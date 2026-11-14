@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-45 页式虚存：地址拼接、PDBR 与改进型 CLOCK</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .btable{ border-collapse:collapse; font-size:13px; margin-top:8px; }
+  .btable th, .btable td{ border:1px solid #e2e8f0; padding:5px 10px; text-align:center; }
+  .btable th{ background:#f1f5f9; color:#475569; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+/* 由数值生成指定位宽的二进制串，避免手拼出错 */
+function bits(v, w){
+  var s = '';
+  for (var i = w - 1; i >= 0; i--) s += ((v >> i) & 1);
+  return s;
+}
+var DIR  = bits(6, 10);      // 页目录号 6
+var PG   = bits(6, 10);      // 页表页号 6
+var OFF  = bits(8, 12);      // 页内偏移 8
+var FULL = DIR + PG + OFF;   // 32 位虚拟地址
+var R1 = FULL.slice(0, 16);  // bits31..16
+var R2 = FULL.slice(16);     // bits15..0
+
+/* 每步的位段配色模式：d=页目录位 p=页号位 o=偏移位（''=普通白格, 见 MODES） */
+var MODES = [
+  { d:'dim', p:'dim', o:'dim' },
+  { d:'hit', p:'dim', o:'dim' },
+  { d:'dim', p:'hit', o:'dim' },
+  { d:'dim', p:'dim', o:'hit' },
+  { d:'ok',  p:'ok',  o:'hit' },
+];
+
+var NOTES = [
+  '页大小 4KB = 2¹²B → 页内偏移 <b>12 位</b>；虚页号 <b>20 位</b> = 页目录号 10 位 + 页表页号 10 位。',
+  '段① 页目录号 = 6 → 10 位二进制 <code>0000000110</code>（上行前 10 格，绿色）。',
+  '段② 页表页号 = 6 → 10 位二进制 <code>0000000110</code>（上行末 6 格 + 下行前 4 格）。',
+  '段③ 页内偏移 = 8 → 12 位二进制 <code>000000001000</code>（下行末 12 格）。',
+  '三段连续拼接（下行 bits15..0 紧接上行）→ <b>0180 6008H</b>。',
+  'PDBR 是 MMU 查页目录用的基地址：访问页目录本身不可能再走一次虚地址翻译 → <b>物理地址</b>。',
+  '<b>进程切换</b>：不同进程地址空间不同、页目录不同 → <b>PDBR 内容会变化</b> ✓。',
+  '<b>同一进程的线程切换</b>：线程共享所属进程的地址空间（同一页目录 / 页表）→ <b>PDBR 不变</b> ✓。',
+  '<b>第（3）问</b>：改进型 CLOCK 要区分“最近未访问”与“已被修改” → 页表项需增设 <b>访问位</b> 与 <b>修改位</b>。',
+  '三问全部完成 ✓',
+];
+
+function segTable(){
+  return '<table class="btable"><tr><th>位段</th><th>bits[31:22]</th><th>bits[21:12]</th><th>bits[11:0]</th></tr>' +
+    '<tr><th>含义</th><td>页目录号（10 位）</td><td>页表页号（10 位）</td><td>页内偏移（12 位）</td></tr></table>';
+}
+
+var SUMS = [
+  '<h4>第（1）问：按 10 + 10 + 12 拼出 32 位虚拟地址</h4>' + segTable(),
+  '<h4>段①：页目录号 6</h4><p>6 的 10 位二进制 = <code>0000000110</code> → 填入 bits[31:22]。</p>',
+  '<h4>段②：页表页号 6</h4><p>6 的 10 位二进制 = <code>0000000110</code> → 填入 bits[21:12]。</p>',
+  '<h4>段③：页内偏移 8</h4><p>8 的 12 位二进制 = <code>000000001000</code> → 填入 bits[11:0]。</p>',
+  '<h4>第（1）问答案</h4>' + segTable() +
+    '<p>拼接 = 0000 0001 1000 0000 0110 0000 0000 1000B = <b>01806008H</b></p>',
+  '<h4>第（2）问：PDBR 是物理地址</h4><p>PDBR 保存页目录起始地址。MMU 拿它直接访问内存中的页目录，若它是虚拟地址则查页目录又要翻译，陷入循环 → <b>物理地址</b>。</p>',
+  '<h4>进程切换：PDBR 会变</h4><p>每个进程有独立的地址空间和页目录，切换进程就要换页目录基址 → <b>PDBR 内容变化</b>。</p>',
+  '<h4>同进程线程切换：PDBR 不变</h4><p>线程是调度单位、共享所属进程的地址空间与页目录 → <b>PDBR 内容不变</b>。</p>',
+  '<h4>第（3）问：改进型 CLOCK 需要的字段</h4><p>淘汰时同时看“是否最近被访问”与“是否被修改” → 页表项需设置 <b>访问位（使用位）</b> 与 <b>修改位（脏位）</b>。</p>',
+  '<h4>最终答案</h4><p>（1）<b>01806008H</b>；（2）<b>物理地址</b>——进程切换<b>会变</b>、同进程线程切换<b>不变</b>；（3）<b>访问位 + 修改位</b>。</p>',
+];
+
+function drawBits(container, chars, classes, msb){
+  container.innerHTML = '';
+  for (var i = 0; i < 16; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), chars[i]));
+    col.appendChild(AW.el('div', 'aw-idx', String(msb ? 31 - i : 15 - i)));
+    container.appendChild(col);
+  }
+}
+
+AW.init({
+  title: '2018·45 页式虚拟存储三连问（8 分大题）',
+  subtitle: '页目录号 <code>6</code> · 页号 <code>6</code> · 偏移 <code>8</code> 拼地址；PDBR 归属与切换；改进型 CLOCK 字段',
+  counterLabel: '步',
+  ribbonTitle: '关键结论（✓ 完成）',
+  intro: '点击「▶ 播放」：先拼虚拟地址，再答 PDBR 两问，最后补 CLOCK 字段。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.lab1 = AW.el('div', 'aw-row-label', '<b>虚拟地址 bits31..16</b>');
+    S.r1 = AW.el('div', 'aw-cells');
+    S.lab2 = AW.el('div', 'aw-row-label', '<b>虚拟地址 bits15..0</b>');
+    S.r2 = AW.el('div', 'aw-cells');
+    S.note = AW.el('div', 'aw-row-label', '');
+    S.sum = AW.el('div', 'aw-stepcard', '');
+    inner.appendChild(S.lab1);
+    inner.appendChild(S.r1);
+    inner.appendChild(S.lab2);
+    inner.appendChild(S.r2);
+    inner.appendChild(S.note);
+    inner.appendChild(S.sum);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var m = i <= 4 ? MODES[i] : MODES[4];
+    var c1 = [], c2 = [];
+    for (var k = 0; k < 16; k++){
+      c1.push(k < 10 ? m.d : m.p);   // 上行：前 10 位页目录，后 6 位页号
+      c2.push(k < 4 ? m.p : m.o);    // 下行：前 4 位页号，后 12 位偏移
+    }
+    drawBits(S.r1, R1.split(''), c1, true);
+    drawBits(S.r2, R2.split(''), c2, false);
+    S.note.innerHTML = NOTES[i];
+    S.sum.innerHTML = SUMS[i];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',       log:'页大小 4KB → 页内偏移 12 位；虚页号 20 位 = 页目录号 10 位 + 页号 10 位', count:0 },
+    { cls:'step',  tag:'第(1)问·段①', log:'页目录号 6 → 高 10 位 = 0000000110', count:1 },
+    { cls:'step',  tag:'第(1)问·段②', log:'页表页号 6 → 中间 10 位 = 0000000110', count:2 },
+    { cls:'step',  tag:'第(1)问·段③', log:'页内偏移 8 → 低 12 位 = 000000001000', count:3 },
+    { cls:'ok',    tag:'拼出地址',    log:'拼接 = 0000 0001 1000 0000 0110 0000 0000 1000B = 01806008H', count:4, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'第(2)问·PDBR', log:'PDBR 供 MMU 直接访问页目录 → 是页目录的物理基地址', count:5 },
+    { cls:'ok',    tag:'进程切换',    log:'不同进程页目录不同 → 进程切换时 PDBR 内容会变化', count:6, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'线程切换',    log:'同进程线程共享地址空间与页目录 → 线程切换时 PDBR 不变', count:7, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'第(3)问·CLOCK', log:'改进型 CLOCK 需同时记录访问与修改 → 页表项加访问位、修改位', count:8, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'完成',       log:'(1) 01806008H；(2) 物理地址，进程切换变、线程切换不变；(3) 访问位+修改位', count:9, done:true },
+  ],
+
+  result: {
+    big: '01806008H',
+    html: '<b>(1)</b> 页目录号 6 + 页号 6 + 偏移 8 → <code>01806008H</code>。<b>(2)</b> PDBR 是页目录的<b>物理地址</b>：进程切换<b>会变</b>（页目录不同），同进程线程切换<b>不变</b>（共享地址空间）。<b>(3)</b> 改进型 CLOCK 需在页表项中设置<b>访问位（使用位）</b>与<b>修改位（脏位）</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-25 · 抢占式优先级调度演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 甘特段（宽度 ∝ 运行时长）：
+   P0:0~10, P2:10~15, P3:15~25, P2:25~40, P0:40~130, P1:130~190 */
+var SEG = [
+  { p: 'P0', t0: 0,   t1: 10,  w: 10 },
+  { p: 'P2', t0: 10,  t1: 15,  w: 5  },
+  { p: 'P3', t0: 15,  t1: 25,  w: 10 },
+  { p: 'P2', t0: 25,  t1: 40,  w: 15 },
+  { p: 'P0', t0: 40,  t1: 130, w: 90 },
+  { p: 'P1', t0: 130, t1: 190, w: 60 },
+];
+
+var gRow, qRow;
+
+function paint(g, q, allOk){
+  for (var j = 0; j < SEG.length; j++){
+    var st;
+    if (allOk || j < g - 1) st = 'ok';
+    else if (j === g - 1) st = 'hit';
+    else st = '';
+    var d = gRow.children[j];
+    if (st === 'hit'){
+      d.style.background = '#16a34a'; d.style.borderColor = '#15803d';
+      d.children[0].style.color = '#fff'; d.children[1].style.color = '#ecfdf5';
+    } else if (st === 'ok'){
+      d.style.background = '#dcfce7'; d.style.borderColor = '#16a34a';
+      d.children[0].style.color = '#14532d'; d.children[1].style.color = '#15803d';
+    } else {
+      d.style.background = '#f8fafc'; d.style.borderColor = '#cbd5e1';
+      d.children[0].style.color = '#94a3b8'; d.children[1].style.color = '#94a3b8';
+    }
+  }
+  qRow.innerHTML = q || '（尚未开始）';
+}
+
+AW.init({
+  title: '抢占式优先级调度演示（2022-25）',
+  subtitle: '优先数<b>越小</b>优先权越高 · 新就绪进程优先权更高时立即抢占 · 单位 ms',
+  counterLabel: '调度次数',
+  ribbonTitle: '调度序号（✓ 完成一次调度）',
+  intro: '点击「▶ 播放」，按时间线逐次演示调度发生点。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>进程表</b>：P0（0 到达，优先 15，需 100）　P1（10 到达，优先 20，需 60）　' +
+      'P2（10 到达，优先 10，需 20）　P3（15 到达，优先 6，需 10）'));
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>甘特图</b>（宽度 ∝ 运行时长；浅绿 = 已定，深绿 = 本步调度上的进程）'));
+    gRow = AW.el('div', '');
+    gRow.style.display = 'flex';
+    gRow.style.gap = '4px';
+    gRow.style.width = 'max-content';
+    for (var j = 0; j < SEG.length; j++){
+      var s = SEG[j];
+      var d = AW.el('div', '');
+      d.style.flex = String(s.w);
+      d.style.minWidth = '52px';
+      d.style.border = '2px solid #cbd5e1';
+      d.style.borderRadius = '8px';
+      d.style.textAlign = 'center';
+      d.style.padding = '8px 2px 6px';
+      d.style.transition = 'background .25s, border-color .25s';
+      var p1 = AW.el('div', '', s.p);
+      p1.style.fontWeight = '700';
+      p1.style.fontSize = '15px';
+      var p2 = AW.el('div', '', s.t0 + '~' + s.t1);
+      p2.style.fontSize = '11px';
+      p2.style.marginTop = '2px';
+      d.appendChild(p1);
+      d.appendChild(p2);
+      gRow.appendChild(d);
+    }
+    inner.appendChild(gRow);
+    qRow = AW.el('div', 'aw-row-label', '（尚未开始）');
+    qRow.style.marginTop = '12px';
+    qRow.style.fontSize = '13.5px';
+    inner.appendChild(qRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0, null, false);
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', g: 0,
+      log: '初始：t=0 只有 P0 在就绪队列，即将开始调度', count: 0,
+      q: '<b>就绪队列</b>：P0（优先 15）' },
+    { cls: 'ok', tag: '第 1 次', g: 1,
+      log: 't=0：就绪队列只有 P0 → 第 1 次调度：P0 上 CPU，运行 0~10 ms', count: 1,
+      ribbon: { k: 1, ok: true },
+      q: '<b>就绪队列</b>：空 → 运行 P0' },
+    { cls: 'step', tag: '抢占', g: 2,
+      log: 't=10：P1（优先 20）、P2（优先 10）到达；P2 优先权高于运行中的 P0（15）→ 第 2 次调度：P2 抢占，运行 10~15 ms', count: 2,
+      ribbon: { k: 2, ok: true },
+      q: '<b>就绪队列</b>：P0（15）、P1（20）→ 运行 P2' },
+    { cls: 'step', tag: '抢占', g: 3,
+      log: 't=15：P3（优先 6）到达，高于运行中的 P2（10）→ 第 3 次调度：P3 抢占，运行 15~25 ms', count: 3,
+      ribbon: { k: 3, ok: true },
+      q: '<b>就绪队列</b>：P0（15）、P1（20）、P2（10，剩 15）→ 运行 P3' },
+    { cls: 'step', tag: '第 4 次', g: 4,
+      log: 't=25：P3 完成。就绪队列 P2（10）、P0（15）、P1（20）→ 第 4 次调度：P2 继续运行剩余 15 ms（25~40）', count: 4,
+      ribbon: { k: 4, ok: true },
+      q: '<b>就绪队列</b>：P0（15）、P1（20）→ 运行 P2' },
+    { cls: 'step', tag: '第 5 次', g: 5,
+      log: 't=40：P2 完成。P0（15）优于 P1（20）→ 第 5 次调度：P0 继续运行剩余 90 ms（40~130）', count: 5,
+      ribbon: { k: 5, ok: true },
+      q: '<b>就绪队列</b>：P1（20）→ 运行 P0' },
+    { cls: 'step', tag: '第 6 次', g: 6,
+      log: 't=130：P0 完成。只剩 P1 → 第 6 次调度：P1 运行（130~190）', count: 6,
+      ribbon: { k: 6, ok: true },
+      q: '<b>就绪队列</b>：空 → 运行 P1' },
+    { cls: 'done', tag: '完成', g: 6,
+      log: 't=190：P1 完成，4 个进程全部结束 → 共发生 6 次进程调度，答案 C', count: 6, done: true,
+      q: '<b>全部完成</b>：调度次序 P0 → P2 → P3 → P2 → P0 → P1' },
+  ],
+
+  render: function(stage, sn, i){
+    paint(sn.g || 0, sn.q, !!sn.done);
+  },
+
+  result: {
+    big: '6 次（答案 C）',
+    html: '6 次调度分别是：t=0 选 P0、t=10 P2 抢占、t=15 P3 抢占、t=25 P2 恢复、t=40 P0 恢复、t=130 选 P1。记忆点：<b>每次抢占后重新上 CPU 也算一次调度</b>，t=0 的初始调度同样计入；P2 先后两段运行对应两次调度。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

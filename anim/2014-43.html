@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-43 动画 · OSPF 路由表 / TTL / LSI 更新</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 拓扑（来自题 42 表/图）：环形 R1—R2(3)—R4(4)—R3(6)—R1(2)
+var ROUTERS = [
+  { key: 'r1', name: 'R1', rid: '10.1.1.1', sub: '192.1.1.0/24', ifn: 'E0' },
+  { key: 'r2', name: 'R2', rid: '10.1.1.2', sub: '192.1.6.0/24', ifn: '' },
+  { key: 'r4', name: 'R4', rid: '10.1.1.6', sub: '192.1.7.0/24', ifn: '' },
+  { key: 'r3', name: 'R3', rid: '10.1.1.5', sub: '192.1.5.0/24', ifn: '' },
+];
+var LINKS = [
+  { a: 'R1', b: 'R2', m: 3, ip: '10.1.1.1 ↔ 10.1.1.2', tag: 'L0' },
+  { a: 'R2', b: 'R4', m: 4, ip: '10.1.1.13 ↔ 10.1.1.14', tag: '' },
+  { a: 'R4', b: 'R3', m: 6, ip: '10.1.1.6 ↔ 10.1.1.5', tag: '' },
+];
+var RING = { a: 'R3', b: 'R1', m: 2, ip: '10.1.1.10 ↔ 10.1.1.9', tag: 'L1' };
+
+// 每一步要高亮的：节点下标、链路下标（-1 表示环回链）、路由表行、TTL、LSI
+var HL = [
+  { nodes: [], links: [], rows: [], ring: false },                    // 0 开始
+  { nodes: [1], links: [0], rows: [], ring: false, big: '192.1.6.0/24 走 L0，代价 4' },
+  { nodes: [1, 2], links: [0, 1], rows: [], ring: false, big: '192.1.7.0/24 走 L0，代价 8' },
+  { nodes: [1, 2], links: [0], rows: [1], ring: false, big: '聚合成 192.1.6.0/23' },
+  { nodes: [3], links: [], rows: [2], ring: true, big: '192.1.5.0/24 走 L1，代价 3' },
+  { nodes: [0], links: [], rows: [0], ring: false, big: '直连 192.1.1.0/24 @ E0' },
+  { nodes: [0, 1, 2, 3], links: [0], rows: [0, 1, 2], ring: true, big: '路由表 3 项（最少）' },
+  { nodes: [1], links: [0], rows: [1], ring: false, big: '192.1.7.211 命中 192.1.6.0/23 → L0' },
+  { nodes: [1, 2], links: [0, 1], rows: [], ring: false, big: '路径 R1 → R2 → R4 → 主机' },
+  { nodes: [1, 2], links: [0, 1], rows: [], ring: false, ttl: true, big: 'TTL：64 → 63 → 62 → 61' },
+  { nodes: [0], links: [], rows: [], ring: false, lsi: true, big: 'LSI 新增：0.0.0.0/0，Metric 10' },
+  { nodes: [0, 1, 2, 3], links: [0, 1], rows: [0, 1, 2], ring: true, ttl: true, lsi: true, big: '三问全部完成' },
+];
+
+var topoBox = null, routeBox = null, ttlBox = null, lsiBox = null, bigEl = null, infoEl = null;
+
+function nodeCard(r, on){
+  var bd = on ? '#16a34a' : '#cbd5e1', bg = on ? '#f6fef9' : '#fff';
+  return '<div style="flex:1;min-width:118px;border:2px solid ' + bd + ';background:' + bg +
+         ';border-radius:12px;padding:7px 4px;text-align:center;transition:all .3s">' +
+         '<div style="font-size:11px;background:#e2e8f0;border-radius:6px;padding:2px 4px;display:inline-block;margin-bottom:5px">' +
+         r.sub + (r.ifn ? '（' + r.ifn + '）' : '') + '</div>' +
+         '<div style="font-size:15px;font-weight:800;color:#0f172a">' + r.name + '</div>' +
+         '<div style="font-size:10px;color:#94a3b8">RouterID ' + r.rid + '</div></div>';
+}
+
+function linkChip(l, on){
+  var bd = on ? '#16a34a' : '#e2e8f0', bg = on ? '#dcfce7' : '#f8fafc', fg = on ? '#14532d' : '#64748b';
+  return '<div style="align-self:center;flex:0 0 auto;margin:0 3px;border:2px solid ' + bd + ';background:' + bg +
+         ';color:' + fg + ';border-radius:9px;padding:4px 7px;font-size:10.5px;font-family:Menlo,monospace;line-height:1.5">' +
+         '<b>' + l.a + '—' + l.b + '</b><br>Metric ' + l.m + (l.tag ? ' · ' + l.tag : '') + '</div>';
+}
+
+function routeTableHtml(rowsState){
+  var rows = [
+    ['192.1.1.0/24', '直连', 'E0'],
+    ['192.1.6.0/23', '10.1.1.2', 'L0'],
+    ['192.1.5.0/24', '10.1.1.10', 'L1'],
+  ];
+  var h = '<table style="border-collapse:collapse;font-size:12.5px;width:100%">';
+  h += '<tr style="background:#f1f5f9;color:#334155">' +
+       ['目的网络', '下一跳', '接口'].map(function(t){
+         return '<th style="border:1px solid #cbd5e1;padding:5px 8px;text-align:left">' + t + '</th>';
+       }).join('') + '</tr>';
+  rows.forEach(function(r, idx){
+    var added = rowsState.indexOf(idx) >= 0;
+    var justNow = rowsState.length && rowsState[rowsState.length - 1] === idx && rowsState._fresh === idx;
+    var bg = !added ? '#fff' : (rowsState._fresh === idx ? '#fef3c7' : '#f6fef9');
+    var fg = !added ? '#cbd5e1' : '#0f172a';
+    var cells = added ? r : ['—', '—', '—'];
+    if (rowsState._lookup === idx){ bg = '#dbeafe'; }
+    h += '<tr>' + cells.map(function(c){
+      return '<td style="border:1px solid #cbd5e1;padding:5px 8px;background:' + bg + ';color:' + fg +
+             ';font-family:Menlo,monospace">' + c + '</td>';
+    }).join('') + '</tr>';
+  });
+  return h + '</table>';
+}
+
+var INFO = [
+  '已知：OSPF 链路状态协议，R1 已掌握全网拓扑与代价（环形 R1—R2—R4—R3—R1），四个直连子网如图。',
+  '到 192.1.6.0/24：R1→R2 代价 3+1=4；绕行 R1→R3→R4→R2 = 2+6+4+1=13。→ 走 L0，下一跳 10.1.1.2。',
+  '到 192.1.7.0/24：R1→R2→R4 代价 3+4+1=8；绕行 R1→R3→R4 = 2+6+1=9。→ 下一跳也是 10.1.1.2（L0）。',
+  '192.1.6.0/24 与 192.1.7.0/24 下一跳、接口相同 → 聚合为 192.1.6.0/23，路由项最少。',
+  '到 192.1.5.0/24：R1→R3 代价 2+1=3；绕行 = 3+4+6+1=14。→ 走 L1，下一跳 10.1.1.10。',
+  '192.1.1.0/24 是直连网络 → 接口 E0。',
+  '第 1 问完成：R1 路由表 3 项（192.1.1.0/24·E0；192.1.6.0/23·10.1.1.2·L0；192.1.5.0/24·10.1.1.10·L1）。',
+  '第 2 问：主机 192.1.1.130 → 192.1.7.211，目的命中 192.1.6.0/23 → R1 从 L0 转发给 10.1.1.2（R2）。',
+  'R2 查表：192.1.7.0/24 挂在 R4 上 → 转给 R4；R4 直连 192.1.7.0/24 → 交付主机。路径：R1 → R2 → R4。',
+  'TTL 每过一个路由器减 1：R1 64→63，R2 63→62，R4 62→61 → 主机收到 TTL = 61。',
+  '第 3 问：R1 新增 Metric 10 的 Internet 链路 → LSI 的直连网络部分增加一条：Prefix = 0.0.0.0/0，Metric = 10。',
+  '完成：路由表 3 项、TTL 61、LSI 增加 0.0.0.0/0（Metric 10）。',
+];
+
+AW.init({
+  title: 'OSPF 大题 · R1 路由表 / TTL / LSI 更新（2014·43）',
+  subtitle: '环形拓扑 <code>R1—R2(3)—R4(4)—R3(6)—R1(2)</code> · 直连子网 192.1.1.0/24 · 192.1.6.0/24 · 192.1.7.0/24 · 192.1.5.0/24',
+  counterLabel: '已完成步骤',
+  ribbonTitle: '三个问题（✓ 已解决）',
+  intro: '点击「▶ 播放」逐步演示：最短路填表 → 聚合成 /23 → 查表转发数 TTL → LSI 更新。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    topoBox = AW.el('div', '');
+    inner.appendChild(topoBox);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>R1 的路由表</b>（琥珀 = 本步刚写入）'));
+    routeBox = AW.el('div', '');
+    inner.appendChild(routeBox);
+
+    ttlBox = AW.el('div', '');
+    inner.appendChild(ttlBox);
+
+    lsiBox = AW.el('div', '');
+    inner.appendChild(lsiBox);
+
+    bigEl = AW.el('div', '');
+    bigEl.style.cssText = 'margin:12px 0 4px;font-size:20px;font-weight:800;color:#0f172a;';
+    inner.appendChild(bigEl);
+
+    infoEl = AW.el('div', '');
+    infoEl.style.cssText = 'font-size:13px;color:#334155;line-height:1.7;';
+    inner.appendChild(infoEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var hl = HL[Math.min(i, HL.length - 1)];
+
+    // 拓扑：一行 4 个路由器卡 + 3 个链路芯片；环回链路画在下面
+    var h = '<div style="display:flex;gap:4px;align-items:stretch;margin-bottom:6px">';
+    h += nodeCard(ROUTERS[0], hl.nodes.indexOf(0) >= 0);
+    h += linkChip(LINKS[0], hl.links.indexOf(0) >= 0);
+    h += nodeCard(ROUTERS[1], hl.nodes.indexOf(1) >= 0);
+    h += linkChip(LINKS[1], hl.links.indexOf(1) >= 0);
+    h += nodeCard(ROUTERS[2], hl.nodes.indexOf(2) >= 0);
+    h += linkChip(LINKS[2], hl.links.indexOf(2) >= 0);
+    h += nodeCard(ROUTERS[3], hl.nodes.indexOf(3) >= 0);
+    h += '</div>';
+    h += '<div style="border:2px solid ' + (hl.ring ? '#16a34a' : '#e2e8f0') + ';background:' +
+         (hl.ring ? '#dcfce7' : '#f8fafc') + ';color:' + (hl.ring ? '#14532d' : '#64748b') +
+         ';border-radius:9px;padding:5px 9px;font-size:11px;font-family:Menlo,monospace;display:inline-block">' +
+         '环回链路 R3—R1 · Metric 2 · L1：10.1.1.10 ↔ 10.1.1.9</div>';
+    topoBox.innerHTML = h;
+
+    // 路由表
+    var rowsState = hl.rows.slice();
+    rowsState._fresh = (i === 3 || i === 4 || i === 5) ? hl.rows[hl.rows.length - 1] : -1;
+    rowsState._lookup = (i === 7) ? 1 : -1;
+    routeBox.innerHTML = routeTableHtml(rowsState);
+
+    // TTL 行
+    if (hl.ttl){
+      ttlBox.innerHTML = '<div class="aw-cells" style="gap:10px;margin-top:8px">' +
+        [['R1', '64→63'], ['R2', '63→62'], ['R4', '62→61']].map(function(t, k){
+          return '<div class="aw-box hit" style="width:96px;height:auto;padding:7px 4px;font-size:12px">' +
+                 '<b>' + t[0] + '</b><br>TTL ' + t[1] + '</div>';
+        }).join('') + '</div>' +
+        '<div style="font-size:12px;color:#64748b;margin-top:4px">每过一个路由器 TTL − 1，共 3 个路由器：64 − 3 = 61</div>';
+    } else {
+      ttlBox.innerHTML = '';
+    }
+
+    // LSI 增补
+    if (hl.lsi){
+      lsiBox.innerHTML = '<div style="margin-top:8px;border:2px solid #d97706;background:#fffbeb;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#92400e">' +
+         '<b>R1 的 LSI 直连网络部分新增：</b>Net2 → Prefix = <b>0.0.0.0/0</b>，Metric = <b>10</b>（Internet 默认路由）</div>';
+    } else {
+      lsiBox.innerHTML = '';
+    }
+
+    bigEl.textContent = hl.big || '';
+    infoEl.innerHTML = INFO[Math.min(i, INFO.length - 1)];
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '读表画图', log: '题 42 表读成环形拓扑：R1—R2(3)、R2—R4(4)、R4—R3(6)、R3—R1(2)，四个直连子网', count: 0 },
+    { cls: 'step',  tag: '算 192.1.6.0/24', log: '走 L0：3+1=4；绕行：2+6+4+1=13 → 下一跳 10.1.1.2，接口 L0', count: 1 },
+    { cls: 'step',  tag: '算 192.1.7.0/24', log: '走 R1→R2→R4：3+4+1=8；绕行：2+6+1=9 → 下一跳也是 10.1.1.2，接口 L0', count: 2 },
+    { cls: 'ok',    tag: '聚合 /23', log: '两条表项同下一跳同接口 → 聚合为 192.1.6.0/23，路由项更少', count: 3 },
+    { cls: 'ok',    tag: '算 192.1.5.0/24', log: '走 L1：2+1=3；绕行：3+4+6+1=14 → 下一跳 10.1.1.10，接口 L1', count: 4 },
+    { cls: 'ok',    tag: '直连 E0', log: '192.1.1.0/24 直连 → 接口 E0', count: 5 },
+    { cls: 'done',  tag: '第 1 问完成', log: '路由表 3 项：192.1.1.0/24·E0；192.1.6.0/23·10.1.1.2·L0；192.1.5.0/24·10.1.1.10·L1', count: 6, ribbon: { k: 1, ok: true } },
+    { cls: 'step',  tag: '查表转发', log: '192.1.7.211 命中 192.1.6.0/23 → R1 从 L0 转发给 10.1.1.2（R2）', count: 7 },
+    { cls: 'step',  tag: '继续转发', log: 'R2：192.1.7.0/24 在 R4 上 → 转给 R4；R4 直连交付主机', count: 8 },
+    { cls: 'ok',    tag: 'TTL 61', log: 'R1、R2、R4 共 3 个路由器，每个减 1：64−3 = 61 → 主机收到 TTL 61', count: 9, ribbon: { k: 2, ok: true } },
+    { cls: 'ok',    tag: 'LSI 更新', log: '新增 Internet 链路（Metric 10）→ LSI 增加 Prefix = 0.0.0.0/0，Metric = 10', count: 10, ribbon: { k: 3, ok: true } },
+    { cls: 'done',  tag: '全部完成', log: '三问完成：路由表 3 项；L0 转发、TTL 61；LSI 增加 0.0.0.0/0 · Metric 10', count: 11, done: true },
+  ],
+
+  result: {
+    big: '路由表 3 项 · TTL 61 · LSI 增 0.0.0.0/0(Metric 10)',
+    html: '第 1 问最短路径 + 同下一跳聚合：<code>192.1.1.0/24 直连 E0；192.1.6.0/23 → 10.1.1.2 (L0)；192.1.5.0/24 → 10.1.1.10 (L1)</code>。第 2 问目的命中 /23 走 L0，路径 <b>R1→R2→R4</b> 三个路由器各减 1，TTL = 64−3 = <b>61</b>。第 3 问 Internet 链路即默认路由，LSI 增 <b>Prefix 0.0.0.0/0、Metric 10</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

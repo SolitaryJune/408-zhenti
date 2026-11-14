@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-32 SCAN 磁盘调度：磁头移过多少磁道</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .tk-col{ width:64px; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; }
+  .tk-box{ width:64px; height:52px; border:2px solid #cbd5e1; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-weight:700; font-size:20px;
+    background:#fff; color:#0f172a; transition:all .2s; }
+  .tk-box.dim{ opacity:.4; }
+  .tk-box.ok{ background:#dcfce7; border-color:#16a34a; color:#14532d; }
+  .tk-box.hit{ background:#16a34a; border-color:#16a34a; color:#fff; animation:aw-pop .45s ease; }
+  .tk-cap{ margin-top:4px; font-size:11px; color:#94a3b8; text-align:center; line-height:1.3; }
+  .tk-head{ width:64px; flex:0 0 auto; text-align:center; font-size:13px; font-weight:700; color:#d97706; transition:transform .5s cubic-bezier(.22,.8,.3,1); }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var POS  = [0, 15, 42, 58, 130, 180, 199];
+var CAP  = ['外侧端 0', '请求', '请求', '磁头起点', '请求', '请求', '请求·最内侧'];
+var HEAD = [3, 4, 5, 6, 2, 1, 1];        // 每步磁头所在列（0 起）
+var DIST = [0, 72, 122, 141, 298, 325, 325]; // 累计移动道数
+var PITCH = 70;
+
+var NOTES = [
+  'SCAN（电梯）规则：沿当前方向依次服务请求，到该方向<b>尽头（本题最内侧 199）</b>才折返。0 号磁道最外侧，"从外向内" = 磁道号增大方向。',
+  '内侧方向第一个请求是 130：|130 − 58| = <b>72</b> 道。',
+  '继续向内：|180 − 130| = <b>50</b> 道，累计 122。',
+  '|199 − 180| = <b>19</b> 道，服务 199 —— 它既是最内侧磁道又是请求 → 内向段共 <b>141</b> 道。',
+  '到达最内端后<b>折返向外</b>：|42 − 199| = <b>157</b> 道，服务 42，累计 298。',
+  '|15 − 42| = <b>27</b> 道，处理完最后一个请求 15，累计 <b>325</b>。',
+  '结束：总移动 = (199 − 58) + (199 − 15) = <b>141 + 184 = 325</b> 个磁道。SCAN 到盘边才折返；本题 199 恰好既是请求又是最内侧磁道。'
+];
+
+var S = { head: null, boxes: [] };
+
+AW.init({
+  title: '【2015-32】SCAN 调度：磁头共移过多少磁道',
+  subtitle: '磁道 <code>0 ~ 199</code>（0 最外侧）· 请求 <code>130 42 180 15 199</code> · 磁头起点 <code>58</code> · 方向：<code>从外向内</code>',
+  counterLabel: '已移过磁道',
+  ribbonTitle: '已服务请求（✓）',
+  intro: '点击「▶ 播放」：沿 SCAN（电梯）规则逐段移动磁头并累加道数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var headRow = AW.el('div', 'aw-cells');
+    headRow.style.cssText = 'margin-top:8px';
+    S.head = AW.el('div', 'tk-head', '▲磁头');
+    headRow.appendChild(S.head);
+    inner.appendChild(headRow);
+
+    var axis = AW.el('div', 'aw-cells');
+    S.boxes = [];
+    POS.forEach(function(p, idx){
+      var col = AW.el('div', 'tk-col');
+      var box = AW.el('div', 'tk-box dim', String(p));
+      var cap = AW.el('div', 'tk-cap', CAP[idx]);
+      col.appendChild(box);
+      col.appendChild(cap);
+      axis.appendChild(col);
+      S.boxes.push(box);
+    });
+    inner.appendChild(axis);
+
+    S.note = AW.el('div', 'aw-row-label', '');
+    S.note.style.cssText = 'margin-top:12px;font-size:14px;color:#334155;line-height:1.7';
+    inner.appendChild(S.note);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var headIdx = HEAD[Math.min(i, HEAD.length - 1)];
+    S.head.style.transform = 'translateX(' + (headIdx * PITCH) + 'px)';
+
+    var serviced = { 4:false, 5:false, 6:false, 2:false, 1:false };
+    if (i >= 1) serviced[4] = true;
+    if (i >= 2) serviced[5] = true;
+    if (i >= 3) serviced[6] = true;
+    if (i >= 4) serviced[2] = true;
+    if (i >= 5) serviced[1] = true;
+
+    S.boxes.forEach(function(box, idx){
+      var cls;
+      if (idx === 3) cls = 'ok';                 // 起点 58
+      else if (idx === 0) cls = '';              // 0 号端点（非请求）
+      else if (serviced[idx]) cls = 'hit';       // 已服务请求
+      else cls = 'dim';                          // 待处理
+      box.className = 'tk-box' + (cls ? ' ' + cls : '');
+    });
+
+    S.note.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始',     log:'磁头在 58 号磁道、从外侧向内侧移动；SCAN 沿当前方向服务到最内端再折返', count:0 },
+    { cls:'ok',    tag:'服务 130', log:'58 → 130：移过 72 道，服务 130', count:72, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'服务 180', log:'130 → 180：移过 50 道，累计 122', count:122, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'到达最内', log:'180 → 199：移过 19 道，服务 199，同时到达最内侧端，累计 141', count:141, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'折返',     log:'折返向外：199 → 42，移过 157 道，服务 42，累计 298', count:298, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'服务 15',  log:'42 → 15：移过 27 道，服务最后一个请求 15，累计 325', count:325, ribbon:{k:5, ok:true} },
+    { cls:'done',  tag:'完成',     log:'总移动 = 141 + 184 = 325 个磁道 → 选 C', count:325, done:true },
+  ],
+
+  result: {
+    big: '325 个磁道（选 C）',
+    html: 'SCAN 沿"从外向内"先服务 <code>130 → 180 → 199</code>（到最内侧端，<b>141</b> 道），折返向外服务 <code>42 → 15</code>（<b>184</b> 道），合计 <b>325</b>。易错：服务完 42 还有请求 15，别漏最后一段；SCAN 到<b>盘边</b>才折返，不是到最远请求就停。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

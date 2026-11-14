@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-44 补码除法器与除法异常动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：机器级代码执行 → 除法器寄存器初始化 → 除法异常两种情形与响应 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '补码除法器：R / Q / Y 初始化与除法异常',
+  subtitle: '<code>d[i] = 0x87654321</code> · <code>x = 0xFF</code> · scov 符号扩展 · idiv 64 位 ÷ 32 位',
+  counterLabel: '步骤',
+  ribbonTitle: '关键步骤（✓ 对 / ✗ 异常）',
+  intro: '点击「▶ 播放」按问逐步演示。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var self = this;
+    var inner = AW.el('div', '');
+
+    var mkChipInto = function(row, val, w){
+      var b = AW.el('div', 'aw-box dim', val);
+      b.style.width = w + 'px'; b.style.height = '40px'; b.style.fontSize = '14px';
+      row.appendChild(b); return b;
+    };
+
+    // 机器级代码三条
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>机器级代码</b>（x 在 R2 中，i 在 R4 中，d 首地址在 R3 中）'));
+    var code = AW.el('div', 'aw-cells');
+    code.style.marginBottom = '6px';
+    self._kMov  = mkChipInto(code, 'mov R1, (R3+R4*4)', 200);
+    self._kScov = mkChipInto(code, 'scov R1', 110);
+    self._kIdiv = mkChipInto(code, 'idiv R1, R3', 140);
+    inner.appendChild(code);
+
+    // 除法器寄存器
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>补码除法器的三个寄存器</b>（第（1）问：64 位被除数 = {R, Q}，Y 为除数）'));
+    var regs = AW.el('div', 'aw-cells');
+    regs.style.marginBottom = '4px';
+    self._rR = mkChipInto(regs, 'R = ?', 190);
+    self._rQ = mkChipInto(regs, 'Q = ?', 190);
+    self._rY = mkChipInto(regs, 'Y = ?', 190);
+    inner.appendChild(regs);
+
+    // 计数器与 ALU 运算
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>控制逻辑</b>'));
+    var ctrl = AW.el('div', 'aw-cells');
+    ctrl.style.marginBottom = '6px';
+    self._kCnt = mkChipInto(ctrl, '计数器在?', 200);
+    self._kAlu = mkChipInto(ctrl, 'ALU 运算：?', 200);
+    inner.appendChild(ctrl);
+
+    // 异常情形
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>第（2）问：触发除法异常的两种情况</b>'));
+    var exc = AW.el('div', 'aw-cells');
+    exc.style.marginBottom = '4px';
+    self._eDiv0 = mkChipInto(exc, '情形一：?', 300);
+    inner.appendChild(exc);
+    var exc2 = AW.el('div', 'aw-cells');
+    exc2.style.marginBottom = '6px';
+    self._eOvf = mkChipInto(exc2, '情形二：?', 300);
+    inner.appendChild(exc2);
+
+    // 异常响应三步
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>异常响应过程 CPU 要完成的操作</b>'));
+    var rsp = AW.el('div', 'aw-cells');
+    rsp.style.marginBottom = '6px';
+    self._s1 = mkChipInto(rsp, '① ?', 200);
+    self._s2 = mkChipInto(rsp, '② ?', 120);
+    self._s3 = mkChipInto(rsp, '③ ?', 220);
+    inner.appendChild(rsp);
+
+    self._note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(self._note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',       log:'执行 idiv 时 d[i] = 0x87654321、x = 0xFF。先顺代码推寄存器，再答除法器初始内容，最后分析除法异常。', count:0, note:'目标：R/Q/Y 初值 + 异常情形' },
+    { cls:'shift', tag:'mov 装数',   log:'mov R1, (R3+R4*4)：R1 ← d[i] = 87654321H（最高位为 1，是负数）。', count:1, ribbon:{k:1, ok:true}, note:'R1 = 87654321H（负数）' },
+    { cls:'shift', tag:'scov 符号扩展', log:'scov R1：把 R1 按符号扩展成 64 位 {R0, R1} = FFFF FFFF 8765 4321H —— R0 全 1，R1 不变。', count:2, ribbon:{k:2, ok:true}, note:'{R0,R1} = FFFFFFFF 87654321H' },
+    { cls:'ok',    tag:'（1）R/Q/Y 初值', log:'对照除法器结构：R = FFFFFFFFH（被除数高 32 位，符号扩展产生），Q = 87654321H（低 32 位），Y = 000000FFH（除数 x = 0xFF）。', count:3, ribbon:{k:3, ok:true}, note:'R=FFFFFFFFH，Q=87654321H，Y=000000FFH' },
+    { cls:'ok',    tag:'（1）计数器',  log:'控制逻辑（部件）中包含计数器 Cn：控制加/减与移位循环的步数。', count:4, ribbon:{k:4, ok:true}, note:'计数器 Cn 在控制逻辑中' },
+    { cls:'ok',    tag:'（1）ALU 运算', log:'ALUop 控制的 ALU 运算只有两种：加法和减法（减法试商、加法调整余数）。', count:5, ribbon:{k:5, ok:true}, note:'ALU：加法、减法两种' },
+    { cls:'miss',  tag:'（2）除 0 异常', log:'情形一：x = 00000000H 时发生除 0 异常——除数为 0 商无定义；此时 d[i] 可以是表示范围内的任意值。', count:6, ribbon:{k:6, ok:false}, note:'异常一：x = 00000000H（除 0）' },
+    { cls:'miss',  tag:'（2）溢出异常', log:'情形二：d[i] = 80000000H 且 x = FFFFFFFFH —— 最小负数 −2^31 除以 −1 得 +2^31，超出 int 表示范围，商溢出异常。', count:7, ribbon:{k:7, ok:false}, note:'异常二：d[i]=80000000H 且 x=FFFFFFFFH' },
+    { cls:'shift', tag:'（2）响应①②', log:'异常响应第一步保存断点和程序状态（断点 PC、程序状态字等现场），第二步关中断（防止响应过程被新中断打断）。', count:8, ribbon:{k:8, ok:true}, note:'① 保存断点和程序状态 ② 关中断' },
+    { cls:'done',  tag:'完成',       log:'第三步跳转到异常处理程序执行。全部答案：R=FFFFFFFFH、Q=87654321H、Y=000000FFH；计数器在控制逻辑中；ALU 做加法、减法；两种异常 + 三步响应。', count:9, done:true, note:'全部答案见结论卡' },
+  ],
+
+  render: function(stage, sn, i){
+    var self = this;
+    var set = function(b, cls, txt){
+      b.className = 'aw-box' + (cls ? ' ' + cls : '');
+      if(txt != null) b.textContent = txt;
+    };
+    set(self._kMov, 'dim', 'mov R1, (R3+R4*4)');
+    set(self._kScov, 'dim', 'scov R1');
+    set(self._kIdiv, 'dim', 'idiv R1, R3');
+    set(self._rR, 'dim', 'R = ?');
+    set(self._rQ, 'dim', 'Q = ?');
+    set(self._rY, 'dim', 'Y = ?');
+    set(self._kCnt, 'dim', '计数器在?');
+    set(self._kAlu, 'dim', 'ALU 运算：?');
+    set(self._eDiv0, 'dim', '情形一：?');
+    set(self._eOvf, 'dim', '情形二：?');
+    set(self._s1, 'dim', '① ?'); set(self._s2, 'dim', '② ?'); set(self._s3, 'dim', '③ ?');
+    if(i >= 1){ set(self._kMov, 'ok'); }
+    if(i >= 2){ set(self._kScov, 'shift'); }
+    if(i >= 3){
+      set(self._kIdiv, 'ok');
+      set(self._rR, 'ok', 'R = FFFFFFFFH');
+      set(self._rQ, 'ok', 'Q = 87654321H');
+      set(self._rY, 'ok', 'Y = 000000FFH');
+    }
+    if(i >= 4){ set(self._kCnt, 'ok', '计数器在控制逻辑中'); }
+    if(i >= 5){ set(self._kAlu, 'ok', 'ALU 运算：加法、减法'); }
+    if(i >= 6){ set(self._eDiv0, 'miss', '情形一：x = 00000000H（除 0）'); }
+    if(i >= 7){ set(self._eOvf, 'miss', '情形二：d[i]=80000000H 且 x=FFFFFFFFH'); }
+    if(i >= 8){
+      set(self._s1, 'ok', '① 保存断点和程序状态');
+      set(self._s2, 'ok', '② 关中断');
+    }
+    if(i >= 9){ set(self._s3, 'ok', '③ 跳转到异常处理程序'); }
+    self._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '第（1）（2）问答案全齐',
+    html: '<p>（1）<b>R = FFFFFFFFH</b>（符号扩展的高 32 位）、<b>Q = 87654321H</b>（被除数低 32 位）、<b>Y = 000000FFH</b>（除数）；<b>控制逻辑</b>中包含计数器 Cn；ALUop 控制的运算有<b>加法、减法</b>两种。（2）两种除法异常：<b>x = 00000000H</b>（除 0，d[i] 任意合法值）；<b>d[i] = 80000000H 且 x = FFFFFFFFH</b>（商溢出）。响应三步：<b>保存断点和程序状态 → 关中断 → 跳转到异常处理程序执行</b>。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

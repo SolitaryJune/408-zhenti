@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-41 calMulMax 算法动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'calMulMax：后缀最值一遍扫描求最大乘积',
+  subtitle: '题例 A = <code>{1, 4, -9, 6}</code> · 从右向左维护后缀最小/最大值 · 目标 res = <code>{6, 24, 81, 36}</code>',
+  counterLabel: '已求出',
+  ribbonTitle: '处理下标（✓ 已算出 res）',
+  intro: '点击「▶ 播放」逐步演示逆序扫描。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._aLabel = AW.el('div', 'aw-row-label', '<b>数组 A</b>（i 从右向左移动，不回退）');
+    this._aWrap = AW.el('div', '');
+    this._rLabel = AW.el('div', 'aw-row-label', '<b>res 数组</b>（res[i] = A[i] × 右侧最值）');
+    this._rWrap = AW.el('div', '');
+    var sufLabel = AW.el('div', 'aw-row-label', '<b>后缀最值</b>（A[i..n−1] 范围，先更新再计算）');
+    var sufRow = AW.el('div', '');
+    sufRow.style.display = 'flex';
+    sufRow.style.gap = '14px';
+    var mk = function(lbl, color){
+      var box = AW.el('div', 'aw-box', '—');
+      box.style.width = '64px';
+      box.style.height = '40px';
+      if (color === 'g') { box.style.borderColor = '#16a34a'; box.style.background = '#dcfce7'; }
+      else { box.style.borderColor = '#d97706'; box.style.background = '#fef3c7'; }
+      var col = AW.el('div', '');
+      col.appendChild(AW.el('div', 'aw-ptr', lbl));
+      col.appendChild(box);
+      return { col: col, box: box };
+    };
+    this._minSuf = mk('minSuffix 最小', 'a');
+    this._maxSuf = mk('maxSuffix 最大', 'g');
+    sufRow.appendChild(this._minSuf.col);
+    sufRow.appendChild(this._maxSuf.col);
+    this._note = AW.el('div', 'aw-row-label',
+      '规则：A[i] ≥ 0 → res[i] = A[i]×maxSuffix；A[i] &lt; 0 → res[i] = A[i]×minSuffix（负负得正）。');
+    inner.appendChild(this._aLabel);
+    inner.appendChild(this._aWrap);
+    inner.appendChild(this._rLabel);
+    inner.appendChild(this._rWrap);
+    inner.appendChild(sufLabel);
+    inner.appendChild(sufRow);
+    inner.appendChild(this._note);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  // 每步的执行状态（与参考答案代码逐步对应；i=-1 表示扫描结束）
+  STATES: [
+    null,
+    null,
+    { i: 3, minS: 6, maxS: 6, res: ['?','?','?','36'], mul: 'A[3]×maxSuffix = 6×6' },
+    { i: 2, minS: -9, maxS: 6, res: ['?','?','81','36'], mul: 'A[2]×minSuffix = (-9)×(-9)' },
+    { i: 1, minS: -9, maxS: 6, res: ['?','24','81','36'], mul: 'A[1]×maxSuffix = 4×6' },
+    { i: 0, minS: -9, maxS: 6, res: ['6','24','81','36'], mul: 'A[0]×maxSuffix = 1×6' },
+    { i: -1, minS: -9, maxS: 6, res: ['6','24','81','36'], mul: '' },
+  ],
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'对每个 i 求 max{A[i]·A[j] | j≥i}。暴力枚举 O(n²)；题例 A={1,4,-9,6} → res={6,24,81,36}', count:0 },
+    { cls:'step', tag:'关键洞察', log:'A[i]≥0 时乘右侧最大值最大；A[i]<0 时负负得正、乘右侧最小值最大 → 只需维护后缀最值', count:1 },
+    { cls:'ok', tag:'i=3', log:'从右往左：先更新后缀最值（min=6, max=6），A[3]=6≥0 → res[3] = 6×6 = 36', count:2, ribbon:{k:4, ok:true} },
+    { cls:'ok', tag:'i=2', log:'A[2]=-9 更新 minSuffix=-9；负数 → res[2] = (-9)×(-9) = 81（j=i 自身相乘也被覆盖）', count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'i=1', log:'A[1]=4：后缀最值不变（min=-9, max=6）→ res[1] = 4×6 = 24', count:4, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'i=0', log:'A[0]=1≥0 → res[0] = 1×6 = 6', count:5, ribbon:{k:1, ok:true} },
+    { cls:'done', tag:'完成', log:'res = {6,24,81,36}，与题面一致。一趟逆序扫描：时间 O(n)、额外空间 O(1)', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var A = ['1','4','-9','6'];
+    var st = this.STATES[i] || null;
+    if (!st){
+      this._aWrap.innerHTML = '';
+      this._aWrap.appendChild(AW.cellRow(A, ['','','',''], null, 1));
+      this._rWrap.innerHTML = '';
+      this._rWrap.appendChild(AW.cellRow(['?','?','?','?'], ['dim','dim','dim','dim'], null, 1));
+      this._minSuf.box.textContent = '—';
+      this._maxSuf.box.textContent = '—';
+      return;
+    }
+    // A 行：已处理 ok、当前 hit、未处理 空
+    var acls = [], ptr = {};
+    for (var c = 0; c < 4; c++){
+      if (st.i < 0) acls.push('ok');
+      else if (c > st.i) acls.push('ok');
+      else if (c === st.i) acls.push('hit');
+      else acls.push('');
+    }
+    if (st.i >= 0) ptr[st.i + 1] = 'i=' + st.i;
+    this._aWrap.innerHTML = '';
+    this._aWrap.appendChild(AW.cellRow(A, acls, ptr, 1));
+    // res 行
+    var rcls = [];
+    for (var r = 0; r < 4; r++){
+      rcls.push(st.res[r] === '?' ? 'dim' : (r === st.i ? 'hit' : 'ok'));
+    }
+    this._rWrap.innerHTML = '';
+    this._rWrap.appendChild(AW.cellRow(st.res, rcls, null, 1));
+    // 后缀最值
+    this._minSuf.box.textContent = String(st.minS);
+    this._maxSuf.box.textContent = String(st.maxS);
+    if (st.i >= 0) this._note.innerHTML = 'res[' + st.i + '] = <b>' + st.mul + ' = ' + st.res[st.i] + '</b>';
+    else this._note.innerHTML = '全部求出：<b>res = {6, 24, 81, 36}</b>，与题面一致 ✓';
+  },
+
+  result: {
+    big: 'O(n) 时间 · O(1) 空间',
+    html: '从右向左扫描，维护后缀最小/最大值：<code>A[i]≥0 → A[i]×maxSuffix</code>，<code>A[i]&lt;0 → A[i]×minSuffix</code>。<br>res = <b>{6, 24, 81, 36}</b> 与题面一致。要点：<b>先更新后缀最值、再算 res[i]</b>，覆盖 j=i 自身相乘（81 正是 (−9)×(−9)）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-46 动态优先数防饥饿演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+/* priority = nice + k1×cpuTime − k2×waitTime（取 k1 = k2 = 1，题目只要求 k1,k2 > 0）
+   P甲 nice=4（低优先级），P乙 nice=1（高优先级）；每拍：运行者 cpuTime+1、waitTime 清 0；等待者 cpuTime 清 0、waitTime+1 */
+
+var K1 = 1, K2 = 1;
+var P = [
+  { name:'P甲（nice=4）', nice:4, cpu:0, wait:0 },
+  { name:'P乙（nice=1）', nice:1, cpu:0, wait:0 }
+];
+function pri(p){ return p.nice + K1 * p.cpu - K2 * p.wait; }
+
+function tbl(runIdx){
+  var st = function(border){ return 'border:1px solid #cbd5e1;padding:6px 12px;' + border; };
+  var h = '<table style="border-collapse:collapse;margin:4px auto 8px;font-size:14px">';
+  h += '<tr><th style="' + st('background:#f1f5f9') + '">进程</th><th style="' + st('background:#f1f5f9') + '">nice</th><th style="' + st('background:#f1f5f9') + '">cpuTime</th><th style="' + st('background:#f1f5f9') + '">waitTime</th><th style="' + st('background:#f1f5f9') + '">priority</th><th style="' + st('background:#f1f5f9') + '">本拍状态</th></tr>';
+  P.forEach(function(p, i){
+    var bg = (i === runIdx) ? '#dcfce7' : '#ffffff';
+    h += '<tr>' +
+      '<td style="' + st('') + 'background:' + bg + ';' + (i === runIdx ? 'font-weight:700;' : '') + '">' + p.name + '</td>' +
+      '<td style="' + st('') + 'background:' + bg + ';text-align:center">' + p.nice + '</td>' +
+      '<td style="' + st('') + 'background:' + bg + ';text-align:center">' + p.cpu + '</td>' +
+      '<td style="' + st('') + 'background:' + bg + ';text-align:center">' + p.wait + '</td>' +
+      '<td style="' + st('') + 'background:' + bg + ';text-align:center;font-weight:700;color:' + (pri(P[0]) <= pri(P[1]) && i === 0 ? '#15803d' : '#334155') + '">' + pri(p) + '</td>' +
+      '<td style="' + st('') + 'background:' + bg + ';text-align:center">' + (i === runIdx ? '▶ 运行' : '⏳ 等待') + '</td></tr>';
+  });
+  h += '</table>';
+  h += '<div class="aw-row-label">公式：priority = nice + k1×cpuTime − k2×waitTime（k1 = k2 = 1）</div>';
+  return h;
+}
+
+function step(runIdx, cls, tag, log, count, done){
+  var s = { cls:cls, tag:tag, log:log, count:count, html:tbl(runIdx) };
+  if(done) s.done = true;
+  return s;
+}
+
+var snaps = [
+  step(-1, 'key', '初始', '若只看静态优先数 priority = nice：4 vs 1，P乙 永远先跑；P甲（nice=4）一直排队——这就是饥饿的隐患', 0),
+  step(-1, 'shift', '公式登场', '引入动态公式 priority = nice + k1×cpuTime − k2×waitTime：跑得越久数值越大（降级），等得越久数值越小（升级）', 0),
+  step(1, 'step', '第 1 拍', 'P乙（1 < 4）运行：P乙 cpuTime=1 → priority 2；P甲 waitTime=1 → priority 3，差距在缩小', 1, false),
+  step(1, 'step', '第 2 拍', 'P乙（2 < 3）继续运行：P乙 cpuTime=2 → priority 3；P甲 waitTime=2 → priority 2 —— 反超！', 2, false),
+  step(0, 'ok', '第 3 拍', 'P甲（2 < 3）获得 CPU：只等了 2 拍就被调度，静态 nice=4 也没被饿死 ✓', 3, false),
+  step(0, 'done', '完成', '结论：waitTime 给等待者持续「减分」提级，久等进程必然成为最小优先数，饥饿不会发生', 3, true)
+];
+
+AW.init({
+  title: '动态优先数：waitTime 如何消除饥饿',
+  subtitle: 'priority = nice + k1×cpuTime − k2×waitTime · P甲 nice=4、P乙 nice=1 · 每拍选 priority 最小者运行',
+  counterLabel: '已模拟拍数',
+  ribbonTitle: '调度拍（✓ 谁获得 CPU）',
+  intro: '点击「▶ 播放」，看 P甲 从永远排队到 2 拍就上 CPU。',
+  snaps: snaps,
+  result: {
+    big: 'waitTime 防饥饿',
+    html: '<b>priority = nice + k1×cpuTime − k2×waitTime</b>（k1 &gt; 0，k2 &gt; 0）。cpuTime 惩罚久占 CPU 的进程（数值变大、优先级降低）；waitTime 补偿久等 CPU 的进程（数值变小、优先级升高）——长时间等待的进程迟早成为最小优先数而获得调度，<b>饥饿被避免</b>。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

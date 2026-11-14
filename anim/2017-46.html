@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-46 · 三线程读写 y、z 的信号量设计</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function codeBlock(lines, marks){
+  return '<pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-family:Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7;color:#334155;margin:6px 0;overflow-x:auto">' + lines + '</pre>';
+}
+
+function accessTable(){
+  var th = 'style="border:1px solid #e2e8f0;padding:4px 8px;background:#f8fafc;font-weight:700"';
+  var td = 'style="border:1px solid #e2e8f0;padding:4px 8px"';
+  return '<table style="border-collapse:collapse;font-size:12.5px;margin:6px 0">' +
+    '<tr><th ' + th + '>变量</th><th ' + th + '>thread1</th><th ' + th + '>thread2</th><th ' + th + '>thread3</th><th ' + th + '>结论</th></tr>' +
+    '<tr><td ' + td + '>x</td><td ' + td + '>读</td><td ' + td + '>—</td><td ' + td + '>—</td><td ' + td + '>无写者，不用保护</td></tr>' +
+    '<tr><td ' + td + '>y</td><td ' + td + '>读</td><td ' + td + '>读</td><td ' + td + '><b style="color:#b91c1c">写</b></td><td ' + td + '>读写互斥</td></tr>' +
+    '<tr><td ' + td + '>z</td><td ' + td + '>—</td><td ' + td + '>读</td><td ' + td + '><b style="color:#b91c1c">写</b></td><td ' + td + '>读写互斥</td></tr>' +
+  '</table><div style="font-size:11.5px;color:#64748b">w 是各线程的局部变量；add() 只读参数不修改全局量</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：谁是共享变量',
+    cls: 'key',
+    log: '共享全局 x、y、z；w 是局部变量；由"写者"定互斥对象',
+    body: '<p>三个线程并发执行，<b>全局变量 x、y、z</b>（cnum 复数结构）是共享数据；各线程的 <code>w</code> 是<b>局部变量</b>，不用保护。互斥的对象由"有没有写者"决定。</p>' },
+  { title: '访问矩阵：找读者与写者',
+    cls: 'step',
+    log: 'y、z 有写者（thread3）需互斥；x 只有读者不用保护',
+    body: accessTable() },
+  { title: '设计三个互斥信号量',
+    cls: 'step',
+    log: 'mutex_y1、mutex_y2、mutex_z，初值均为 1',
+    body: '<p>设三个<b>初值均为 1</b> 的互斥信号量：<code>mutex_y1</code>——thread1 与 thread3 对 y 的互斥；<code>mutex_y2</code>——thread2 与 thread3 对 y 的互斥；<code>mutex_z</code>——thread2 与 thread3 对 z 的互斥。</p>' },
+  { title: '并发设计的关键：两个 y 锁',
+    cls: 'key',
+    log: 'thread1/thread2 都是纯读者，各用一把 y 锁可同时读',
+    body: '<p>thread1 与 thread2 对 y 都<b>只是读</b>：分别用 mutex_y1、mutex_y2，二者<b>可同时读 y</b>，不互相阻塞——这就是"最大限度并发"。thread3 <b>写 y</b> 时须握住 mutex_y1 与 mutex_y2；thread2 读 z 与 thread3 写 z 由 mutex_z 互斥。</p>' },
+  { title: 'thread1 的代码',
+    cls: 'step',
+    log: 'thread1：只读 y → 只需 mutex_y1',
+    body: codeBlock('// thread1\ncnum w;\nwait(mutex_y1);\nw = add(x, y);\nsignal(mutex_y1);') +
+         '<p style="font-size:12.5px;color:#64748b">add(x,y) 读 x、读 y，结果存局部 w；x 无写者不用加锁。</p>' },
+  { title: 'thread2 的代码',
+    cls: 'step',
+    log: 'thread2：读 y（mutex_y2）与读 z（mutex_z），先 P 后用、用完即 V',
+    body: codeBlock('// thread2\ncnum w;\nwait(mutex_y2);\nwait(mutex_z);\nw = add(y, z);\nsignal(mutex_z);\nsignal(mutex_y2);') +
+         '<p style="font-size:12.5px;color:#64748b">先申请 y 的锁再申请 z 的锁；用完先释放 z 再释放 y。</p>' },
+  { title: 'thread3 的代码',
+    cls: 'step',
+    log: 'thread3：先写 z（mutex_z），后写 y（mutex_y1 + mutex_y2），两段分开加锁',
+    body: codeBlock('// thread3\ncnum w;\nw.a = 1;\nw.b = 1;\nwait(mutex_z);\nz = add(z, w);\nsignal(mutex_z);\nwait(mutex_y1);\nwait(mutex_y2);\ny = add(y, w);\nsignal(mutex_y1);\nsignal(mutex_y2);') +
+         '<p style="font-size:12.5px;color:#64748b">w.a=1、w.b=1 只碰局部变量，放在 P 操作之前；z 段与 y 段分开加锁。</p>' },
+  { title: '正确性检查：互斥且无死锁',
+    cls: 'good',
+    log: '互斥满足；thread3 先释放 z 再申请 y，不形成循环等待',
+    body: '<p><b>互斥</b>：任一时刻 y 上至多一个线程在写、读与写互斥，z 同理。<b>无死锁</b>：thread2 持 mutex_y2 再申请 mutex_z，而 thread3 <b>先 signal(mutex_z) 再申请 y 的两把锁</b>——从不"抱着 z 等 y"，不构成循环等待。<b>并发最大</b>：两个纯读者可同时读 y，锁的粒度最小。</p>' },
+  { title: '结论：答案要点',
+    cls: 'good',
+    log: '三个初值为 1 的互斥信号量 + 各线程的 P/V 位置',
+    body: '<p>答案：需要 <b>mutex_y1、mutex_y2、mutex_z</b> 三个初值为 1 的互斥信号量，按上表代码位置插入 P、V 操作。要点：① x 不加锁；② thread1 与 thread2 用不同的 y 锁以并发；③ thread3 写 y 要同时握 mutex_y1、mutex_y2；④ z 段与 y 段分开加锁避免死锁。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'bad' ? 'miss' : s.cls === 'good' ? 'ok' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last
+  };
+});
+
+AW.init({
+  title: '2017-46 · 三线程并发：互斥访问 y、z 的信号量设计',
+  subtitle: 'thread1: add(x,y) ｜ thread2: add(y,z) ｜ thread3: z=add(z,w) 且 y=add(y,w) · 最大限度并发',
+  intro: '点击「▶ 播放」逐步展开：找共享变量 → 配信号量 → 写代码 → 查死锁。',
+  snaps: snaps,
+  result: {
+    big: '3 个初值为 1 的互斥信号量',
+    html: '<code>mutex_y1</code>（thread1↔thread3 的 y）、<code>mutex_y2</code>（thread2↔thread3 的 y）、<code>mutex_z</code>（thread2↔thread3 的 z）。记忆锚点：<b>写者出现才需要互斥；纯读者之间不互相阻塞；先释放 z 再申请 y 避免循环等待</b>。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

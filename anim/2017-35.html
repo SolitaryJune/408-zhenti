@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-35 · IEEE 802.11 帧的三个地址</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法 / 过程演示类题目动画（外壳与控件由 assets/anim-engine.js 提供） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var slotBoxes = [];
+var infoLine;
+
+AW.init({
+  title: '2017-35 · IEEE 802.11 数据帧 F 的三个地址字段',
+  subtitle: 'H 经 AP、路由器 R 访问 Internet · 帧类型：802.11 数据帧（To DS = 1）',
+  counterLabel: '已确定地址',
+  ribbonTitle: '三个地址（✓ 已确定）',
+  intro: '点击「▶ 播放」逐步确定地址 1、地址 2、地址 3。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    /* 拓扑条：H —无线— AP —有线— R — Internet */
+    var topo = AW.el('div', 'aw-cells');
+    function node(name, mac, style){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b = AW.el('div', 'aw-box', name);
+      if (style) b.style.cssText = style;
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', mac || ''));
+      return col;
+    }
+    function link(txt, w){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b = AW.el('div', '', txt);
+      b.style.cssText = 'width:' + w + 'px;height:44px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;border-top:2px dashed #94a3b8;';
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', ''));
+      return col;
+    }
+    topo.appendChild(node('H', 'MAC 9a', 'width:64px;background:#dcfce7;border-color:#16a34a;'));
+    topo.appendChild(link('无线', 56));
+    topo.appendChild(node('AP', 'MAC 9b', 'width:64px;'));
+    topo.appendChild(link('有线', 70));
+    topo.appendChild(node('R', 'MAC 9c', 'width:64px;'));
+    topo.appendChild(link('…', 56));
+    topo.appendChild(node('云', 'Internet', 'width:64px;'));
+    inner.appendChild(topo);
+
+    /* 帧地址槽 */
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>帧 F 的三个地址字段</b>（802.11 数据帧，H → AP 方向）'));
+    var slots = AW.el('div', 'aw-cells');
+    var labels = ['地址1（接收方）', '地址2（发送方）', '地址3（目的/下一跳）'];
+    for (var i = 0; i < 3; i++){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '140px';
+      col.appendChild(AW.el('div', 'aw-ptr', labels[i]));
+      var b = AW.el('div', 'aw-box dim', '—');
+      b.style.cssText = 'width:132px;font-size:14px;';
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', ''));
+      slots.appendChild(col);
+      slotBoxes.push(b);
+    }
+    inner.appendChild(slots);
+
+    infoLine = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(infoLine);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '审题',
+      log: '帧 F 从 H 出发走无线段 H→AP（仍是 802.11 帧）；分组的目的方向是路由器 R，再往 Internet。三个地址逐个确定',
+      count: 0,
+      slots: [{t:'—',c:'dim'},{t:'—',c:'dim'},{t:'—',c:'dim'}],
+      info: '802.11 地址语义：地址1 = 该帧的接收方，地址2 = 该帧的发送方，地址3 = 目的方向的下一跳' },
+    { cls: 'ok', tag: '地址1',
+      log: '地址1 = 该帧的接收方：无线段上直接收帧的是 AP → 00-12-34-56-78-9b',
+      count: 1, ribbon: {k:1, ok:true},
+      slots: [{t:'9b',c:'ok'},{t:'—',c:'dim'},{t:'—',c:'dim'}],
+      info: '地址1 不是 H！H 是发帧的一方，对应地址2' },
+    { cls: 'ok', tag: '地址2',
+      log: '地址2 = 该帧的发送方：无线侧的发送者就是 H → 00-12-34-56-78-9a',
+      count: 2, ribbon: {k:2, ok:true},
+      slots: [{t:'9b',c:'ok'},{t:'9a',c:'ok'},{t:'—',c:'dim'}],
+      info: 'AP 收到后会转成有线以太网帧：源 9a → 目的 9c，交给路由器 R' },
+    { cls: 'ok', tag: '地址3',
+      log: '地址3 = 目的方向的下一跳：分组要交给路由器 R 转发去 Internet → 00-12-34-56-78-9c',
+      count: 3, ribbon: {k:3, ok:true},
+      slots: [{t:'9b',c:'ok'},{t:'9a',c:'ok'},{t:'9c',c:'ok'}],
+      info: '地址3 不写 AP（AP 是地址1），也不写 H（H 是地址2）' },
+    { cls: 'step', tag: '核对语义',
+      log: '核对：站点发往 AP 的帧（To DS=1、From DS=0）：地址1=AP、地址2=站点 H、地址3=去往最终目的的下一跳 R，三者互不重复',
+      count: 3,
+      slots: [{t:'9b',c:'ok'},{t:'9a',c:'ok'},{t:'9c',c:'ok'}],
+      info: '三个地址依次 = 9b、9a、9c' },
+    { cls: 'step', tag: '对照选项',
+      log: 'A 把地址1写成 H；C 把地址2写成 R、地址3写成 H；D 三者整体错位——只有 B 是（9b, 9a, 9c）',
+      count: 3,
+      slots: [{t:'9b',c:'ok'},{t:'9a',c:'ok'},{t:'9c',c:'ok'}],
+      info: '干扰项都来自"照搬以太网目的在前"或"源/目的位置记反"' },
+    { cls: 'done', tag: '结论',
+      log: '帧 F：地址1 = AP（9b），地址2 = H（9a），地址3 = R（9c）→ 选 B',
+      count: 3, done: true,
+      slots: [{t:'9b',c:'ok'},{t:'9a',c:'ok'},{t:'9c',c:'ok'}],
+      info: '' },
+  ],
+
+  render: function(stage, sn){
+    for (var i = 0; i < 3; i++){
+      slotBoxes[i].textContent = sn.slots[i].t;
+      slotBoxes[i].className = 'aw-box ' + sn.slots[i].c;
+    }
+    infoLine.textContent = sn.info || '';
+  },
+
+  result: {
+    big: '答案 B',
+    html: '地址1 = <b>AP（9b）</b>（无线段接收方）、地址2 = <b>H（9a）</b>（发送方）、地址3 = <b>R（9c）</b>（去往 Internet 的下一跳）。记忆锚点：站点→AP 的帧：地址1=AP、地址2=自己、地址3=真正想去的下一跳。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

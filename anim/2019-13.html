@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-13 unsigned short 65535 → short 的位模式解释</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+var ONE = '1111111111111111'.split('');
+var ZER = '0000000000000000'.split('');
+var QUE = '????????????????'.split('');
+
+function arr(n, c){ var a = []; for (var i = 0; i < n; i++) a.push(c); return a; }
+function ones(a, b){ var x = arr(16, b); x[0] = a; return x; }
+
+function drawRow(container, chars, classes, ptrs){
+  container.innerHTML = '';
+  for (var i = 0; i < chars.length; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ptrs && ptrs[i] ? ptrs[i] : ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), chars[i]));
+    col.appendChild(AW.el('div', 'aw-idx', String(15 - i)));
+    container.appendChild(col);
+  }
+}
+
+AW.init({
+  title: '2019·13 unsigned short 65535 赋给 short：si = ?',
+  subtitle: '<code>unsigned short usi = 65535; short si = usi;</code> · 位模式不变，解释方式变',
+  counterLabel: '步',
+  ribbonTitle: '关键步骤（✓ 已完成）',
+  intro: '点击「▶ 播放」，逐步观察这 16 个二进制位经历了什么。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>si 的 16 个二进制位</b>（最左为第 15 位 · 符号位）'));
+    S.row1 = AW.el('div', 'aw-cells');
+    inner.appendChild(S.row1);
+    S.cap1 = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.cap1);
+    S.vwrap = AW.el('div', '');
+    S.vwrap.style.display = 'none';
+    S.vwrap.appendChild(AW.el('div', 'aw-row-label', '<b>验证：按位取反再加 1</b>（补码求真值）'));
+    S.row2 = AW.el('div', 'aw-cells');
+    S.vwrap.appendChild(S.row2);
+    S.cap2 = AW.el('div', 'aw-row-label', '');
+    S.vwrap.appendChild(S.cap2);
+    inner.appendChild(S.vwrap);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    if (i === 0){
+      drawRow(S.row1, QUE, arr(16, 'dim'), null);
+      S.cap1.innerHTML = 'usi = 65535：16 位无符号整数（unsigned short）';
+      S.vwrap.style.display = 'none';
+    } else if (i <= 2){
+      drawRow(S.row1, ONE, arr(16, 'ok'), null);
+      S.cap1.innerHTML = (i === 1)
+        ? '65535 = 2<sup>16</sup> − 1 → 16 位全为 1，即 0xFFFF'
+        : '执行 short si = usi：16 个位<b>原样拷贝</b>，位模式仍是 0xFFFF（赋值不改变位）';
+      S.vwrap.style.display = 'none';
+    } else if (i <= 4){
+      drawRow(S.row1, ONE, ones('hit', 'ok'), { 0: '符号位=1' });
+      S.cap1.innerHTML = (i === 3)
+        ? '改按 short（补码）解释：最高位是符号位，等于 1 → 负数'
+        : '按权求值：−2<sup>15</sup> + (2<sup>14</sup> + … + 2<sup>0</sup>) = −32768 + 32767 = <b>−1</b>';
+      S.vwrap.style.display = 'none';
+    } else if (i === 5){
+      drawRow(S.row1, ONE, ones('hit', 'ok'), { 0: '符号位=1' });
+      S.cap1.innerHTML = '交叉验证：对 16 个 1 按位取反再加 1';
+      S.vwrap.style.display = '';
+      drawRow(S.row2, ZER, arr(16, ''), null);
+      S.cap2.innerHTML = '111…1 → 取反 000…0 → 加 1 得 1 → 真值 = <b>−1</b>（与按权展开一致）';
+    } else {
+      drawRow(S.row1, ONE, arr(16, 'hit'), { 0: '符号位=1' });
+      S.cap1.innerHTML = '结论：si = <b>−1</b>，答案选 A';
+      S.vwrap.style.display = '';
+      drawRow(S.row2, ZER, arr(16, 'dim'), null);
+      S.cap2.innerHTML = '记忆锚点：全 1 的 n 位补码恒为 −1';
+    }
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', log: 'unsigned short usi = 65535：16 位无符号数', count: 0 },
+    { cls: 'step', tag: '写出二进制', log: '65535 = 2^16 − 1：16 个位全是 1（0xFFFF）', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '赋值拷贝', log: 'short si = usi：位模式原样拷贝，16 个 1 不变', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'shift', tag: '换解释', log: '按 short（补码）解释：最高位为 1 → 负数', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'step', tag: '按权求值', log: '−2^15 + (2^14 + … + 2^0) = −32768 + 32767 = −1', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'ok', tag: '交叉验证', log: '取反加一：000…0 + 1 = 1 → 真值 −1，两种方法一致', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'done', tag: '完成', log: 'si = −1，答案选 A', count: 6, done: true },
+  ],
+
+  result: {
+    big: 'si = −1（答案 A）',
+    html: '<b>赋值只搬位、不换算</b>：<code>short si = usi</code> 后 16 位仍全为 1，按补码解释即为 <b>−1</b>。干扰项 B/C/D 都是在"重新计算数值"上出了错。记忆锚点：<b>全 1 的 n 位补码 = −1</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

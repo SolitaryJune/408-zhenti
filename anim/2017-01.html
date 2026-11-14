@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-01 动画：循环执行次数与时间复杂度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-01 循环执行次数推演（算法/过程类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var NCOL = 8;
+var KVAL = [1,2,3,4,5,6,7,8];
+var IVAL = [1,2,3,4,5,6,7,8];
+var SVAL = [1,3,6,10,15,21,28,36];
+var kRow, iRow, sRow;
+
+function setRow(row, cls){
+  for (var j = 0; j < row.children.length; j++){
+    var box = row.children[j].children[1];
+    box.className = 'aw-box' + (cls && cls[j] ? ' ' + cls[j] : '');
+  }
+}
+function colCls(u, cur){
+  var a = [];
+  for (var j = 0; j < NCOL; j++){
+    if (j < u) a.push(j === cur ? 'hit' : 'ok');
+    else a.push('');
+  }
+  return a;
+}
+
+AW.init({
+  title: '2017-01　时间复杂度：循环到底执行多少轮？',
+  subtitle: 'while (sum &lt; n) sum += ++i;　—— sum 逐轮累加三角形数 <code>1+2+…+k = k(k+1)/2</code>',
+  counterLabel: '执行轮数',
+  ribbonTitle: '轮次（✓ 已执行一轮）',
+  intro: '点击「▶ 播放」逐轮执行循环，看 sum 什么时候追上 n。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>轮数 k</b>'));
+    kRow = AW.cellRow(KVAL, [], null);
+    inner.appendChild(kRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>i</b>（++i：先自增，再累加进 sum）'));
+    iRow = AW.cellRow(IVAL, [], null);
+    inner.appendChild(iRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>sum</b>（第 k 轮结束时 = k(k+1)/2）'));
+    sRow = AW.cellRow(SVAL, [], null);
+    inner.appendChild(sRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'进入循环前：i = 0，sum = 0；判定 sum &lt; n 成立，开始第 1 轮', count:0, u:0, cur:-1 },
+    { cls:'ok', tag:'第 1 轮', log:'sum += ++i：i 变 1，sum = 0+1 = 1；sum &lt; n 仍成立，继续', count:1, ribbon:{k:1,ok:true}, u:1, cur:0 },
+    { cls:'ok', tag:'第 2 轮', log:'i 变 2，sum = 1+2 = 3', count:2, ribbon:{k:2,ok:true}, u:2, cur:1 },
+    { cls:'ok', tag:'第 3 轮', log:'i 变 3，sum = 3+3 = 6', count:3, ribbon:{k:3,ok:true}, u:3, cur:2 },
+    { cls:'ok', tag:'第 4 轮', log:'i 变 4，sum = 6+4 = 10（三角形数 1,3,6,10,15,…）', count:4, ribbon:{k:4,ok:true}, u:4, cur:3 },
+    { cls:'ok', tag:'第 5 轮', log:'i 变 5，sum = 10+5 = 15', count:5, ribbon:{k:5,ok:true}, u:5, cur:4 },
+    { cls:'ok', tag:'第 6 轮', log:'i 变 6，sum = 15+6 = 21', count:6, ribbon:{k:6,ok:true}, u:6, cur:5 },
+    { cls:'ok', tag:'第 7 轮', log:'i 变 7，sum = 21+7 = 28', count:7, ribbon:{k:7,ok:true}, u:7, cur:6 },
+    { cls:'ok', tag:'第 8 轮', log:'i 变 8，sum = 28+8 = 36；第 k 轮结束时恒有 sum = k(k+1)/2', count:8, ribbon:{k:8,ok:true}, u:8, cur:7 },
+    { cls:'shift', tag:'解不等式', log:'循环恰好执行 K 轮 ⇔ (K−1)K/2 &lt; n 且 K(K+1)/2 ≥ n，解得 K ≈ √(2n)，与 √n 同阶', count:8, u:8, cur:-1 },
+    { cls:'done', tag:'完成', log:'执行次数 K ≈ √(2n)（n=100 时 K=14；n=1000000 时 K=1414）→ 时间复杂度 O(n^1/2)，选 B', count:8, u:8, cur:-1, done:true },
+  ],
+
+  render: function(stage, sn){
+    var cls = colCls(sn.u || 0, (sn.cur == null ? -1 : sn.cur));
+    setRow(kRow, cls); setRow(iRow, cls); setRow(sRow, cls);
+  },
+
+  result: {
+    big: 'O(n<sup>1/2</sup>)　选 B',
+    html: 'sum 是三角形数：<code>sum = 1+2+…+k = k(k+1)/2</code>。循环恰好执行 K 轮 ⇔ <code>(K−1)K/2 &lt; n</code> 且 <code>K(K+1)/2 ≥ n</code>，解得 <code>K ≈ √(2n)</code>——执行次数与 <code>√n</code> 同阶，时间复杂度 <b>O(n<sup>1/2</sup>)</b>。数值验证：n=100 时执行 14 轮（105 首次 ≥ 100），n=1000000 时执行 1414 轮。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

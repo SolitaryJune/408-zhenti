@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-19 设备与设备控制器之间的接口标准</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个连接位置', cls: 'key',
+    body: '<p>题目问「<b>设备 ↔ 设备控制器（I/O 接口）</b>」之间的接口标准。体系分两层：主机侧部件之间用<b>系统总线</b>（PCI/AGP/PCI-Express）；设备控制器与外部设备之间用<b>外设接口标准</b>。</p>' },
+  { title: '选项 A：PCI', cls: 'bad',
+    body: '<p>PCI 是<b>系统总线</b>/板级互连标准：连主板上 CPU、主存、设备控制器（插卡）等部件，位于「设备控制器 ↔ 主机」一侧 → 不符合题意。</p>' },
+  { title: '选项 B：USB', cls: 'good',
+    body: '<p>USB（通用串行总线）是<b>串行外设接口标准</b>：一头插外部设备（键盘、U 盘等），一头插主机的设备控制器/接口 → <b>正是题干说的位置，对</b>。</p>' },
+  { title: '选项 C：AGP', cls: 'bad',
+    body: '<p>AGP 是早期<b>显卡专用系统总线</b>标准：把显卡（含其设备控制器）接到主板，仍属系统总线层 → 不符合题意。</p>' },
+  { title: '选项 D：PCI-Express', cls: 'bad',
+    body: '<p>PCI-Express 是高速串行<b>系统总线（板级互连）</b>标准，用于主板扩展卡互连 → 不符合题意。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：PCI / AGP / PCI-Express 都是<b>板级系统总线</b>；USB / IEEE 1394 才是<b>设备 ↔ 设备控制器</b>的外设接口标准。</p>' },
+];
+
+var RIBBON_AT = { 1: { k: 1, ok: false }, 2: { k: 2, ok: true }, 3: { k: 3, ok: false }, 4: { k: 4, ok: false } };
+
+var SCLS = { '': 'step', key: 'shift', good: 'ok', bad: 'miss' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : SCLS[s.cls || ''],
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBON_AT[i]) {
+    sn.ribbon = RIBBON_AT[i];
+    sn.cls = sn.ribbon.ok ? 'ok' : 'miss';
+    sn.tag = '选项 ' + ['A', 'B', 'C', 'D'][sn.ribbon.k - 1] + (sn.ribbon.ok ? ' ✓' : ' ✗');
+  }
+  return sn;
+});
+
+AW.init({
+  title: '2013 真题 · 外设接口标准辨析',
+  subtitle: '题眼：<code>设备 ↔ 设备控制器（I/O 接口）</code> · 逐项判断四个标准所处的连接层',
+  counterLabel: '步骤',
+  ribbonTitle: '选项核对（✓ 正确 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」逐步展开推理链：先分清两层互连，再逐项判断。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：USB',
+    html: '记忆锚点：PCI、AGP、PCI-Express 是<b>系统总线/板级</b>互连标准；<b>USB</b> 是设备与设备控制器之间的<b>串行外设接口</b>标准。<br>审题先圈「设备 ↔ 设备控制器」，再判断每个标准在哪一层。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-11 自底向上建大根堆</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var HEAPROW, CALC;
+
+// 1-indexed 数组视图：7 个格子
+function paintHeap(arr, cls, ptr, calcHtml){
+  HEAPROW.innerHTML = '';
+  for(var i = 0; i < 7; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptr && ptr[i]) || ''));
+    col.appendChild(AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), String(arr[i])));
+    col.appendChild(AW.el('div', 'aw-idx', String(i + 1)));
+    HEAPROW.appendChild(col);
+  }
+  CALC.innerHTML = calcHtml || '&nbsp;';
+}
+
+AW.init({
+  title: '2018·数据结构（十一） 自底向上建大根堆',
+  subtitle: '初始序列 <code>6,1,5,9,8,4,7</code> · n=7 · 从最后一个非叶结点 ⌊7/2⌋=3 开始下沉',
+  counterLabel: '已下沉步数',
+  intro: '点击「▶ 播放」，逐个结点执行下沉，对照选项 A。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    HEAPROW = AW.el('div', 'aw-cells');
+    CALC = AW.el('div', 'aw-row-label', '&nbsp;');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>堆数组</b>（下标 = 结点编号；结点 i 的孩子是 2i、2i+1；上方为当前处理结点）'));
+    wrap.appendChild(HEAPROW);
+    wrap.appendChild(CALC);
+    stage.appendChild(wrap);
+    paintHeap([6,1,5,9,8,4,7], [], {}, '初始：结点 3 的孩子是 6、7（编号），从结点 3 开始');
+  },
+
+  render: function(stage, sn){
+    paintHeap(sn.arr, sn.cls, sn.ptr, sn.calc);
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'初始序列 6,1,5,9,8,4,7；最后一个非叶结点 ⌊7/2⌋ = 3', count:0,
+      arr:[6,1,5,9,8,4,7], cls:[], ptr:{3:'结点3'},
+      calc:'依次对结点 3、2、1 下沉；结点 3 = 5，孩子（编号 6、7）值 4、7' },
+    { cls:'shift', tag:'结点 3 下沉', log:'结点 3（值 5）：最大孩子 7 > 5 → 交换 → 6,1,7,9,8,4,5', count:1,
+      arr:[6,1,7,9,8,4,5], cls:['','','ok','','','','dim'], ptr:{3:'结点3'},
+      calc:'结点 3：孩子 4、7，取较大者 7 交换；位置 7 变成 5' },
+    { cls:'shift', tag:'结点 2 下沉', log:'结点 2（值 1）：最大孩子 9 > 1 → 交换 → 6,9,7,1,8,4,5', count:2,
+      arr:[6,9,7,1,8,4,5], cls:['','ok','','dim','','',''], ptr:{2:'结点2'},
+      calc:'结点 2：孩子 9、8，取较大者 9 交换' },
+    { cls:'shift', tag:'结点 1 下沉', log:'结点 1（值 6）：最大孩子 9 > 6 → 交换 → 9,6,7,1,8,4,5', count:3,
+      arr:[9,6,7,1,8,4,5], cls:['ok','dim','','','','',''], ptr:{1:'结点1'},
+      calc:'结点 1：孩子 9、7，取较大者 9 交换；6 落到结点 2，还要继续向下检查！' },
+    { cls:'shift', tag:'6 继续下沉', log:'6 落到结点 2 后：孩子 1、8，8 > 6 → 再交换 → 9,8,7,1,6,4,5', count:4,
+      arr:[9,8,7,1,6,4,5], cls:['','ok','','','dim','',''], ptr:{2:'结点2'},
+      calc:'下沉未停：交换后必须继续向下比较（这步漏掉就会停在 9,6,7,...）' },
+    { cls:'ok', tag:'检查收尾', log:'结点 3（值 7）：孩子 4、5 无需交换；其余结点均满足大根堆 → 堆建成', count:5,
+      arr:[9,8,7,1,6,4,5], cls:['ok','ok','ok','ok','ok','ok','ok'], ptr:{3:'结点3'},
+      calc:'结点 2 = 8（孩子 1、6）、结点 3 = 7（孩子 4、5）均无需交换' },
+    { cls:'done', tag:'完成', log:'变化过程与选项 A 完全一致 → 答案 A', count:5, done:true,
+      arr:[9,8,7,1,6,4,5], cls:['hit','hit','hit','hit','hit','hit','hit'], ptr:{},
+      calc:'6,1,7,9,8,4,5 → 6,9,7,1,8,4,5 → 9,6,7,1,8,4,5 → 9,8,7,1,6,4,5（= 选项 A）' },
+  ],
+
+  result: {
+    big: '答案 A',
+    html: '从结点 3 开始倒序下沉：5 与 7 换 → 1 与 9 换 → 6 与 9 换、<b>6 再与 8 换</b> → 结点 3 无需换。最终堆 <b>9,8,7,1,6,4,5</b>，全过程与选项 <b>A</b> 一致。记忆锚点：<b>从 ⌊n/2⌋ 到 1 依次下沉，交换后必须连续下沉到底</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

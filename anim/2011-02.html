@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-02 以 d 开头的出栈序列个数 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 画一个栈的竖视图（自底向上数组）
+function stackViz(arr, hl){
+  var h = '<div style="display:inline-block;text-align:center;margin-top:4px;vertical-align:top">';
+  h += '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px">栈顶 ↑</div>';
+  h += '<div style="display:inline-flex;flex-direction:column;gap:4px;border:2px solid #cbd5e1;border-radius:10px;padding:6px">';
+  for (var i = arr.length - 1; i >= 0; i--){
+    var cls = 'aw-box' + (i === hl ? ' hit' : (i > (hl == null ? -1 : hl) ? ' dim' : ''));
+    h += '<div class="' + cls + '" style="width:40px;height:34px;font-size:15px">' + arr[i] + '</div>';
+  }
+  return h + '</div><div style="font-size:12px;color:#94a3b8;margin-top:4px">栈底</div></div>';
+}
+
+// 四个空档的序列表
+function seqTable(){
+  var rows = [
+    ['c 出之前', 'e, c, b, a'],
+    ['c 与 b 之间', 'c, e, b, a'],
+    ['b 与 a 之间', 'c, b, e, a'],
+    ['a 出之后', 'c, b, a, e'],
+  ];
+  var h = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">';
+  var chips = ['<b style="color:#2563eb">e</b>, c, b, a', 'c, <b style="color:#2563eb">e</b>, b, a',
+               'c, b, <b style="color:#2563eb">e</b>, a', 'c, b, a, <b style="color:#2563eb">e</b>'];
+  rows.forEach(function(r, i){
+    h += '<div style="border:1.5px solid #cbd5e1;border-radius:10px;padding:6px 12px;font-size:13.5px;background:#f8fafc">' +
+         '空档 ' + (i + 1) + '（' + r[0] + '）：<b>' + chips[i] + '</b></div>';
+  });
+  return h + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：d 第一个出栈意味着什么', cls: 'key',
+    body: '<p>进栈次序固定 <code>a b c d e</code>。d 要第一个出栈，出 d 之前 a、b、c 必须已依次压栈垫在下面，而 <b>e 还没进栈</b>（否则 e 会压在 d 上面先出）。于是先「进 a 进 b 进 c 进 d，退 d」。</p>' },
+  { title: 'd 出栈后的固定局面', cls: '',
+    body: '<p>' + stackViz(['a','b','c'], 2) +
+          '<span style="display:inline-block;vertical-align:top;margin-left:14px;font-size:14px;line-height:2">栈内自底向上 <b>a、b、c</b>（c 在顶）；<b>e 尚未进栈</b>。<br>此后每步只有两种动作：<b>退栈</b> 或 <b>进 e 再退 e</b>。</span></p>' },
+  { title: '退栈顺序被栈顶定死', cls: '',
+    body: '<p>栈只能从栈顶出：c 出栈后才是 b，b 出栈后才是 a，退栈顺序固定为 <b>c → b → a</b>，没有任何选择余地。</p>' },
+  { title: 'e 的唯一自由度：出栈时刻', cls: 'key',
+    body: '<p>e 何时进栈都行，但 e 一旦压入就<b>挡在栈顶</b>，c、b、a 在 e 出栈前一个也动不了。所以「进 e、退 e」必须作为一个整体，插进 c、b、a 出栈过程的某个<b>空档</b>：c 出之前 / c 与 b 之间 / b 与 a 之间 / a 出之后，共 <b>4 个</b>。</p>' },
+  { title: '列出全部出栈序列', cls: '',
+    body: '<p>' + seqTable() + '</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>共 <b>4 种</b>出栈序列以 d 开头，答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
+    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-02 · 以 d 开头的出栈序列有几种？',
+  subtitle: '进栈次序 <code>a b c d e</code> · 先定局面再数自由度',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B · 4 种',
+    html: 'd 第一个出栈 ⇒ a、b、c 已入栈、e 未入栈。此后退栈顺序被定死为 <b>c → b → a</b>，唯一自由的是 e 的出栈时刻，只能落在 <b>4 个空档</b>：ecba、ceba、cbea、cbae。易错：e 压入后挡住栈顶，不能与 c、b、a 交叉出栈。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

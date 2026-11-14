@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-07 拓扑排序动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：入度递减法拓扑排序 → 3,1,4,2,6,5 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 边：3→1, 1→2, 1→4, 3→6, 4→2, 4→6, 2→5, 6→5
+// deg 数组按结点 1..6；-1 表示已输出
+function S(deg, out, log, cls, tag){
+  return { deg: deg.slice(), out: out.slice(), log: log, cls: cls || 'step', tag: tag, count: out.length };
+}
+
+var snaps = [
+  S([1,2,0,1,2,2], [],
+    '初始入度：结点3 入度为 0，其余 1,2,4,5,6 都有前驱（边：3→1 1→2 1→4 3→6 4→2 4→6 2→5 6→5）', 'step', '初始'),
+  S([0,2,-1,1,2,1], [3],
+    '输出 3，删除边 3→1、3→6：结点1 入度降为 0，结点6 降为 1', 'ok', '输出 3'),
+  S([-1,1,-1,0,2,1], [3,1],
+    '输出 1，删除边 1→2、1→4：结点4 入度降为 0，结点2 降为 1', 'ok', '输出 1'),
+  S([-1,0,-1,-1,2,0], [3,1,4],
+    '输出 4，删除边 4→2、4→6：结点2 与 6 的入度同时降为 0，出现两个候选', 'ok', '输出 4'),
+  S([-1,-1,-1,-1,1,-1], [3,1,4,2],
+    '候选 {2,6} 中选 2：输出 2，删除边 2→5，结点5 入度降为 1', 'ok', '输出 2'),
+  S([-1,-1,-1,-1,0,-1], [3,1,4,2,6],
+    '只剩候选 6：输出 6，删除边 6→5，结点5 入度降为 0', 'ok', '输出 6'),
+  S([-1,-1,-1,-1,-1,-1], [3,1,4,2,6,5],
+    '输出 5，全部结点输出完毕 → 拓扑序列 3,1,4,2,6,5', 'ok', '输出 5'),
+  S([-1,-1,-1,-1,-1,-1], [3,1,4,2,6,5],
+    '验证选项：A/B 第 3 位输出 2 时 4→2 还在（入度 1）非法；C 在 6 前输出 5 时 6→5 还在非法 → 只能选 D', 'done', '完成', 1)
+];
+snaps[7].done = true;
+
+AW.init({
+  title: '2014-07　有向图的拓扑排序',
+  subtitle: '边：3→1、1→2、1→4、3→6、4→2、4→6、2→5、6→5 · 每步只输出入度为 0 的点',
+  counterLabel: '已输出',
+  ribbonTitle: '输出次序（✓ 入度为 0 才能出）',
+  intro: '点击「▶ 播放」逐步删边排拓扑序列。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var lbl1 = AW.el('div', 'aw-row-label', '<b>各结点当前入度</b>（绿底=入度 0 可输出，灰=已输出）');
+    var degHolder = AW.el('div', '');
+    degHolder.id = 'degRow';
+    var lbl2 = AW.el('div', 'aw-row-label', '<b>拓扑序列</b>（绿框=刚输出）');
+    var outHolder = AW.el('div', '');
+    outHolder.id = 'outRow';
+    inner.appendChild(lbl1); inner.appendChild(degHolder);
+    inner.appendChild(lbl2); inner.appendChild(outHolder);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._deg = degHolder; this._out = outHolder;
+  },
+  render: function(stage, sn, i){
+    var chars = [], cls = [], ptr = {};
+    for (var j = 0; j < 6; j++){
+      var d = sn.deg[j];
+      if (d === -1){ chars.push('—'); cls.push('dim'); }
+      else if (d === 0){ chars.push('0'); cls.push('hit'); ptr[j+1] = '可输出'; }
+      else { chars.push(String(d)); cls.push(''); }
+    }
+    this._deg.innerHTML = '';
+    this._deg.appendChild(AW.cellRow(chars, cls, ptr));
+    this._out.innerHTML = '';
+    if (sn.out.length){
+      var oc = sn.out.map(function(_, k){ return k === sn.out.length - 1 && i > 0 && sn.cls !== 'done' ? 'hit' : 'ok'; });
+      this._out.appendChild(AW.cellRow(sn.out, oc, null));
+    }
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D：3,1,4,2,6,5',
+    html: '每一步输出的结点当时入度均为 0（第 3 步后 2、6 都是候选，取 2）。<br>排除：A/B 在 4 未输出前输出 2（边 4→2 还在）；C 在 6 前输出 5（边 6→5 还在）。拓扑序列不唯一，合法即可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

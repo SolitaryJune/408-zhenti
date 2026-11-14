@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-14 Cache 组相联映射动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-14：主存 129 号单元 → 主存块号 → Cache 组号
+     模板：算法/过程类（地址映射），只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function chunksRow(){
+  var h = '<div class="aw-row-label"><b>主存块</b>（每块 32B）</div><div class="aw-cells">';
+  var i;
+  for(i = 0; i <= 4; i++){
+    var c = (i === 4) ? 'miss' : 'dim';
+    h += '<div class="aw-col"><div class="aw-ptr">' + (i === 4 ? '129 号单元' : '') + '</div>' +
+         '<div class="aw-box ' + c + '">块' + i + '</div>' +
+         '<div class="aw-idx">' + (i * 32) + '~' + (i * 32 + 31) + '</div></div>';
+  }
+  return h + '</div>';
+}
+function groupsRow(hi){
+  var h = '<div class="aw-row-label"><b>Cache 的 8 个组</b>（16 块 ÷ 2 路）</div><div class="aw-cells">';
+  var i;
+  for(i = 0; i < 8; i++){
+    var c = (i === hi) ? 'hit' : '';
+    h += '<div class="aw-col"><div class="aw-ptr">' + (i === hi ? '装入这里' : '') + '</div>' +
+         '<div class="aw-box ' + c + '">组' + i + '</div>' +
+         '<div class="aw-idx">2 路</div></div>';
+  }
+  return h + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'Cache 共 16 块，2 路组相联（每组 2 块）；主存块 32B，按字节编址。求 129 号单元所在主存块装入的 Cache 组号',
+    html:'<div class="aw-stepcard key"><p>组相联映射三步：<b>① 字节地址 → 主存块号；② Cache 块数 ÷ 路数 = 组数；③ 组号 = 主存块号 mod 组数</b>。</p></div>' },
+
+  { cls:'ok', tag:'主存块号', count:1, ribbon:{k:1, ok:true},
+    log:'主存块号 = ⌊129 ÷ 32⌋ = 4（块 4 覆盖 128~159 号单元，129 落在其中）',
+    html: chunksRow() },
+
+  { cls:'step', tag:'Cache 组数', count:2, ribbon:{k:2, ok:true},
+    log:'Cache 16 块、2 路组相联 → 组数 = 16 ÷ 2 = 8 组（组号 0~7）',
+    html: groupsRow(-1) },
+
+  { cls:'ok', tag:'映射取模', count:3, ribbon:{k:3, ok:true},
+    log:'组号 = 主存块号 mod 组数 = 4 mod 8 = 4 → 装入第 4 组',
+    html: groupsRow(4) },
+
+  { cls:'step', tag:'装入说明', count:4, ribbon:{k:4, ok:true},
+    log:'主存块 4 只能装入 Cache 第 4 组；组内 0、1 两行放哪一行由替换算法决定，不影响组号',
+    html: chunksRow() + groupsRow(4) },
+
+  { cls:'done', tag:'完成', count:5, ribbon:{k:5, ok:true},
+    log:'129 号单元所在主存块装入 Cache 第 4 组 → 答案 C',
+    done:true,
+    html: groupsRow(4) + chunksRow() },
+];
+
+AW.init({
+  title: '2009-14 主存 129 号单元的 Cache 组号',
+  subtitle: 'Cache 16 块 · 2 路组相联 · 主存块 32B · 按字节编址 · 考点：组相联映射',
+  counterLabel: '映射步',
+  ribbonTitle: '映射进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步完成地址映射。',
+  snaps: snaps,
+  result: {
+    big: '装入第 4 组（答案 C）',
+    html: '三步链条：<b>块号 = ⌊129/32⌋ = 4 → 组数 = 16/2 = 8 → 组号 = 4 mod 8 = 4</b>。<br>易错：直接用 129 mod 8 = 1 是干扰项 B 的来路——必须先折算主存块号。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

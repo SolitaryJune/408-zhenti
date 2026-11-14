@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-18 主存地址映射 Cache 组号 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var box = null, note = null;
+
+function mkSlot(name){
+  var col = AW.el('div', 'aw-col');
+  col.appendChild(AW.el('div', 'aw-ptr', ''));
+  var b = AW.el('div', 'aw-box', '—');
+  b.style.width = '170px';
+  b.style.fontSize = '24px';
+  col.appendChild(b);
+  col.appendChild(AW.el('div', 'aw-idx', name));
+  return b;
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  wrap.appendChild(AW.el('div', 'aw-row-label',
+    '<b>两步定位</b>：先除块大小得主存块号，再 mod 组数得 Cache 组号（数据 Cache 1024 行 · 4 路组相联 · 主存块 32B · 按字节编址）'));
+  var row = AW.el('div', 'aw-cells');
+  row.style.gap = '26px';
+  box = [mkSlot('主存地址'), mkSlot('主存块号'), mkSlot('Cache 组号')];
+  wrap.appendChild(row);
+  note = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(note);
+  stage.appendChild(wrap);
+}
+
+function setSlot(b, txt, color){
+  b.innerHTML = txt;
+  b.style.background = '#fff';
+  b.style.borderColor = '#cbd5e9';
+  if (color === 'amber'){ b.style.background = '#fef3c7'; b.style.borderColor = '#d97706'; b.style.color = '#92400e'; }
+  else if (color === 'green'){ b.style.background = '#dcfce7'; b.style.borderColor = '#16a34a'; b.style.color = '#14532d'; }
+  else if (color === 'dim'){ b.style.opacity = '.45'; }
+}
+
+function render(stage, sn){
+  setSlot(box[0], sn.v[0], sn.hi === 0 ? 'amber' : '');
+  setSlot(box[1], sn.v[1], sn.hi === 1 ? 'amber' : '');
+  setSlot(box[2], sn.v[2], (sn.hi === 2 || sn.hi === 3) ? 'green' : (sn.hi === -1 ? 'dim' : ''));
+  note.innerHTML = sn.note || '';
+}
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0, hi:-1, v:['1028','?','?'],
+    log:'先求组数：数据 Cache 1024 行、4 路组相联 → 组数 = 1024 ÷ 4 = 256 组（组号 0～255）。',
+    note:'4 路组相联 = 每组 4 行，<b>1024 行 ÷ 4 = 256 组</b>。' },
+  { cls:'step', tag:'块内偏移', count:1, hi:0, v:['1028','?','?'],
+    log:'主存块大小 32 B（按字节编址）：块内偏移 = 1028 mod 32 = 4。注意：偏移不是组号！',
+    note:'1028 = 32 × 32 + 4 → 块内偏移 <b>4</b>（它只在块内部定位字节）。' },
+  { cls:'step', tag:'算块号', count:2, hi:1, v:['1028','32','?'],
+    log:'主存块号 = 1028 div 32 = 32（向下取整）。所访问的 4 字节都在第 32 块内。',
+    note:'主存块号 = <b>32</b>（1028 ÷ 32 = 32.125，取整）' },
+  { cls:'ok', tag:'算组号', count:3, hi:2, v:['1028','32','32'],
+    log:'组相联映射：组号 = 主存块号 mod 组数 = 32 mod 256 = 32。',
+    note:'Cache 组号 = <b>32</b>（块号 32 映射到组 32，块内任意一路可放）' },
+  { cls:'step', tag:'对照干扰项', count:4, hi:3, v:['1028','32','32'],
+    log:'错法对照：拿地址直接 mod 组数得 16（选项 B）；拿块内偏移当组号得 4（选项 A）；块大小误当 16B 得块号 64（选项 D）。',
+    note:'正确答案 32 与三个干扰项恰好对应三种典型错误。' },
+  { cls:'done', tag:'完成', count:5, done:true, hi:2, v:['1028','32','32'],
+    log:'该数据所在主存块对应的 Cache 组号 = 32，与选项 C 一致。',
+    note:'答案：<b>组号 32</b>（选项 C）' },
+];
+
+AW.init({
+  title: '2026·18 主存地址 → Cache 组号',
+  subtitle: '访问地址 <code>1028</code>（4 字节）· 1024 行 4 路组相联 · 主存块 32B',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」按"块号 → 组号"两步推演。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: 'Cache 组号 = 32',
+    html: '答案选 <b>C</b>。组数 = 1024 ÷ 4 = 256；主存块号 = 1028 div 32 = 32；组号 = 32 mod 256 = <b>32</b>。<br>记忆锚点：<b>先除块大小得块号，再 mod 组数得组号</b>——拿地址直接 mod 组数（得 16，选项 B）或拿块内偏移当组号（得 4，选项 A）都是高频错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

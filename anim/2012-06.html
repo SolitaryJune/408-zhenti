@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-06 上三角邻接矩阵与拓扑序列</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类：上三角 ⇒ 无环 ⇒ 拓扑序存在；唯一性讨论
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>有向图用邻接矩阵存储，<b>主对角线以下元素全 0</b> ⇒ A[i][j]=1 只可能在行号 i 小于列号 j 时出现：所有弧都<b>从小序号指向大序号</b>，「往回指」的弧不存在。</p>' },
+  { title: '存在性：一定存在',
+    cls: 'good',
+    body: '<p>若有回路，沿回路必须「从大序号走回小序号」，与「只向前指」矛盾 ⇒ 必为 <b>DAG（有向无环图）</b> ⇒ 拓扑序列<b>一定存在</b>。事实上 <code>1, 2, 3, …, n</code> 本身就是一个拓扑序列。</p>' },
+  { title: '唯一性：可能不唯一',
+    cls: 'bad',
+    body: '<p>反例：3 个顶点、<b>一条弧也没有</b>（全 0 矩阵同样满足「下三角全 0」）——此时任意排列都是拓扑序列，<b>不唯一</b>。</p>' },
+  { title: '唯一性：也可能唯一',
+    cls: '',
+    body: '<p>正例：链 <code>1→2→3→…→n</code>，拓扑序只有一个。⇒ 准确的说法是「存在，<b>可能</b>不唯一」。</p>' },
+  { title: '逐项排除',
+    cls: 'bad',
+    body: '<p>A「存在且唯一」：忽略了无边图的情形。</p>' +
+          '<p>B「存在且不唯一」：忽略了链状特例下唯一。</p>' +
+          '<p>D「无法确定是否存在」：上三角 ⇒ 无环 ⇒ 存在性是<b>确定</b>的。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（存在，可能不唯一）</b>。锚点：<b>上三角 ⇒ 弧全向前指 ⇒ 必无环 ⇒ 必有拓扑序</b>；唯一与否取决于弧的具体分布。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '上三角邻接矩阵 ⇒ 拓扑序列的存在性与唯一性',
+  subtitle: '主对角线以下全 0 · 弧只从小号指向大号 · 推理链逐项展开',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C · 存在，可能不唯一',
+    html: '上三角 ⇒ 所有弧向前指 ⇒ <b>必有拓扑序</b>（<code>1,2,…,n</code> 就是）；但无边图不唯一、链状图唯一 ⇒ 只是「<b>可能</b>不唯一」。<br>A/B 把话说死在「唯一/不唯一」，D 否认了确定的存在性——都不如 C 准确。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

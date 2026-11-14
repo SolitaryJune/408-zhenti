@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-21 Cache 命中率计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-21：命中率 = 命中次数 / 总访存次数（推理链）
+     模板：概念/推理链类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：命中率定义',
+    cls: 'key',
+    body: '<p>访存 <code>1000</code> 次，访问 Cache 缺失（未命中）<code>50</code> 次。定义：<b>命中率 = 命中次数 ÷ 总访存次数</b>，且 命中率 + 缺失率 = 1。</p>' },
+  { title: '第 1 步：命中次数',
+    cls: '',
+    ribbon: {k:1, ok:true},
+    body: '<p>每次访存非命中即缺失，所以命中次数 = 1000 − 50 = <b>950 次</b>。</p>' },
+  { title: '第 2 步：算命中率',
+    cls: 'good',
+    ribbon: {k:2, ok:true},
+    body: '<p>命中率 = 950 ÷ 1000 = <b>95%</b>。</p>' },
+  { title: '干扰项对照',
+    cls: 'bad',
+    body: '<p><b>A（5%）</b>：50 ÷ 1000，把<b>缺失率</b>当命中率——命中率应取补数。<b>B（9.5%）</b>：由 5% 无依据换算而来。<b>C（50%）</b>：把 50 当分子乱配分母。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D：95%</b>。记忆锚点：<b>命中率 = (总次数 − 缺失次数) ÷ 总次数 = 1 − 缺失率</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || null,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-21 Cache 命中率的计算',
+  subtitle: '访存 1000 次 · Cache 缺失 50 次 · 考点：Cache 性能指标',
+  counterLabel: '推理步',
+  ribbonTitle: '计算进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '95%（答案 D）',
+    html: '<b>命中次数 = 1000 − 50 = 950，命中率 = 950/1000 = 95%</b>。<br>干扰项 A（5%）是把缺失率当命中率——两者互补，命中率 = 1 − 缺失率。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

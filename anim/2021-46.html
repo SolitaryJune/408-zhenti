@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-46 · 多阶段引导与制作启动盘</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+/* 页面专属小样式（仅本页舞台内容使用） */
+.chain{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:4px 0 2px; }
+.cnode{ border:2px solid #cbd5e1; border-radius:999px; padding:7px 13px; font-size:13.5px;
+  background:#fff; color:#334155; transition:all .25s; }
+.cnode.done{ border-color:var(--green); background:var(--green-bg); color:#14532d; }
+.cnode.cur{ border-color:var(--amber); background:var(--amber-bg); color:#92400e;
+  box-shadow:0 2px 10px rgba(217,119,6,.25); }
+.cnode .badge{ display:inline-block; margin-left:6px; font-size:10.5px; font-weight:700;
+  background:var(--blue); color:#fff; border-radius:6px; padding:1px 6px; }
+.carrow{ color:#94a3b8; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var C1 = ['ROM 中的引导程序', '磁盘引导程序', '分区引导程序', '操作系统初始化程序'];
+var C2 = ['物理格式化', '对磁盘分区', '逻辑格式化', '安装操作系统'];
+var c1nodes = [], c2nodes = [];
+
+function mkChain(inner, labels, labelText){
+  var row = AW.el('div', 'chain');
+  var nodes = [];
+  labels.forEach(function(t, idx){
+    if (idx) row.appendChild(AW.el('span', 'carrow', '→'));
+    var n = AW.el('span', 'cnode', t);
+    row.appendChild(n);
+    nodes.push(n);
+  });
+  inner.appendChild(AW.el('div', 'aw-row-label', labelText));
+  inner.appendChild(row);
+  return nodes;
+}
+
+/* 状态：i = snap 序号（0~11）。链1：步1~4 点亮；链2：步5~8 点亮；步9~10 打标记；11 完成 */
+function paint(i){
+  c1nodes.forEach(function(n, k){
+    var cls = 'cnode';
+    if (i >= 1 && i <= 4){
+      if (k < i - 1) cls = 'cnode done';
+      else if (k === i - 1) cls = 'cnode cur';
+    } else if (i >= 5){
+      cls = 'cnode done';
+    }
+    n.className = cls;
+  });
+  c2nodes.forEach(function(n, k){
+    var cls = 'cnode';
+    if (i >= 5 && i <= 8){
+      if (k < i - 5) cls = 'cnode done';
+      else if (k === i - 5) cls = 'cnode cur';
+    } else if (i >= 9){
+      cls = 'cnode done';
+    }
+    var badge = '';
+    if (k === 0 && i >= 9) badge = '扇区划分在这里';
+    if (k === 2 && i >= 10) badge = '建根目录在这里';
+    n.className = cls;
+    n.innerHTML = C2[k] + (badge ? '<span class="badge">' + badge + '</span>' : '');
+  });
+}
+
+AW.init({
+  title: '多阶段引导顺序与制作启动盘顺序（2021-46）',
+  subtitle: '硬盘第一个扇区 = 主引导记录（磁盘引导程序 + 分区表）· 每分区第一扇区 = 分区引导程序',
+  counterLabel: '步骤',
+  ribbonTitle: '步骤（✓ 已点亮）',
+  intro: '点击「▶ 播放」：先点亮启动链条（第 1）问），再点亮制盘链条（第 2）问），最后打标记（第 3）问）。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>第 1）问 · 系统启动的执行顺序</b>'));
+    c1nodes = mkChain(inner, C1, '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>第 2）问 · 制成启动盘的 4 个操作</b>（第 3）问在此链上打标记）'));
+    c2nodes = mkChain(inner, C2, '');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', log: '加电！硬盘是启动盘：第一扇区是主引导记录（含磁盘引导程序与分区表）。先看第 1）问', count: 0 },
+    { cls: 'step', tag: '启动①', log: 'CPU 加电后首先执行 ROM 中的引导程序——整条启动链的起点', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '启动②', log: 'ROM 引导程序读入硬盘第一扇区（MBR）并执行其中的磁盘引导程序；它依据分区表选择要引导的分区', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '启动③', log: '磁盘引导程序读入所选分区第一扇区的分区引导程序并执行', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'step', tag: '启动④', log: '分区引导程序装载该分区的操作系统，控制权交给操作系统的初始化程序 → 第 1）问顺序：ROM→磁盘→分区→OS 初始化', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'step', tag: '制盘①', log: '第 2）问 第①步：磁盘的物理格式化（低级格式化）——划分扇区，建立最小读写单位', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'step', tag: '制盘②', log: '第②步：对磁盘进行分区，写入分区表等描述信息', count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'step', tag: '制盘③', log: '第③步：逻辑格式化——在分区上建立文件系统（初始化元数据、建立根目录）', count: 7, ribbon: { k: 7, ok: true } },
+    { cls: 'step', tag: '制盘④', log: '第④步：安装操作系统——OS 程序装入分区，此后才能作为启动盘引导', count: 8, ribbon: { k: 8, ok: true } },
+    { cls: 'shift', tag: '标记①', log: '第 3）问：磁盘扇区的划分发生在「物理格式化」（见链条上的标记）', count: 9, ribbon: { k: 9, ok: true } },
+    { cls: 'shift', tag: '标记②', log: '文件系统根目录的建立在「逻辑格式化」（见链条上的标记）', count: 10, ribbon: { k: 10, ok: true } },
+    { cls: 'done', tag: '完成', log: '三问齐了：启动 4 级接力；制盘 4 步顺序；扇区划分属物理格式化、根目录建立属逻辑格式化', count: 11, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    paint(i);
+  },
+
+  result: {
+    big: '三问答案汇总',
+    html: '1）执行顺序：<b>ROM 引导程序 → 磁盘引导程序 → 分区引导程序 → OS 初始化程序</b>。<br>' +
+          '2）制盘顺序：<b>物理格式化 → 分区 → 逻辑格式化 → 安装操作系统</b>。<br>' +
+          '3）扇区划分在<b>物理格式化</b>中完成；根目录建立在<b>逻辑格式化</b>中完成。记忆锚点：启动是逐级接力（ROM→磁盘→分区→OS）；先有扇区才能分区，先有文件系统才能装 OS。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

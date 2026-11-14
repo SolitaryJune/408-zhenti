@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-01 单链表四条指针语句的执行效果</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 结点表：key → [格内字符, 下方说明] */
+var NODE = {
+  H: ['头', '头结点'],
+  A: ['A', '首元结点'],
+  P: ['P', 'p 所指结点'],
+  Q: ['Q', 'q 所指结点（原为 p 的后继）'],
+  R: ['R', 'q 的后继'],
+  E: ['⋯', '']
+};
+
+/* 每一步所有结点的 next 指针全景：四条语句逐句生效 */
+var LINKS = [
+  { H: 'A', A: 'P', P: 'Q', Q: 'R', R: 'E' },
+  { H: 'A', A: 'P', P: 'Q', Q: 'R', R: 'E' },
+  { H: 'A', A: 'P', P: 'R', Q: 'R', R: 'E' },
+  { H: 'A', A: 'P', P: 'R', Q: 'A', R: 'E' },
+  { H: 'Q', A: 'P', P: 'R', Q: 'A', R: 'E' },
+  { H: 'Q', A: 'P', P: 'R', Q: 'A', R: 'E' }
+];
+var PTRS = [
+  { H: 'h', P: 'p' },
+  { H: 'h', P: 'p', Q: 'q' },
+  { H: 'h', P: 'p', Q: 'q' },
+  { H: 'h', P: 'p', Q: 'q' },
+  { H: 'h', P: 'p', Q: 'q' },
+  { H: 'h', P: 'p', Q: 'q' }
+];
+/* 每步重点结点高亮：hit=蓝闪, ok=绿, amber=琥珀 */
+var HI = [
+  {},
+  { Q: 'hit' },
+  { P: 'hit', Q: 'amber' },
+  { Q: 'amber' },
+  { H: 'hit', Q: 'ok' },
+  { Q: 'ok' }
+];
+var LOGS = [
+  '初始：头结点→A→P→Q→R⋯。p 指向中间结点 P（非首非尾），q 的旧值不影响结果',
+  '语句① q = p->next：q 指向 P 的后继结点 Q',
+  '语句② p->next = q->next：P 跨过 Q 直接链向 R —— Q 被从主链上摘下（next 仍指向 R）',
+  '语句③ q->next = h->next：Q 的 next 改指原首元结点 A，Q 等着头结点来接',
+  '语句④ h->next = q：头结点改链 Q，Q 成为新的第一个数据结点',
+  '最终：头结点→Q→A→P→R⋯。效果 = 把 q 所指结点移动到头结点之后'
+];
+
+function nodeCell(k, ptrs, hi, links, showNext) {
+  var p = (ptrs && ptrs[k]) || '';
+  var cls = 'aw-box';
+  if (hi[k] === 'hit') cls += ' hit';
+  if (hi[k] === 'ok') cls += ' ok';
+  var st = hi[k] === 'amber' ? ' style="border-color:#d97706;background:#fef3c7"' : '';
+  var nxt = (showNext && links[k] && links[k] !== 'E') ? ' · next→' + links[k] : '';
+  return '<div class="aw-col"><div class="aw-ptr">' + p + '</div>' +
+    '<div class="' + cls + '"' + st + '>' + NODE[k][0] + '</div>' +
+    '<div class="aw-idx">' + NODE[k][1] + nxt + '</div></div>';
+}
+
+function drawChain(links, ptrs, hi) {
+  var seq = ['H'];
+  var seen = { H: 1 };
+  while (links[seq[seq.length - 1]] && !seen[links[seq[seq.length - 1]]]) {
+    var nx = links[seq[seq.length - 1]];
+    seen[nx] = 1;
+    seq.push(nx);
+  }
+  var out = [];
+  ['A', 'P', 'Q', 'R'].forEach(function (k) { if (!seen[k]) out.push(k); });
+  var html = '<div class="aw-cells" style="gap:0">';
+  seq.forEach(function (k, i) {
+    if (i > 0) {
+      html += '<div style="display:flex;align-items:center;justify-content:center;width:30px;padding-top:22px;font-size:20px;font-weight:800;color:#16a34a">→</div>';
+    }
+    html += nodeCell(k, ptrs, hi, links, false);
+  });
+  html += '</div>';
+  if (out.length) {
+    html += '<div class="aw-row-label" style="margin-top:14px"><b>主链之外</b>（next 已被改写、暂不在链上）</div>';
+    html += '<div class="aw-cells" style="gap:0">';
+    out.forEach(function (k, i) {
+      if (i > 0) {
+        html += '<div style="display:flex;align-items:center;justify-content:center;width:30px;padding-top:22px;font-size:20px;font-weight:800;color:#cbd5e1">·</div>';
+      }
+      html += nodeCell(k, ptrs, hi, links, true);
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+var STATES = LINKS.map(function (l, i) { return drawChain(l, PTRS[i], HI[i]); });
+
+AW.init({
+  title: '单链表：四条指针语句执行后发生了什么（2024-01）',
+  subtitle: '带头结点的非空单链表 · p 指向<b>非首且非尾</b>的结点 · 逐句执行 4 条语句',
+  counterLabel: '已执行语句',
+  intro: '点击「▶ 播放」，逐句观察 next 指针如何被改写。',
+  snaps: [
+    { cls: 'step', tag: '初始', log: LOGS[0], count: 0, html: STATES[0] },
+    { cls: 'step', tag: '语句①', log: LOGS[1], count: 1, html: STATES[1] },
+    { cls: 'shift', tag: '语句②', log: LOGS[2], count: 2, html: STATES[2] },
+    { cls: 'shift', tag: '语句③', log: LOGS[3], count: 3, html: STATES[3] },
+    { cls: 'ok', tag: '语句④', log: LOGS[4], count: 4, html: STATES[4] },
+    { cls: 'done', tag: '完成', log: LOGS[5], count: 4, html: STATES[5], done: true }
+  ],
+  result: {
+    big: '选 D',
+    html: '四条语句的效果是<b>将 q 所指结点移动到 L 的头结点之后</b>。记忆锚点：<code>p->next = q->next</code> 先把 Q 从主链上抽走，<code>q->next = h->next; h->next = q</code> 再把 Q 头插到表头 —— 两步合起来就是「头插法搬结点」，p 自始至终没动。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-38 TCP 慢开始窗口推演动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：字节序号标尺上的 TCP 窗口推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};   // 持久 DOM 引用
+
+AW.init({
+  title: '收到确认后还能再发几个 TCP 段？',
+  subtitle: 't0 时 cwnd = 2000 B、发送窗口 2000 B · ssthresh = 8000 B · MSS = 1000 B · t1 收到 <code>seq=4001, ack_seq=3001, rcvwnd=4000</code>',
+  counterLabel: '推演步',
+  ribbonTitle: '推理（✓ 对）',
+  intro: '点击「▶ 播放」，在字节标尺上逐步推演窗口变化。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>字节序号标尺</b>（每格 1000 B = 1 个 MSS 段）'));
+    var row = AW.el('div', 'aw-cells');
+    row.style.marginBottom = '6px';
+    S.boxes = []; S.ptrs = [];
+    ['2001–3000', '3001–4000', '4001–5000', '5001–6000', '6001–7000'].forEach(function(t){
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      col.appendChild(ptr);
+      var b = AW.el('div', 'aw-box dim', t);
+      b.style.width = '104px';
+      b.style.fontSize = '13px';
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', 'seq ' + t.split('–')[0]));
+      row.appendChild(col);
+      S.boxes.push(b); S.ptrs.push(ptr);
+    });
+    inner.appendChild(row);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>窗口状态</b>'));
+    var chipRow = AW.el('div', 'aw-cells');
+    chipRow.style.marginBottom = '6px';
+    S.chips = [];
+    ['cwnd = 2000 B', 'rwnd = ?', '发送窗口 = 2000 B', '已发未确认 = ?', '还可新发 = ?'].forEach(function(t){
+      var b = AW.el('div', 'aw-box dim', t);
+      b.style.width = '172px';
+      b.style.height = '42px';
+      b.style.fontSize = '13.5px';
+      chipRow.appendChild(b); S.chips.push(b);
+    });
+    inner.appendChild(chipRow);
+
+    S.note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',     log:'t0 时刻：cwnd = 2000 B、发送窗口 2000 B、ssthresh = 8000 B、MSS = 1000 B，甲始终按 MSS 发送段。', count:0, note:'发送窗口 = min(cwnd, rwnd)' },
+    { cls:'shift', tag:'t0 发送',  log:'甲发出 seq=2001（2001–3000）与 seq=3001（3001–4000）两个段，恰好占满 2000 B 的发送窗口。', count:1, ribbon:{k:1, ok:true}, note:'已发 2001–4000' },
+    { cls:'ok',    tag:'t1 确认',  log:'收到 seq=4001、ack_seq=3001、rcvwnd=4000：确认号 3001 表示 2001–3000 已收到；seq=3001 那段仍未确认。', count:2, ribbon:{k:2, ok:true}, note:'ack_seq=3001：确认 2001–3000' },
+    { cls:'ok',    tag:'拥塞窗口', log:'cwnd = 2000 < ssthresh = 8000 → 慢开始：每收到一个新确认 cwnd 增加 1 个 MSS → cwnd = 2000 + 1000 = 3000 B。', count:3, ribbon:{k:3, ok:true}, note:'cwnd = 3000 B' },
+    { cls:'ok',    tag:'接收窗口', log:'确认段携带 rcvwnd = 4000 B。', count:4, ribbon:{k:4, ok:true}, note:'rwnd = 4000 B' },
+    { cls:'ok',    tag:'发送窗口', log:'发送窗口 = min(cwnd, rwnd) = min(3000, 4000) = 3000 B，覆盖字节 3001–6000。', count:5, ribbon:{k:5, ok:true}, note:'发送窗口 = 3000 B' },
+    { cls:'shift', tag:'在途扣减', log:'已发送未确认的只有 3001–4000（1000 B），占掉窗口的前 1 格。', count:6, ribbon:{k:6, ok:true}, note:'已发未确认 = 1000 B' },
+    { cls:'ok',    tag:'可新发',   log:'还可新发 = 3000 − 1000 = 2000 B，即字节 4001–6000，正好 2 个 MSS 段。', count:7, ribbon:{k:7, ok:true}, note:'4001–6000 = 2 段' },
+    { cls:'done',  tag:'完成',     log:'结论：在收到新确认之前甲还能再发 2 个 TCP 段，选 A。', count:8, done:true, note:'答案 A（2 段）' },
+  ],
+
+  render: function(stage, sn, i){
+    var set = function(b, cls, txt){
+      b.className = 'aw-box' + (cls ? ' ' + cls : '');
+      if(txt != null) b.textContent = txt;
+    };
+    set(S.boxes[0], i >= 2 ? 'ok' : (i >= 1 ? 'shift' : 'dim'));
+    set(S.boxes[1], i >= 1 ? 'shift' : 'dim');
+    set(S.boxes[2], i >= 7 ? 'hit' : 'dim');
+    set(S.boxes[3], i >= 7 ? 'hit' : 'dim');
+    set(S.boxes[4], 'dim');
+    S.ptrs[0].textContent = (i >= 2) ? 'ack_seq=3001 ✓' : '';
+    S.ptrs[1].textContent = (i >= 1) ? '在途未确认' : '';
+    S.ptrs[2].textContent = (i >= 7) ? '可新发' : '';
+    S.ptrs[3].textContent = (i >= 7) ? '可新发' : '';
+    S.ptrs[4].textContent = (i >= 7) ? '窗口外' : '';
+
+    set(S.chips[0], i >= 3 ? 'ok' : 'dim', i >= 3 ? 'cwnd = 3000 B' : 'cwnd = 2000 B');
+    set(S.chips[1], i >= 4 ? 'ok' : 'dim', i >= 4 ? 'rwnd = 4000 B' : 'rwnd = ?');
+    set(S.chips[2], i >= 5 ? 'ok' : 'dim', i >= 5 ? '发送窗口 = 3000 B' : '发送窗口 = 2000 B');
+    set(S.chips[3], i >= 6 ? 'shift' : 'dim', i >= 6 ? '已发未确认 = 1000 B' : '已发未确认 = ?');
+    set(S.chips[4], i >= 7 ? 'hit' : 'dim', i >= 7 ? '还可新发 = 2000 B（2 段）' : '还可新发 = ?');
+    S.note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '答案 A：还能再发 2 个段',
+    html: '<p>cwnd 3000 B（慢开始每确认加 1 个 MSS）→ 发送窗口 = min(3000, 4000) = <b>3000 B</b>；窗口内 3001–4000 已发未确认，4001–6000 可新发 = 2000 B = <b>2 个 MSS 段</b>。记忆锚点：可新发字节 = 发送窗口 − 已发送未确认。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

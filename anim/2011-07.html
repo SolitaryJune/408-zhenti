@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-07 二叉排序树查找路径判定 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var OPTS = [
+  { L:'A', seq:['95','22','91','24','94','71'], fail:4, ok:false,
+    lines:[
+      '<b>95</b> 作根，区间 (−∞, +∞)',
+      '<b>22</b> &lt; 95 → 走进 95 的左子树，区间收窄为 (−∞, 95)',
+      '<b>91</b>：在 (22, 95) 内 → 22 的右子树，区间 (22, 95)',
+      '<b>24</b>：在 (22, 91) 内 → 91 的左子树，区间 (22, 91)，<b>此后一切必须 &lt; 91</b>',
+      '<b>94</b>：想作 24 的右孩子（94 &gt; 24），但它落在区间 (24, 91) 之外 —— <b style="color:#b91c1c">94 &gt; 91，违反上界，矛盾！</b>',
+    ],
+    note:'走到 91 的左子树后却冒出 94 &gt; 91，BST 性质被破坏。' },
+  { L:'B', seq:['92','20','91','34','88','35'], fail:-1, ok:true,
+    lines:[
+      '<b>92</b> 作根，区间 (−∞, +∞)',
+      '<b>20</b> &lt; 92 → 左子树，(−∞, 92)',
+      '<b>91</b>：在 (20, 92) 内 → 20 的右子树，(20, 92)',
+      '<b>34</b>：在 (20, 91) 内 → 91 的左子树，(20, 91)',
+      '<b>88</b>：在 (34, 91) 内 → 34 的右子树，(34, 91)',
+      '<b>35</b>：在 (34, 88) 内 → 88 的左子树，(34, 88) ✓',
+    ],
+    note:'每个关键字都落进当前区间，可以是某棵 BST 的查找路径。' },
+  { L:'C', seq:['21','89','77','29','36','38'], fail:-1, ok:true,
+    lines:[
+      '<b>21</b> 作根，区间 (−∞, +∞)',
+      '<b>89</b> &gt; 21 → 右子树，(21, +∞)',
+      '<b>77</b>：在 (21, 89) 内 → 89 的左子树，(21, 89)',
+      '<b>29</b>：在 (21, 77) 内 → 77 的左子树，(21, 77)',
+      '<b>36</b>：在 (29, 77) 内 → 29 的右子树，(29, 77)',
+      '<b>38</b>：在 (36, 77) 内 → 36 的右子树，(36, 77) ✓',
+    ],
+    note:'上下起伏但全部落位合法。' },
+  { L:'D', seq:['12','25','71','68','33','34'], fail:-1, ok:true,
+    lines:[
+      '<b>12</b> 作根，区间 (−∞, +∞)',
+      '<b>25</b> &gt; 12 → 右子树，(12, +∞)',
+      '<b>71</b>：在 (12, +∞) 内且 &gt; 25 → 25 的右子树，(25, +∞)',
+      '<b>68</b>：在 (25, 71) 内 → 71 的左子树，(25, 71)',
+      '<b>33</b>：在 (25, 68) 内 → 68 的左子树，(25, 68)',
+      '<b>34</b>：在 (33, 68) 内 → 33 的右子树，(33, 68) ✓',
+    ],
+    note:'全部落位合法。' },
+];
+
+function optSnap(o, k){
+  var classes = o.seq.map(function(_, i){
+    if (o.fail >= 0 && i > o.fail) return 'dim';
+    if (o.fail >= 0 && i === o.fail) return 'miss';
+    return 'ok';
+  });
+  var ptrs = {};
+  if (o.fail >= 0) ptrs[o.fail + 1] = '✗ 越界';
+  var verdict = o.ok
+    ? '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#16a34a">✓ 可能：逐点落位全部合法</div>'
+    : '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#dc2626">✗ 不可能：' + o.note + '</div>';
+  return {
+    cls: o.ok ? 'ok' : 'miss',
+    tag: o.ok ? '选项 ' + o.L + ' 可能 ✓' : '选项 ' + o.L + ' 不可能 ✗',
+    log: '选项 ' + o.L + '（' + o.seq.join(',') + '）：' + o.note,
+    count: k,
+    ribbon: { k: k, ok: o.ok },
+    html: '<div class="aw-row-label"><b>选项 ' + o.L + '</b>　查找路径序列（逐点带区间落位）</div>' +
+          AW.cellRow(o.seq, classes, ptrs, 1) +
+          '<div style="font-size:13.5px;line-height:1.95;color:#334155;margin-top:8px">' +
+          o.lines.join('<br>') + '</div>' + verdict,
+  };
+}
+
+var snaps = [{
+  cls:'step', tag:'方法', count:0,
+  html:'<div style="font-size:14.5px;line-height:2.1;color:#334155">' +
+       '查找路径从根出发：比当前结点<b>小走左</b>、<b>大走右</b>，后一个关键字必须是前一个结点的孩子。<br>' +
+       '判定方法：给每个关键字<b>带上下界落位</b>——进左子树收窄上界、进右子树收窄下界；<b style="color:#b91c1c">落不进区间即不可能</b>。<br>' +
+       '下面对四个选项逐点落位。</div>',
+  log:'方法：逐点带上下界 (lo, hi) 落位，越界即不可能。',
+}].concat(OPTS.map(optSnap)).concat([{
+  cls:'done', tag:'结论', count:5, done:true,
+  html:'<div style="font-size:15px;line-height:2.1;color:#334155">' +
+       'B、C、D 逐点落位全部合法；只有 <b>A</b> 在进入 91 的左子树后出现 94 &gt; 91，<b style="color:#dc2626">越过上界</b>。<br>' +
+       '不可能是查找路径的序列是 <b style="color:#dc2626;font-size:18px">95, 22, 91, 24, 94, 71</b>，答案选 <b style="color:#dc2626;font-size:18px">A</b>。</div>',
+  log:'结论：A 在第 5 个关键字 94 处越界，不可能；答案 A。',
+}]);
+
+AW.init({
+  title: '2011-07 · 哪个序列不可能是 BST 的查找路径？',
+  subtitle: '判定法 <code>逐点带上下界 (lo, hi) 落位</code> · 四个选项逐点检查',
+  counterLabel: '已判定选项',
+  ribbonTitle: '选项（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」逐个选项落位检查。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（95,22,91,24,94,71）',
+    html: '走到 91 的左子树后，之后所有关键字必须 &lt; 91；序列里却出现 <b>94 &gt; 91</b>，BST 性质被破坏。B/C/D 每个关键字都能落进当前区间 (lo, hi)。记忆点：<b>进左收上界、进右收下界，越界即不可能</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

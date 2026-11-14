@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-02 · 双向链表插入的指针补全</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PITCHROW = '<div class="aw-row-label">四条指针的当前值（琥珀=本步修改，绿=正确，红=错误赋值）</div>';
+
+function box(txt, cls){
+  return '<div class="aw-box ' + (cls || '') + '" style="width:46px">' + txt + '</div>';
+}
+function chainRow(label, names, clses, arr){
+  var h = '<div class="aw-row-label">' + label + '</div><div class="aw-cells">';
+  for (var i = 0; i < names.length; i++){
+    if (i > 0){
+      h += '<div style="align-self:center;color:#2563eb;font-weight:700;padding:0 3px;font-size:18px">' + arr + '</div>';
+    }
+    h += box(names[i], clses[i]);
+  }
+  return h + '</div>';
+}
+function fieldRow(name, val, cls){
+  return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+    '<div style="width:96px;font-family:Menlo,monospace;font-size:13px;color:#475569;text-align:right">' + name + '</div>' +
+    box(val, cls) + '</div>';
+}
+function stageHTML(st){
+  var h = '';
+  h += chainRow('<b>next 链</b>（沿 p->next / s->next 正向走）', st.nc, st.ncs, '→');
+  h += chainRow('<b>prev 链</b>（沿 q->prev / s->prev 反向走）', st.pc, st.pcs, '←');
+  if (st.float){
+    h += '<div class="aw-row-label" style="color:#d97706">' + st.float + '</div>';
+  }
+  h += PITCHROW;
+  for (var i = 0; i < st.f.length; i++){
+    h += fieldRow(st.f[i][0], st.f[i][1], st.f[i][2]);
+  }
+  h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.note + '</div>';
+  return h;
+}
+
+/* 每步的舞台状态：nc/pc=两条链的结点名，ncs/pcs=配色，f=四条指针，float=提示，note=本步说明 */
+var STATES = [
+  { nc:['P','Q'], ncs:['',''], pc:['Q','P'], pcs:['',''],
+    f:[['p->next','Q',''],['s->next','—','dim'],['s->prev','—','dim'],['q->prev','P','']],
+    float:'新结点 S 尚未接入任何链：s->next、s->prev 均未设置',
+    note:'初始：非空双向链表中 P ⇄ Q，要在 p 所指结点（非尾结点）之后插入 s 所指新结点。' },
+  { nc:['P','Q'], ncs:['',''], pc:['Q','P'], pcs:['',''],
+    f:[['p->next','Q',''],['s->next','Q','shift'],['s->prev','—','dim'],['q->prev','P','']],
+    float:'S 悬空，但 s->next 已记住后继 Q',
+    note:'已执行第 1 句 s->next = p->next：新结点先接住后继 q。' },
+  { nc:['P','S','Q'], ncs:['','ok',''], pc:['Q','P'], pcs:['',''],
+    f:[['p->next','S','shift'],['s->next','Q','ok'],['s->prev','—','dim'],['q->prev','P','']],
+    float:'注意：q->prev 仍是 p；此后 p->next 不再指向 q，q 只能靠 s->next 找到',
+    note:'已执行第 2 句 p->next = s：p 挂上 s。此刻只差 s->prev 与 q->prev 两条反向指针。' },
+  { nc:['P','S','Q'], ncs:['','ok',''], pc:['Q','P'], pcs:['','miss'],
+    f:[['p->next','S',''],['s->next','Q',''],['s->prev','P','ok'],['q->prev','P','miss']],
+    float:'q 的前驱应是 S，却写成了 p —— 反向链在 q 处接错',
+    note:'选项 A 试做：s->next->prev = p 把 q->prev 写成 p ✗（s->prev = p 本身没错，但整体已错）。' },
+  { nc:['P','S','Q'], ncs:['','miss',''], pc:['Q','P'], pcs:['',''],
+    f:[['p->next','S',''],['s->next','Q',''],['s->prev','S','miss'],['q->prev','P','']],
+    float:'p->next 现在就是 S 自己：第一句变成 s->prev = s，自环',
+    note:'选项 B 试做：p->next->prev = s 即 s->prev = s 自环 ✗。' },
+  { nc:['P','S','Q'], ncs:['','ok',''], pc:['Q','P'], pcs:['','miss'],
+    f:[['p->next','S',''],['s->next','Q',''],['s->prev','?','miss'],['q->prev','P','miss']],
+    float:'拿未设置的 s->prev 当源数据，反向链被写乱',
+    note:'选项 D 试做：p->next->prev = s->prev 用未设置的 s->prev 赋值 ✗；s->next->prev = p 又把 q->prev 写成 p ✗。' },
+  { nc:['P','S','Q'], ncs:['','ok',''], pc:['Q','P'], pcs:['',''],
+    f:[['p->next','S',''],['s->next','Q',''],['s->prev','P','shift'],['q->prev','P','']],
+    float:'此刻 q->prev 还没被改过，值恰是 p —— 正是 s 该认的前驱',
+    note:'选项 C 第 1 句 s->prev = s->next->prev：s->next 是 q，读到 q->prev = p，赋给 s->prev ✓。' },
+  { nc:['P','S','Q'], ncs:['','ok',''], pc:['Q','S','P'], pcs:['','ok',''],
+    f:[['p->next','S','ok'],['s->next','Q','ok'],['s->prev','P','ok'],['q->prev','S','shift']],
+    float:'',
+    note:'选项 C 第 2 句 s->next->prev = s：q->prev = s ✓。四条指针全部就位。' },
+  { nc:['P','S','Q'], ncs:['','ok',''], pc:['Q','S','P'], pcs:['','ok',''],
+    f:[['p->next','S','ok'],['s->next','Q','ok'],['s->prev','P','ok'],['q->prev','S','ok']],
+    float:'',
+    note:'结论：还需执行 s->prev = s->next->prev; s->next->prev = s; —— 正是选项 C。' },
+];
+
+var snaps = STATES.map(function(st, i){
+  var last = i === STATES.length - 1;
+  var cnt = [0,1,2,2,2,2,3,4,4][i];
+  var rb = { 1:{k:1,ok:true}, 2:{k:2,ok:true}, 6:{k:3,ok:true}, 7:{k:4,ok:true} }[i];
+  var clsArr = ['shift','ok','ok','miss','miss','miss','ok','ok','done'];
+  var tagArr = ['初始','s->next 已设','p->next 已设','选项 A 错','选项 B 错','选项 D 错','选项 C 第 1 句 ✓','选项 C 第 2 句 ✓','完成'];
+  var logArr = [
+    '初始：P ⇄ Q，新结点 s->next、s->prev 均未设置',
+    '执行 s->next = p->next：s 的 next 指向 q',
+    '执行 p->next = s：p 的 next 指向 s；q->prev 仍是 p',
+    '选项 A：q->prev 被写成 p，应为 s —— 错',
+    '选项 B：p->next 已是 s 自己，s->prev = s 自环 —— 错',
+    '选项 D：用未设置的 s->prev 赋值，q->prev 又写成 p —— 错',
+    '选项 C 第 1 句：s->prev = s->next->prev = q->prev(旧值 p) ✓',
+    '选项 C 第 2 句：s->next->prev = s，q->prev = s ✓ 四条指针齐',
+    '还需要执行的正是选项 C —— 答案 C'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: cnt,
+    html: stageHTML(st), done: last,
+  };
+  if (rb){ sn.ribbon = rb; }
+  return sn;
+});
+
+AW.init({
+  title: '2023-02 · 双向链表插入：还缺哪两条指针？',
+  subtitle: '结点 <code>[prev | data | next]</code> · 已执行 <code>s->next = p->next; p->next = s;</code>',
+  counterLabel: '已接好指针',
+  ribbonTitle: '四条指针（✓ 已正确接好）',
+  intro: '点击「▶ 播放」逐步执行语句并逐项检验四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '还需 <code>s->prev = s->next->prev; s->next->prev = s;</code>。关键：<b>p->next 已是 s 自己</b>，不能再用来找后继 q（B、D 的陷阱）；q 只能靠 <b>s->next</b> 找到。次序上必须先「s->prev 读旧 q->prev」再「q->prev = s」。干扰项：A 把 q->prev 写回 p；B 自环；D 用未设值赋值。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

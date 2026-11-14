@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-34 奈奎斯特准则反推 QAM-64</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：纯计算推理 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { tag:'审题眼', cls:'key', title:'审题眼：无噪声 → 奈奎斯特准则',
+    body:'<p>信道<b>无噪声、理想</b>，给了带宽 W = 4 MHz 与最大速率 C = 48 Mbps，问 QAM 方案。' +
+         '这指向考点：<b>奈奎斯特准则 C = 2W·log₂V</b>，V 是码元状态数，QAM-m 里的 m 就是 V。' +
+         '（有噪声、给信噪比时才用香农公式，本题用不上。）</p>' },
+  { tag:'代入', cls:'step', title:'代入数字，先解出 log₂V',
+    body:'<p>48×10<sup>6</sup> = 2 × 4×10<sup>6</sup> × log₂V<br>→ log₂V = 48 ÷ (2×4) = <b>6</b>。</p>' },
+  { tag:'求 V', cls:'good', title:'V = 2⁶ = 64 → QAM-64',
+    body:'<p>每个码元携带 6 bit，需要 64 个状态（星座点）→ <b>QAM-64</b>。</p>' },
+  { tag:'A ✗', cls:'bad', title:'A. QAM-16：速率不够',
+    body:'<p>V = 16 → log₂16 = 4 → C = 8M × 4 = <b>32 Mbps</b>，到不了 48 Mbps，排除。</p>' },
+  { tag:'B ✗', cls:'bad', title:'B. QAM-32：速率不够',
+    body:'<p>V = 32 → log₂32 = 5 → C = 8M × 5 = <b>40 Mbps</b>，也到不了 48 Mbps，排除。</p>' },
+  { tag:'D ✗', cls:'bad', title:'D. QAM-128：速率超了',
+    body:'<p>V = 128 → log₂128 = 7 → C = 8M × 7 = <b>56 Mbps</b>。题给最大速率就是 48 Mbps，56 对不上，排除。</p>' },
+  { tag:'结论', cls:'good', title:'结论：选 C（QAM-64）',
+    body:'<p>只有 V = 64 使 2W·log₂V 恰好等于 48 Mbps。记忆点：<b>无噪声用奈氏公式，48 ÷ (2×4) = 6，2⁶ = 64</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : (s.cls === 'good' ? 'ok' : 'step')),
+    tag: s.tag,
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '无噪声信道的 QAM 调制方案推理',
+  subtitle: '考点：奈奎斯特准则 C = 2W·log₂V · 逐项推演四个选项',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>无噪声 → 奈奎斯特 C = 2W·log₂V</b>；log₂V = 48 ÷ (2×4) = 6 → V = 2⁶ = <b>64</b>，即 QAM-64。<br>' +
+          '干扰项：A/B 速率不够（32/40 Mbps）、D 速率超了（56 Mbps）；有噪声才用香农公式 C = W·log₂(1+S/N)。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

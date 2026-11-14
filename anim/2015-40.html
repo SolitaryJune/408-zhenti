@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-40 概念辨析：HTTP 请求报文逐行解读</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类动画：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：把报文逐行拆开',
+    cls: 'key',
+    body: '<p>请求行 <code>GET /index.html HTTP/1.1</code>：要取 <code>index.html</code>、用 GET、HTTP/1.1。<br>首部行 <code>Host: www.test.edu.cn</code>：文档在哪个服务器。<br><code>Connection: Close</code>：连接方式。<code>Cookie: 123456</code>：身份标识。题目挑<b>错误</b>说法。</p>' },
+  { title: '选项 A：请求浏览 index.html',
+    cls: 'good',
+    body: '<p><b>A「该浏览器请求浏览 index.html」</b>：说法<b>正确</b>，不选。请求行中的 URL 就是 /index.html。</p>' },
+  { title: '选项 B：文档在 www.test.edu.cn 上',
+    cls: 'good',
+    body: '<p><b>B「index.html 存放在 www.test.edu.cn 上」</b>：说法<b>正确</b>，不选。Host 首部行指明了目标服务器。</p>' },
+  { title: '选项 C：请求使用持续连接？',
+    cls: 'bad',
+    body: '<p><b>C「该浏览器请求使用持续连接」</b>：<b>错误，本题答案</b>。HTTP/1.1 虽默认持续连接，但报文显式写了 <code>Connection: Close</code>——本次用<b>非持续连接</b>：每个对象都要新建 TCP 连接，取完即断。</p>' },
+  { title: '选项 D：曾经浏览过该网站？',
+    cls: 'good',
+    body: '<p><b>D「该浏览器曾经浏览过 www.test.edu.cn」</b>：说法<b>正确</b>，不选。<code>Cookie: 123456</code> 是服务器首次访问时颁发、浏览器保存并自动回带的标识——说明是「回头客」。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：请求行看「要什么」、Host 看「在哪儿」、Connection 看「连不连」（<b>Close = 非持续</b>）、Cookie 看「来没来过」。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2015-40 HTTP 请求报文：哪句说错了？',
+  subtitle: '报文：<code>GET /index.html HTTP/1.1</code> + Host + <code>Connection: Close</code> + Cookie · 选项逐项核对',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '<code>Connection: Close</code> = 要求<b>非持续连接</b>——虽然 HTTP/1.1 默认持续连接，但首部行可以显式改写，每个对象取完即断。<br>配套记：Host 指明服务器；Cookie 由服务器颁发、浏览器回带，用于在无状态的 HTTP 上识别老用户。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-41 主元素问题：摩尔投票算法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var A = [0, 5, 5, 3, 5, 7, 5, 5];
+var N = A.length;
+
+function arrRow(idx, clsMap){
+  var h = '<div class="aw-cells" style="justify-content:center">';
+  for (var i = 0; i < N; i++){
+    h += '<div class="aw-col"><div class="aw-ptr">' + (idx === i ? 'i=' + i : '') + '</div>'
+       + '<div class="aw-box ' + (clsMap && clsMap[i] ? clsMap[i] : '') + '" style="width:46px">' + A[i] + '</div>'
+       + '<div class="aw-idx">' + i + '</div></div>';
+  }
+  return h + '</div>';
+}
+function stateRow(c, count){
+  var h = '<div style="display:flex;gap:10px;justify-content:center;margin:8px 0">';
+  h += '<div class="aw-box hit" style="width:120px;height:36px;font-size:14px">候选 c = ' + c + '</div>';
+  h += '<div class="aw-box ok" style="width:120px;height:36px;font-size:14px">计数 count = ' + count + '</div>';
+  return h + '</div>';
+}
+function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
+function card(cls, title, body){
+  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 投票阶段每步的数组高亮（cls）与当前 i
+// cls：相等→hit（绿），抵消→miss（红），换候选→琥珀内联
+var VOTE = [
+  { idx: null, cls: [], c: '—', count: '—' },
+  { idx: 0, cls: ['hit'], c: 0, count: 1 },
+  { idx: 1, cls: ['', 'miss'], c: 0, count: 0 },
+  { idx: 2, cls: ['', 'ok', 'hit'], c: 5, count: 1 },
+  { idx: 3, cls: ['', 'ok', 'ok', 'miss'], c: 5, count: 0 },
+  { idx: 4, cls: ['', 'ok', 'ok', 'ok', 'hit'], c: 5, count: 1 },
+  { idx: 5, cls: ['', 'ok', 'ok', 'ok', 'ok', 'miss'], c: 5, count: 0 },
+  { idx: 6, cls: ['', 'ok', 'ok', 'ok', 'ok', 'ok', 'hit'], c: 5, count: 1 },
+  { idx: 7, cls: ['', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'hit'], c: 5, count: 2 }
+];
+
+var LOGS = [
+  '审题：A = (0,5,5,3,5,7,5,5)，n = 8。主元素 x：出现次数严格大于 n/2。算法：摩尔投票——先投票选候选，再验证',
+  '第 0 位：设候选 c = A[0] = 0，count = 1',
+  'i = 1：A[1] = 5 ≠ c(0) → 抵消一次，count 1 → 0',
+  'i = 2：A[2] = 5 ≠ c(0)，count 已为 0 → 更换候选：c = 5，count = 1（琥珀格 = 新候选）',
+  'i = 3：A[3] = 3 ≠ c(5) → 抵消，count 1 → 0',
+  'i = 4：A[4] = 5 = c → count 0 → 1',
+  'i = 5：A[5] = 7 ≠ c(5) → 抵消，count 1 → 0',
+  'i = 6：A[6] = 5 = c → count 0 → 1',
+  'i = 7：A[7] = 5 = c → count 1 → 2。扫描结束：候选 c = 5，count = 2 > 0，值得验证',
+  '第二遍验证：重新扫描统计 5 的实际出现次数——下标 1、2、4、6、7，共 5 次',
+  '判定：5 次 > n/2 = 4 → 主元素存在，输出 5（若换成反例 (0,5,5,3,5,1,5,7)，5 只出现 4 次，4 不大于 4 → 输出 −1）'
+];
+var TAGS = ['审题', '初始化', 'i=1 抵消', 'i=2 换候选', 'i=3 抵消', 'i=4 相等', 'i=5 抵消', 'i=6 相等', 'i=7 相等',
+            '第二遍统计', '验证通过'];
+var CLS  = ['step', 'step', 'miss', 'shift', 'miss', 'ok', 'miss', 'ok', 'ok', 'step', 'done'];
+
+var snaps = [];
+for (var i = 0; i <= 10; i++){
+  var v = VOTE[Math.min(i, 8)];
+  var h = '';
+  if (i === 0){
+    h += rowLabel('数组 A（n = 8）');
+    h += arrRow(null, null);
+    h += card('key', '题意与算法思想',
+      '<p>摩尔投票分两阶段：<b>① 找候选</b>——相同元素计数加一、不同减一、减到 0 就换候选；若主元素真的存在（次数 &gt; n/2），"一换一抵消"后活下来的候选必是它。<b>② 验证</b>——候选未必真是主元素，第二遍统计它的实际次数再判定。</p>');
+  } else if (i <= 8){
+    h += rowLabel('数组 A（绿 = 与候选相等；红 = 抵消一次；琥珀 = 更换候选）');
+    h += arrRow(v.idx, v.cls);
+    h += stateRow(v.c, v.count);
+    h += card(CLS[i] === 'shift' ? 'key' : (CLS[i] === 'miss' ? 'bad' : ''), TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 9){
+    h += rowLabel('第二遍：统计候选 5 的出现次数（绿 = 出现 5 的位置）');
+    h += arrRow(null, ['', 'hit', 'hit', '', 'hit', '', 'hit', 'hit']);
+    h += card('', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else {
+    h += rowLabel('数组 A（n = 8）');
+    h += arrRow(null, ['', 'hit', 'hit', '', 'hit', '', 'hit', 'hit']);
+    h += stateRow(5, '5 次');
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+    h += card('good', '大题三问要点',
+      '<p><b>（2）代码关键行</b>：<code>c = A[0]; count = 1;</code> → 循环中「相等加一 / 不等减一 / 减到 0 换候选」→ <code>count &gt; n/2 ? 返回 c : 返回 -1</code>（两遍扫描）。</p>'
+      + '<p><b>（3）复杂度</b>：时间 <b>O(n)</b>（两次线性遍历），空间 <b>O(1)</b>（只用 c、count 等常数变量）。</p>');
+  }
+  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
+  if (i >= 2 && i <= 8) sn.ribbon = { k: i - 1, ok: CLS[i] === 'ok' }; // 7 次比较
+  if (i === 10) sn.done = true;
+  snaps.push(sn);
+}
+
+AW.init({
+  title: '找主元素：摩尔投票算法演示（2013-41）',
+  subtitle: 'A = <code>(0,5,5,3,5,7,5,5)</code> · n = 8 · 一遍投票找候选 + 一遍验证',
+  counterLabel: '算法步',
+  ribbonTitle: '投票比较（✓ 相等加一 / ✗ 抵消）',
+  intro: '点击「▶ 播放」逐步演示投票与验证。',
+  snaps: snaps,
+  result: {
+    big: '主元素 = 5（输出 5）',
+    html: '投票结束后候选 c = <b>5</b>；第二遍统计 5 出现 <b>5 次 &gt; 8/2 = 4</b> → 输出 <b>5</b>。<br>大题要点：① 必须<b>两遍扫描</b>（候选≠一定成立，反例 (0,5,5,3,5,1,5,7) 应输出 −1）；② 判定条件是<b>严格大于</b> n/2；③ 时间 <b>O(n)</b>、空间 <b>O(1)</b>。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-03 中序序列里的前驱与后继</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body) {
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+    '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  {
+    title: '审题眼：p、q 是谁',
+    cls: 'key',
+    body: '<p>中序序列形如 <code>…, p, v, q, …</code>，且 <b>v 有两个孩子</b>。这说明 p 恰好是 v 的<b>中序前驱</b>，q 恰好是 v 的<b>中序后继</b>。要判定的就是：这样的前驱、后继各自还可能有什么孩子。</p>'
+  },
+  {
+    title: '关键定理：两个孩子时前驱/后继的位置',
+    cls: '',
+    body: '<p>结点 v 有两个孩子时：它的<b>中序前驱 = 左子树中最右边的结点</b>（从左子树根一路向右走到底）；它的<b>中序后继 = 右子树中最左边的结点</b>（从右子树根一路向左走到底）。v 的直接孩子不一定是 p、q，但 p、q 一定是这两个「极端」结点。</p>'
+  },
+  {
+    title: '分析 p：左子树最右结点',
+    cls: 'good',
+    body: '<p>p 是 v 左子树中一路向右走到底的结点。<b>如果 p 还有右孩子</b>，就该继续往右走，p 就不是最右结点、也就不是 v 的前驱 —— 矛盾。所以 <b>p 必定没有右孩子</b>（p 有没有左孩子都可能）。</p>'
+  },
+  {
+    title: '分析 q：右子树最左结点',
+    cls: 'good',
+    body: '<p>对称地，q 是 v 右子树中一路向左走到底的结点。<b>如果 q 还有左孩子</b>，就该继续往左走，q 就不是最左结点、不是 v 的后继 —— 矛盾。所以 <b>q 必定没有左孩子</b>（q 有没有右孩子都可能）。</p>'
+  },
+  {
+    title: '逐项排除',
+    cls: 'bad',
+    body: '<p><b>B</b>「q 有左孩子」：与第 4 步矛盾。<b>C</b>「p 有右孩子」、<b>D</b> 两条都违反上面两步的结论。只有 <b>A</b>「p 没有右孩子，q 没有左孩子」与两个方向的分析完全一致。</p>'
+  },
+  {
+    title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。用小树验证：v 的左子树取 <code>a→右孩子 b</code>，中序是 <code>a, b, v</code>，前驱 b 无右孩子；右子树取 <code>c→左孩子 d</code>，中序是 <code>v, d, c</code>，后继 d 无左孩子。</p>'
+  }
+];
+
+var snaps = STEPS.map(function (s, i) {
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function (x, j) {
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '中序序列 …,p,v,q,… 能推出什么（2024-03）',
+  subtitle: 'v 有两个孩子 · p 是中序前驱 · q 是中序后继',
+  intro: '点击「▶ 播放」，顺着「前驱/后继在哪」的定位规则一步步推。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>「前驱无右，后继无左」</b>—— 前驱是左子树一路向右的终点，后继是右子树一路向左的终点，终点再往下走一格就自相矛盾。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

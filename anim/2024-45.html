@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-45 · 页表项地址推算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     地址映射推演动画：页表项虚拟/物理地址与页框号（大题两问）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 结果清单（顺序 = 推演顺序）
+var RESULTS = [
+  '（1）页框号更新为 2EAH',
+  '（1）页表项虚拟地址 = B8C0 0120H',
+  '（1）页表项物理地址 = 6540 0120H',
+  '（2）页表所在页的页号 = 2E3H（十进制 739）',
+  '（2）该页表项的虚拟地址 = B8C0 0B8CH',
+  '（2）该页表项中的页框号 = 195H',
+];
+
+// 字段着色：0,1 = 页号主体（绿）；2 = 跨界半字节（琥珀，高 2 位属页号、低 2 位属偏移）；其余 = 偏移（白）
+function markClasses(){
+  return ['ok', 'ok', 'shift', '', '', '', '', ''];
+}
+
+AW.init({
+  title: '页式虚存：页表项自身地址的两问推算',
+  subtitle: '页大小 <code>4 MB</code>（偏移 22 位）· 页号 <code>10 位</code> · 页表项 <code>4 B</code> · 页表始址（虚）<code>B8C0 0000H</code> · 装入物理 <code>6540 0000H</code>',
+  counterLabel: '推演步',
+  ribbonTitle: '关键结果（✓ 已推出）',
+  intro: '点击「▶ 播放」逐步推算两问的答案。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var cond = AW.el('div', 'aw-row-label',
+      '<b>字段划分</b>：32 位地址 = 页号（高 10 位）+ 页内偏移（低 22 位）。<span style="color:#15803d">■ 绿 = 页号主体</span>　<span style="color:#92400e">■ 琥珀 = 跨界半字节（高 2 位属页号，低 2 位属偏移）</span>　<span style="color:#64748b">■ 白 = 页内偏移</span>');
+    stage.appendChild(cond);
+    var row = AW.el('div', 'aw-cells');
+    row.style.gap = '8px';
+    this._digits = [];
+    for(var k = 0; k < 8; k++){
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', '?');
+      col.appendChild(ptr); col.appendChild(box);
+      row.appendChild(col);
+      this._digits.push({ ptr: ptr, box: box });
+    }
+    stage.appendChild(row);
+    this._addrLabel = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._addrLabel);
+    this._formula = AW.el('div', 'aw-row-label', '');
+    this._formula.style.fontSize = '14px';
+    stage.appendChild(this._formula);
+    this._resBox = AW.el('div', '');
+    stage.appendChild(this._resBox);
+  },
+
+  snaps: [
+    { cls:'step', tag:'条件', log:'按字节编址，虚/物地址均 32 位，页大小 4 MB（即 2 的 22 次幂字节）→ 页内偏移 22 位、页号 10 位；页表项 4 字节', count:1, addr:'—', digits:null, resCount:0, f:'先把 32 位虚地址拆成 [页号 10 位 | 页内偏移 22 位]' },
+    { cls:'step', tag:'（1）拆虚地址', log:'拆分虚地址 1234 5678H：前两个半字节加第 3 个半字节的高 2 位是页号——0001 0010 0011 取高 10 位 = 048H（十进制 72）；低 22 位是偏移 345678H', count:2, addr:'虚地址 1234 5678H', digits:['1','2','3','4','5','6','7','8'], resCount:0, f:'页号 = 高 10 位 = <b>048H</b>（72）　·　偏移 = 低 22 位 = <b>345678H</b>' },
+    { cls:'ok', tag:'（1）页框号', log:'缺页处理完成：该页装入页框后物理地址 = BAB4 5678H，低 22 位偏移不变，高 10 位（1011101010）即页框号 = 2EAH', count:3, addr:'物理地址 BAB4 5678H', digits:['B','A','B','4','5','6','7','8'], resCount:1, f:'页框号 = BAB4 5678H 高 10 位 = <b>2EAH</b>　·　偏移仍为 345678H', ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'（1）页表项虚地址', log:'页表项虚拟地址 = 页表始址（虚）B8C0 0000H + 页号 × 4 B：048H × 4 = 120H → B8C0 0120H', count:4, addr:'页表项虚拟地址', digits:['B','8','C','0','0','1','2','0'], resCount:2, f:'B8C0 0000H + 048H × 4 = B8C0 0000H + 120H = <b>B8C0 0120H</b>', ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'（1）页表项物理地址', log:'页表装在物理 6540 0000H 起的连续空间，页表项相对页表始址的偏移不变（120H）：物理地址 = 6540 0120H', count:5, addr:'页表项物理地址', digits:['6','5','4','0','0','1','2','0'], resCount:3, f:'6540 0000H + 120H = <b>6540 0120H</b>', ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'（2）页表所在页号', log:'页表自身也在虚拟地址空间里：页表始址（虚）B8C0 0000H 的高 10 位即所在页页号——1011 1000 1100 取高 10 位 = 2E3H（739）', count:6, addr:'页表始址（虚）B8C0 0000H', digits:['B','8','C','0','0','0','0','0'], resCount:4, f:'页表所在页的页号 = B8C0 0000H 高 10 位 = <b>2E3H</b>（十进制 739）', ribbon:{k:4, ok:true} },
+    { cls:'ok', tag:'（2）该页的页表项', log:'页表所在页（2E3H）的页表项就是进程 P 页表中的第 2E3H 项：虚拟地址 = B8C0 0000H + 2E3H × 4，739 × 4 = 2956 = B8CH → B8C0 0B8CH', count:7, addr:'该页表项虚拟地址', digits:['B','8','C','0','0','B','8','C'], resCount:5, f:'B8C0 0000H + 2E3H × 4 = B8C0 0000H + B8CH = <b>B8C0 0B8CH</b>', ribbon:{k:5, ok:true} },
+    { cls:'ok', tag:'（2）页框号', log:'页表从物理 6540 0000H 开始连续装入，其所在页的页框号 = 6540 0000H 的高 10 位：0110 0101 0100 取高 10 位 = 195H', count:8, addr:'页表装入位置（物）6540 0000H', digits:['6','5','4','0','0','0','0','0'], resCount:6, f:'页框号 = 6540 0000H 高 10 位 = <b>195H</b>', ribbon:{k:6, ok:true} },
+    { cls:'done', tag:'结论', log:'（1）B8C0 0120H / 6540 0120H / 2EAH；（2）2E3H / B8C0 0B8CH / 195H', count:9, addr:'—', digits:null, resCount:6, f:'两问共 6 个结果，见下方清单', done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var ds = this._digits || [];
+    var digits = sn.digits;
+    var marks = markClasses();
+    for(var k = 0; k < ds.length; k++){
+      if(digits){
+        ds[k].box.textContent = digits[k];
+        ds[k].box.className = 'aw-box' + (marks[k] ? ' ' + marks[k] : '');
+      } else {
+        ds[k].box.textContent = '?';
+        ds[k].box.className = 'aw-box dim';
+      }
+      ds[k].ptr.textContent = '';
+    }
+    this._addrLabel.innerHTML = sn.addr === '—' ? '<b>当前对象</b>：待定' : '<b>当前对象</b>：' + sn.addr;
+    this._formula.innerHTML = '<b>算式</b>：' + sn.f;
+    var n = sn.resCount || 0;
+    var html = '';
+    for(var r = 0; r < n && r < RESULTS.length; r++){
+      html += '<div class="aw-log-line ok">' + RESULTS[r] + '</div>';
+    }
+    this._resBox.innerHTML = html ? '<div class="aw-row-label"><b>已推出结果</b></div>' + html : '';
+  },
+
+  result: {
+    big: '两问全解',
+    html: '<b>（1）</b>页表项虚拟地址 <code>B8C0 0120H</code>、物理地址 <code>6540 0120H</code>、页框号 <code>2EAH</code>。<br><b>（2）</b>页表所在页页号 <code>2E3H</code>、该页表项虚拟地址 <code>B8C0 0B8CH</code>、页框号 <code>195H</code>。<br>记忆点：<b>页表项地址 = 页表始址 + 页号 × 4B；页表自身所在页以页表始址（虚）的高 10 位定页号，以实际装入位置（物）的高 10 位定页框号。</b>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

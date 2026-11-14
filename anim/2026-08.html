@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-08 AVL 两子树结点数最大差 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 构造验证图：根 + 左子树（高 3 满，7 结点）+ 右子树（高 2 最少，2 结点）
+function demoTreeSVG(){
+  var T = {
+    v:'根',
+    l:{ v:'L',
+      l:{ v:'LL', l:{v:'x'}, r:{v:'y'} },
+      r:{ v:'LR', l:{v:'u'}, r:{v:'w'} } },
+    r:{ v:'Rt', l:{v:'c'}, r:null }
+  };
+  var POS = {}, seq = [];
+  (function ino(nd){ if(!nd) return; ino(nd.l); seq.push(nd.v); ino(nd.r); })(T);
+  var pos = {}, cnt = 0, maxd = 0;
+  (function place(nd, d){
+    if (!nd) return;
+    place(nd.l, d + 1);
+    pos[nd.v] = { x: ++cnt, y: d }; maxd = Math.max(maxd, d);
+    place(nd.r, d + 1);
+  })(T, 1);
+  var XP = 52, YP = 50, R = 16;
+  var W = (cnt + 1) * XP, H = (maxd + 1) * YP;
+  function px(v){ return pos[v].x * XP; }
+  function py(v){ return pos[v].y * YP - 8; }
+  var s = '<svg width="' + W + '" height="' + H + '" style="display:block;margin:0 auto">';
+  (function edges(nd){
+    if (!nd) return;
+    ['l','r'].forEach(function(k){
+      if (nd[k]) s += '<line x1="' + px(nd.v) + '" y1="' + py(nd.v) + '" x2="' + px(nd[k].v) + '" y2="' + py(nd[k].v) + '" stroke="#94a3b8" stroke-width="2"/>';
+    });
+    edges(nd.l); edges(nd.r);
+  })(T);
+  for (var v in pos){
+    var leaf = (v === 'x' || v === 'y' || v === 'u' || v === 'w' || v === 'c');
+    var fill = '#fff', stroke = '#cbd5e1';
+    if (leaf){ fill = '#dcfce7'; stroke = '#16a34a'; }
+    if (v === 'L' || v === 'Rt'){ fill = '#fef3c7'; stroke = '#d97706'; }
+    s += '<circle cx="' + px(v) + '" cy="' + py(v) + '" r="' + R + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>' +
+         '<text x="' + px(v) + '" y="' + (py(v) + 4.5) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a" font-family="Menlo,Consolas,monospace">' + v + '</text>';
+  }
+  return s + '</svg>';
+}
+
+var STEPS = [
+  { title: '审题眼：平衡约束管高度，不管结点数',
+    cls: 'key',
+    body: '<p>AVL 只要求每个结点左右子树<b>高度</b>之差 ≤ 1。根高 4（占第 1～4 层），则左右子树高度组合只能是 <code>(3,3)</code> 或 <code>(3,2)/(2,3)</code>——(2,2) 更矮不拉差距，要拉开结点数差必须让一侧顶到高度 3。</p>' },
+  { title: '两种高度下的结点数极值',
+    cls: '',
+    body: '<p>高 h 的 AVL：<b>最少</b>结点数 N(h) = N(h−1) + N(h−2) + 1，其中 N(1)=1、N(2)=2 → N(3)=4；<b>最多</b>是满二叉树 2<sup>h</sup>−1，即高 3 最多 7、高 2 最多 3。</p>' +
+          '<table style="border-collapse:collapse;margin:6px 0;font-size:13.5px">' +
+          '<tr><td style="border:1.5px solid #cbd5e1;padding:3px 10px;background:#f1f5f9">子树高度</td><td style="border:1.5px solid #cbd5e1;padding:3px 10px">结点数范围</td></tr>' +
+          '<tr><td style="border:1.5px solid #cbd5e1;padding:3px 10px">高 3</td><td style="border:1.5px solid #cbd5e1;padding:3px 10px">4 ～ 7</td></tr>' +
+          '<tr><td style="border:1.5px solid #cbd5e1;padding:3px 10px">高 2</td><td style="border:1.5px solid #cbd5e1;padding:3px 10px">2 ～ 3</td></tr></table>' },
+  { title: '组合 (3,3)：差最多 3',
+    cls: '',
+    body: '<p>两侧都顶到高度 3：一侧取满树 7 个，另一侧取最少形态 N(3)=4 个，差 = <b>7 − 4 = 3</b>。</p>' },
+  { title: '组合 (3,2)：差最多 5',
+    cls: 'good',
+    body: '<p>一侧高 3 取满树 <b>7</b> 个，另一侧高 2 取最少形态 <b>2</b> 个（根 + 1 个孩子）：差 = <b>7 − 2 = 5</b>。高度差 3 − 2 = 1，根的平衡因子合法。</p>' },
+  { title: '构造验证：这棵树真实存在',
+    cls: 'good',
+    body: '<p>左子树取高 3 的满树（7 结点），右子树取 2 结点：根的平衡因子 = 1，全树高 4，每个结点都满足 AVL 约束：</p>' +
+          '<div style="overflow-x:auto">' + demoTreeSVG() + '</div>' +
+          '<p style="margin-top:6px">黄 = 两棵子树的根，绿 = 叶。左右子树结点数差 7 − 2 = <b>5</b>，且 (3,3) 的最大差 3、(2,2) 的最大差 1 都更小。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>根的左右子树结点个数相差最多 <b style="font-size:16px">5</b>，答案选 <b style="font-size:16px">D</b>。记忆锚点：<code>高度差 1 ≠ 结点数差小；一侧满、另一侧取该高度的最少形态</code>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2026-08 · 高 4 的 AVL：两子树结点数最多差多少',
+  subtitle: '平衡因子约束的是高度差 · <code>一侧满树 7，另一侧高 2 最少 2 → 差 5</code>',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步推理并构造验证。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（相差最多 5）',
+    html: '根高 4 → 子树高度组合为 (3,3) 或 (3,2)：高 3 结点数范围 4～7、高 2 为 2～3。(3,3) 最大差 7−4=3；<b>(3,2) 取满树 7 与最少 2，差 5</b>，且高度差 1 合法——构造真实存在，选 <b>D</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

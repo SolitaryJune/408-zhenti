@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-35 CSMA/CA 发帧到收妥 · 时序动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 时间轴各段：DIFS（不计时）→ DATA 40μs → SIFS 28μs → ACK ≈0 */
+var SEGS = [
+  { key: 'difs', label: 'DIFS', val: '128 μs', w: 128, tip: '发送前的信道侦听等待，在计时起点之前' },
+  { key: 'data', label: 'DATA', val: '40 μs',  w: 80,  tip: '1500 B = 12000 bit ÷ 300 Mbps' },
+  { key: 'sifs', label: 'SIFS', val: '28 μs',  w: 56,  tip: '接收方收完后等 SIFS 才发 ACK' },
+  { key: 'ack',  label: 'ACK',  val: '≈0',     w: 30,  tip: '除数据帧外其他帧的传输时延被忽略' },
+];
+
+var segWrap, clockBox, noteBox, calcBox;
+
+function drawTimeline(sn){
+  var s = '<div style="display:flex;align-items:flex-start;gap:2px;width:max-content">';
+  SEGS.forEach(function(g, gi){
+    var state = 'future';
+    if (sn.act != null){
+      if (gi < sn.act) state = 'past';       // 已走过的段：浅绿
+      else if (gi === sn.act) state = 'cur'; // 当前段：实心绿
+    }
+    if (g.key === 'difs' && sn.act != null) state = (sn.act === 0 ? 'excl' : 'dim');
+    var bg = '#fff', bd = '#cbd5e1', fg = '#0f172a';
+    if (state === 'past'){ bg = '#dcfce7'; bd = '#16a34a'; fg = '#14532d'; }
+    if (state === 'cur'){ bg = '#16a34a'; bd = '#16a34a'; fg = '#fff'; }
+    if (state === 'excl'){ bg = '#fef3c7'; bd = '#d97706'; fg = '#92400e'; }
+    if (state === 'dim' || state === 'future'){ bg = '#fff'; bd = '#e2e8f0'; fg = '#94a3b8'; }
+    s += '<div style="width:' + g.w + 'px;text-align:center">' +
+         '<div style="height:52px;border:2px solid ' + bd + ';border-radius:10px;background:' + bg +
+         ';display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .3s">' +
+         '<div style="font-weight:800;font-size:14px;color:' + fg + '">' + g.label + '</div>' +
+         '<div style="font-size:11.5px;color:' + fg + ';opacity:.85">' + g.val + '</div></div>' +
+         '<div style="font-size:10.5px;color:#94a3b8;margin-top:4px;line-height:1.4">' + g.tip + '</div></div>';
+  });
+  s += '</div>';
+  return s;
+}
+
+function drawCalc(sn){
+  var rows = sn.calc || [];
+  var s = '<table style="border-collapse:collapse;font-size:13px;margin-top:4px">';
+  rows.forEach(function(r){
+    s += '<tr><td style="border:1px solid #e2e8f0;padding:4px 12px;background:#f8fafc">' + r[0] +
+         '</td><td style="border:1px solid #e2e8f0;padding:4px 12px;font-family:Menlo,monospace"><b>' + r[1] + '</b></td></tr>';
+  });
+  return s + '</table>';
+}
+
+var snaps = [
+  { cls:'step', tag:'读题', act:null, t:0, count:0,
+    log:'条件：速率 300 Mbps，数据帧 1500 B，SIFS=28 μs，DIFS=128 μs；忽略传播时延与除数据帧外其他帧的传输时延。计时从「开始发送数据帧」时刻起。',
+    calc: [['数据帧 1500 B','12000 bit'], ['速率','300 Mbps'], ['SIFS / DIFS','28 μs / 128 μs']] },
+  { cls:'shift', tag:'DIFS 不计时', act:0, t:0, count:0, ribbon:{k:1, ok:true},
+    log:'关键判定①：DIFS 是发送「之前」的信道侦听等待，而计时起点是「开始发送数据帧」，所以 128 μs 的 DIFS <b>不计入</b>。',
+    calc: [['计时起点','开始发送数据帧时刻'], ['DIFS 128 μs','不计入']] },
+  { cls:'ok', tag:'DATA = 40 μs', act:1, t:40, count:40, ribbon:{k:2, ok:true},
+    log:'发送数据帧：1500 B = 12000 bit，12000 ÷ 300 Mbps = <b>40 μs</b>。t = 40 μs 时最后一比特发出。',
+    calc: [['t_DATA = 1500×8 ÷ 300M','40 μs'], ['累计','t = 40 μs']] },
+  { cls:'ok', tag:'接收方收完', act:2, t:40, count:40,
+    log:'信号传播时延被忽略 → 接收方在 t = 40 μs 时刻恰好收完整个数据帧，马上进入 SIFS 等待。',
+    calc: [['传播时延','忽略'], ['累计','t = 40 μs']] },
+  { cls:'shift', tag:'SIFS = 28 μs', act:2, t:68, count:68, ribbon:{k:3, ok:true},
+    log:'关键判定②：802.11 规定接收方收到数据帧后要等 SIFS = 28 μs 再发 ACK → t = 40 + 28 = 68 μs。',
+    calc: [['SIFS','28 μs'], ['累计','t = 40 + 28 = 68 μs']] },
+  { cls:'ok', tag:'ACK ≈ 0', act:3, t:68, count:68, ribbon:{k:4, ok:true},
+    log:'关键判定③：ACK 帧的传输时延被题目忽略（≈0），传播时延也忽略 → H 立刻得知接收方已收到该帧。',
+    calc: [['ACK 传输时延','忽略（≈0）'], ['累计','t = 68 μs']] },
+  { cls:'done', tag:'完成', act:4, t:68, count:68, ribbon:{k:5, ok:true},
+    log:'合计：DATA 40 μs + SIFS 28 μs = <b>68 μs</b>（DIFS 与 ACK 都不计时）→ 选 B。',
+    calc: [['总时间 = 40 + 28','68 μs'], ['答案','B']] },
+];
+
+snaps.forEach(function(sn, i){
+  sn.done = i === snaps.length - 1;
+});
+
+AW.init({
+  title: '2026-35 · CSMA/CA：从开始发数据帧到确认收妥',
+  subtitle: '<code>1500 B ÷ 300 Mbps = 40 μs</code> + <code>SIFS 28 μs</code> · DIFS 与 ACK 不计时',
+  counterLabel: '累计时间(μs)',
+  ribbonTitle: '关键判定（✓ 已锁定）',
+  intro: '点击「▶ 播放」，沿时间轴逐段计算并判定哪些时段要计入。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    segWrap = AW.el('div', '');
+    clockBox = AW.el('div', 'aw-row-label', '');
+    calcBox = AW.el('div', '');
+    noteBox = AW.el('div', 'aw-row-label', '');
+    wrap.appendChild(segWrap);
+    wrap.appendChild(clockBox);
+    wrap.appendChild(calcBox);
+    wrap.appendChild(noteBox);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    segWrap.innerHTML = drawTimeline(sn);
+    clockBox.innerHTML = '当前累计时间 t = <b>' + sn.t + ' μs</b>';
+    calcBox.innerHTML = drawCalc(sn);
+    noteBox.innerHTML = '';
+  },
+  snaps: snaps,
+  result: {
+    big: '68 μs（选 B）',
+    html: '时间轴：<b>DATA 40 μs</b>（1500 B=12000 bit ÷ 300 Mbps）→ <b>SIFS 28 μs</b> → ACK（忽略，≈0）→ 共 <b>40 + 28 = 68 μs</b>。干扰项来源：把 DIFS 128 μs 加上是 196 μs（D）；漏掉 SIFS 是 40 μs（A）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-30 共享页面的页号与页框号</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var innerEl = null;
+
+// 每步的格子状态：R 页表 / S 页表 / 物理页框
+var STATES = [
+  { r:['dim','dim','dim'], s:['dim','dim','dim'], f:['dim','dim','dim','dim','dim'],
+    rPtr:{}, sPtr:{}, fPtr:{} },
+  { r:['dim','ok','dim'],  s:['dim','dim','dim'], f:['dim','dim','ok','dim','dim'],
+    rPtr:{2:'p1=5'}, sPtr:{}, fPtr:{} },
+  { r:['dim','ok','dim'],  s:['dim','dim','ok'],  f:['dim','dim','ok','dim','dim'],
+    rPtr:{2:'p1=5'}, sPtr:{3:'p2=9'}, fPtr:{} },
+  { r:['ok','ok','dim'],   s:['dim','dim','ok'],  f:['dim','dim','ok','dim','dim'],
+    rPtr:{2:'p1=5'}, sPtr:{3:'p2=9'}, fPtr:{} },
+  { r:['dim','ok','dim'],  s:['dim','dim','ok'],  f:['dim','dim','hit','dim','dim'],
+    rPtr:{2:'p1=5'}, sPtr:{3:'p2=9'}, fPtr:{3:'f1=f2=2'} },
+  { r:['dim','ok','dim'],  s:['dim','dim','ok'],  f:['dim','dim','hit','dim','dim'],
+    rPtr:{2:'p1=5'}, sPtr:{3:'p2=9'}, fPtr:{3:'f1=f2=2'} },
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  innerEl = AW.el('div', '');
+  wrap.appendChild(innerEl);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn, i){
+  var st = STATES[i] || STATES[0];
+  innerEl.innerHTML = '';
+
+  innerEl.appendChild(AW.el('div', 'aw-row-label', '<b>进程 R 的页表</b>（页号 → 页框号，R 经虚拟页 5 访问 data）'));
+  innerEl.appendChild(AW.cellRow(['4→1', '5→2', '6→3'], st.r, st.rPtr, 1));
+
+  innerEl.appendChild(AW.el('div', 'aw-row-label', '<b>进程 S 的页表</b>（页号 → 页框号，S 经虚拟页 9 访问 data）'));
+  innerEl.appendChild(AW.cellRow(['7→0', '8→3', '9→2'], st.s, st.sPtr, 1));
+
+  innerEl.appendChild(AW.el('div', 'aw-row-label', '<b>物理内存页框</b>（data 存放在页框 2，物理副本只有一份）'));
+  innerEl.appendChild(AW.cellRow(['0', '1', '2', '3', '4'], st.f, st.fPtr, 0));
+}
+
+AW.init({
+  title: '共享数据 data：页号 p1/p2 与页框号 f1/f2',
+  subtitle: '进程 R、S 共享 data · R 的页表：<code>5→2</code> · S 的页表：<code>9→2</code> · 页大小 4KB',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」看两个进程如何各自映射到同一页框。',
+  build: build,
+  render: render,
+  snaps: [
+    { cls:'step', tag:'初始', log:'进程 R 和 S 共享数据 data：物理内存中 data 只有一个副本，存放在页框 2', count:0 },
+    { cls:'ok',   tag:'R 访问', log:'R 查自己的页表：虚拟页号 p1 = 5，映射到页框号 f1 = 2', count:1 },
+    { cls:'ok',   tag:'S 访问', log:'S 查自己的页表：虚拟页号 p2 = 9，映射到页框号 f2 = 2', count:2 },
+    { cls:'shift',tag:'比页号', log:'p1 = 5 ≠ p2 = 9：两个进程虚拟空间布局独立，页号不一定相等', count:3 },
+    { cls:'shift',tag:'比页框', log:'f1 = f2 = 2：共享的是同一份物理副本，两个页表项必然指向同一页框', count:4 },
+    { cls:'done', tag:'完成', log:'页号不一定相等、页框号一定相等 → 选 C', count:5, done:true },
+  ],
+  result: {
+    big: '答案 C',
+    html: '<b>页号不一定相等</b>：页号是各进程虚拟地址空间里的编号，布局互不相干；' +
+          '<b>页框号一定相等</b>：共享数据在物理内存只有一份，两个页表项必须指向同一页框。' +
+          '记忆锚点：共享的是<b>物理页框</b>，不是虚拟页号。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

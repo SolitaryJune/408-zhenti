@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-47 动画 · TCP 抓包分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  table.pkt{ border-collapse:collapse; font-size:12px; font-family:Menlo,monospace; width:100%; }
+  table.pkt th, table.pkt td{ border:1px solid #e2e8f0; padding:5px 7px; text-align:center; white-space:nowrap; }
+  table.pkt th{ background:#f1f5f9; color:#475569; font-family:inherit; }
+  table.pkt tr.g{ background:#dcfce7; }
+  table.pkt tr.s{ background:#eff6ff; }
+  table.pkt tr.k{ background:#fef3c7; }
+  table.pkt tr.dim{ opacity:.45; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var rowEls = [], fxEl = null;
+
+// 每步给 5 个分组行的着色：g 绿(结论行) / s 蓝(对照行) / k 琥珀(聚焦行) / dim 淡化
+var ROWCLS = [
+  ['', '', '', '', ''],
+  ['g', 's', 'g', 'g', 's'],
+  ['g', 'g', 'g', 'dim', 'dim'],
+  ['dim', 'dim', 'dim', 'dim', 'dim'],
+  ['', '', 'k', '', 'k'],
+  ['', '', '', '', ''],
+  ['dim', 'dim', 'dim', 'g', 'dim'],
+  ['', '', '', 'g', 'g'],
+  ['', '', '', '', 'k'],
+  ['', '', '', '', 'k'],
+  ['', '', '', '', 'g'],
+  ['g', 'g', 'g', 'g', 'g'],
+];
+
+var FX = [
+  '先认地址：<code>c0 a8 00 08 = 192.168.0.8（主机 H）</code>，<code>d3 44 47 50 = 211.68.71.80（服务器 S）</code>。',
+  '看<b>源 IP</b>：1、3、4 号源 IP = 192.168.0.8 → 由 <b>H 发送</b>；2、5 号由 S 发回。',
+  '看<b>标志位</b>：1 号 02H(SYN) → 2 号 12H(SYN+ACK) → 3 号 10H(ACK)，三次握手齐备 → <b>1、2、3 号</b>完成连接建立。',
+  '以太网数据字段最短 <b>46 B</b>：IP 数据报总长度小于 46 B 的帧必须填充。',
+  '3、5 号总长 0028H = <b>40 B &lt; 46 B</b> → 各填充 6 B；1、2 号 48 B、4 号 56 B 不用 → <b>填充的是 3、5 号</b>（问 1 完成）。',
+  '应用数据 = 总长 − IP 头 − TCP 头：1、2 号 48−20−28 = 0；3、5 号 40−20−20 = 0 —— 都不带数据。',
+  '4 号总长 0038H = <b>56 B</b>：56−20−20 = <b>16 B</b> 应用数据（标志 18H = PSH+ACK，序号 846B41C6）。',
+  '5 号是 S 回的确认：确认号 846B41D6 = 4 号序号 + 16 → S 已收到这 <b>16 字节</b>应用数据（问 2 完成）。',
+  '47-b 表与 5 号分组<b>标识同为 6811H</b>：S 发出时 TTL = 40H = <b>64</b>；每过一个路由器 TTL 减 1。',
+  'H 捕获的 5 号分组 TTL = 31H = <b>49</b>。',
+  '64 − 49 = <b>15</b> → 到达 H 时经过了 <b>15 个路由器</b>（问 3 完成）。',
+  '三问汇总：H 发送 1、3、4；连接建立 1、2、3；填充 3、5；S 已收到 16 字节；经过 15 个路由器。✔',
+];
+
+AW.init({
+  title: 'TCP 抓包分析：握手 / 填充 / TTL（2012·47）',
+  subtitle: 'H = <code>192.168.0.8</code> · S = <code>211.68.71.80</code> · 快速以太网 · 5 个 IP 分组（前 40 字节）',
+  counterLabel: '已分析',
+  ribbonTitle: '小问进度（✓ 已解决）',
+  intro: '点击「▶ 播放」逐问分析抓包表。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>地址对照</b>：<code>c0 a8 00 08 = 192.168.0.8（H）</code> · <code>d3 44 47 50 = 211.68.71.80（S）</code> · 端口 0BD9H = 3033，1388H = 5000'));
+
+    var tbl = AW.el('table', 'pkt');
+    tbl.innerHTML =
+      '<thead><tr><th>编号</th><th>方向</th><th>IP 总长</th><th>TTL</th><th>标识</th><th>TCP 标志</th><th>序号</th><th>确认号</th><th>数据</th></tr></thead><tbody></tbody>';
+    var tb = tbl.querySelector('tbody');
+    var DATA = [
+      ['1', 'H→S', '0030H = 48B', '80H = 128', '019B', '02H SYN', '846B41C5', '00000000', '0'],
+      ['2', 'S→H', '0030H = 48B', '31H = 49', '0000', '12H SYN+ACK', 'E0599FEF', '846B41C6', '0'],
+      ['3', 'H→S', '0028H = 40B', '80H = 128', '019C', '10H ACK', '846B41C6', 'E0599FF0', '0'],
+      ['4', 'H→S', '0038H = 56B', '80H = 128', '019D', '18H PSH+ACK', '846B41C6', 'E0599FF0', '16'],
+      ['5', 'S→H', '0028H = 40B', '31H = 49', '6811', '10H ACK', 'E0599FF0', '846B41D6', '0'],
+    ];
+    DATA.forEach(function(r){
+      var tr = document.createElement('tr');
+      r.forEach(function(c){
+        var td = document.createElement('td');
+        td.textContent = c;
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+      rowEls.push(tr);
+    });
+    inner.appendChild(tbl);
+
+    fxEl = AW.el('div', 'aw-row-label', FX[0]);
+    fxEl.style.marginTop = '12px';
+    inner.appendChild(fxEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '认地址',   log: '先认地址：c0 a8 00 08 = 192.168.0.8（主机 H），d3 44 47 50 = 211.68.71.80（服务器 S）', count: 0 },
+    { cls: 'ok',   tag: '问1·方向', log: '源 IP = 192.168.0.8 的是 1、3、4 号 → 由 H 发送；2、5 号由 S 发回', count: 1 },
+    { cls: 'ok',   tag: '问1·握手', log: '1 号 SYN(02H) → 2 号 SYN+ACK(12H) → 3 号 ACK(10H)：三次握手完成 → 1、2、3 号完成连接建立', count: 2 },
+    { cls: 'step', tag: '问1·最小帧', log: '以太网数据字段最短 46 B：IP 数据报总长不足 46 B 的帧必须填充', count: 3 },
+    { cls: 'ok',   tag: '问1·填充', log: '3、5 号总长 0028H = 40 B < 46 B → 各填充 6 B；1、2 号 48 B、4 号 56 B 不用 → 填充的是 3、5 号（问 1 完成）', count: 4, ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '问2·找数据', log: '总长减 IP 头和 TCP 头才是应用数据：1、2 号 48−20−28 = 0；3、5 号 40−20−20 = 0 —— 都不带数据', count: 5 },
+    { cls: 'ok',   tag: '问2·4号',  log: '4 号总长 0038H = 56 B：56 − 20 − 20 = 16 B 应用数据（标志 18H = PSH+ACK，序号 846B41C6）', count: 6 },
+    { cls: 'ok',   tag: '问2·证实', log: '5 号是 S 回的确认：确认号 846B41D6 = 4 号序号 + 16 → S 已收到这 16 字节应用数据（问 2 完成）', count: 7, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '问3·TTL',  log: '47-b 表与 5 号分组标识同为 6811H —— S 发出时 TTL = 40H = 64；每过一个路由器 TTL 减 1', count: 8 },
+    { cls: 'step', tag: '问3·到达', log: 'H 捕获的 5 号分组 TTL = 31H = 49', count: 9 },
+    { cls: 'ok',   tag: '问3·跳数', log: '64 − 49 = 15 → 该分组到达 H 时经过了 15 个路由器（问 3 完成）', count: 10, ribbon: { k: 3, ok: true } },
+    { cls: 'done', tag: '汇总',     log: '三问答案：1、3、4 由 H 发送；1、2、3 完成连接建立；3、5 号填充；S 已收到 16 字节；经过 15 个路由器', count: 11, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    var map = ROWCLS[i] || [];
+    for (var k = 0; k < rowEls.length; k++){
+      rowEls[k].className = map[k] || '';
+    }
+    fxEl.innerHTML = FX[i] || FX[0];
+  },
+
+  result: {
+    big: '16 字节 · 15 个路由器',
+    html: '问 1：H 发送 <b>1、3、4</b> 号（源 IP 是 192.168.0.8），<b>1、2、3</b> 号完成三次握手，<b>3、5</b> 号填充（40 B &lt; 46 B）。问 2：4 号携带 56−20−20 = <b>16 B</b>，5 号确认号 = 序号 + 16 证实已收到。问 3：TTL 从 40H(64) 降到 31H(49)，64−49 = <b>15 个路由器</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

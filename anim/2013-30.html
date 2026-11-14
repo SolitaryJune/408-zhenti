@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-30 缺页时操作系统可能执行的操作</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：缺页的前提是“地址合法、页不在内存”',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>产生缺页 = 访问的页<b>不在内存且地址合法</b>。缺页处理流程：保留现场 → 查页表确认不在内存 → 装入所缺页 → 改页表 → 重新执行被中断的指令。核心问题是“装页时系统做什么”。</p>' },
+  { title: 'III 分配内存：有空闲页框时执行',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>内存中还有<b>空闲页框</b>时，缺页处理程序直接分配一个空闲页框，把所缺页调入。<b>可能执行 ✓</b></p>' },
+  { title: 'II 置换页：内存已满时执行',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>内存已满时，按置换算法（如 LRU、Clock）选一页淘汰（必要时写回），腾出页框装入所缺页。<b>可能执行 ✓</b></p>' },
+  { title: 'I 处理越界错：不属缺页处理',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p><b>越界错</b>是地址<b>超出进程逻辑地址空间</b>的保护性错误：越界时由越界检查直接报错，根本不会形成“合法但不在内存”的缺页。产生缺页的前提恰是地址合法，所以“处理越界错”与缺页处理是<b>两条不同的异常路径</b>。<b>不属于 ✗</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>B</b>（仅 II、III）。记忆锚点：<b>缺页处理 = 分配内存（有空闲）或 置换页（无空闲）</b>；越界错是保护性错误、直接终止，与缺页不是一回事。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2013-30】缺页时操作系统可能执行的操作',
+  subtitle: '考点：请求分页 · 缺页处理 vs 越界错 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 II、III）',
+    html: '缺页处理的两条路：内存<b>有空闲页框 → 分配内存</b>（III）；<b>已满 → 置换页</b>（II）。<b>处理越界错</b>（I）是另一类保护性异常——越界时不会产生缺页。记忆点：<b>缺页可恢复，越界直接报错</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-19 硬布线控制器与微程序控制器对比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-19：硬布线 vs 微程序（推理链）
+     模板：概念/推理链类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：问「相对于微程序」的特点',
+    cls: 'key',
+    body: '<p><b>微程序控制器</b>：控制信号编成微指令存入<b>控制存储器</b>，执行指令时逐条读出——「以软代硬」。<b>硬布线控制器</b>：组合逻辑电路直接产生控制信号——「纯硬件」。要从<b>速度</b>和<b>修改扩展</b>两个维度回答。</p>' },
+  { title: '维度 1：速度——硬布线快',
+    cls: 'good',
+    body: '<p>硬布线不需要访问控存读微指令，控制信号由<b>组合逻辑直接产生</b> → <b>指令执行速度快</b>；微程序每个微操作都要读一次控存，速度慢。</p>' },
+  { title: '维度 2：修改扩展——硬布线难',
+    cls: 'key',
+    body: '<p>硬布线的控制逻辑<b>固化在线路里</b>，增改一条指令就要重新设计布线 → <b>修改和扩展难</b>；微程序只需修改控存里的微程序 → 容易。</p>' },
+  { title: '逐项排除 A、B、C',
+    cls: 'bad',
+    ribbon: {k:1, ok:false},
+    body: '<p><b>A「速度慢、修改扩展容易」</b>：两处全错，这是微程序的特征。</p><p><b>B「速度慢、修改扩展难」</b>：速度说反了。</p><p><b>C「速度快、修改扩展容易」</b>：修改扩展说反了。</p>' },
+  { title: '选项 D 正确',
+    cls: 'good',
+    ribbon: {k:2, ok:true},
+    body: '<p><b>D「指令执行速度快，指令功能的修改和扩展难」</b>：速度维度 ✓、修改扩展维度 ✓，两个维度都对——硬布线的标准画像。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>硬布线快而僵，微程序慢而活</b>（灵活=易修改）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || null,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-19 硬布线控制器 vs 微程序控制器',
+  subtitle: '考点：控制器的功能和工作原理 · 两种控制方式的取舍',
+  counterLabel: '推理步',
+  ribbonTitle: '排查进度（✓ 对 / ✗ 排除）',
+  intro: '点击「▶ 播放」沿两个维度推演。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '硬布线控制器：<b>组合逻辑直接产生控制信号 → 快</b>；逻辑固化在电路中 → <b>修改扩展难</b>。微程序相反：读控存慢、改微程序易。记忆锚点：硬布线快而僵，微程序慢而活。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

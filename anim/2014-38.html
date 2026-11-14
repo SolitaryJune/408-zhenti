@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-38 动画 · TCP 超时后拥塞窗口演化</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 11 个时刻：下标 0 = 超时重置，下标 1..10 = 1~10 个 RTT 后
+var CWND = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+var LABELS = ['超时', 'RTT1', 'RTT2', 'RTT3', 'RTT4', 'RTT5', 'RTT6', 'RTT7', 'RTT8', 'RTT9', 'RTT10'];
+var RWND = 10;
+
+var cwndBox = null, minEl = null, infoEl = null;
+
+function cellCls(idx, i){
+  // i：当前步（0..10 对应数组下标，11 = 取 min，12 = done）
+  if (i === 0) return 'dim';
+  if (idx > i) return 'dim';
+  // 慢开始（0,1,2）琥珀，拥塞避免蓝绿
+  if (idx <= 2) return 'hit';
+  return 'ok';
+}
+
+var INFO = [
+  '超时：ssthresh = 8 ÷ 2 = 4KB；cwnd = 1KB（1 个 MSS）。',
+  '慢开始：每 RTT 翻倍，1 → 2。',
+  '2 → 4 恰好到达 ssthresh = 4KB，停止翻倍，改拥塞避免。',
+  '拥塞避免：每 RTT 只加 1KB，4 → 5。',
+  '5 → 6。',
+  '6 → 7。',
+  '7 → 8。',
+  '8 → 9。',
+  '9 → 10：已碰到接收窗口 10KB，但 cwnd 仍按规则继续涨。',
+  '10 → 11。',
+  '11 → 12。10 个 RTT 后 cwnd = 12KB。',
+  '最终：发送窗口 = min(12KB, 10KB) = 10KB。',
+  '结论：答案 A（10KB）。',
+];
+
+AW.init({
+  title: 'TCP 拥塞控制 · 超时后 10 个 RTT 的发送窗口（2014·38）',
+  subtitle: '超时时 <code>cwnd = 8KB</code> · MSS <code>1KB</code> · 接收窗口恒为 <code>10KB</code>',
+  counterLabel: '已历 RTT',
+  ribbonTitle: 'RTT 序号（✓ 已经历）',
+  intro: '点击「▶ 播放」逐步演示：超时重置 → 慢开始翻倍 → 拥塞避免加 1 → 与接收窗口取小。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>拥塞窗口 cwnd 的演化</b>（KB）· 琥珀 = 慢开始（×2），绿 = 拥塞避免（+1）'));
+    cwndBox = AW.el('div', '');
+    inner.appendChild(cwndBox);
+
+    minEl = AW.el('div', '');
+    minEl.style.cssText = 'margin:12px 0 6px;font-size:22px;font-weight:800;color:#0f172a;line-height:1.6;';
+    inner.appendChild(minEl);
+
+    infoEl = AW.el('div', 'aw-row-label');
+    infoEl.style.cssText = 'font-size:13.5px;color:#334155;line-height:1.7;';
+    inner.appendChild(infoEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    cwndBox.innerHTML = '';
+    var row = AW.el('div', 'aw-cells');
+    for (var idx = 0; idx < 11; idx++){
+      var col = AW.el('div', 'aw-col');
+      var ptrTxt = '';
+      if (i >= 1 && i <= 10 && idx === i) ptrTxt = '本 RTT';
+      if (i === 11) ptrTxt = (idx === 8) ? 'cap' : '';
+      col.appendChild(AW.el('div', 'aw-ptr', ptrTxt));
+      var cls = cellCls(idx, Math.min(i, 10));
+      col.appendChild(AW.el('div', 'aw-box ' + cls, String(CWND[idx])));
+      col.appendChild(AW.el('div', 'aw-idx', LABELS[idx]));
+      row.appendChild(col);
+    }
+    cwndBox.appendChild(row);
+
+    if (i <= 10){
+      minEl.innerHTML = '发送窗口 = min(cwnd, 接收窗口 10KB) = <b>min(' +
+        (i === 0 ? 1 : CWND[i]) + 'KB, 10KB)</b>';
+    } else {
+      minEl.innerHTML = '发送窗口 = min(cwnd = 12KB, 接收窗口 = 10KB) = <span style="color:#16a34a">10KB</span>' +
+        '　<span style="font-size:13px;color:#dc2626;font-weight:700">← 被接收窗口封顶！</span>';
+    }
+    infoEl.innerHTML = INFO[Math.min(i, INFO.length - 1)];
+  },
+
+  snaps: [
+    { cls: 'miss', tag: '超时重置', log: 't 时刻超时：ssthresh = 8 ÷ 2 = 4KB，cwnd 重置为 1KB，进慢开始', count: 0 },
+    { cls: 'shift', tag: '慢开始', log: 'RTT1：慢开始翻倍 1 → 2', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'shift', tag: '到 ssthresh', log: 'RTT2：翻倍 2 → 4 = ssthresh，转拥塞避免', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT3：拥塞避免 +1 → 5', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT4：+1 → 6', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT5：+1 → 7', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT6：+1 → 8（回到超时前的值，但本轮是正常增长）', count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT7：+1 → 9', count: 7, ribbon: { k: 7, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT8：+1 → 10（已达接收窗口上限）', count: 8, ribbon: { k: 8, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT9：+1 → 11', count: 9, ribbon: { k: 9, ok: true } },
+    { cls: 'ok', tag: '拥塞避免', log: 'RTT10：+1 → 12', count: 10, ribbon: { k: 10, ok: true } },
+    { cls: 'ok', tag: '取小', log: '发送窗口 = min(cwnd = 12KB, rwnd = 10KB) = 10KB', count: 11 },
+    { cls: 'done', tag: '完成', log: '10 个 RTT 后甲的发送窗口 = 10KB → 答案 A', count: 12, done: true },
+  ],
+
+  result: {
+    big: '10KB（答案 A）',
+    html: '两条腿走：cwnd 演化 = 慢开始 <code>1 → 2 → 4</code>（到 ssthresh = 8/2 = 4KB）后每 RTT <code>+1</code> → 10 个 RTT 后 cwnd = <b>12KB</b>；但发送窗口 = <b>min(cwnd, rwnd)</b> = min(12, 10) = <b>10KB</b>。选 B 的人都是忘了 min 这一步。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-40 算法动画：HTTP/1.1 取回页面与图像的 RTT 推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2022-40：持久连接 + 慢开始 cwnd 限制下，4 个 RTT 收齐全部内容
+     外壳与控件全部由 assets/anim-engine.js 提供。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 4 块内容（每块 1 MSS）：HTML 1 块 + 图像 3 块
+var CONTENT = ['网页', '图①', '图②', '图③'];
+
+// 4 个 RTT 轮次的说明
+var ROUNDS = [
+  { title: '第 1 个 RTT', body: '前两次握手：H 发 SYN，S 回 SYN+ACK（建连占用一整个 RTT）。', cwnd: '—' },
+  { title: '第 2 个 RTT', body: '第三次握手捎带请求 news408.html；cwnd = 1 MSS ≥ 1 MSS → S 连续发完 HTML。', cwnd: '1 MSS' },
+  { title: '第 3 个 RTT', body: 'H 的确认捎带请求图像；S 收到确认 cwnd 翻倍 = 2 MSS < 3 MSS → 先发图像前 2 个 MSS。', cwnd: '2 MSS' },
+  { title: '第 4 个 RTT', body: 'cwnd = 4 MSS ≥ 剩余 1 MSS → S 发图像最后一个 MSS，本轮结束收齐全部内容。', cwnd: '4 MSS' },
+];
+
+// sn: { round: 已完成轮数, cells: 已收到内容块数, cwnd: 当前窗口文案 }
+var STEPS = [
+  { cls:'step', tag:'前提', log:'已完成域名解析（无 DNS 开销）；HTTP/1.1 默认持久连接 → 全程只建一次 TCP 连接。t = 0 开始建连。', round:0, cells:0, cwnd:'—' },
+  { cls:'step', tag:'第 1 个 RTT', log:'前两次握手：SYN / SYN+ACK —— 建连占用第 1 个 RTT。', round:1, cells:0, cwnd:'—', ribbon:{k:1, ok:true} },
+  { cls:'ok',   tag:'第 2 个 RTT', log:'第三次握手捎带 GET news408.html；慢开始 cwnd = 1 MSS ≥ 1 MSS → S 连续发完 HTML。本轮结束 H 收齐网页。', round:2, cells:1, cwnd:'1 MSS', ribbon:{k:2, ok:true} },
+  { cls:'ok',   tag:'第 3 个 RTT', log:'H 的确认捎带 GET 图像；S 收到确认 cwnd 翻倍 = 2 MSS < 3 MSS → 本轮只能发图像前 2 个 MSS。', round:3, cells:3, cwnd:'2 MSS', ribbon:{k:3, ok:true} },
+  { cls:'ok',   tag:'第 4 个 RTT', log:'cwnd = 4 MSS ≥ 剩余 1 MSS → S 发图像最后一个 MSS。本轮结束 H 收齐全部内容！', round:4, cells:4, cwnd:'4 MSS', ribbon:{k:4, ok:true} },
+  { cls:'done', tag:'完成', log:'共 4 个 RTT × 10 ms = 40 ms → 选 B。若图像能在一轮发完才会是 30 ms——cwnd 限制正是多出一轮的原因。', round:4, cells:4, cwnd:'—', done:true },
+];
+
+AW.init({
+  title: '2022-40：HTTP/1.1 取回网页 + 图像至少要多久？',
+  subtitle: '网页 <code>1 MSS</code> · 图像 <code>3 MSS</code> · RTT = <code>10 ms</code> · 持久连接 + 慢开始',
+  counterLabel: '已收到 MSS',
+  ribbonTitle: 'RTT 轮次（✓ 完成）',
+  intro: '点击「▶ 播放」逐轮推演请求与响应。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._inner = inner;
+  },
+
+  render: function(stage, sn, i){
+    var inner = this._inner;
+    inner.innerHTML = '';
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>已收到的内容</b>（每块 1 MSS）'));
+    var classes = CONTENT.map(function(_, j){
+      return j < sn.cells ? 'hit' : '';
+    });
+    inner.appendChild(AW.cellRow(CONTENT, classes, null, 1));
+
+    var cwnd = AW.el('div', '', '当前拥塞窗口 cwnd：' + sn.cwnd);
+    cwnd.style.cssText = 'display:inline-block;margin:10px 0 4px;padding:7px 14px;border-radius:10px;' +
+      'background:#0f172a;color:#fbbf24;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;';
+    inner.appendChild(cwnd);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>传输轮次</b>（每轮 = 1 RTT = 10 ms）'));
+    ROUNDS.forEach(function(r, j){
+      var done = j < sn.round;
+      var isCurrent = j === sn.round - 1;
+      var box = AW.el('div', 'aw-stepcard' + (done ? (isCurrent ? ' key' : ' good') : ''));
+      if (!done){
+        box.style.opacity = '.45';
+        box.style.borderColor = '#e2e8f0';
+      }
+      box.innerHTML = '<h4><span class="n">' + (j + 1) + '</span>' + r.title +
+        '　<span style="font-size:12px;color:#64748b">本轮 cwnd：' + r.cwnd + '</span></h4><p>' + r.body +
+        (done ? '　<b>✔ 本轮结束：已收到 ' + (j === 0 ? '0 MSS（仅建连）' : (j === 1 ? '1 MSS' : (j === 2 ? '3 MSS' : '4 MSS'))) + '</b>' : '') + '</p>';
+      inner.appendChild(box);
+    });
+  },
+
+  snaps: STEPS,
+
+  result: {
+    big: '40 ms（选 B）',
+    html: '共 <b>4 个 RTT</b>：建连 1 + 网页 1 + 图像前 2 MSS 1 + 图像最后 1 MSS 1。关键点：<b>HTTP/1.1 持久连接只建一次连接</b>；图像 3 MSS 受 cwnd 限制要分两轮发完——这正是干扰项 A（30 ms）漏算的那一轮。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

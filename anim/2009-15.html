@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-15 存储芯片字/位扩展分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-15：ROM 2K×8 与 RAM 4K×4 芯片数量计算（推理链）
+     模板：概念/推理链类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：拆容量',
+    cls: 'key',
+    body: '<p>主存 <code>64KB</code> = ROM 区 <code>4KB</code> + RAM 区 <code>60KB</code>，按<b>字节编址</b>（每单元 8 位）。芯片：ROM <code>2K×8 位</code>，RAM <code>4K×4 位</code>。位宽不够要先位扩展，容量不够再字扩展。</p>' },
+  { title: 'ROM 区：位宽够，只做字扩展',
+    cls: 'good',
+    ribbon: {k:1, ok:true},
+    body: '<p><code>2K×8 位</code>的数据线正好 8 位，一个芯片一次读出一个字节 → 只需字扩展：<b>4KB ÷ 2KB = 2 片</b>。排除 ROM 为 1 片的选项 C。</p>' },
+  { title: 'RAM 区第 1 步：位扩展拼位宽',
+    cls: 'key',
+    ribbon: {k:2, ok:true},
+    body: '<p><code>4K×4 位</code>只有 4 位数据线，必须 <b>2 片并联</b>（一片供高 4 位、一片供低 4 位）拼成 <code>4K×8 位 = 4KB</code>。这是最容易漏的一步。</p>' },
+  { title: 'RAM 区第 2 步：字扩展凑容量',
+    cls: 'good',
+    ribbon: {k:3, ok:true},
+    body: '<p>拼好位宽后每组 4KB：字扩展组数 = <b>60KB ÷ 4KB = 15 组</b>，总片数 = 15 × 2 = <b>30 片</b>。直接写 15 片就是忘位扩展的干扰项 B。</p>' },
+  { title: '逐项排除干扰项',
+    cls: 'bad',
+    body: '<p><b>A（1、15）</b>：ROM 少算一半、RAM 忘位扩展，双重错误。<b>B（2、15）</b>：ROM 对了，但 RAM 忘了位扩展。<b>C（1、30）</b>：RAM 对了，但 ROM 把 2K 芯片当成 4K 算。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D：ROM 2 片、RAM 30 片</b>。记忆锚点：<b>先核对位宽（位扩展凑 8 位），再核对容量（字扩展凑 KB）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || null,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-15 ROM / RAM 芯片数量的计算',
+  subtitle: '主存 64KB（ROM 4KB + RAM 60KB） · ROM 芯片 2K×8 位 · RAM 芯片 4K×4 位 · 按字节编址',
+  counterLabel: '推理步',
+  ribbonTitle: '计算进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: 'ROM 2 片、RAM 30 片（答案 D）',
+    html: '<b>ROM：</b>位宽 8 位已够 → 字扩展 4KB ÷ 2KB = 2 片。<b>RAM：</b>先 2 片位扩展成 4K×8 位 = 4KB，再字扩展 60KB ÷ 4KB = 15 组 → 15 × 2 = 30 片。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

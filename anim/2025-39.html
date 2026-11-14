@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-39 UDP 与 TCP 最少服务时间推演动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：协议时序推演（UDP 一问一答 vs TCP 握手+问答）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};   // 持久 DOM 引用
+
+AW.init({
+  title: 'Time 服务：UDP 与 TCP 各需多少时间',
+  subtitle: '客户与服务器往返时延 RTT = 8 ms（单程 4 ms）· 请求时间查询服务的最少耗时',
+  counterLabel: '已推演',
+  ribbonTitle: '关键步骤（✓ 对 / ✗ 陷阱）',
+  intro: '点击「▶ 播放」，分别推演 UDP 与 TCP 的报文时间线。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    var mkRow = function(label, chips, widths){
+      inner.appendChild(AW.el('div', 'aw-row-label', label));
+      var row = AW.el('div', 'aw-cells');
+      row.style.marginBottom = '6px';
+      var boxes = [];
+      chips.forEach(function(t, k){
+        var b = AW.el('div', 'aw-box dim', t);
+        b.style.width = ((widths && widths[k]) || 150) + 'px';
+        b.style.height = '46px';
+        b.style.fontSize = '13.5px';
+        row.appendChild(b); boxes.push(b);
+      });
+      inner.appendChild(row);
+      return boxes;
+    };
+
+    S.u = mkRow('<b>UDP（无连接）</b>',
+      ['请求：t=0 发出 → t=4 ms 到服务器', '响应：t=4 ms 发出 → t=8 ms 到客户', '合计 = 1 RTT = 8 ms'], [250, 250, 170]);
+    S.t = mkRow('<b>TCP（先三次握手，再传数据）</b>',
+      ['SYN：t=0 发出 → t=4 ms 到服务器', 'SYN+ACK：→ t=8 ms 到客户（1 RTT，连接建立）', 'ACK＋请求：t=8 ms 发出 → t=12 ms 到服务器', '响应：→ t=16 ms 到客户', '合计 = 2 RTT = 16 ms'], [230, 270, 280, 190, 170]);
+    S.c = mkRow('<b>对比</b>',
+      ['UDP = 8 ms', 'TCP = 16 ms', '答案 B（8 ms，16 ms）'], [130, 130, 220]);
+
+    S.note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',    log:'Time 是 C/S 架构的时间查询应用，支持 UDP 和 TCP。客户与服务器 RTT = 8 ms，单程 4 ms。问两种方式拿到时间的最少耗时。', count:0, note:'UDP 无连接；TCP 要先三次握手' },
+    { cls:'ok',    tag:'UDP 请求', log:'UDP 无需握手：客户 t=0 直接发出查询请求，t=4 ms 到达服务器。', count:1, ribbon:{k:1, ok:true}, note:'请求 0.5 RTT' },
+    { cls:'ok',    tag:'UDP 响应', log:'服务器立即回响应，t=8 ms 客户收到时间 → UDP 最少 1 个 RTT = 8 ms。', count:2, ribbon:{k:2, ok:true}, note:'UDP = 8 ms' },
+    { cls:'ok',    tag:'TCP SYN',  log:'TCP 先建立连接：t=0 客户发 SYN，t=4 ms 到达服务器。', count:3, ribbon:{k:3, ok:true}, note:'握手第 1 步' },
+    { cls:'shift', tag:'SYN+ACK',  log:'服务器回 SYN+ACK，t=8 ms 到达客户——恰好过了 1 个 RTT，客户端连接建立，客户此后才被允许发送数据。', count:4, ribbon:{k:4, ok:true}, note:'握手耗 1 RTT' },
+    { cls:'ok',    tag:'请求',     log:'客户随即发 ACK 并携带查询请求，t=12 ms 请求到达服务器。', count:5, ribbon:{k:5, ok:true}, note:'请求 0.5 RTT' },
+    { cls:'ok',    tag:'响应',     log:'服务器立即响应，t=16 ms 客户收到时间 → TCP 最少 2 个 RTT = 16 ms。', count:6, ribbon:{k:6, ok:true}, note:'TCP = 16 ms' },
+    { cls:'ok',    tag:'对比',     log:'UDP 8 ms、TCP 16 ms：TCP 天生比 UDP 多付一个握手的 RTT。', count:7, ribbon:{k:7, ok:true}, note:'8 ms vs 16 ms' },
+    { cls:'done',  tag:'完成',     log:'结论：UDP 8 ms、TCP 16 ms，选 B。', count:8, done:true, note:'答案 B' },
+  ],
+
+  render: function(stage, sn, i){
+    var set = function(b, cls){
+      b.className = 'aw-box' + (cls ? ' ' + cls : '');
+    };
+    S.u.forEach(function(b, k){ set(b, k === 2 ? (i >= 2 ? 'hit' : 'dim') : (i >= 1 ? 'ok' : 'dim')); });
+    set(S.t[0], i >= 3 ? 'ok' : 'dim');
+    set(S.t[1], i >= 4 ? 'shift' : 'dim');
+    set(S.t[2], i >= 5 ? 'ok' : 'dim');
+    set(S.t[3], i >= 6 ? 'ok' : 'dim');
+    set(S.t[4], i >= 6 ? 'hit' : 'dim');
+    set(S.c[0], i >= 7 ? 'ok' : 'dim');
+    set(S.c[1], i >= 7 ? 'ok' : 'dim');
+    set(S.c[2], i >= 8 ? 'hit' : 'dim');
+    S.note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '答案 B：8 ms，16 ms',
+    html: '<p>UDP = 1 RTT = <b>8 ms</b>（无连接，一问一答）；TCP = 握手 1 RTT + 请求/响应 1 RTT = <b>16 ms</b>。记忆锚点：三次握手让 TCP 天生比 UDP 多付一个 RTT；RTT 是一来一回，单程只有 4 ms。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

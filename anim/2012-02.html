@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-02 中缀转后缀的操作符栈深度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：中缀→后缀的栈操作逐步演示
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var TOKENS = ['a','+','b','-','a','*','(','(','c','+','d',')','/','e','-','f',')','+','g'];
+
+var tokRow, stkRow, outRow;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl1 = AW.el('div', 'aw-row-label', '<b>中缀输入</b>（绿＝已处理，亮绿＝当前读入）');
+  tokRow = AW.el('div', 'aw-cells');
+  var lbl2 = AW.el('div', 'aw-row-label', '<b>操作符栈</b>（左＝栈底，右＝栈顶）');
+  stkRow = AW.el('div', 'aw-cells');
+  var lbl3 = AW.el('div', 'aw-row-label', '<b>输出（后缀表达式）</b>');
+  outRow = AW.el('div', 'aw-cells');
+  wrap.appendChild(lbl1); wrap.appendChild(tokRow);
+  wrap.appendChild(lbl2); wrap.appendChild(stkRow);
+  wrap.appendChild(lbl3); wrap.appendChild(outRow);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var cls, pm = {};
+  // 输入行
+  cls = TOKENS.map(function(t, i){
+    if (i > sn.tok) return 'dim';
+    if (i === sn.tok) return 'hit';
+    return 'ok';
+  });
+  if (sn.tok >= 0) pm[sn.tok + 1] = '读';
+  tokRow.innerHTML = '';
+  tokRow.appendChild(AW.cellRow(TOKENS, cls, pm));
+  // 栈行
+  stkRow.innerHTML = '';
+  if (sn.stack.length === 0){
+    stkRow.appendChild(AW.cellRow(['空'], ['dim']));
+  } else {
+    cls = sn.stack.map(function(t, i){
+      return (i === sn.stack.length - 1) ? 'hit' : 'ok';
+    });
+    stkRow.appendChild(AW.cellRow(sn.stack, cls));
+  }
+  // 输出行
+  outRow.innerHTML = '';
+  if (sn.out === ''){
+    outRow.appendChild(AW.cellRow(['空'], ['dim']));
+  } else {
+    cls = sn.out.split('').map(function(ch){ return 'ok'; });
+    outRow.appendChild(AW.cellRow(sn.out.split(''), cls));
+  }
+}
+
+AW.init({
+  title: '中缀转后缀：操作符栈的最大深度',
+  subtitle: '中缀 <code>a+b-a*((c+d)/e-f)+g</code> → 后缀 <code>ab+acd+e/f-*-g+</code> · 栈存放暂不能定序的操作符',
+  counterLabel: '最大栈深',
+  ribbonTitle: '操作符处理（✓ 入栈 / ✗ 出栈）',
+  intro: '点击「▶ 播放」逐段扫描中缀表达式，盯住栈里同时压着几个操作符。',
+
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'初始：栈为空、输出为空。规则：操作数直接输出；操作符入栈前先弹出栈顶所有「优先级 ≥ 自己」的操作符；( 直接入栈，) 负责清到左括号。', tok:-1, stack:[], out:'', count:0 },
+    { cls:'step', tag:'输出+入栈', log:'读 a、+：a 是操作数，直接输出；+ 入栈（栈：+，深 1）。', tok:1, stack:['+'], out:'a', count:1, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'同级弹出', log:'读 b、-：b 输出；- 与栈顶 + 同级，先把 + 弹出输出，再把 - 入栈（栈：-）。', tok:3, stack:['-'], out:'ab+', count:1, ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'直接入栈', log:'读 a、*：a 输出；* 优先级高于 -，直接入栈（栈：- *，深 2）。', tok:5, stack:['-','*'], out:'ab+a', count:2, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'括号入栈', log:'读两个 (：括号也是操作符、也占栈位，连续入栈（栈：- * ( ( ，深 4）。', tok:7, stack:['-','*','(','('], out:'ab+a', count:4, ribbon:{k:4, ok:true} },
+    { cls:'ok', tag:'峰值 5', log:'读 c、+：c 输出；栈顶是 (，+ 入栈 → 栈内同时压着 - * ( ( + 共 5 个操作符，达到全程最大栈深！', tok:9, stack:['-','*','(','(','+'], out:'ab+ac', count:5, ribbon:{k:5, ok:true} },
+    { cls:'shift', tag:'右括号', log:'读 d、)：d 输出；) 不断弹出直到 ( ：弹出 + 输出、丢弃 (（栈：- * ( ）。', tok:11, stack:['-','*','('], out:'ab+acd+', count:5, ribbon:{k:6, ok:false} },
+    { cls:'step', tag:'直接入栈', log:'读 /：栈顶是 (，/ 直接入栈（栈：- * ( /，深 4）。', tok:12, stack:['-','*','(','/'], out:'ab+acd+', count:5, ribbon:{k:7, ok:true} },
+    { cls:'shift', tag:'先弹后进', log:'读 e、-：e 输出；- 优先级低于 /，先弹出 / 输出，再入栈（栈：- * ( -）。', tok:14, stack:['-','*','(','-'], out:'ab+acd+e/', count:5, ribbon:{k:8, ok:true} },
+    { cls:'shift', tag:'右括号', log:'读 f、)：f 输出；) 弹出 - 输出、丢弃 (（栈：- *，深 2）。', tok:16, stack:['-','*'], out:'ab+acd+e/f-', count:5, ribbon:{k:9, ok:false} },
+    { cls:'step', tag:'连环弹出', log:'读 +：先弹 * 再弹 -（优先级都不低于 +）输出，最后 + 入栈（栈：+，深 1）。', tok:17, stack:['+'], out:'ab+acd+e/f-*-', count:5, ribbon:{k:10, ok:true} },
+    { cls:'done', tag:'完成', log:'读 g 输出；扫描结束弹出 +。后缀表达式 ab+acd+e/f-*-g+，与题给完全一致；全程栈内同时最多 5 个操作符。', tok:18, stack:[], out:'ab+acd+e/f-*-g+', count:5, ribbon:{k:11, ok:false}, done:true },
+  ],
+
+  result: {
+    big: '最多 5 个',
+    html: '峰值出现在读里层 <code>(c+d)</code> 的 <code>+</code> 时：栈内同时是 <code>- * ( ( +</code> 共 <b>5 个</b>，答案选 <b>A</b>。<br>最大的坑：<b>左括号也是操作符、同样占栈位</b>——漏数两个 ( 会误答 3。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

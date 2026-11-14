@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-27 银行家算法安全性检查</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-27（选择题）5 进程 3 类资源的安全序列判定
+     形态：算法/过程演示（持久 DOM + render 更新）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 题面数据（来自题干表格）：Need = Max − Allocation；总量 (18,6,22)
+var PROCS = [
+  { name: 'P0', alloc: [3, 2, 3], need: [2, 3, 7] },
+  { name: 'P1', alloc: [4, 0, 3], need: [1, 3, 3] },
+  { name: 'P2', alloc: [4, 0, 5], need: [0, 0, 6] },
+  { name: 'P3', alloc: [2, 0, 4], need: [2, 2, 1] },
+  { name: 'P4', alloc: [3, 1, 4], need: [1, 1, 0] },
+];
+var AVAIL0 = [2, 3, 3];   // 18-16, 6-3, 22-19
+var COLW = 140;           // 3 格宽度 = 3*44 + 2*4
+
+// build 建好的持久元素引用
+var G = {};
+
+function resCells(vals){
+  var row = AW.el('div', 'aw-cells');
+  for (var k = 0; k < vals.length; k++){
+    row.appendChild(AW.el('div', 'aw-box', String(vals[k])));
+  }
+  return row;
+}
+
+function v(ctx, color){ return '<span style="color:' + color + ';font-weight:700">' + ctx + '</span>'; }
+
+AW.init({
+  title: '【2012-27】银行家算法：找安全序列',
+  subtitle: '总量 <code>R1,R2,R3 = 18,6,22</code> · Need = Max − Allocation · Available = <code>(2,3,3)</code>',
+  counterLabel: '检查步',
+  ribbonTitle: 'D 序列完成进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐个验证四个选项的安全序列。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'min-width:640px;padding:2px 0';
+
+    // Available 行
+    var availLine = AW.el('div', '');
+    availLine.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:12px';
+    var al = AW.el('div', 'aw-row-label', '<b>可用资源 Available</b>');
+    al.style.cssText = 'margin:0;font-size:13px';
+    var availCells = AW.el('div', 'aw-cells');
+    var a0 = [];
+    for (var k = 0; k < AVAIL0.length; k++){
+      var b = AW.el('div', 'aw-box', String(AVAIL0[k]));
+      availCells.appendChild(b); a0.push(b);
+    }
+    var an = AW.el('span', '', '（= 总量 18,6,22 − 已分配合计 16,3,19）');
+    an.style.cssText = 'font-size:12px;color:#94a3b8';
+    availLine.appendChild(al); availLine.appendChild(availCells); availLine.appendChild(an);
+    inner.appendChild(availLine);
+
+    // 表头
+    var head = AW.el('div', '');
+    head.style.cssText = 'display:flex;align-items:center;gap:14px;font-size:12px;color:#64748b;padding:0 6px';
+    head.innerHTML = '<span style="width:40px"></span><span style="width:52px"></span>' +
+      '<span style="width:' + COLW + 'px">Need（需求）</span>' +
+      '<span style="width:' + COLW + 'px">Allocation（已分配）</span>' +
+      '<span style="width:130px">判定</span>';
+    inner.appendChild(head);
+
+    // 进程行
+    G.rows = [];
+    PROCS.forEach(function(p){
+      var line = AW.el('div', '');
+      line.style.cssText = 'display:flex;align-items:center;gap:14px;margin:7px 0;padding:4px 6px;' +
+        'border:2px solid transparent;border-radius:12px;transition:background .25s,border-color .25s';
+      var nm = AW.el('div', '', '<b>' + p.name + '</b>');
+      nm.style.cssText = 'width:40px;text-align:center';
+      var idx = AW.el('div', '', '');
+      idx.style.cssText = 'width:52px;font-size:11px;color:#94a3b8;font-family:Menlo,monospace';
+      var needC = resCells(p.need);
+      needC.style.cssText += ';width:' + COLW + 'px';
+      var allocC = resCells(p.alloc);
+      allocC.style.cssText += ';width:' + COLW + 'px';
+      for (var t = 0; t < allocC.children.length; t++){ allocC.children[t].style.opacity = '.75'; }
+      var st = AW.el('div', '', '');
+      st.style.cssText = 'width:130px;font-size:12.5px;font-weight:700';
+      line.appendChild(nm); line.appendChild(idx);
+      line.appendChild(needC); line.appendChild(allocC); line.appendChild(st);
+      inner.appendChild(line);
+      G.rows.push({ line: line, idx: idx, needCells: needC.children, allocCells: allocC.children, st: st });
+    });
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    G.availCells = a0;
+  },
+
+  render: function(stage, sn){
+    var i, k;
+    // Available 更新
+    for (k = 0; k < 3; k++){
+      G.availCells[k].className = 'aw-box';
+      G.availCells[k].textContent = String(sn.avail[k]);
+    }
+    var check = sn.check || null;
+    var doneSet = sn.finished || [];
+    // 进程行状态
+    for (i = 0; i < G.rows.length; i++){
+      var r = G.rows[i];
+      var isCheck = !!(check && check.p === i);
+      var isDone = doneSet.indexOf(i) >= 0;
+      r.line.style.background = isCheck ? (check.fits ? '#f0fdf4' : '#fff7f7')
+                              : (isDone ? '#f6fef9' : '');
+      r.line.style.borderColor = isCheck ? (check.fits ? '#16a34a' : '#dc2626')
+                                : (isDone ? '#bbf7d0' : 'transparent');
+      r.idx.textContent = isDone ? '✓ 完成' : '';
+      r.st.innerHTML = isCheck
+        ? (check.fits ? v('需求 ≤ 可用 ✓', '#15803d') : v('需求 > 可用 ✗', '#b91c1c'))
+        : '';
+      for (k = 0; k < 3; k++){
+        r.needCells[k].className = 'aw-box' + (isCheck ? (check.fits ? ' ok' : ' miss') : '');
+        r.allocCells[k].className = 'aw-box' + (isDone ? ' ok' : '');
+        if (!isDone){ r.allocCells[k].style.opacity = '.75'; }
+      }
+    }
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '初始', log: '总量 (18,6,22)，已分配合计 (16,3,19) → Available = (2,3,3)。四个选项逐个验证能否走完一条安全序列。', avail: [2,3,3], check: null, finished: [] },
+    { cls: 'miss', tag: 'A 排除', log: '选项 A 第一步就要 P0：Need (2,3,7)，R3 需 7 > 可用 3 → 第一步就走不通，A 排除。', avail: [2,3,3], check: {p:0, fits:false}, finished: [] },
+    { cls: 'miss', tag: 'C 排除', log: '选项 C 第一步就要 P2：Need (0,0,6)，R3 需 6 > 可用 3 → 同样走不通，C 排除。', avail: [2,3,3], check: {p:2, fits:false}, finished: [] },
+    { cls: 'ok', tag: 'B 第一步', log: '选项 B：P1 的 Need (1,3,3) ≤ (2,3,3) ✓，P1 可完成并释放它的 Allocation (4,0,3) → Available = (6,3,6)。', avail: [6,3,6], check: {p:1, fits:true}, finished: [] },
+    { cls: 'miss', tag: 'B 卡死', log: 'B 的第二步是 P0：Need (2,3,7)，R3 需 7 > 可用 6 → 卡死，B 也排除。', avail: [6,3,6], check: {p:0, fits:false}, finished: [] },
+    { cls: 'ok', tag: 'D 第1步', log: '选项 D：P3 的 Need (2,2,1) ≤ (2,3,3) ✓ → P3 完成，释放 (2,0,4) → Available (4,3,7)。', avail: [4,3,7], check: {p:3, fits:true}, finished: [3], ribbon: {k:1, ok:true} },
+    { cls: 'ok', tag: 'D 第2步', log: 'P4 的 Need (1,1,0) ≤ (4,3,7) ✓ → 完成，释放 (3,1,4) → Available (7,4,11)。', avail: [7,4,11], check: {p:4, fits:true}, finished: [3,4], ribbon: {k:2, ok:true} },
+    { cls: 'ok', tag: 'D 第3步', log: 'P2 的 Need (0,0,6) ≤ (7,4,11) ✓ → 完成，释放 (4,0,5) → Available (11,4,16)。', avail: [11,4,16], check: {p:2, fits:true}, finished: [3,4,2], ribbon: {k:3, ok:true} },
+    { cls: 'ok', tag: 'D 第4步', log: 'P1 的 Need (1,3,3) ≤ (11,4,16) ✓ → 完成，释放 (4,0,3) → Available (15,4,19)。', avail: [15,4,19], check: {p:1, fits:true}, finished: [3,4,2,1], ribbon: {k:4, ok:true} },
+    { cls: 'ok', tag: 'D 第5步', log: 'P0 的 Need (2,3,7) ≤ (15,4,19) ✓ → 完成，释放 (3,2,3) → Available (18,6,22)，全部资源回收。', avail: [18,6,22], check: {p:0, fits:true}, finished: [3,4,2,1,0], ribbon: {k:5, ok:true} },
+    { cls: 'done', tag: '完成', log: '五个进程依次全部完成 → P3, P4, P2, P1, P0 是安全序列，系统处于安全状态。', avail: [18,6,22], check: null, finished: [3,4,2,1,0], done: true },
+  ],
+
+  result: {
+    big: '答案 D',
+    html: '<b>P3, P4, P2, P1, P0</b> 是安全序列。解题套路：<b>① Available = 总量 − 已分配合计；② 逐步找 Need ≤ Available 的进程，完成后把它的 Allocation 加回 Available</b>。A、C 第一个进程就不过关；B 第二步卡在 P0 的 R3 = 7。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

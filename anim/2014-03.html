@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-03 循环队列空满判定动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：M=6 循环队列，入队到 M-1 个触发队满判定 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var M = 6;
+var LETTERS = ['a','b','c','d','e'];
+
+// 构造快照：初始为空 + 依次入队 5 个（M-1 个）触发队满
+function mk(i, filled, end1, end2, log, cls, tag){
+  return { i:i, filled:filled, end1:end1, end2:end2, log:log, cls:cls, tag:tag, count:filled.length };
+}
+
+var snaps = [
+  mk(0, [], 0, 0,
+     '初始为空：end1 = end2 = 0，两指针重合 → 队空条件 end1 == end2 成立（两端均可进出队）',
+     'ok', '队空'),
+];
+for (var k = 1; k <= 5; k++){
+  var full = (k === 5);
+  snaps.push(mk(k, LETTERS.slice(0, k), 0, k,
+    '元素 ' + LETTERS[k-1] + ' 入队到 A[' + (k-1) + ']，end2 后移为 ' + k +
+    (full ? '。已有 5 = M-1 个元素：end1(0) == (end2+1) mod M = 0 → 队满判定成立！' : '。end1 != end2，既不空也不满'),
+    full ? 'done' : 'step',
+    full ? '队满' : '入队'));
+}
+snaps.push({
+  i: 6, filled: LETTERS.slice(), end1: 0, end2: 5,
+  log: '若再入队第 6 个，end2 绕回 0 与 end1 重合——那正是"队空"的标志，所以必须牺牲 1 格：最多 M-1 个元素。队空 end1==end2、队满 end1==(end2+1) mod M，选 A',
+  cls: 'done', tag: '完成', count: 5, done: true
+});
+
+AW.init({
+  title: '2014-03　循环队列：队空与队满判定',
+  subtitle: '数组 <code>A[0…5]</code>（M=6）· end1 指队头元素 · end2 指队尾元素的后一位置',
+  counterLabel: '元素数',
+  intro: '点击「▶ 播放」观察指针随入队移动。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._lbl = AW.el('div', 'aw-row-label', '');
+    var holder = AW.el('div', '');
+    holder.id = 'qRow';
+    inner.appendChild(this._lbl);
+    inner.appendChild(holder);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._holder = holder;
+  },
+  render: function(stage, sn, i){
+    var chars = [], cls = [], ptr = {};
+    for (var j = 0; j < M; j++){
+      if (j < sn.filled.length){ chars.push(sn.filled[j]); cls.push('ok'); }
+      else { chars.push('·'); cls.push('dim'); }
+    }
+    ptr[1] = 'end1=' + sn.end1;
+    ptr[sn.end2 + 1] = 'end2=' + sn.end2;
+    this._lbl.innerHTML = '队列状态（绿=已存放元素，灰=空位）　元素个数 = (end2 - end1) mod M = <b>' + sn.count + '</b>';
+    this._holder.innerHTML = '';
+    this._holder.appendChild(AW.cellRow(chars, cls, ptr, 0));
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '队空：<code>end1 == end2</code>（初始即成立）；队满：<code>end1 == (end2 + 1) mod M</code>（牺牲 1 格，最多 M-1 个元素）。<br>注意模数只能是 M，B/D 的 <code>mod (M-1)</code> 会让指针越界。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-26 死锁避免 S1 与死锁检测 S2 的对比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两种策略的本质', cls: 'key',
+    log: 'S1 避免＝分配前算安全账（不安全就不给）；S2 检测＝先给出去，出事再查再解除',
+    body: '<p><b>S1 死锁避免</b>（银行家算法）：每次申请前做<b>安全性检查</b>，不安全就不分配。<br><b>S2 死锁检测</b>：放任分配，周期性用<b>资源分配图</b>检测，发现死锁再解除。</p>' },
+  { title: '判断 I：限制申请顺序？', cls: 'bad',
+    log: 'I 错：限制申请顺序（资源有序分配）是死锁预防，不是避免；S2 更不会限制',
+    body: '<p>"限制用户申请资源的顺序"（如资源有序分配法、一次性申请全部资源）是破坏死锁必要条件的手段，属于死锁<b>预防</b>，不是避免 → I <b>错</b>。S1 只在每次申请时判断安不安全，并不规定申请顺序。</p>' },
+  { title: '判断 II：需要资源总量信息？', cls: 'good',
+    log: 'II 对：银行家算法必须有最大需求 Max；S2 只看当前分配图，不需要总量',
+    body: '<p>银行家算法要有 <code>Available / Max / Allocation / Need</code>，<b>必须预知进程所需资源总量</b>；检测算法只需当前的分配与申请情况 → S1 需要、S2 不需要 → II <b>对</b>。</p>' },
+  { title: '判断 III：给不给"可能死锁"的进程分配？', cls: 'good',
+    log: 'III 对：S1 检测到不安全就不分配；S2 允许先分配，死锁后再检测解除',
+    body: '<p>S1 发现这次分配会导致<b>不安全状态</b>就不给，让进程等待 → "不会给可能导致死锁的进程分配"；S2 敢先把资源给出去，<b>事后</b>检测到死锁再解除 → III <b>对</b>。</p>' },
+  { title: '结论', cls: 'good',
+    log: 'I 错、II 对、III 对 → 答案 B（仅 II、III）',
+    body: '<p>答案选 <b>B</b>（仅 II、III）。记忆锚点：<b>避免＝事前算安全账（要 Max，不安全不给）；检测＝事后查账（先给后查再解除）</b>；限制申请顺序属于<b>预防</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2015-26】死锁避免（S1）与死锁检测（S2）的正确叙述',
+  subtitle: '考点：死锁处理四种策略的区分（预防 / 避免 / 检测 / 解除）· 三条命题逐条判定',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 II、III）',
+    html: '<b>I 错</b>：限制申请顺序是死锁<code>预防</code>的手段，避免策略不规定顺序。<b>II 对</b>：避免需要进程申报<code>最大需求</code>，检测只要当前分配图。<b>III 对</b>：避免不安全就不分配；检测允许先分配、死锁后解除。记忆锚点：<b>避免事前算账，检测事后查账</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-18 CPI 与时钟周期辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：CPI 与时钟周期叙述逐项核对 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：两个性能基本量',
+    cls: 'key',
+    body: '<p>时钟周期 = 主频的倒数，是 CPU 最小时间节拍；CPI = 总周期数 ÷ 总指令数（平均每条指令的拍数）。<b>CPU 时间 = 指令数 × CPI × 时钟周期</b>。找出错误的叙述。</p>' },
+  { title: '选项 A：不同指令 CPI 不同 —— 正确',
+    cls: 'good',
+    rb: {k:1, ok:true},
+    body: '<p>不同类型指令的 CPI 可能不一样：如浮点乘除需要的周期远多于定点加减，Load/Store 也比寄存器运算慢。CPI 本来就是「平均」值。</p>' },
+  { title: '选项 B：CPI 与 Cache 缺失率无关 —— 错误',
+    cls: 'bad',
+    rb: {k:2, ok:false},
+    body: '<p>Cache 缺失时 CPU 要<b>插入等待周期</b>等主存（缺失损失可达上百拍），这些 stall 全部计入总周期数 → 缺失率越高，程序的<b>实际 CPI 越大</b>。「无关」说法错误——这正是要选的答案。</p>' },
+  { title: '选项 C：单周期以最耗时指令为准 —— 正确',
+    cls: 'good',
+    rb: {k:3, ok:true},
+    body: '<p>单周期 CPU 中所有指令都在<b>一个时钟周期</b>内完成，周期长度必须迁就最慢的那条指令（通常是最长的访存指令）。</p>' },
+  { title: '选项 D：流水线以最长流水段为准 —— 正确',
+    cls: 'good',
+    rb: {k:4, ok:true},
+    body: '<p>流水线 CPU 每拍推进一个流水段，时钟节拍由<b>最慢的流水段</b>决定（还要加上寄存器开销）。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>A、C、D 都正确；<b>B 错误</b>——CPI 与访存行为直接相关，Cache 缺失率越高 CPI 越大。答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if(s.rb) sn.ribbon = s.rb;
+  return sn;
+});
+
+AW.init({
+  title: 'CPI 与时钟周期：哪句说错了？',
+  subtitle: '考点：CPI、时钟周期的决定因素 · 选项逐项核对',
+  ribbonTitle: '选项（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '<p>程序的实际 CPI <b>与 Cache 缺失率有关</b>：每次缺失插入等待周期，缺失越多 CPI 越大。记忆锚点：单周期看「最慢的指令」、流水线看「最慢的段」，但 CPI 还要算上存储层次的 stall。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

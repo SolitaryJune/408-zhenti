@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-01 动画 · 递归调用栈演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 程序：int S(int n){ return (n<=0) ? 0 : S(n-1)+n; }  main(){ cout << S(1); }
+
+function stackHTML(frames){
+  if(!frames.length){
+    return '<div style="display:flex;align-items:center;justify-content:center;height:150px;' +
+           'border:2px dashed #cbd5e1;border-radius:12px;color:#94a3b8;font-size:13.5px">' +
+           '（调用栈为空）</div>';
+  }
+  var h = '<div style="display:flex;flex-direction:column-reverse;align-items:stretch;gap:6px;min-height:150px;justify-content:flex-start">';
+  frames.forEach(function(f, i){
+    var cls = i === frames.length - 1 ? 'aw-box hit' : 'aw-box ok';
+    var top = i === frames.length - 1 ? '<div style="font-size:11px;color:#15803d;font-weight:700;margin-bottom:2px">↑ 栈顶（当前执行）</div>' : '';
+    h += '<div style="display:flex;flex-direction:column;align-items:center">' + top +
+         '<div class="' + cls + '" style="width:240px;height:40px;font-size:16px">' + f + '</div></div>';
+  });
+  h += '<div style="font-size:11px;color:#64748b;margin-top:4px;text-align:center">▲ 栈底（最先入栈）</div></div>';
+  return h;
+}
+
+AW.init({
+  title: '2015-01 · 递归调用栈演示：S(1) 的调用过程',
+  subtitle: '程序 <code>int S(int n){ return (n<=0) ? 0 : S(n-1)+n; }</code>，main 调用 S(1) · 观察栈底到栈顶依次保存谁',
+  counterLabel: '已入栈',
+  ribbonTitle: '入栈次序（✓ 调用层）',
+  intro: '点击「▶ 播放」逐步观察函数调用信息入栈、出栈的次序。',
+
+  snaps: [
+    { cls:'step', tag:'准备',
+      log:'程序启动：main() 即将被调用，调用栈当前为空',
+      count:0, html: stackHTML([]) },
+    { cls:'ok', tag:'入栈 ①',
+      log:'main() 开始执行，它的调用信息第一个入栈 —— 位于栈底',
+      count:1, ribbon:{k:1, ok:true}, html: stackHTML(['main()']) },
+    { cls:'ok', tag:'入栈 ②',
+      log:'main 执行 cout<<S(1)：进入 S(1)，n=1&gt;0，需先算 S(0)+1，S(1) 的信息压入栈（在 main 之上）',
+      count:2, ribbon:{k:2, ok:true}, html: stackHTML(['main()','S(1)']) },
+    { cls:'ok', tag:'入栈 ③',
+      log:'S(1) 调用 S(0)，S(0) 的信息入栈 —— 此刻栈最深，自栈底到栈顶为 main() → S(1) → S(0)',
+      count:3, ribbon:{k:3, ok:true}, html: stackHTML(['main()','S(1)','S(0)']) },
+    { cls:'shift', tag:'返回出栈',
+      log:'S(0) 满足 n≤0 直接返回 0，出栈；S(1) 拿到 0 算出 0+1=1，也出栈',
+      count:3, html: stackHTML(['main()']) },
+    { cls:'done', tag:'完成',
+      log:'main 输出 1 后结束。结论：自栈底到栈顶依次为 main() → S(1) → S(0)，选 A',
+      count:3, done:true, html: stackHTML([]) },
+  ],
+
+  result: {
+    big: 'A',
+    html: '调用规则：<b>先调用者先入栈、后调用者压在栈顶</b>。本题调用链为 main() → S(1) → S(0)，' +
+          '所以自栈底到栈顶依次保存 <b>main() → S(1) → S(0)</b>，选 <b>A</b>。<br>' +
+          '记忆锚点：递归每深一层就多压一帧，<b>栈顶永远是"当前正在执行"的函数</b>；B/D 颠倒了栈顶栈底，C 漏层错序。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

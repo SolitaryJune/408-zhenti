@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-26 LRU 页面置换：缺页次数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SEQ = ['0', '1', '2', '0', '5', '1', '4', '3', '0', '2', '3', '2', '0'];
+/* ST[t]：第 t 次访问（t 从 1 开始）。hit=是否命中；f=访问后页框内容（左端最久未用）；ev=淘汰页 */
+var ST = [null,
+  { hit: true,  f: ['1', '2', '0'] },
+  { hit: true,  f: ['2', '0', '1'] },
+  { hit: true,  f: ['0', '1', '2'] },
+  { hit: true,  f: ['1', '2', '0'] },
+  { hit: false, f: ['2', '0', '5'], ev: '1' },
+  { hit: false, f: ['0', '5', '1'], ev: '2' },
+  { hit: false, f: ['5', '1', '4'], ev: '0' },
+  { hit: false, f: ['1', '4', '3'], ev: '5' },
+  { hit: false, f: ['4', '3', '0'], ev: '1' },
+  { hit: false, f: ['3', '0', '2'], ev: '4' },
+  { hit: true,  f: ['0', '2', '3'] },
+  { hit: true,  f: ['0', '3', '2'] },
+  { hit: true,  f: ['3', '2', '0'] }
+];
+
+var seqRow, fBox = [], fPtr = [];
+
+function paint(i) {
+  var t, j, col, box, ptr;
+  /* 访问序列条 */
+  for (j = 0; j < 13; j++) {
+    t = j + 1;
+    box = seqRow.children[j].children[1];
+    var c = '';
+    if (i >= 1) {
+      if (t < i) c = ST[t].hit ? 'ok' : 'miss';
+      else if (t === i) c = ST[t].hit ? 'hit' : 'miss';
+    }
+    if (i === 14) c = ST[t].hit ? 'ok' : 'miss';
+    box.className = 'aw-box' + (c ? ' ' + c : '');
+  }
+  /* 页框 */
+  var fr = (i === 0) ? ['0', '1', '2'] : ST[Math.min(i, 13)].f;
+  var isFault = (i >= 1 && i <= 13 && !ST[i].hit);
+  for (j = 0; j < 3; j++) {
+    box = fBox[j]; ptr = fPtr[j];
+    box.textContent = fr[j];
+    box.className = 'aw-box' + (i === 0 ? '' :
+      (isFault ? (j === 0 ? ' miss' : (j === 2 ? ' hit' : '')) : (j === 2 ? ' hit' : '')));
+    ptr.textContent = i === 0 ? '' :
+      (isFault ? (j === 0 ? '淘汰' : (j === 2 ? '调入' : '')) : (j === 2 ? '命中' : ''));
+  }
+}
+
+AW.init({
+  title: 'LRU 页面置换：数缺页次数（2025-26）',
+  subtitle: '固定分配局部置换 · 3 个页框 · 访问序列 <code>0 1 2 0 5 1 4 3 0 2 3 2 0</code> · <b>0、1、2 已调入内存</b>（初始装入不计缺页）',
+  counterLabel: '缺页次数',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺页）',
+  intro: '点击「▶ 播放」，逐次访问，LRU 每次淘汰最久未使用的页面。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>访问序列</b>（红＝缺页，绿＝命中）'));
+    seqRow = AW.cellRow(SEQ, ['', '', '', '', '', '', '', '', '', '', '', '', ''], null, 1);
+    inner.appendChild(seqRow);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>3 个页框</b>（LRU 顺序：左端最久未用，优先淘汰；绿＝本次访问的页）'));
+    var frow = AW.el('div', 'aw-cells');
+    for (var j = 0; j < 3; j++) {
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', '');
+      var ix = AW.el('div', 'aw-idx', '帧 ' + (j + 1));
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(ix);
+      frow.appendChild(col);
+      fBox.push(box); fPtr.push(ptr);
+    }
+    inner.appendChild(frow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'step', tag: '初始', log: '初始：0、1、2 已调入内存（不计缺页）。页框按 LRU 排列，左端最久未用', count: 0 },
+    { cls: 'ok', tag: '命中', log: '访问 0：在内存 → 命中，0 变为最近使用（移到右端）', count: 0, ribbon: { k: 1, ok: true } },
+    { cls: 'ok', tag: '命中', log: '访问 1：命中', count: 0, ribbon: { k: 2, ok: true } },
+    { cls: 'ok', tag: '命中', log: '访问 2：命中', count: 0, ribbon: { k: 3, ok: true } },
+    { cls: 'ok', tag: '命中', log: '访问 0：命中。至此 0、1、2 都重新用过一遍，1 成为最久未用', count: 0, ribbon: { k: 4, ok: true } },
+    { cls: 'miss', tag: '缺页', log: '访问 5：不在内存 → 缺页！淘汰最久未用的 1，调入 5（第 1 次缺页）', count: 1, ribbon: { k: 5, ok: false } },
+    { cls: 'miss', tag: '缺页', log: '访问 1：缺页！淘汰 2，调入 1（第 2 次缺页）', count: 2, ribbon: { k: 6, ok: false } },
+    { cls: 'miss', tag: '缺页', log: '访问 4：缺页！淘汰 0，调入 4（第 3 次缺页）', count: 3, ribbon: { k: 7, ok: false } },
+    { cls: 'miss', tag: '缺页', log: '访问 3：缺页！淘汰 5，调入 3（第 4 次缺页）', count: 4, ribbon: { k: 8, ok: false } },
+    { cls: 'miss', tag: '缺页', log: '访问 0：缺页！淘汰 1，调入 0（第 5 次缺页）。注意：0 早在访问 4 时已被淘汰', count: 5, ribbon: { k: 9, ok: false } },
+    { cls: 'miss', tag: '缺页', log: '访问 2：缺页！淘汰 4，调入 2（第 6 次缺页）', count: 6, ribbon: { k: 10, ok: false } },
+    { cls: 'ok', tag: '命中', log: '访问 3：在内存 → 命中', count: 6, ribbon: { k: 11, ok: true } },
+    { cls: 'ok', tag: '命中', log: '访问 2：命中', count: 6, ribbon: { k: 12, ok: true } },
+    { cls: 'ok', tag: '命中', log: '访问 0：命中，访问序列结束', count: 6, ribbon: { k: 13, ok: true } },
+    { cls: 'done', tag: '完成', log: '统计：13 次访问，缺页 6 次（5、1、4、3、0、2），命中 7 次 → 答案选 B', count: 6, done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: '缺页 6 次（选 B）',
+    html: '13 次访问：前 4 次（0、1、2、0）命中；中段 <b>5、1、4、3、0、2 连续 6 次缺页</b>；末尾 3、2、0 又连续命中。LRU 每次淘汰<b>最久未使用</b>的页——0 在调入 4 时已被淘汰，所以第 9 次访问 0 必然再缺页。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

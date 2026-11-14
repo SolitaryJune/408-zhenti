@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-39 动画 · 掩码与默认网关配置的连锁故障</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类：/25 掩码分子网 + 网关是否存在，逐项分析 A~D
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：两组配置',
+    cls: 'key',
+    body: '<p>H1、H2：掩码 <code>255.255.255.128</code>（/25），默认网关 <code>192.168.3.1</code>；H3、H4：同样的掩码，默认网关 <code>192.168.3.254</code>。图中 LAN 里 R2 的接口 E1 = <b>192.168.3.254</b>，除此之外没有任何接口配在 192.168.3.x。</p>' },
+  { title: '按 /25 掩码切分子网',
+    cls: 'key',
+    body: '<p>192.168.3.0/25 的可用地址 .1～.126：<b>H1（.2）、H2（.3）在这里</b>；192.168.3.128/25 的可用地址 .129～.254：<b>H3（.251）、H4（.252）在这里</b>。H1 组和 H3 组被掩码切成了两个子网。</p>' },
+  { title: '逐项分析 A',
+    cls: 'bad',
+    body: '<p>A「H1 不能与 H2 进行正常 IP通信」：H1 与 H2 同属 <code>192.168.3.0/25</code>，同网段<b>直接交付</b>（都接在 Switch 上），可以正常通信 → A 错。✗</p>' },
+  { title: '逐项分析 B',
+    cls: 'bad',
+    body: '<p>B「H2 与 H4 均不能访问 Internet」：H4 的网关 <code>192.168.3.254</code> 正是图中 R2 的接口 E1，<b>H4 可以经 R2 上网</b>，「均不能」不成立 → B 错。✗（H2 的网关 192.168.3.1 确实是虚设的，但只要 H4 能上网，B 就不成立。）</p>' },
+  { title: '逐项分析 D',
+    cls: 'bad',
+    body: '<p>D「H3 不能与 H4 进行正常 IP 通信」：H3 与 H4 同属 <code>192.168.3.128/25</code>，同网段直接交付（都接在 Hub 上）→ D 错。✗</p>' },
+  { title: '逐项分析 C',
+    cls: 'good',
+    body: '<p>C「H1 不能与 H3 进行正常 IP 通信」：H1 用掩码判断 H3（.251）不在 <code>192.168.3.0/25</code> 内，于是把分组交给默认网关 <b>192.168.3.1</b>——但 LAN 里<b>没有任何设备配置这个地址</b>，ARP 解析不到网关，分组发不出去 → H1 不能与 H3 通信 → C 对。✓</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：默认网关只是主机上的一个<b>配置值</b>，LAN 中没有对应接口就形同虚设；主机按掩码判断「同网段直发、异网段交网关」。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪一项现象是可能发生的？',
+  subtitle: '考点：IPv4 子网划分（/25）· 默认网关与直接交付 · 逐项推理（2016-39）',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 正确 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（H1 不能与 H3 正常 IP 通信）',
+    html: '记忆锚点：<b>H1、H2 在 192.168.3.0/25，H3、H4 在 192.168.3.128/25</b>；H1 发往 H3 的分组要找网关 <b>192.168.3.1</b>，而图中 LAN 只有 R2 的 <b>192.168.3.254</b>——网关不存在，通信失败。A/D 同网段可直连，B 中 H4 的网关真实存在。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

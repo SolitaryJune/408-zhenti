@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-16 动画 · add xaddr,3 的访存次数推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-16（计算机组成原理·Cache/虚拟存储）
+     过程推演：读 x 与写回 x 两条路径的访存计数
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 每步显示的事件卡（i>=1 时逐个亮出）
+var EVENTS = [
+  { name: '执行阶段 · 读操作数 x', detail: '虚拟地址 xaddr → 须经页式虚存机构变换，再取数据', hit: null },
+  { name: '读 x · 地址变换', detail: 'TLB 命中：直接得到物理地址，<b>不查页表</b>（页表在主存，查一次要访存 1 次）', hit: true },
+  { name: '读 x · 取数据', detail: 'Cache 命中：数据从 Cache 读出，<b>不访主存</b> → 读 x 共 0 次', hit: true },
+  { name: '执行阶段 · 写回 x', detail: '结果 (x)+3 要写回：直写方式下写 Cache 时必须<b>同步写主存</b>', hit: false },
+  { name: '写 x · 直写主存', detail: 'Write Through：这一笔省不掉 → 访主存 1 次', hit: false },
+];
+
+var listBox = null, sumBox = null;
+
+function evCard(k, ev, on){
+  var on_ = on ? true : false;
+  var bd = on_ ? (ev.hit ? '#16a34a' : '#dc2626') : '#e2e8f0';
+  var bg = on_ ? (ev.hit ? '#f6fef9' : '#fff8f8') : '#fff';
+  var badge = !on_ ? '' : (ev.hit
+    ? '<span style="display:inline-block;background:#dcfce7;color:#15803d;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:8px">访主存 0 次</span>'
+    : '<span style="display:inline-block;background:#fee2e2;color:#b91c1c;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:8px">访主存 1 次</span>');
+  return '<div style="border:2px solid ' + bd + ';background:' + bg + ';border-radius:12px;padding:9px 13px;margin-bottom:8px;transition:all .3s">' +
+         '<div style="font-size:13.5px;font-weight:700;color:#0f172a">事件 ' + k + '：' + ev.name + badge + '</div>' +
+         '<div style="font-size:12.5px;color:#334155;line-height:1.7;margin-top:3px">' + ev.detail + '</div></div>';
+}
+
+AW.init({
+  title: '“add xaddr, 3”至少访主存几次？（2015·16）',
+  subtitle: '页式虚存 + <code>TLB</code> + Cache <b>直写（Write Through）</b> · 指令功能 = 读 x → 加 3 → 写回 x',
+  counterLabel: '累计访存',
+  intro: '点击「▶ 播放」逐步推演每条路径是否访主存。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    listBox = AW.el('div', '');
+    stage.appendChild(listBox);
+    sumBox = AW.el('div', '');
+    stage.appendChild(sumBox);
+  },
+
+  render: function(stage, sn, i){
+    var h = '<div style="font-size:12.5px;color:#64748b;margin-bottom:8px">前提：TLB 命中、Cache 命中的最有利情形；取指令的访存不计入“完成指令功能”</div>';
+    for (var k = 0; k < EVENTS.length; k++){
+      h += evCard(k + 1, EVENTS[k], k < i);
+    }
+    listBox.innerHTML = h;
+
+    var memCnt = 0;
+    if (i >= 4) memCnt = 1;
+    var s = '';
+    if (i >= 1 && i < 4){
+      s = '<div style="border:2px dashed #cbd5e1;border-radius:12px;padding:8px 14px;display:inline-block;font-size:13.5px;font-weight:700;color:#475569">目前累计访主存 ' + memCnt + ' 次</div>';
+    } else if (i >= 4){
+      s = '<div style="border:2px solid #16a34a;background:#f6fef9;border-radius:12px;padding:9px 14px;display:inline-block;font-size:14.5px;font-weight:800;color:#14532d">' +
+          '合计 = 读 x（0 次，TLB 命中 + Cache 命中）+ 写 x（1 次，直写）= 1 次</div>';
+    }
+    sumBox.innerHTML = s;
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '读条件', log: '指令 add xaddr,3：读 x、加 3、写回 x；页式虚存 + TLB 在，Cache 直写 → 分路径推演', count: 0 },
+    { cls: 'step',  tag: '读 x·变换', log: '读 x 先做地址变换：TLB 命中 → 不查页表，0 次访存（无 TLB 时查页表要 1 次）', count: 0 },
+    { cls: 'ok',    tag: '读 x·取数', log: '取数据：Cache 命中 → 0 次访存；读操作数 x 全程 0 次', count: 0 },
+    { cls: 'step',  tag: '写回 x', log: '写回结果：直写（Write Through）= 写 Cache 时必须同时写主存', count: 0 },
+    { cls: 'miss',  tag: '直写 1 次', log: '写 x 穿透到主存 → 访主存 1 次；合计 = 0 + 1 = 1 次', count: 1 },
+    { cls: 'done',  tag: '完成', log: '结论：至少访主存 1 次 → 答案选 B。若改回写方式，这笔可暂免（答案才可能为 0）', count: 1, done: true },
+  ],
+
+  result: {
+    big: '至少 1 次（答案 B）',
+    html: '读 x：<b>TLB 命中省掉查页表</b>的访存、<b>Cache 命中省掉取数</b>的访存 → 0 次；写 x：<b>直写必须同步写主存</b> → 1 次。合计 1 次。若改成回写方式，写也暂不访主存。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

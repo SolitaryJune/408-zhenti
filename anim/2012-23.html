@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-23 用户态不可能发生的事件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-23（选择题）下列选项中，不可能在用户态发生的事件是
+     形态：概念辨析 · 逐步揭示推理链
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：判断标准是什么',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>判断「能否在用户态发生」，就看该事件是否需要执行<b>特权指令</b>、是否必须由<b>内核</b>完成。用户态只能执行非特权指令；内核才能做的事（改页表寄存器、切换上下文等）绝不可能发生在用户态。</p>' },
+  { title: 'A 系统调用：发生在用户态',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p><b>系统调用</b>是用户程序执行<code>陷入指令</code>主动请求内核服务——「发出调用」这一事件发生在<b>用户态</b>，随后 CPU 才转入核心态执行内核代码。所以系统调用可以在用户态发生，排除 A。</p>' },
+  { title: 'B 外部中断：与 CPU 状态无关',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p><b>外部中断</b>随时可能到达，与 CPU 当前处于用户态还是核心态毫无关系；用户态下运行的程序同样会被外部中断打断。排除 B。</p>' },
+  { title: 'D 缺页：用户态指令引发的异常',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p><b>缺页</b>是用户程序执行访存指令、发现所访页面不在内存时触发的异常，异常就发生在用户态，随后陷入内核处理。排除 D。</p>' },
+  { title: 'C 进程切换：只能在核心态完成',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p><b>进程切换</b>包括：调度程序选择新进程、保存旧进程上下文、恢复新进程上下文、修改 PC 与 PSW、切换页表基址寄存器——每一步都要用<b>特权指令</b>，都是内核工作，只能在<b>核心态</b>进行。用户态绝不可能发生进程切换。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>凡需要特权指令、必须由内核完成的动作（进程切换），都不可能在用户态发生</b>；而系统调用「发出」、外部中断、缺页都是用户态可发生的事件。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2012-23】不可能在用户态发生的事件',
+  subtitle: '考点：用户态 / 核心态与特权指令 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>进程切换 = 调度 + 换上下文 + 改 PC/PSW/页表寄存器，全是特权指令，只能在核心态完成</b>。A「系统调用发出」、B「外部中断」、D「缺页」都可在用户态发生——它们只是随后转入核心态处理。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

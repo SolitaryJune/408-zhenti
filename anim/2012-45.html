@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-45 请求分页局部页面置换策略</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-45（大题）请求分页：每 5 个时间单位扫描回收 + 空闲链取回
+     形态：算法/过程演示（持久 DOM：访问序列 / 空闲链 / 驻留集）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 访问序列：<虚拟页号, 时刻>
+var ACC = [
+  { p: 1, t: 1 },
+  { p: 3, t: 2 },
+  { p: 0, t: 4 },
+  { p: 0, t: 6 },
+  { p: 1, t: 11 },
+  { p: 0, t: 13 },
+  { p: 2, t: 14 },
+];
+var FREE0 = [32, 15, 21, 41];   // 空闲链初始（头→尾）
+
+var G = {};
+
+function drawFree(list){
+  G.freeRow.innerHTML = '';
+  if (!list.length){
+    G.freeRow.appendChild(AW.el('div', 'aw-box dim', '空'));
+    return;
+  }
+  list.forEach(function(num, i){
+    var col = AW.el('div', 'aw-col');
+    var ptr = AW.el('div', 'aw-ptr', i === 0 ? '头' : (i === list.length - 1 ? '尾' : ''));
+    var box = AW.el('div', 'aw-box', String(num));
+    if (i === 0){ box.className = 'aw-box ok'; }
+    col.appendChild(ptr); col.appendChild(box);
+    G.freeRow.appendChild(col);
+  });
+}
+
+function drawRes(res, hotIdx){
+  G.resRow.innerHTML = '';
+  if (!res.length){
+    G.resRow.appendChild(AW.el('div', 'aw-box dim', '空'));
+    return;
+  }
+  res.forEach(function(r, i){
+    var col = AW.el('div', 'aw-col');
+    var box = AW.el('div', 'aw-box' + (i === hotIdx ? ' ok' : ''), '页' + r[0]);
+    var ix = AW.el('div', 'aw-idx', '框' + r[1]);
+    col.appendChild(box); col.appendChild(ix);
+    G.resRow.appendChild(col);
+  });
+}
+
+function drawAcc(cur, curCls){
+  for (var i = 0; i < G.accBoxes.length; i++){
+    var cls = 'aw-box';
+    if (i === cur){ cls += curCls; }
+    else if (cur >= 0 && i > cur){ cls += ' dim'; }
+    G.accBoxes[i].firstChild.nextSibling.className = cls;
+    G.accBoxes[i].firstChild.innerHTML = (i === cur) ? '▼' : '';
+  }
+}
+
+AW.init({
+  title: '【2012-45】请求分页：扫描回收 + 空闲链取回',
+  subtitle: '每 <code>5</code> 个时间单位扫描一轮驻留集，本轮未访问的页框回收至<b>链尾</b>（内容不清空）；缺页时曾用过且仍在链中的页直接取回，否则取<b>链头</b> · 初始空闲链 <code>32,15,21,41</code>',
+  counterLabel: '时刻',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺页）',
+  intro: '点击「▶ 播放」逐次访问、逐轮扫描地推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'min-width:620px';
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>访问序列</b>（页号 / 时刻，▼=当前）'));
+    var accRow = AW.el('div', 'aw-cells');
+    ACC.forEach(function(a){
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', '页' + a.p);
+      var ix = AW.el('div', 'aw-idx', 't=' + a.t);
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(ix);
+      accRow.appendChild(col);
+    });
+    inner.appendChild(accRow);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>空闲页框链</b>（头 → 尾；链头绿框）'));
+    var freeRow = AW.el('div', 'aw-cells');
+    inner.appendChild(freeRow);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>驻留集</b>（页 → 页框）'));
+    var resRow = AW.el('div', 'aw-cells');
+    inner.appendChild(resRow);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    G.accBoxes = accRow.children;
+    G.freeRow = freeRow;
+    G.resRow = resRow;
+  },
+
+  render: function(stage, sn){
+    drawAcc(sn.acc, sn.accCls || '');
+    drawFree(sn.free);
+    drawRes(sn.res, sn.hot);
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '初始', count: 0, acc: -1, accCls: '', free: [32,15,21,41], res: [], hot: -1 },
+    { cls: 'miss', tag: '缺页→链头', count: 1, acc: 0, accCls: ' miss', free: [15,21,41], res: [[1,32]], hot: 0,
+      ribbon: {k:1, ok:false},
+      log: 't=1 访问页1：缺页；页1 从未用过，只能从空闲链头部取出页框 32。空闲链剩 15,21,41。' },
+    { cls: 'miss', tag: '缺页→链头', count: 2, acc: 1, accCls: ' miss', free: [21,41], res: [[1,32],[3,15]], hot: 1,
+      ribbon: {k:2, ok:false},
+      log: 't=2 访问页3：缺页且从未用过 → 取链头页框 15。空闲链剩 21,41。' },
+    { cls: 'miss', tag: '问1）页框21', count: 4, acc: 2, accCls: ' miss', free: [41], res: [[1,32],[3,15],[0,21]], hot: 2,
+      ribbon: {k:3, ok:false},
+      log: 't=4 访问页0：首次缺页且从未用过 → 取链头页框 21（t=5 的第一轮扫描还没发生）。【问 1）答案：21】' },
+    { cls: 'shift', tag: '第1轮扫描', count: 5, acc: -1, accCls: '', free: [41], res: [[1,32],[3,15],[0,21]], hot: -1,
+      log: 't=5 第 1 轮扫描（0~5）：页1、页3、页0 本轮都被访问过 → 无回收，空闲链仍只有 41。' },
+    { cls: 'ok', tag: '命中', count: 6, acc: 3, accCls: ' hit', free: [41], res: [[1,32],[3,15],[0,21]], hot: -1,
+      ribbon: {k:4, ok:true},
+      log: 't=6 访问页0：驻留集中已有（页框 21）→ 命中，页0 记为本轮已访问。' },
+    { cls: 'shift', tag: '第2轮扫描', count: 10, acc: -1, accCls: '', free: [41,32,15], res: [[0,21]], hot: -1,
+      log: 't=10 第 2 轮扫描（5~10）：本轮只有页0 被访问；页1、页3 未被访问 → 页框 32、15 回收放到链尾，空闲链变为 41,32,15（内容未清空）。' },
+    { cls: 'shift', tag: '问2）页框32', count: 11, acc: 4, accCls: ' miss', free: [41,15], res: [[0,21],[1,32]], hot: 1,
+      ribbon: {k:5, ok:false},
+      log: 't=11 访问页1：缺页；但页1 曾被使用且页框 32 还在空闲链中 → 直接取回放回驻留集（页框号 32，不占链头 41）。【问 2）答案：32】' },
+    { cls: 'ok', tag: '命中', count: 13, acc: 5, accCls: ' hit', free: [41,15], res: [[0,21],[1,32]], hot: -1,
+      ribbon: {k:6, ok:true},
+      log: 't=13 访问页0：命中（页框 21）。' },
+    { cls: 'miss', tag: '问3）页框41', count: 14, acc: 6, accCls: ' miss', free: [15], res: [[0,21],[1,32],[2,41]], hot: 2,
+      ribbon: {k:7, ok:false},
+      log: 't=14 访问页2：缺页且从未被使用过，不满足取回条件 → 从空闲链头部取出页框 41。【问 3）答案：41】' },
+    { cls: 'done', tag: '完成', count: 14, acc: -1, accCls: '', free: [15], res: [[0,21],[1,32],[2,41]], hot: -1, done: true,
+      log: '问 4）：适合。时间局部性好的程序，被回收的页面很快会再次被访问——该策略不清空内容、允许从空闲链取回，省去一次读盘，效率更高。' },
+  ],
+
+  result: {
+    big: '21 · 32 · 41',
+    html: '<b>问1）21</b>：页0 首次缺页，取链头；<b>问2）32</b>：页1 曾用过且页框 32 仍在空闲链，直接取回；<b>问3）41</b>：页2 从未用过，取链头；<b>问4）适合</b>——回收不清空内容，时间局部性好时可省一次读盘。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

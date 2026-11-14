@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-23 操作系统提供给应用程序的接口</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类动画（复制 tools/anim_concept_template.html，只改 AW.init 区域）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：谁提供给谁',
+    cls: 'key',
+    body: '<p>题目问的是<b>操作系统</b>提供给<b>应用程序</b>的接口。操作系统向上提供两类接口：面向用户的<b>命令接口</b>、面向程序的<b>程序接口</b>。要找的就是"程序接口"。</p>' },
+  { title: '选项 A：系统调用',
+    cls: 'good',
+    body: '<p><b>系统调用</b>：对。应用程序不能直接执行特权指令（启停外设、改页表等），只能通过系统调用"陷入"内核，由操作系统代为完成服务——这正是操作系统提供给应用程序的<b>程序接口</b>。</p>' },
+  { title: '选项 B：中断',
+    cls: 'bad',
+    body: '<p><b>中断</b>：错。中断是 CPU 对异步事件的响应机制，属于系统内部的处理手段，方向是"事件找系统"，不是应用程序主动请求服务的入口。</p>' },
+  { title: '选项 C：库函数',
+    cls: 'bad',
+    body: '<p><b>库函数</b>：错。printf、fopen 等只是对系统调用的<b>封装</b>，属于函数库而非操作系统本体；不经库函数、直接用陷入指令同样能发起系统调用。</p>' },
+  { title: '选项 D：原语',
+    cls: 'bad',
+    body: '<p><b>原语</b>：错。原语是内核内部不可分割的指令序列（如开关中断、P/V 操作的底层实现），只供内核自己使用，不对应用程序开放。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A（系统调用）</b>。记忆锚点：系统调用 = 操作系统给应用程序的官方程序接口；库函数只是"包装盒"，中断与原语都不是应用可调用的接口。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010·23 操作系统提供给应用程序的接口',
+  subtitle: '考点：操作系统的运行环境 · 四个选项逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>系统调用是操作系统提供给应用程序的程序接口</b>。干扰项：库函数是封装盒（C），中断是事件机制（B），原语是内核自用（D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-24 中断向量表适合的数据结构</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：中断向量表是「按类型号直接定位」的表',
+    cls: 'key',
+    body: '<p>发生中断时，拿到一个<b>中断类型号</b>，就要<b>立即定位</b>对应中断处理程序的入口地址（中断向量）。' +
+          '需求的本质：<b>类型号 → 入口地址，一步到位的随机查找</b>。哪个结构能做到？</p>' },
+  { title: 'A. 数组 —— 恰好匹配',
+    cls: 'good',
+    body: '<p>数组按下标随机存取：第 k 项地址 = 首地址 + k × 每项大小，<b>O(1) 一步直达</b>。' +
+          '中断类型号天然就是下标，正好把向量表建成 <code>入口地址[类型号]</code>。</p>' },
+  { title: 'B. 队列 —— 用途不符',
+    cls: 'bad',
+    body: '<p>队列是<b>先进先出</b>的排队结构（如就绪队列、等待队列），只能取队头，' +
+          '<b>没有按编号随机定位的能力</b>，与「查表」需求不符。</p>' },
+  { title: 'C. 单向链表 —— 查找太慢',
+    cls: 'bad',
+    body: '<p>找第 k 项必须<b>从头沿指针走 k 步</b>。中断响应要求极快，遍历等待不起。</p>' },
+  { title: 'D. 双向链表 —— 依旧要遍历',
+    cls: 'bad',
+    body: '<p>双向链表只是<b>插入删除方便</b>、可倒着走，按序号定位仍要遍历，帮助不大。</p>' },
+  { title: '结论：数组',
+    cls: 'good',
+    body: '<p>中断类型号当下标，<b>一次地址计算直达入口</b>，<b>答案选 A</b>。' +
+          '记忆锚点：向量表 = 「类型号为下标的入口地址数组」。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '中断向量表适合用什么数据结构',
+  subtitle: '考点：操作系统的运行环境（中断处理） · 四种结构逐项比对',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>中断类型号 → 数组下标 → 入口地址</b>，一次地址计算（首地址 + 下标 × 项大小）O(1) 定位。' +
+          '队列/链表都只能顺序访问，无法满足中断响应「按编号直达」的要求。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

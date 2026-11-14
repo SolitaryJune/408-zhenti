@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-42 动画：Prim 算法求最小生成树</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-42 Prim 求 MST 逐步推演（算法/过程类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var VS = [
+  { id:'A', cx:210, ty:16 },
+  { id:'B', cx:60,  ty:140 },
+  { id:'C', cx:100, ty:300 },
+  { id:'D', cx:320, ty:300 },
+  { id:'E', cx:360, ty:140 },
+];
+var ES = [
+  { u:'A', v:'B', w:6, off:[-16,-6] },
+  { u:'A', v:'D', w:4, off:[-16,-6] },
+  { u:'A', v:'E', w:5, off:[10,-6] },
+  { u:'B', v:'C', w:4, off:[-18,-2] },
+  { u:'C', v:'D', w:6, off:[-4,-16] },
+  { u:'C', v:'E', w:5, off:[8,2] },
+  { u:'D', v:'E', w:4, off:[12,-2] },
+];
+/* 每步边状态（按下标 0=AB,1=AD,2=AE,3=BC,4=CD,5=CE,6=DE）：''=未涉及, 'cur'=当前候选(琥珀), 'mst'=已选入MST(绿) */
+var EST = [
+  ['cur','cur','cur','','','',''],
+  ['','mst','','','','',''],
+  ['cur','mst','cur','','cur','','cur'],
+  ['','mst','','','','','mst'],
+  ['cur','mst','','','cur','cur','mst'],
+  ['','mst','','','','mst','mst'],
+  ['cur','mst','','cur','','mst','mst'],
+  ['','mst','','mst','','mst','mst'],
+  ['','mst','','mst','','mst','mst'],
+];
+var VST = [
+  { A:'hit', B:'',    C:'',    D:'',    E:''    },
+  { A:'ok',  B:'',    C:'',    D:'hit', E:''    },
+  { A:'ok',  B:'',    C:'',    D:'ok',  E:''    },
+  { A:'ok',  B:'',    C:'',    D:'ok',  E:'hit' },
+  { A:'ok',  B:'',    C:'',    D:'ok',  E:'ok'  },
+  { A:'ok',  B:'',    C:'hit', D:'ok',  E:'ok'  },
+  { A:'ok',  B:'',    C:'ok',  D:'ok',  E:'ok'  },
+  { A:'ok',  B:'hit', C:'ok',  D:'ok',  E:'ok'  },
+  { A:'ok',  B:'ok',  C:'ok',  D:'ok',  E:'ok'  },
+];
+var nodeEls = {}, edgeEls = [], labEls = [];
+var COLORS = { '':'#cbd5e1', cur:'#d97706', mst:'#16a34a' };
+
+function setEdgeState(sn){
+  var st = EST[sn.si];
+  for (var j = 0; j < ES.length; j++){
+    var s = st[j] || '';
+    edgeEls[j].style.background = COLORS[s];
+    edgeEls[j].style.height = (s === 'mst' ? 3 : 2) + 'px';
+    labEls[j].style.color = s === 'cur' ? '#b45309' : (s === 'mst' ? '#15803d' : '#64748b');
+  }
+}
+function setVertexState(sn){
+  var st = VST[sn.si];
+  VS.forEach(function(v){
+    nodeEls[v.id].className = 'aw-box' + (st[v.id] ? ' ' + st[v.id] : '');
+  });
+}
+
+AW.init({
+  title: '2017-42　Prim 算法从 A 出发求 MST',
+  subtitle: '带权连通图 G：AB=6 · AD=4 · AE=5 · BC=4 · CD=6 · CE=5 · DE=4　—— 每轮选「树内 ↔ 树外」最小横切边',
+  counterLabel: '已选边数',
+  ribbonTitle: '顶点并入 U（✓ 已并入；A 为起点）',
+  intro: '点击「▶ 播放」，逐轮观察候选横切边与选边。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var gbox = AW.el('div', '');
+    gbox.style.position = 'relative';
+    gbox.style.width = '420px';
+    gbox.style.height = '360px';
+    gbox.style.margin = '0 auto';
+    var byId = {};
+    VS.forEach(function(v){ byId[v.id] = v; });
+    ES.forEach(function(e, k){
+      var p = byId[e.u], q = byId[e.v];
+      var x1 = p.cx, y1 = p.ty + 22, x2 = q.cx, y2 = q.ty + 22;
+      var dx = x2 - x1, dy = y2 - y1;
+      var ln = AW.el('div', '');
+      ln.style.position = 'absolute';
+      ln.style.left = x1 + 'px';
+      ln.style.top = y1 + 'px';
+      ln.style.width = Math.sqrt(dx * dx + dy * dy) + 'px';
+      ln.style.height = '2px';
+      ln.style.background = COLORS[''];
+      ln.style.transformOrigin = '0 50%';
+      ln.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+      gbox.appendChild(ln);
+      edgeEls[k] = ln;
+      var lab = AW.el('div', '', String(e.w));
+      lab.style.position = 'absolute';
+      lab.style.left = ((x1 + x2) / 2 + e.off[0]) + 'px';
+      lab.style.top = ((y1 + y2) / 2 + e.off[1]) + 'px';
+      lab.style.fontSize = '14px';
+      lab.style.fontWeight = '700';
+      lab.style.color = '#64748b';
+      lab.style.zIndex = 1;
+      gbox.appendChild(lab);
+      labEls[k] = lab;
+    });
+    VS.forEach(function(v){
+      var b = AW.el('div', 'aw-box', v.id);
+      b.style.position = 'absolute';
+      b.style.left = (v.cx - 22) + 'px';
+      b.style.top = v.ty + 'px';
+      b.style.zIndex = 2;
+      gbox.appendChild(b);
+      nodeEls[v.id] = b;
+    });
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>图 G</b>（琥珀＝当前候选横切边，绿＝已选入 MST）'));
+    inner.appendChild(gbox);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'U = {A}，树内只有起点 A；候选横切边：AB=6、AD=4、AE=5', count:0, si:0 },
+    { cls:'ok', tag:'选 (A,D)', log:'最小横切边 AD=4 → 选入 (A,D)，D 并入 U={A,D}', count:1, ribbon:{k:2,ok:true}, si:1 },
+    { cls:'shift', tag:'候选', log:'U={A,D}：候选横切边 AB=6、AE=5、DE=4、DC=6 —— 最小是 DE=4', count:1, si:2 },
+    { cls:'ok', tag:'选 (D,E)', log:'选入 (D,E)=4，E 并入 U={A,D,E}', count:2, ribbon:{k:3,ok:true}, si:3 },
+    { cls:'shift', tag:'候选', log:'U={A,D,E}：候选横切边 AB=6、DC=6、EC=5 —— 最小是 EC=5', count:2, si:4 },
+    { cls:'ok', tag:'选 (C,E)', log:'选入 (C,E)=5，C 并入 U={A,D,E,C}', count:3, ribbon:{k:4,ok:true}, si:5 },
+    { cls:'shift', tag:'候选', log:'U={A,D,E,C}：候选横切边 AB=6、CB=4 —— 最小是 CB=4', count:3, si:6 },
+    { cls:'ok', tag:'选 (B,C)', log:'选入 (B,C)=4，B 并入 —— 5 个顶点全部并入，共 4 条边', count:4, ribbon:{k:5,ok:true}, si:7 },
+    { cls:'done', tag:'完成', log:'MST 边：(A,D)4、(D,E)4、(C,E)5、(B,C)4，总权 17；每轮最小横切边无并列 → MST 唯一', count:4, si:8, done:true },
+  ],
+
+  render: function(stage, sn){
+    setEdgeState(sn);
+    setVertexState(sn);
+  },
+
+  result: {
+    big: '总权 17　MST 唯一',
+    html: 'Prim 从 A 出发依次选 <code>(A,D)4 → (D,E)4 → (C,E)5 → (B,C)4</code>，总权 <b>17</b>。每轮的最小横切边都唯一出现，Prim 路径唯一；枚举全部生成树验证：权 17 的只有这一棵 ⇒ <b>MST 唯一</b>。一般结论：<b>任意环上边权互不相同 ⇒ MST 唯一</b>（所有边权互异是其特例）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

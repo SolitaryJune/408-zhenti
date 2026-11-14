@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-38 动画 · NAT 转换后的源 IP 与目的 IP</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：HTTP 请求分组逐跳推演，R2 处 NAT 改写源地址
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 转发路径节点：H3 → Switch → R2(NAT) → R1 → S */
+var PATH = [
+  { id:'H3', label:'H3', sub:'192.168.3.251<br>（私有地址）' },
+  { id:'SW', label:'Switch', sub:'二层交换' },
+  { id:'R2', label:'R2', sub:'NAT 路由器<br>网关 192.168.3.254' },
+  { id:'R1', label:'R1', sub:'L0 对端 201.1.3.9' },
+  { id:'S',  label:'S',  sub:'Web 服务器<br>130.18.10.1' }
+];
+
+var ST = {
+  '':    { bg:'#ffffff', bd:'#cbd5e1', fg:'#0f172a', op:1 },
+  send:  { bg:'#fef3c7', bd:'#d97706', fg:'#92400e', op:1 },
+  nat:   { bg:'#fef3c7', bd:'#d97706', fg:'#b45309', op:1 },
+  ok:    { bg:'#dcfce7', bd:'#16a34a', fg:'#14532d', op:1 },
+  dim:   { bg:'#ffffff', bd:'#cbd5e1', fg:'#94a3b8', op:.45 }
+};
+
+var nodeEls = {};
+var hdrEl = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.cssText = 'width:680px;';
+
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:6px 0 14px;';
+  PATH.forEach(function(n, i){
+    var d = AW.el('div', '');
+    d.style.cssText = 'flex:1 1 auto;border:2px solid #cbd5e1;border-radius:12px;background:#fff;' +
+      'padding:9px 6px;text-align:center;font-weight:700;font-size:13.5px;color:#0f172a;transition:all .25s;';
+    d.innerHTML = n.label + '<span style="display:block;font-size:10px;font-weight:400;color:#64748b;margin-top:3px;">' + n.sub + '</span>';
+    nodeEls[n.id] = d;
+    row.appendChild(d);
+    if(i < PATH.length - 1){
+      var ar = AW.el('div', '');
+      ar.style.cssText = 'flex:0 0 auto;color:#94a3b8;font-size:18px;font-weight:700;';
+      ar.innerHTML = '→';
+      row.appendChild(ar);
+    }
+  });
+  inner.appendChild(row);
+
+  hdrEl = AW.el('div', '');
+  hdrEl.style.cssText = 'width:100%;border:2px dashed #cbd5e1;border-radius:12px;background:#f8fafc;padding:10px 14px;';
+  inner.appendChild(hdrEl);
+
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  PATH.forEach(function(n){
+    var d = nodeEls[n.id];
+    var st = ST[(sn.who && sn.who[n.id]) || ''];
+    d.style.background = st.bg;
+    d.style.borderColor = st.bd;
+    d.style.color = st.fg;
+    d.style.opacity = st.op;
+  });
+  var src = sn.src || '—', dst = sn.dst || '—';
+  hdrEl.innerHTML =
+    '<div style="font-size:12px;color:#64748b;margin-bottom:6px;">R2 所处理 / 转发的 IP 分组头部</div>' +
+    '<div style="display:flex;gap:12px;">' +
+    '<div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:13px;">源 IP<br>' +
+    '<b style="font-family:Menlo,monospace;font-size:15px;color:' + (sn.srcNew ? '#15803d' : '#334155') + '">' + src + '</b></div>' +
+    '<div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:13px;">目的 IP<br>' +
+    '<b style="font-family:Menlo,monospace;font-size:15px;color:#334155">' + dst + '</b></div>' +
+    '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    who:{}, src:'—', dst:'—',
+    log:'H3 = 192.168.3.251（私有地址），S = 130.18.10.1。R2 把发往 Internet 的分组经 L0 链路转发给 R1；L0 用 201.1.3.8/30，图中 R1 侧为 201.1.3.9 → R2 侧接口 = 201.1.3.10。',
+    frame:'' },
+  { cls:'step', tag:'H3 发出', count:1, src:'192.168.3.251', dst:'130.18.10.1',
+    who:{ H3:'send' },
+    log:'H3 发出 HTTP 请求分组：源 192.168.3.251，目的 130.18.10.1（目的地址全程不变）。' },
+  { cls:'step', tag:'到达 R2', count:2, src:'192.168.3.251', dst:'130.18.10.1',
+    who:{ SW:'send', R2:'send' },
+    log:'分组经 Switch 到达网关 R2；R2 查路由表：去往 130.18.10.1 从接口 L0 转发给 R1。' },
+  { cls:'shift', tag:'R2 执行 NAT', count:3, src:'201.1.3.10', dst:'130.18.10.1', srcNew:true,
+    who:{ R2:'nat' },
+    log:'源是私有地址，公网不可路由 → R2 做 NAT：源地址改写为出口接口地址 201.1.3.10（201.1.3.9 是对端 R1 的地址）。',
+    frame:'' },
+  { cls:'ok', tag:'转发出去', count:4, src:'201.1.3.10', dst:'130.18.10.1', srcNew:true,
+    who:{ R2:'send', R1:'send', S:'ok' },
+    log:'R2 转发出去的分组：源 201.1.3.10，目的 130.18.10.1 → 经 R1 交给 Internet 上的 S。' },
+  { cls:'step', tag:'对照干扰项', count:5, src:'201.1.3.10', dst:'130.18.10.1', srcNew:true,
+    who:{ H3:'dim', SW:'dim', R2:'dim', R1:'dim', S:'dim' },
+    log:'A：没做 NAT，私有地址不能上公网 ✗；B：目的填了 R1 侧的 201.1.3.9 ✗；C：源填了 201.1.3.8——它是该 /30 的网络地址（主机位全 0），不能用作源 ✗。' },
+  { cls:'done', tag:'完成', count:6, done:true, src:'201.1.3.10', dst:'130.18.10.1', srcNew:true,
+    who:{ H3:'ok', R2:'ok', S:'ok' },
+    log:'结论：R2 转发出去的分组 源 = 201.1.3.10、目的 = 130.18.10.1 → 选 D。' },
+];
+
+AW.init({
+  title: 'R2 转发的 HTTP 请求分组：源 IP 和目的 IP 是多少？',
+  subtitle: '考点：NAT 地址转换 · 私有地址 · /30 子网可用地址（2016-38）',
+  counterLabel: '转发进度',
+  ribbonTitle: '推理步骤（✓ 正确 / ✗ 易错点）',
+  intro: '点击「▶ 播放」跟踪分组头部在逐跳转发中的变化。',
+  snaps: snaps,
+  build: build,
+  render: render,
+  result: {
+    big: '源 201.1.3.10 · 目的 130.18.10.1（选 D）',
+    html: 'NAT 用<b>出口接口地址</b>替换私有源地址：R2 经 L0 转发，L0 是 201.1.3.8/30（R1 侧 201.1.3.9 → R2 侧 201.1.3.10），源改为 <b>201.1.3.10</b>；目的地址自始至终是 S 的 <b>130.18.10.1</b>。干扰项：C 的 201.1.3.8 是网络地址（主机位全 0），不能配在接口上。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

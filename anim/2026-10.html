@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-10 多关键字排序的稳定性 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三层排名规则 + 两趟策略',
+    cls: 'key',
+    body: '<p>最终次序要求：① 总成绩从高到低；② 总成绩相同按 <b>C1 从高到低</b>；③ C1 也相同按<b>初始相对次序</b>。规定做法：<b>先按 C1 排序，再按总成绩排序</b>。问的是这用了哪种算法。</p>' },
+  { title: '关键机制：第二趟只保留、不重排同分者',
+    cls: '',
+    body: '<p>第二趟按总成绩排序时，总成绩相同的记录之间的先后<b>不会被这一趟的规则决定</b>——它们的次序只能由排序算法「原样保留」下来。保留的正是<b>第一趟之后</b>它们的相对位置。</p>' },
+  { title: '推出：两趟都必须稳定',
+    cls: '',
+    body: '<p>要满足规则 ②：第一趟后同总分者已按 C1 从高到低排好，第二趟必须<b>稳定</b>才能原样保住；<br>要满足规则 ③：C1 相同者在第一趟后须保持初始次序，所以<b>第一趟也必须稳定</b>。<br>结论：<code>先按 C1 排序的算法和再按总成绩排序的算法都必须是稳定排序</code>。</p>' },
+  { title: '基数排序：稳定 ✓',
+    cls: 'good',
+    body: '<p>基数排序按「分配-收集」逐趟处理：收集时<b>按桶的先后、桶内按进入次序</b>依次取出，同值记录的相对次序从不被打乱——<b>稳定的</b>。多趟稳定排序逐关键字处理，正是<b>多关键字排序的标准做法</b>（低位优先，各趟必须稳定）。</p>' },
+  { title: '快排 / 希尔 / 选择：都不稳定 ✗',
+    cls: 'bad',
+    body: '<p><b>快速排序</b>：划分时交换可跨越很远距离，同值次序可能颠倒。<br><b>希尔排序</b>：分组插入在跨组移动中打乱相对次序。<br><b>简单选择排序</b>：远距离交换，如 2a,2b,1 选 1 与 2a 交换后两个 2 颠倒。<br>三者的趟间次序传递都不可靠，无法保证规则 ③。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>两趟排序都必须稳定才能逐级继承次序，四个选项中只有<b>基数排序</b>稳定，答案选 <b style="font-size:16px">A</b>。记忆锚点：<code>多关键字排序 = 拆成多趟单关键字排序，趟趟必须稳定</code>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2026-10 · 先按 C1 再按总分：靠的是哪种排序',
+  subtitle: '考点：<code>稳定性与多关键字排序</code> · 次序如何跨趟传递',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（基数排序）',
+    html: '第二趟（按总分）排序时，同总分者的次序只能<b>原样继承</b>第一趟（按 C1）的结果；C1 相同者的初始次序又要靠第一趟稳定来保住——<b>两趟都必须稳定</b>。选项中只有基数排序（分配-收集、桶内保序）稳定，快排/希尔/选择都不稳定，选 <b>A</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

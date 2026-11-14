@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-42 正则 k 叉树的叶结点数与结点数上下界</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '第(1)问 · 思路：从边入手',
+    cls: 'key',
+    body: '<p>“正则 k 叉树”= 每个非叶结点<b>恰好 k 个孩子</b>。抓住树的恒等式：<b>边数 = 结点数 − 1</b>；而每条边都由某个非叶结点发出 → 有 m 个非叶结点时，总边数 = <code>k×m</code>。</p>' },
+  { title: '第(1)问 · 推导',
+    cls: 'good',
+    body: '<p>总结点数 = 边数 + 1 = <code>k×m + 1</code>；叶结点数 = 总结点数 − 非叶结点数 = <code>k×m + 1 − m</code> = <b>(k−1)×m + 1</b>。</p>' },
+  { title: '第(1)问 · 验证',
+    cls: 'key',
+    body: '<p>代入 k=3、m=2：根有 3 个孩子，其中 1 个孩子又有 3 个孩子 → 叶结点 2+3 = 5，恰为 (3−1)×2+1 = 5 ✓。</p>' },
+  { title: '第(2)问 · 最多：每层放满',
+    cls: 'good',
+    body: '<p>高度 h（单结点树 h=1）。结点最多 = 每层都放满：第 j 层最多 k<sup>j−1</sup> 个 → 总数 = <code>1 + k + k^2 + … + k^(h−1)</code>，等比求和 = <b>(k^h − 1)/(k − 1)</b>。</p>' },
+  { title: '第(2)问 · 最少：单链延伸',
+    cls: 'good',
+    body: '<p>高度要达到 h，必须有一条从根往下共 h−1 条边的路径；正则性要求路径上每个非叶结点都凑满 k 个孩子。要省结点，就只让<b>一条链</b>延伸，其余孩子全当叶子 → 除根外每层恰 k 个：总数 = <b>1 + (h−1)×k</b>。</p>' },
+  { title: '第(2)问 · 验证',
+    cls: 'key',
+    body: '<p>代入 k=3、h=3：最少 = 1 + 2×3 = 7（根 1 个 + 第二层 3 个 + 第三层 3 个，只有一条链延伸）；最多 = (27−1)/2 = 13（1+3+9）✓。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>（1）叶结点 = <b>(k−1)m + 1</b>；（2）最多 = <b>(k^h − 1)/(k − 1)</b>，最少 = <b>1 + (h−1)k</b>。记忆锚点：<b>边计数</b>（每个非叶结点发 k 条边）＋“满则最多、单链延伸则最少”。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016·正则 k 叉树：叶结点数与结点数的最多/最少',
+  subtitle: '每问先给框架再填细节 · 边计数法贯穿全题',
+  intro: '点击「▶ 播放」逐步展开推导链。',
+  snaps: snaps,
+  result: {
+    big: '叶 (k−1)m+1 · 最多 (k^h−1)/(k−1) · 最少 1+(h−1)k',
+    html: '第(1)问：边数 = k×m → 总结点 = km+1 → 叶 = (k−1)m+1。第(2)问：最多是<b>满 k 叉树</b>（等比求和）；最少是<b>一条链延伸、每层补满 k 个</b>。易错：最少情形不能拉成每层 1 个的单链，那违反正则性。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

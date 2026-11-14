@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-32 本地键盘登录：谁最先获得输入</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类动画（复制 tools/anim_concept_template.html，只改 AW.init 区域）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链
+var STEPS = [
+  { title: '审题眼：谁"最先"碰到按键数据',
+    cls: 'key',
+    body: '<p>关键词"首先获得"。键盘输入是<b>异步硬件事件</b>，走的是中断链路，不是系统调用链路——沿着硬件事件链找第一站。</p>' },
+  { title: '事件链：按键 → 中断 → 中断处理程序',
+    cls: 'good',
+    body: '<p>键盘控制器产生<b>中断</b>信号 → CPU 在每条指令执行结束后检查并响应 → 转入<b>中断处理程序</b>，由它从控制器读走扫描码/字符放入输入缓冲。此刻上层程序都还没碰到数据。</p>' },
+  { title: '选项 B：中断处理程序 → 对',
+    cls: 'good',
+    body: '<p><b>对</b>。硬件只负责发出中断信号，真正<b>第一个读走输入信息</b>的程序是中断处理程序——一切异步 I/O 的第一站。</p>' },
+  { title: '选项 A / D：shell 与登录程序都是消费者',
+    cls: 'bad',
+    body: '<p><b>命令解释程序</b>要等输入缓冲里有内容、且轮到它运行时才去读；<b>用户登录程序</b>更要靠"读到输入"才能工作——两者都排在中断处理<b>之后</b>。登录场景让人联想到 shell，正是本题设的坑。</p>' },
+  { title: '选项 C：系统调用服务程序不沾边',
+    cls: 'bad',
+    body: '<p>它处理应用程序<b>主动发起</b>的系统调用；键盘输入是异步硬件事件，不经系统调用入口，方向就反了。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B（中断处理程序）</b>。记忆锚点：<b>一切异步 I/O 的第一响应者 = 中断处理程序</b>；shell、登录程序都是后续的"消费者"。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010·32 键盘登录时谁最先获得输入信息',
+  subtitle: '考点：操作系统的运行环境 / I/O 管理 · 中断链路逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '事件链：<b>按键 → 中断 → 中断处理程序读走数据 → 放入缓冲 → shell/登录程序消费</b>。第一站是中断处理程序；系统调用服务程序管"应用主动请求"，与此链路无关。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

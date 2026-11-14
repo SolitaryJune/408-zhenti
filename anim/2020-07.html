@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-07 Kruskal 最小生成树选边过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-07 无向图 G 的 Kruskal 最小生成树：按权排序逐边考察
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 无向图 G 的全部边（按权从小到大），与题图一致
+var EDGES = [
+  { e:'b-f', w:5  },
+  { e:'b-d', w:6  },
+  { e:'d-f', w:7  },
+  { e:'a-e', w:9  },
+  { e:'c-e', w:10 },
+  { e:'b-e', w:11 },
+  { e:'a-c', w:12 },
+  { e:'e-d', w:14 },
+  { e:'c-d', w:18 },
+  { e:'a-b', w:20 },
+];
+
+var edgeRow, noteLine;
+
+function drawEdges(cur, accepted, rejected){
+  edgeRow.innerHTML = '';
+  EDGES.forEach(function(ed, idx){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '64px';
+    var cls = '';
+    if(idx === cur){ cls = 'hit'; }
+    else if(accepted.indexOf(idx) >= 0){ cls = 'ok'; }
+    else if(rejected.indexOf(idx) >= 0){ cls = 'miss'; }
+    var b = AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), ed.e);
+    b.style.width = '64px';
+    b.style.fontSize = '14px';
+    col.appendChild(b);
+    col.appendChild(AW.el('div', 'aw-idx', '权' + ed.w));
+    edgeRow.appendChild(col);
+  });
+}
+
+AW.init({
+  title: 'Kruskal 算法求最小生成树：边是怎么加进去的？',
+  subtitle: '无向图 G，6 个顶点 · <b>按权从小到大</b>考察各边，不成环就加入，选满 n−1 = 5 条边',
+  counterLabel: '已考察',
+  ribbonTitle: '考察序号（✓ 加入 / ✗ 成环舍弃）',
+  intro: '点击「▶ 播放」逐步考察每条边。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>边按权升序排列</b>（绿 = 已加入生成树，红 = 成环舍弃，琥珀 = 正在考察）'));
+    edgeRow = AW.el('div', 'aw-cells');
+    inner.appendChild(edgeRow);
+    noteLine = AW.el('div', 'aw-row-label', '');
+    noteLine.style.marginTop = '14px';
+    inner.appendChild(noteLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'排序', log:'先把 10 条边按权升序排列。n=6，需要选出 5 条边且不成环。', count:0 },
+    { cls:'ok',   tag:'加入', log:'第 1 条 (b,f) 权 5：b、f 互不连通 → 加入。分量：{b,f}。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'ok',   tag:'加入', log:'第 2 条 (b,d) 权 6：d 不在 {b,f} 中 → 加入。分量：{b,d,f}。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'miss', tag:'舍弃', log:'第 3 条 (d,f) 权 7：d、f 已在同一分量，加入会成环 → 舍弃。', count:3, ribbon:{k:3, ok:false} },
+    { cls:'ok',   tag:'加入', log:'第 4 条 (a,e) 权 9：a、e 尚未连通 → 加入。分量：{a,e}。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'ok',   tag:'加入', log:'第 5 条 (c,e) 权 10：c 不在 {a,e} 中 → 加入。分量：{a,c,e}。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'ok',   tag:'加入', log:'第 6 条 (b,e) 权 11：连通 {a,c,e} 与 {b,d,f} → 加入，6 个顶点全部连通，已选 5 条边，算法结束。', count:6, ribbon:{k:6, ok:true} },
+    { cls:'done', tag:'完成', log:'依次加入：(b,f), (b,d), (a,e), (c,e), (b,e)，总权 5+6+9+10+11 = 41 → 选 A。', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var accepted = [], rejected = [], cur = -1;
+    if(i >= 1){ accepted = [0]; }
+    if(i >= 2){ accepted = [0, 1]; }
+    if(i >= 3){ rejected = [2]; }
+    if(i >= 4){ accepted = [0, 1, 3]; }
+    if(i >= 5){ accepted = [0, 1, 3, 4]; }
+    if(i >= 6){ accepted = [0, 1, 3, 4, 5]; }
+    if(i <= 6){ cur = i - 1; }
+    drawEdges(cur, accepted, rejected);
+
+    var comps = '尚未开始';
+    if(i === 0){ comps = '每个顶点各自一个分量：{a} {b} {c} {d} {e} {f}'; }
+    else if(i === 1){ comps = '{b,f} | {a} {c} {d} {e}'; }
+    else if(i === 2){ comps = '{b,d,f} | {a} {c} {e}'; }
+    else if(i === 3){ comps = '{b,d,f} | {a} {c} {e}（(d,f) 舍弃后不变）'; }
+    else if(i === 4){ comps = '{b,d,f} | {a,e} | {c}'; }
+    else if(i === 5){ comps = '{b,d,f} | {a,c,e}'; }
+    else if(i >= 6){ comps = '{a,b,c,d,e,f}（全部连通）'; }
+
+    var picked = '';
+    if(i >= 1){
+      var names = [];
+      accepted.forEach(function(k){ names.push('(' + EDGES[k].e + ')'); });
+      picked = '<br>已加入的边：' + names.join(' → ');
+    }
+    noteLine.innerHTML = '<b>当前连通分量：</b>' + comps + picked;
+  },
+
+  result: {
+    big: '(b,f), (b,d), (a,e), (c,e), (b,e)',
+    html: '<b>答案选 A。</b>Kruskal 三步：<b>按权排序 → 逐边考察（并查集判环）→ 选满 5 条边</b>。注意 (d,f)=7 排在 (a,e)=9 之前，虽成环被舍弃也占一个考察位；选项 B 的边集相同但把 (b,e)=11 提前了，违反按权加入的次序。总权值 <code>5+6+9+10+11=41</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

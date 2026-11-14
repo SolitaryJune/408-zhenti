@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-08 · 折半查找最多比较几次？</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 最坏路径：每比较一次，剩余区间 = ⌈(n-1)/2⌉ */
+var SIZES = [300, 150, 75, 37, 18, 9, 4, 2, 1, 0];
+
+function stageHTML(st){
+  var h = '<div class="aw-row-label"><b>有序顺序表</b>，n = 600：每比较 1 次（取 mid 判定），最坏剩下 ⌈(n−1)/2⌉ 个元素的半段</div>';
+  h += '<div class="aw-cells">';
+  for (var i = 0; i < st.shown; i++){
+    var cls = (i === st.shown - 1 && st.shown <= 10 && i >= 1) ? ' hit' : ' ok';
+    if (st.allOk){ cls = ' ok'; }
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box' + cls + '">' + SIZES[i] + '</div><div class="aw-idx">第' + (i + 1) + '次</div></div>';
+  }
+  if (st.shown === 0){
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box">600</div><div class="aw-idx">初始</div></div>';
+  }
+  h += '</div>';
+  if (st.calc){
+    h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.calc + '</div>';
+  }
+  return h;
+}
+
+var CALC = [
+  '初始区间长度 600，尚无比较。',
+  '第 1 次比较后最坏剩 ⌈599/2⌉ = 300 个。',
+  '第 2 次比较后剩 150 个。',
+  '第 3 次比较后剩 75 个。',
+  '第 4 次比较后剩 37 个。',
+  '第 5 次比较后剩 18 个。',
+  '第 6 次比较后剩 9 个。',
+  '第 7 次比较后剩 4 个。',
+  '第 8 次比较后剩 2 个。',
+  '第 9 次比较后剩 1 个。',
+  '第 10 次比较后剩 0 个：区间空，查找必结束。',
+  '锚点：2⁹ = 512 ＜ 601 ≤ 1024 = 2¹⁰ → ⌈log₂ 601⌉ = 10；9 层判定树最多 2⁹−1 = 511 个结点，装不下 600 个元素。',
+];
+
+var snaps = [];
+for (var i = 0; i <= 11; i++){
+  var last = (i === 11);
+  var tagArr = ['初始','第 1 次','第 2 次','第 3 次','第 4 次','第 5 次','第 6 次','第 7 次','第 8 次','第 9 次','第 10 次','结论'];
+  var clsArr = ['shift','step','step','step','step','step','step','step','step','step','step','done'];
+  var logArr = [
+    '600 个元素的有序顺序表折半查找：开始',
+    '第 1 次比较：最坏剩 300 个元素',
+    '第 2 次比较：剩 150 个',
+    '第 3 次比较：剩 75 个',
+    '第 4 次比较：剩 37 个',
+    '第 5 次比较：剩 18 个',
+    '第 6 次比较：剩 9 个',
+    '第 7 次比较：剩 4 个',
+    '第 8 次比较：剩 2 个',
+    '第 9 次比较：剩 1 个',
+    '第 10 次比较：剩 0 个，区间空 —— 最多 10 次',
+    '⌈log₂(n+1)⌉ = ⌈log₂ 601⌉ = 10 → 答案 B'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i],
+    count: Math.max(0, Math.min(i, 10)),
+    html: stageHTML({ shown: (i === 0 ? 0 : Math.min(i, 10)), allOk: last, calc: CALC[i] }),
+    done: last,
+  };
+  if (i >= 1 && i <= 10){ sn.ribbon = { k: i, ok: true }; }
+  snaps.push(sn);
+}
+
+AW.init({
+  title: '2023-08 · 600 个元素折半查找，最多比较几次？',
+  subtitle: '有序顺序表 n = 600 · 最坏路径逐次折半 · 最多比较 ⌈log₂(n+1)⌉ 次',
+  counterLabel: '已比较',
+  ribbonTitle: '比较次数（✓ 完成一次折半）',
+  intro: '点击「▶ 播放」沿最坏路径逐次折半。',
+  snaps: snaps,
+  result: {
+    big: '最多比较 10 次（答案 B）',
+    html: '每比较一次最坏剩 ⌈(n−1)/2⌉ 个：600 → 300 → 150 → 75 → 37 → 18 → 9 → 4 → 2 → 1 → 0，共 <b>10</b> 次。公式：<b>⌈log₂(n+1)⌉ = ⌈log₂ 601⌉ = 10</b>（2⁹=512 ＜ 601 ≤ 1024=2¹⁰）。易错：⌊log₂ 600⌋ = 9 的「9」装不下 600 个判定树结点（2⁹−1 = 511 ＜ 600）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

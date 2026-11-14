@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-04 三对角矩阵压缩存储的下标计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>三对角矩阵：只有主对角线与上下两条斜线可能非零——第 i 行只有 <code>m[i,i-1]</code>、<code>m[i,i]</code>、<code>m[i,i+1]</code>。按<b>行优先</b>存入下标从 <b>0</b> 开始的一维数组 N。求 <code>m[30,30]</code> 的下标。</p>' },
+  { title: '数第 30 行之前的元素',
+    cls: 'good',
+    body: '<p>第 30 行之前是第 1~29 行：<b>第 1 行只有 2 个元素</b>（缺左斜元素），第 2~29 行共 28 行、每行 3 个 → 合计 <code>2 + 28×3 = 86</code> 个，占据 N[0..85]。</p>' },
+  { title: '第 30 行内定位',
+    cls: 'good',
+    body: '<p>第 30 行的元素依次是 <code>m[30,29]</code>、<code>m[30,30]</code>、<code>m[30,31]</code>。目标 <code>m[30,30]</code> 排行内第 <b>2</b> 个，前面还要让出 1 个位置。</p>' },
+  { title: '得出下标',
+    cls: 'good',
+    body: '<p>下标 = 86 + 1 = <b>87</b>（0 起下标）。答案选 <b>B</b>。</p>' },
+  { title: '小例子校验',
+    cls: 'key',
+    body: '<p>用 <code>m[2,2]</code> 校验：第 1 行占 N[0]、N[1]；第 2 行 <code>m[2,1]</code> 占 N[2]，<code>m[2,2]</code> 占 N[3]。“前面 2 个 + 行内偏移 1 = 3” ✓，公式可靠。</p>' },
+  { title: '干扰项从哪来',
+    cls: 'bad',
+    body: '<p><b>A（86）</b>：只数到第 30 行行首 <code>m[30,29]</code> 的下标，忘了行内还要偏移；<b>C（88）</b>：误按“下标从 1 起”计；<b>D（89）</b>：再多偏移一位。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>B（87）</b>。记忆锚点：前 i−1 行共 <code>3(i-1)-1</code> 个（i 大于 1 时），行内偏移 <code>j-i+1</code>，下标 = 两者之和（0 起）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016·三对角矩阵压缩存储：m[30,30] 的数组下标',
+  subtitle: '100 阶三对角矩阵 · 行优先存放 · 数组 N 下标从 0 开始',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '下标 87（选 B）',
+    html: '三对角矩阵行优先压缩 = <b>前面整行的元素个数 + 行内偏移</b>。本题 <code>86 + 1 = 87</code>。易混点：数组下标<b>从 0 开始</b>；第 1 行只有 2 个非零元素。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-23 · 多道程序系统特征辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：挑「不正确」的项', cls: 'key',
+    body: '<p>多道程序系统的典型特征是<b>并发</b>与<b>共享</b>，而「进程数与 CPU 利用率的关系」是常考误区。逐项核对四个选项。</p>' },
+  { title: 'A 支持进程的并发执行 → 正确', cls: '',
+    body: '<p>多道程序驻留内存、单 CPU 上交替执行：宏观上并行、微观上串行。进程的<b>并发执行</b>正是多道程序系统的基本特征 → A 正确，不选。</p>' },
+  { title: 'C 需要管理共享资源 → 正确', cls: '',
+    body: '<p>内存、CPU、外设被多道程序共同使用：程序必须<b>共享</b>资源，系统必须实现对共享资源（尤其内存）的管理与保护 → C 正确，不选。</p>' },
+  { title: 'B 不必支持虚拟存储 → 正确', cls: '',
+    body: '<p>多道程序系统不必然有虚拟存储：只要各道程序占用的内存<b>总和不超过实际内存</b>即可运行；虚拟存储是为突破内存容量限制而引入的<b>可选增强</b> → B 正确，不选。</p>' },
+  { title: 'D 进程数越多 CPU 利用率越高 → 不正确', cls: 'bad',
+    body: '<p>进程数增加，CPU 空闲被填补，利用率先升；但超过限度后：<b>①</b> 内存等资源不足，频繁换页甚至抖动；<b>②</b> 进程切换（保存/恢复现场）开销占比增大。利用率随进程数<b>先升后降</b>，并非越多越高 → <b>D 不正确，选 D</b>。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：多道程序 = 并发 + 共享，但<b>不必然</b>有虚拟存储；CPU 利用率随进程数呈抛物线（先升后降），受内存容量与切换开销约束。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '多道程序系统特征辨析（2022-23）',
+  subtitle: '考点：并发 · 共享 · 虚拟存储是否必需 · 进程数与 CPU 利用率',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，逐步展开推理链，逐项核对四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：多道程序 = <b>并发 + 共享</b>（A、C 正确），虚拟存储只是可选增强（B 正确）；进程数与 CPU 利用率是<b>先升后降</b>的关系，不是越多越高（D 错误）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

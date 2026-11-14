@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-35 · SR 协议超时重传哪些帧</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：SR 选择重传协议的逐帧状态推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2011-35 · SR 协议超时后重传哪些帧',
+  subtitle: '选择重传协议 SR · 已发送 0~3 号帧 · 已收到 1 号帧的确认 · 0、2 号帧依次超时',
+  counterLabel: '重传帧数',
+  ribbonTitle: '帧号（✓ 已确认 / ✗ 重传）',
+  intro: '点击「▶ 播放」逐帧观察 SR 的处理。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>发送窗口中的数据帧</b>（SR 原则：哪个帧超时，只重传哪个帧）'));
+    var line = AW.el('div', '');
+    line.style.cssText = 'display:flex;align-items:flex-start;margin:10px 0 4px;';
+    this._ptrs = [];
+    this._boxes = [];
+    for(var f = 0; f <= 3; f++){
+      var col = AW.el('div', '');
+      col.style.cssText = 'width:72px;display:flex;flex-direction:column;align-items:center;margin-right:12px;';
+      var ptr = AW.el('div', '', '');
+      ptr.style.cssText = 'height:22px;font-size:12px;font-weight:700;white-space:nowrap;';
+      var box = AW.el('div', 'aw-box', String(f));
+      box.style.width = '60px';
+      var idx = AW.el('div', 'aw-idx', '帧 ' + f);
+      col.appendChild(ptr);
+      col.appendChild(box);
+      col.appendChild(idx);
+      line.appendChild(col);
+      this._ptrs.push(ptr);
+      this._boxes.push(box);
+    }
+    inner.appendChild(line);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      st:['dim','dim','dim','dim'], pt:{},
+      log:'SR（选择重传）协议：发送方已发出 0~3 号帧，每个帧各自启动超时计时器；接收方逐帧确认。' },
+    { cls:'step', tag:'收到确认', count:0, ribbon:{k:1, ok:true},
+      st:['','ok','',''], pt:{1:{t:'ACK ✓', c:'#15803d'}},
+      log:'收到 1 号帧的确认：1 号帧成功交付，从此与重传无关。' },
+    { cls:'miss', tag:'0 号超时', count:1, ribbon:{k:0, ok:false},
+      st:['miss','ok','',''], pt:{0:{t:'超时→重传', c:'#b91c1c'}, 1:{t:'ACK ✓', c:'#15803d'}},
+      log:'0 号帧超时：SR 只重传超时帧本身——重传 0 号（累计 1 帧）。' },
+    { cls:'miss', tag:'2 号超时', count:2, ribbon:{k:2, ok:false},
+      st:['miss','ok','miss',''], pt:{0:{t:'重传', c:'#b91c1c'}, 1:{t:'ACK ✓', c:'#15803d'}, 2:{t:'超时→重传', c:'#b91c1c'}},
+      log:'2 号帧随后也超时：同样只重传 2 号（累计 2 帧）。' },
+    { cls:'step', tag:'3 号不动', count:2,
+      st:['miss','ok','miss',''], pt:{0:{t:'重传', c:'#b91c1c'}, 1:{t:'ACK ✓', c:'#15803d'}, 2:{t:'重传', c:'#b91c1c'}, 3:{t:'未超时，不动', c:'#2563eb'}},
+      log:'3 号帧还没收到确认，但计时器未超时——SR 不会碰它。' },
+    { cls:'done', tag:'完成', count:2, done:true,
+      st:['miss','ok','miss',''], pt:{0:{t:'重传 ✓', c:'#b91c1c'}, 1:{t:'ACK ✓', c:'#15803d'}, 2:{t:'重传 ✓', c:'#b91c1c'}, 3:{t:'等待', c:'#2563eb'}},
+      log:'结论：需要重传的帧 = 0 号、2 号，共 2 帧，选 B。' },
+  ],
+
+  render: function(stage, sn){
+    var st = sn.st || ['', '', '', ''];
+    var pt = sn.pt || {};
+    for(var f = 0; f <= 3; f++){
+      this._boxes[f].className = 'aw-box' + (st[f] ? ' ' + st[f] : '');
+      var p = pt[f];
+      this._ptrs[f].innerHTML = p ? p.t : '';
+      this._ptrs[f].style.color = p ? (p.c || '#334155') : '#334155';
+    }
+  },
+
+  result: {
+    big: '重传 2 帧（选 B）',
+    html: 'SR 的重传粒度是<b>单个帧</b>：只有超时的帧自己被重传。已确认的 1 号帧不动，未超时的 3 号帧也不动 → 重传 0 号、2 号共 <b>2 帧</b>。干扰项 D（4 帧）是把 GBN"退回 N、整批重传"的思路错用到了 SR 上。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-17 TLB 标记位数计算动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：虚拟地址位段切分 + TLB 组划分演示 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'TLB 标记位数的计算：位段切分演示',
+  subtitle: '虚拟地址 32 位 · 页大小 1 KB · TLB 32 项 4 路组相联',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步切分虚拟地址位段。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    var seg = function(txt, w){
+      var b = AW.el('div', 'aw-box dim', txt);
+      b.style.width = w + 'px';
+      b.style.fontSize = '14px';
+      b.style.height = '46px';
+      b.style.borderRadius = '10px';
+      return b;
+    };
+    var lab = function(t){
+      return AW.el('div', 'aw-row-label', '<b>' + t + '</b>');
+    };
+
+    // 条 1：虚拟地址 32 位
+    inner.appendChild(lab('虚拟地址 32 位（按字节编址）'));
+    var s1 = AW.el('div', 'aw-cells');
+    s1.style.marginBottom = '6px';
+    this._vpn = seg('虚页号 VPN', 352);
+    this._off = seg('页内偏移', 160);
+    s1.appendChild(this._vpn); s1.appendChild(this._off);
+    inner.appendChild(s1);
+
+    // 条 2：VPN 细分
+    inner.appendChild(lab('虚页号 VPN 22 位的细分（TLB 组相联）'));
+    var s2 = AW.el('div', 'aw-cells');
+    s2.style.marginBottom = '6px';
+    this._tag = seg('TLB 标记', 304);
+    this._set = seg('组号', 48);
+    s2.appendChild(this._tag); s2.appendChild(this._set);
+    inner.appendChild(s2);
+
+    // 条 3：8 组 × 4 路
+    inner.appendChild(lab('TLB 共 32 项 = 8 组 × 4 路（每列一组）'));
+    var g3 = AW.el('div', 'aw-cells');
+    this._groups = [];
+    for (var g = 0; g < 8; g++){
+      var b = AW.el('div', 'aw-box dim', '组' + g);
+      b.style.width = '44px'; b.style.height = '40px'; b.style.fontSize = '12px';
+      g3.appendChild(b);
+      this._groups.push(b);
+    }
+    inner.appendChild(g3);
+
+    this._note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'开始',   log:'虚拟地址 32 位、页大小 1 KB = 2^10 B。先按页大小把地址切成两段。', count:0, note:'目标：求 TLB 表项中"标记"字段的位数' },
+    { cls:'ok',    tag:'页内偏移', log:'页大小 1 KB = 2^10 B → 页内偏移占低 10 位。', count:1, note:'页内偏移 = 10 位（低 10 位）', ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'虚页号',  log:'虚拟地址 32 位，去掉 10 位页内偏移 → 虚拟页号 VPN = 22 位（高 22 位）。', count:2, note:'VPN = 22 位', ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'组号',   log:'TLB 共 32 项、4 路组相联 → 组数 = 32 ÷ 4 = 8 组 → 组号取 VPN 的低 3 位（2^3 = 8）。', count:3, note:'组号 = 3 位（8 组 × 4 路 = 32 项）', ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'标记',   log:'TLB 表项的标记 = VPN 中除组号外的高位 = 22 − 3 = 19 位。', count:4, note:'标记 = 22 − 3 = 19 位 → 选 C', ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'完成',   log:'标记字段至少 19 位，答案 C。注意：主存地址 30 位是干扰条件——TLB 标记对应的是虚页号，不是物理地址。', count:5, done:true, note:'TLB 标记 = 19 位 → 答案 C' },
+  ],
+
+  render: function(stage, sn, i){
+    var setCls = function(b, cls){ b.className = 'aw-box' + (cls ? ' ' + cls : ''); };
+    [this._vpn, this._off, this._tag, this._set].forEach(function(b){ setCls(b, 'dim'); });
+    this._groups.forEach(function(b){ setCls(b, 'dim'); });
+    if (i >= 1){ setCls(this._off, 'ok'); }
+    if (i >= 2){ setCls(this._vpn, 'ok'); }
+    if (i >= 3){
+      setCls(this._set, 'shift');
+      this._groups.forEach(function(b){ setCls(b, 'ok'); });
+    }
+    if (i >= 4){ setCls(this._tag, 'ok'); }
+    this._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: 'TLB 标记 19 位',
+    html: '<p>答案 <b>C（19 位）</b>。链条：页大小 1 KB → 偏移 10 位 → VPN 22 位；TLB 32 项 4 路 → 8 组 → 组号 3 位；<b>标记 = 22 − 3 = 19 位</b>。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

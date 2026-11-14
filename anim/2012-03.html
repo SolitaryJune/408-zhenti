@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-03 前序+后序确定根的孩子</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类：前序+后序 → 根的孩子
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>前序 <code>a e b d c</code>，后序 <code>b c d e a</code>。考点：<b>前序＋后序能确定树的什么</b>——根必确定；根的孩子个数要靠「左右孩子判别规则」推理。</p>' },
+  { title: '先定根',
+    cls: 'good',
+    body: '<p>前序第一个元素 = 后序最后一个元素 = 根：<b>根是 a</b>，两个序列互相印证。</p>' },
+  { title: '孩子判别规则',
+    cls: 'key',
+    body: '<p>若根有<b>两个孩子</b>：前序中紧跟根的是<b>左孩子</b>（左子树先访问）；后序中紧贴根的是<b>右孩子</b>（右子树最后访问完）。两者应是<b>不同</b>的结点。</p>' },
+  { title: '套用规则 → 矛盾',
+    cls: 'bad',
+    body: '<p>本题：前序中 a 后面是 <code>e</code>（左孩子候选）；后序中 a 前面也是 <code>e</code>（右孩子候选）。左、右都指向 e ⇒ <b>矛盾</b> ⇒ 根 a <b>只有一个孩子</b>。</p>' },
+  { title: '确认唯一孩子是 e',
+    cls: 'good',
+    body: '<p>只有一个孩子时，它既紧排前序根后、又紧排后序根前——就是 <b>e</b>。顺势再推：e 的子树满足前序 <code>e b d c</code> / 后序 <code>b c d e</code>，同样规则可得 e 的孩子是 b，结构自洽。</p>' },
+  { title: '逐项排除',
+    cls: 'bad',
+    body: '<p>B「有 e、b」：b 排在前序 e 之后，是 <b>e 的孩子</b>，不是 a 的孩子。</p>' +
+          '<p>C「有 e、c」：c 在更深层，同理不是 a 的孩子。</p>' +
+          '<p>D「无法确定」：前序＋后序虽一般不能唯一确定整棵树，但本题「独生子」情形下根的孩子<b>完全可确定</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A（只有 e）</b>。口诀：<b>前序找左、后序找右；两者重合 ⇒ 独生子。</b></p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '由前序＋后序序列确定根的孩子',
+  subtitle: '前序 <code>a e b d c</code> · 后序 <code>b c d e a</code> · 推理链逐项展开',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A · 只有 e',
+    html: '前序根后第一个 = e（左孩子候选），后序根前最后一个也是 e（右孩子候选）——两者重合 ⇒ 根只有一个孩子 e。<br>干扰项 B 里的 <code>b</code> 其实是 <b>e 的孩子</b>；D 的「无法确定」忽略了「独生子」这一无歧义情形。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

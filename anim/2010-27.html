@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-27 Peterson 算法：互斥与饥饿分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：P0 与 P1 同时竞争进入临界区的典型交错执行序列
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+// 两进程的代码行（与题目伪代码一致）
+var P0L = ['flag[0] = TRUE;', 'turn = 1;', 'while(flag[1] &amp;&amp; turn==1);', '进入临界区（工作）', 'flag[0] = FALSE;'];
+var P1L = ['flag[1] = TRUE;', 'turn = 0;', 'while(flag[0] &amp;&amp; turn==0);', '进入临界区（工作）', 'flag[1] = FALSE;'];
+
+// 进程状态徽章配色
+var ST = {
+  idle:  ['在非临界区', '#f1f5f9', '#64748b'],
+  flag:  ['已举旗申请', '#dbeafe', '#1d4ed8'],
+  yld:   ['已谦让 turn', '#fef3c7', '#92400e'],
+  wait:  ['while 处等待', '#fee2e2', '#b91c1c'],
+  crit:  ['临界区内', '#dcfce7', '#15803d'],
+  ext:   ['已退出撤旗', '#f1f5f9', '#64748b'],
+};
+function badge(s){
+  var c = ST[s];
+  return '<span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:' + c[1] + ';color:' + c[2] + '">' + c[0] + '</span>';
+}
+
+// 步骤序列：P0 与 P1 同时申请、依次谦让、后写 turn 者覆盖先写者
+var SNAPS = [
+  { f0:'F', f1:'F', turn:0, p0:null, p1:null, p0s:'idle', p1s:'idle',
+    cls:'shift', tag:'开始', count:0,
+    log:'初始：flag[0]=flag[1]=FALSE，turn=0，两进程都未申请进入临界区' },
+  { f0:'T', f1:'F', turn:0, p0:0, p1:null, p0s:'flag', p1s:'idle',
+    cls:'step', tag:'P0 举旗', count:1,
+    log:'P0 想进临界区：执行 flag[0]=TRUE，举起自己的旗子' },
+  { f0:'T', f1:'T', turn:0, p0:null, p1:0, p0s:'flag', p1s:'flag',
+    cls:'step', tag:'P1 举旗', count:2,
+    log:'P1 也想进：flag[1]=TRUE —— 两进程同时竞争，互斥的考验开始' },
+  { f0:'T', f1:'T', turn:1, p0:1, p1:null, p0s:'yld', p1s:'flag',
+    cls:'shift', tag:'P0 谦让', count:3,
+    log:'P0 执行 turn=1：把机会让给 P1（"你先请"）' },
+  { f0:'T', f1:'T', turn:0, p0:null, p1:1, p0s:'flag', p1s:'yld',
+    cls:'shift', tag:'P1 谦让', count:4,
+    log:'P1 执行 turn=0：也把机会让给 P0 —— turn 被覆盖为 0，只有后写者的谦让生效，终值唯一' },
+  { f0:'T', f1:'T', turn:0, p0:2, p1:null, p0s:'crit', p1s:'yld',
+    cls:'ok', tag:'P0 放行', count:5, ribbon:{k:1, ok:true},
+    log:'P0 检查 while(flag[1] &amp;&amp; turn==1)：flag[1]=TRUE 但 turn=0 ≠ 1 → 条件不成立，P0 进入临界区' },
+  { f0:'T', f1:'T', turn:0, p0:null, p1:2, p0s:'crit', p1s:'wait',
+    cls:'miss', tag:'P1 等待', count:6, ribbon:{k:2, ok:false},
+    log:'P1 检查 while(flag[0] &amp;&amp; turn==0)：flag[0]=TRUE 且 turn=0 → 条件成立，P1 原地等待。互斥体现：此刻只有 P0 在临界区' },
+  { f0:'F', f1:'T', turn:0, p0:4, p1:2, p0s:'ext', p1s:'wait',
+    cls:'shift', tag:'P0 退出', count:7,
+    log:'P0 用完临界资源：flag[0]=FALSE 撤旗并退出' },
+  { f0:'F', f1:'T', turn:0, p0:null, p1:2, p0s:'ext', p1s:'crit',
+    cls:'ok', tag:'P1 放行', count:8, ribbon:{k:3, ok:true},
+    log:'P1 再查 while(flag[0] &amp;&amp; turn==0)：flag[0]=FALSE → 条件不再成立，P1 进入临界区 —— 等待有限时间即被放行，不会饥饿' },
+  { f0:'F', f1:'F', turn:0, p0:null, p1:4, p0s:'ext', p1s:'ext',
+    cls:'done', tag:'完成', count:9, done:true,
+    log:'序列结束：全程任一时刻只有一个进程在临界区（互斥成立），P1 只等了 P0 一次使用即进入（不会饥饿）→ 答案 D' },
+];
+
+AW.init({
+  title: '2010·27 Peterson 算法：并发执行会怎样？',
+  subtitle: 'P0 与 P1 同时竞争进入临界区 · 共享变量 <code>flag[2]</code>（初值 FALSE）与 <code>turn</code>（初值 0）· 典型交错序列推演',
+  counterLabel: '已执行语句',
+  ribbonTitle: '关键判定（✓ 放行 / ✗ 等待）',
+  intro: '点击「▶ 播放」，按语句交错序列推演两进程的并发执行。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    // 共享变量行
+    function vcol(lab){
+      var c = AW.el('div', 'aw-col');
+      c.appendChild(AW.el('div', 'aw-ptr', lab));
+      var b = AW.el('div', 'aw-box', 'F');
+      c.appendChild(b);
+      return { col: c, box: b };
+    }
+    refs.f0 = vcol('flag[0]');
+    refs.f1 = vcol('flag[1]');
+    refs.tv = vcol('turn');
+    var vr = AW.el('div', 'aw-cells');
+    vr.appendChild(refs.f0.col);
+    vr.appendChild(refs.f1.col);
+    vr.appendChild(refs.tv.col);
+    var cap = AW.el('div', 'aw-row-label', '<b>共享变量</b>（两进程都可读写，是互斥的"裁判"）');
+    inner.appendChild(cap);
+    inner.appendChild(vr);
+
+    // 两进程代码卡
+    function proc(name, lines){
+      var box = AW.el('div', '');
+      box.style.cssText = 'border:1.5px solid #e2e8f0;border-radius:14px;padding:10px 12px;background:#fff;';
+      var hd = AW.el('div', '');
+      hd.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+      hd.appendChild(AW.el('div', '', '<b style="font-size:13.5px;color:#0f172a">' + name + '</b>'));
+      var badgeEl = AW.el('div', '');
+      hd.appendChild(badgeEl);
+      box.appendChild(hd);
+      var els = [];
+      lines.forEach(function(l){
+        var d = AW.el('div', '', l);
+        d.style.cssText = 'font-family:Menlo,Consolas,monospace;font-size:12.5px;padding:5px 9px;border-radius:8px;margin-bottom:3px;background:#f8fafc;border:1px solid #eef2f7;color:#475569;';
+        box.appendChild(d);
+        els.push(d);
+      });
+      return { box: box, badge: badgeEl, lines: els };
+    }
+    refs.p0 = proc('进程 P0', P0L);
+    refs.p1 = proc('进程 P1', P1L);
+    var grid = AW.el('div', '');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;';
+    grid.appendChild(refs.p0.box);
+    grid.appendChild(refs.p1.box);
+    inner.appendChild(grid);
+    inner.appendChild(AW.el('div', 'aw-hint',
+      'turn 的终值唯一：P1 后写覆盖 P0 → 只放行一方；flag 退出置 FALSE → 等待方立即放行。两机制合起来：互斥 + 无饥饿'));
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    function setFlag(o, v){
+      o.box.textContent = v;
+      o.box.style.background = (v === 'T') ? '#dcfce7' : '#fff';
+      o.box.style.borderColor = (v === 'T') ? '#16a34a' : '#cbd5e1';
+      o.box.style.color = (v === 'T') ? '#14532d' : '#0f172a';
+    }
+    setFlag(refs.f0, sn.f0);
+    setFlag(refs.f1, sn.f1);
+    refs.tv.box.textContent = sn.turn;
+    refs.tv.box.style.background = '#fef3c7';
+    refs.tv.box.style.borderColor = '#d97706';
+    refs.tv.box.style.color = '#92400e';
+
+    refs.p0.badge.innerHTML = badge(sn.p0s);
+    refs.p1.badge.innerHTML = badge(sn.p1s);
+    function hl(lines, cur){
+      lines.forEach(function(d, i){
+        d.style.background = (cur === i) ? '#fef3c7' : '#f8fafc';
+        d.style.borderColor = (cur === i) ? '#d97706' : '#eef2f7';
+        d.style.color = (cur === i) ? '#92400e' : '#475569';
+      });
+    }
+    hl(refs.p0.lines, sn.p0);
+    hl(refs.p1.lines, sn.p1);
+  },
+
+  result: {
+    big: '答案 D',
+    html: '<b>能保证互斥，不会出现饥饿</b>。推演显示：turn 终值唯一（P1 后写覆盖为 0）→ 两个 while 不可能同时放行，任一时刻只有一人进入；P0 退出时 flag[0]=FALSE，P1 立即被放行——等待有限，无饥饿。A/B 的"互斥被破坏"与 A/C 的"饥饿"均与推演不符。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

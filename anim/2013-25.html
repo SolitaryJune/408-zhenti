@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-25 计算 CHS 的是哪一层软件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：四层软件，各管一段',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>磁盘 I/O 处理流程：用户程序 → 系统调用处理程序 → 设备驱动程序 → 中断处理程序。柱面号/磁头号/扇区号是磁盘<b>特有的物理参数</b>——谁最贴近硬件、谁负责设备相关细节，就是谁算。</p>' },
+  { title: 'A 用户程序：只提逻辑请求',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p>用户程序只知道“读文件第 n 块”这种<b>逻辑请求</b>，看不到磁盘的几何结构，也无权直接操作设备。排除 A。</p>' },
+  { title: 'B 系统调用处理程序：只查参数、转发请求',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p>系统调用处理程序做参数合法性检查、组织 I/O 请求，然后转交给设备相关层，它依然不与具体设备的物理参数打交道。排除 B。</p>' },
+  { title: 'C 设备驱动程序：把逻辑块号换算成 CHS',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>设备驱动程序是软件中<b>最了解硬件</b>的一层：它把抽象的“逻辑块号”换算成设备能直接执行的具体参数——对磁盘就是<b>柱面号、磁头号、扇区号</b>，并据此发出读写命令。<b>正确。</b></p>' },
+  { title: 'D 中断处理程序：I/O 完成后的善后',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p>中断处理程序在 I/O <b>完成之后</b>才被触发，负责保存现场、传递数据、唤醒等待进程——那时数据位置早已确定，不需要它再算。排除 D。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>“逻辑块号 → 柱面/磁头/扇区”是设备相关换算，由设备驱动程序完成</b>；中断处理程序只管“完成后”的事。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2013-25】算柱面号/磁头号/扇区号的程序是谁',
+  subtitle: '考点：磁盘 I/O 四层软件的职责划分 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（设备驱动程序）',
+    html: '设备驱动程序是<b>设备相关</b>的一层：把逻辑块号换算成<b>柱面号、磁头号、扇区号</b>并发出命令。用户程序只提逻辑请求，系统调用处理程序只转发，中断处理程序在 I/O 完成后才善后。记忆点：<b>谁贴硬件，谁算 CHS</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

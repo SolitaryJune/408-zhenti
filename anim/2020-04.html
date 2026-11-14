@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-04 森林转二叉树并求后序动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-04 由森林先根/中根序列重建对应二叉树 T，再求 T 的后根序列
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PRE  = ['a', 'b', 'c', 'd', 'e', 'f'];   // F 先根 = T 先序
+var INO  = ['b', 'a', 'd', 'f', 'e', 'c'];   // F 中根 = T 中序
+var POST = ['b', 'f', 'e', 'd', 'c', 'a'];   // T 后序（答案）
+
+var preRow, inoRow, postRow, treeBox, noteLine;
+
+// 结点坐标（画布 660 x 460）
+var POS = { a:[330, 35], b:[190, 130], c:[470, 130], d:[410, 230], e:[470, 320], f:[410, 410] };
+var EDGES = [ ['a','b'], ['a','c'], ['c','d'], ['d','e'], ['e','f'] ];
+
+function seqRow(label, chars, classes){
+  var box = AW.el('div', '');
+  box.appendChild(AW.el('div', 'aw-row-label', label));
+  box.appendChild(AW.cellRow(chars, classes));
+  return box;
+}
+
+function edgeLine(p1, p2){
+  var x1 = POS[p1][0], y1 = POS[p1][1], x2 = POS[p2][0], y2 = POS[p2][1];
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx * dx + dy * dy);
+  var ang = Math.atan2(dy, dx);
+  var d = AW.el('div', '');
+  d.style.position = 'absolute';
+  d.style.left = x1 + 'px';
+  d.style.top = y1 + 'px';
+  d.style.width = len + 'px';
+  d.style.height = '2px';
+  d.style.background = '#94a3b8';
+  d.style.transformOrigin = '0 0';
+  d.style.transform = 'rotate(' + ang + 'rad)';
+  return d;
+}
+
+function treeNode(k, cls){
+  var d = AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), k);
+  d.style.position = 'absolute';
+  d.style.left = (POS[k][0] - 22) + 'px';
+  d.style.top = (POS[k][1] - 22) + 'px';
+  d.style.borderRadius = '50%';
+  return d;
+}
+
+function drawTree(present, hiNodes){
+  treeBox.innerHTML = '';
+  EDGES.forEach(function(e){
+    if(present.indexOf(e[0]) >= 0 && present.indexOf(e[1]) >= 0){
+      treeBox.appendChild(edgeLine(e[0], e[1]));
+    }
+  });
+  present.forEach(function(k){
+    var cls = hiNodes && hiNodes[k] ? hiNodes[k] : 'ok';
+    treeBox.appendChild(treeNode(k, cls));
+  });
+}
+
+AW.init({
+  title: '由森林的两序重建二叉树，再求 T 的后根遍历',
+  subtitle: 'F 先根 = a b c d e f · F 中根 = b a d f e c · 对应关系：<b>先根↔先序，中根↔中序</b>',
+  counterLabel: '推导步',
+  ribbonTitle: '推导步骤（✓ 完成）',
+  intro: '点击「▶ 播放」：先序定根、中序分左右，逐步重建二叉树 T。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    preRow = seqRow('<b>先序</b>（F 先根 = T 先序）', PRE, []);
+    inner.appendChild(preRow);
+    inoRow = seqRow('<b>中序</b>（F 中根 = T 中序）', INO, []);
+    inner.appendChild(inoRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>重建的二叉树 T</b>（绿 = 本步确定的子树根）'));
+    treeBox = AW.el('div', '');
+    treeBox.style.position = 'relative';
+    treeBox.style.width = '660px';
+    treeBox.style.height = '460px';
+    inner.appendChild(treeBox);
+    postRow = seqRow('<b>后序</b>（T 的后根遍历，逐步点亮）', POST, []);
+    inner.appendChild(postRow);
+    noteLine = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(noteLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'对应关系', log:'森林先根遍历 = 对应二叉树的先序；森林中根遍历 = 对应二叉树的中序。求 T 的后根（后序）。', count:0 },
+    { cls:'step', tag:'定根',     log:'先序第 1 个 a 是根；中序里 a 左侧 {b} 是左子树，右侧 {d,f,e,c} 是右子树。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'ok',   tag:'左子树',   log:'左子树先序 b、中序 b → b 是 a 的左孩子，且是叶子。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'右子树根', log:'右子树先序 c,d,e,f、中序 d,f,e,c → 根为 c；中序里 c 右侧为空 → c 无右孩子。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'c 的左子树', log:'先序 d,e,f、中序 d,f,e → 根 d；d 左侧为空 → d 无左孩子，{f,e} 是 d 的右子树。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'ok',   tag:'建树完成', log:'先序 e,f、中序 f,e → 根 e，左孩子为叶子 f，e 无右孩子 → 树 T 建好。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'ok',   tag:'后序·左',  log:'后序 = 左→右→根：左子树只有 b → 后序先得 b。', count:6, ribbon:{k:6, ok:true} },
+    { cls:'step', tag:'后序·右',  log:'右子树递归：f、e 先于 d（d 的右子树后序为 f,e,d），再输出 c → 接上 f,e,d,c。', count:7, ribbon:{k:7, ok:true} },
+    { cls:'done', tag:'后序·根',  log:'最后根 a → T 的后根遍历 = b, f, e, d, c, a → 选 C。', count:8, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var preCls = ['','','','','',''];
+    var inoCls = ['','','','','',''];
+    var postFill = 0, present = [], hiNodes = {};
+
+    if(i >= 1){
+      preCls[0] = 'hit'; inoCls[1] = 'hit';
+      present = ['a']; hiNodes.a = 'hit';
+    }
+    if(i >= 2){
+      preCls[0] = 'ok'; preCls[1] = 'hit';
+      inoCls[0] = 'hit'; inoCls[1] = 'ok';
+      present = ['a', 'b']; hiNodes.a = 'ok'; hiNodes.b = 'hit';
+    }
+    if(i >= 3){
+      preCls[2] = 'hit';
+      inoCls[2] = 'ok'; inoCls[3] = 'ok'; inoCls[4] = 'ok'; inoCls[5] = 'hit';
+      present = ['a', 'b', 'c']; hiNodes.b = 'ok'; hiNodes.c = 'hit';
+    }
+    if(i >= 4){
+      preCls[2] = 'ok'; preCls[3] = 'hit';
+      inoCls[2] = 'hit'; inoCls[3] = 'ok'; inoCls[4] = 'ok'; inoCls[5] = 'ok';
+      present = ['a', 'b', 'c', 'd']; hiNodes.c = 'ok'; hiNodes.d = 'hit';
+    }
+    if(i >= 5){
+      preCls[3] = 'ok'; preCls[4] = 'hit'; preCls[5] = 'ok';
+      inoCls[2] = 'ok'; inoCls[3] = 'ok'; inoCls[4] = 'hit'; inoCls[5] = 'ok';
+      present = ['a', 'b', 'c', 'd', 'e', 'f'];
+      hiNodes.d = 'ok'; hiNodes.e = 'hit'; hiNodes.f = 'ok';
+    }
+    if(i === 6){
+      postFill = 1; hiNodes.e = 'ok'; hiNodes.b = 'hit';
+    }
+    if(i === 7){
+      postFill = 5; hiNodes = { a:'ok', c:'ok', d:'ok', e:'ok', f:'ok' }; hiNodes.c = 'hit';
+    }
+    if(i >= 8){
+      postFill = 6;
+      hiNodes = { a:'hit', b:'hit', c:'hit', d:'hit', e:'hit', f:'hit' };
+    }
+
+    // 重画三行序列
+    var newPre = seqRow('<b>先序</b>（F 先根 = T 先序）', PRE, preCls);
+    preRow.parentNode.replaceChild(newPre, preRow); preRow = newPre;
+    var newIno = seqRow('<b>中序</b>（F 中根 = T 中序）', INO, inoCls);
+    inoRow.parentNode.replaceChild(newIno, inoRow); inoRow = newIno;
+
+    drawTree(present, hiNodes);
+
+    var postCls = [];
+    for(var t = 0; t < 6; t++){
+      if(t < postFill){ postCls.push(t === postFill - 1 ? 'hit' : 'ok'); }
+      else { postCls.push(''); }
+    }
+    var newPost = seqRow('<b>后序</b>（T 的后根遍历，逐步点亮）', POST, postCls);
+    postRow.parentNode.replaceChild(newPost, postRow); postRow = newPost;
+
+    if(i === 0){ noteLine.innerHTML = '方法：<b>先序定根，中序分左右</b>，逐层递归。'; }
+    else if(i === 1){ noteLine.innerHTML = '中序被 a 切成两段：左 {b}，右 {d,f,e,c}。'; }
+    else if(i === 3){ noteLine.innerHTML = 'c 的右孩子不存在（中序 c 后面没有别的元素）。'; }
+    else if(i === 5){ noteLine.innerHTML = '树形：a(b, c(d(—, e(f, —))))——一条方向交替的单链。'; }
+    else if(i >= 8){ noteLine.innerHTML = '<b>答案：b, f, e, d, c, a，选 C。</b> 干扰项 A 恰是中序、B/D 顺序部分颠倒。'; }
+    else { noteLine.innerHTML = '…'; }
+  },
+
+  result: {
+    big: 'b, f, e, d, c, a',
+    html: '<b>答案选 C。</b>流程：森林<b>先根↔二叉树先序</b>、<b>中根↔二叉树中序</b> → 用"先序定根、中序分左右"重建出 T（a 的左孩子 b、右孩子 c；c→d→e→f 方向交替的单链）→ 按左→右→根写出后序 <code>b, f, e, d, c, a</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

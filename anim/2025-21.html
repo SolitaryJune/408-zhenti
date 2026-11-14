@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-21 DMA 适用设备辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：四类设备逐一判断是否适合 DMA -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：DMA 适合什么设备',
+    cls: 'key',
+    body: '<p>DMA 的价值在「<b>高速 + 成块</b>」：CPU 只做初始化和结束处理，整块数据由 DMA 控制器直接在设备与主存间搬运。低速、按字节零星传送的设备用程序查询/中断方式更经济——DMA 控制器有硬件成本。</p>' },
+  { title: 'I. 键盘 —— 不适合',
+    cls: 'bad',
+    rb: {k:1, ok:false},
+    body: '<p>键盘是<b>人速级</b>设备，每次只来几个字节、间隔由人敲击决定。中断方式完全应付得来，用 DMA 是大炮打蚊子。</p>' },
+  { title: 'II. 网卡 —— 适合',
+    cls: 'good',
+    rb: {k:2, ok:true},
+    body: '<p>网卡高速、<b>成帧成块</b>传送：整包数据直接在网卡与主存间搬运，CPU 期间照常执行程序，整块传完后被中断一次——典型的 DMA 应用。</p>' },
+  { title: 'III. 固态硬盘 —— 适合',
+    cls: 'good',
+    rb: {k:3, ok:true},
+    body: '<p>固态硬盘是<b>高速块设备</b>，批量读写数据量大：不用 DMA 的话 CPU 会被 I/O 完全拖住，用 DMA 整块直传主存。</p>' },
+  { title: 'IV. 针式打印机 —— 不适合',
+    cls: 'bad',
+    rb: {k:4, ok:false},
+    body: '<p>针式打印机是典型的<b>低速字符设备</b>，按字符逐个输出，数据零星——中断（或程序查询）方式即可，DMA 得不偿失。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>适合 DMA 的是 <b>II 网卡、III 固态硬盘</b>，答案选 <b>B</b>。记忆锚点：键盘、针式打印机是低速字符设备的代表；网卡、磁盘（含 SSD）是高速块设备的代表。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if(s.rb) sn.ribbon = s.rb;
+  return sn;
+});
+
+AW.init({
+  title: '哪些设备适合采用 DMA？',
+  subtitle: '考点：I/O 方式与设备特性匹配 · I 键盘 / II 网卡 / III 固态硬盘 / IV 针式打印机',
+  ribbonTitle: '设备（✓ 适合 / ✗ 不适合）',
+  intro: '点击「▶ 播放」逐个设备判断。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（II、III）',
+    html: '<p>DMA 适合<b>高速、成块传送</b>的设备：<b>网卡（II）、固态硬盘（III）</b>。键盘（I）、针式打印机（IV）是低速字符设备，用中断方式即可。DMA 的硬件开销对低速设备得不偿失。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-06 · 权值全 1 的图如何求单源最短路径</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个关键条件',
+    cls: 'key',
+    body: '<p>条件一：无向连通图 G 的<b>各边权值均为 1</b>——路径长度 = 边数。条件二：要从「某顶点」到「其余各顶点」都最短——这是<b>单源最短路径</b>问题。候选算法：I. Prim、II. Kruskal、III. BFS。</p>' },
+  { title: 'I. Prim 算法：求的是最小生成树',
+    cls: 'bad',
+    body: '<p>Prim 从某顶点出发长出<b>最小生成树（MST）</b>：目标是用总权值最小的 n−1 条边连通全图。MST 管<b>总造价</b>，不管<b>单源距离</b>——MST 上的路径未必是两顶点间的最短路径。I <b>不一定</b>能求出最短路径。</p>' },
+  { title: '反例：权全 1 时 MST 也可能不是 SPT',
+    cls: 'bad',
+    body: '<p>五顶点 s、a、b、t，边 s–a、s–b、a–b、a–t、b–t（权全 1）。Kruskal/Prim 可能生成树 {s–a, a–b, b–t}：树上 s 到 t 要 <b>3</b> 条边；而真实最短路径 s–a–t 只要 <b>2</b> 条边。可见即使权全 1，MST 也不等于最短路径树（SPT）。</p>' },
+  { title: 'II. Kruskal 算法：同样是 MST',
+    cls: 'bad',
+    body: '<p>Kruskal 按边权从小到大全局选 n−1 条不成环的边，构造的还是<b>最小生成树</b>，与「某顶点到各顶点的距离」无关。II 也<b>不一定</b>。</p>' },
+  { title: 'III. BFS：按层扩展恰好按边数递增',
+    cls: 'good',
+    body: '<p>BFS 从源点出发：先访问距离 1 的顶点，再访问距离 2 的……第 k 层顶点的边数恰为 k。<b>权全 1 时边数最少 = 路径最短</b>，每个顶点首次被访问时的路径即最短路径。III <b>一定</b>能求出。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>只有 III 一定可行，答案选 <b>B</b>（仅 III）。记忆锚点：<b>MST 管「总造价」，SPT 管「单源距离」</b>；无权（全 1 权）图的最短路径 = BFS。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2023-06 · 哪个算法一定求得出权全 1 图的单源最短路径？',
+  subtitle: 'I. Prim　II. Kruskal　III. 广度优先搜索 · 边权均为 1',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 III）',
+    html: 'Prim / Kruskal 构造<b>最小生成树</b>，MST ≠ 最短路径树（反例：s–a、s–b、a–b、a–t、b–t 权全 1，MST 上 s→t 走 3 条边，最短只要 2 条）。<b>BFS 按层扩展</b>，权全 1 时首次到达即最短，一定可行。记忆锚点：<b>无权图最短路用 BFS；MST 管总造价，不管单源距离</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

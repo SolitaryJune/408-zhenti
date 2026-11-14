@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-31 提高文件访问速度的优化方法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：文件访问的瓶颈',
+    cls: 'key',
+    body: '<p>文件访问的主要开销在<b>磁盘 I/O</b>（寻道 + 旋转延迟 + 传输）与重复访问。提速思路三条：<b>少去磁盘、一次多拿、缓存复用</b>。四条措施逐个判断。</p>' },
+  { title: 'Ⅰ：提前读 —— 能提速',
+    cls: 'good',
+    body: '<p>根据访问规律，把预计马上要访问的块<b>预先读入内存</b>，真正访问时直接命中，免等磁盘。<b>Ⅰ ✓</b></p>' },
+  { title: 'Ⅱ：为文件分配连续的簇 —— 能提速',
+    cls: 'good',
+    body: '<p>文件各簇<b>物理相邻</b>，顺序读写几乎不寻道，还可以一次预读多块。<b>Ⅱ ✓</b></p>' },
+  { title: 'Ⅲ：延迟写 —— 能提速',
+    cls: 'good',
+    body: '<p>写操作写入高速缓存即返回，之后<b>成批写回磁盘</b>；期间若再读该块还能命中缓存。（它有掉电丢失风险，但“提速”只看性能。）<b>Ⅲ ✓</b></p>' },
+  { title: 'Ⅳ：采用磁盘高速缓存 —— 能提速',
+    cls: 'good',
+    body: '<p>常用盘块保留在内存，命中即<b>免去磁盘 I/O</b>。<b>Ⅳ ✓</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>Ⅰ、Ⅱ、Ⅲ、Ⅳ 全部能提高文件访问速度 → 选 <b>D</b>。记忆锚点：<b>预读 + 连续布局 + 延迟写 + 高速缓存，都是提速手段</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·31 哪些优化能提高文件访问速度（2 分选择题）',
+  subtitle: 'Ⅰ 提前读 · Ⅱ 连续簇 · Ⅲ 延迟写 · Ⅳ 磁盘高速缓存 —— 四条逐个判断',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（四条都行）',
+    html: '提前读（预取）、连续簇（少寻道）、延迟写（摊薄写盘、读回命中）、磁盘高速缓存（命中免 I/O）——分别对应“<b>少去磁盘、一次多拿、缓存复用</b>”三条提速思路。易错：延迟写虽有掉电丢失风险，但判断提速只看性能。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

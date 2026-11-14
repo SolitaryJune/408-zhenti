@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-37 CRC 校验：余数为 0 才无错</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：模 2 除法逐步推演 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var OPT_CELLS = [], WORK_CELLS = [], REM_EL = null;
+
+function setRow(cells, vals, clss){
+  for (var i = 0; i < cells.length; i++){
+    cells[i].textContent = vals ? vals.charAt(i) : '';
+    cells[i].className = 'aw-box ' + ((clss && clss[i]) || (vals ? '' : 'dim'));
+  }
+}
+
+// 每步的舞台状态：ov/oc=检验串值与配色，wv/wc=工作区值与配色，rem=结论行
+var STATES = [
+  { ov:null, oc:null, wv:null, wc:null,
+    rem:'判据：接收串 ÷ G <b>余数 = 0 ⇔ 传输无错</b>；先求数据 10111 的正确 FCS' },
+  { ov:'101110000', oc:['','','','','','','','',''], wv:null, wc:null,
+    rem:'数据 10111 后补 4 个 0 → <b>101110000</b>，准备模 2 除以 G' },
+  { ov:'101110000', oc:['dim','dim','dim','dim','dim','dim','dim','dim','dim'],
+    wv:'001000000', wc:['ok','ok','ok','ok','ok','','','',''],
+    rem:'第 1 轮：首位对齐，10111 ⊕ 10011 = 00100 → 余下 <b>001000000</b>' },
+  { ov:null, oc:null,
+    wv:'000001100', wc:['dim','dim','dim','dim','dim','hit','hit','hit','hit'],
+    rem:'第 2 轮：对齐余下首位 1，⊕ 10011 → 余数 = <b>1100</b>' },
+  { ov:null, oc:null,
+    wv:'000001100', wc:['dim','dim','dim','dim','dim','hit','hit','hit','hit'],
+    rem:'余数 r = 1100（4 位 < 5 位，除完）→ <b>FCS = 1100</b>，正确码字 = 10111 1100' },
+  { ov:'101110000', oc:['dim','dim','dim','dim','dim','miss','miss','miss','miss'], wv:null, wc:null,
+    rem:'A：10111 0000 → 除 G 余 <b>1100 ≠ 0</b>，判有错 ✗' },
+  { ov:'101110100', oc:['dim','dim','dim','dim','dim','miss','miss','miss','miss'], wv:null, wc:null,
+    rem:'B：10111 0100 → 除 G 余 <b>1000 ≠ 0</b>，判有错 ✗' },
+  { ov:'101111000', oc:['dim','dim','dim','dim','dim','miss','miss','miss','miss'], wv:null, wc:null,
+    rem:'C：10111 1000 → 除 G 余 <b>0100 ≠ 0</b>，判有错 ✗' },
+  { ov:'101111100', oc:['dim','dim','dim','dim','dim','hit','hit','hit','hit'], wv:null, wc:null,
+    rem:'D：10111 1100 → 除 G 余 <b>0000</b> ✓ 无错 → <b>选 D</b>' },
+];
+
+AW.init({
+  title: 'CRC 检验：哪个串除以 G 余 0',
+  subtitle: 'G(X) = X<sup>4</sup>+X+1 → 除数 G = 10011 · 判据：余数 = 0 ⇔ 无错',
+  counterLabel: '已验串',
+  ribbonTitle: '选项（✓ 余 0 / ✗ 余非 0）',
+  intro: '点击「▶ 播放」，先除出正确 FCS，再逐个检验四个选项。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    OPT_CELLS = []; WORK_CELLS = []; REM_EL = null;
+    var wrap = AW.el('div', 'aw-scroll');
+
+    function bitRow(labelHtml){
+      var box = AW.el('div', '');
+      box.appendChild(AW.el('div', 'aw-row-label', labelHtml));
+      var row = AW.el('div', 'aw-cells');
+      box.appendChild(row);
+      wrap.appendChild(box);
+      return row;
+    }
+
+    // 除数行（静态）
+    var gRow = bitRow('<b>除数 G</b>（5 位）');
+    var gStr = '10011';
+    for (var i = 0; i < gStr.length; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      col.appendChild(AW.el('div', 'aw-box hit', gStr.charAt(i)));
+      col.appendChild(AW.el('div', 'aw-idx', String(i + 1)));
+      gRow.appendChild(col);
+    }
+
+    // 检验串行（动态 9 位）
+    var oRow = bitRow('<b>检验串</b>（9 位：数据 10111 + 末 4 位）');
+    for (var j = 0; j < 9; j++){
+      var c1 = AW.el('div', 'aw-col');
+      c1.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b1 = AW.el('div', 'aw-box dim', '');
+      OPT_CELLS.push(b1);
+      c1.appendChild(b1);
+      c1.appendChild(AW.el('div', 'aw-idx', String(j + 1)));
+      oRow.appendChild(c1);
+    }
+
+    // 模 2 除法工作区（动态 9 位）
+    var wRow = bitRow('<b>模 2 除法工作区</b>（按位异或，不借位）');
+    for (var k = 0; k < 9; k++){
+      var c2 = AW.el('div', 'aw-col');
+      c2.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b2 = AW.el('div', 'aw-box dim', '');
+      WORK_CELLS.push(b2);
+      c2.appendChild(b2);
+      c2.appendChild(AW.el('div', 'aw-idx', String(k + 1)));
+      wRow.appendChild(c2);
+    }
+
+    REM_EL = AW.el('div', '');
+    REM_EL.style.cssText = 'margin-top:12px;font-size:14.5px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;min-height:44px;line-height:1.7';
+    REM_EL.innerHTML = STATES[0].rem;
+    wrap.appendChild(REM_EL);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var st = STATES[sn.st || 0];
+    setRow(OPT_CELLS, st.ov, st.oc);
+    setRow(WORK_CELLS, st.wv, st.wc);
+    REM_EL.innerHTML = st.rem;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'判据',      log:'G(X) = X<sup>4</sup>+X+1 → 除数 G = 10011（5 位）；接收判据：余数 = 0 ⇔ 无错', count:0, st:0 },
+    { cls:'step',  tag:'构造被除数', log:'数据 10111 后补 4 个 0 → 101110000，用模 2 除法除以 G',            count:0, st:1 },
+    { cls:'shift', tag:'第 1 轮异或', log:'首位对齐：10111 ⊕ 10011 = 00100 → 余下 001000000',             count:1, st:2 },
+    { cls:'shift', tag:'第 2 轮异或', log:'对齐余下首位 1：⊕ 10011 → 只剩 4 位，余数 = 1100',               count:2, st:3 },
+    { cls:'ok',    tag:'得 FCS',    log:'余数 1100 即 FCS → 正确码字 = 10111 1100',                   count:2, st:4 },
+    { cls:'miss',  tag:'验 A',      log:'A：10111 0000 → 除 G 余 1100 ≠ 0，判有错 ✗',                  count:3, st:5, ribbon:{k:1, ok:false} },
+    { cls:'miss',  tag:'验 B',      log:'B：10111 0100 → 除 G 余 1000 ≠ 0，判有错 ✗',                  count:4, st:6, ribbon:{k:2, ok:false} },
+    { cls:'miss',  tag:'验 C',      log:'C：10111 1000 → 除 G 余 0100 ≠ 0，判有错 ✗',                  count:5, st:7, ribbon:{k:3, ok:false} },
+    { cls:'done',  tag:'验 D',      log:'D：10111 1100 → 除 G 余 0000 ✓ 无错 → 选 D',                  count:6, st:8, ribbon:{k:4, ok:true}, done:true },
+  ],
+
+  result: {
+    big: '答案 D',
+    html: '判据：<b>整串 ÷ G 余数 = 0 ⇔ 无错</b>。101110000 ÷ 10011 余 <b>1100</b>，故正确码字 = <code>10111 1100</code>；' +
+          '四个选项只有 D 除 G 余 0。A/B/C 的末 4 位与 1100 有差异，余数非 0，判有错。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

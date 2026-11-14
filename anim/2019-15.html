@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-15 基址寻址 + 补码符号扩展 + 大端存放</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bt{ border-collapse: collapse; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13.5px; margin-top: 6px; }
+  .bt th, .bt td{ border: 1px solid #e2e8f0; padding: 6px 12px; text-align: center; }
+  .bt th{ background: #f1f5f9; color: #475569; }
+  .bt td.hi{ background: var(--green-bg); border-color: var(--green); color: #14532d; font-weight: 700; }
+  .bt td.hi2{ background: var(--amber-bg); border-color: var(--amber); color: #92400e; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+function byteTable(mode){
+  var bytes = ['12H', '34H', 'FFH', '00H'];
+  var addrs = ['EFFF FF12H', 'EFFF FF13H', 'EFFF FF14H', 'EFFF FF15H'];
+  var roles = ['MSB<br>最高有效字节', '', '', 'LSB<br>最低有效字节'];
+  var hi = [false, false, false, false];
+  if (mode === 'msb') hi[0] = true;
+  if (mode === 'full') { hi[0] = true; hi[3] = true; }
+  if (mode === 'lsb') hi[3] = true;
+  var h = '<table class="bt"><tr><th>字节内容</th>';
+  var i;
+  for (i = 0; i < 4; i++) h += '<td' + (hi[i] ? ' class="hi"' : '') + '>' + bytes[i] + '</td>';
+  h += '</tr><tr><th>所在地址</th>';
+  for (i = 0; i < 4; i++) h += '<td' + (hi[i] ? ' class="hi"' : '') + '>' + addrs[i] + '</td>';
+  h += '</tr><tr><th>角色</th>';
+  for (i = 0; i < 4; i++) h += '<td>' + roles[i] + '</td>';
+  h += '</tr></table>';
+  return h;
+}
+
+AW.init({
+  title: '2019·15 基址寻址求 LSB 所在地址（大端方式）',
+  subtitle: '操作数 <code>1234 FF00H</code> · 基址 BR = <code>F000 0000H</code> · 形式地址 A = <code>FF12H</code>（补码）· 按字节编址',
+  counterLabel: '步',
+  ribbonTitle: '关键步骤（✓ 已完成）',
+  intro: '点击「▶ 播放」：先算有效地址 EA，再按大端摆放 4 个字节。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.off = AW.el('div', 'aw-stepcard key', '');
+    inner.appendChild(S.off);
+    S.ea = AW.el('div', 'aw-stepcard', '');
+    S.ea.style.display = 'none';
+    inner.appendChild(S.ea);
+    S.bt = AW.el('div', '');
+    S.bt.style.display = 'none';
+    inner.appendChild(S.bt);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    if (i === 0){
+      S.off.innerHTML = '<h4>形式地址 A = FF12H（补码）</h4><p>基址寻址：EA = (BR) + A。A 是 16 位补码——它代表正数还是负数？先看符号位。</p>';
+      S.ea.style.display = 'none';
+      S.bt.style.display = 'none';
+    } else if (i === 1){
+      S.off.innerHTML = '<h4>第一步：判符号</h4><p>FF12H = <code>1111 1111 0001 0010B</code>，最高位 = 1 → <b>负数</b>。真值 = FF12H − 10000H = −EEH（十进制 −238）。</p>';
+      S.ea.style.display = 'none';
+      S.bt.style.display = 'none';
+    } else if (i === 2){
+      S.off.innerHTML = '<h4>第二步：符号扩展</h4><p>补码参加 32 位加法，高位补符号位 1：<code>FF12H → FFFF FF12H</code>。<br>（若误当无符号数做零扩展得 0000 FF12H，就会错选 A：F000 FF12H）</p>';
+      S.ea.style.display = 'none';
+      S.bt.style.display = 'none';
+    } else if (i === 3){
+      S.off.innerHTML = '<h4>偏移量（已符号扩展）</h4><p><code>FFFF FF12H</code>（即 −238）</p>';
+      S.ea.innerHTML = '<h4>第三步：求有效地址</h4><p>EA = (BR) + A = <code>F000 0000H + FFFF FF12H</code> = <b>1</b> EFFF FF12H<br>→ 丢弃超出 32 位的进位 → <b>EA = EFFF FF12H</b></p>';
+      S.ea.style.display = '';
+      S.bt.style.display = 'none';
+    } else if (i === 4){
+      S.ea.innerHTML = '<h4>有效地址</h4><p>EA = <b>EFFF FF12H</b></p>';
+      S.bt.innerHTML = '<h4>第四步：按大端方式摆放操作数 1234 FF00H</h4><p>大端 = <b>最高有效字节放最低地址</b>：12H 放在 EA = EFFF FF12H 处。</p>' + byteTable('msb');
+      S.bt.style.display = '';
+    } else if (i === 5){
+      S.bt.innerHTML = '<h4>第五步：其余字节依次向高地址排</h4><p>34H → EFFF FF13H，FFH → EFFF FF14H，00H → EFFF FF15H。</p>' + byteTable('full');
+      S.bt.style.display = '';
+    } else {
+      S.bt.innerHTML = '<h4>结论</h4><p>LSB（最低有效字节）= 00H，位于 <b>EFFF FF15H</b> = EA + 3 → 答案选 <b>D</b>。</p>' + byteTable('lsb');
+      S.bt.style.display = '';
+    }
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '审题', log: 'EA = (BR) + A，A = FF12H 是补码；操作数 4 字节，大端存放', count: 0 },
+    { cls: 'step', tag: '判符号', log: 'FF12H 最高位为 1 → 负数，真值 = −EEH（−238）', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'shift', tag: '符号扩展', log: '补码高位补 1：FF12H → FFFF FF12H（误做零扩展会错选 A）', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '算 EA', log: 'F000 0000H + FFFF FF12H = 1 EFFF FF12H → 丢进位 → EA = EFFF FF12H', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'ok', tag: '大端摆放', log: '大端方式：MSB（12H）放最低地址 EFFF FF12H', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'step', tag: '字节对号', log: '34H→FF13H，FFH→FF14H，00H→FF15H', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'done', tag: '完成', log: 'LSB（00H）在 EFFF FF15H → 答案 D', count: 6, done: true },
+  ],
+
+  result: {
+    big: '答案 D：EFFF FF15H',
+    html: '两个关键动作：<b>补码偏移先符号扩展</b>（FF12H → FFFF FF12H 再相加），<b>大端方式 MSB 在低地址、LSB 在高地址 EA+3</b>。干扰项 A 来自"零扩展"错误，B 的地址尾数 +3 正确但基址算错，C 符号扩展对了却把大端当成小端。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

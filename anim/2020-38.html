@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-38 拥塞窗口从 8KB 到 32KB 的最长时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类动画：慢开始（最快）与拥塞避免（最慢）两条路径对比
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var row1, row2;
+
+function growRow(label, cells, chipText){
+  var wrap = AW.el('div', '');
+  wrap.style.cssText = 'margin-bottom:16px;';
+  var lb = AW.el('div', 'aw-row-label', '<b>' + label + '</b>');
+  wrap.appendChild(lb);
+  var flex = AW.el('div', '');
+  flex.style.cssText = 'display:flex;align-items:flex-start;gap:6px;width:max-content;';
+  var cellEls = [];
+  cells.forEach(function(c, k){
+    if(k > 0){
+      var arrow = AW.el('div', '', '→');
+      arrow.style.cssText = 'color:#94a3b8;font-weight:700;font-size:16px;line-height:46px;';
+      flex.appendChild(arrow);
+    }
+    var col = AW.el('div', '');
+    col.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+    var box = AW.el('div', 'aw-box', c.v);
+    box.style.cssText = 'width:58px;opacity:.22;transition:opacity .4s,background .3s,border-color .3s;';
+    var ix = AW.el('div', '', c.idx);
+    ix.style.cssText = 'margin-top:4px;font-size:11px;color:#94a3b8;font-family:monospace;white-space:nowrap;';
+    col.appendChild(box); col.appendChild(ix);
+    flex.appendChild(col);
+    cellEls.push(box);
+  });
+  var chip = AW.el('div', '', chipText);
+  chip.style.cssText = 'margin-left:12px;align-self:center;font-size:12.5px;font-weight:700;color:#334155;background:#f1f5f9;border-radius:10px;padding:8px 10px;transition:all .4s;opacity:.35;';
+  flex.appendChild(chip);
+  wrap.appendChild(flex);
+  return { wrap: wrap, cells: cellEls, chip: chip };
+}
+
+AW.init({
+  title: 'cwnd 从 8KB 涨到 32KB，最久要多久？',
+  subtitle: 'MSS = 1KB · RTT = 2ms · 不出现拥塞（窗口只增不减）· 问的是「最长」时间',
+  counterLabel: '所需 RTT 数',
+  ribbonTitle: '关键节点（✓ 已确认）',
+  intro: '点击「▶ 播放」，先看最快的走法，再走最慢的合法路径。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'padding:6px 2px 2px;';
+    row1 = growRow('路径一：慢开始（每轮翻倍 · 最快）',
+      [{v:'8KB', idx:'RTT 0'}, {v:'16KB', idx:'RTT 1'}, {v:'32KB', idx:'RTT 2'}],
+      '2 RTT × 2ms = 4ms（最短）');
+    row2 = growRow('路径二：拥塞避免（每轮 +1 MSS · 最慢）',
+      [{v:'8KB', idx:'RTT 0'}, {v:'9KB', idx:'RTT 1'}, {v:'…', idx:'…'}, {v:'31KB', idx:'RTT 23'}, {v:'32KB', idx:'RTT 24'}],
+      '24 RTT × 2ms = 48ms（最长）');
+    inner.appendChild(row1.wrap);
+    inner.appendChild(row2.wrap);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题', log:'MSS = 1KB，RTT = 2ms；cwnd 要从 8KB 涨到 32KB，且「不出现拥塞」= 窗口只增不减', count:0 },
+    { cls:'shift', tag:'两种合法路径', log:'窗口增大只有两种节奏：慢开始每轮翻倍（指数）、拥塞避免每轮 +1 MSS（线性）。问「最长」→ 找最慢的', count:0 },
+    { cls:'ok',    tag:'先看最快', log:'慢开始：8 → 16 → 32，只需 2 个 RTT = 4ms —— 这是最短时间（选项 A 的来源），不是答案', count:2, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'走最慢', log:'拥塞避免：每经过 1 个 RTT，cwnd 只增加 1 个 MSS = 1KB：8 → 9 → 10 → …', count:1 },
+    { cls:'ok',    tag:'算轮数', log:'共需增加 32 − 8 = 24KB，每轮 +1KB → 24 个传输轮次（24 个 RTT）', count:24, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成', log:'24 RTT × 2ms = 48ms，即最长时间 → 选 D', count:24, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    row1.cells.forEach(function(b){
+      b.style.opacity = (i >= 2) ? 1 : .22;
+      b.style.background = (i >= 2) ? '#dcfce7' : '#fff';
+      b.style.borderColor = (i >= 2) ? '#16a34a' : '#cbd5e1';
+    });
+    row1.chip.style.opacity = (i >= 2) ? 1 : .35;
+    row1.chip.style.background = (i >= 2) ? '#dcfce7' : '#f1f5f9';
+
+    row2.cells.forEach(function(b, k){
+      var on = (k === 0) ? (i >= 3) : (i >= 4);
+      b.style.opacity = on ? 1 : .22;
+      b.style.background = on ? '#dcfce7' : '#fff';
+      b.style.borderColor = on ? '#16a34a' : '#cbd5e1';
+    });
+    if(i >= 4){
+      row2.cells[4].style.background = '#16a34a';
+      row2.cells[4].style.color = '#fff';
+    }
+    row2.chip.style.opacity = (i >= 4) ? 1 : .35;
+    row2.chip.style.background = (i >= 4) ? '#fef3c7' : '#f1f5f9';
+  },
+
+  result: {
+    big: '48 ms',
+    html: '最长时间 = 最慢的合法增长（拥塞避免）：(32 − 8) ÷ 1 = <b>24 个 RTT</b>，24 × 2ms = <b>48ms</b>，选 <b>D</b>。对照：最快走慢开始只要 2 RTT = 4ms——选项 A 是「最短」陷阱。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

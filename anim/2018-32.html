@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-32 能实现让权等待的同步机制</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：让权等待 vs 忙等',
+    cls: 'key',
+    body: '<p><b>让权等待</b>：申请不到资源时应<b>阻塞自己、放弃 CPU</b>（“权”指处理机），被唤醒后再来竞争。反面是<b>忙等</b>：占着 CPU 反复循环测试、空转。逐项判断四种机制。</p>' },
+  { title: 'A：Peterson 方法 —— 忙等',
+    cls: 'bad',
+    body: '<p>纯软件方案，靠 <code>while</code> 循环检测对方标志空转等待，进程始终占着 CPU。<b>不能让权 ✗</b></p>' },
+  { title: 'B / D：swap 指令与 TestAndSet 指令 —— 忙等',
+    cls: 'bad',
+    body: '<p>硬件指令实现<b>自旋锁</b>：拿不到锁就在循环里反复“读-改-测”。它们解决的是<b>原子性</b>，不改变“等待方式”。<b>不能让权 ✗</b></p>' },
+  { title: 'C：信号量方法 —— 能让权等待',
+    cls: 'good',
+    body: '<p>P 操作申请失败时，把进程挂到该信号量的<b>等待队列并阻塞</b>（让出 CPU）；V 操作释放资源并<b>唤醒</b>等待者。<b>实现让权等待 ✓</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>软件方法 / 硬件指令 = 忙等；信号量 = 阻塞等待（让权）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·32 哪种同步机制可实现让权等待（2 分选择题）',
+  subtitle: 'Peterson · swap · TestAndSet · 信号量 —— 谁能让进程“阻塞等”而不是“空转等”',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（信号量方法）',
+    html: '<b>让权等待</b> = 等不到资源就阻塞、放弃 CPU。Peterson 是软件空转；swap / TestAndSet 是硬件自旋锁——它们都解决<b>原子性</b>而非<b>等待方式</b>，全是忙等；只有<b>信号量</b>的 P 操作失败会阻塞入队、让出 CPU，V 操作再唤醒。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-06 哪一个不是深度优先搜索序列</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var ADJ = [
+  ['V1','V2, V3, V5'],
+  ['V2','V5'],
+  ['V3','V2'],
+  ['V4','V3'],
+  ['V5','V4']
+];
+
+function seqRow(seq, okCount, note){
+  var h = '<div class="aw-cells" style="justify-content:center">';
+  seq.forEach(function(s, i){
+    var c = 'aw-box';
+    if(i < okCount){ c += ' ok'; }
+    else if(i === okCount){ c += ' miss'; }
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="' + c + '">' + s + '</div><div class="aw-idx">' + (i + 1) + '</div></div>';
+  });
+  h += '</div>';
+  if(note){ h += '<p style="text-align:center;font-size:13px;color:#334155;margin-top:8px">' + note + '</p>'; }
+  return h;
+}
+
+function adjTbl(hl){
+  var h = '<div style="width:max-content;margin:0 auto"><table style="border-collapse:collapse;font-size:14px">';
+  h += '<tr><th style="border:1px solid #cbd5e1;background:#f1f5f9;padding:6px 18px">顶点</th><th style="border:1px solid #cbd5e1;background:#f1f5f9;padding:6px 18px">能直接到达（出边）</th></tr>';
+  ADJ.forEach(function(r, i){
+    var bg = '#ffffff', fw = '400', fc = '#334155';
+    if(hl && hl.r === i){ bg = hl.good ? '#dcfce7' : '#fee2e2'; fw = '700'; fc = hl.good ? '#14532d' : '#b91c1c'; }
+    h += '<tr><td style="border:1px solid #cbd5e1;padding:6px 18px;text-align:center;background:' + bg + ';font-weight:' + fw + ';color:' + fc + '">' + r[0] + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:6px 18px;text-align:center;background:' + bg + ';font-weight:' + fw + ';color:' + fc + '">' + r[1] + '</td></tr>';
+  });
+  h += '</table>';
+  if(hl && hl.seq){ h += '<div style="margin-top:14px">' + seqRow(hl.seq, hl.seqOk, hl.note) + '</div>'; }
+  h += '</div>';
+  return h;
+}
+
+AW.init({
+  title: '2016·有向图：哪一个不是从 V1 出发的 DFS 序列？',
+  subtitle: 'DFS 规则：下一步只能沿<b>当前顶点的出边</b>走向未访问顶点 · 走投无路才回溯',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」：先读懂邻接表，再逐项检验四个候选序列。',
+
+  snaps: [
+    { cls:'step', tag:'开始', count:0,
+      log:'有向图，从 V1 出发做深度优先搜索。规则：每访问一个顶点，下一步只能沿它的出边去一个尚未访问的邻接点；无路可走才回溯。',
+      html: adjTbl(null) },
+    { cls:'step', tag:'读图', count:1,
+      log:'读出邻接表：V1 出发直达 V2、V3、V5；V2 只出 V5；V3 只出 V2；V4 只出 V3；V5 只出 V4。',
+      html: adjTbl(null) },
+    { cls:'step', tag:'验D·第一步', count:2,
+      log:'检验 D（V1, V2, V3, V4, V5）：第 1 步 V1 → V2 ✓，V1 的出边里有 V2。',
+      html: adjTbl({r:0, good:true, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'V1 → V2 ✓'}) },
+    { cls:'miss', tag:'验D·断链', count:3,
+      log:'第 2 步该从 V2 走：V2 唯一的出边是 V2→V5，而 V3 不是 V2 的邻接点——DFS 不可能从 V2 直接访问 V3 ✗。',
+      html: adjTbl({r:1, good:false, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'V2 → V3 ✗ 没有这条边！'}) },
+    { cls:'step', tag:'补证', count:4,
+      log:'V3 只能从 V1 或 V4 进入，而 V4 必须等 V5→V4 之后；所以 V1、V2 之后只能去 V5——那正是选项 C 的走法。D 走不通。',
+      html: adjTbl({r:1, good:false, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'D 不是 DFS 序列'}) },
+    { cls:'ok', tag:'验A', count:5,
+      log:'检验 A（V1, V5, V4, V3, V2）：V1→V5 ✓ → V4 ✓（V5→V4）→ V3 ✓（V4→V3）→ V2 ✓（V3→V2），步步有边，合法。',
+      html: adjTbl({seq:['V1','V5','V4','V3','V2'], seqOk:5, note:'A 合法 ✓'}) },
+    { cls:'ok', tag:'验B', count:6,
+      log:'检验 B（V1, V3, V2, V5, V4）：V1→V3 ✓ → V2 ✓（V3→V2）→ V5 ✓（V2→V5）→ V4 ✓（V5→V4），合法。',
+      html: adjTbl({seq:['V1','V3','V2','V5','V4'], seqOk:5, note:'B 合法 ✓'}) },
+    { cls:'ok', tag:'验C', count:7,
+      log:'检验 C（V1, V2, V5, V4, V3）：V1→V2 ✓ → V5 ✓（V2→V5）→ V4 ✓（V5→V4）→ V3 ✓（V4→V3），合法。',
+      html: adjTbl({seq:['V1','V2','V5','V4','V3'], seqOk:5, note:'C 合法 ✓'}) },
+    { cls:'done', tag:'结论', count:8, done:true,
+      log:'四个序列中只有 D 在 V2→V3 处断链 → 不是深度优先搜索序列，选 D。',
+      html: adjTbl({r:1, good:false, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'答案：D'}) },
+  ],
+
+  result: {
+    big: '答案 D',
+    html: 'DFS 铁律：下一步必须沿<b>当前顶点的出边</b>走向未访问顶点，不能“跳”。D 中 V2 没有指向 V3 的边（出边只有 V2→V5），第 2 步就断了。另注意方向：图里是 V3→V2、V5→V4，看反就会误判。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

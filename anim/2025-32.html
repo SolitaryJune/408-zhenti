@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-32 文件系统能为 HDD 和 SSD 共同提供什么</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body) {
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+    '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  {
+    title: '审题眼：找"两类设备都能"的功能',
+    cls: 'key',
+    body: '<p>温彻斯特硬盘＝机械盘（磁头<b>寻道</b>、盘片旋转）；固态硬盘＝闪存盘（无寻道、擦写有寿命需<b>磨损均衡</b>）。答案必须是与设备物理特性无关、<b>属于文件系统自身职责</b>的功能。</p>'
+  },
+  {
+    title: 'A 划分扇区：错',
+    cls: 'bad',
+    body: '<p>扇区由磁盘出厂时的<b>低级格式化</b>（厂商 / 磁盘控制器层）划定。文件系统面对的是已划好扇区的盘，划分扇区不是它做的事。A 错。</p>',
+    ribbon: { k: 1, ok: false }
+  },
+  {
+    title: 'B 确定盘块大小：对',
+    cls: 'good',
+    body: '<p>文件系统把若干连续扇区组成<b>盘块（簇）</b>，以盘块为最小单位分配文件空间——这是文件系统自己的抽象，<b>与设备是机械盘还是闪存盘无关</b>，对两类设备都成立。B 对。</p>',
+    ribbon: { k: 2, ok: true }
+  },
+  {
+    title: 'C 降低寻道时间：错',
+    cls: 'bad',
+    body: '<p>只有机械盘才有"寻道"这回事，<b>SSD 根本没有磁头</b>；寻道时间由磁盘调度、机械结构决定，文件系统无能为力。C 错。</p>',
+    ribbon: { k: 3, ok: false }
+  },
+  {
+    title: 'D 实现均衡磨损：错',
+    cls: 'bad',
+    body: '<p>磨损均衡是 SSD（闪存块擦写次数有限）的<b>专属需求</b>，由固件 / FTL 层完成；机械盘没有"磨损"问题。只对一类设备成立，不满足"都能"。D 错。</p>',
+    ribbon: { k: 4, ok: false }
+  },
+  {
+    title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>确定盘块大小是文件系统自己的抽象</b>，与设备无关；划分扇区（低级格式化）、寻道（机械盘物理动作）、磨损均衡（SSD 固件功能）都超出文件系统的职责范围。</p>'
+  }
+];
+
+var snaps = STEPS.map(function (s, i) {
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function (x, j) {
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '文件系统能为 HDD 和 SSD 共同提供什么（2025-32）',
+  subtitle: '磁盘和固态硬盘 · 找与<b>设备物理特性无关</b>、属于文件系统自身的功能',
+  ribbonTitle: '选项判定（✓ 两类都能 / ✗ 不能）',
+  intro: '点击「▶ 播放」，逐项判断四个功能。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '<b>确定盘块大小</b>是文件系统自身的抽象（连续扇区组成盘块/簇，作为分配单位），对机械盘和固态盘都成立。划分扇区是低级格式化的事（A）、寻道只存在于机械盘（C）、磨损均衡是 SSD 固件的专属功能（D）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

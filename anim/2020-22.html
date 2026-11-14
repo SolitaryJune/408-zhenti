@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-22 周期挪用 DMA 时间线</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-22：周期挪用 DMA 输入过程（总线时间轴演示）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+// 时间轴示意：12 个存取周期，DMA 每 3 个周期挪用 1 个（第 3、6、9、12 格）
+var TIMELINE = ['CPU','CPU','DMA','CPU','CPU','DMA','CPU','CPU','DMA','CPU','CPU','DMA'];
+
+var CPU_CSS  = 'border-color:#2563eb;background:#dbeafe;color:#1d4ed8;';
+var DMA_ON   = 'border-color:#d97706;background:#fbbf24;color:#78350f;';
+var DMA_OFF  = 'border-color:#cbd5e1;background:#f1f5f9;color:#94a3b8;';
+
+function timelineRow(dmaLit, pauseCpu){
+  var row = AW.el('div', 'aw-cells');
+  TIMELINE.forEach(function(t, i){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '64px';
+    var box = AW.el('div', 'aw-box', t);
+    box.style.width = '60px';
+    box.style.fontSize = '13px';
+    if (t === 'DMA'){
+      box.style.cssText += (i < dmaLit ? DMA_ON : DMA_OFF);
+    } else {
+      box.style.cssText += CPU_CSS;
+      if (pauseCpu) box.style.opacity = '0.35';
+    }
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', '周期' + (i + 1)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '800px';
+  inner.appendChild(AW.el('div', 'aw-row-label',
+    '<b>总线时间轴</b>（1 格 = 1 个存取周期，示意：外设每凑满 4B，DMA 挪用 1 格）'));
+  inner.appendChild(timelineRow(sn.dmaLit, sn.pauseCpu));
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+AW.init({
+  title: '2020-22 · 周期挪用 DMA 的输入过程',
+  subtitle: '数据块 512B · 接口缓冲寄存器 32 位（4B）· 找<b>错误</b>叙述',
+  counterLabel: '已挪用周期',
+  ribbonTitle: '选项核对（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」或「下一步」，沿时间轴看 DMA 怎么"偷"周期。',
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始', count:0, dmaLit:0, pauseCpu:false,
+      log:'设备用周期挪用 DMA 输入：数据块 512B，I/O 接口里有一个 32 位（4B）数据缓冲寄存器。',
+      note:'DMA 与 CPU 共享主存总线，谁在什么时候用总线是本题的关键。' },
+    { cls:'ok', tag:'A 正确', count:0, dmaLit:0, pauseCpu:false,
+      log:'外设每送来 32 位（4B）就填满缓冲寄存器 → DMA 发一次总线请求；整块 512B ÷ 4B = 128 次。A 正确。',
+      note:'每次"准备好 32 位数据"对应一次总线请求：512 ÷ 4 = <b>128 次</b>。', ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'第一次挪用', count:1, dmaLit:1, pauseCpu:true,
+      log:'第一次挪用：DMA 占用总线 1 个存取周期，把 4B 写入主存；这一拍 CPU 暂停让路。',
+      note:'挪用的瞬间：DMA 用总线传 4B，CPU 让出一个存取周期（时间轴上 CPU 格变淡）。' },
+    { cls:'ok', tag:'B 正确', count:1, dmaLit:1, pauseCpu:false,
+      log:'DMA 必须"随到随传"——不马上挪用总线，缓冲里的数据就可能被下一批输入覆盖 → DMA 的总线使用权优先级高于 CPU。B 正确。',
+      note:'优先级高的原因：I/O 设备的数据有<strong>时效性</strong>，错过就丢。', ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'CPU 照常', count:1, dmaLit:1, pauseCpu:false,
+      log:'挪用结束，CPU 继续执行程序、照常访问主存——时间轴上前后的 CPU 周期都在正常干活。',
+      note:'关键：让路只是<strong>一拍</strong>，不是整个过程。' },
+    { cls:'shift', tag:'再次挪用', count:2, dmaLit:2, pauseCpu:true,
+      log:'缓冲寄存器又凑满 4B → 再挪用 1 个周期……如此往复，128 次挪用点散布在整个传送过程中。',
+      note:'每次挪用只占 1 个存取周期，挪用点之间 CPU 都在照常工作。' },
+    { cls:'miss', tag:'C 错误', count:2, dmaLit:2, pauseCpu:false,
+      log:'"整个传送过程中 CPU 不可以访问主存"把挪用一个周期夸大成独占全程 → 与周期挪用定义矛盾，C 错误。',
+      note:'周期挪用 ≠ 独占总线：挪用间隙 CPU <b>可以</b>访存。', ribbon:{k:3, ok:false} },
+    { cls:'ok', tag:'D 正确', count:128, dmaLit:4, pauseCpu:false,
+      log:'整块 512B 传完（128 次挪用结束）→ DMA 控制器发出"DMA 传送结束"中断请求，CPU 做后处理。D 正确。',
+      note:'块传送结束时的中断是 DMA 与 CPU 协同的收尾动作。', ribbon:{k:4, ok:true} },
+    { cls:'done', tag:'完成', count:128, dmaLit:4, pauseCpu:false,
+      log:'结论：错误叙述是 C —— 周期挪用只在传一个数据的瞬间占总线，其余时间 CPU 照常访存 → 答案 C。',
+      note:'口诀：偷一个周期，还你全程。', noteCls:'good', done:true },
+  ],
+  result: {
+    big: '答案 C',
+    html: '周期挪用（周期窃取）= DMA 在传一个数据时<b>挪用一个存取周期</b>，挪用间隙 CPU 照常执行程序并访存。<br>' +
+      '易混：把周期挪用当成"停止 CPU 访存"方式（整块期间 CPU 完全停访），正是选项 C 的错误根源。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

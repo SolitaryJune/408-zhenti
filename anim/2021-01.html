@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-01 单循环链表删除首元结点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一个链表结点格：p=上方指针标注 v=框内文字 c=附加类 s=内联样式 l=下方说明
+function nd(p, v, c, s, l){
+  return { p: p || '', v: v, c: c || '', s: s || '', l: l || '' };
+}
+function listRow(nodes, extra){
+  var h = '<div class="aw-scroll"><div class="aw-cells">';
+  nodes.forEach(function(n, i){
+    h += '<div class="aw-col"><div class="aw-ptr">' + n.p + '</div>' +
+         '<div class="aw-box' + (n.c ? ' ' + n.c : '') + '" style="' + n.s + '">' + n.v + '</div>' +
+         '<div class="aw-idx">' + n.l + '</div></div>';
+    if(i < nodes.length - 1){
+      h += '<div style="align-self:center;color:#94a3b8;font-weight:700">→</div>';
+    }
+  });
+  h += '</div>';
+  if(extra) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>';
+  return h + '</div>';
+}
+var KEY = 'background:var(--amber-bg);border-color:var(--amber);color:#92400e';
+
+AW.init({
+  title: '带头结点单循环链表：删除第一个元素',
+  subtitle: 'h 指头结点 · p 指尾结点 · q 为临时指针 · 四个选项逐项推演',
+  counterLabel: '步骤',
+  ribbonTitle: '选项判定（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐步查看每个选项语句序列的执行效果。',
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'非空单循环链表：h 指头结点 H，p 指尾结点 t，尾结点的 next 指回 H（循环）', count:0,
+      html: listRow([
+        nd('h↑', 'H', '', '', '头结点'),
+        nd('', 'a', '', '', '首元'),
+        nd('', 'b', '', '', '第 2 个'),
+        nd('p↑', 't', '', '', '尾结点')
+      ], '第一个元素存放在<b>首元结点 a</b>（即 <code>h-&gt;next</code> 所指结点）中。') },
+
+    { cls:'shift', tag:'目标', log:'删除第一个元素 = 删除首元结点 a：三步——q 保存 a、头结点 next 越过 a、free(q)，顺序不能反', count:1,
+      html: listRow([
+        nd('h↑', 'H', '', '', '头结点'),
+        nd('', 'a', '', KEY, '首元·待删'),
+        nd('', 'b', '', '', '第 2 个'),
+        nd('p↑', 't', '', '', '尾结点')
+      ], '先改 next 再保存，a 的地址就丢了——所以先 <code>q=h-&gt;next</code>。') },
+
+    { cls:'miss', tag:'A ✗', log:'A 先执行 h->next=h->next->next，再 q=h->next：q 指到的是新首元 b，free(q) 释放错结点，a 丢失', count:2, ribbon:{k:1, ok:false},
+      html: listRow([
+        nd('h↑', 'H', 'ok', '', '头结点'),
+        nd('', 'a', 'dim', '', '首元·丢失'),
+        nd('q↑', 'b', 'miss', '', '新首元'),
+        nd('p↑', 't', 'dim', '', '尾结点')
+      ], 'A 的问题：<code>q = h-&gt;next</code> 放在改链<b>之后</b>，q 拿到的已是 b —— <code>free(q)</code> 把 b 释放了，真正的 a 成了无法回收的丢失结点。') },
+
+    { cls:'ok', tag:'B 一般 ✓', log:'B：q 先保存 a，h->next=q->next 越过 a，free(q)——一般情况删对了，但特例见下一步', count:3,
+      html: listRow([
+        nd('h↑', 'H', 'ok', '', '头结点'),
+        nd('q↑', 'a', '', KEY, '已摘链'),
+        nd('', 'b', 'ok', '', '新首元'),
+        nd('p↑', 't', '', '', '尾结点')
+      ], '<code>q=h-&gt;next; h-&gt;next=q-&gt;next; free(q);</code> 链表本身删对了——但尾指针 p 呢？') },
+
+    { cls:'miss', tag:'B 特例 ✗', log:'特例：链表只有 1 个元素结点时，a 就是尾结点（p==q），free 后 p 悬空——B 没修 p，错', count:4, ribbon:{k:2, ok:false},
+      html: listRow([
+        nd('h↑', 'H', '', '', '头结点'),
+        nd('q↑ p↑', 'a', '', KEY, '首元兼尾结点')
+      ], 'p==q 时（链表只有 1 个元素）：free 后 <b>p 仍指向被释放的结点</b>，悬空——B 没有把 p 修正为 h。') },
+
+    { cls:'miss', tag:'C ✗', log:'C 条件写反：p != q（正常情况，尾结点好好的）竟执行 p=h，尾指针错误指到头结点，尾结点 t 失联', count:5, ribbon:{k:3, ok:false},
+      html: listRow([
+        nd('h↑ p↑✗', 'H', 'miss', '', '头结点'),
+        nd('', 'a', 'dim', '', '已删除'),
+        nd('', 'b', 'ok', '', '新首元'),
+        nd('', 't', 'dim', '', '尾结点被抛弃')
+      ], 'C 把条件写反：<code>if (p != q) p = h;</code> —— 恰恰在<b>正常情况</b>把 p 改成 h，真正的尾结点 t 失联。') },
+
+    { cls:'ok', tag:'D ✓', log:'D：q 存 a → h->next=q->next 越过 a → 仅当 p==q（删的恰是尾结点）才 p=h → free(q)，一般与特例都正确', count:6, ribbon:{k:4, ok:true},
+      html: listRow([
+        nd('h↑', 'H', 'ok', '', '头结点'),
+        nd('q↑', 'a', '', KEY, '待删'),
+        nd('', 'b', 'ok', '', '新首元'),
+        nd('p↑', 't', 'ok', '', '尾结点保持')
+      ], '<code>if (p == q) p = h;</code> —— 只有被删结点本身就是尾结点（链表只有 1 个元素）时才修正 p，方向正确。') },
+
+    { cls:'done', tag:'完成', log:'答案 D：q=h->next; h->next=q->next; if(p==q) p=h; free(q);', count:7, done:true,
+      html: listRow([
+        nd('h↑', 'H', 'ok', '', '头结点'),
+        nd('', 'b', 'ok', '', '新首元'),
+        nd('p↑', 't', 'ok', '', '尾结点')
+      ], '删除后的一般情况；若原链表只有 1 个元素结点，p 已被修正为 h。') },
+  ],
+
+  result: {
+    big: '答案 D',
+    html: '删除首元结点三步：<b>q 保存 → 前驱 next 越过 → free</b>；单循环链表还要维护尾指针——<b>仅当被删结点就是尾结点（p==q）时才 p=h</b>。干扰项：A 释放错结点、B 漏修尾指针、C 条件写反。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

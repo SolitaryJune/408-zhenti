@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-35：GBN 后退 N 帧——超时重传推演
+     模板：算法 / 过程演示类（持久 DOM + 逐步点亮帧格子）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2009-35：GBN 超时后重发几帧？',
+  subtitle: '发送方已发送 0～7 号帧 · 只收到 0、2、3 号帧的确认 · 累积确认',
+  counterLabel: '已确认帧数',
+  ribbonTitle: '事件序（✓ 确认到达 / ✗ 超时）',
+  intro: '点击「▶ 播放」逐步演示 GBN 的超时重传。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._inner = inner;
+  },
+
+  snaps: [
+    { cls:'step', tag:'开始', log:'发送方已发送 0～7 号共 8 帧，超时计时器正在计时', count:0 },
+    { cls:'ok', tag:'收到 ACK0', log:'收到 0 号帧的确认 → 0 号帧确认完毕', count:1, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'收到 ACK2', log:'收到 2 号帧的确认：累积确认 → 0～2 号帧全部确认（1 号的确认虽没等到，被 2 号捎带确认）', count:3, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'收到 ACK3', log:'收到 3 号帧的确认：累积确认 → 0～3 号帧全部确认完毕', count:4, ribbon:{k:3, ok:true} },
+    { cls:'miss', tag:'计时器超时', log:'超时！查最靠前的未确认帧 → 是 4 号帧', count:4, ribbon:{k:4, ok:false} },
+    { cls:'shift', tag:'GBN 后退重发', log:'GBN 规则：从第一个未确认帧起，其后所有已发送帧全部重发 → 4、5、6、7 号', count:4 },
+    { cls:'done', tag:'完成', log:'重发 4～7 号共 4 帧 → 答案选 C', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var inner = this._inner;
+    inner.innerHTML = '';
+    var lbl = AW.el('div', 'aw-row-label', '<b>发送队列</b>（已发送 0～7 号帧）· 绿＝已确认 · 红＝超时需重发');
+    inner.appendChild(lbl);
+    var chars = ['0', '1', '2', '3', '4', '5', '6', '7'];
+    var nConfirmed = (i === 0) ? 0 : (i === 1 ? 1 : (i === 2 ? 3 : 4));
+    var classes = chars.map(function(_, idx){
+      if (idx < nConfirmed) return 'ok';
+      if (i >= 5 && idx >= 4) return 'miss';
+      return '';
+    });
+    var ptr = (i >= 4) ? { 5: '第一个未确认' } : null;
+    inner.appendChild(AW.cellRow(chars, classes, ptr, 0));
+  },
+
+  result: {
+    big: '重发 4 帧 → 选 C',
+    html: 'GBN 的确认是<b>累积确认</b>：收到 3 号帧的确认 ⇒ 0～3 号全部确认（1 号被捎带）。超时后从第一个未确认帧 <b>4 号</b>起整段重发已发送的 4、5、6、7 号 → <b>4 帧，选 C</b>。<br>干扰项：D（5 帧）误把 1 号也算重发——GBN 接收方不缓存乱序帧、也按累积确认，1 号无需重发。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

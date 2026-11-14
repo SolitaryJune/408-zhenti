@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-18 MMU 地址转换检测事件辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：MMU 转换流程与四事件归属 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：MMU 的任务',
+    cls: 'key',
+    body: '<p>MMU（存储管理单元）把 CPU 给出的<b>虚拟地址</b>翻译成<b>物理地址</b>：先查 TLB → 未命中查内存页表 → 拼物理地址。题目问"<b>不是</b>在 MMU 地址转换过程中检测的"。</p>' },
+  { title: 'TLB 缺失 —— 在转换过程中',
+    cls: 'good',
+    body: '<p>查 TLB 没命中该虚页号 → MMU 检测到，转去查内存中的页表。这是转换流程的第一环。</p>' },
+  { title: '页面缺失 —— 在转换过程中',
+    cls: 'good',
+    body: '<p>页表项有效位为 0，目标页不在主存 → MMU 在查表时检测，触发<b>缺页异常</b>，转操作系统调页。</p>' },
+  { title: '访问越权 —— 在转换过程中',
+    cls: 'good',
+    body: '<p>页表项带读/写/执行权限位，操作与权限不符（如写只读页）→ MMU 在转换时检测，触发<b>保护异常</b>。</p>' },
+  { title: 'Cache 缺失 —— 与 MMU 无关！',
+    cls: 'bad',
+    body: '<p>Cache 缺失是拿到物理地址后访问 Cache 时，由 Cache 的<b>标记比较电路</b>发现"块不在其中"产生的，属于<b>访存阶段</b>的事件，不是地址转换过程检测的 → 选 <b>B</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B（Cache 缺失）</b>。记忆锚点：MMU 管"<b>地址对不对、有没有权限、页在不在</b>"；Cache 管"<b>数据在不在高速缓存</b>"——两个部件各查各的。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'MMU 地址转换过程中检测什么？',
+  subtitle: '越权 / Cache 缺失 / 页面缺失 / TLB 缺失 · 逐项归属',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '<p>MMU 转换过程中检测：<b>TLB 缺失、页面缺失（缺页异常）、访问越权（保护异常）</b>。Cache 缺失由 Cache 自己的标记比较电路检测，与 MMU 地址转换无关。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

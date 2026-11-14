@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-28 · 随机访问 + 易扩展的文件物理结构</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析类：文件物理结构对比（答案 B 索引结构）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题眼是两个条件：<b>适合随机访问</b>（给第 i 块就能直接定位）+ <b>易于文件扩展</b>（增长时不必搬动已有内容）。逐个结构对照打分。</p>' },
+  { title: 'A. 连续结构 —— 排除',
+    cls: 'bad',
+    body: '<p>随机访问<b>可以</b>（起始块号 + i 直接算出第 i 块位置），但扩展需要大块连续空间、常要<b>整体搬迁</b> → 不满足"易扩展"。</p>' },
+  { title: 'C. 链式结构（定长块）—— 排除',
+    cls: 'bad',
+    body: '<p>扩展<b>容易</b>（挂上新块即可），但读第 i 块必须<b>从头沿链逐块查找</b> → 不适合随机访问。</p>' },
+  { title: 'D. 链式结构（变长块）—— 排除',
+    cls: 'bad',
+    body: '<p>同样只能沿链顺序查找，块长还不定，随机访问能力更差 → 排除。</p>' },
+  { title: 'B. 索引结构 —— 正确',
+    cls: 'good',
+    body: '<p>FCB 中放<b>索引表</b>：查第 i 个表项直接得第 i 块的块号 → <b>随机访问 O(1)</b>；文件增长只需<b>追加表项并分配新盘块</b> → <b>易扩展</b>。两个条件全满足。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>B</b>。记忆锚点：索引 = "直接寻址表"，<b>随机访问与动态扩展两头兼得</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-28 · 适合随机访问且易于扩展的结构',
+  subtitle: '考点：文件物理结构对比 · 连续 / 链式 / 索引',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>索引结构</b>既有连续结构的"可直接定位"（查索引表），又有链接结构的"易扩展"（改表即可）。连续结构败在扩展难，链式结构败在只能顺序访问。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

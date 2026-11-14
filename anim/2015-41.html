@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-41 动画 · 单链表按绝对值去重（辅助数组法）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 链表：HEAD(头结点) → 21 → 15 → 15 → −7 → 15；辅助数组 q[0..n]（示例 n=21，展示用到的 q[7]/q[15]/q[21]）
+var NODES = [
+  { v:'HEAD', abs:null, q:null },
+  { v:'21', abs:'|21|=21', q:21 },
+  { v:'15', abs:'|15|=15', q:15 },
+  { v:'15', abs:'|15|=15', q:15 },
+  { v:'-7', abs:'|-7|=7',  q:7 },
+  { v:'15', abs:'|15|=15', q:15 },
+];
+var QKEYS = [21, 15, 7];          // 展示的辅助数组单元
+var nodeCols = [], arrowEls = [], flagEls = {}, flagBox = null, pRow = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '620px';
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>单链表</b>（p 指向已处理部分的前驱，检查 p→link；绿=保留 / 红=删除）'));
+  pRow = AW.el('div', 'aw-cells');
+  NODES.forEach(function(nd, i){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '72px';
+    if(i > 0){
+      var ar = AW.el('div', 'aw-ptr', '→');
+      ar.style.lineHeight = '40px';
+      ar.style.color = '#64748b';
+      arrowEls.push(ar);
+      pRow.appendChild(ar);
+    }
+    var box = AW.el('div', 'aw-box', nd.v);
+    box.style.width = '72px';
+    if(i === 0){ box.style.fontSize = '13px'; box.style.borderColor = '#94a3b8'; }
+    col.appendChild(box);
+    nodeCols.push({ col: col, box: box });
+    pRow.appendChild(col);
+  });
+  inner.appendChild(pRow);
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>辅助数组 q[0..n]</b>（示例取 n=21，只展示用到的单元；1=该绝对值已登记）'));
+  flagBox = AW.el('div', 'aw-cells');
+  QKEYS.forEach(function(k){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '72px';
+    var box = AW.el('div', 'aw-box', '0');
+    box.style.width = '72px';
+    col.appendChild(box);
+    flagBox.appendChild(col);
+    flagEls[k] = { box: box, col: col };
+  });
+  inner.appendChild(flagBox);
+  QKEYS.forEach(function(k){
+    flagEls[k].col.appendChild(AW.el('div', 'aw-idx', 'q[' + k + ']'));
+  });
+  NODES.forEach(function(nd, i){
+    nodeCols[i].col.appendChild(AW.el('div', 'aw-idx', i === 0 ? '头结点' : '结点' + i));
+  });
+
+  inner.appendChild(AW.el('div', 'aw-row-label',
+    '过程：|data| 首次出现 → 登记 q[|data|]=1 并保留；再次出现 → 修改前驱 link 摘链删除，p 不动'));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var nc = sn.nodeCls;
+  NODES.forEach(function(nd, i){
+    var c = nc[i] || '';
+    nodeCols[i].box.className = 'aw-box' + (c ? ' ' + c : '');
+    if(i === 0) nodeCols[i].box.style.fontSize = '13px';
+  });
+  // p 指针：放在当前 p 所在结点上方
+  NODES.forEach(function(_, i){
+    var ptr = nodeCols[i].col.querySelector('.aw-ptr');
+    if(ptr) ptr.remove();
+  });
+  nodeCols.forEach(function(nci, i){
+    if(sn.pIdx === i){
+      var ptr = AW.el('div', 'aw-ptr', 'p');
+      nci.col.insertBefore(ptr, nci.col.firstChild);
+    }
+  });
+  // 箭头：指向"被删结点"的箭头变红打叉
+  arrowEls.forEach(function(a, i){
+    var deleted = nc[i + 1] === 'miss' || nc[i + 1] === 'dim';
+    a.textContent = deleted ? '⤍' : '→';
+    a.style.color = deleted ? '#dc2626' : '#64748b';
+    a.style.textDecoration = deleted ? 'line-through' : 'none';
+  });
+  // 辅助数组
+  QKEYS.forEach(function(k){
+    var f = flagEls[k];
+    f.box.textContent = String(sn.flags[k] || 0);
+    f.box.className = 'aw-box' + (sn.flags[k] ? ' ok' : '');
+    f.box.style.width = '72px';
+  });
+}
+
+var ALL0 = { 7:0, 15:0, 21:0 };
+
+AW.init({
+  title: '2015-41 · 单链表按绝对值去重：一趟扫描 + 辅助数组',
+  subtitle: '链表 <code>21 → 15 → 15 → −7 → 15</code> · 辅助数组 q[0..n] 登记出现过的绝对值 · 要求 |data| ≤ n',
+  counterLabel: '已处理结点',
+  ribbonTitle: '结点处理（✓ 保留 / ✗ 删除）',
+  intro: '点击「▶ 播放」观察辅助数组如何指导一趟去重。',
+
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'step', tag:'准备',
+      log:'malloc 申请 q[0..n]（n=21 时为 22 个单元）并全部清 0；p 从头结点 HEAD 出发，每次检查 p→link 的绝对值',
+      count:0, pIdx:0, nodeCls:['','','','','',''], flags:ALL0 },
+    { cls:'ok', tag:'结点①：21',
+      log:'|21|=21，q[21]=0 → 首次出现：保留，登记 q[21]=1，p 后移到结点①',
+      count:1, ribbon:{k:1, ok:true}, pIdx:1,
+      nodeCls:['','ok','','','',''], flags:{ 7:0, 15:0, 21:1 } },
+    { cls:'ok', tag:'结点②：15',
+      log:'|15|=15，q[15]=0 → 首次出现：保留，登记 q[15]=1，p 后移到结点②',
+      count:2, ribbon:{k:2, ok:true}, pIdx:2,
+      nodeCls:['','ok','ok','','',''], flags:{ 7:0, 15:1, 21:1 } },
+    { cls:'miss', tag:'结点③：15（重复）',
+      log:'|15|=15，q[15]=1 → 已出现过：p→link 越过结点③把它摘链并 free，p 不动',
+      count:3, ribbon:{k:3, ok:false}, pIdx:2,
+      nodeCls:['','ok','ok','miss','',''], flags:{ 7:0, 15:1, 21:1 } },
+    { cls:'ok', tag:'结点④：−7',
+      log:'新的 p→link 是 −7：|−7|=7，q[7]=0 → 首次出现：保留，登记 q[7]=1，p 后移',
+      count:4, ribbon:{k:4, ok:true}, pIdx:4,
+      nodeCls:['','ok','ok','miss','ok',''], flags:{ 7:1, 15:1, 21:1 } },
+    { cls:'miss', tag:'结点⑤：15（重复）',
+      log:'|15|=15，q[15]=1 → 摘链删除结点⑤并 free，p 不动',
+      count:5, ribbon:{k:5, ok:false}, pIdx:4,
+      nodeCls:['','ok','ok','miss','ok','miss'], flags:{ 7:1, 15:1, 21:1 } },
+    { cls:'step', tag:'扫描结束',
+      log:'p→link 为空，while 退出；free(q) 释放辅助数组。链表剩 21 → 15 → −7，与题目结果图一致',
+      count:5, pIdx:4, nodeCls:['','ok','ok','dim','ok','dim'], flags:{ 7:1, 15:1, 21:1 } },
+    { cls:'done', tag:'复杂度',
+      log:'整条链表只扫一遍：时间 O(m)；辅助数组 n+1 个单元：空间 O(n) —— 以 O(n) 空间换 O(m) 时间',
+      count:5, done:true, pIdx:4, nodeCls:['','ok','ok','dim','ok','dim'], flags:{ 7:1, 15:1, 21:1 } },
+  ],
+
+  result: {
+    big: 'O(m) 时间 · O(n) 空间',
+    html: '设计思想：<b>辅助数组 q[0..n] 登记绝对值是否出现过，一趟扫描完成去重</b>。' +
+          '关键细节：删除结点时 <b>p 不动</b>（新的 p→link 仍要检查），保留时 p 才后移；' +
+          '若用两两比较则 O(m²)，不满足"时间尽可能高效"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

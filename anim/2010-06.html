@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-06 哈夫曼树性质 · 辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function N(v, l, r, id){
+  return { v: v, id: id || v, l: l || null, r: r || null };
+}
+
+// 反例：权值 1,2,3,4,8,16,32 的哈夫曼树（合并 1+2、3+3、4+6、8+10、16+18、32+34）
+function huffSvg(){
+  var t = N('66',
+            N('32', null, null, '32l'),
+            N('34',
+              N('16', null, null, '16n'),
+              N('18',
+                N('8', null, null, '8n'),
+                N('10',
+                  N('4', null, null, '4n'),
+                  N('6',
+                    N('3', null, null, '3a'),
+                    N('3', N('1', null, null, '1n'), N('2', null, null, '2n'), '3b'),
+                    '6n'),
+                  '10n'),
+                '18n'),
+              '34n'),
+            '66r');
+  var pos = {}, cnt = 0, maxd = 0;
+  (function inorder(nd, d){
+    if (!nd) return;
+    inorder(nd.l, d + 1);
+    pos[nd.id] = { x: ++cnt, y: d + 1, v: nd.v, leaf: !nd.l && !nd.r };
+    maxd = Math.max(maxd, d + 1);
+    inorder(nd.r, d + 1);
+  })(t, 0);
+  var XP = 46, YP = 54, R = 17;
+  var W = (cnt + 1) * XP, H = (maxd + 1) * YP;
+  function px(id){ return pos[id].x * XP; }
+  function py(id){ return pos[id].y * YP - YP * 0.35; }
+  var s = '<svg width="' + W + '" height="' + H + '" style="display:block;margin:0 auto">';
+  (function edges(nd){
+    if (!nd) return;
+    ['l', 'r'].forEach(function(k){
+      if (nd[k]) s += '<line x1="' + px(nd.id) + '" y1="' + py(nd.id) + '" x2="' + px(nd[k].id) + '" y2="' + py(nd[k].id) + '" stroke="#94a3b8" stroke-width="2"/>';
+    });
+    edges(nd.l); edges(nd.r);
+  })(t);
+  for (var id in pos){
+    var p = pos[id];
+    var fill = p.leaf ? '#dcfce7' : '#fff', stroke = p.leaf ? '#16a34a' : '#cbd5e1';
+    if (id === '32l' || id === '66r'){ fill = '#fef3c7'; stroke = '#d97706'; }
+    s += '<circle cx="' + px(id) + '" cy="' + py(id) + '" r="' + R + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>' +
+         '<text x="' + px(id) + '" y="' + (py(id) + 5) + '" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a" font-family="Menlo,Consolas,monospace">' + p.v + '</text>';
+  }
+  return s + '</svg>';
+}
+
+var STEPS = [
+  { title: '审题眼：找「错误」的那句', cls: 'key',
+    body: '<p>n 个<b>互不相同</b>的权值构造哈夫曼树。构造法只有一条：<b>每轮取森林中两棵权值最小的树合并</b>。四个选项全靠这条规则推。</p>' },
+  { title: 'B：没有度 1 的结点 ✓', cls: 'good',
+    body: '<p>每轮合并：两棵树出列、一棵新树入列——新结点恰好带 <b>2 个孩子</b>。整个过程中结点只会「度 0 变度 2」，度 1 结点无处产生。推论：叶结点数 = 二度结点数 + 1。B 正确。</p>' },
+  { title: 'C：两个最小权值必为兄弟 ✓', cls: 'good',
+    body: '<p>第一轮合并面对的是全森林，取的两个最小权值结点被放进同一棵新树，<b>从此互为兄弟</b>（也是全树最深处的一对叶）。C 正确。</p>' },
+  { title: 'D：非叶结点 ≥ 下一层任一结点 ✓', cls: 'good',
+    body: '<p>二度结点的权 = 左孩子权 + 右孩子权，不小于任一孩子；孩子若是非叶结点，又同理支配自己的子树。逐层看，<b>任一非叶结点的权值不小于下一层任何结点的权值</b>。D 正确。</p>' },
+  { title: 'A：哈夫曼树 ≠ 完全二叉树 ✗', cls: 'bad',
+    body: '<p>反例：权值 <b>1, 2, 3, 4, 8, 16, 32</b>，依次合并 1+2=3、3+3=6、4+6=10、8+10=18、16+18=34、32+34=66（绿=叶，琥珀=根与 32）：</p>' +
+          '<div style="overflow-x:auto">' + huffSvg() + '</div>' +
+          '<p>32 是根旁的一片大叶子，另一侧却延伸到第 7 层——完全二叉树要求上层满、下层左对齐，这棵树明显不是。<b>A 错误</b>。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b style="font-size:16px">A</b>。记忆锚点：哈夫曼树只有度 0 和度 2 的结点（B）、两最小最先合并（C）、双亲权 ≥ 孩子权（D）；它只保证 <b>WPL 最小</b>，不保证是完全二叉树。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-06 · 哈夫曼树的四个说法，哪个是错的',
+  subtitle: '考点：哈夫曼构造规则 · <code>两小合并 → 无度1结点 / 最小成兄弟 / 双亲权 ≥ 孩子权</code>',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐项检验四个说法。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（不一定是完全二叉树）',
+    html: '哈夫曼树每次两小合并：无度 1 结点、两最小权值必为兄弟、双亲权不小于孩子权——B/C/D 都成立。反例权值 1,2,3,4,8,16,32 合并后一侧是叶子 32、另一侧深达 7 层，<b>不是完全二叉树</b>，它只保证 WPL 最小。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

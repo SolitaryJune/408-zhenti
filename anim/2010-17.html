@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-17 TLB/Cache/Page 命中组合 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三级查找的依赖关系', cls: 'key',
+    body: '<p>一次访存要过三关：<b>TLB</b>（页表项副本）→ <b>Page</b>（页面在不在主存）→ <b>Cache</b>（数据块副本）。要找的是<b>不可能</b>出现的组合，先找三条之间的"单向箭头"。</p>' },
+  { title: '关键规则：TLB 命中 ⇒ Page 必命中', cls: '',
+    body: '<p><b>TLB 缓存的是"已调入主存的页面"的有效页表项</b>——页面没进主存（缺页）时页表项无效，不会出现在 TLB 里。所以 TLB 命中 → 页面必在主存 → Page 必命中；反过来 TLB 未命中则什么都推不出来。</p>' },
+  { title: 'A：TLB✗ Cache✗ Page✗ → 可能', cls: 'good',
+    body: '<p>访问一个<b>从未调入</b>的页面：页表项不在 TLB、数据不在 Cache、页面不在主存（缺页调页）→ 三关全挂，完全正常 → <b>可能</b>。</p>' },
+  { title: 'B：TLB✗ Cache✓ Page✓ → 可能', cls: 'good',
+    body: '<p>页面在主存、数据在 Cache，但<b>它的页表项恰好不在 TLB 里</b>（TLB 容量小、刚被替换掉）→ 还得去主存查页表，再从 Cache 拿数据 → <b>可能</b>。</p>' },
+  { title: 'C：TLB✓ Cache✗ Page✓ → 可能', cls: 'good',
+    body: '<p>TLB 命中拿到物理地址（页面确在主存），但<b>这个数据块不在 Cache</b>（映射到同一行的块被换出）→ 要访主存 → <b>可能</b>。</p>' },
+  { title: 'D：TLB✓ Cache✓ Page✗ → 不可能', cls: 'bad',
+    body: '<p><b>TLB 命中已保证 Page 命中</b>——"Page 未命中（页面不在主存）"与它直接矛盾；页面都不在内存，其数据块更不可能躺在 Cache 里 → <b>不可能</b>。</p>' },
+  { title: '结论：不可能的是 D', cls: 'good',
+    body: '<p>A、B、C 都能构造出正常场景，唯独 D 违反"<b>TLB 命中 ⇒ Page 命中</b>"这条单向箭头 → 答案选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[2].ribbon = { k: 1, ok: true };
+snaps[3].ribbon = { k: 2, ok: true };
+snaps[4].ribbon = { k: 3, ok: true };
+snaps[5].ribbon = { k: 4, ok: false };
+
+AW.init({
+  title: '2010-17 · 哪种 TLB/Cache/Page 命中组合不可能',
+  subtitle: 'TLB → Page → Cache 三级查找 · 找"<b>不可能</b>"的命中组合',
+  counterLabel: '判定项',
+  ribbonTitle: '选项（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」：先立规则，再逐项检验 A~D。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（TLB✓ Cache✓ Page✗）',
+    html: '单向箭头：<b>TLB 命中 ⇒ Page 命中</b>——TLB 只缓存有效（页面已在主存）的页表项，所以"TLB 命中而 Page 未命中"自相矛盾。A、B、C 都可能发生。记忆锚点：<b>箭头单向，逆推不成立</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-35 滑动窗口利用率与序号比特数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var TT = 62.5, CYC = 562.5;
+var BARS = [
+  { w: 7, pct: 7 * TT / CYC * 100, label: 'W = 7 帧：发送 437.5 ms ÷ 周期 562.5 ms = 77.8%（未达标）' },
+  { w: 8, pct: 8 * TT / CYC * 100, label: 'W = 8 帧：发送 500 ms ÷ 周期 562.5 ms = 88.9%（达标 ✓）' },
+];
+var FXT = null;
+
+var FXS = [
+  '点击「▶ 播放」，从提取参数开始逐步推导。',
+  'Tt = 1000 B = 8000 bit ÷ 128 kbps = <b>62.5 ms</b>（发送一帧的时间）',
+  'RTT = 2 × 250 ms = <b>500 ms</b>；一个周期 = Tt + RTT = <b>562.5 ms</b>（确认帧发送时间忽略，其传播已含在 RTT 中）',
+  '链路利用率：U = W·Tt ÷ (Tt + RTT) ≥ 80%',
+  '解得 W ≥ 0.8 × 562.5 ÷ 62.5 = <b>7.2</b> → 窗口至少 <b>8 帧</b>（见下方两根进度条对比）',
+  '关键一步：滑动窗口序号 n 比特时发送窗口最多 <b>2^n − 1</b>（不能与下一轮窗口序号重叠）<br>2^n − 1 ≥ 8 → n ≥ <b>4</b>；3 比特只给 7 帧，装不下 8 帧',
+  '结论：序号至少 4 比特，选 <b>B</b>',
+];
+
+function paramTable(){
+  var c = 'border:1px solid #e2e8f0;padding:5px 12px;font-size:13px';
+  var k = c + ';background:#f8fafc;color:#475569';
+  return '<table style="border-collapse:collapse;margin-bottom:12px">' +
+    '<tr><td style="' + k + '">发送速率</td><td style="' + c + '">128 kbps</td>' +
+    '<td style="' + k + '">帧长</td><td style="' + c + '">1000 B = 8000 bit</td></tr>' +
+    '<tr><td style="' + k + '">单向传播时延</td><td style="' + c + '">250 ms</td>' +
+    '<td style="' + k + '">RTT</td><td style="' + c + '">500 ms</td></tr></table>';
+}
+
+AW.init({
+  title: '2015-35 滑动窗口：利用率 ≥ 80% 需要几比特序号？',
+  subtitle: '128 kbps 链路 · 帧长 1000 B · 单向传播 250 ms · 忽略确认帧开销',
+  counterLabel: '已推进步骤',
+  intro: '点击「▶ 播放」逐步推导：先算时间，再解窗口，最后定序号比特数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', '');
+    wrap.innerHTML = paramTable();
+    FXT = AW.el('div', '');
+    FXT.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-family:Menlo,Consolas,monospace;font-size:14px;color:#334155;margin-bottom:14px;line-height:1.8';
+    wrap.appendChild(FXT);
+    BARS.forEach(function(b){
+      var row = AW.el('div', '');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
+      var outer = AW.el('div', '');
+      outer.style.cssText = 'flex:1;height:26px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden';
+      var fill = AW.el('div', '');
+      fill.style.cssText = 'height:100%;width:0;background:#94a3b8;transition:width .5s ease, background .4s ease';
+      outer.appendChild(fill);
+      b._fill = fill;
+      var lb = AW.el('div', '');
+      lb.style.cssText = 'width:330px;font-size:12.5px;color:#475569;line-height:1.5;flex:0 0 auto';
+      lb.innerHTML = b.label;
+      row.appendChild(outer);
+      row.appendChild(lb);
+      wrap.appendChild(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题', log:'甲→乙 128 kbps 卫星链路，单向传播 250 ms，帧长 1000 B，忽略确认帧开销：求链路利用率 ≥ 80% 所需的序号比特数。', count:0 },
+    { cls:'step', tag:'发送时延', log:'一帧 1000 B = 8000 bit，发送时延 Tt = 8000 ÷ 128000 = <b>62.5 ms</b>。', count:1 },
+    { cls:'step', tag:'往返时延', log:'RTT = 2 × 250 ms = <b>500 ms</b>；一个周期 = Tt + RTT = 562.5 ms（确认帧的发送时间忽略，但其传播已含在 RTT 里）。', count:2 },
+    { cls:'step', tag:'利用率公式', log:'每周期实际发送 W 帧用掉 W·Tt，其余时间在等确认：U = W·Tt ÷ (Tt + RTT) ≥ 80%。', count:3 },
+    { cls:'ok', tag:'解不等式', log:'W ≥ 0.8 × 562.5 ÷ 62.5 = 7.2 → 至少 <b>8 帧</b>。看图：W=7 只有 77.8%（不够，红条）；W=8 达 88.9%（达标，绿条）。', count:4 },
+    { cls:'shift', tag:'关键一步', log:'滑动窗口序号 n 比特时，发送窗口最多 <b>2^n − 1</b>（窗口序号不能与下一轮重叠）：2^n − 1 ≥ 8 → n ≥ <b>4</b>。3 比特最多 7 帧，装不下 8 帧！', count:5 },
+    { cls:'done', tag:'完成', log:'结论：帧序号至少 4 比特，选 <b>B</b>。', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    FXT.innerHTML = FXS[i] || '';
+    BARS.forEach(function(b, idx){
+      b._fill.style.width = (i >= 3 ? b.pct : 0) + '%';
+      b._fill.style.background = (i >= 4) ? (idx === 0 ? '#dc2626' : '#16a34a') : '#94a3b8';
+    });
+  },
+
+  result: {
+    big: '答案 B：序号至少 4 比特',
+    html: 'U = W·Tt ÷ (Tt + RTT) ≥ 80% → W ≥ 7.2，发送窗口至少 <b>8 帧</b>；滑动窗口序号 n 比特最多允许发送窗口 <code>2^n − 1</code>，8 帧 &gt; 7 帧，故 <code>n = 4</code>。<br>易错：直接用 2^3 = 8 ≥ 8 误选 A——序号窗口不能与下一轮窗口重叠，必须少用一个序号（GBN 口径 2^n − 1；按 SR 口径 2^(n−1) ≥ 8 结果同样是 4）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

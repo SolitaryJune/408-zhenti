@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-44 Cache 结构与缺失计数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-44：Cache 三问推演（地址切分 → 数组访存缺失计数 → 指令访存与缺失处理）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var NBLK = 64; // 数组 s 占 64 个主存块
+
+var AMBER_CSS = 'border-color:#d97706;background:#fef3c7;color:#92400e;';
+var BLUE_CSS  = 'border-color:#2563eb;background:#dbeafe;color:#1d4ed8;';
+var GREEN_CSS = 'border-color:#16a34a;background:#dcfce7;color:#14532d;';
+var RED_CSS   = 'border-color:#dc2626;background:#fee2e2;color:#b91c1c;';
+
+// 地址三段切分条（values 为 null 时不显示取值）
+function addrBar(withVals){
+  var bar = AW.el('div', '');
+  bar.style.cssText = 'display:flex;gap:6px;width:max-content;margin:2px 0 6px;';
+  function seg(w, bd, bg, colr, txt){
+    var d = AW.el('div', '', txt);
+    d.style.cssText = 'width:' + w + 'px;height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'font-weight:700;font-size:12.5px;border-radius:9px;border:2px solid ' + bd + ';background:' + bg +
+      ';color:' + colr + ';text-align:center;line-height:1.4;';
+    return d;
+  }
+  var v = withVals ? '00010H' : '？（待分解）';
+  var g = withVals ? '0' : '？';
+  var o = withVals ? '3' : '？';
+  bar.appendChild(seg(360, '#d97706', '#fef3c7', '#92400e', '标记 Tag：20 位<br>' + v));
+  bar.appendChild(seg(120, '#2563eb', '#dbeafe', '#1d4ed8', '组索引：6 位<br>' + g));
+  bar.appendChild(seg(120, '#16a34a', '#dcfce7', '#14532d', '块内偏移：6 位<br>' + o));
+  return bar;
+}
+
+// 数组 s 的 64 块小地图
+function blockMap(states){
+  var row = AW.el('div', 'aw-cells');
+  for (var i = 0; i < NBLK; i++){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '26px';
+    var box = AW.el('div', 'aw-box' + (states && states[i] ? ' ' + states[i] : ''), String(i));
+    box.style.width = '24px';
+    box.style.height = '24px';
+    box.style.fontSize = '10px';
+    box.style.borderRadius = '6px';
+    if (!states || !states[i]) box.style.cssText += 'border-color:#cbd5e1;background:#f1f5f9;color:#94a3b8;';
+    col.appendChild(box);
+    row.appendChild(col);
+  }
+  return row;
+}
+
+// Cache 组 0 的 8 行
+function setRow(mode){ // mode: 'init' | 'empty' | 'filled'
+  var row = AW.el('div', 'aw-cells');
+  for (var i = 0; i < 8; i++){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '72px';
+    var css = RED_CSS, txt = '有效=0';
+    if (mode === 'init'){ css = 'border-color:#cbd5e1;background:#f1f5f9;color:#94a3b8;'; txt = '空行'; }
+    if (mode === 'filled' && i === 0){ css = GREEN_CSS; txt = '有效=1<br>标记00010H'; }
+    var box = AW.el('div', 'aw-box', txt);
+    box.style.width = '68px';
+    box.style.height = '44px';
+    box.style.fontSize = '11px';
+    box.style.lineHeight = '1.3';
+    box.style.cssText += css;
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', '行' + i));
+    row.appendChild(col);
+  }
+  return row;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '640px';
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>主存地址 32 位</b>按"标记 | 组索引 | 块内偏移"切分（块 64B → 偏移 6 位；64 组 → 索引 6 位）'));
+  inner.appendChild(addrBar(sn.addrVals));
+  if (sn.showBlocks){
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>数组 s 的 64 个主存块</b>（红 = 已产生 1 次缺失）'));
+    inner.appendChild(blockMap(sn.blocks));
+  }
+  if (sn.showSet){
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>指令 Cache 组 0</b>（8 路组相联，8 行）'));
+    inner.appendChild(setRow(sn.setMode));
+  }
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function blocksUpTo(n){
+  var a = [], i;
+  for (i = 0; i < NBLK; i++) a.push(i <= n ? 'miss' : '');
+  return a;
+}
+
+AW.init({
+  title: '2020-44 · Cache 结构计算与访存推演',
+  subtitle: '32 位地址 · 8 路组相联 · 直写 · LRU · 块 64B · 数据区 32KB',
+  counterLabel: '推演步',
+  ribbonTitle: '三大问（✓ 已解决）',
+  intro: '点击「▶ 播放」或「下一步」：先切地址，再数缺失，最后走一遍取指。',
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始', count:0, addrVals:false,
+      log:'主存 32 位、按字节编址；指令/数据 Cache 8 路组相联、直写、LRU、块 64B、数据区各 32KB，初始为空。三问逐个来。',
+      note:'先把 32 位地址切成三段，一切结论都从这里出发。' },
+    { cls:'step', tag:'算组数', count:1, addrVals:false,
+      log:'块内地址：64B → 6 位；数据区 32KB ÷ 64B = 512 行，8 路 → 512 ÷ 8 = 64 组 → 组索引 6 位。',
+      note:'行数 = 32KB ÷ 64B = <b>512 行</b>；组数 = 512 ÷ 8 = <b>64 组</b>。' },
+    { cls:'ok', tag:'第 1 问完成', count:2, addrVals:false,
+      log:'问 1：标记 = 32 − 6 − 6 = 20 位；8 路的 LRU 需 3 位；直写策略不需要修改位（脏位）。',
+      note:'每行：标记 <b>20 位</b> + LRU <b>3 位</b>，直写<b>无修改位</b>（有效位另计）。', ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'第 2 问 开场', count:3, addrVals:false, showBlocks:true, blocks:blocksUpTo(-1),
+      log:'问 2：数组 s 是 1024 个 int × 4B = 4096B；首址 0080 00C0H 恰为 64 的整数倍（C0H = 192 = 3×64）→ 数组恰好占 64 个整块。',
+      note:'4096 ÷ 64 = <b>64 块</b>，每块 16 个元素，块不对跨。' },
+    { cls:'step', tag:'看循环体', count:4, addrVals:false, showBlocks:true, blocks:blocksUpTo(-1),
+      log:'循环体 s[k] = 2 * s[k]：每次迭代先读 s[k] 再写 s[k]；变量 k 在寄存器中，不经过 Cache。',
+      note:'对 Cache 的访问 = 每次迭代一读一写，全部落在数组 s 上。' },
+    { cls:'miss', tag:'k=0 缺失', count:5, addrVals:false, showBlocks:true, blocks:blocksUpTo(0),
+      log:'k=0：读 s[0] —— 块 0 不在 Cache（开始为空）→ 缺失 1 次，块 0 调入。',
+      note:'第一次读：冷启动缺失。', noteCls:'bad' },
+    { cls:'ok', tag:'写 s[0] 命中', count:6, addrVals:false, showBlocks:true, blocks:blocksUpTo(0),
+      log:'写 s[0]：块 0 已在 Cache → 命中（直写只是同时写主存，不产生缺失）。',
+      note:'读把块调进来，随后的写<b>命中</b>；直写不影响缺失计数。' },
+    { cls:'ok', tag:'k=1～15 全命中', count:7, addrVals:false, showBlocks:true, blocks:blocksUpTo(0),
+      log:'k=1～15：都在块 0 内 → 读、写全部命中，缺失不再增加。',
+      note:'一块 16 个元素：块内其余 15 次迭代 32 次访存全部命中。' },
+    { cls:'miss', tag:'k=16 又缺失', count:8, addrVals:false, showBlocks:true, blocks:blocksUpTo(1),
+      log:'k=16：读 s[16] → 进入块 1 → 又缺失 1 次。依此类推：每块只在第一个元素读取时缺失。',
+      note:'块 1 的第一次读取又缺失一次。', noteCls:'bad' },
+    { cls:'ok', tag:'第 2 问完成', count:9, addrVals:false, showBlocks:true, blocks:blocksUpTo(63),
+      log:'合计：64 块 × 每块 1 次 = 64 次缺失。',
+      note:'缺失总次数 = <b>64 次</b>（每块恰好缺 1 次）。', noteCls:'good', ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'第 3 问 分解地址', count:10, addrVals:true,
+      log:'问 3：CPU 读主存单元 0001 0003H 中的指令。分解：块内偏移 = 低 6 位 = 3；组索引 = 中间 6 位 = 0；标记 = 高 20 位 = 00010H。',
+      note:'地址 <code>0001 0003H</code> → 偏移 <b>3</b>、组索引 <b>0</b>、标记 <b>00010H</b>。' },
+    { cls:'miss', tag:'查组比标记', count:11, addrVals:true, showSet:true, setMode:'empty',
+      log:'按组索引 0 找到指令 Cache 组 0，8 行标记逐一比较：Cache 初始为空，有效位全 0 → 无一命中 → 缺失。',
+      note:'8 行有效位全 0，比较标记没有意义 → <b>缺失</b>。', noteCls:'bad' },
+    { cls:'shift', tag:'缺失处理', count:12, addrVals:true, showSet:true, setMode:'filled',
+      log:'缺失处理：访问主存，取出该指令所在块（起始地址 0001 0000H，64B）；在组 0 中按 LRU 选一行（空 Cache 时选空闲行），写入数据、置有效位 1、填标记 00010H。',
+      note:'整块调入：写数据 + 置有效位 + 填标记 <code>00010H</code>。' },
+    { cls:'ok', tag:'按偏移取指', count:13, addrVals:true, showSet:true, setMode:'filled',
+      log:'最后按块内偏移 3 从该行取出指令，送 CPU —— 访问完成。',
+      note:'从装入的块内取第 3 字节处的指令交 CPU。', ribbon:{k:3, ok:true} },
+    { cls:'done', tag:'完成', count:14, addrVals:true, showSet:true, setMode:'filled',
+      log:'结论：标记 20 位、LRU 3 位、无修改位；数组访存缺失 64 次；指令访存 = 分解地址 → 查组比标记 → 缺失调块 → 按偏移取指。',
+      note:'三大问全部解决。', noteCls:'good', done:true },
+  ],
+  result: {
+    big: '缺失 64 次 · Tag 20 位',
+    html: '<b>问 1</b>：标记 20 位（32−6−6）、LRU 3 位（8 路）、直写无修改位；<br>' +
+      '<b>问 2</b>：4096B = 64 块，每块只在首元素读取时缺 1 次 → <b>64 次</b>；<br>' +
+      '<b>问 3</b>：<code>0001 0003H</code> → 偏移 3 / 组 0 / 标记 00010H → 空 Cache 缺失 → 调块 0001 0000H 起的 64B → 按偏移取指。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

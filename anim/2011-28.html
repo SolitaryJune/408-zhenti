@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-28 缺页处理中 OS 执行的操作</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：缺页处理的完整流程',
+    cls: 'key',
+    body: '<p>访问的页面不在内存 → 硬件产生<b>缺页中断</b> → OS 接管：找页框 → 调页 → 改页表 → 重新执行被中断的指令。把候选操作 I/II/III 逐个放到流程里对号。</p>' },
+  { title: 'III 分配页框 —— 会做',
+    cls: 'good',
+    body: '<p>调页前必须有地方放：内存有<b>空闲页框</b>就直接分配；没有则按置换算法<b>淘汰一页</b>（脏页还要写回磁盘）。所以「分配页框」可能发生。</p>' },
+  { title: 'II 磁盘 I/O —— 会做',
+    cls: 'good',
+    body: '<p>缺失的页面在磁盘（对换区/文件区）上，必须发起<b>磁盘 I/O</b> 把它读进页框，页面才回得来。</p>' },
+  { title: 'I 修改页表 —— 会做',
+    cls: 'good',
+    body: '<p>页入内存后要在页表项里<b>填页框号、置有效位为 1</b>（被淘汰页的表项置无效，必要时改修改位）；不改页表，下次访问照样缺页。</p>' },
+  { title: '三项合并',
+    cls: 'good',
+    body: '<p>I 修改页表、II 磁盘 I/O、III 分配页框<b>都可能发生</b>，三者环环相扣：不读盘页面回不来、不分配页框没处放、不改页表映射没建立。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D（I、II 和 III）</b>。记忆锚点：缺页处理三板斧——<b>分配页框、读盘 I/O、改页表</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-28 缺页处理过程中 OS 可能执行的操作',
+  subtitle: '考点：缺页中断处理流程 · 判断 I/II/III 是否可能',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：I、II 和 III 都可能',
+    html: '分配页框（没空页框要置换淘汰）→ 磁盘 I/O（把缺的页从磁盘读入）→ 修改页表（填页框号、置有效位）。三个操作都出现在缺页处理流程中。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

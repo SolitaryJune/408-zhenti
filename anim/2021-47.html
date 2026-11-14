@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-47 域名访问全过程 · DNS / ARP / 交换机自学习</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类：t0→t1 事件时间线，左侧拓扑逐帧高亮、右侧交换表逐项学习
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var NODES = [
+  { port: 1, name: '本地域名服务器', ip: '192.168.1.126/25', mac: '00-11-22-33-44-BB' },
+  { port: 2, name: '路由器 R（通往 Internet / Web 服务器 www.abc.com）', ip: '192.168.1.1/25', mac: '00-11-22-33-44-AA' },
+  { port: 3, name: '主机 H2', ip: '192.168.1.3/25', mac: '00-11-22-33-44-DD' },
+  { port: 4, name: '主机 H1（发起访问）', ip: '192.168.1.2/25', mac: '00-11-22-33-44-CC' },
+];
+// 交换表按学习先后排列：at = 在第几个 snap 出现
+var TABROWS = [
+  { mac: '00-11-22-33-44-CC', port: 4, at: 1 },
+  { mac: '00-11-22-33-44-BB', port: 1, at: 2 },
+  { mac: '00-11-22-33-44-AA', port: 2, at: 6 },
+];
+var nodeEls = [], tabRowEls = [], tabEmptyEl, frameBox, resBox;
+
+AW.init({
+  title: 't0→t1：一次域名访问里的 DNS、ARP 与交换机自学习',
+  subtitle: 'H1 通过域名 <code>www.abc.com</code> 访问 Web 服务器 · t0 时 ARP 表与交换表全空 · t1 = S 第一次收到 HTTP 请求帧',
+  counterLabel: '已学表项',
+  ribbonTitle: '交换表表项（✓ 已学习）',
+  intro: '点击「▶ 播放」，按时间线逐帧演示。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', '');
+    var inner = AW.el('div', '');
+
+    var cols = AW.el('div', '');
+    cols.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;';
+
+    // 左列：拓扑（S 的四个端口连接的结点）
+    var left = AW.el('div', '');
+    left.style.cssText = 'flex:1.25;min-width:330px;';
+    left.appendChild(AW.el('div', 'aw-row-label', '<b>拓扑</b>：交换机 S 的四个端口'));
+    nodeEls = [];
+    NODES.forEach(function(n){
+      var row = AW.el('div', '');
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;margin-bottom:8px;' +
+        'border:2px solid #e2e8f0;border-radius:10px;background:#fff;transition:all .35s;';
+      var badge = AW.el('span', '');
+      badge.style.cssText = 'flex:0 0 auto;background:#0f172a;color:#fff;border-radius:8px;padding:3px 9px;font-size:12px;font-weight:700;';
+      badge.textContent = '端口 ' + n.port;
+      var info = AW.el('div', '');
+      info.style.cssText = 'font-size:12.5px;line-height:1.6;color:#334155;font-family:Menlo,monospace;';
+      info.innerHTML = '<b style="font-family:inherit;">' + n.name + '</b><br>' + n.ip + ' · ' + n.mac;
+      row.appendChild(badge);
+      row.appendChild(info);
+      left.appendChild(row);
+      nodeEls.push(row);
+    });
+    cols.appendChild(left);
+
+    // 右列：交换表 + 当前帧
+    var right = AW.el('div', '');
+    right.style.cssText = 'flex:1;min-width:300px;';
+    right.appendChild(AW.el('div', 'aw-row-label', '<b>S 的交换表</b> &lt;MAC 地址, 端口&gt;'));
+    var tbl = document.createElement('table');
+    tbl.style.cssText = 'border-collapse:collapse;font-size:12.5px;font-family:Menlo,monospace;width:100%;';
+    var th = 'border:1px solid #e2e8f0;padding:6px 10px;background:#f1f5f9;';
+    tbl.innerHTML = '<thead><tr><th style="' + th + '">MAC 地址</th><th style="' + th + '">端口</th></tr></thead>' +
+      '<tbody><tr class="empty"><td colspan="2" style="border:1px solid #e2e8f0;padding:6px 10px;color:#94a3b8;text-align:center;">（空）</td></tr>' +
+      TABROWS.map(function(){
+        return '<tr style="display:none;"><td style="border:1px solid #e2e8f0;padding:6px 10px;"></td>' +
+               '<td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center;font-weight:700;"></td></tr>';
+      }).join('') + '</tbody>';
+    right.appendChild(tbl);
+    tabRowEls = Array.prototype.slice.call(tbl.querySelectorAll('tbody tr:not(.empty)'));
+    tabEmptyEl = tbl.querySelector('tr.empty');
+
+    frameBox = AW.el('div', '');
+    frameBox.style.cssText = 'margin-top:12px;padding:9px 12px;border:2px dashed #cbd5e1;border-radius:10px;' +
+      'font-size:12.5px;line-height:1.7;color:#334155;font-family:Menlo,monospace;background:#f8fafc;';
+    frameBox.innerHTML = '当前帧：—';
+    right.appendChild(frameBox);
+    cols.appendChild(right);
+
+    inner.appendChild(cols);
+
+    resBox = AW.el('div', '');
+    resBox.style.cssText = 'margin-top:10px;font-size:14px;font-weight:700;color:#0f172a;';
+    inner.appendChild(resBox);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '审题', count: 0, hi: [], tab: 0, newIdx: -1,
+      log: 't0：H1 的 ARP 表、S 的交换表全空。H1 用浏览器通过域名 www.abc.com 访问 Web 服务器——先 DNS 解析、后 HTTP；t1 = S 第一次收到 HTTP 请求帧',
+      frame: '（尚未开始）',
+      res: '主线：ARP 找 DNS 服务器 → DNS 查询/应答 → ARP 找网关 → HTTP 请求' },
+    { cls: 'shift', tag: 'ARP 广播①', count: 1, hi: [4], tab: 1, newIdx: 0, ribbon: { k: 1, ok: true },
+      log: 'H1 先找 DNS 服务器的 MAC：发 ARP 查询广播（目的 MAC = FF-FF-FF-FF-FF-FF）。S 从端口 4 收到 → 学习 <CC, 4>，并向端口 1、2、3 泛洪',
+      frame: 'ARP 查询（广播）：H1(CC) → FF-FF-FF-FF-FF-FF ｜ 端口 4 进入 → 泛洪 1/2/3',
+      res: 'H2 挂在端口 3 → 收到第 1 个 ARP 广播帧' },
+    { cls: 'ok', tag: 'ARP 应答①', count: 2, hi: [1], tab: 2, newIdx: 1, ribbon: { k: 2, ok: true },
+      log: 'DNS 服务器（BB）从端口 1 回 ARP 应答（单播给 CC）→ S 学习 <BB, 1>，转发到端口 4',
+      frame: 'ARP 应答（单播）：BB → CC ｜ 端口 1 进入 → 端口 4 发出' },
+    { cls: 'ok', tag: 'DNS 查询', count: 2, hi: [4], tab: 2, newIdx: -1,
+      log: 'H1 发 DNS 查询：DNS 报文 → UDP 数据报 → IP 数据报 → 以太网帧（目的 MAC = BB）。从端口 4 进入，查表转发端口 1 —— 问①：应用层协议是 DNS',
+      frame: 'DNS 查询帧：CC → BB ｜ 封装 DNS→UDP→IP→以太网 ｜ 端口 4 进 → 端口 1 出',
+      res: '问①答案：DNS；封装链 = DNS 报文 → UDP 数据报 → IP 数据报 → 以太网帧' },
+    { cls: 'ok', tag: 'DNS 应答', count: 2, hi: [1], tab: 2, newIdx: -1,
+      log: 'DNS 应答帧从端口 1 进入 → 转发端口 4（交换表无新增）。H1 得到 Web 服务器的 IP——它在网外，接下来要找默认网关 192.168.1.1 的 MAC',
+      frame: 'DNS 应答帧：BB → CC ｜ 端口 1 进 → 端口 4 出' },
+    { cls: 'shift', tag: 'ARP 广播②', count: 2, hi: [4], tab: 2, newIdx: -1,
+      log: 'H1 发第二个 ARP 查询广播（问网关 192.168.1.1 的 MAC）：S 从端口 4 收到（CC 已在表中），泛洪到端口 1、2、3',
+      frame: 'ARP 查询（广播）：H1(CC) → FF-FF-FF-FF-FF-FF ｜ 端口 4 进入 → 泛洪 1/2/3',
+      res: 'H2 第 2 次收到 ARP 广播帧' },
+    { cls: 'ok', tag: 'ARP 应答②', count: 3, hi: [2], tab: 3, newIdx: 2, ribbon: { k: 3, ok: true },
+      log: '路由器 R（AA）从端口 2 回 ARP 应答（单播）→ S 学习 <AA, 2>，转发端口 4',
+      frame: 'ARP 应答（单播）：AA → CC ｜ 端口 2 进入 → 端口 4 发出' },
+    { cls: 'ok', tag: 'HTTP 请求', count: 3, hi: [4], tab: 3, newIdx: -1,
+      log: 'H1 发 HTTP 请求帧（TCP→IP→以太网，目的 MAC = AA）：从端口 4 进入，查表转发端口 2 —— 这就是 t1 时刻 S 第一次收到的 HTTP 帧',
+      frame: 'HTTP 请求帧：CC → AA ｜ 端口 4 进 → 端口 2 出',
+      res: 't1 时刻：交换表 = CC→4、BB→1、AA→2' },
+    { cls: 'done', tag: '完成', count: 3, hi: [], tab: 3, newIdx: -1, done: true,
+      log: '问① DNS，封装 DNS→UDP→IP→以太网帧；问② 交换表 CC→4、BB→1、AA→2；问③ H2 至少收到 2 帧，均为 ARP 查询广播帧，目的 MAC = FF-FF-FF-FF-FF-FF',
+      frame: '（演示结束）' },
+  ],
+
+  render: function(stage, sn, i){
+    NODES.forEach(function(n, k){
+      var row = nodeEls[k];
+      if(sn.hi && sn.hi.indexOf(n.port) >= 0){
+        row.style.background = '#fffbeb';
+        row.style.borderColor = '#d97706';
+      } else {
+        row.style.background = '#fff';
+        row.style.borderColor = '#e2e8f0';
+      }
+    });
+    tabEmptyEl.style.display = (sn.tab === 0) ? '' : 'none';
+    TABROWS.forEach(function(r, k){
+      var row = tabRowEls[k];
+      var show = sn.tab >= r.at;
+      row.style.display = show ? '' : 'none';
+      row.querySelector('td').textContent = r.mac;
+      row.querySelectorAll('td')[1].textContent = r.port;
+      row.style.background = (sn.newIdx === k) ? '#dcfce7' : '';
+    });
+    frameBox.innerHTML = '当前帧：' + (sn.frame || '—');
+    resBox.innerHTML = sn.res || '';
+  },
+
+  result: {
+    big: '三问答案齐了',
+    html: '问① <b>DNS</b>，封装：<code>DNS 报文 → UDP 数据报 → IP 数据报 → 以太网帧</code>。问② 交换表：<code>CC→4、BB→1、AA→2</code>（学的是入端口的源 MAC）。问③ H2 至少收到 <b>2 帧</b>，都是 <b>ARP 查询广播帧</b>，目的 MAC = <code>FF-FF-FF-FF-FF-FF</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

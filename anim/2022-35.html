@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-35 算法动画：IP AND 掩码</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2022-35：网络地址 = IP 地址 AND 子网掩码（逐字节位运算演示）
+     外壳与控件全部由 assets/anim-engine.js 提供。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var IP_BYTES = ['183', '80', '72', '48'];
+var MASK_BYTES = ['255', '255', '192', '0'];
+var AND_VALS = ['183', '80', '64', '0'];           // 最终结果
+var BIT3_IP = ['0','1','0','0','1','0','0','0'];   // 72
+var BIT3_MASK = ['1','1','0','0','0','0','0','0']; // 192
+var BIT3_AND = ['0','1','0','0','0','0','0','0'];  // 64
+var WEIGHTS = ['128','64','32','16','8','4','2','1'];
+
+// 每步的字节高亮状态（len 4：'' 普通 / 'ok' 已确定 / 'hit' 当前 / 'dim' 未定）
+// st = { ipC, maskC, andC, andVals, detail }
+function st(ipHit, maskHit, andHit, andVals, detail){
+  function cls(cur){
+    var a = [];
+    for (var i = 0; i < 4; i++){
+      if (i < cur) a.push('ok');
+      else if (i === cur) a.push('hit');
+      else a.push('dim');
+    }
+    return a;
+  }
+  return {
+    ipC: cls(ipHit),
+    maskC: cls(maskHit),
+    andC: cls(andHit),
+    andVals: andVals,
+    detail: detail || null,
+  };
+}
+
+// 步骤 0：字节1；1：字节2；2：字节3 展开；3：字节3 与结果；4：字节4；5：完成
+var STATES = [
+  st(0, 0, 0, ['183', '?', '?', '?'], null),
+  st(1, 1, 1, ['183', '80', '?', '?'], null),
+  st(2, 2, -1, ['183', '80', '?', '?'],
+     { ip: BIT3_IP.map(function(b, i){ return i < 2 ? 'hit' : 'dim'; }),
+       mask: BIT3_MASK.map(function(b, i){ return i < 2 ? 'hit' : 'dim'; }),
+       and: null }),
+  st(2, 2, 2, ['183', '80', '64', '?'],
+     { ip: BIT3_IP.map(function(b, i){ return i < 2 ? 'ok' : 'dim'; }),
+       mask: BIT3_MASK.map(function(b, i){ return i < 2 ? 'ok' : 'dim'; }),
+       and: BIT3_AND.map(function(b, i){ return b === '1' ? 'hit' : 'ok'; }) }),
+  st(3, 3, 3, ['183', '80', '64', '0'], null),
+  st(4, 4, 4, ['183', '80', '64', '0'], null),
+];
+STATES[5] = {
+  ipC: ['hit','hit','hit','hit'], maskC: ['hit','hit','hit','hit'],
+  andC: ['hit','hit','hit','hit'], andVals: AND_VALS, detail: null,
+};
+
+function byteRow(chars, classes, idxStart){
+  return AW.cellRow(chars, classes, null, idxStart || 1);
+}
+
+function bitRow(bits, classes, labels){
+  var row = AW.el('div', 'aw-cells');
+  bits.forEach(function(b, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), String(b)));
+    col.appendChild(AW.el('div', 'aw-idx', labels ? labels[i] : ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+AW.init({
+  title: '2022-35：网络地址 = IP 地址 AND 子网掩码',
+  subtitle: 'IP <code>183.80.72.48</code> · 掩码 <code>255.255.192.0</code>（/18） · 逐字节按位与',
+  counterLabel: '已确定字节',
+  ribbonTitle: '字节序号（✓ 已确定）',
+  intro: '点击「▶ 播放」逐字节演示按位与求网络地址。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._inner = inner;
+  },
+
+  render: function(stage, sn, i){
+    var inner = this._inner;
+    inner.innerHTML = '';
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>IP 地址</b> 183.80.72.48（每格一个字节）'));
+    inner.appendChild(byteRow(IP_BYTES, sn.ipC));
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>子网掩码</b> 255.255.192.0 = /18（前 18 位为 1）'));
+    inner.appendChild(byteRow(MASK_BYTES, sn.maskC));
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>按位与（网络地址）</b>'));
+    inner.appendChild(byteRow(sn.andVals, sn.andC));
+
+    if (sn.detail){
+      inner.appendChild(AW.el('div', 'aw-row-label', '<b>第三字节按位展开</b>：IP 的 72'));
+      inner.appendChild(bitRow(BIT3_IP, sn.detail.ip, WEIGHTS));
+      inner.appendChild(AW.el('div', 'aw-row-label', '子网掩码的 192（按位与 ↓）'));
+      inner.appendChild(bitRow(BIT3_MASK, sn.detail.mask, WEIGHTS));
+      if (sn.detail.and){
+        inner.appendChild(AW.el('div', 'aw-row-label', '<b>与结果 = 64</b>（高位保留、低位清零）'));
+        inner.appendChild(bitRow(BIT3_AND, sn.detail.and, WEIGHTS));
+      }
+    }
+  },
+
+  snaps: [
+    { cls:'step',  tag:'字节 1', log:'网络地址 = IP AND 掩码，逐位相与。第 1 字节掩码 255（全 1）→ 183 原样保留。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'字节 2', log:'第 2 字节掩码 255（全 1）→ 80 原样保留。前 16 位已确定：183.80。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'字节 3 展开', log:'第 3 字节：IP 是 72 = 01001000，掩码是 192 = 11000000（/18：第三字节只有最高 2 位是网络位）。', count:2 },
+    { cls:'shift', tag:'按位与', log:'按位与：01001000 AND 11000000 = 01000000，即十进制 64 —— 高 2 位保留、低 6 位清零。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'字节 4', log:'第 4 字节掩码 0（全 0）→ 48 AND 0 = 0，主机位全部清零。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'完成', log:'网络地址 = 183.80.64.0 → 选 B。与运算只会"保留或清零"，不会产生新值。', count:4, done:true },
+  ],
+
+  result: {
+    big: '183.80.64.0（选 B）',
+    html: '网络地址 = IP AND 掩码 = <b>183.80.64.0</b>。口诀：<b>掩码全 1 的字节原样抄，全 0 的字节写 0，中间态字节展开按位与</b>。干扰项 C（抄 72）、D（抄 192）都违反了"与运算只保留或清零"这一性质。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

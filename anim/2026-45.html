@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-45 抢占式优先权 + 时间片轮转调度推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程演示类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var UI = {};
+
+var COLORS = { P1:'#2563eb', P2:'#16a34a', P3:'#d97706', P4:'#8b5cf6', idle:'#e2e8f0' };
+// CPU 占用区段：[起, 止, 进程, 标签]（一格 = 10 ms）
+var SEGS = [
+  [0,10,'idle',''],
+  [10,20,'P2','P2'],
+  [20,70,'P4','P4'],
+  [70,80,'P2','P2'],
+  [80,90,'P4','P4'],
+  [90,140,'P1','P1'],
+  [140,180,'P3','P3'],
+  [180,230,'P1','P1'],
+];
+
+// procs: [P1, P2, P3, P4] 各为 [剩余ms, 优先权, 状态]
+var FIN = [ [0,4,'完成'], [0,4,'完成'], [0,2,'完成'], [0,4,'完成'] ];
+
+var snaps = [
+  { cls:'shift', tag:'初始', log:'0~10：CPU 空闲。P1(3, 95ms)、P2(4, 20ms) 将于 10ms 到达，P3(2, 40ms) 12ms 到达，P4(5, 60ms) 14ms 到达。', count:0, t:0,
+    procs:[[95,3,'未到达'],[20,4,'未到达'],[40,2,'未到达'],[60,5,'未到达']] },
+  { cls:'ok', tag:'中断1 · 调度', log:'10ms（第 1 次时钟中断）：P1、P2 到达。就绪队列 P2(4)、P1(3) → 调度 P2（优先权最高）开始执行。', count:1, t:10,
+    procs:[[95,3,'就绪'],[20,4,'运行'],[40,2,'未到达'],[60,5,'未到达']], ribbon:{k:1, ok:true} },
+  { cls:'shift', tag:'中断2 · 抢占', log:'20ms（第 2 次）：P4（14ms 到达，优先权 5）高于 P2(4)，抢占 CPU；P2 因被抢占回就绪队列、优先权不变。调度 P4 → P4 首次执行时刻 20ms。', count:2, t:20,
+    procs:[[95,3,'就绪'],[10,4,'就绪'],[40,2,'就绪'],[60,5,'运行']], ribbon:{k:2, ok:true} },
+  { cls:'shift', tag:'中断7 · 切片', log:'70ms（第 7 次）：P4 跑满时间片 50ms（20→70），优先权 5→4 回就绪。P2(4) 于 20ms 入队早于 P4(4) 的 70ms → 同权先入队，调度 P2。', count:7, t:70,
+    procs:[[95,3,'就绪'],[10,4,'运行'],[40,2,'就绪'],[10,4,'就绪']], ribbon:{k:3, ok:true} },
+  { cls:'ok', tag:'中断8 · 完成', log:'80ms（第 8 次）：P2 完成（共需 20ms）。就绪队列 P4(4)、P1(3)、P3(2) → 调度 P4（余 10ms）。', count:8, t:80,
+    procs:[[95,3,'就绪'],[0,4,'完成'],[40,2,'就绪'],[10,4,'运行']], ribbon:{k:4, ok:true} },
+  { cls:'ok', tag:'中断9 · 完成', log:'90ms（第 9 次）：P4 完成（共 60ms）→ 调度 P1（优先权 3）。P1 首次执行时刻 90ms。', count:9, t:90,
+    procs:[[95,3,'运行'],[0,4,'完成'],[40,2,'就绪'],[0,4,'完成']], ribbon:{k:5, ok:true} },
+  { cls:'shift', tag:'中断14 · 切片', log:'140ms（第 14 次）：P1 跑满时间片（90→140），优先权 3→2。P3(2) 于 12ms 入队早于 P1(2) 的 140ms → 同权先入队，调度 P3。P3 首次执行时刻 140ms。', count:14, t:140,
+    procs:[[45,2,'就绪'],[0,4,'完成'],[40,2,'运行'],[0,4,'完成']], ribbon:{k:6, ok:true} },
+  { cls:'ok', tag:'中断18 · 完成', log:'180ms（第 18 次）：P3 完成（12→180 共 40ms）→ 调度 P1（优先权 2，余 45ms），时间片重置 50ms。', count:18, t:180,
+    procs:[[45,2,'运行'],[0,4,'完成'],[0,2,'完成'],[0,4,'完成']], ribbon:{k:7, ok:true} },
+  { cls:'ok', tag:'全部结束', log:'225ms：P1 完成（180→225 共 95ms）。220 时刻是最后一次时钟中断，之后无进程可调度。', count:22, t:225, procs:FIN },
+  { cls:'step', tag:'统计', log:'统计：时钟中断发生于 10,20,…,220 共 22 次；CPU 调度发生于 10/20/70/80/90/140/180 共 7 次；P1、P3、P4 首次执行时刻分别为 90、140、20 ms。', count:22, t:225, procs:FIN },
+  { cls:'step', tag:'问(2)', log:'时间片 50→100ms：P1 的 95ms 一个时间片跑完、不再切片，调度只发生在 10/20/80/90/190 共 5 次 → CPU 调度次数减少。时钟中断间隔 10→1ms：中断次数增为 10 倍，每次都要执行中断处理程序 → 系统开销增加。', count:22, t:225, procs:FIN },
+  { cls:'done', tag:'结论', log:'答：(1) 时钟中断 22 次，CPU 调度 7 次，P1/P3/P4 首次执行时刻 90/140/20 ms；(2) 时间片增大 → 调度次数减少；中断间隔减小 → 系统开销增加。', count:22, t:225, procs:FIN, done:true },
+];
+
+AW.init({
+  title: '2026-45 · 抢占式优先权 + 时间片轮转调度',
+  subtitle: '优先权值越大越高 · 仅时钟中断（每 10ms）可抢占 · 时间片 50ms · 切片减 1 / 被抢占不变',
+  counterLabel: '时钟中断序',
+  ribbonTitle: 'CPU 调度（✓ = 第 k 次调度）',
+  intro: '点击「▶ 播放」，按 10ms 一次的时钟中断逐点推演。',
+  snaps: snaps,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>Gantt 图</b>（一格 = 10 ms，下方数字为该格起点时刻）'));
+    UI.gantt = AW.el('div', 'aw-cells');
+    UI.gcells = [];
+    for (var t = 0; t < 230; t += 10){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '30px';
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b = AW.el('div', 'aw-box', '');
+      b.style.width = '26px'; b.style.height = '36px'; b.style.fontSize = '11px';
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', String(t)));
+      UI.gcells.push(b);
+      UI.gantt.appendChild(col);
+    }
+    inner.appendChild(UI.gantt);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>进程状态</b>（剩余 CPU 时间 · 当前优先权 · 状态）'));
+    UI.procs = [];
+    var prow = AW.el('div', '');
+    prow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+    for (var p = 0; p < 4; p++){
+      var c = AW.el('div', '', '');
+      c.style.cssText = 'border:2px solid #cbd5e1;border-radius:10px;padding:6px 10px;font-size:12.5px;background:#fff;min-width:150px';
+      UI.procs.push(c);
+      prow.appendChild(c);
+    }
+    inner.appendChild(prow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var T = sn.t || 0;
+    for (var c = 0; c < UI.gcells.length; c++){
+      var a = c * 10, seg = null, s;
+      for (s = 0; s < SEGS.length; s++){
+        if (SEGS[s][0] <= a && a < SEGS[s][1]){ seg = SEGS[s]; break; }
+      }
+      var b = UI.gcells[c];
+      if (seg && a <= T){
+        b.style.background = COLORS[seg[2]];
+        b.style.borderColor = COLORS[seg[2]];
+        b.style.color = '#fff';
+        b.innerHTML = seg[3];
+      } else {
+        b.style.background = '#fff';
+        b.style.borderColor = '#cbd5e1';
+        b.style.color = '#0f172a';
+        b.innerHTML = '';
+      }
+    }
+    for (var p = 0; p < 4; p++){
+      var st = sn.procs[p];
+      UI.procs[p].innerHTML = '<b style="color:' + COLORS['P' + (p + 1)] + '">P' + (p + 1) + '</b>　剩 ' + st[0] +
+        'ms · 优 ' + st[1] + ' · ' + st[2];
+      UI.procs[p].style.borderColor = st[2] === '运行' ? COLORS['P' + (p + 1)] : '#cbd5e1';
+      UI.procs[p].style.background = st[2] === '完成' ? '#f0fdf4' : '#fff';
+      UI.procs[p].style.opacity = st[2] === '未到达' ? '.55' : '1';
+    }
+  },
+
+  result: {
+    big: '中断 22 次 · 调度 7 次',
+    html: '（1）时钟中断 10~220 共 <b>22 次</b>；CPU 调度发生于 <b>10/20/70/80/90/140/180</b> 共 <b>7 次</b>；P1、P3、P4 首次执行时刻 <b>90 / 140 / 20 ms</b>。<br>（2）时间片 50→100ms → CPU 调度次数<b>减少</b>；中断间隔 10→1ms → 系统开销<b>增加</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

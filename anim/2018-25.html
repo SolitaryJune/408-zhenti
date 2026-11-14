@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-25 两线程并发 x++ 的序列分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .code2col{ display:flex; gap:14px; margin-top:8px; flex-wrap:wrap; }
+  .tcode{ border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px; flex:1 1 300px; }
+  .tcode h4{ font-size:13.5px; margin-bottom:8px; color:#334155; }
+  .ins{ font-family:Menlo,monospace; font-size:12.5px; padding:6px 9px; border-radius:8px;
+    border:1.5px solid #e2e8f0; margin-bottom:6px; background:#fff; color:#334155; transition:all .3s; }
+  .ins b{ color:#2563eb; margin-right:8px; }
+  .ins.hot{ border-color:#d97706; background:#fffbeb; }
+  .ins.stale{ border-color:#dc2626; background:#fee2e2; }
+  .ins.eff{ border-color:#16a34a; background:#dcfce7; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+/* 两个线程的机器级指令（图片口径：读 x → 加 1 → 写回） */
+var INSA = [
+  { id:'a1', txt:'mov R1, x', cmt:'(x) → R1（读）' },
+  { id:'a2', txt:'inc R1',    cmt:'(R1) + 1 → R1' },
+  { id:'a3', txt:'mov x, R1', cmt:'(R1) → x（写回）' },
+];
+var INSB = [
+  { id:'b1', txt:'mov R2, x', cmt:'(x) → R2（读）' },
+  { id:'b2', txt:'inc R2',    cmt:'(R2) + 1 → R2' },
+  { id:'b3', txt:'mov x, R2', cmt:'(R2) → x（写回）' },
+];
+
+/* 每一步：序列格子 [字符, 样式]，以及指令高亮 {a:[3], b:[3]}（''=普通） */
+var VIEW = [
+  { seq:[['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']], h:{a:['','',''],b:['','','']}, trk:'x = 0（初值）' },
+  { seq:[['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']], h:{a:['','',''],b:['','','']}, trk:'x 的最终值 = 最后一次写回的值' },
+  { seq:[['a1','miss'],['b1','miss'],['a2','miss'],['b2','miss'],['a3','miss'],['b3','miss']],
+    h:{a:['stale','','eff'],b:['stale','','eff']}, trk:'两个线程都读到 0、都写回 1 → x = 1 ✗' },
+  { seq:[['a1','shift'],['a2','shift'],['a3','shift'],['b1','shift'],['b2','shift'],['b3','shift']],
+    h:{a:['','',''],b:['','','']}, trk:'要求：一方 3 条全部结束后，另一方才第一次读 x' },
+  { seq:[['a1','hit'],['a2','hit'],['a3','hit'],['b1','ok'],['b2','ok'],['b3','ok']],
+    h:{a:['','','eff'],b:['hot','','']}, trk:'T₁ 写回 1 → T₂ 读到 1 → x = 2 ✓' },
+  { seq:[['b1','hit'],['b2','hit'],['b3','hit'],['a1','ok'],['a2','ok'],['a3','ok']],
+    h:{a:['hot','',''],b:['','','eff']}, trk:'T₂ 写回 1 → T₁ 读到 1 → x = 2 ✓' },
+  { seq:[['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']], h:{a:['','',''],b:['','','']}, trk:'其余 18 种序列 → x = 1 ✗' },
+  { seq:[['✓','hit'],['a2','ok'],['a3','ok'],['b1','ok'],['b2','ok'],['✓','hit']],
+    h:{a:['','',''],b:['','','']}, trk:'满足条件的序列共 2 个 → 答案 B' },
+];
+
+function codePanel(title, ins){
+  var h = '<div class="tcode"><h4>' + title + '</h4>';
+  ins.forEach(function(x){
+    h += '<div class="ins" data-id="' + x.id + '"><b>' + x.id + '</b>' + x.txt + '　<span style="color:#94a3b8">// ' + x.cmt + '</span></div>';
+  });
+  return h + '</div>';
+}
+
+AW.init({
+  title: '2018·25 两线程并发执行 x++：使 x=2 的序列个数（2 分选择题）',
+  subtitle: '同一进程两线程 <code>thread1 / thread2</code> · 共享 <code>x</code>（初值 0）· 各 3 条指令',
+  counterLabel: '分析步',
+  ribbonTitle: '结论要点（✓ 成立 / ✗ 反例）',
+  intro: '点击「▶ 播放」逐步推演指令交错。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.codes = AW.el('div', 'code2col');
+    S.codes.innerHTML = codePanel('thread1（T₁）', INSA) + codePanel('thread2（T₂）', INSB);
+    S.lab = AW.el('div', 'aw-row-label', '<b>被分析的执行序列</b>（每格一条指令，线程内顺序不可乱）');
+    S.seqBox = AW.el('div', 'aw-cells', '');
+    S.trk = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.codes);
+    inner.appendChild(S.lab);
+    inner.appendChild(S.seqBox);
+    inner.appendChild(S.trk);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var v = VIEW[i];
+    S.seqBox.innerHTML = '';
+    S.seqBox.appendChild(AW.cellRow(
+      v.seq.map(function(x){ return x[0]; }),
+      v.seq.map(function(x){ return x[1]; })
+    ));
+    var nodes = S.codes.querySelectorAll('.ins');
+    for (var k = 0; k < nodes.length; k++){
+      var id = nodes[k].getAttribute('data-id');
+      var idx = +id.charAt(1) - 1;
+      var cls = id.charAt(0) === 'a' ? v.h.a[idx] : v.h.b[idx];
+      nodes[k].className = 'ins' + (cls ? ' ' + cls : '');
+    }
+    S.trk.innerHTML = '<b>x 跟踪：</b>' + v.trk;
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始',   log:'两线程各 3 条指令（读 x → 加 1 → 写回），共享 x、初值 0；指令交错共 C(6,3) = 20 种', count:0 },
+    { cls:'step',  tag:'关键规律', log:'x 的最终值 = 最后一次写回的值；后写者必须“读到对方写回的 1”，才能算出 2', count:1 },
+    { cls:'miss',  tag:'反例',   log:'a1 b1 a2 b2 a3 b3：两个线程都读到 0、都写回 1（丢失更新）→ x = 1', count:2, ribbon:{k:1, ok:false} },
+    { cls:'shift', tag:'转化条件', log:'于是 x=2 ⟺ 某个线程的 3 条指令全部执行完后，另一线程才第一次读 x', count:3 },
+    { cls:'ok',    tag:'情形一',  log:'a1 a2 a3 b1 b2 b3：T₁ 写回 1 → T₂ 读到 1、写回 2 → x = 2 ✓', count:4, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'情形二',  log:'b1 b2 b3 a1 a2 a3：T₂ 写回 1 → T₁ 读到 1、写回 2 → x = 2 ✓', count:5, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'排除',   log:'其余 18 种序列都存在“先读后写”的穿插，结果都是 x = 1，不合要求', count:6 },
+    { cls:'done',  tag:'结论',   log:'使 x=2 的序列恰为 2 个（两个全串行序列）→ 选 B', count:7, ribbon:{k:4, ok:true}, done:true },
+  ],
+
+  result: {
+    big: '2 个序列',
+    html: '只有 <code>a1 a2 a3 | b1 b2 b3</code> 与 <code>b1 b2 b3 | a1 a2 a3</code> 这两个<b>全串行</b>序列能使 x=2；任何穿插都会出现“先读后写”而丢失更新，x=1 → 选 <b>B</b>。记忆锚点：<b>x++ 不是原子操作，穿插即丢失更新</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

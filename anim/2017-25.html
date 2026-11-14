@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-25 · 最佳适应的分区回收与合并</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（tools/anim_algo_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 内存示意块：type = free 空闲 | rec 回收区 | alloc 已分配 | merged 合并后
+function mapHTML(mode){
+  var items;
+  if (mode === 'merged'){
+    items = [
+      { a:'20K',  b:'400K',   s:'380KB',  t:'merged', n:'合并后空闲' },
+      { a:'400K', b:'500K',   s:'100KB',  t:'alloc',  n:'已分配' },
+      { a:'500K', b:'580K',   s:'80KB',   t:'free',   n:'空闲 80KB' },
+      { a:'580K', b:'1000K',  s:'420KB',  t:'alloc',  n:'已分配' },
+      { a:'1000K',b:'1100K',  s:'100KB',  t:'free',   n:'空闲 100KB' }
+    ];
+  } else {
+    items = [
+      { a:'20K',  b:'60K',    s:'40KB',   t:'free',  n:'空闲 40KB' },
+      { a:'60K',  b:'200K',   s:'140KB',  t:(mode === 'before' ? 'alloc' : 'rec'), n:(mode === 'before' ? '已分配（待回收）' : '回收区 60K~200K') },
+      { a:'200K', b:'400K',   s:'200KB',  t:'free',  n:'空闲 200KB' },
+      { a:'400K', b:'500K',   s:'100KB',  t:'alloc', n:'已分配' },
+      { a:'500K', b:'580K',   s:'80KB',   t:'free',  n:'空闲 80KB' },
+      { a:'580K', b:'1000K',  s:'420KB',  t:'alloc', n:'已分配' },
+      { a:'1000K',b:'1100K',  s:'100KB',  t:'free',  n:'空闲 100KB' }
+    ];
+  }
+  var h = '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  items.forEach(function(it, idx){
+    var bg = it.t === 'free' ? '#f6fef9' : it.t === 'rec' ? '#fffbeb' : it.t === 'merged' ? '#dcfce7' : '#f1f5f9';
+    var bd = it.t === 'free' ? '#16a34a' : it.t === 'rec' ? '#d97706' : it.t === 'merged' ? '#16a34a' : '#cbd5e1';
+    var thick = (mode === 'front' && (idx === 0 || idx === 1)) || (mode === 'rear' && (idx === 1 || idx === 2));
+    h += '<div style="flex:1 1 86px;min-width:86px;border:' + (thick ? '3px' : '2px') + ' solid ' + bd + ';background:' + bg +
+         ';border-radius:10px;padding:6px 4px;text-align:center">' +
+         '<div style="font-size:11px;color:#64748b">' + it.a + ' ~ ' + it.b + '</div>' +
+         '<div style="font-weight:700;font-size:13px">' + it.s + '</div>' +
+         '<div style="font-size:10.5px;color:#94a3b8">' + it.n + '</div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function chainHTML(list, hi){
+  var h = '<div class="aw-row-label" style="margin-top:14px"><b>空闲分区链</b>（最佳适应：每次操作后按大小升序）</div>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  list.forEach(function(p, i){
+    var sel = (hi === i);
+    h += '<div style="border:2px solid ' + (sel ? '#d97706' : '#e2e8f0') + ';background:' + (sel ? '#fffbeb' : '#fff') +
+         ';border-radius:12px;padding:8px 14px;text-align:center">' +
+         '<div style="font-weight:700;font-size:14px">' + p.size + '</div>' +
+         '<div style="font-size:11.5px;color:#64748b">@ ' + p.addr + '</div>' +
+         (sel ? '<div style="font-size:10.5px;color:#92400e;font-weight:700">链首</div>' : '') + '</div>';
+    if (i < list.length - 1) h += '<div style="align-self:center;color:#94a3b8;font-size:16px">→</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+var INIT   = [ { addr:'20K', size:'40KB' },  { addr:'500K', size:'80KB' },   { addr:'1000K', size:'100KB' }, { addr:'200K', size:'200KB' } ];
+var AFTER  = [ { addr:'20K', size:'380KB' }, { addr:'500K', size:'80KB' },   { addr:'1000K', size:'100KB' } ];
+var SORTED = [ { addr:'500K', size:'80KB' }, { addr:'1000K', size:'100KB' }, { addr:'20K',   size:'380KB' } ];
+
+var snaps = [
+  { cls:'step',  tag:'初始',     log:'回收前的空闲分区链（升序）：40KB@20K、80KB@500K、100KB@1000K、200KB@200K，共 4 个', count:0,
+    html: chainHTML(INIT) + '<div class="aw-row-label" style="margin-top:14px"><b>内存示意</b>（20K ~ 1100K）</div>' + mapHTML('before') },
+  { cls:'shift', tag:'回收',     log:'回收分区：起始 60K、大小 140KB，即地址范围 60K ~ 200K', count:1,
+    html: mapHTML('rec') + chainHTML(INIT) },
+  { cls:'ok',    tag:'前邻检查', log:'前邻：20K~60K 的 40KB 分区末地址恰为 60K，与回收区相接 → 可合并', count:2, ribbon:{k:1, ok:true},
+    html: mapHTML('front') + chainHTML(INIT) },
+  { cls:'ok',    tag:'后邻检查', log:'后邻：回收区末地址 200K 恰是 200K~400K 的 200KB 空闲分区的起始 → 可合并', count:3, ribbon:{k:2, ok:true},
+    html: mapHTML('rear') + chainHTML(INIT) },
+  { cls:'shift', tag:'三区合一', log:'20K~60K + 60K~200K + 200K~400K 合并为 20K~400K，大小 40 + 140 + 200 = 380KB', count:4,
+    html: mapHTML('merged') + chainHTML(INIT) },
+  { cls:'step',  tag:'清点',     log:'500K~580K（80KB）与 1000K~1100K（100KB）不相接、保持独立 → 空闲分区共 3 个', count:5,
+    html: mapHTML('merged') + chainHTML(AFTER) },
+  { cls:'ok',    tag:'升序重排', log:'按大小升序重排：80KB@500K → 100KB@1000K → 380KB@20K，链首 = 500K、80KB', count:6,
+    html: chainHTML(SORTED, 0) },
+  { cls:'done',  tag:'完成',     log:'空闲分区 3 个；链首分区起始地址 500K、大小 80KB → 答案 B', count:7, done:true,
+    html: chainHTML(SORTED, 0) + '<div style="margin-top:10px;font-size:15px;font-weight:700;color:#16a34a">数量 3 · 链首 500K / 80KB → 答案 B</div>' }
+];
+
+AW.init({
+  title: '2017-25 · 最佳适应：回收 60K 起始、140KB 的分区',
+  subtitle: '空闲分区：40KB@20K ｜ 80KB@500K ｜ 100KB@1000K ｜ 200KB@200K · 每次操作后按大小升序重排',
+  counterLabel: '推演步',
+  ribbonTitle: '合并判定（✓ 可合并）',
+  intro: '点击「▶ 播放」：先看回收区与邻居的相邻关系，再合并、重排、定链首。',
+  snaps: snaps,
+  result: {
+    big: '3 个 · 链首 500K / 80KB',
+    html: '答案 <b>B</b>。流程：回收 60K~200K → 前邻 40KB、后邻 200KB 都相接 → 三区合一为 <b>380KB@20K</b> → 与 80KB、100KB 不相邻 → 按大小升序重排，链首是最小的 <b>80KB@500K</b>。易错：忘记升序重排会误选 A（把 20K 当链首）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

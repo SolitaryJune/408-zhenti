@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-14 IEEE 754 精确表示判定</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function vtable(colHeaders, rows, hlRow){
+  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:13.5px;font-family:Menlo,monospace">';
+  h += '<tr>';
+  colHeaders.forEach(function(c){
+    h += '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:4px 12px;color:#475569">' + c + '</th>';
+  });
+  h += '</tr>';
+  rows.forEach(function(r, i){
+    h += '<tr' + (hlRow === i ? ' style="background:#fef3c7"' : (i === 3 ? ' style="background:#fee2e2"' : '')) + '>';
+    r.forEach(function(c){
+      h += '<td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">' + c + '</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</table>';
+}
+
+var STEPS = [
+  { cls: 'key', title: '审题眼：尾数有限位是硬约束',
+    body: '<p>IEEE 754 格式的尾数只有<b>有限位</b>二进制小数。所以一个十进制数能被精确表示，当且仅当它能写成<b>有限位二进制小数</b>——否则必须舍入，只能近似。</p>' },
+  { cls: '', title: '判别方法：乘 2 取整 / 看分母',
+    body: '<p>方法一：小数部分反复 ×2 取整，有限步内归零 → 精确。<br>方法二：写成最简分数，<b>分母只含因子 2</b>（如 4、2）→ 精确；分母含 5、3 等 → 大概率无限循环。</p>' },
+  { cls: 'good', title: '1.25 = 5/4 = 1.01B ✓',
+    body: '<p>1.25 = 1 + 0.25 = 1 + 2<sup>−2</sup> → 二进制 <code>1.01B</code>，两位就写完了，尾数完全装得下 → <b>能精确表示</b>。</p>' },
+  { cls: 'good', title: '2.0 = 10B ✓　2.5 = 10.1B ✓',
+    body: '<p><code>2.0 = 10B</code>（整数，当然精确）；<code>2.5 = 10.1B</code>（0.5 = 2<sup>−1</sup>）→ 都<b>能精确表示</b>。</p>' },
+  { cls: 'bad', title: '1.2 = 6/5：二进制无限循环 ✗',
+    body: '<p>1.2 = 6/5，分母含因子 5。用乘 2 法看小数部分 0.2：<br><code>0.2×2=0.4 → 0.4×2=0.8 → 0.8×2=1.6 → 1.6 取 1 余 0.6 → 0.6×2=1.2 → 又回到 0.2 …</code><br>进入循环：1.2 = <code>1.0011 0011 0011 …B</code>，<b>无限循环</b>。</p>' },
+  { cls: 'bad', title: '有限尾数只能舍入 → 选 A',
+    body: '<p>IEEE 754 尾数位数有限，无限循环小数只能存成一个<b>近似值</b>——1.2 不能被精确表示，选 <b>A</b>。</p>' },
+  { cls: 'good', title: '结论',
+    body: '<p>1.25、2.0、2.5 都是"分母只含 2 的幂"的分数 → 精确；1.2 = 6/5 → 无限循环 → 近似。答案 <b>A</b>。</p>' +
+      '<p>记忆锚点：<b>小数位数少 ≠ 能精确</b>；1.2 只有 1 位十进制小数却不能精确，1.25 两位却可以——看二进制，不看十进制。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : 'step')),
+    tag: last ? '完成' : '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2021-14 · 哪个数 IEEE 754 表示不了',
+  subtitle: '考点：浮点数精确表示的条件 · 尾数有限位 · 选项逐个检验',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐个检验四个数。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（1.2 不能精确表示）',
+    html: '记忆锚点：写成最简分数，<b>分母只含因子 2 → 精确</b>（1.25 = 5/4、2.5 = 5/2）；分母含 5、3 等 → 二进制无限循环 → 只能近似（1.2 = 6/5 = 1.0011 0011 …B）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

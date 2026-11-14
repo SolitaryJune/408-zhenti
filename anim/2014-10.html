@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-10 希尔排序增量动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：按候选增量分组检验组内有序性 → d=3 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var A = [9, 1, 4, 13, 7, 8, 20, 23, 15];   // 位置 1..9
+
+// 每个快照：cls 九格配色（''/ok/hit/miss/dim），ptr 位置指针标签，lbl 行说明
+var snaps = [
+  { cls:'', ptr:null,
+    lbl:'原始（第一趟）结果序列，共 9 个元素；希尔排序第一趟 = 按增量 d 分组、组内插入排序 → 每隔 d 的子序列必须升序',
+    cls0:'step', tag:'初始', log:'待检验增量候选：2、3、4、5', count:0 },
+  { cls:['miss','dim','miss','dim','ok','dim','ok','dim','ok'],
+    ptr:{1:'d=2 组',3:'d=2 组',5:'d=2 组',7:'d=2 组',9:'d=2 组'},
+    lbl:'检验 d=2：奇数位子序列 9,4,7,20,15 —— 第一对就出现 9 > 4 逆序',
+    cls0:'miss', tag:'排除 A', log:'d=2：9>4 组内逆序 → 增量不可能是 2，排除 A', count:1 },
+  { cls:['hit','dim','dim','hit','dim','dim','hit','dim','dim'],
+    ptr:{1:'组1',4:'组1',7:'组1'},
+    lbl:'检验 d=3 第 1 组（位 1,4,7）：9,13,20 升序 ✓',
+    cls0:'ok', tag:'组1 有序', log:'d=3 组1：9,13,20 升序', count:2 },
+  { cls:['dim','hit','dim','dim','hit','dim','dim','hit','dim'],
+    ptr:{2:'组2',5:'组2',8:'组2'},
+    lbl:'检验 d=3 第 2 组（位 2,5,8）：1,7,23 升序 ✓',
+    cls0:'ok', tag:'组2 有序', log:'d=3 组2：1,7,23 升序', count:3 },
+  { cls:['dim','dim','hit','dim','dim','hit','dim','dim','hit'],
+    ptr:{3:'组3',6:'组3',9:'组3'},
+    lbl:'检验 d=3 第 3 组（位 3,6,9）：4,8,15 升序 ✓ —— 三组全有序，d=3 成立！',
+    cls0:'ok', tag:'d=3 成立', log:'d=3 三组全部升序 → 第一趟结果与原序列相同，增量可能是 3（候选 B）', count:4 },
+  { cls:['miss','dim','dim','dim','miss','dim','dim','dim','ok'],
+    ptr:{1:'d=4 组',5:'d=4 组',9:'d=4 组'},
+    lbl:'检验 d=4：位 1,5,9 的子序列 9,7,15 —— 9 > 7 逆序',
+    cls0:'miss', tag:'排除 C', log:'d=4：9>7 组内逆序 → 排除 C', count:5 },
+  { cls:['miss','ok','ok','ok','dim','miss','ok','ok','ok'],
+    ptr:{1:'d=5 组',6:'d=5 组'},
+    lbl:'检验 d=5：位 1,6 是 9,8 —— 9 > 8 逆序（其余对 1,20、4,23、13,15 虽有序但救不了）',
+    cls0:'miss', tag:'排除 D', log:'d=5：9>8 组内逆序 → 排除 D', count:6 },
+  { cls:['ok','ok','ok','ok','ok','ok','ok','ok','ok'],
+    ptr:null,
+    lbl:'结论：只有 d=3 使"每隔 d 的子序列全部升序" → 该趟增量是 3，选 B',
+    cls0:'done', tag:'完成', log:'只有 d=3 通过检验 → 答案 B。d=3 时组内本就有序，第一趟不移动任何元素', count:7, done:true },
+];
+
+AW.init({
+  title: '2014-10　由第一趟结果反推希尔排序增量',
+  subtitle: '序列 <code>9 1 4 13 7 8 20 23 15</code> · 检验准则：每隔 d 的子序列必须升序',
+  counterLabel: '已检验',
+  intro: '点击「▶ 播放」逐个检验候选增量。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._lbl = AW.el('div', 'aw-row-label', '');
+    var holder = AW.el('div', '');
+    holder.id = 'aRow';
+    inner.appendChild(this._lbl);
+    inner.appendChild(holder);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._holder = holder;
+  },
+  render: function(stage, sn, i){
+    this._lbl.innerHTML = sn.lbl;
+    this._holder.innerHTML = '';
+    var chars = A.map(function(x){ return String(x); });
+    var cls = i === 0 ? A.map(function(){ return 'dim'; }) : sn.cls;
+    this._holder.appendChild(AW.cellRow(chars, cls, sn.ptr, 1));
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B：增量 3',
+    html: 'd=3 的三组 <code>9,13,20</code>、<code>1,7,23</code>、<code>4,8,15</code> 全部升序 → 第一趟原样输出。<br>d=2（9&gt;4）、d=4（9&gt;7）、d=5（9&gt;8）都存在组内逆序，排除 A、C、D。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

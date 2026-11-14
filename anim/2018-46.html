@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-46 索引节点文件系统的三问计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .itrow{ display:flex; gap:5px; margin-top:8px; flex-wrap:wrap; }
+  .it{ width:52px; height:44px; border:2px solid #cbd5e1; border-radius:9px;
+    display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700;
+    background:#fff; color:#334155; transition:all .3s; }
+  .it.dim{ opacity:.4; }
+  .it.ok{ background:#dcfce7; border-color:#16a34a; color:#14532d; }
+  .it.hit{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+/* 索引节点的 11 个地址项：直接 8 个 + 一级/二级/三级间接各 1 个 */
+var ITEMS = ['直接0','直接1','直接2','直接3','直接4','直接5','直接6','直接7','一级','二级','三级'];
+/* 每步的格子状态：0=普通 1=dim 2=ok 3=hit */
+var IMODES = [
+  [1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,1,1,1,1],
+  [2,2,2,2,2,2,2,2,1,1,1],
+  [2,2,2,2,2,2,2,2,3,3,3],
+  [2,2,2,2,2,2,2,2,3,3,3],
+  [2,2,2,2,2,2,2,2,3,3,3],
+  [2,2,2,2,2,2,2,2,3,3,3],
+  [2,2,2,2,2,2,2,2,3,3,3],
+  [3,3,3,3,3,3,3,3,1,1,1],
+  [1,1,1,1,1,1,1,1,3,1,1],
+  [2,2,2,2,2,2,2,2,3,3,3],
+];
+var ICLS = ['', 'dim', 'ok', 'hit'];
+
+var NOTES = [
+  '簇 <b>4KB</b>；inode <b>64B</b>；<b>11 个地址项</b> = 直接 8 + 一级/二级/三级间接各 1，每项 <b>4B</b>。',
+  '一个 4KB 索引块能存 4KB ÷ 4B = <b>1024</b> 个地址项（各级间接计算的基础）。',
+  '8 个直接地址项直接记簇号：覆盖 8 × 4KB = <b>32KB</b>。',
+  '一级间接指向一个索引块（1024 项）；二级 1024²；三级 1024³。',
+  '第（1）问完成：最大文件 = 直接 + 三级间接之和。',
+  '第（2）问先算 inode：inode 区 1M 簇 × 每簇 4KB/64B = 64 个 → 共 <b>64M</b> 个 inode。',
+  '图像文件 5600B → 占 ⌈5600/4096⌉ = <b>2 簇</b>；数据区 512M 簇 ÷ 2 = 256M 个。',
+  '取小者：min(64M, 256M) = <b>64M</b>，瓶颈在 inode 区。',
+  'F1 = 6KB 占 2 簇，簇号全在<b>直接地址项</b>里 → 取最后簇号不必访问磁盘上的索引块。',
+  'F2 = 40KB 占 10 簇：前 8 簇用直接项，最后 2 簇要经<b>一级间接索引块</b> → 多一次磁盘访问。',
+  '三问全部完成 ✓',
+];
+
+var SUMS = [
+  '<h4>审题</h4><p>簇 4KB；inode 64B；11 个地址项（直接 8 + 一级/二级/三级间接各 1），每项 4B。</p>',
+  '<h4>索引块容量</h4><p>一个 4KB 索引块可存 4KB ÷ 4B = <b>1024</b> 个地址项。</p>',
+  '<h4>直接地址项</h4><p>8 个直接项 → 8 × 4KB = <b>32KB</b>。</p>',
+  '<h4>三级间接结构</h4><p>一级：1024 × 4KB；二级：1024² × 4KB；三级：1024³ × 4KB。</p>',
+  '<h4>第（1）问答案</h4><p>最大文件长度 = <b>(8 + 1024 + 1024² + 1024³) × 4KB</b></p>',
+  '<h4>第（2）问 · inode 上限</h4><p>inode 区 1M 簇 × 每簇 4KB/64B = 64 个 → 共 <b>1M × 64 = 64M</b> 个 inode。</p>',
+  '<h4>第（2）问 · 数据区上限</h4><p>5600B 占 ⌈5600/4096⌉ = <b>2 簇</b>；512M ÷ 2 = <b>256M</b> 个文件。</p>',
+  '<h4>第（2）问答案</h4><p>min(64M, 256M) = <b>64M 个</b>图像文件（受 inode 数量限制）。</p>',
+  '<h4>第（3）问 · F1 = 6KB</h4><p>占 2 簇，簇号全在<b>直接地址项</b> → 取最后一个簇号只需查内存中的 inode，<b>不必访问磁盘</b>。</p>',
+  '<h4>第（3）问 · F2 = 40KB</h4><p>占 10 簇：前 8 簇用直接项，最后 2 簇在<b>一级间接地址项</b>指向的索引块 → 必须先从磁盘读该索引块，<b>多一次磁盘 I/O</b>。</p>',
+  '<h4>最终答案</h4><p>(1) <b>(8 + 1024 + 1024² + 1024³) × 4KB</b>；(2) <b>64M 个</b>；(3) <b>不相同</b>——F2 取最后簇号要额外读一级间接索引块。</p>',
+];
+
+AW.init({
+  title: '2018·46 混合索引结构的文件系统计算（7 分大题）',
+  subtitle: '簇 <code>4KB</code> · inode <code>64B</code> · 地址项 <code>11 个（直接 8 + 一/二/三级间接各 1）</code> · 每项 <code>4B</code>',
+  counterLabel: '步',
+  ribbonTitle: '关键结论（✓ 完成）',
+  intro: '点击「▶ 播放」：先算最大文件，再算可存文件数，最后比较 F1/F2。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.lab = AW.el('div', 'aw-row-label', '<b>索引节点（64B）的 11 个地址项</b>（琥珀 = 本步关注）');
+    S.items = AW.el('div', 'itrow');
+    ITEMS.forEach(function(t){
+      var d = AW.el('div', 'it dim', t);
+      S.items.appendChild(d);
+    });
+    S.note = AW.el('div', 'aw-row-label', '');
+    S.sum = AW.el('div', 'aw-stepcard', '');
+    inner.appendChild(S.lab);
+    inner.appendChild(S.items);
+    inner.appendChild(S.note);
+    inner.appendChild(S.sum);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var mode = IMODES[i];
+    for (var k = 0; k < S.items.children.length; k++){
+      S.items.children[k].className = 'it ' + ICLS[mode[k]];
+    }
+    S.note.innerHTML = NOTES[i];
+    S.sum.innerHTML = SUMS[i];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',        log:'簇 4KB；inode 64B；11 个地址项 = 直接 8 + 一级/二级/三级间接各 1，每项 4B', count:0 },
+    { cls:'step',  tag:'索引块容量',   log:'一个 4KB 索引块可存 4KB/4B = 1024 个地址项', count:1 },
+    { cls:'step',  tag:'直接地址项',   log:'8 个直接地址项 → 8 × 4KB = 32KB', count:2 },
+    { cls:'step',  tag:'各级间接项',   log:'一级 1024 × 4KB；二级 1024² × 4KB；三级 1024³ × 4KB', count:3 },
+    { cls:'ok',    tag:'第(1)问完成',  log:'最大文件长度 = (8 + 1024 + 1024² + 1024³) × 4KB', count:4, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'第(2)问·inode', log:'inode 区 1M 簇 × 每簇 4KB/64B = 64 个 → 共 64M 个 inode', count:5 },
+    { cls:'step',  tag:'第(2)问·数据区', log:'5600B 占 ⌈5600/4096⌉ = 2 簇 → 512M/2 = 256M 个（数据区不是瓶颈）', count:6 },
+    { cls:'ok',    tag:'第(2)问完成',  log:'取小者：最多 64M 个图像文件（受 inode 区限制）', count:7, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'第(3)问·F1',  log:'F1 = 6KB 占 2 簇，全在直接地址项 → 取最后簇号不必访问磁盘', count:8 },
+    { cls:'miss',  tag:'第(3)问·F2',  log:'F2 = 40KB 占 10 簇，最后一簇经一级间接 → 需先读一级索引块（多一次磁盘访问）', count:9, ribbon:{k:3, ok:true} },
+    { cls:'done',  tag:'完成',        log:'(1) (8+1024+1024²+1024³)×4KB；(2) 64M 个；(3) 不相同', count:10, done:true },
+  ],
+
+  result: {
+    big: '(8+1024+1024²+1024³)×4KB · 64M 个',
+    html: '<b>(1)</b> 索引块容量 4KB/4B = 1024 项 → 最大文件 = <b>(8 + 1024 + 1024² + 1024³) × 4KB</b>。<b>(2)</b> inode 区限 64M 个、数据区限 256M 个，取小者 <b>64M 个</b>图像文件。<b>(3)</b> <b>不相同</b>：F1（6KB）最后一簇在直接地址项；F2（40KB）最后一簇要经一级间接索引块，<b>多一次磁盘访问</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

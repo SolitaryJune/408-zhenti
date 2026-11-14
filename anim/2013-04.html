@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-04 三叉哈夫曼树的最小带权路径长度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function setRow(vals, hiSet, isNew){
+  var h = '<div class="aw-cells" style="justify-content:center">';
+  for (var i = 0; i < vals.length; i++){
+    var v = vals[i];
+    var cls = hiSet && hiSet[v] ? 'miss' : (isNew != null && v === isNew ? 'hit' : '');
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box ' + cls + '" style="width:46px">' + v + '</div></div>';
+  }
+  return h + '</div>';
+}
+function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
+function card(cls, title, body){
+  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
+}
+function tnode(v, col, row, cls, note){
+  return '<div class="aw-box ' + (cls || '') + '" style="grid-column:' + col + ';grid-row:' + row + ';justify-self:center;width:46px;position:relative">'
+       + v + (note ? '<span style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:#64748b;white-space:nowrap">' + note + '</span>' : '') + '</div>';
+}
+
+var LOGS = [
+  '审题：6 个叶权 2,3,4,5,6,7，建三叉哈夫曼树。判断是否补虚结点：(n−1) mod (k−1) = 5 mod 2 = 1 ≠ 0 → 需补 1 个权 0 虚结点',
+  '补 0 后共 7 个权：0, 2, 3, 4, 5, 6, 7（红=本轮将被合并的 3 个最小权）',
+  '第 1 次合并：取最小 3 个 0、2、3 → 新结点权 5；集合变为 4, 5, 5, 6, 7（两个 5：新结点与原叶）',
+  '第 2 次合并：取最小 3 个 4、5、5 → 新结点权 14；集合变为 6, 7, 14',
+  '第 3 次合并：取 6、7、14 → 根结点权 27，构造结束',
+  '树形与深度：6、7 在第 1 层；4、原叶 5 在第 2 层；0、2、3 在第 3 层（0 虚结点被排到最深，不贡献 WPL）',
+  '算 WPL：三叉哈夫曼的 WPL = 所有非叶（合并产生）结点权之和 = 5 + 14 + 27 = 46；验证：6+7+4×2+5×2+0+2×3+3×3 = 46 ✓',
+  '结论：WPL 最小为 46 → 选 B'
+];
+var TAGS = ['审题 · 补 0', '权集合', '合并① → 5', '合并② → 14', '合并③ → 根 27', '树形与深度', 'WPL = 46', '完成'];
+var CLS  = ['step','step','shift','shift','shift','step','ok','done'];
+
+// 每步的集合（合并后集合含新结点）
+var SETS = [
+  [],
+  [0,2,3,4,5,6,7],
+  [4,5,6,7,5],   // 展示时人工加回原叶 5（排序后 4,5,5,6,7）
+  [6,7,14],
+  [27],
+  [],
+  [],
+  []
+];
+var HI = [null, {0:1,2:1,3:1}, null, null, null, null, null, null];
+var NEWV = [null, null, 5, 14, 27, null, null, null];
+
+// 最终树（9 列网格）：行1 根，行2 三个孩子，行3 14 的孩子，行4 新5的孩子
+function finalTree(){
+  var h = '<div style="display:grid;grid-template-columns:repeat(9,48px);grid-auto-rows:54px;justify-content:center;margin-top:14px">';
+  h += tnode(27, 5, 1, 'hit', '根·层0');
+  h += tnode(6, 3, 2, 'ok', '叶·层1');
+  h += tnode(7, 5, 2, 'ok', '叶·层1');
+  h += tnode(14, 7, 2, 'hit', '层1');
+  h += tnode(4, 6, 3, 'ok', '叶·层2');
+  h += tnode('5叶', 7, 3, 'ok', '叶·层2');
+  h += tnode('5新', 8, 3, 'hit', '层2');
+  h += tnode(0, 7, 4, 'dim', '虚0·层3');
+  h += tnode(2, 8, 4, 'ok', '叶·层3');
+  h += tnode(3, 9, 4, 'ok', '叶·层3');
+  h += '</div>';
+  return h;
+}
+
+var snaps = [];
+for (var i = 0; i < 8; i++){
+  var h = '';
+  if (i === 0){
+    h += card('key', '题意与补虚结点判断',
+      '<p>三叉哈夫曼树每次合并消耗 3 个结点、产生 1 个新结点；要每个分支结点恰有 3 个孩子，需 <code>(n−1) 能被 (k−1) 整除</code>。</p>'
+      + '<p>本例 n = 6、k = 3：<code>5 mod 2 = 1</code>，不整除 → 最后一次只剩 2 个结点合并，根只有 2 个孩子。</p>'
+      + '<p>所以先<b>补 1 个权值为 0 的虚结点</b>，共 7 个权再开始构造。</p>');
+  } else if (i === 5){
+    h += rowLabel('最终三叉哈夫曼树（列对齐表示父子：上方为父）');
+    h += finalTree();
+    h += card('', '读深度', '<p>叶 6、7：深度 1；叶 4、原叶 5：深度 2；虚 0、叶 2、叶 3：深度 3。权 0 的虚结点排得最深、不贡献 WPL。</p>');
+  } else if (SETS[i].length){
+    h += rowLabel('当前结点权集合（红 = 本轮取出的 3 个最小权；绿 = 新合并结点）');
+    h += setRow(SETS[i], HI[i], NEWV[i]);
+  } else {
+    h += rowLabel('当前结点权集合');
+    h += setRow([27], null, null);
+  }
+  h += card(CLS[i] === 'shift' ? 'key' : (i === 7 ? 'good' : ''), TAGS[i], '<p>' + LOGS[i] + '</p>');
+  if (i === 6){
+    h += card('good', '两种算法殊途同归',
+      '<p><b>法一（内部结点求和）</b>：WPL = 5 + 14 + 27 = 46。</p>'
+      + '<p><b>法二（叶权 × 深度）</b>：WPL = 6×1 + 7×1 + 4×2 + 5×2 + 0×3 + 2×3 + 3×3 = 6+7+8+10+0+6+9 = 46。</p>');
+  }
+  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
+  if (i >= 2 && i <= 4) sn.ribbon = { k: i - 1, ok: true }; // 三次合并
+  if (i === 7) sn.done = true;
+  snaps.push(sn);
+}
+
+AW.init({
+  title: '三叉哈夫曼树：最小带权路径长度（2013-04）',
+  subtitle: '叶权 <code>2,3,4,5,6,7</code> · 每次取最小 3 个合并 · 先补权 0 虚结点',
+  counterLabel: '构造步',
+  ribbonTitle: '合并次数（✓ 完成一次合并）',
+  intro: '点击「▶ 播放」逐步构造三叉哈夫曼树。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：WPL = 46',
+    html: '(n−1) mod (k−1) = 1 ≠ 0 → 先补 1 个权 0 虚结点；三次合并 0+2+3→5、4+5+5→14、6+7+14→27。<br>WPL = 内部结点权之和 = <b>5 + 14 + 27 = 46</b>。记忆点：<b>不补 0 会得根只有 2 个孩子的树（36），不是合法三叉哈夫曼树</b>；27 只是根权（选项 A 的陷阱）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

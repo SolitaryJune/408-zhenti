@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-27 银行家算法安全性检测</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.os-work{display:flex;justify-content:center;gap:8px;margin:4px 0 12px;font-size:15px;flex-wrap:wrap}
+.os-work b{padding:4px 14px;border-radius:8px;background:#e0e7ff;color:#3730a3}
+.os-tbl{border-collapse:collapse;margin:0 auto;font-size:14px}
+.os-tbl th,.os-tbl td{border:1px solid #cbd5e1;padding:5px 12px;text-align:center}
+.os-tbl th{background:#f1f5f9;font-weight:600}
+.os-tbl tr.pr td{transition:background .3s}
+.os-tbl tr.cur td{box-shadow:inset 0 0 0 2px #2563eb}
+.os-tbl tr.ok td{background:#dcfce7}
+.os-tbl tr.miss td{background:#fee2e2}
+.os-tbl tr.run td{background:#bbf7d0}
+.os-verdict{text-align:center;margin-top:12px;font-size:14px;font-weight:700;min-height:22px;color:#b91c1c}
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var ALLOC = { P1:[2,0,0], P2:[1,2,0], P3:[0,1,1], P4:[0,0,1] };
+var NEED  = { P1:[0,0,1], P2:[1,3,2], P3:[1,3,1], P4:[2,0,0] };
+var NAMES = ['P1','P2','P3','P4'];
+
+// 行状态：'' 待检 / ok 满足可运行 / miss 不满足 / run 已运行并回收
+// 每步携带完整状态（work、各行颜色、当前比较行、结论行），跳步也能正确重绘
+function S(work, rows, cur, verdict, cls, tag, count, log, ribbon){
+  return { state:{work:work, rows:rows, cur:cur, verdict:verdict},
+           cls:cls, tag:tag, count:count, log:log,
+           ribbon:ribbon || null, done:false };
+}
+
+var SNAPS = [
+  S([0,2,1], {}, null, '',
+    'shift', '开始', 0,
+    '初始：可用资源 Work = (0,2,1)。安全性检测口诀——反复找「尚需 ≤ 可用」的进程，让它运行并回收资源'),
+  S([0,2,1], {P1:'ok'}, 'P1', '',
+    'step', '查 P1', 1,
+    'P1 尚需 (0,0,1) ≤ (0,2,1) → 满足！P1 可以先运行'),
+  S([0,2,1], {P1:'ok', P2:'miss'}, 'P2', '',
+    'miss', '查 P2', 2,
+    'P2 尚需 (1,3,2)：R1 缺 1、R2 缺 1 → 不满足'),
+  S([0,2,1], {P1:'ok', P2:'miss', P3:'miss'}, 'P3', '',
+    'miss', '查 P3', 3,
+    'P3 尚需 (1,3,1)：R2 缺 1 → 不满足'),
+  S([0,2,1], {P1:'ok', P2:'miss', P3:'miss', P4:'miss'}, 'P4', '',
+    'miss', '查 P4', 4,
+    'P4 尚需 (2,0,0)：R1 缺 2 → 不满足。开局只有 P1 能跑，任何安全序列都必须以 P1 开头（选项 A、B、C 也都如此）'),
+  S([2,2,1], {P1:'run', P2:'miss', P3:'miss', P4:'miss'}, null, '',
+    'ok', '运行 P1', 5, {k:1, ok:true},
+    'P1 运行完毕，回收其已分配的 (2,0,0) → Work = (0,2,1) + (2,0,0) = (2,2,1)'),
+  S([2,2,1], {P1:'run', P2:'miss', P3:'miss', P4:'miss'}, 'P2', '',
+    'miss', '再查 P2', 6,
+    'P2 尚需 (1,3,2)：R2 仍缺 1 → 不满足'),
+  S([2,2,1], {P1:'run', P2:'miss', P3:'miss', P4:'miss'}, 'P3', '',
+    'miss', '再查 P3', 7,
+    'P3 尚需 (1,3,1)：R2 仍缺 1 → 不满足'),
+  S([2,2,2], {P1:'run', P2:'miss', P3:'miss', P4:'run'}, null, '',
+    'ok', '运行 P4', 8, {k:4, ok:true},
+    'P4 尚需 (2,0,0) ≤ (2,2,1) → 运行 P4，回收 (0,0,1) → Work = (2,2,2)'),
+  S([2,2,2], {P1:'run', P2:'miss', P3:'miss', P4:'run'}, 'P2', 'P2、P3 的尚需中 R2=3，永远大于 Work 的 R2=2',
+    'miss', '最后查 P2', 9, {k:2, ok:false},
+    'P2 尚需 (1,3,2)：R2 需 3 > 2 → 仍无法满足'),
+  S([2,2,2], {P1:'run', P2:'miss', P3:'miss', P4:'run'}, 'P3', 'P2、P3 的尚需中 R2=3，永远大于 Work 的 R2=2',
+    'miss', '最后查 P3', 10, {k:3, ok:false},
+    'P3 尚需 (1,3,1)：R2 需 3 > 2 → 仍无法满足。剩下的进程没有一个能完成，检测推不下去了'),
+  S([2,2,2], {P1:'run', P2:'miss', P3:'miss', P4:'run'}, null,
+    '不存在安全序列：A 卡在 P2，B 卡在 P3，C（P1,P4,P3,…）也在 P3 卡住',
+    'done', '结论', 11,
+    '所有顺序都推不到底 → 安全序列不存在，系统处于不安全状态，答案 D'),
+];
+SNAPS[SNAPS.length - 1].done = true;
+
+AW.init({
+  title: '2011-27 安全性检测：安全序列存在吗',
+  subtitle: '可用资源 Work = (0, 2, 1) · 逐进程比较「尚需 ≤ 可用」，运行后回收全部已分配',
+  counterLabel: '检测步数',
+  ribbonTitle: '进程结局（✓ 能完成 / ✗ 无法满足）',
+  intro: '点击「▶ 播放」逐步执行安全性检测。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    function cell(v){ return '<td>' + v + '</td>'; }
+    this._work = AW.el('div', 'os-work');
+    stage.appendChild(this._work);
+    var t = AW.el('table', 'os-tbl');
+    t.innerHTML = '<thead><tr><th rowspan="2">进程</th><th colspan="3">已分配</th><th colspan="3">尚需</th></tr>' +
+                  '<tr><th>R1</th><th>R2</th><th>R3</th><th>R1</th><th>R2</th><th>R3</th></tr></thead>';
+    var tb = document.createElement('tbody');
+    var self = this;
+    this._rows = {};
+    NAMES.forEach(function(p){
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td><b>' + p + '</b></td>' +
+                     ALLOC[p].map(cell).join('') + NEED[p].map(cell).join('');
+      tb.appendChild(tr);
+      self._rows[p] = tr;
+    });
+    t.appendChild(tb);
+    stage.appendChild(t);
+    this._verdict = AW.el('div', 'os-verdict');
+    stage.appendChild(this._verdict);
+  },
+
+  render: function(stage, sn){
+    var st = sn.state;
+    var self = this;
+    this._work.innerHTML = '可用资源 Work：<b>' + st.work.join('　') + '</b>';
+    NAMES.forEach(function(p){
+      var tr = self._rows[p];
+      var cls = 'pr' + (st.rows[p] ? ' ' + st.rows[p] : '') + (st.cur === p ? ' cur' : '');
+      tr.className = cls;
+    });
+    this._verdict.textContent = st.verdict || '';
+  },
+
+  result: {
+    big: '答案 D：安全序列不存在',
+    html: '开局只有 P1 能运行（Work 变为 (2,2,1)），随后只有 P4 能运行（Work 变为 (2,2,2)）；但 P2 需 R2=3、P3 需 R2=3，<b>始终大于 2</b>——选项 A、B、C 分别在 P2/P3 处卡死，不存在安全序列。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

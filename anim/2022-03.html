@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-03 中序相邻 ⇒ 谁是 p 的中序后继</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>「中序相邻、p 在前」⇔ <b>q 恰好是 p 的中序后继</b>。后继只有两个来源：① p 有右子树 → 右子树最左下的结点；② p 无右子树 → 沿双亲链向上，找到第一个「p 落在其左子树里」的祖先。</p>' },
+  { title: '验证 I：q 是 p 的双亲',
+    cls: 'good',
+    body: '<p>p 是 q 的<b>左孩子</b>且没有右子树 ⇒ 中序为 …, p, q, …，相邻。<b>可能 ✓</b></p>' },
+  { title: '验证 II：q 是 p 的右孩子',
+    cls: 'good',
+    body: '<p>q 没有左孩子时，p 的中序后继就是它的右孩子 q ⇒ …, p, q, …，相邻。<b>可能 ✓</b></p>' },
+  { title: '验证 III：q 是 p 的右兄弟',
+    cls: 'bad',
+    body: '<p>中序顺序是「左子树 → 双亲 → 右子树」。q 是 p 的右兄弟 ⇒ q 排在双亲之后：…, p（的子树）, <b>双亲</b>, q, …，p 与 q 之间至少隔着双亲。<b>不可能 ✗</b></p>' },
+  { title: '验证 IV：q 是双亲的双亲',
+    cls: 'good',
+    body: '<p>构造：q 的左孩子是 r，r 的右孩子是 p（叶）⇒ 中序为 r, p, q，p 的后继恰是 q。<b>可能 ✓</b>。诀窍：从 p 往上走到 q 的途中每个中间结点（r）都「向右拐」，它们都先于 p 输出，不会插进 p、q 之间。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>I、II、IV 都可能，<b>仅 III 不可能</b> ⇒ 答案 <b>B</b>。记忆锚点：中序里紧跟 p 的是「右子树最左」，否则是向上找的第一个「左拐」祖先——<b>兄弟永远轮不到</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '中序相邻：p 与 q 的哪种关系不可能？（2022-03）',
+  subtitle: '考点：二叉树中序遍历 · 中序后继的判定 · 逐条验证 I～IV',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 III 不可能）',
+    html: '中序后继 = 右子树最左结点，或「向上第一个左拐祖先」。I（双亲）、II（右孩子）、IV（祖父，走右拐链）都能成为后继；III 的右兄弟必须排在双亲之后，永远与 p 隔着双亲。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

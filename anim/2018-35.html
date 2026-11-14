@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2018-35：802.11 CSMA/CA 信道预约方法（RTS/CTS 交换）
+     模板：算法 / 过程演示类（协议时序推演）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function nodeBox(title, sub, style){
+  return '<div style="' + (style || 'background:#fff;border:2px solid #cbd5e1') +
+    ';border-radius:12px;padding:9px 13px;text-align:center;font-weight:700;font-size:13.5px;color:#334155;line-height:1.45"><div>' +
+    title + '</div><div style="font-size:10.5px;font-weight:400;color:#64748b">' + sub + '</div></div>';
+}
+
+function net(m1, m2, navOn){
+  return '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 8px">' +
+    nodeBox('站点 A', '发送方', 'background:#eff6ff;border:2px solid #2563eb') +
+    '<div style="flex:1;max-width:190px"><div style="font-size:12px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:8px;padding:3px 6px;margin-bottom:4px;text-align:center">' + (m1 || ' ') + '</div><div style="height:3px;background:#cbd5e1;border-radius:2px"></div></div>' +
+    nodeBox('AP', '接入点') +
+    '<div style="flex:1;max-width:190px"><div style="font-size:12px;font-weight:700;color:' + (navOn ? '#15803d' : '#94a3b8') + ';background:' + (navOn ? '#dcfce7' : '#f1f5f9') + ';border-radius:8px;padding:3px 6px;margin-bottom:4px;text-align:center">' + (m2 || ' ') + '</div><div style="height:3px;background:#cbd5e1;border-radius:2px"></div></div>' +
+    nodeBox('站点 C', '隐蔽站', navOn ? 'background:#fef3c7;border:2px solid #d97706' : 'background:#fff;border:2px solid #cbd5e1') +
+    '</div>';
+}
+
+function tbar(done, cur){
+  var segs = ['RTS', 'CTS', '数据帧', 'ACK'];
+  var h = '<div style="display:flex;gap:5px;margin:6px 0 2px">';
+  segs.forEach(function(s, i){
+    var bg = '#f8fafc', fg = '#94a3b8', bd = '#e2e8f0';
+    if(i < done){ bg = '#dcfce7'; fg = '#15803d'; bd = '#16a34a'; }
+    if(i === cur){ bg = '#fef3c7'; fg = '#92400e'; bd = '#d97706'; }
+    h += '<div style="flex:1;background:' + bg + ';border:2px solid ' + bd + ';color:' + fg + ';border-radius:9px;padding:8px 0;text-align:center;font-weight:700;font-size:13px">' + s + '</div>';
+  });
+  h += '</div><div style="font-size:11px;color:#94a3b8;margin-bottom:6px">信道占用时间轴（绿 = 已完成，琥珀 = 当前阶段）</div>';
+  return h;
+}
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'802.11 用 CSMA/CA：无线信道碰撞代价高、还有隐蔽站问题 → 发数据前允许先"预约"信道',
+    html: net('', '', false) + tbar(0, -1) +
+      card(1, 'key', '审题：CSMA/CA 为什么需要信道预约',
+        '<p>无线环境中存在<b>隐蔽站</b>：C 和 A 互相听不到，却都向 AP 发送，会碰撞。所以 802.11 允许发送方<b>先预约信道</b>再发数据——题目问的就是预约的方法。</p>') },
+  { cls:'shift', tag:'RTS', count:1, ribbon:{k:1, ok:true},
+    log:'第 1 步：A 监听信道空闲后，先向 AP 发送 RTS 帧（请求发送，内含通信持续时间）',
+    html: net('RTS ▶', '', false) + tbar(0, 0) +
+      card(2, 'key', '第 1 步：发送站 A 发 RTS',
+        '<p>A 想发数据，先发 <b>RTS 帧</b>（Request To Send），帧中写明<b>本次通信总共占用信道多长时间</b>。</p>') },
+  { cls:'ok', tag:'CTS', count:2, ribbon:{k:2, ok:true},
+    log:'第 2 步：AP 回送 CTS 帧（允许发送），并向周围广播',
+    html: net('◀ CTS', 'CTS 广播', false) + tbar(1, 1) +
+      card(3, 'good', '第 2 步：AP 回 CTS',
+        '<p>AP 收到 RTS 后回送 <b>CTS 帧</b>（Clear To Send），同样携带持续时间，并<b>广播</b>出去——周围所有站都能听到。</p>') },
+  { cls:'shift', tag:'NAV 预约', count:3, ribbon:{k:3, ok:true},
+    log:'第 3 步：隐蔽站 C 也听到 CTS → 设置 NAV，预约期内不发送——信道被"预约"下来',
+    html: net('', 'NAV 计时', true) + tbar(1, 1) +
+      card(4, 'key', '第 3 步：听到 CTS 的站设置 NAV',
+        '<p>C 虽然听不到 A，但<b>听得到 AP 广播的 CTS</b> → 按其中的持续时间设置 <b>NAV（网络分配向量）</b>，在此期间不发送。<b>信道预约完成</b>——这就是"交换 RTS 与 CTS 帧"的作用。</p>') },
+  { cls:'ok', tag:'数据帧', count:4, ribbon:{k:4, ok:true},
+    log:'第 4 步：A 在预约期内发送数据帧，不会被隐蔽站 C 干扰',
+    html: net('DATA ▶', 'NAV 静默', true) + tbar(2, 2) +
+      card(5, 'good', '第 4 步：发送数据帧',
+        '<p>A 在预约期内安心发送数据帧；隐蔽站 C 因 NAV 静默，不会制造碰撞。</p>') },
+  { cls:'done', tag:'完成', count:5, ribbon:{k:5, ok:true}, done:true,
+    log:'AP 回 ACK，通信结束；对照选项：预约 = 交换 RTS 与 CTS 帧 → 选 D',
+    html: net('◀ ACK', '', false) + tbar(4, -1) +
+      card(6, 'good', '结论：答案 D',
+        '<p>AP 收好后回 <b>ACK</b>；NAV 到期，信道释放。<b>信道预约的方法 = 交换 RTS 与 CTS 帧，选 D。</b><br>排除：A 确认帧是<b>可靠传输</b>手段；B 二进制指数退避是<b>碰撞重发策略</b>；C 多个 MAC 地址与预约无关。</p>') },
+];
+
+AW.init({
+  title: '2018-35：802.11 CSMA/CA 的信道预约方法',
+  subtitle: 'RTS / CTS 交换 · NAV 预约 · 选项逐项对照',
+  counterLabel: '流程',
+  ribbonTitle: '预约流程（✓ 完成）',
+  intro: '点击「▶ 播放」按时间轴逐步推演 RTS/CTS 预约过程。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：交换 RTS 与 CTS 帧',
+    html: '记忆锚点：<b>先握手后说话</b>——A 发 <b>RTS</b> 请求，AP 回 <b>CTS</b> 广播，所有听到 CTS 的站（含隐蔽站）设置 <b>NAV</b> 静默，信道即被预约。<br>干扰项：确认帧（A）管可靠传输、二进制指数退避（B）管碰撞重发、多 MAC 地址（C）与预约无关。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

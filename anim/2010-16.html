@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-16 RAM 与 ROM 特性辨析 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：四条叙述逐条判定', cls: 'key',
+    body: '<p>题目给了四条关于 RAM / ROM 的叙述，要求挑出<b>全部正确</b>的组合。逐条问自己：这条说的是"易失性 / 访问方式 / 用途 / 维护方式"里的哪一件？</p>' },
+  { title: 'I：RAM 易失、ROM 非易失 → 正确', cls: 'good',
+    body: '<p>RAM（SRAM、DRAM）靠触发器/电容保存信息，<b>断电即失</b>；ROM 里的信息在写入后<b>断电保持</b>。这正是两类存储器最根本的分界 → <b>✔ 正确</b>。</p>' },
+  { title: 'II：都采用随机存取 → 正确', cls: 'good',
+    body: '<p>随机存取的定义是<b>存取时间与单元位置无关</b>：给出地址即可直接访问。RAM、ROM 都按地址访问、任意单元同等耗时 → <b>✔ 正确</b>。注意"随机存取"≠"可写"，别把 II 漏掉。</p>' },
+  { title: 'III：都可用作 Cache → 错误', cls: 'bad',
+    body: '<p>Cache 的内容要随程序运行<b>不断换入换出</b>，必须是可读可写且高速的器件——实际由 <b>SRAM</b> 构成；ROM 只读、不可更新 → <b>✘ 错误</b>。</p>' },
+  { title: 'IV：都需要刷新 → 错误', cls: 'bad',
+    body: '<p>刷新是为了补回电容泄漏的电荷，是 <b>DRAM 独有</b>的操作；SRAM 靠触发器双稳态、不漏电不用刷新，ROM 更不需要 → <b>✘ 错误</b>。</p>' },
+  { title: '结论：正确的是 I 和 II，选 A', cls: 'good',
+    body: '<p>四条里 I、II 正确，III、IV 错误，且没有"仅 I"或"仅 II"的选项——答案选 <b>A（仅 I 和 II）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[1].ribbon = { k: 1, ok: true };
+snaps[2].ribbon = { k: 2, ok: true };
+snaps[3].ribbon = { k: 3, ok: false };
+snaps[4].ribbon = { k: 4, ok: false };
+
+AW.init({
+  title: '2010-16 · RAM / ROM 四条叙述谁对谁错',
+  subtitle: '易失性 · 随机存取 · 作 Cache · 刷新 —— 逐条辨析',
+  counterLabel: '判定项',
+  ribbonTitle: '四条叙述（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐条判定四条叙述。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（仅 I 和 II）',
+    html: '<b>RAM 易失、ROM 非易失</b>（I 对）；<b>两者都随机存取</b>——随机存取说的是访问方式不是可写（II 对）；Cache 只能用可写的 SRAM（III 错）；<b>刷新是 DRAM 的专利</b>（IV 错）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

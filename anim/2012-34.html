@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-34 动画 · 物理层接口的四个特性</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .aw-stepcard table.mini{ border-collapse:collapse; font-size:12.5px; margin:6px 0 2px; width:100%; }
+  .mini th, .mini td{ border:1px solid #e2e8f0; padding:4px 8px; text-align:left; }
+  .mini th{ background:#f1f5f9; color:#475569; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找「事件发生顺序」',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>题干关键词：「<b>完成每种功能的事件发生顺序</b>」。物理层接口有四个特性，考的是哪一个管「先后次序」。</p>' },
+  { title: '四个特性对照表',
+    cls: '',
+    tag: '列清单',
+    body: '<table class="mini"><tr><th>特性</th><th>管什么</th><th>关键词</th></tr>' +
+          '<tr><td>机械特性</td><td>接口形状尺寸、引脚数目与排列、固定锁定</td><td>形状、引脚</td></tr>' +
+          '<tr><td>电气特性</td><td>引脚线上电压范围、速率与距离限制</td><td>电压、速率</td></tr>' +
+          '<tr><td>功能特性</td><td>某电平电压表示何种意义、各引脚线作用</td><td>引脚功能</td></tr>' +
+          '<tr><td>过程特性</td><td>不同功能的各种事件的出现顺序</td><td>顺序、规程</td></tr></table>' },
+  { title: '排除 A：机械特性',
+    cls: 'bad',
+    tag: '排除 A',
+    body: '<p>机械特性管接口「<b>长得什么样</b>」——形状、引脚排列与锁定装置，与事件顺序无关。</p>' },
+  { title: '排除 B 与 D：功能特性、电气特性',
+    cls: 'bad',
+    tag: '排除 B/D',
+    body: '<p><b>功能特性</b>回答「这条线上出现某电平代表什么功能」；<b>电气特性</b>回答「电压多少伏、速率多快」。都是静态含义，不涉及先后。</p>' },
+  { title: '锁定 C：过程特性',
+    cls: 'good',
+    tag: '锁定 C',
+    body: '<p><b>过程特性</b>（规程特性）的定义就是「不同功能的各种事件的出现顺序」——先做什么、后做什么，与题干<b>逐字对应</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '答案 C',
+    body: '<p>答案选 <b>C（过程特性）</b>。记忆锚点：「顺序 → 过程（规程）特性」；其余三特性口诀：<b>机械看形状、电气看电压、功能看含义</b>。</p>' },
+];
+
+var CLSMAP = { key: 'shift', bad: 'miss', good: 'ok' };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (CLSMAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '物理层接口特性：谁管「事件顺序」（2012·34）',
+  subtitle: '考点：<code>物理层接口的机械 / 电气 / 功能 / 过程特性</code> · 逐项对照',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（过程特性）',
+    html: '「完成每种功能的事件发生顺序」正是<b>过程特性（规程特性）</b>的定义原文。区分口诀：机械看形状、电气看电压、功能看含义、过程看顺序。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

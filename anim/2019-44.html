@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-44 磁盘 SSTF 调度与簇号转换动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（磁盘调度 + 地址转换） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 4 个请求簇号 → 柱面号（每柱面 10×200/2 = 1000 簇，簇号从 0 编）
+var REQS = [
+  { c: 100260, cyl: 100 },
+  { c: 60005,  cyl: 60  },
+  { c: 101660, cyl: 101 },
+  { c: 110560, cyl: 110 },
+];
+// SSTF 访问次序（REQS 下标）：100260 → 101660 → 110560 → 60005
+var HEAD0 = 85;
+function P(cyl){ return (cyl - 55) / 60 * 100; } // 轴范围 55~115
+
+// 每步状态：head = 磁头柱面；chips 是否显示；served/cur = 已完成/正在访问的 REQS 下标
+// addr：0 隐藏，1 基准，2 拆分式+三卡，3 物理地址，4 驱动程序
+var ST = [
+  { head:85,  chips:false, served:[],        cur:-1, addr:0 },
+  { head:85,  chips:false, served:[],        cur:-1, addr:0, cap:true },
+  { head:85,  chips:true,  served:[],        cur:-1, addr:0 },
+  { head:100, chips:true,  served:[],        cur:0,  addr:0 },
+  { head:101, chips:true,  served:[0],       cur:2,  addr:0 },
+  { head:110, chips:true,  served:[0,2],     cur:3,  addr:0 },
+  { head:60,  chips:true,  served:[0,2,3],   cur:1,  addr:0 },
+  { head:60,  chips:true,  served:[0,2,3],   cur:1,  addr:1 },
+  { head:60,  chips:true,  served:[0,2,3],   cur:1,  addr:2 },
+  { head:60,  chips:true,  served:[0,2,3],   cur:1,  addr:3 },
+  { head:60,  chips:true,  served:[0,2,3],   cur:1,  addr:4 },
+  { head:60,  chips:true,  served:[0,2,3],   cur:1,  addr:4 },
+];
+
+AW.init({
+  title: '2019-44 · 磁盘：容量、SSTF 调度与簇号→物理地址',
+  subtitle: '300 柱面 × 10 磁道/柱面 × 200 扇区/磁道 × 512B · 每簇 2 扇区 · 磁头初始在 85 号柱面',
+  counterLabel: '已服务请求',
+  ribbonTitle: 'SSTF 访问次序（✓ 已访问）',
+  intro: '点击「▶ 播放」：先算容量，再看 SSTF 逐次选道，最后拆分簇号。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.minWidth = '640px';
+
+    // (1) 容量条
+    var cap = AW.el('div', '');
+    cap.style.cssText = 'display:none;font-size:14px;line-height:1.8;color:#334155;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:9px 14px;margin-bottom:14px';
+    cap.innerHTML = '(1) 容量 = 300 × 10 × 200 × 512 B = 307 200 000 B = 300 000 KB = <b style="color:#16a34a">3×10<sup>5</sup> KB</b>（≈ 293 MB）';
+
+    // (2) 柱面轴
+    var al = AW.el('div', 'aw-row-label', '<b>柱面号轴</b>（SSTF：每次移向距离当前磁头最近的请求）');
+    var axis = AW.el('div', '');
+    axis.style.cssText = 'position:relative;height:104px;margin:6px 0 14px;transition:opacity .3s';
+
+    var base = AW.el('div', '');
+    base.style.cssText = 'position:absolute;left:0;right:0;top:64px;height:4px;background:#e2e8f0;border-radius:2px';
+    axis.appendChild(base);
+
+    for (var t = 60; t <= 110; t += 10){
+      var tick = AW.el('div', '');
+      tick.style.cssText = 'position:absolute;left:' + P(t) + '%;top:62px;width:2px;height:8px;background:#cbd5e1';
+      var lab = AW.el('div', '', String(t));
+      lab.style.cssText = 'position:absolute;left:' + P(t) + '%;top:74px;transform:translateX(-50%);font-size:11px;color:#94a3b8;font-family:monospace';
+      axis.appendChild(tick); axis.appendChild(lab);
+    }
+
+    // 请求筹码
+    var chipEls = [];
+    REQS.forEach(function(r){
+      var ch = AW.el('div', '');
+      ch.style.cssText = 'position:absolute;top:0;left:' + P(r.cyl) + '%;transform:translateX(-50%);padding:4px 9px;border:2px solid #cbd5e1;background:#fff;border-radius:9px;font-size:11.5px;line-height:1.4;text-align:center;font-weight:700;color:#475569;white-space:nowrap;display:none;transition:all .25s';
+      ch.innerHTML = r.c + '<br><span style="font-weight:400;color:#94a3b8">柱面 ' + r.cyl + '</span>';
+      chipEls.push(ch);
+      axis.appendChild(ch);
+    });
+
+    // 磁头
+    var head = AW.el('div', '');
+    head.style.cssText = 'position:absolute;top:26px;left:' + P(HEAD0) + '%;transform:translateX(-50%);font-size:12px;font-weight:800;color:#2563eb;text-align:center;white-space:nowrap';
+    head.innerHTML = '磁头 85<br>▼';
+    axis.appendChild(head);
+
+    // (3) 地址换算面板
+    var addr = AW.el('div', '');
+    addr.style.cssText = 'display:none;border:2px solid #e2e8f0;border-radius:12px;padding:12px 14px';
+    var ab = AW.el('div', '');
+    ab.style.cssText = 'font-size:13.5px;line-height:1.9;color:#334155';
+    ab.innerHTML = '(3) 每柱面 <b>1000</b> 簇（10×200÷2），每磁道 <b>100</b> 簇（200÷2），每簇 <b>2</b> 扇区；簇号从 0 编号，"第 100530 簇"按簇号 <b>100529</b> 计算。';
+    var fLine = AW.el('div', '');
+    fLine.style.cssText = 'display:none;font-size:15px;font-weight:700;color:#0f172a;margin-top:8px;font-family:"SF Mono",Menlo,monospace';
+    fLine.innerHTML = '簇号 100529 = <span style="color:#d97706">100</span> × 1000 + <span style="color:#2563eb">5</span> × 100 + <span style="color:#16a34a">29</span>';
+    var chips = AW.el('div', '');
+    chips.style.cssText = 'display:none;gap:8px;flex-wrap:wrap;margin-top:8px';
+    var chipData = [
+      ['柱面 100', '#fef3c7', '#d97706', '#92400e'],
+      ['磁头（盘面）5 所在磁道', '#dbeafe', '#2563eb', '#1d4ed8'],
+      ['磁道内第 29 簇 → 扇区 58、59', '#dcfce7', '#16a34a', '#15803d'],
+    ];
+    chipData.forEach(function(cd){
+      var c = AW.el('div', '', cd[0]);
+      c.style.cssText = 'padding:6px 12px;border-radius:9px;font-size:12.5px;font-weight:700;background:' + cd[1] + ';border:1.5px solid ' + cd[2] + ';color:' + cd[3];
+      chips.appendChild(c);
+    });
+    var rLine = AW.el('div', '');
+    rLine.style.cssText = 'display:none;margin-top:8px;font-size:14px;color:#334155';
+    rLine.innerHTML = '首扇区物理地址 = <b style="color:#16a34a">(柱面 100, 磁头 5, 扇区 58)</b>，即占用 58、59 号两个扇区。';
+    var dLine = AW.el('div', '');
+    dLine.style.cssText = 'display:none;margin-top:8px;font-size:13.5px;color:#334155;background:#f8fafc;border-radius:9px;padding:8px 12px';
+    dLine.innerHTML = '簇号 → 磁盘物理地址的转换由 I/O 系统中的<b>磁盘驱动程序</b>完成。';
+    addr.appendChild(ab); addr.appendChild(fLine); addr.appendChild(chips); addr.appendChild(rLine); addr.appendChild(dLine);
+
+    inner.appendChild(cap); inner.appendChild(al); inner.appendChild(axis); inner.appendChild(addr);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+
+    this._cap = cap; this._axis = axis; this._chipEls = chipEls; this._head = head;
+    this._addr = addr; this._fLine = fLine; this._chipsRow = chips; this._rLine = rLine; this._dLine = dLine;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'题面',       log:'磁盘 300 柱面 × 10 磁道/柱面 × 200 扇区/磁道，扇区 512B，每簇 2 扇区。磁头在 85 号柱面，4 个请求簇号：100260、60005、101660、110560。', count:0 },
+    { cls:'ok',    tag:'(1) 容量',   log:'容量 = 300 × 10 × 200 × 512 B = 307 200 000 B = 300 000 KB，即 3×10⁵ KB。', count:0 },
+    { cls:'shift', tag:'(2) 簇→柱面', log:'每柱面簇数 = 10 × 200 ÷ 2 = 1000。四个请求落在：100260→柱面 100、60005→60、101660→101、110560→110。', count:0 },
+    { cls:'shift', tag:'SSTF ①',    log:'磁头在 85：距 100 号柱面 15、距 60 号 25、距 101 号 16、距 110 号 25 → 最近为 100 号，访问簇 100260。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'SSTF ②',    log:'磁头在 100：101 号柱面只差 1（110 差 10、60 差 40）→ 访问簇 101660。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'SSTF ③',    log:'磁头在 101：110 差 9 < 60 差 41 → 访问簇 110560。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'SSTF ④',    log:'最后访问 60 号柱面的簇 60005。SSTF 次序：100260 → 101660 → 110560 → 60005。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'(3) 基准',   log:'每磁道簇数 = 200 ÷ 2 = 100 簇；簇号从 0 编号，"第 100530 簇"按 100529 号簇计算。', count:4 },
+    { cls:'ok',    tag:'三段拆分',   log:'100529 = 100 × 1000 + 5 × 100 + 29 → 100 号柱面、5 号磁头所在的磁道、磁道内第 29 簇。', count:4 },
+    { cls:'ok',    tag:'扇区定位',   log:'每簇 2 个扇区：磁道内第 29 簇占用 58、59 号扇区，首扇区物理地址 (100, 5, 58)。', count:4 },
+    { cls:'step',  tag:'谁来做',     log:'簇号 → 磁盘物理地址的转换由 I/O 系统中的磁盘驱动程序完成。', count:4 },
+    { cls:'done',  tag:'结论',       log:'(1) 3×10⁵ KB；(2) SSTF：100260→101660→110560→60005；(3) 首扇区 (100, 5, 58)，由磁盘驱动程序转换。', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i, dir){
+    var st = ST[i];
+    this._cap.style.display = st.cap ? 'block' : 'none';
+    this._axis.style.opacity = st.addr >= 1 ? '.4' : '1';
+    var chipEls = this._chipEls;
+    for (var k = 0; k < 4; k++){
+      var e = chipEls[k];
+      e.style.display = st.chips ? 'block' : 'none';
+      if (st.served.indexOf(k) >= 0){
+        e.style.background = '#dcfce7'; e.style.borderColor = '#16a34a'; e.style.color = '#15803d';
+      } else if (st.cur === k){
+        e.style.background = '#fef3c7'; e.style.borderColor = '#d97706'; e.style.color = '#92400e';
+      } else {
+        e.style.background = '#fff'; e.style.borderColor = '#cbd5e1'; e.style.color = '#475569';
+      }
+    }
+    var head = this._head;
+    head.style.transition = dir ? 'left .6s ease' : 'none';
+    head.style.left = P(st.head) + '%';
+    head.innerHTML = '磁头 ' + st.head + '<br>▼';
+
+    var addr = st.addr;
+    this._addr.style.display = addr >= 1 ? 'block' : 'none';
+    this._fLine.style.display = addr >= 2 ? 'block' : 'none';
+    this._chipsRow.style.display = addr >= 2 ? 'flex' : 'none';
+    this._rLine.style.display = addr >= 3 ? 'block' : 'none';
+    this._dLine.style.display = addr >= 4 ? 'block' : 'none';
+  },
+
+  result: {
+    big: '(100, 5, 58)',
+    html: '(1) 容量 = 300×10×200×512B = <b>3×10<sup>5</sup> KB</b>；(2) SSTF 次序：<b>100260 → 101660 → 110560 → 60005</b>；(3) 簇号 100529 = 100×1000 + 5×100 + 29，位于 100 号柱面、5 号磁道的磁道，占 <b>58、59 号扇区</b>，首扇区物理地址 <b>(100, 5, 58)</b>；簇号转换由<b>磁盘驱动程序</b>完成。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

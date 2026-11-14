@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-45 swap 指令实现临界区互斥：错误演示与修正</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var lockBox, k1Box, k2Box, z1El, z2El, codeEl;
+
+function paint(box, val, isLock){
+  box.textContent = val;
+  if(val === '—'){
+    box.style.background = '#fff'; box.style.borderColor = '#cbd5e1'; box.style.color = '#0f172a';
+  } else if(val === 'FALSE'){
+    box.style.background = '#dcfce7'; box.style.borderColor = '#16a34a'; box.style.color = '#14532d';
+  } else {
+    box.style.background = isLock ? '#fef3c7' : '#e2e8f0';
+    box.style.borderColor = isLock ? '#d97706' : '#94a3b8';
+    box.style.color = isLock ? '#92400e' : '#475569';
+  }
+}
+
+function paintZone(el, sn, w){
+  var z = sn['z' + w];
+  el.textContent = 'T' + w + '：' + z;
+  if(z.indexOf('✗') >= 0){ el.style.color = '#b91c1c'; el.style.fontWeight = '700'; }
+  else if(z.indexOf('✓') >= 0){ el.style.color = '#15803d'; el.style.fontWeight = '700'; }
+  else { el.style.color = '#334155'; el.style.fontWeight = '500'; }
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+
+  var top = AW.el('div', 'aw-cells');
+  var lc = AW.el('div', 'aw-col');
+  lc.appendChild(AW.el('div', 'aw-ptr', '共享变量'));
+  lockBox = AW.el('div', 'aw-box', 'FALSE');
+  lc.appendChild(lockBox);
+  lc.appendChild(AW.el('div', 'aw-idx', 'lock'));
+  top.appendChild(lc);
+
+  var c1 = AW.el('div', 'aw-col');
+  c1.appendChild(AW.el('div', 'aw-ptr', '线程 T1'));
+  k1Box = AW.el('div', 'aw-box', '—');
+  c1.appendChild(k1Box);
+  c1.appendChild(AW.el('div', 'aw-idx', 'key1'));
+  top.appendChild(c1);
+
+  var c2 = AW.el('div', 'aw-col');
+  c2.appendChild(AW.el('div', 'aw-ptr', '线程 T2'));
+  k2Box = AW.el('div', 'aw-box', '—');
+  c2.appendChild(k2Box);
+  c2.appendChild(AW.el('div', 'aw-idx', 'key2'));
+  top.appendChild(c2);
+
+  var zone = AW.el('div', '');
+  zone.style.cssText = 'margin-left:26px;border:1px dashed #cbd5e1;border-radius:12px;padding:8px 16px;font-size:14px;line-height:2;';
+  z1El = AW.el('div', '', 'T1：不在临界区');
+  z2El = AW.el('div', '', 'T2：不在临界区');
+  zone.appendChild(z1El);
+  zone.appendChild(z2El);
+  top.appendChild(zone);
+  inner.appendChild(top);
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>正在执行的语句</b>'));
+  codeEl = AW.el('div', '', '（即将开始）');
+  codeEl.style.cssText = 'font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;background:#fef3c7;border:1px solid #d97706;color:#92400e;border-radius:10px;padding:9px 14px;width:max-content;';
+  inner.appendChild(codeEl);
+
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn, i){
+  paint(lockBox, sn.lock, true);
+  paint(k1Box, sn.k1, false);
+  paint(k2Box, sn.k2, false);
+  paintZone(z1El, sn, 1);
+  paintZone(z2El, sn, 2);
+  codeEl.textContent = sn.code || '';
+}
+
+AW.init({
+  title: 'swap 实现临界区互斥：找错与验证',
+  subtitle: '约定：<code>lock=TRUE</code> 占用不能进，<code>lock=FALSE</code> 空闲能进 · <code>swap</code> 为硬件原子指令 · 两线程 T1、T2 竞争',
+  counterLabel: '推演步',
+  ribbonTitle: '关键节点（✓ 修正生效 / ✗ 互斥失败）',
+  intro: '点击「▶ 播放」逐步模拟两线程竞争，先暴露错误再验证修正。',
+  build: build,
+  render: render,
+  snaps: [
+    { cls:'step', tag:'初始', count:0,
+      log:'初始：lock = FALSE（临界区空闲），T1、T2 都想进入，key 尚未赋值',
+      lock:'FALSE', k1:'—', k2:'—', z1:'不在临界区', z2:'不在临界区', code:'进入区：key = TRUE;' },
+    { cls:'ok', tag:'T1 进入 ✓', count:1,
+      log:'T1：key=TRUE 后执行 swap key, lock → key=FALSE、lock=TRUE，while/if 均通过，T1 进入临界区',
+      lock:'TRUE', k1:'FALSE', k2:'—', z1:'在临界区 ✓', z2:'不在临界区', code:'T1: key=TRUE;  swap key, lock;' },
+    { cls:'miss', tag:'互斥失败 ✗', count:2, ribbon:{ k:3, ok:false },
+      log:'学生的 if 版：T2 swap 一次后 key 仍为 TRUE，if 不成立却不再循环，直接闯入 → 两个线程同时在临界区！',
+      lock:'TRUE', k1:'FALSE', k2:'TRUE', z1:'在临界区 ✗', z2:'也在临界区 ✗', code:'T2: key=TRUE;  if(key==TRUE) swap key, lock;  //只换一次' },
+    { cls:'shift', tag:'修正一：if→while', count:3, ribbon:{ k:4, ok:true },
+      log:'改为 while(key==TRUE) swap key, lock：T2 交换后 key=TRUE，条件成立 → 反复交换、循环等待，进不去',
+      lock:'TRUE', k1:'FALSE', k2:'TRUE', z1:'在临界区', z2:'while 循环等待…', code:'T2: while(key==TRUE) swap key, lock;' },
+    { cls:'miss', tag:'退出区错误 ✗', count:4, ribbon:{ k:5, ok:false },
+      log:'学生的退出区执行 lock = TRUE → lock 仍为「占用」，T2 永远换不到 FALSE，无限等待',
+      lock:'TRUE', k1:'FALSE', k2:'TRUE', z1:'已离开', z2:'永远等不到 ✗', code:'T1 退出区: lock = TRUE;  //学生版，错误' },
+    { cls:'ok', tag:'修正二：lock=FALSE', count:5, ribbon:{ k:6, ok:true },
+      log:'退出区改为 lock = FALSE：T1 正确释放，lock 变回「空闲」',
+      lock:'FALSE', k1:'FALSE', k2:'TRUE', z1:'已离开（释放 ✓）', z2:'继续 while 等待', code:'T1 退出区: lock = FALSE;  //修正后' },
+    { cls:'ok', tag:'T2 进入 ✓', count:6,
+      log:'T2 再执行一次 swap：key 换到 FALSE，while 条件不成立 → T2 进入临界区，互斥正确',
+      lock:'TRUE', k1:'FALSE', k2:'FALSE', z1:'已离开', z2:'在临界区 ✓', code:'T2: swap key, lock;  //key 变 FALSE，退出 while' },
+    { cls:'shift', tag:'第2问：newSwap', count:7, ribbon:{ k:8, ok:false },
+      log:'若改用函数调用 newSwap(&key,&lock)：lock=FALSE 空闲，T1、T2 同时调用（各自 key=TRUE），函数体是多条语句',
+      lock:'FALSE', k1:'TRUE', k2:'TRUE', z1:'调用 newSwap', z2:'调用 newSwap', code:'newSwap(&key,&lock){ temp=*key; *key=*lock; *lock=temp; }' },
+    { cls:'step', tag:'T2 执行到一半', count:8,
+      log:'T2 执行 temp=key; key=lock（读到旧值 FALSE）→ 还没写回 lock 就被 T1 抢占，交叉执行开始',
+      lock:'FALSE', k1:'TRUE', k2:'FALSE', z1:'等调度', z2:'执行到一半，被打断', code:'T2: temp=*key;  *key=*lock;  //还没执行 *lock=temp' },
+    { cls:'step', tag:'T1 完整执行', count:9,
+      log:'T1 完整执行自己的 newSwap：key1=FALSE、lock=TRUE → T1 认为自己拿到了锁',
+      lock:'TRUE', k1:'FALSE', k2:'FALSE', z1:'在临界区', z2:'仍在等调度', code:'T1: 完整执行 newSwap（temp=*key; *key=*lock; *lock=temp;）' },
+    { cls:'miss', tag:'双双进入 ✗', count:10, ribbon:{ k:11, ok:false },
+      log:'T2 恢复执行 *lock=temp；但 T2 的 key 早已是 FALSE → T2 也认为自己拿到锁 → 两线程同时进入，互斥被破坏',
+      lock:'TRUE', k1:'FALSE', k2:'FALSE', z1:'在临界区 ✗', z2:'也在临界区 ✗', code:'T2: *lock=temp;  //key 已是 FALSE，误判成功' },
+    { cls:'done', tag:'完成', count:11,
+      log:'结论：(1) if→while、lock=TRUE→lock=FALSE；(2) 不能用 newSwap 代替 swap 指令（非原子）',
+      lock:'TRUE', k1:'FALSE', k2:'FALSE', z1:'—', z2:'—', code:'结论见右侧结果卡', done:true },
+  ],
+  result: {
+    big: '第1问两处修改；第2问不能替代',
+    html: '<b>（1）</b>进入区 <code>if (key == TRUE) swap key, lock;</code> 改为 <code>while (key == TRUE) swap key, lock;</code>（否则被占用时照样闯入）；' +
+          '退出区 <code>lock = TRUE;</code> 改为 <code>lock = FALSE;</code>（FALSE 才表示空闲可进）。<br>' +
+          '<b>（2）</b><b>不能</b>用 <code>newSwap(&key,&lock)</code> 代替 <code>swap key, lock</code>：普通函数内的多条读写操作不是原子操作，多线程并发时可能交叉进行（动画第 8–10 步的交错），不能保证临界区互斥；swap 是硬件指令，天然原子。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

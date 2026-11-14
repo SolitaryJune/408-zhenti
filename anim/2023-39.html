@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-39 /20 子网的可分配地址范围</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：按位与求子网 + 范围推导 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var ADDR_CELLS = [], MASK_CELLS = [], AND_CELLS = [], READ_EL = null;
+
+function setRow(cells, vals, clss){
+  for (var i = 0; i < cells.length; i++){
+    cells[i].textContent = vals ? vals.charAt(i) : '';
+    cells[i].className = 'aw-box ' + ((clss && clss[i]) || (vals ? '' : 'dim'));
+  }
+}
+
+// 三行 8 bit 的每步状态：a/m/r = 值(null 空白)，ac/mc/rc = 配色
+var STATES = [
+  { a:null, ac:null, m:null, mc:null, r:null, rc:null,
+    read:'168.16.84.24/20：前 20 位网络位，后 12 位主机位——分界落在第三字节内部' },
+  { a:null, ac:null, m:'11110000', mc:['ok','ok','ok','ok','','','',''], r:null, rc:null,
+    read:'第三字节掩码 = <b>11110000 = 240</b>：高 4 位网络位、低 4 位主机位' },
+  { a:'01010100', ac:['hit','hit','hit','hit','','','',''], m:'11110000', mc:['ok','ok','ok','ok','','','',''], r:null, rc:null,
+    read:'主机第三字节 <b>84 = 01010100</b>' },
+  { a:'01010100', ac:['ok','ok','ok','ok','dim','dim','dim','dim'], m:'11110000', mc:['ok','ok','ok','ok','dim','dim','dim','dim'],
+    r:'01010000', rc:['hit','hit','hit','hit','dim','dim','dim','dim'],
+    read:'按位与：01010100 ∧ 11110000 = <b>01010000 = 80</b> → 子网第三字节 = 80' },
+  { a:'01010100', ac:['ok','ok','ok','ok','dim','dim','dim','dim'], m:'11110000', mc:['ok','ok','ok','ok','dim','dim','dim','dim'],
+    r:'01010000', rc:['hit','hit','hit','hit','dim','dim','dim','dim'],
+    read:'子网 = <b>168.16.80.0/20</b>；第三字节块大小 = 2⁴ = 16 → 范围 <b>80 ~ 95</b>' },
+  { a:'01010100', ac:['ok','ok','ok','ok','dim','dim','dim','dim'], m:'11110000', mc:['ok','ok','ok','ok','dim','dim','dim','dim'],
+    r:'01010000', rc:['hit','hit','hit','hit','dim','dim','dim','dim'],
+    read:'网络地址 168.16.<b>80.0</b>（主机位全 0）不可分配 → 最小可分配 = <b>168.16.80.1</b>' },
+  { a:'01010100', ac:['ok','ok','ok','ok','dim','dim','dim','dim'], m:'11110000', mc:['ok','ok','ok','ok','dim','dim','dim','dim'],
+    r:'01010000', rc:['hit','hit','hit','hit','dim','dim','dim','dim'],
+    read:'广播地址 168.16.<b>95.255</b>（主机位全 1）不可分配 → 最大可分配 = <b>168.16.95.254</b>' },
+  { a:'01010100', ac:['ok','ok','ok','ok','dim','dim','dim','dim'], m:'11110000', mc:['ok','ok','ok','ok','dim','dim','dim','dim'],
+    r:'01010000', rc:['hit','hit','hit','hit','dim','dim','dim','dim'],
+    read:'干扰项：C 把 /20 当 /24（84.1~84.254）；D 拿 84 当起点（没按位与）；A 终点跟着错起点走' },
+  { a:'01010100', ac:['ok','ok','ok','ok','dim','dim','dim','dim'], m:'11110000', mc:['ok','ok','ok','ok','dim','dim','dim','dim'],
+    r:'01010000', rc:['hit','hit','hit','hit','dim','dim','dim','dim'],
+    read:'答案：<b>168.16.80.1 ~ 168.16.95.254，选 B</b>' },
+];
+
+AW.init({
+  title: '168.16.84.24/20 所在子网的可分配范围',
+  subtitle: '考点：/20 掩码按位与 · 最小 / 最大可分配 IP 地址',
+  counterLabel: '步骤',
+  ribbonTitle: '推理环节（✓ 已完成）',
+  intro: '点击「▶ 播放」，从掩码按位与一路推到可分配范围。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ADDR_CELLS = []; MASK_CELLS = []; AND_CELLS = []; READ_EL = null;
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>第三字节按位与</b>（/20 → 4 个网络位落在第三字节；格下数字为位权）'));
+
+    function bitRow(labelHtml, cellsArr, isMask){
+      var box = AW.el('div', '');
+      box.appendChild(AW.el('div', 'aw-row-label', labelHtml));
+      var row = AW.el('div', 'aw-cells');
+      var W = [128, 64, 32, 16, 8, 4, 2, 1];
+      for (var i = 0; i < 8; i++){
+        var col = AW.el('div', 'aw-col');
+        col.appendChild(AW.el('div', 'aw-ptr', isMask && i === 3 ? '网络位｜主机位' : (isMask && i === 0 ? '← 网络位' : (isMask && i === 4 ? '主机位 →' : ''))));
+        var b = AW.el('div', 'aw-box dim', '');
+        cellsArr.push(b);
+        col.appendChild(b);
+        col.appendChild(AW.el('div', 'aw-idx', String(W[i])));
+        row.appendChild(col);
+      }
+      box.appendChild(row);
+      wrap.appendChild(box);
+    }
+
+    bitRow('<b>地址第三字节</b>（84）', ADDR_CELLS, false);
+    bitRow('<b>∧ 掩码第三字节</b>（240）', MASK_CELLS, true);
+    bitRow('<b>= 子网第三字节</b>', AND_CELLS, false);
+
+    READ_EL = AW.el('div', '');
+    READ_EL.style.cssText = 'margin-top:12px;font-size:14.5px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;min-height:46px;line-height:1.7';
+    READ_EL.innerHTML = STATES[0].read;
+    wrap.appendChild(READ_EL);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var st = STATES[sn.st || 0];
+    setRow(ADDR_CELLS, st.a, st.ac);
+    setRow(MASK_CELLS, st.m, st.mc);
+    setRow(AND_CELLS, st.r, st.rc);
+    READ_EL.innerHTML = st.read;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'读题',       log:'/20：前 20 位网络位、后 12 位主机位，分界落在第三字节内部', count:0, st:0 },
+    { cls:'step',  tag:'第三字节掩码', log:'/20 → 第三字节掩码 = 11110000（240）：高 4 位网络位、低 4 位主机位', count:1, st:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'地址展开',    log:'第三字节 84 = 01010100', count:2, st:2, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'按位与',     log:'01010100 ∧ 11110000 = 01010000 = 80 → 子网第三字节 = 80', count:3, st:3, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'定子网',     log:'子网 = 168.16.80.0/20；块大小 = 2⁴ = 16 → 第三字节 80 ~ 95', count:4, st:4 },
+    { cls:'ok',    tag:'最小可分配',  log:'网络地址 168.16.80.0 不可分配 → 最小可分配 = 168.16.80.1', count:5, st:5 },
+    { cls:'ok',    tag:'最大可分配',  log:'广播地址 168.16.95.255 不可分配 → 最大可分配 = 168.16.95.254', count:6, st:6, ribbon:{k:4, ok:true} },
+    { cls:'miss',  tag:'排除干扰',   log:'C 把 /20 当 /24；D 拿主机自己的 84 当子网起点；A 终点跟着错起点走', count:7, st:7 },
+    { cls:'done',  tag:'结论',      log:'168.16.80.1 ~ 168.16.95.254 → 选 B', count:8, st:8, done:true },
+  ],
+
+  result: {
+    big: '168.16.80.1 ~ 168.16.95.254',
+    html: '/20 → 第三字节掩码 <code>240</code>；<code>84 ∧ 240 = 80</code> → 子网 <code>168.16.80.0/20</code>（第三字节 80~95）。' +
+          '网络地址 .0 与广播地址 .255 不可分配 → <b>168.16.80.1 ~ 168.16.95.254，选 B</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

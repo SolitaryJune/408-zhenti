@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-14 结构体对齐与小端存放</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-14：struct record 内存布局（边界对齐）+ 小端方式定位 34H
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var ADDR = ['FE00H','FE01H','FE02H','FE03H','FE04H','FE05H','FE06H','FE07H','FE08H'];
+
+// 主存字节格行（9 个单元，地址标签在下方）
+function memRow(vals, cls){
+  var row = AW.el('div', 'aw-cells');
+  vals.forEach(function(v, i){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '58px';
+    var box = AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), v);
+    box.style.width = '54px';
+    box.style.fontSize = '15px';
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', ADDR[i]));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+// 机器数书写顺序展示行：12 34 00 00
+function writeRow(hl){
+  var row = AW.el('div', 'aw-cells');
+  ['12','34','00','00'].forEach(function(v, i){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '58px';
+    var box = AW.el('div', 'aw-box' + (hl === i ? ' hit' : ''), v);
+    box.style.width = '54px';
+    box.style.fontSize = '15px';
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', ['高位','次高','次低','低位'][i]));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '560px';
+  inner.appendChild(AW.el('div', 'aw-row-label',
+    '<b>主存字节</b>（按字节编址，结构体首地址 2020 FE00H）'));
+  inner.appendChild(memRow(sn.vals, sn.cls));
+  if (sn.showWrite){
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>x2 的机器数 1234 0000H</b>（书写顺序：高位 → 低位）'));
+    inner.appendChild(writeRow(sn.writeHi));
+  }
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+AW.init({
+  title: '2020-14 · 结构体对齐 + 小端方式找 34H',
+  subtitle: '<code>struct record { short x1; int x2; }</code> · 首地址 <code>2020 FE00H</code> · x2 = <code>1234 0000H</code>',
+  counterLabel: '分配步',
+  ribbonTitle: '选项核对（✓ 命中 / ✗ 排除）',
+  intro: '点击「▶ 播放」或「下一步」：先排地址，再放字节。',
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始', count:0,
+      log:'按字节编址、32 位机、小端方式、边界对齐。struct 有两个成员：x1 是 short（2B），x2 是 int（4B）。',
+      vals:['–','–','–','–','–','–','–','–','–'],
+      cls:[],
+      note:'x1 为 short，2 字节；x2 为 int，4 字节。x2 的机器数 = 1234 0000H。' },
+    { cls:'ok', tag:'放 x1', count:1,
+      log:'成员 x1（short，2B）从首地址 2020 FE00H 开始：偏移 0～1，2 字节边界天然对齐。',
+      vals:['x1','x1','–','–','–','–','–','–','–'],
+      cls:['ok','ok'],
+      note:'x1 占用 2020 FE00H ～ 2020 FE01H。' },
+    { cls:'shift', tag:'对齐检查', count:2,
+      log:'x2（int，4B）要求 4 字节对齐：若从偏移 2 开始，地址 2020 FE02H 不是 4 的倍数 → 编译器填充 2 字节。',
+      vals:['x1','x1','填','填','–','–','–','–','–'],
+      cls:['ok','ok','dim','dim'],
+      note:'填充 2 字节（偏移 2～3，地址 FE02H～FE03H），把 x2 推到 4 的倍数地址上。' },
+    { cls:'ok', tag:'放 x2', count:3,
+      log:'x2 落在 2020 FE04H ～ FE07H（偏移 4～7），4 字节对齐满足。',
+      vals:['x1','x1','填','填','x2','x2','x2','x2','–'],
+      cls:['ok','ok','dim','dim','ok','ok','ok','ok'],
+      note:'x2 从 2020 FE04H 开始，占 4 个单元。' },
+    { cls:'step', tag:'写机器数', count:4, showWrite:true, writeHi:-1,
+      log:'x2 的机器数为 1234 0000H：按书写顺序（高位 → 低位）是 12、34、00、00 四个字节。',
+      vals:['x1','x1','填','填','x2','x2','x2','x2','–'],
+      cls:['ok','ok','dim','dim','ok','ok','ok','ok'],
+      note:'接下来按<b>小端方式</b>入库：低位字节放低地址。' },
+    { cls:'shift', tag:'小端存放', count:5, showWrite:true, writeHi:3,
+      log:'小端方式：低位字节放低地址 → FE04H=00、FE05H=00、FE06H=34、FE07H=12。',
+      vals:['x1','x1','填','填','00','00','34','12','–'],
+      cls:['ok','ok','dim','dim','','','',''],
+      note:'书写顺序 12 34 00 00 <b>倒着</b>放进 FE04H 起的 4 个单元：00、00、34、12。' },
+    { cls:'miss', tag:'排除 A', count:6, showWrite:true,
+      log:'选项 A 说 2020 FE03H：那是编译器填充的字节，根本不是 34H → 排除。',
+      vals:['x1','x1','填','填','00','00','34','12','–'],
+      cls:['ok','ok','miss','dim','','','',''],
+      note:'A（2020 FE03H）✗：填充字节，无有效数据。', ribbon:{k:1, ok:false} },
+    { cls:'miss', tag:'排除 B', count:7, showWrite:true,
+      log:'选项 B 说 2020 FE04H：该单元存的是 00H（最低字节）→ 排除。',
+      vals:['x1','x1','填','填','00','00','34','12','–'],
+      cls:['ok','ok','dim','dim','miss','','',''],
+      note:'B（2020 FE04H）✗：存的是 00H。', ribbon:{k:2, ok:false} },
+    { cls:'miss', tag:'排除 C', count:8, showWrite:true,
+      log:'选项 C 说 2020 FE05H：该单元存的也是 00H → 排除。',
+      vals:['x1','x1','填','填','00','00','34','12','–'],
+      cls:['ok','ok','dim','dim','','miss','',''],
+      note:'C（2020 FE05H）✗：存的也是 00H。', ribbon:{k:3, ok:false} },
+    { cls:'ok', tag:'锁定 D', count:9, showWrite:true, writeHi:1,
+      log:'2020 FE06H 存的正是 34H ✓ → 选 D。',
+      vals:['x1','x1','填','填','00','00','34','12','–'],
+      cls:['ok','ok','dim','dim','','','hit',''],
+      note:'D（2020 FE06H）✓：34H 在这里。', ribbon:{k:4, ok:true} },
+    { cls:'done', tag:'完成', count:10, showWrite:true, writeHi:1,
+      log:'结论：x2 从偏移 4 开始（对齐），小端倒放 00 00 34 12，34H 位于 2020 FE06H → 答案 D。',
+      vals:['x1','x1','填','填','00','00','34','12','–'],
+      cls:['ok','ok','dim','dim','','','hit',''],
+      note:'口诀：先对齐排地址，再"低位放低地址"倒着放字节。', done:true },
+  ],
+  result: {
+    big: '答案 D（2020 FE06H）',
+    html: '两步走：<b>边界对齐</b>——short 在偏移 0～1，int 必须从偏移 4 开始（填充 2 字节）；<br>' +
+      '<b>小端方式</b>——1234 0000H 倒着放：FE04H=00、FE05H=00、FE06H=<b>34H</b>、FE07H=12H。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

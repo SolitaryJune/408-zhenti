@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-47 动画 · 路由聚合 / 最长匹配 / BGP</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  table.rt{ border-collapse:collapse; font-size:13px; font-family:Menlo,monospace; margin-top:4px; }
+  table.rt th, table.rt td{ border:1px solid #e2e8f0; padding:6px 10px; text-align:center; white-space:nowrap; }
+  table.rt th{ background:#f1f5f9; color:#475569; font-family:inherit; }
+  table.rt tr.g{ background:#dcfce7; }
+  .sub{ display:inline-block; border:2px solid #94a3b8; background:#f8fafc; color:#334155;
+        border-radius:10px; padding:6px 10px; font-size:12.5px; font-weight:700;
+        font-family:Menlo,monospace; margin:3px 6px 3px 0; transition:all .3s; }
+  .sub em{ font-style:normal; font-weight:400; color:#64748b; font-size:11.5px; }
+  .sub.hl{ border-color:#d97706; background:#fffbeb; color:#92400e; }
+  .sub.agg{ border-color:#16a34a; background:#f0fdf4; color:#15803d; }
+  .mrow{ border:2px solid #cbd5e1; background:#f8fafc; border-radius:10px; padding:7px 12px;
+         font-size:13px; font-weight:700; margin:6px 0; transition:all .3s; }
+  .mrow.cand{ border-color:#d97706; background:#fffbeb; color:#92400e; }
+  .mrow.lose{ opacity:.4; }
+  .mrow.win{ border-color:#16a34a; background:#f0fdf4; color:#15803d; }
+  .mrow em{ font-style:normal; font-weight:400; font-size:12px; color:#64748b; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SUBS = [
+  ['153.14.5.0/25', 'AS1 · R1 左子网'],
+  ['153.14.5.128/25', 'AS1 · R1 右子网'],
+  ['194.17.20.128/25', 'R2 直连 · E0'],
+  ['194.17.20.0/25', 'AS2 · R3 左子网'],
+  ['194.17.21.0/24', 'AS2 · R3 右子网'],
+];
+
+var FX = [
+  '图中共 <b>5 个子网</b>；两条点对点链路上：R1 侧接口 <code>153.14.3.2</code>、R3 侧接口 <code>194.17.24.2</code>（将作下一跳）。目标：路由项最少。',
+  '<b>AS1 聚合</b>：两个 /25 前半 + 后半恰好拼满 → <code>153.14.5.0/24</code>；下一跳 153.14.3.2（R1），走 <b>S0</b> → 填第 1 行。',
+  '<b>R3 侧聚合</b>：194.17.20.0/25（.20.0~127）+ 194.17.21.0/24（.21.0~255）拼成连续块 → <code>194.17.20.0/23</code>；下一跳 194.17.24.2（R3），走 <b>S1</b> → 填第 2 行。',
+  '<b>关键一步</b>：/23 的范围（.20.0~.21.255）包含 R2 直连的 194.17.20.128/25 → 更精确的直连路由必须<b>单独保留</b> → 第 3 行。路由表 3 项，已最少（问 1 完成）。',
+  '<b>问 2</b>：目的 IP 194.17.20.200 —— 先与 194.17.20.0/23 匹配（落在 .20.0~.21.255）→ 候选 S1。',
+  '又与 194.17.20.128/25 匹配（落在 .20.128~.20.255）；<b>/25 比 /23 更长</b> → 最长前缀匹配 → 走 <b>E0</b>（问 2 完成）。',
+  '<b>问 3</b>：R1 属 AS1、R2 属 AS2 —— 不同自治系统之间交换路由信息 → 外部网关协议 <b>BGP</b>（BGP-4）。',
+  'BGP 报文封装在 <b>TCP 分组</b>（端口 179）中传输，保证可靠交换（问 3 完成）。对照：RIP 走 UDP、OSPF 直接封装在 IP。',
+  '<b>汇总</b>：R2 路由表 3 项；194.17.20.200 按最长前缀匹配从 E0 转发；R1↔R2 用 BGP、封装在 TCP 中。三问全部完成 ✔',
+];
+
+AW.init({
+  title: 'R2 路由表：聚合 + 最长匹配 + BGP（2013·47）',
+  subtitle: 'AS1（R1 + 2 子网）— R2 —（R3 + 2 子网，另直连 1 子网）· 路由项尽可能少 · 目的 194.17.20.200 走哪？',
+  counterLabel: '推演步数',
+  ribbonTitle: '三问进度（✓ 已解决）',
+  intro: '点击「▶ 播放」逐问构建 R2 的路由表并完成判定。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>图中 5 个子网</b>（琥珀 = 正在聚合，绿 = 已聚合/已安置）'));
+    var cardWrap = AW.el('div', '');
+    var cardEls = [];
+    SUBS.forEach(function(s){
+      var d = AW.el('div', 'sub', s[0] + ' <em>' + s[1] + '</em>');
+      cardWrap.appendChild(d);
+      cardEls.push(d);
+    });
+    inner.appendChild(cardWrap);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>R2 路由表</b>（目的网络 ｜ 下一跳 ｜ 接口）'));
+    var tbl = AW.el('table', 'rt');
+    tbl.innerHTML = '<thead><tr><th>目的网络</th><th>下一跳</th><th>接口</th></tr></thead><tbody></tbody>';
+    var tb = tbl.querySelector('tbody');
+    var ROWS = [
+      ['153.14.5.0/24', '153.14.3.2', 'S0'],
+      ['194.17.20.0/23', '194.17.24.2', 'S1'],
+      ['194.17.20.128/25', '直连', 'E0'],
+    ];
+    var rowEls = [];
+    ROWS.forEach(function(r){
+      var tr = document.createElement('tr');
+      r.forEach(function(c){
+        var td = document.createElement('td');
+        td.textContent = c;
+        tr.appendChild(td);
+      });
+      tr.style.display = 'none';
+      tb.appendChild(tr);
+      rowEls.push(tr);
+    });
+    inner.appendChild(tbl);
+
+    var mp = AW.el('div', '');
+    mp.innerHTML = '<div class="aw-row-label"><b>问 2 判定</b>：目的 IP <code>194.17.20.200</code></div>' +
+      '<div class="mrow" id="m1">候选① 194.17.20.0/23 <em>（覆盖 .20.0 ~ .21.255）</em> → 下一跳 194.17.24.2，接口 S1</div>' +
+      '<div class="mrow" id="m2">候选② 194.17.20.128/25 <em>（覆盖 .20.128 ~ .20.255）</em> → 直连，接口 E0</div>' +
+      '<div class="mrow" id="m3" style="display:none">结论：/25 前缀更长 → <b>最长前缀匹配</b> → 从 E0 转发</div>';
+    mp.style.display = 'none';
+    inner.appendChild(mp);
+
+    var fx = AW.el('div', 'aw-row-label', '');
+    fx.style.marginTop = '10px';
+    inner.appendChild(fx);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._cards = cardEls;
+    this._rows = rowEls;
+    this._mp = mp;
+    this._m1 = mp.querySelector('#m1');
+    this._m2 = mp.querySelector('#m2');
+    this._m3 = mp.querySelector('#m3');
+    this._fx = fx;
+  },
+
+  // rows：路由表可见行数；cardCls：5 张子网卡的类；m：匹配面板状态 0/1/2
+  snaps: [
+    { cls:'step',  tag:'审题',       rows:0, cardCls:['','','','',''], m:0, count:0,
+      log:'图中 5 个子网 + 两条点对点链路（R1 侧 153.14.3.2，R3 侧 194.17.24.2）。要求：R2 的路由表覆盖所有子网且路由项最少' },
+    { cls:'shift', tag:'问1·AS1聚合', rows:1, cardCls:['hl','hl','','',''], m:0, count:1,
+      log:'AS1：153.14.5.0/25 与 153.14.5.128/25 恰好拼满一个 /24 → 聚合为 153.14.5.0/24，下一跳 153.14.3.2（R1），接口 S0 → 填第 1 行' },
+    { cls:'shift', tag:'问1·R3侧聚合', rows:2, cardCls:['agg','agg','hl','',''], m:0, count:2,
+      log:'R3 侧：194.17.20.0/25（.20.0~127）与 194.17.21.0/24（.21.0~255）拼成连续块 → 聚合为 194.17.20.0/23，下一跳 194.17.24.2（R3），接口 S1 → 填第 2 行' },
+    { cls:'ok',    tag:'问1·直连保留', rows:3, cardCls:['agg','agg','hl','agg','agg'], m:0, count:3, ribbon:{k:2, ok:true},
+      log:'/23 的范围包含 R2 直连的 194.17.20.128/25 → 更精确的直连路由单独保留（直连，E0）→ 第 3 行；共 3 项已最少（问 1 完成）' },
+    { cls:'step',  tag:'问2·候选①',  rows:3, cardCls:['agg','agg','agg','agg','agg'], m:1, count:4,
+      log:'目的 IP 194.17.20.200：与 194.17.20.0/23 匹配（.20.200 落在 .20.0~.21.255）→ 候选 S1' },
+    { cls:'ok',    tag:'问2·最长匹配', rows:3, cardCls:['agg','agg','hl','agg','agg'], m:2, count:5, ribbon:{k:3, ok:true},
+      log:'又与 194.17.20.128/25 匹配（.20.128~.20.255）；/25 前缀更长 → 最长前缀匹配 → 从 E0 转发（问 2 完成）' },
+    { cls:'step',  tag:'问3·跨AS',   rows:3, cardCls:['agg','agg','agg','agg','agg'], m:2, count:6,
+      log:'R1 属 AS1、R2 属 AS2 —— 不同自治系统的路由器之间交换路由信息 → 外部网关协议 BGP（BGP-4）' },
+    { cls:'ok',    tag:'问3·封装',   rows:3, cardCls:['agg','agg','agg','agg','agg'], m:2, count:7, ribbon:{k:4, ok:true},
+      log:'BGP 报文封装在 TCP 分组（端口 179）中传输，保证可靠交换（问 3 完成）；对照：RIP 走 UDP、OSPF 走 IP' },
+    { cls:'done',  tag:'汇总',      rows:3, cardCls:['agg','agg','agg','agg','agg'], m:2, count:8, done:true,
+      log:'R2 路由表 3 项（/24、/23、直连 /25）；194.17.20.200 从 E0 转发；R1↔R2 用 BGP，封装在 TCP 中' },
+  ],
+
+  render: function(stage, sn, i){
+    for (var j = 0; j < 5; j++){
+      this._cards[j].className = 'sub' + (sn.cardCls[j] ? ' ' + sn.cardCls[j] : '');
+    }
+    for (var r = 0; r < 3; r++){
+      this._rows[r].style.display = (r < sn.rows) ? '' : 'none';
+      this._rows[r].className = 'g';
+    }
+    this._mp.style.display = sn.m > 0 ? '' : 'none';
+    this._m1.className = 'mrow' + (sn.m === 1 ? ' cand' : ' lose');
+    this._m2.className = 'mrow' + (sn.m === 1 ? '' : (sn.m === 2 ? ' win' : ''));
+    this._m3.style.display = sn.m === 2 ? '' : 'none';
+    this._fx.innerHTML = FX[i] || '';
+  },
+
+  result: {
+    big: '3 条路由 · E0 转发 · BGP/TCP',
+    html: '问 1：AS1 两个 /25 聚合成 <code>153.14.5.0/24</code>（下一跳 153.14.3.2，S0）；R3 侧两个子网聚合成 <code>194.17.20.0/23</code>（下一跳 194.17.24.2，S1）；R2 直连的 <code>194.17.20.128/25</code> 必须单独保留（E0）——共 <b>3 项</b>。问 2：194.17.20.200 同中 /23 与 /25 两项，<b>最长前缀匹配</b>走 <b>E0</b>。问 3：跨 AS 用 <b>BGP</b>，报文封装在 <b>TCP</b>（端口 179）中。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

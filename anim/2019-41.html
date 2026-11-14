@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-41 链表原地重排 · 三阶段动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+// cols: [{l:标签, c:类, p:指针, g:'x'=断链}], g 为该格之前的连接符
+function boxCol(c){
+  return '<div class="aw-col"><div class="aw-ptr">' + (c.p || '') + '</div>' +
+         '<div class="aw-box' + (c.c ? ' ' + c.c : '') + '" style="width:48px;height:48px;font-size:15px">' +
+         c.l + '</div><div class="aw-idx"></div></div>';
+}
+function listRow(cols, cap){
+  var h = '';
+  if (cap) h += '<div class="aw-row-label">' + cap + '</div>';
+  h += '<div class="aw-cells">';
+  cols.forEach(function(c, i){
+    if (i > 0){
+      h += (c.g === 'x')
+        ? '<div style="width:30px;text-align:center;color:#dc2626;font-weight:700;line-height:48px;margin-top:22px">⫽</div>'
+        : '<div style="width:24px;text-align:center;color:#94a3b8;font-weight:700;line-height:48px;margin-top:22px">→</div>';
+    }
+    h += boxCol(c);
+  });
+  h += '</div>';
+  return h;
+}
+function N(l, c, p, g){ return { l:l, c:c, p:p, g:g }; }
+
+var HEAD = '带头结点的单链表（示例 n = 6）';
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    html: listRow([ N('h'), N('a1'), N('a2'), N('a3'), N('a4'), N('a5'), N('a6') ], HEAD),
+    log:'任务：把 L=(a1,…,a6) 重排为 L′=(a1,a6,a2,a5,a3,a4)。三步走：<b>快慢指针找中点 → 原地逆置后半段 → 交替合并</b>，全程只用几个指针变量（空间 O(1)）。' },
+  { cls:'step', tag:'快慢指针出发', count:1,
+    html: listRow([ N('h'), N('a1','','p'), N('a2','','q'), N('a3'), N('a4'), N('a5'), N('a6') ], HEAD),
+    log:'快慢指针 p、q 都从头结点 h 出发：p 每轮走 1 步，q 每轮走 2 步（q->next 为空就停）。第 1 轮：p→a1，q→a2。' },
+  { cls:'step', tag:'第 2 轮', count:2,
+    html: listRow([ N('h'), N('a1'), N('a2','','p'), N('a3'), N('a4','','q'), N('a5'), N('a6') ], HEAD),
+    log:'第 2 轮：p→a2，q→a4。' },
+  { cls:'ok', tag:'中点已找到', count:3,
+    html: listRow([ N('h'), N('a1'), N('a2'), N('a3','','p'), N('a4'), N('a5'), N('a6','','q') ], HEAD),
+    log:'第 3 轮：p→a3，q→a6；q->next 为空，循环结束 —— <b>p 即中间结点</b>（n 为偶数时是前半段最后一个结点）。' },
+  { cls:'shift', tag:'断开前后两段', count:4,
+    html: listRow([ N('h'), N('a1'), N('a2'), N('a3','','p'), N('a4','dim','','x'), N('a5','dim'), N('a6','dim') ], HEAD),
+    log:'执行 p->next = NULL 断链：前半段 h→a1→a2→a3，后半段 a4→a5→a6（置灰）等待逆置。' },
+  { cls:'shift', tag:'头插 a4', count:5,
+    html: listRow([ N('h'), N('a1'), N('a2'), N('a3','','p'), N('a4','hit'), N('a5','dim','','x'), N('a6','dim') ], HEAD),
+    log:'头插逆置开始：取 a4 插到 p 之后（p→a4），r 暂存 a4 的后继 a5，q 移到 a5。' },
+  { cls:'shift', tag:'头插 a5', count:6,
+    html: listRow([ N('h'), N('a1'), N('a2'), N('a3','','p'), N('a5','hit'), N('a4','ok'), N('a6','dim','','x') ], HEAD),
+    log:'再取 a5 头插：p→a5→a4，只剩 a6。' },
+  { cls:'ok', tag:'逆置完成', count:7,
+    html: listRow([ N('h'), N('a1'), N('a2'), N('a3','','p'), N('a6','hit'), N('a5','ok'), N('a4','ok') ], HEAD),
+    log:'最后取 a6 头插：p→a6→a5→a4，<b>后半段逆置完成</b>——没有申请新结点，全部原地完成。' },
+  { cls:'step', tag:'合并准备', count:8,
+    html: listRow([ N('h'), N('a1','','s'), N('a2'), N('a3'), N('a6','dim','','x','q'), N('a5','dim'), N('a4','dim') ], HEAD),
+    log:'交替合并：s = h->next = a1 指向前半段，q = p->next = a6 指向逆置后的后半段（p->next 先置 NULL 防成环）。' },
+  { cls:'ok', tag:'插入 a6', count:9, ribbon:{k:1, ok:true},
+    html: listRow([ N('h'), N('a1','ok'), N('a6','hit'), N('a2','','s'), N('a3'), N('a5','dim','','x','q'), N('a4','dim') ], HEAD),
+    log:'取 a6 插到 a1 之后（a1→a6→a2…），r 暂存 a5；s 移到 a2，q 移到 a5。' },
+  { cls:'ok', tag:'插入 a5', count:10, ribbon:{k:2, ok:true},
+    html: listRow([ N('h'), N('a1','ok'), N('a6','ok'), N('a2','ok'), N('a5','hit'), N('a3','','s'), N('a4','dim','','x','q') ], HEAD),
+    log:'取 a5 插到 a2 之后，s 移到 a3，q 移到 a4。' },
+  { cls:'ok', tag:'插入 a4', count:11, ribbon:{k:3, ok:true},
+    html: listRow([ N('h'), N('a1','ok'), N('a6','ok'), N('a2','ok'), N('a5','ok'), N('a3','ok'), N('a4','hit') ], HEAD),
+    log:'取 a4 插到 a3 之后，后半段取空，合并完成。' },
+  { cls:'done', tag:'完成', count:12, done:true,
+    html: listRow([ N('h'), N('a1','ok'), N('a6','ok'), N('a2','ok'), N('a5','ok'), N('a3','ok'), N('a4','hit') ], HEAD),
+    log:'完成：L′ = (a1, a6, a2, a5, a3, a4)，与题目要求完全一致。' },
+];
+
+AW.init({
+  title: '2019-41 · 链表原地重排：找中点 → 逆置后半段 → 交替合并',
+  subtitle: 'L=(a1,…,a6) → <code>L′=(a1,a6,a2,a5,a3,a4)</code> · 空间 O(1)',
+  counterLabel: '步数',
+  ribbonTitle: '穿插合并（✓ 已插入一个后半段结点）',
+  intro: '点击「▶ 播放」按参考答案三步框架演示。',
+  snaps: snaps,
+  result: {
+    big: 'L′=(a1,a6,a2,a5,a3,a4)',
+    html: '三步框架：<b>①快慢指针找中点</b>（p 慢 1 步、q 快 2 步）→ <b>②后半段原地逆置</b>（头插到 p 之后，先 p->next=NULL 断链）→ <b>③交替合并</b>（后半段结点逐个插到前半段缝隙，先 r 暂存后继）。时间 <b>O(n)</b>、空间 <b>O(1)</b>，满足题目要求。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

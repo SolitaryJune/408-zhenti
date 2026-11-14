@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-04 · 哈夫曼树的构造与平均码长</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function pairRow(label, freqs, lens, cls){
+  var h = '<div class="aw-row-label">' + label + '</div><div class="aw-cells">';
+  for (var i = 0; i < freqs.length; i++){
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box ' + (cls && cls[i] ? ' ' + cls[i] : '') + '">' + freqs[i] + '</div><div class="aw-idx">' + (lens ? '码长' + lens[i] : '频次') + '</div></div>';
+  }
+  return h + '</div>';
+}
+
+function stageHTML(st){
+  var h = pairRow('<b>当前森林</b>（每步合并最小的两棵，新结点以绿色标出）', st.forest, null, st.cls);
+  if (st.depths){
+    h += pairRow('各字符码长 = 树中深度（频次 → 码长）', [3,4,5,6,8,10], st.depths, ['ok','ok','ok','ok','ok','ok']);
+  }
+  if (st.calc){
+    h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.calc + '</div>';
+  }
+  return h;
+}
+
+/* 每步状态：forest=森林权值数组，cls=配色，depths=码长（出现即显示），calc=算式行 */
+var STATES = [
+  { forest:[3,4,5,6,8,10], cls:['','','','','',''],
+    calc:'初始：6 个字符的频次 3, 4, 5, 6, 8, 10，各为一棵单结点树。' },
+  { forest:[5,6,7,8,10], cls:['','','ok','',''],
+    calc:'取最小两个 3、4 合并成 7（3、4 的深度将比 8 大 1）。' },
+  { forest:[7,8,10,11], cls:['','','','ok'],
+    calc:'再取最小两个 5、6 合并成 11。' },
+  { forest:[10,11,15], cls:['','','ok'],
+    calc:'取最小两个 7、8 合并成 15（7 里含 3、4，8 单独）。' },
+  { forest:[15,21], cls:['','ok'],
+    calc:'取最小两个 10、11 合并成 21。' },
+  { forest:[36], cls:['ok'],
+    calc:'最后 15、21 合并成根 36 —— 哈夫曼树建成。' },
+  { forest:[36], cls:['ok'], depths:[3,3,3,3,2,2],
+    calc:'码长即深度：3、4、5、6 各 3 位；8、10 各 2 位。' },
+  { forest:[36], cls:['ok'], depths:[3,3,3,3,2,2],
+    calc:'WPL = 3×3 + 4×3 + 5×3 + 6×3 + 8×2 + 10×2 = 9+12+15+18+16+20 = 90。校验：非叶结点权值和 7+11+15+21+36 = 90 ✓' },
+  { forest:[36], cls:['ok'], depths:[3,3,3,3,2,2],
+    calc:'总频次 = 3+4+5+6+8+10 = 36；加权平均长度 = 90 ÷ 36 = 2.5 → 答案 B。' },
+];
+
+var snaps = STATES.map(function(st, i){
+  var last = i === STATES.length - 1;
+  var cntArr = [0,1,2,3,4,5,5,5,5];
+  var clsArr = ['step','ok','ok','ok','ok','shift','step','step','done'];
+  var tagArr = ['初始','合并 3+4','合并 5+6','合并 7+8','合并 10+11','成根 36','定码长','算 WPL','求平均'];
+  var logArr = [
+    '初始：6 个字符频次 3,4,5,6,8,10，各为一棵树',
+    '第 1 次合并：最小两个 3、4 → 新结点 7',
+    '第 2 次合并：5、6 → 11',
+    '第 3 次合并：7、8 → 15',
+    '第 4 次合并：10、11 → 21',
+    '第 5 次合并：15、21 → 根 36，建树完成',
+    '按树形定码长（深度）：3,4,5,6 为 3 位；8,10 为 2 位',
+    'WPL = 9+12+15+18+16+20 = 90（= 非叶权值和 7+11+15+21+36 ✓）',
+    '平均码长 = 90 ÷ 36 = 2.5 → 答案 B'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: cntArr[i],
+    html: stageHTML(st), done: last,
+  };
+  if (i >= 1 && i <= 5){ sn.ribbon = { k: i, ok: true }; }
+  return sn;
+});
+
+AW.init({
+  title: '2023-04 · 哈夫曼编码的加权平均长度',
+  subtitle: '6 个字符频次 <code>3, 4, 5, 6, 8, 10</code> · 平均码长 = WPL ÷ 总频次',
+  counterLabel: '已合并',
+  ribbonTitle: '合并次序（✓ 已完成一次合并）',
+  intro: '点击「▶ 播放」逐步构造哈夫曼树并计算平均码长。',
+  snaps: snaps,
+  result: {
+    big: '平均码长 = 2.5（答案 B）',
+    html: 'WPL = 3×3+4×3+5×3+6×3+8×2+10×2 = <b>90</b>，总频次 36，平均码长 90÷36 = <b>2.5</b>。校验技巧：<b>WPL = 全部非叶结点权值之和</b>（7+11+15+21+36 = 90）。易错：除数是频次和 36 而不是字符个数 6；合并必须每步取当前最小两个。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

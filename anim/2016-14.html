@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-14 动画 · 小端方式下 double 变量的字节存放</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：小端存放——8 个字节逐个落入 00008040H 起的内存
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var ADDRS = ['8040H','8041H','8042H','8043H','8044H','8045H','8046H','8047H'];
+var BYTES = ['88H','77H','66H','55H','44H','33H','22H','11H'];   // 小端：低字节在低地址
+
+// 内存一行：value[i] 为空串表示未存入；kind: ''普通 / hit目标地址 / ok已存
+function memRow(values, kinds, ptrIdx){
+  var row = AW.el('div', 'aw-cells');
+  values.forEach(function(v, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptrIdx === i) ? '→ 本次存入' : ''));
+    col.appendChild(AW.el('div', 'aw-box' + (kinds && kinds[i] ? ' ' + kinds[i] : ''),
+        v === '' ? '?' : v));
+    col.appendChild(AW.el('div', 'aw-idx', ADDRS[i]));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function wrap(label, nodeHtml){
+  return '<div class="aw-row-label">' + label + '</div><div class="aw-scroll">' + nodeHtml + '</div>';
+}
+
+// 前 filled 个字节已存入
+function mem(filled, targetIdx){
+  var vals = [], kinds = [], i;
+  for(i = 0; i < 8; i++){
+    if(i < filled){ vals.push(BYTES[i]); kinds.push('ok'); }
+    else { vals.push(''); kinds.push(''); }
+  }
+  if(targetIdx != null){ kinds[targetIdx] = 'hit'; }
+  return memRow(vals, kinds, targetIdx).outerHTML;
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'double 变量机器数 1122 3344 5566 7788H（8 字节），从小地址 0000 8040H 开始按小端方式存放',
+    html:'<div class="aw-stepcard key"><p>机器数按书写习惯<b>高位字节在左</b>：最高字节 <code>11H</code>，最低字节 <code>88H</code>。<b>小端方式 = 最低有效字节放最低地址</b>（低对低）。下面从 8040H 开始逐字节落位。</p></div>' },
+
+  { cls:'ok', tag:'8040H ← 88H', count:1, ribbon:{k:1, ok:true},
+    log:'最低有效字节 88H 放最低地址 8040H —— 小端的第一步',
+    html: wrap('内存（小端存放）', mem(1, 0)) },
+
+  { cls:'ok', tag:'8041H ← 77H', count:2, ribbon:{k:2, ok:true},
+    log:'次低字节 77H → 8041H，地址递增、字节从低到高依次排',
+    html: wrap('内存（小端存放）', mem(2, 1)) },
+
+  { cls:'ok', tag:'8042H ← 66H', count:3, ribbon:{k:3, ok:true},
+    log:'66H → 8042H',
+    html: wrap('内存（小端存放）', mem(3, 2)) },
+
+  { cls:'ok', tag:'8043H ← 55H', count:4, ribbon:{k:4, ok:true},
+    log:'55H → 8043H',
+    html: wrap('内存（小端存放）', mem(4, 3)) },
+
+  { cls:'ok', tag:'8044H ← 44H', count:5, ribbon:{k:5, ok:true},
+    log:'44H → 8044H',
+    html: wrap('内存（小端存放）', mem(5, 4)) },
+
+  { cls:'ok', tag:'8045H ← 33H', count:6, ribbon:{k:6, ok:true},
+    log:'33H → 8045H',
+    html: wrap('内存（小端存放）', mem(6, 5)) },
+
+  { cls:'ok', tag:'8046H ← 22H ★', count:7, ribbon:{k:7, ok:true},
+    log:'22H → 8046H（题目所问的存储单元！偏移 6，第 7 个字节）',
+    html: wrap('内存（小端存放）—— 8046H 正是题目所问单元', mem(7, 6)) },
+
+  { cls:'ok', tag:'8047H ← 11H', count:8, ribbon:{k:8, ok:true},
+    log:'最高有效字节 11H → 最高地址 8047H，8 字节全部落位',
+    html: wrap('内存（小端存放，完整）', mem(8, 7)) },
+
+  { cls:'done', tag:'完成', count:9, ribbon:{k:9, ok:true},
+    log:'0000 8046H 中存放的是 22H → 答案 A',
+    done:true,
+    html: wrap('内存（小端存放，完整）', mem(8, 6)) +
+          '<div class="aw-stepcard good"><p>8046H − 8040H = 6，偏移 6 处是 <code>22H</code>，选 <b>A</b>。若按大端存放，8046H 处将是 <code>77H</code>（干扰项 C 的来历）。</p></div>' },
+];
+
+AW.init({
+  title: '2016-14 小端方式下 double 变量的字节存放',
+  subtitle: '机器数 <code>1122 3344 5566 7788H</code> · 起始地址 <code>0000 8040H</code> · 考点：小端（Little Endian）存放',
+  counterLabel: '已存字节',
+  ribbonTitle: '存放进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐字节演示小端落位。',
+  snaps: snaps,
+  result: {
+    big: '0000 8046H 中是 22H',
+    html: '答案选 <b>A</b>。小端口诀「<b>低对低</b>」：最低字节 <code>88H</code> → 最低地址 <code>8040H</code>，地址递增字节从低到高：<code>88 77 66 55 44 33 22 11</code>。偏移 6 即 <code>22H</code>。<br>干扰项 <code>77H</code>（C）是大端方式下 8046H 的内容——先确认端序再数偏移。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

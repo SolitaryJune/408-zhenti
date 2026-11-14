@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2018-36：停-等协议信道利用率 40% 反推数据帧长度
+     模板：算法 / 过程演示类（发送周期时间轴推演）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function cyclebar(mode){
+  var segs;
+  if(mode === 'sol'){
+    segs = [
+      { t:'发送数据帧', s:'266.7ms（占 40%）', w:266.7, bg:'#dcfce7', fg:'#15803d', bd:'#16a34a' },
+      { t:'数据帧传播', s:'200ms', w:200, bg:'#e2e8f0', fg:'#475569', bd:'#94a3b8' },
+      { t:'确认帧传播', s:'200ms', w:200, bg:'#e2e8f0', fg:'#475569', bd:'#94a3b8' }
+    ];
+  } else {
+    segs = [
+      { t:'发送数据帧', s:'T = ?', w:1, bg:'#fef3c7', fg:'#92400e', bd:'#d97706' },
+      { t:'数据帧传播', s:'200ms', w:1, bg:'#e2e8f0', fg:'#475569', bd:'#94a3b8' },
+      { t:'确认帧传播', s:'200ms', w:1, bg:'#e2e8f0', fg:'#475569', bd:'#94a3b8' }
+    ];
+  }
+  var h = '<div style="display:flex;gap:4px;margin:8px 0 4px">';
+  segs.forEach(function(sg){
+    h += '<div style="flex:' + sg.w + ';background:' + sg.bg + ';border:2px solid ' + sg.bd + ';border-radius:9px;padding:9px 4px;text-align:center;color:' + sg.fg + '"><div style="font-weight:700;font-size:13px">' + sg.t + '</div><div style="font-size:11.5px;font-family:Menlo,Consolas,monospace;margin-top:2px">' + sg.s + '</div></div>';
+  });
+  h += '</div><div style="font-size:11.5px;color:#94a3b8;margin-bottom:6px">一个发送周期 = T + 200ms + 200ms = T + 400ms　·　利用率 U = T ÷ 周期</div>';
+  return h;
+}
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'甲→乙停-等协议：速率 3kbps，单向传播 200ms，忽略确认帧传输时延，U = 40% → 反求数据帧长 L',
+    html: cyclebar('gen') + card(1, 'key', '审题：已知与所求',
+      '<p>数据传输速率 <code>3kbps</code>，单向传播时延 <code>200ms</code>，确认帧的<b>传输</b>时延忽略；信道利用率 = <b>40%</b>，求<b>数据帧长度 L</b>。</p>') },
+  { cls:'step', tag:'周期构成', count:1,
+    log:'停-等：发一帧 → 停下来等确认 → 再发下一帧；一个周期 = 发送时延 T + 两个单向传播',
+    html: cyclebar('gen') + card(2, 'step', '第一步：画出一个完整周期',
+      '<p>停-等协议发出一帧后<b>停下来等确认</b>。忽略确认帧传输时延，周期由三段构成：<b>发送数据帧 T</b> → <b>数据帧传播 200ms</b> → <b>确认帧传播 200ms</b>。</p>') },
+  { cls:'shift', tag:'列公式', count:2,
+    log:'U = 发送时间 ÷ 周期 = T / (T + 400ms)',
+    html: cyclebar('gen') + card(3, 'key', '第二步：写出利用率公式',
+      '<p>周期 = <code>T + 400ms</code>；信道利用率 = 发送数据帧的时间 ÷ 周期 = <code>T / (T + 400)</code>。</p>') },
+  { cls:'step', tag:'解方程', count:3,
+    log:'代入 0.4：T = 0.4(T + 400) → 0.6T = 160 → T ≈ 266.7ms',
+    html: cyclebar('gen') + card(4, 'step', '第三步：代入 40% 解出 T',
+      '<p><code>T / (T + 400) = 0.4</code> → <code>T = 0.4T + 160</code> → <code>0.6T = 160</code> → <b>T ≈ 266.7ms</b>。</p>') },
+  { cls:'ok', tag:'求帧长', count:4, ribbon:{k:1, ok:true},
+    log:'L = 速率 × T = 3000 b/s × 0.2667s = 800 比特',
+    html: cyclebar('sol') + card(5, 'good', '第四步：还原帧长',
+      '<p>L = <code>3000 b/s × 0.2667 s = 800 比特</code>。看时间轴：发送段恰好占整个周期的 <b>40%</b>。</p>') },
+  { cls:'step', tag:'验算', count:5, ribbon:{k:2, ok:false},
+    log:'验算干扰项：240→16.7%，400→25%，480→28.6%，都不是 40%',
+    html: cyclebar('sol') + card(6, 'bad', '第五步：验算其余选项',
+      '<p>240 比特：T = 80ms → U = 80/480 ≈ <b>16.7%</b>；400 比特：T ≈ 133.3ms → U = <b>25%</b>；480 比特：T = 160ms → U ≈ <b>28.6%</b>。都不等于 40%。</p>') },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'答案：数据帧长度 800 比特，选 D',
+    html: cyclebar('sol') + card(7, 'good', '结论：答案 D',
+      '<p><b>L = 800 比特</b>。易错提醒：若漏掉<b>确认帧的传播时延</b>（只算一程 200ms），会解出 L = 400 比特——正是干扰项 B。</p>') },
+];
+
+AW.init({
+  title: '2018-36：停-等协议信道利用率反推帧长',
+  subtitle: '速率 3kbps · 单向传播 200ms · U = 40% → 帧长 L = ?',
+  counterLabel: '步骤',
+  ribbonTitle: '关键节点（✓ 命中 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」沿时间轴逐步推演。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：800 比特',
+    html: '公式记忆：<b>停-等利用率 U = T / (T + 2×单向传播时延)</b>。代入：T/(T + 400ms) = 0.4 → T ≈ 266.7ms → <b>L = 3000 × 0.2667 = 800 比特</b>。<br>易错：漏算确认帧传播（只加 200ms）会得 400 比特，恰是干扰项 B。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

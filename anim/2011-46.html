@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-46 一次性写入文件系统的分配方式与 FCB 组织</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三个关键词',
+    cls: 'key',
+    body: '<p>题干条件：<b>① 一级目录结构</b>；<b>② 文件数据一次性写入</b>；<b>③ 已写入的文件不可修改</b>（可多次创建新文件）。两个问的答案都要从这些条件推出来。</p>' },
+  { title: '问(1) 三种分配方式逐一对照',
+    cls: 'step',
+    body: '<p><b>连续分配</b>：顺序访问无寻道开销，第 i 块一次算出（起始块号+i），随机访问也快；但文件难增长。<b>链式分配</b>：随机访问要沿链逐块找，慢。<b>索引分配</b>：要多读一次索引块，为"文件动态增长"而生。<br/>对照条件②③：文件写完不再改、不再长 → 连续分配的"难增长"缺陷用不上，优点全保留。</p>' },
+  { title: '问(1) 结论：连续分配 + FCB 字段',
+    cls: 'good',
+    body: '<p><b>连续分配方式更合适</b>：一次性写入不可修改 → 无需预留空间、无移动开销，连续盘区顺序读取寻道少、随机访问效率最高。<br/><b>FCB 字段</b>：位置固定、长度已知，只需设计<b>起始块号</b>和<b>块数</b>（或<b>结束块号/文件长度</b>）即可定位全部数据块。</p>' },
+  { title: '问(2) 集中存 vs 跟数据连续存',
+    cls: 'step',
+    body: '<p>查找文件的过程：先<b>比对 FCB</b>（如文件名），命中后才去访问数据块。<br/>若 <b>FCB 与数据块连续存放</b>：逐个试探文件时，每比较一个 FCB 就要跳回数据区，磁头来回寻道，I/O 次数多。<br/>若 <b>FCB 集中存放在目录区</b>：可把多个 FCB 一次性读入内存逐个比较，磁头移动少、磁盘 I/O 次数少。</p>' },
+  { title: '问(2) 结论：FCB 集中存储',
+    cls: 'good',
+    body: '<p><b>集中存储更好</b>：文件检索要频繁比较多个 FCB，集中存放可成批读入、减少磁头移动与磁盘 I/O 次数，加快文件查找。</p>' },
+  { title: '全题汇总',
+    cls: 'good',
+    body: '<p>（1）<b>连续分配</b>更合适——一次性写入不可修改，连续访问高效；FCB 设<b>起始块号 + 块数（或结束块号）</b>。<br/>（2）FCB <b>集中存储</b>更好——检索时成批读 FCB，减少寻道与 I/O。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-46 一级目录 · 一次性写入：分配方式与 FCB 组织',
+  subtitle: '考点：文件分配方式选型 · FCB 字段设计 · FCB 存储布局',
+  intro: '点击「▶ 播放」逐步展开两问的推理链。',
+  snaps: snaps,
+  result: {
+    big: '(1) 连续分配　(2) FCB 集中存储',
+    html: '条件"一次性写入、不可修改" → <b>连续分配</b>最优（顺序/随机访问都快，无增长需求）；FCB 只需<b>起始块号 + 块数（或结束块号）</b>。FCB <b>集中存放</b>在目录区，检索时成批读入比较，减少磁头移动与 I/O 次数。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

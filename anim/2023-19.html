@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-19 五段流水线的阻塞分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.gname{ width:78px; flex:0 0 auto; font-size:12.5px; font-weight:700; color:#334155;
+  text-align:right; padding-right:6px; font-family:Menlo,Consolas,monospace; }
+.gcyc{ width:52px; flex:0 0 auto; text-align:center; font-size:11px; color:#94a3b8; font-family:monospace; }
+.gcell{ width:52px; height:34px; flex:0 0 auto; border:1.5px solid #eef2f7; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; font-size:12.5px; color:#cbd5e1; background:#fff; }
+.gcell.gif, .gcell.gid{ color:#1e40af; background:#eff6ff; border-color:#93c5fd; }
+.gcell.gex{ color:#92400e; background:#fef3c7; border-color:#d97706; }
+.gcell.gmem{ color:#6d28d9; background:#faf5ff; border-color:#c4b5fd; }
+.gcell.gwb{ color:#14532d; background:#dcfce7; border-color:#16a34a; font-weight:700; }
+.gcell.gstall{ color:#b91c1c; background:#fee2e2; border-color:#dc2626; font-weight:700; }
+.calcbox{ display:inline-block; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#334155; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CYC = 10;
+var SCHED = [
+  { name:'I1 add',  c:{ 1:'取指', 2:'译码', 3:'执行', 4:'访存', 5:'写回' } },
+  { name:'I2 load', c:{ 2:'取指', 3:'译码', 4:'执行', 5:'访存', 6:'写回' } },
+  { name:'I3 beq',  c:{ 3:'取指', 4:'译码', 5:'阻塞', 6:'执行', 7:'访存', 8:'写回' } },
+  { name:'I4 addi', c:{ 4:'取指', 5:'阻塞', 6:'阻塞', 7:'译码', 8:'执行', 9:'访存', 10:'写回' } },
+];
+var SCL = { '取指':'gif', '译码':'gid', '执行':'gex', '访存':'gmem', '写回':'gwb', '阻塞':'gstall' };
+
+function gantt(upTo){
+  var h = '<div class="aw-scroll"><div style="width:max-content">';
+  h += '<div style="display:flex;gap:3px;margin-bottom:4px"><div class="gname"></div>';
+  for (var c = 1; c <= CYC; c++) h += '<div class="gcyc">' + c + '</div>';
+  h += '</div>';
+  for (var r = 0; r < 4; r++){
+    h += '<div style="display:flex;gap:3px;margin-bottom:3px;align-items:center">';
+    h += '<div class="gname">' + SCHED[r].name + '</div>';
+    for (var c2 = 1; c2 <= CYC; c2++){
+      var st = (c2 <= upTo && SCHED[r].c[c2]) ? SCHED[r].c[c2] : '';
+      var cls = 'gcell' + (st ? ' ' + SCL[st] : '');
+      h += '<div class="' + cls + '">' + st + '</div>';
+    }
+    h += '</div>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function tip(t){
+  return '<div class="calcbox">' + t + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'取指/译码取数/执行/访存/写回 5 段流水线；数据冒险用转发，控制冒险用硬件阻塞。',
+    html: tip('<b>5 段流水线</b>：取指 → 译码/取数 → 执行 → 访存 → 写回。<br>数据冒险：<b>转发</b>；控制冒险（beq）：<b>硬件阻塞</b>。看谁会停下。') + gantt(0) },
+  { cls:'step', tag:'周期 1', count:1,
+    log:'I1 取指。',
+    html: gantt(1) },
+  { cls:'step', tag:'周期 2', count:2,
+    log:'I1 译码、I2 取指。',
+    html: gantt(2) },
+  { cls:'step', tag:'周期 3', count:3,
+    log:'I1 执行（算出 s2）、I2 译码、I3 取指。',
+    html: gantt(3) + tip('I1 在<b>执行段末</b>得到 R[s2]，I2 下一步就要用。') },
+  { cls:'ok', tag:'周期 4', count:4,
+    log:'I2 执行：I1 的 s2 从 EX 段末直接转发过来，不阻塞；I3 译码、I4 取指。',
+    html: gantt(4) + tip('<b>EX→EX 转发</b>：I1 执行段末的 s2 恰好衔接 I2 执行段的开头（算有效地址）→ <b>I2 不阻塞</b>。') },
+  { cls:'miss', tag:'周期 5', count:5,
+    log:'I3 阻塞：load 的 s3 要到 I2 访存段末才读出，比较用不上 → 停 1 拍；I4 也被堵住。',
+    html: gantt(5) + tip('<b>load-use 冒险</b>：I3 需在自己的执行段比较 s3，而 s3 要到 I2 的<b>访存段末</b>才出得来 → I3 <b>阻塞 1 拍</b>；I3 占着译码段，I4 也动不了。') },
+  { cls:'miss', tag:'周期 6', count:6,
+    log:'I3 执行：s3 从 I2 访存段转发过来；I4 继续阻塞——beq 的方向要等 I3 执行段末才确定。',
+    html: gantt(6) + tip('I3 执行段从<b>访存段</b>转发拿到 s3，完成比较；但它是 <b>beq</b>，转移方向要到<b>执行段末</b>才确定 → <b>I4 继续阻塞</b>（硬件阻塞方式处理控制冒险）。') },
+  { cls:'step', tag:'周期 7', count:7,
+    log:'I3 访存；转移方向已定（不转移），I4 恢复前进、进入译码。',
+    html: gantt(7) },
+  { cls:'step', tag:'周期 8', count:8,
+    log:'I3 写回；I4 执行。',
+    html: gantt(8) },
+  { cls:'step', tag:'周期 9~10', count:10,
+    log:'I4 访存、写回，指令序列执行完毕。',
+    html: gantt(10) + tip('全程只有 I3、I4 出现红色「阻塞」格。') },
+  { cls:'step', tag:'判定 I1', count:10, ribbon:{k:1, ok:true},
+    log:'I1：数据的产生者，无任何冒险，从未停等。',
+    html: gantt(10) + tip('<b>I1</b>：全程无冒险 → <b>未阻塞 ✓</b>') },
+  { cls:'step', tag:'判定 I2', count:10, ribbon:{k:2, ok:true},
+    log:'I2：s2 靠 EX→EX 转发获得，不阻塞。',
+    html: gantt(10) + tip('<b>I2</b>：s2 在 I1 执行段末就有，EX→EX 转发来得及 → <b>未阻塞 ✓</b>') },
+  { cls:'step', tag:'判定 I3', count:10, ribbon:{k:3, ok:false},
+    log:'I3：load-use 数据冒险，阻塞 1 拍后靠转发拿到 s3。',
+    html: gantt(10) + tip('<b>I3</b>：s3 到 I2 访存段末才出，I3 的执行段等不及 → <b>阻塞 1 拍 ✗</b>，再由访存段转发。') },
+  { cls:'step', tag:'判定 I4', count:10, ribbon:{k:4, ok:false},
+    log:'I4：控制冒险，beq 方向确定前被硬件阻塞。',
+    html: gantt(10) + tip('<b>I4</b>：紧随 beq，转移方向在 I3 执行段末才确定，期间被<b>硬件阻塞 ✗</b>。') },
+  { cls:'done', tag:'结论', count:10, done:true,
+    log:'发生阻塞的是 I3、I4 → 答案 C。',
+    html: tip('<b>结论</b>：I2 靠转发通过；<b>I3</b>（load-use）与 <b>I4</b>（控制冒险）发生阻塞 → 答案 <b>C</b>。') },
+];
+
+AW.init({
+  title: '2023-19 · 五段流水线的阻塞分析',
+  subtitle: 'I1 add / I2 load / I3 beq / I4 addi · 转发处理数据冒险 · 硬件阻塞处理控制冒险',
+  counterLabel: '时钟周期',
+  ribbonTitle: '指令判定（✓ 未阻塞 / ✗ 阻塞）',
+  intro: '点击「▶ 播放」逐周期推进流水线时空图。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（仅 I3、I4 阻塞）',
+    html: 'I1→I2：<code>EX→EX 转发 s2</code>，不阻塞；I2→I3：<b>load-use</b>，s3 访存段末才有，I3 阻塞 1 拍后 <code>MEM→EX 转发</code>；I3 是 beq，方向在其执行段末才定，<b>I4 被硬件阻塞</b>。记忆锚点：load 后紧跟使用必阻塞 1 拍；转移指令后必等方向。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

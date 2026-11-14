@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-41 最佳归并树：5次两两合并</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：哈夫曼式合并过程，累计比较次数
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var tabRow, sumRow;
+
+function tabEl(label, cls){
+  var b = AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), label);
+  b.style.width = 'auto';
+  b.style.minWidth = '44px';
+  b.style.padding = '0 12px';
+  b.style.fontSize = '16px';
+  return b;
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl1 = AW.el('div', 'aw-row-label', '<b>当前表集合</b>（绿＝本轮合并产生的新表，亮绿＝本轮参与合并的表）');
+  tabRow = AW.el('div', 'aw-cells');
+  tabRow.style.gap = '10px';
+  var lbl2 = AW.el('div', 'aw-row-label', '<b>策略</b>：每次选当前长度最小的两个表合并（哈夫曼思想）');
+  var lbl3 = AW.el('div', 'aw-row-label', '<b>累计最坏比较次数</b>');
+  sumRow = AW.el('div', 'aw-cells');
+  sumRow.style.gap = '10px';
+  wrap.appendChild(lbl1); wrap.appendChild(tabRow);
+  wrap.appendChild(lbl2);
+  wrap.appendChild(lbl3); wrap.appendChild(sumRow);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  tabRow.innerHTML = '';
+  sn.tables.forEach(function(t){
+    tabRow.appendChild(tabEl(t.label, t.cls));
+  });
+  sumRow.innerHTML = '';
+  sumRow.appendChild(tabEl(sn.count + ' 次', sn.count > 0 ? 'ok' : 'dim'));
+}
+
+AW.init({
+  title: '最佳归并树：6 个有序表 5 次两两合并',
+  subtitle: 'A=10 · B=35 · C=40 · D=50 · E=60 · F=200 · 两表合并最坏比较 = <code>两表长度和 − 1</code>',
+  counterLabel: '累计比较次数',
+  ribbonTitle: '合并序号（✓ 完成）',
+  intro: '点击「▶ 播放」逐步执行 5 次合并，每次都挑当前最短的两个表。',
+
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'初始 6 个升序表：A(10)、B(35)、C(40)、D(50)、E(60)、F(200)。目标：5 次两两合并成一个表，且最坏总比较次数最小。',
+      tables:[{label:'A·10'},{label:'B·35'},{label:'C·40'},{label:'D·50'},{label:'E·60'},{label:'F·200'}], count:0 },
+    { cls:'ok', tag:'第 1 次合并', log:'选当前最短的 A(10) 与 B(35) → AB(45)；最坏比较 10+35−1 = 44 次。',
+      tables:[{label:'AB·45', cls:'ok'},{label:'C·40'},{label:'D·50'},{label:'E·60'},{label:'F·200'}], count:44, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'第 2 次合并', log:'现有 45、40、50、60、200 → 选最短的 C(40) 与 AB(45) → ABC(85)；最坏比较 45+40−1 = 84 次，累计 128。',
+      tables:[{label:'ABC·85', cls:'ok'},{label:'D·50'},{label:'E·60'},{label:'F·200'}], count:128, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'第 3 次合并', log:'现有 85、50、60、200 → 选 D(50) 与 E(60) → DE(110)；最坏比较 50+60−1 = 109 次，累计 237。',
+      tables:[{label:'ABC·85'},{label:'DE·110', cls:'ok'},{label:'F·200'}], count:237, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'第 4 次合并', log:'现有 85、110、200 → 选 ABC(85) 与 DE(110) → ABCDE(195)；最坏比较 85+110−1 = 194 次，累计 431。',
+      tables:[{label:'ABCDE·195', cls:'ok'},{label:'F·200'}], count:431, ribbon:{k:4, ok:true} },
+    { cls:'ok', tag:'第 5 次合并', log:'最后 ABCDE(195) 与 F(200) → 最终表(395)；最坏比较 195+200−1 = 394 次，累计 825。',
+      tables:[{label:'最终表·395', cls:'ok'}], count:825, ribbon:{k:5, ok:true} },
+    { cls:'done', tag:'完成', log:'合并完成：最坏情况总比较 44+84+109+194+394 = 825 次，达到最小；策略＝每次选当前最短的两个表（哈夫曼/最佳归并树）。',
+      tables:[{label:'最终表·395', cls:'ok'}], count:825, done:true },
+  ],
+
+  result: {
+    big: '825 次',
+    html: '合并序：A(10)+B(35)→45 → ＋C(40)→85；D(50)+E(60)→110 → 两者→195 → ＋F(200)→395。<br>44+84+109+194+394 = <b>825</b>。第 2 问策略：<b>每次选当前长度最小的两个表合并</b>——与哈夫曼树构造同构，长表只在最后参与一次，总代价最小。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

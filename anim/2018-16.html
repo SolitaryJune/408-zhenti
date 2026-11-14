@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-16 逻辑右移与算术右移</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 带位号标签的位格行（labels 与 chars 等长）
+function bitRow(chars, classes, labels, ptrMap){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptrMap && ptrMap[i]) || ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), String(ch)));
+    col.appendChild(AW.el('div', 'aw-idx', labels ? String(labels[i]) : ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+var BITS = ['位7','位6','位5','位4','位3','位2','位1','位0'];
+
+AW.init({
+  title: '逻辑右移 1 位 vs 算术右移 1 位',
+  subtitle: 'x = <code>1101 1000</code>（8 位，符号位 = 1）· 差别只在高位补什么',
+  counterLabel: '步数',
+  ribbonTitle: '推演进度（✓ 已完成）',
+  intro: '点击「▶ 播放」对比两种右移。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>原始 x</b>'));
+    this._rowX = AW.el('div', '');
+    inner.appendChild(this._rowX);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>逻辑右移 1 位</b>（高位补 0）'));
+    this._rowL = AW.el('div', '');
+    inner.appendChild(this._rowL);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>算术右移 1 位</b>（高位补符号位）'));
+    this._rowS = AW.el('div', '');
+    inner.appendChild(this._rowS);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    // 原始行
+    var cx = ['1','1','0','1','1','0','0','0'];
+    var kx = ['','','','','','','',''];
+    var px = null;
+    if(i === 0){ px = { 0: '符号位=1' }; }
+    if(i >= 1){ kx[7] = 'miss'; px = { 7: '移出丢弃' }; }   // 最低位被移出
+    this._rowX.innerHTML = '';
+    this._rowX.appendChild(bitRow(cx, kx, BITS, px));
+
+    // 两种右移结果行：最高位待定 → '?'
+    function resRow(fill, filledCls){
+      var ch = [fill, '1','1','0','1','1','0','0'];
+      var k = [filledCls, '', '', '', '', '', '', ''];
+      return { ch: ch, k: k };
+    }
+    // 逻辑行
+    var rl;
+    if(i >= 2){ rl = resRow('0', 'ok'); } else { rl = resRow('?', 'dim'); }
+    this._rowL.innerHTML = '';
+    this._rowL.appendChild(bitRow(rl.ch, rl.k, BITS, i === 2 ? { 0: '补 0' } : null));
+    // 算术行
+    var rs;
+    if(i >= 3){ rs = resRow('1', 'ok'); } else { rs = resRow('?', 'dim'); }
+    this._rowS.innerHTML = '';
+    this._rowS.appendChild(bitRow(rs.ch, rs.k, BITS, i === 3 ? { 0: '补符号位 1' } : null));
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题', log:'x = 1101 1000，符号位（位7）= 1；右移 1 位：各位整体右移，最低位的 0 移出丢弃', count:1, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'共同动作', log:'两个结果行的高 7 位都是 1101 100 的依次右移，唯独最高位（位7）补什么由移位类型决定', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'逻辑右移', log:'逻辑右移不管符号，高位一律补 0 → 0110 1100', count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'算术右移', log:'算术右移高位补符号位（本题是 1）→ 1110 1100，负数右移后仍是负数', count:4, ribbon:{k:4, ok:true} },
+    { cls:'step', tag:'对选项', log:'逻辑 = 0110 1100，算术 = 1110 1100 → 选 B；A 两个都补 0/填反，C 顺序对调，D 两个都补 1', count:5, ribbon:{k:5, ok:true} },
+    { cls:'done', tag:'完成', log:'答案 B：逻辑右移 0110 1100，算术右移 1110 1100', count:5, done:true },
+  ],
+
+  result: {
+    big: '0110 1100 · 1110 1100（答案 B）',
+    html: '逻辑右移高位<b>补 0</b>；算术右移高位<b>补符号位</b>（本题 1）。题目先问逻辑、后问算术，顺序别对调。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-32 不能改善磁盘 I/O 性能的选项</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-32（选择题）不能改善磁盘设备 I/O 性能的是
+     形态：概念辨析 · 逐项揭示推理链
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：磁盘 I/O 慢在哪',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>磁盘 I/O 的主要开销 = <b>寻道时间 + 旋转延迟 + 传输时间</b>。有效的改善手段都围绕两件事：<b>减少实际 I/O 次数</b>、<b>减少寻道</b>。题目要选出<b>不能</b>改善的选项。</p>' },
+  { title: 'A 重排 I/O 请求次序——能改善',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>对排队中的 I/O 请求按磁道号<b>重排次序</b>（如电梯算法、SSTF），磁头移动总距离大幅缩短，寻道时间下降。<b>能</b>改善，不选。</p>' },
+  { title: 'C 预读和滞后写——能改善',
+    cls: 'good',
+    scls: 'step',
+    body: '<p><b>预读</b>利用顺序访问的局部性，提前把后续块读入缓存；<b>滞后写</b>把多次写合并、延迟到合适时机一次完成。两者都直接<b>减少实际 I/O 次数</b>，<b>能</b>改善，不选。</p>' },
+  { title: 'D 优化文件物理块的分布——能改善',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>让文件的物理块尽量<b>连续或集中</b>存放，读同一文件时寻道和旋转等待都更少。<b>能</b>改善，不选。</p>' },
+  { title: 'B 一个磁盘设多个分区——不能改善',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p>分区只是对磁盘做<b>逻辑划分</b>（便于管理、隔离不同的文件系统），既不减少寻道、不减少旋转等待，也不减少 I/O 次数——物理 I/O 过程一步都没变。<b>不能</b>改善性能，正是本题答案。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>重排请求、预读/滞后写、优化块分布都在「减寻道、减 I/O」上做文章；分区只是逻辑划分，与性能无关</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2012-32】磁盘 I/O 性能改善手段辨析（选不能）',
+  subtitle: '考点：磁盘 I/O 与设备管理 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>设置多个分区只是磁盘的逻辑划分，不改变寻道/旋转/传输的任何环节</b>。重排 I/O 请求次序、预读与滞后写、优化文件块分布都能减少寻道或实际 I/O，都是有效手段。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

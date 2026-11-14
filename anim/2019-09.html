@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMP 模式匹配动画 — T="abaabaabcabaabc", S="abaabc"</title>
+<style>
+  :root{
+    --cell: 44px;
+    --gap: 4px;
+    --pitch: 48px;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --card: #ffffff;
+    --page: #eef2f7;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --amber: #d97706;
+    --amber-bg: #fef3c7;
+    --blue: #2563eb;
+  }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  body{
+    font-family: "PingFang SC", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    padding: 28px 16px 60px;
+  }
+  .page{ max-width: 900px; margin: 0 auto; }
+  header{ margin-bottom: 18px; }
+  h1{ font-size: 26px; margin-bottom: 6px; }
+  .sub{ color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .sub code{
+    background:#e2e8f0; padding: 2px 7px; border-radius: 6px;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px; color:#334155;
+  }
+  .card{
+    background: var(--card); border-radius: 16px; padding: 20px;
+    box-shadow: 0 1px 3px rgba(15,23,42,.08), 0 8px 24px rgba(15,23,42,.05);
+    margin-bottom: 16px;
+  }
+
+  /* ===== next 表 ===== */
+  .next-table{ display:flex; gap: 28px; align-items:flex-start; flex-wrap: wrap; margin-bottom: 18px; }
+  table.nextt{ border-collapse: collapse; font-size: 14px; }
+  table.nextt td, table.nextt th{
+    border: 1px solid #e2e8f0; padding: 5px 12px; text-align: center; min-width: 40px;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  table.nextt th{ background:#f1f5f9; color:#475569; font-weight: 600; }
+  table.nextt td.nval{ color: var(--blue); font-weight: 700; }
+  .next-note{ font-size: 13px; color: var(--muted); line-height: 1.8; flex: 1; min-width: 260px; }
+  .next-note b{ color:#334155; }
+
+  /* ===== 主串 / 模式串 ===== */
+  .s-scroll{ overflow-x: auto; padding-bottom: 4px; }
+  .s-inner{ min-width: 724px; }
+  .row-label{ font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  .row-label b{ color:#334155; }
+  .cells{ display: flex; gap: var(--gap); }
+  .col{ width: var(--cell); flex: 0 0 auto; display:flex; flex-direction:column; align-items:center; }
+  .ptr{ height: 22px; font-size: 12px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+  .box{
+    width: var(--cell); height: var(--cell); border: 2px solid #cbd5e1; border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-weight: 700; font-size: 19px;
+    background: #fff; color: var(--ink); transition: background .2s, border-color .2s, color .2s;
+  }
+  .idx{ margin-top: 4px; font-size: 11px; color: #94a3b8; font-family: monospace; }
+  .box.ok{ background: var(--green-bg); border-color: var(--green); color:#14532d; }
+  .box.hit{ background: var(--green); border-color: var(--green); color:#fff; }
+  .box.miss{ background: var(--red-bg); border-color: var(--red); color:#b91c1c; }
+  .box.hit, .box.miss{ animation: pop .45s ease; }
+  @keyframes pop{ 0%{transform:scale(1)} 40%{transform:scale(1.22)} 100%{transform:scale(1)} }
+
+  .shifter{ transition: transform .5s cubic-bezier(.22,.8,.3,1); width: max-content; display: flex; flex-direction: row; gap: var(--gap); }
+  .shifter.notrans{ transition: none; }
+
+  .next-mini{ margin-top: 6px; }
+  .nbox{
+    width: var(--cell); height: 26px; border-radius: 8px; background:#f1f5f9; border: 2px solid #e2e8f0;
+    display:flex; align-items:center; justify-content:center;
+    font-family: monospace; font-weight: 700; font-size: 14px; color:#475569;
+  }
+  .nbox.nhi{ background: var(--amber-bg); border-color: var(--amber); color:#92400e; animation: pop .45s ease; }
+  .nidx{ font-size: 10px; color:#94a3b8; margin-top: 2px; font-family: monospace; }
+
+  /* ===== 状态栏 ===== */
+  .status-bar{
+    margin-top: 16px; background:#f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 12px 14px; font-size: 15px; line-height: 1.6; min-height: 48px;
+  }
+  .status-bar .tag{
+    display:inline-block; font-size: 12px; font-weight:700; padding: 2px 9px; border-radius: 999px; margin-right: 8px;
+  }
+  .tag.t-ok{ background: var(--green-bg); color:#15803d; }
+  .tag.t-miss{ background: var(--red-bg); color:#b91c1c; }
+  .tag.t-shift{ background: var(--amber-bg); color:#92400e; }
+  .tag.t-done{ background: #dbeafe; color:#1d4ed8; }
+
+  /* ===== 控制条 ===== */
+  .controls{ display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
+  button{
+    border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+    cursor: pointer; background: #e2e8f0; color:#334155; transition: all .15s;
+    font-family: inherit;
+  }
+  button:hover{ filter: brightness(.96); transform: translateY(-1px); }
+  button.primary{ background: var(--blue); color:#fff; }
+  button.warn{ background:#f1f5f9; color:#64748b; }
+  .counter{
+    margin-left: auto; display:flex; gap: 10px; align-items:center;
+  }
+  .kchip{
+    background:#0f172a; color:#fff; border-radius: 12px; padding: 8px 16px;
+    font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .kchip span{ color:#fbbf24; font-size: 20px; }
+  .speed{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); }
+  .speed input{ width: 90px; accent-color: var(--blue); }
+  .case-switch{ display:flex; gap:8px; flex-basis:100%; margin-bottom:2px; }
+  .case-btn{ border:2px solid #e2e8f0; background:#f8fafc; color:#475569; font-family: "SF Mono", Menlo, monospace; }
+  .case-btn.active{ background:#dbeafe; border-color:var(--blue); color:#1d4ed8; }
+  .hidden{ display:none !important; }
+
+  /* ===== 日志 / 序号带 ===== */
+  .bottom-grid{ display:grid; grid-template-columns: 1fr 300px; gap: 16px; }
+  @media (max-width: 760px){ .bottom-grid{ grid-template-columns: 1fr; } }
+  .panel-title{ font-size: 14px; font-weight: 700; color:#334155; margin-bottom: 10px; }
+  #logList{ max-height: 240px; overflow-y: auto; display:flex; flex-direction:column; gap:6px; }
+  .log-line{
+    font-size: 13px; padding: 7px 10px; border-radius: 8px; background:#f8fafc; border:1px solid #eef2f7;
+    font-family: "SF Mono", Menlo, monospace; line-height: 1.5;
+  }
+  .log-line.ok{ border-left: 3px solid var(--green); }
+  .log-line.miss{ border-left: 3px solid var(--red); background:#fff7f7; }
+  .log-line.shift{ border-left: 3px solid var(--amber); background:#fffbeb; }
+  .log-line.done{ border-left: 3px solid var(--blue); background:#eff6ff; font-weight: 700; }
+  .ribbon{ display:flex; flex-wrap: wrap; gap: 8px; align-content:flex-start; }
+  .chip{
+    width: 34px; height: 34px; border-radius: 50%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size: 11px; font-weight:700;
+    background:#f1f5f9; color:#94a3b8; border: 2px solid #e2e8f0;
+  }
+  .chip em{ font-style:normal; font-size:9px; font-weight:400; }
+  .chip.ok{ background: var(--green-bg); border-color: var(--green); color:#15803d; }
+  .chip.miss{ background: var(--red-bg); border-color: var(--red); color:#b91c1c; }
+  .chip.pop{ animation: pop .45s ease; }
+
+  /* ===== 结果卡 ===== */
+  #summary{ display:none; border: 2px solid var(--green); background: linear-gradient(135deg,#f0fdf4,#ffffff 60%); }
+  #summary.show{ display:block; animation: pop .5s ease; }
+  .ans{ display:flex; align-items:center; gap: 18px; flex-wrap: wrap; }
+  .ans .big{
+    font-size: 46px; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums;
+  }
+  .ans .desc{ font-size: 15px; line-height: 1.8; color:#334155; }
+  .ans .desc b{ color: var(--green); }
+  .ans .desc code{
+    background:#e2e8f0; padding:1px 6px; border-radius:6px; font-family: monospace; font-size: 13px;
+  }
+
+  /* ===== 文字解析 ===== */
+  .explain ol{ margin: 6px 0 0 20px; font-size: 14px; line-height: 2; color:#334155; }
+  .explain b{ color:#0f172a; }
+  .explain .formula{
+    margin-top: 10px; font-size: 13px; color: var(--muted); background:#f8fafc;
+    border-radius: 10px; padding: 10px 14px; line-height: 1.8;
+  }
+  .hint{ font-size: 12px; color:#94a3b8; margin-top: 10px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>KMP 模式匹配动画演示</h1>
+    <div class="sub">
+      主串 T = <code id="tStr">abaabaabcabaabc</code>（n = 15）　模式串 S = <code>abaabc</code>（m = 6）<br>
+      采用教材版 KMP（i 不回退，失配时 j 回退到 <code>next[j]</code>）
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="next-table">
+      <table class="nextt">
+        <tr><th>j</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr>
+        <tr><th>S[j]</th><td>a</td><td>b</td><td>a</td><td>a</td><td>b</td><td>c</td></tr>
+        <tr><th>next[j]</th><td class="nval">0</td><td class="nval">1</td><td class="nval">1</td><td class="nval">2</td><td class="nval">2</td><td class="nval">3</td></tr>
+      </table>
+      <div class="next-note">
+        <b>next 表怎么来的？</b> next[1] = 0；next[j] = "S[1..j−1] 的最长相等前后缀长度" + 1。<br>
+        例：j=6 时 S[1..5]=<code>abaab</code>，最长相等前后缀为 <code>ab</code>（长度 2）→ next[6] = 3。<br>
+        含义：<b>失配在 S[j] 时，前面 j−1 个字符已匹配，其中前缀 <code>ab</code> 也出现在主串刚匹配段的尾部</b>，所以把 S[3] 滑到失配点接着比即可，已比过的不再重比。
+      </div>
+    </div>
+
+    <div class="row-label"><b>主串 T</b>（指针 i 只前进、永不回退）</div>
+    <div class="s-scroll"><div class="s-inner"><div class="shifter" id="tRow"></div></div></div>
+
+    <div class="row-label"><b>模式串 S</b>（失配时按 next 右移）＋ 对齐的 next 值</div>
+    <div class="s-scroll"><div class="s-inner">
+      <div class="shifter" id="sShifter"><div class="cells" id="sRow"></div></div>
+      <div class="shifter" id="nShifter"><div class="cells next-mini" id="nextRow"></div></div>
+    </div></div>
+
+    <div class="status-bar" id="statusBar">准备就绪：i = 1，j = 1，即将开始第 1 次比较。点击「▶ 播放」或「下一步」。</div>
+    <div class="hint">快捷键：← 上一步　→ 下一步　空格 播放/暂停</div>
+  </section>
+
+  <section class="card controls">
+    <div class="case-switch">
+      <button id="caseA" class="case-btn active">案例① 原题 abaabaabcabaabc</button>
+      <button id="caseB" class="case-btn">案例② 变体 abaabfabcabaabc（第6位 a→f）</button>
+    </div>
+    <button id="btnReset" class="warn">⏮ 重置</button>
+    <button id="btnPrev">◀ 上一步</button>
+    <button id="btnPlay" class="primary">▶ 播放</button>
+    <button id="btnNext">下一步 ▶</button>
+    <button id="btnEnd" class="warn">⏭ 直接看结果</button>
+    <div class="speed">
+      <span>慢</span><input type="range" id="speed" min="1" max="5" value="3" step="1"><span>快</span>
+    </div>
+    <div class="counter"><div class="kchip">已比较 <span id="kCount">0</span> 次</div></div>
+  </section>
+
+  <section class="card bottom-grid">
+    <div>
+      <div class="panel-title">比较过程日志</div>
+      <div id="logList"><div class="log-line">（尚未开始）</div></div>
+    </div>
+    <div>
+      <div class="panel-title">比较序号（<span style="color:var(--green)">✓ 相等</span> / <span style="color:var(--red)">✗ 失配</span>）</div>
+      <div class="ribbon" id="ribbon"><span style="font-size:13px;color:#94a3b8">随比较逐个点亮…</span></div>
+    </div>
+  </section>
+
+  <section class="card" id="summary">
+    <div class="ans">
+      <div class="big" id="sumBig">10 次</div>
+      <div class="desc" id="sumDesc">
+        <b>匹配成功！</b> 模式串出现在 T 的第 <b>4</b> 位起：<code>T[4..9] = abaabc</code>。<br>
+        总比较次数 = <b>6</b>（第一趟：T[1..6] ↔ S[1..6]，第 6 次在 T[6]↔S[6] 失配）+ <b>4</b>（第二趟：T[6..9] ↔ S[3..6] 连续相等）= <b>10 次</b>。<br>
+        KMP 的优势就体现在：失配后 i 不回退，靠 next[6]=3 跳过了 S[1]、S[2] 的两次多余比较。
+      </div>
+    </div>
+  </section>
+
+  <section class="card explain">
+    <div class="panel-title">过程解析（答案）</div>
+    <div id="explainA">
+    <ol>
+      <li><b>第一趟（6 次比较）</b>：i 从 1 开始，T[1..5]=<code>abaab</code> 与 S[1..5]=<code>abaab</code> 逐位相等（前 5 次比较 ✓）；第 6 次比较 T[6]='a' ≠ S[6]='c'，<b>失配</b>。此时已比较 <b>6</b> 次。</li>
+      <li><b>回退 j，i 不动</b>：查 next 表得 next[6] = 3，令 j = 3。已匹配的 <code>abaab</code> 中最长相等前后缀是 <code>ab</code>，故 S[1..2] 正好对准 T[4..5]，这两位不必重比，S[3] 直接对准 T[6]。</li>
+      <li><b>第二趟（4 次比较）</b>：T[6]↔S[3]、T[7]↔S[4]、T[8]↔S[5]、T[9]↔S[6] 四次比较全部 ✓，j 增至 7 &gt; m，匹配成功。</li>
+      <li><b>总比较次数 = 6 + 4 = <span style="color:var(--green)">10 次</span></b>，匹配位置为 T[4..9]。（若用朴素 BF 算法此处需比较更多次，KMP 正是省掉了回退带来的重复比较。）</li>
+    </ol>
+    <div class="formula">计数说明：每一次「单个字符之间」的比较都计入，包括失配的那一次和最后一次成功的那一次。</div>
+    </div>
+    <div id="explainB" class="hidden">
+    <ol>
+      <li><b>第一趟（8 次比较）</b>：T[1..5]=<code>abaab</code> 与 S[1..5] 逐位相等（前 5 次 ✓）；第 6 次 T[6]='f' ≠ S[6]='c'，<b>失配</b>；查 next[6]=3，第 7 次 T[6]='f' vs S[3]='a' 仍 ✗；查 next[3]=1，第 8 次 T[6]='f' vs S[1]='a' 仍 ✗；next[1]=0 → i 右移到 7、j 置 1。这一趟 i 一步未退，模式串靠 next 连续右移。</li>
+      <li><b>第二趟（4 次比较）</b>：第 9 次 T[7]='a' ↔ S[1] ✓、第 10 次 T[8]='b' ↔ S[2] ✓；第 11 次 T[9]='c' vs S[3]='a' ✗ → next[3]=1；第 12 次 T[9]='c' vs S[1]='a' ✗ → next[1]=0 → i 右移到 10、j 置 1。</li>
+      <li><b>第三趟（6 次比较）</b>：T[10..15]=<code>abaabc</code> 与 S[1..6] 六次全部 ✓，j 增至 7 &gt; m，匹配成功。</li>
+      <li><b>总比较次数 = 8 + 4 + 6 = <span style="color:var(--green)">18 次</span></b>，匹配位置 T[10..15]。</li>
+    </ol>
+    <div class="formula">关键差异：变体把 T[6] 换成 'f'——它在 S 中根本不出现，失配后触发 next 的多级回退链 6→3→1→0，回退后的比较注定失败，但 i 始终不回退。若改用 nextval 优化（nextval[3]=0），第 8、12 两次比较可省去，共 16 次。计数口径不变：失配的与最后成功的都计入。</div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const PITCH = 48; // 44 + 4
+
+  // ---- 严蔚敏版 next 数组（1-based，next[1]=0）----
+  function buildNext(s){
+    const next = new Array(s.length + 1).fill(0);
+    let i = 1, j = 0;
+    while (i < s.length){
+      if (j === 0 || s[i-1] === s[j-1]){ i++; j++; next[i] = j; }
+      else j = next[j];
+    }
+    return next;
+  }
+
+  // ---- 两个案例：① 原题　② 变体（T 第 6 位 a→f）----
+  const CASES = {
+    A: { T: "abaabaabcabaabc", S: "abaabc" },
+    B: { T: "abaabfabcabaabc", S: "abaabc" },
+  };
+  let T, S, n, m, NEXT, snaps;
+
+  function buildCase(key){
+    const c = CASES[key];
+    T = c.T; S = c.S; n = T.length; m = S.length;
+    NEXT = buildNext(S);
+
+    // 预演 KMP，生成步骤序列
+    const rawSteps = [];
+    (function run(){
+      let i = 1, j = 1, k = 0;
+      while (i <= n){
+        k++;
+        const ok = T[i-1] === S[j-1];
+        rawSteps.push({ type:'cmp', i, j, ok, k });
+        if (ok){
+          i++; j++;
+          if (j > m){ rawSteps.push({ type:'done', start: i - m, total: k }); return; }
+        } else {
+          const to = NEXT[j];
+          rawSteps.push({ type:'shift', i, from: j, to });
+          j = to;
+          if (j === 0){ i++; j = 1; rawSteps.push({ type:'restart', i }); }
+        }
+      }
+      rawSteps.push({ type:'fail' });
+    })();
+
+    // 由步骤生成完整快照，便于上一步/下一步
+    snaps = [{
+      i:1, j:1, align:1, count:0, tC:Array(n).fill(''), sC:Array(m).fill(''),
+      nextHi:null, logs:[], done:false, tag:null
+    }];
+    let cnt = 0;
+    for (const st of rawSteps){
+      const prev = snaps[snaps.length - 1];
+      if (st.type === 'cmp'){
+        cnt = st.k;
+        const tC = Array(n).fill(''), sC = Array(m).fill('');
+        const align = st.i - st.j + 1;
+        for (let p = 0; p < st.j - 1; p++){ tC[align-1+p] = 'ok'; sC[p] = 'ok'; }
+        tC[st.i-1] = st.ok ? 'hit' : 'miss';
+        sC[st.j-1] = st.ok ? 'hit' : 'miss';
+        snaps.push({
+          i: st.i, j: st.j, align, count: cnt, tC, sC, nextHi: null, done: false,
+          logs: prev.logs.concat([{
+            cls: st.ok ? 'ok' : 'miss',
+            text: `第 ${st.k} 次比较：T[${st.i}]='${T[st.i-1]}' vs S[${st.j}]='${S[st.j-1]}' → ${st.ok ? '✓ 相等' : '✗ 失配'}`
+          }]),
+          tag: st.ok ? ['t-ok','相等 ✓'] : ['t-miss','失配 ✗'],
+          cmpk: st.k, cmpok: st.ok
+        });
+      } else if (st.type === 'shift'){
+        const to = st.to;
+        const tC = Array(n).fill(''), sC = Array(m).fill('');
+        const align = to === 0 ? st.i : st.i - to + 1;
+        for (let p = 0; p < to - 1; p++){ tC[align-1+p] = 'ok'; sC[p] = 'ok'; }
+        snaps.push({
+          i: st.i, j: to, align, count: cnt, tC, sC, nextHi: st.from, done: false,
+          logs: prev.logs.concat([{
+            cls: 'shift',
+            text: to > 0
+              ? `查 next 表：next[${st.from}] = ${to}，j 回退为 ${to}；模式串右移使 S[${to}] 对准 T[${st.i}]${to > 1 ? `（S[1..${to-1}] 已隐含匹配，跳过不重比）` : ''}`
+              : `查 next 表：next[${st.from}] = 0，模式串右移到头，i 前进一格、j 置 1`
+          }]),
+          tag: ['t-shift','按 next 右移']
+        });
+      } else if (st.type === 'restart'){
+        snaps.push({
+          i: st.i, j: 1, align: st.i, count: cnt,
+          tC: Array(n).fill(''), sC: Array(m).fill(''), nextHi: 1, done: false,
+          logs: prev.logs.concat([{ cls:'shift', text:`i 前进到 ${st.i}，j 置 1，从 T[${st.i}] 与 S[1] 重新比较` }]),
+          tag: ['t-shift','i 前进一格']
+        });
+      } else if (st.type === 'done'){
+        const tC = Array(n).fill(''), sC = Array(m).fill('');
+        for (let p = 0; p < m; p++){ tC[st.start-1+p] = 'hit'; sC[p] = 'hit'; }
+        snaps.push({
+          i: null, j: null, align: st.start, count: st.total, tC, sC, nextHi: null, done: true,
+          matchStart: st.start, total: st.total,
+          logs: prev.logs.concat([{
+            cls: 'done',
+            text: `j = ${m+1} > 模式长度 ${m} → 匹配成功！子串位于 T[${st.start}..${st.start+m-1}]，总比较次数 = ${st.total} 次`
+          }]),
+          tag: ['t-done','匹配成功！']
+        });
+      } else if (st.type === 'fail'){
+        snaps.push({
+          i:null, j:null, align:1, count:cnt, tC:Array(n).fill(''), sC:Array(m).fill(''),
+          nextHi:null, done:true, failed:true,
+          logs: prev.logs.concat([{ cls:'done', text:'i 超出主串，匹配失败（本例不会走到这里）' }]),
+          tag: ['t-miss','匹配失败']
+        });
+      }
+    }
+  }
+
+  // ---- DOM 渲染 ----
+  const $ = id => document.getElementById(id);
+  const tRow = $('tRow'), sRow = $('sRow'), nextRow = $('nextRow');
+  const sShifter = $('sShifter'), nShifter = $('nShifter');
+  const statusBar = $('statusBar'), logList = $('logList'), ribbon = $('ribbon');
+  const kCount = $('kCount'), summary = $('summary');
+
+  function colRow(container, chars, classes, ptrText /* idx->label or null */){
+    container.innerHTML = '';
+    chars.forEach((ch, idx) => {
+      const c1 = idx + 1;
+      const col = document.createElement('div'); col.className = 'col';
+      const ptr = document.createElement('div'); ptr.className = 'ptr';
+      ptr.textContent = ptrText && ptrText[c1] ? ptrText[c1] : '';
+      const box = document.createElement('div');
+      box.className = 'box' + (classes[idx] ? ' ' + classes[idx] : '');
+      box.textContent = ch;
+      const ix = document.createElement('div'); ix.className = 'idx'; ix.textContent = c1;
+      col.append(ptr, box, ix);
+      container.appendChild(col);
+    });
+  }
+
+  function render(cur, animate){
+    const sn = snaps[cur];
+    if (!animate){ sShifter.classList.add('notrans'); nShifter.classList.add('notrans'); }
+
+    // 主串行
+    colRow(tRow, T.split(''), sn.tC, sn.i ? { [sn.i]: 'i=' + sn.i } : null);
+    // 模式串行 + next 行（同步滑动）
+    colRow(sRow, S.split(''), sn.sC, sn.j ? { [sn.j]: 'j=' + sn.j } : null);
+    nextRow.innerHTML = '';
+    for (let j = 1; j <= m; j++){
+      const col = document.createElement('div'); col.className = 'col';
+      const b = document.createElement('div');
+      b.className = 'nbox' + (sn.nextHi === j ? ' nhi' : '');
+      b.textContent = NEXT[j];
+      const ix = document.createElement('div'); ix.className = 'nidx'; ix.textContent = 'next[' + j + ']';
+      col.append(b, ix);
+      nextRow.appendChild(col);
+    }
+    const off = 'translateX(' + (sn.align - 1) * PITCH + 'px)';
+    sShifter.style.transform = off;
+    nShifter.style.transform = off;
+    if (!animate){
+      void sShifter.offsetWidth;
+      sShifter.classList.remove('notrans'); nShifter.classList.remove('notrans');
+    }
+
+    // 计数 / 状态
+    kCount.textContent = sn.count;
+    if (cur === 0){
+      statusBar.textContent = '准备就绪：i = 1，j = 1，即将开始第 1 次比较。';
+    } else {
+      const [cls, label] = sn.tag;
+      statusBar.innerHTML = `<span class="tag ${cls}">${label}</span>` + sn.logs[sn.logs.length-1].text;
+    }
+
+    // 日志
+    logList.innerHTML = '';
+    if (sn.logs.length === 0){
+      logList.innerHTML = '<div class="log-line">（尚未开始）</div>';
+    } else {
+      sn.logs.forEach(l => {
+        const d = document.createElement('div');
+        d.className = 'log-line ' + l.cls;
+        d.textContent = l.text;
+        logList.appendChild(d);
+      });
+      logList.scrollTop = logList.scrollHeight;
+    }
+
+    // 序号带
+    ribbon.innerHTML = '';
+    const cmpLogs = sn.logs.filter(l => /^第 \d+ 次比较/.test(l.text));
+    if (cmpLogs.length === 0){
+      ribbon.innerHTML = '<span style="font-size:13px;color:#94a3b8">随比较逐个点亮…</span>';
+    } else {
+      cmpLogs.forEach(l => {
+        const k = +l.text.match(/^第 (\d+) 次比较/)[1];
+        const ok = l.text.includes('✓');
+        const d = document.createElement('div');
+        d.className = 'chip ' + (ok ? 'ok' : 'miss') + ' pop';
+        d.innerHTML = `${ok ? '✓' : '✗'}<em>第${k}</em>`;
+        ribbon.appendChild(d);
+      });
+    }
+
+    // 结果卡
+    if (sn.done && sn.matchStart) summary.classList.add('show');
+    else summary.classList.remove('show');
+  }
+
+  // ---- 播放控制 ----
+  let cur = 0, timer = null;
+  const DELAYS = [1400, 1000, 700, 450, 250];
+
+  function goto(t, animate = true){
+    t = Math.max(0, Math.min(snaps.length - 1, t));
+    const jump = Math.abs(t - cur) > 1;
+    cur = t;
+    render(cur, animate && !jump);
+    if (cur >= snaps.length - 1) stopPlay();
+  }
+  function stopPlay(){
+    if (timer){ clearInterval(timer); timer = null; }
+    $('btnPlay').textContent = '▶ 播放';
+  }
+  function togglePlay(){
+    if (timer){ stopPlay(); return; }
+    if (cur >= snaps.length - 1) goto(0, false);
+    $('btnPlay').textContent = '⏸ 暂停';
+    timer = setInterval(() => {
+      if (cur >= snaps.length - 1) stopPlay();
+      else goto(cur + 1);
+    }, DELAYS[+$('speed').value - 1]);
+  }
+
+  $('btnNext').onclick = () => { stopPlay(); goto(cur + 1); };
+  $('btnPrev').onclick = () => { stopPlay(); goto(cur - 1); };
+  $('btnReset').onclick = () => { stopPlay(); goto(0, false); };
+  $('btnEnd').onclick = () => { stopPlay(); goto(snaps.length - 1, false); };
+  $('btnPlay').onclick = togglePlay;
+  $('speed').oninput = () => { if (timer){ stopPlay(); togglePlay(); } };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight'){ stopPlay(); goto(cur + 1); }
+    else if (e.key === 'ArrowLeft'){ stopPlay(); goto(cur - 1); }
+    else if (e.key === ' '){ e.preventDefault(); togglePlay(); }
+  });
+
+  // ---- 案例切换 ----
+  const SUMMARIES = {
+    A: {
+      big: '10 次',
+      html: `<b>匹配成功！</b> 模式串出现在 T 的第 <b>4</b> 位起：<code>T[4..9] = abaabc</code>。<br>
+        总比较次数 = <b>6</b>（第一趟：T[1..6] ↔ S[1..6]，第 6 次在 T[6]↔S[6] 失配）+ <b>4</b>（第二趟：T[6..9] ↔ S[3..6] 连续相等）= <b>10 次</b>。<br>
+        KMP 的优势就体现在：失配后 i 不回退，靠 next[6]=3 跳过了 S[1]、S[2] 的两次多余比较。`
+    },
+    B: {
+      big: '18 次',
+      html: `<b>匹配成功！</b> 模式串出现在 T 的第 <b>10</b> 位起：<code>T[10..15] = abaabc</code>。<br>
+        总比较次数 = <b>8</b>（第一趟）+ <b>4</b>（第二趟）+ <b>6</b>（第三趟）= <b>18 次</b>。<br>
+        亮点：T[6]='f' 在 S 中根本不出现，失配后 j 沿 next 链 <code>6→3→1→0</code> 一路回退、i 一步未退；T[9]='c' 处同理又回退一次。`
+    }
+  };
+  function applyCase(key){
+    stopPlay();
+    buildCase(key);
+    $('tStr').textContent = T;
+    $('caseA').classList.toggle('active', key === 'A');
+    $('caseB').classList.toggle('active', key === 'B');
+    $('explainA').classList.toggle('hidden', key !== 'A');
+    $('explainB').classList.toggle('hidden', key !== 'B');
+    $('sumBig').textContent = SUMMARIES[key].big;
+    $('sumDesc').innerHTML = SUMMARIES[key].html;
+    cur = 0;
+    render(0, false);
+  }
+  $('caseA').onclick = () => applyCase('A');
+  $('caseB').onclick = () => applyCase('B');
+
+  applyCase('A');
+</script>
+</body>
+</html>

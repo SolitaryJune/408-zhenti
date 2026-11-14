@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-30 磁臂黏着与磁盘调度算法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：磁臂黏着的根源',
+    cls: 'key',
+    body: '<p>磁臂黏着 = 系统总是反复访问同一磁道，其他磁道请求长期得不到响应。根源是调度时<b>按“离当前磁头近”挑选请求</b>——某磁道请求源源不断时，磁头就被它“黏”住。逐个算法分析。</p>' },
+  { title: 'B：SSTF 最短寻道时间优先 —— 会黏着',
+    cls: 'bad',
+    body: '<p>总选距当前磁头<b>最近</b>的请求。同一磁道的连续新请求会持续被优先选中，磁头被反复吸住。<b>会导致黏着 ✗</b></p>' },
+  { title: 'C：SCAN 扫描算法 —— 会黏着',
+    cls: 'bad',
+    body: '<p>沿一个方向扫描、服务途经请求，本质仍是“离当前位置近者优先”。高频磁道会反复吸住磁头。<b>会导致黏着 ✗</b></p>' },
+  { title: 'D：CSCAN 循环扫描 —— 会黏着',
+    cls: 'bad',
+    body: '<p>循环扫描只是单向回绕，仍按位置就近服务请求，黏着模式不变。<b>会导致黏着 ✗</b></p>' },
+  { title: 'A：FCFS 先来先服务 —— 不会黏着',
+    cls: 'good',
+    body: '<p>严格按请求<b>到达先后</b>服务，与磁道位置无关；再密集的新请求也不能插队抢走磁头。<b>不会导致磁臂黏着 ✓</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>不会导致磁臂黏着的是 FCFS → 选 <b>A</b>。记忆锚点：<b>黏着的根源是“挑近的”；FCFS 不挑位置</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·30 哪种磁盘调度算法不会磁臂黏着（2 分选择题）',
+  subtitle: 'FCFS · SSTF · SCAN · CSCAN —— 谁不按“离磁头近”挑请求',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐个算法分析。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（FCFS）',
+    html: 'SSTF / SCAN / CSCAN 都按<b>磁道位置就近</b>挑选请求，热点磁道会把磁头“黏”住；FCFS 只看<b>到达顺序</b>，不可能总停在一个磁道。注意：SCAN / CSCAN 解决的是来回摆动与边缘饥饿，<b>并不解决黏着</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

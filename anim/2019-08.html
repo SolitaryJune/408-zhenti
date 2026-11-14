@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-08 线性探测散列表 · 查找失败的 ASL</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var LEN = 11;
+
+// 8 个关键字的插入过程：散列地址与探测路径
+var KEYS = [
+  { k:87, h:3, path:[3] },
+  { k:40, h:5, path:[5] },
+  { k:30, h:2, path:[2] },
+  { k:6,  h:6, path:[6] },
+  { k:11, h:4, path:[4] },
+  { k:22, h:1, path:[1] },
+  { k:98, h:0, path:[0] },
+  { k:20, h:6, path:[6,7], conflict:true },
+];
+
+function hashTableHtml(ht, marks, noteHtml, titleHtml){
+  // ht: 长度 11 数组（null 为空）；marks: {idx: 'ok|hit|miss|dim'}
+  var h = '';
+  if (titleHtml) h += '<div class="aw-row-label">' + titleHtml + '</div>';
+  h += '<div style="display:flex;gap:' + 0 + 'px"><div class="aw-cells" style="gap:6px">';
+  for (var i = 0; i < LEN; i++){
+    var cls = marks && marks[i] ? ' ' + marks[i] : '';
+    h += '<div class="aw-col"><div class="aw-ptr"></div>' +
+         '<div class="aw-box' + cls + '" style="width:52px;height:52px;font-size:16px">' +
+         (ht[i] == null ? '' : ht[i]) + '</div>' +
+         '<div class="aw-idx">' + i + '</div></div>';
+  }
+  h += '</div></div>';
+  if (noteHtml) h += '<div class="aw-row-label" style="margin-top:10px">' + noteHtml + '</div>';
+  return h;
+}
+
+function buildInsertSnaps(){
+  var snaps = [];
+  var ht = [];
+  for (var i = 0; i < LEN; i++) ht.push(null);
+  snaps.push({ cls:'step', tag:'初始', count:0,
+    html: hashTableHtml(ht, null,
+      '散列函数 <code>H(key) = key % 7</code>（散列地址 0~6），冲突用<b>线性探测</b>：向后逐格找空位。表长 11。',
+      '<b>散列表 HT</b>（长度 11，初始为空）') });
+  for (var j = 0; j < KEYS.length; j++){
+    var it = KEYS[j];
+    var marks = {};
+    for (var p = 0; p < it.path.length - 1; p++) marks[it.path[p]] = 'miss';  // 被占，探测失败
+    marks[it.path[it.path.length - 1]] = 'hit';                              // 落位
+    ht[it.path[it.path.length - 1]] = it.k;
+    var log = '插入 ' + it.k + '：H(' + it.k + ') = ' + it.h;
+    if (it.conflict){
+      log += '，但 6 号已被关键字 6 占用 → 继续探查，7 号为空 → 落位 7 号，共探测 2 次。';
+    } else {
+      log += '，' + it.h + ' 号为空 → 直接落位，探测 1 次。';
+    }
+    snaps.push({ cls: it.conflict ? 'miss' : 'ok', tag: it.conflict ? '冲突·探查' : '直接插入',
+      count: j + 1, ribbon:{ k: j + 1, ok:true },
+      html: hashTableHtml(ht, marks,
+        '已插入 ' + (j + 1) + ' / 8 个关键字。', '<b>散列表 HT</b>（线性探测插入中）') , _log: log });
+    // 补 log（保持 snaps 简洁，直接在对象上赋值后返回）
+    snaps[snaps.length - 1].log = log;
+  }
+  return snaps;
+}
+
+function failureProbeSnap(ht, start, endExclusive, times){
+  var marks = {};
+  for (var i = start; i < endExclusive; i++) marks[i] = 'ok';   // 探测经过的占用格
+  marks[endExclusive] = 'miss';                                 // 空格 → 判定失败
+  return { cls:'miss', tag:'失败探查', count:9,
+    html: hashTableHtml(ht, marks,
+      '查找失败 = 从散列地址出发逐格探测，直到遇到<b>空单元</b>。此处从 0 号探到 8 号才空，共 ' + times + ' 次。',
+      '<b>插入完成后的 HT</b>：0=98, 1=22, 2=30, 3=87, 4=11, 5=40, 6=6, 7=20，8~10 空') };
+}
+
+var inserts = buildInsertSnaps();
+var htFull = [];
+for (var i2 = 0; i2 < LEN; i2++) htFull.push(null);
+KEYS.forEach(function(it){ htFull[it.path[it.path.length - 1]] = it.k; });
+
+var failCounts = [9, 8, 7, 6, 5, 4, 3];   // H=0..6 的失败探测次数
+
+var chipsHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+for (var c = 0; c < 7; c++){
+  chipsHtml += '<div style="background:#fff7f7;border:1.5px solid #fecaca;border-radius:10px;padding:6px 10px;font-size:13px;color:#b91c1c;font-weight:700">H=' + c + ' → ' + failCounts[c] + ' 次</div>';
+}
+chipsHtml += '</div>';
+
+var snaps = inserts.concat([
+  failureProbeSnap(htFull, 0, 8, 9),
+  { cls:'step', tag:'七个地址逐一统计', count:10,
+    html: hashTableHtml(htFull, null, chipsHtml,
+      '<b>查找失败</b>：只可能从 H(key) = 0~6 这 7 个地址出发（分母是模数 7，不是表长 11）') },
+  { cls:'step', tag:'汇总求平均', count:11,
+    html: hashTableHtml(htFull, null,
+      '<div style="font-size:16px;line-height:2">失败探测总次数 = 9+8+7+6+5+4+3 = <b style="color:#b91c1c">42</b><br>' +
+      'ASL<sub>失败</sub> = 42 ÷ <b style="color:#2563eb">7</b>（模数）= <b style="color:#16a34a;font-size:20px">6</b></div>',
+      '<b>平均查找长度（查找失败）</b>') },
+  { cls:'done', tag:'结论', count:12, done:true,
+    html: hashTableHtml(htFull, null,
+      '<div style="font-size:15px;line-height:2">查找失败的平均查找长度 = <b style="color:#16a34a">6</b> → 选 <b style="color:#16a34a">C</b>。<br>' +
+      '两个关键点：①分母是<b>模数 7</b>（散列地址 0~6），不是表长 11；②失败探测必须走到第一个空单元，8~10 号为空把各地址的探测都拖长了。</div>',
+      '<b>结论</b>') },
+]);
+
+AW.init({
+  title: '2019-08 · 线性探测散列表：查找失败的 ASL',
+  subtitle: '表长 11 · <code>H(key) = key % 7</code> · 关键字序列 87,40,30,6,11,22,98,20',
+  counterLabel: '已完成步',
+  ribbonTitle: '插入序号（✓ 插入成功）',
+  intro: '点击「▶ 播放」先插入 8 个关键字，再模拟查找失败。',
+  snaps: snaps,
+  result: {
+    big: 'ASL = 6（答案 C）',
+    html: '失败探查：H=0→9 次、H=1→8、H=2→7、H=3→6、H=4→5、H=5→4、H=6→3，合计 <b>42</b>；除以<b>模数 7</b> 得 <b>6</b>。陷阱：分母用表长 11、漏算 20 的冲突落位 7 号。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

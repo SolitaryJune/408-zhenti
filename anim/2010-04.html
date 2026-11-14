@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-04 AVL 插入 48 · RL 双旋动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 结点构造器（v=显示值，id=标记键，sub=下方小注）
+function N(v, l, r, sub, id){
+  return { v: v, id: id || v, l: l || null, r: r || null, sub: sub || null };
+}
+function G(id){ return { v: '空', id: id, l: null, r: null, sub: null, ghost: true }; }
+
+// 通用二叉树绘制：按中序定位 x、按深度定位 y
+function drawTree(root, marks, opts){
+  opts = opts || {};
+  var XP = opts.xp || 58, YP = opts.yp || 70, R = opts.r || 20;
+  var cnt = 0, maxd = 0, pos = {};
+  (function inorder(nd, d){
+    if (!nd) return;
+    inorder(nd.l, d + 1);
+    pos[nd.id] = { x: ++cnt, y: d + 1 };
+    maxd = Math.max(maxd, d + 1);
+    inorder(nd.r, d + 1);
+  })(root, 0);
+  var W = (cnt + 1) * XP, H = (maxd + 1) * YP;
+  function px(id){ return pos[id].x * XP; }
+  function py(id){ return pos[id].y * YP - YP * 0.4; }
+  var s = '<svg width="' + W + '" height="' + H + '" style="max-width:100%;display:block;margin:0 auto">';
+  (function edges(nd){
+    if (!nd) return;
+    ['l', 'r'].forEach(function(k){
+      var c = nd[k];
+      if (c){
+        s += '<line x1="' + px(nd.id) + '" y1="' + py(nd.id) + '" x2="' + px(c.id) + '" y2="' + py(c.id) + '" stroke="#94a3b8" stroke-width="2.5"/>';
+      }
+    });
+    edges(nd.l); edges(nd.r);
+  })(root);
+  (function nodes(nd){
+    if (!nd) return;
+    var m = marks && marks[nd.id];
+    var fill = '#fff', stroke = '#cbd5e1', txt = '#0f172a', dash = '';
+    if (m === 'ok'){ fill = '#dcfce7'; stroke = '#16a34a'; txt = '#14532d'; }
+    else if (m === 'hit'){ fill = '#16a34a'; stroke = '#16a34a'; txt = '#fff'; }
+    else if (m === 'miss'){ fill = '#fee2e2'; stroke = '#dc2626'; txt = '#b91c1c'; }
+    else if (m === 'key'){ fill = '#fef3c7'; stroke = '#d97706'; txt = '#92400e'; }
+    else if (m === 'dim'){ fill = '#f8fafc'; stroke = '#e2e8f0'; txt = '#cbd5e1'; }
+    if (nd.ghost){ dash = ' stroke-dasharray="4 3"'; txt = '#cbd5e1'; }
+    s += '<circle cx="' + px(nd.id) + '" cy="' + py(nd.id) + '" r="' + R + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2.5"' + dash + '/>' +
+         '<text x="' + px(nd.id) + '" y="' + (py(nd.id) + 6) + '" text-anchor="middle" font-size="15" font-weight="700" fill="' + txt + '" font-family="Menlo,Consolas,monospace">' + nd.v + '</text>';
+    if (nd.sub){
+      s += '<text x="' + px(nd.id) + '" y="' + (py(nd.id) + R + 16) + '" text-anchor="middle" font-size="11.5" fill="#64748b">' + nd.sub + '</text>';
+    }
+    nodes(nd.l); nodes(nd.r);
+  })(root);
+  return s + '</svg>';
+}
+
+function treeCard(svg, note){
+  return '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px 6px 2px">' + svg + '</div>' +
+         '<div style="font-size:13.5px;line-height:1.9;color:#334155;margin-top:8px">' + note + '</div>';
+}
+
+// 四个关键形态
+var t0 = N('24', N('13'), N('53', N('37'), N('90'), 'BF=0'), 'BF=-1');
+var t1 = N('24', N('13'), N('53', N('37', null, N('48'), 'BF=-1'), N('90'), 'BF=+1'), 'BF=-2');
+var t4 = N('24', N('13'), N('37', null, N('53', N('48'), N('90'), 'BF=0'), 'BF=-1'), 'BF=-1');
+var t5 = N('37', N('24', N('13'), G('e24'), 'BF=-1'), N('53', N('48'), N('90'), 'BF=0'), 'BF=0');
+
+var snaps = [
+  { cls: 'step', tag: '初始', count: 0,
+    log: '原平衡树 24（13，53（37，90）），各结点 BF 都在 ±1 内；现在插入 48。',
+    html: treeCard(drawTree(t0, { 24: 'key' }, { yp: 78 }),
+      '平衡二叉树：24（左 13，右 53），53 的左孩子 37、右孩子 90。各结点平衡因子（左高−右高）均在 ±1 内，<b>24 的 BF = -1</b>。<br>现在插入关键字 <b>48</b>。') },
+  { cls: 'ok', tag: '插入 48', count: 1, ribbon: { k: 1, ok: true },
+    log: '48 走 24→53→37，落为 37 的右孩子；37 BF=-1、53 BF=+1，均合法。',
+    html: treeCard(drawTree(t1, { 48: 'hit' }, { yp: 78 }),
+      'BST 性质定位：48 大于 24、53，小于 90，走 24 → 53 → 37，落为 <b>37 的右孩子</b>（37 &lt; 48 &lt; 53）。<br>各结点新平衡因子：37 = -1、53 = +1，均合法。') },
+  { cls: 'miss', tag: '失衡', count: 2, ribbon: { k: 2, ok: true },
+    log: '回溯到 24：左高 1、右高 3，BF=-2 失衡 → 最小失衡子树根是 24。',
+    html: treeCard(drawTree(t1, { 24: 'miss', 53: 'key', 37: 'key' }, { yp: 78 }),
+      '沿插入路径回溯：37（-1）、53（+1）都平衡，到 <b>24：左高 1、右高 3，BF = -2</b>，失衡。<br><b>24 是最小失衡子树的根</b>，调整只在以 24 为根的子树内进行。') },
+  { cls: 'shift', tag: '判型 RL', count: 3, ribbon: { k: 3, ok: true },
+    log: '插入点在 24 的右子树(53)的左子树(37)上 → RL 型：先右旋 53，再左旋 24。',
+    html: treeCard(drawTree(t1, { 24: 'miss', 53: 'key', 37: 'hit' }, { yp: 78 }),
+      '插入点位于 24 的<b>右子树（53）的左子树（37）</b>上 → <b>RL 型</b>。<br>口诀：<b>先对右孩子 53 右旋，再对失衡根 24 左旋</b>（双旋，先孩子后根）。') },
+  { cls: 'shift', tag: '右旋 53', count: 4, ribbon: { k: 4, ok: true },
+    log: '右旋 53：37 升为子树根，48 改挂 53 左孩子，53 带 90 下沉。',
+    html: treeCard(drawTree(t4, { 37: 'hit', 53: 'dim' }, { yp: 78 }),
+      '右旋 53：37 升为该子树根；37 原来的右孩子 <b>48</b> 改挂为 53 的左孩子；53 带着右孩子 90 下沉为 37 的右孩子。<br>此时 37、53、24 的 BF 都回到 ±1 内，但整树仍以 24 为根，还需第二步。') },
+  { cls: 'shift', tag: '左旋 24', count: 5, ribbon: { k: 5, ok: true },
+    log: '左旋 24：37 升为整树根，37 原左孩子(空)改挂 24 右孩子，24 带 13 下沉。',
+    html: treeCard(drawTree(t5, { 37: 'hit', 24: 'ok' }, { yp: 78 }),
+      '左旋 24：37 升为整树根；37 原来的左孩子（<b>空</b>）改挂为 24 的右孩子；24 带着左孩子 13 下沉为 37 的左孩子。<br>全部结点 BF = 0 或 -1，新树重新平衡。') },
+  { cls: 'done', tag: '结论', count: 6, done: true, ribbon: { k: 6, ok: true },
+    log: '新树根 37：左孩子 24、右孩子 53 → 答案选 C（24, 53）。',
+    html: treeCard(drawTree(t5, { 24: 'key', 53: 'key', 37: 'hit' }, { yp: 78 }),
+      '新平衡树：根 <b>37</b>，左孩子 <b>24</b>（左 13、右空），右孩子 <b>53</b>（左 48、右 90）。<br>37 的左、右孩子保存的关键字 = <b style="color:#16a34a;font-size:17px">24 和 53</b> → 答案选 <b style="color:#16a34a;font-size:17px">C</b>。') },
+];
+
+AW.init({
+  title: '2010-04 · AVL 插入 48：RL 型双旋全过程',
+  subtitle: '原树 24（13，53（37，90））· 插入 48 · 判型 → 先右旋 53，再左旋 24',
+  counterLabel: '已完成步骤',
+  ribbonTitle: '调整步骤（✓ 完成）',
+  intro: '点击「▶ 播放」，看 48 插入后如何通过双旋恢复平衡。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（24, 53）',
+    html: '48 落为 <b>37 的右孩子</b> → 24 的 BF 变 -2（右孩子的左子树增高 = <b>RL 型</b>）→ 先对 53 <b>右旋</b>、再对 24 <b>左旋</b>。新树根 37，左孩子 24（左 13、右空），右孩子 53（左 48、右 90）。易错：把 RL 当成单旋，或把双旋方向弄反。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

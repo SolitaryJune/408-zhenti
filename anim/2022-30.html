@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-30 · 影响缺页率的因素辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找「不会影响缺页率」的选项', cls: 'key',
+    body: '<p>缺页率的定义：访问的页<b>不在内存</b>的比例。凡是影响「页是否驻留内存」的因素都影响缺页率；只影响<b>缺页后处理速度</b>的因素不影响它。</p>' },
+  { title: 'A 页置换算法 → 影响', cls: '',
+    body: '<p>OPT、LRU、FIFO 对未来访问的预测能力不同，同样的访问序列下缺页次数可相差数倍 → <b>影响</b>缺页率。</p>' },
+  { title: 'B 工作集的大小 → 影响', cls: '',
+    body: '<p>工作集是进程在某段时间内实际访问页的集合。分配的物理块数<b>小于工作集</b>时会频繁缺页甚至抖动；物理块充裕则缺页率低 → <b>影响</b>。</p>' },
+  { title: 'C 进程的数量 → 影响', cls: '',
+    body: '<p>内存总量一定，进程越多、分给每个进程的物理块越少，各进程缺页率升高 → <b>影响</b>（多道程序度间接抬高缺页率）。</p>' },
+  { title: 'D 页缓冲队列的长度 → 不影响', cls: 'good',
+    body: '<p>页缓冲队列存放<b>已被淘汰出内存的页</b>：若再访问这些页，可从缓冲区快速恢复——只缩短缺页<b>处理时间</b>；它不改变「页是否在内存」的判定事实，也不参与置换决策 → <b>不影响</b>缺页率。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：影响缺页率——置换算法、物理块数/工作集、页面大小、程序局部性、进程数；<b>页缓冲只加快恢复、不减少缺页判定</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '影响缺页率的因素辨析（2022-30）',
+  subtitle: '考点：缺页率的影响因素 · 缺页判定事实 vs 缺页处理速度',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，逐项核对四个选项是否影响缺页率。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（页缓冲队列的长度）',
+    html: '记忆锚点：置换算法、工作集/物理块数、进程数都改变「页是否在内存」→ 影响缺页率；页缓冲队列只让被淘汰页<b>恢复更快</b>，不减少缺页的发生 → 不影响。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

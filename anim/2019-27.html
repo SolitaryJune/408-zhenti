@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-27 二级反馈队列调度动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 每一步的舞台状态（与 snaps 一一对应）
+// seg：甘特图已亮出的段数；done：已完成进程所在的段下标（-1 无）
+var STATES = [
+  { q1: 'P1(需30) → P2(需20)',               q2: '（空）',                seg: 0, done: -1 },
+  { q1: 'P2(需20)',                          q2: '（空）',                seg: 1, done: -1 },
+  { q1: 'P2(需20)',                          q2: 'P1(剩20)',              seg: 1, done: -1 },
+  { q1: '（空）',                            q2: 'P1(剩20)',              seg: 2, done: -1 },
+  { q1: '（空）',                            q2: 'P1(剩20) → P2(剩10)',   seg: 2, done: -1 },
+  { q1: '（空）',                            q2: 'P1(剩20) → P2(剩10)',   seg: 3, done: -1 },
+  { q1: '（空）',                            q2: 'P1(剩20)',              seg: 3, done: 2 },
+  { q1: '（空）',                            q2: '（空）',                seg: 4, done: 2 },
+  { q1: '（空）',                            q2: '（空）',                seg: 4, done: 3 },
+  { q1: '（空）',                            q2: '（空）',                seg: 4, done: 3, wt: true },
+];
+
+var SEGS = [
+  { w: 20, name: 'P1', q: 'Q1', t: '0~10' },
+  { w: 20, name: 'P2', q: 'Q1', t: '10~20' },
+  { w: 20, name: 'P2', q: 'Q2', t: '20~30' },
+  { w: 40, name: 'P1', q: 'Q2', t: '30~50' },
+];
+
+AW.init({
+  title: '2019-27 · 二级反馈队列调度：P1(30ms)、P2(20ms)',
+  subtitle: 'Q1：时间片轮转（10ms）· Q2：短进程优先 · 新进程先入 Q1 · 一个时间片未完降入 Q2 · Q1 空才调度 Q2',
+  counterLabel: '当前时刻',
+  ribbonTitle: '调度决策（✓ 每次选进程）',
+  intro: '点击「▶ 播放」沿时间轴逐步推进。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.minWidth = '620px';
+
+    var l1 = AW.el('div', 'aw-row-label', '<b>就绪队列 Q1</b>（时间片轮转，片长 10ms）');
+    var q1 = AW.el('div', '');
+    q1.style.cssText = 'font-size:14.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:2px solid #bfdbfe;border-radius:10px;padding:8px 12px;margin-bottom:10px;min-height:38px';
+    var l2 = AW.el('div', 'aw-row-label', '<b>就绪队列 Q2</b>（短进程优先）');
+    var q2 = AW.el('div', '');
+    q2.style.cssText = 'font-size:14.5px;font-weight:700;color:#92400e;background:#fffbeb;border:2px solid #fde68a;border-radius:10px;padding:8px 12px;margin-bottom:14px;min-height:38px';
+
+    var gl = AW.el('div', 'aw-row-label', '<b>CPU 甘特图</b>（0 → 50ms；蓝 = 在 Q1 内运行，琥珀 = 在 Q2 内运行，绿 = 已完成）');
+    var gantt = AW.el('div', '');
+    gantt.style.cssText = 'display:flex;width:100%;height:44px;border:2px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#f8fafc';
+    var segEls = [];
+    SEGS.forEach(function(s){
+      var d = AW.el('div', '');
+      d.style.cssText = 'display:none;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;width:' + s.w + '%';
+      d.textContent = s.name + ' ' + s.t;
+      segEls.push(d);
+      gantt.appendChild(d);
+    });
+
+    var ruler = AW.el('div', '');
+    ruler.style.cssText = 'position:relative;height:18px;margin-top:4px;font-size:11px;color:#94a3b8;font-family:monospace';
+    var rulerPos = [0, 20, 40, 60, 100];
+    var rulerT   = [0, 10, 20, 30, 50];
+    for (var k = 0; k < 5; k++){
+      var lab = AW.el('div', '', String(rulerT[k]));
+      var tx = k === 0 ? '0' : (k === 4 ? '-100%' : '-50%');
+      lab.style.cssText = 'position:absolute;left:' + rulerPos[k] + '%;transform:translateX(' + tx + ')';
+      ruler.appendChild(lab);
+    }
+
+    var wtTitle = AW.el('div', 'aw-row-label', '<b>等待时间</b>（= 停留在系统内的时间 − 实际运行时间）');
+    var wt = AW.el('div', '');
+    wt.style.cssText = 'display:none;font-size:14px;line-height:1.9;color:#334155;background:#f8fafc;border-radius:10px;padding:10px 14px;margin-top:8px';
+    wt.innerHTML = 'P1：t=50 完成，等待 = 50 − 30 = <b>20ms</b>；P2：t=30 完成，等待 = 30 − 20 = <b>10ms</b><br>' +
+                   '平均等待时间 = (20 + 10) ÷ 2 = <b style="color:#16a34a">15ms</b> → 选 <b>C</b>';
+
+    inner.appendChild(l1); inner.appendChild(q1);
+    inner.appendChild(l2); inner.appendChild(q2);
+    inner.appendChild(gl); inner.appendChild(gantt); inner.appendChild(ruler);
+    inner.appendChild(wtTitle); inner.appendChild(wt);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+
+    this._q1 = q1; this._q2 = q2; this._segEls = segEls; this._wt = wt;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'开始',    log:'t=0：Q1、Q2 初始为空；系统依次创建 P1（需 30ms）、P2（需 20ms）后开始调度，先来的 P1 排在 Q1 队首。', count:0 },
+    { cls:'shift', tag:'调度 ①',  log:'t=0：Q1 非空 → 优先调度 Q1 队首 P1，运行一个时间片 10ms（0→10）。', count:10, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'降级',    log:'t=10：P1 尚需 20ms，未结束 → 转入 Q2；此时 Q1 只剩 P2。', count:10 },
+    { cls:'shift', tag:'调度 ②',  log:'t=10：Q1 非空 → 调度 P2，运行 10ms（10→20）。', count:20, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'降级',    log:'t=20：P2 尚需 10ms → 转入 Q2；Q1 空，Q2 中排队次序为 P1(剩20)、P2(剩10)。', count:20 },
+    { cls:'shift', tag:'调度 ③',  log:'t=20：Q1 空 → 调度 Q2：短进程优先，P2 剩 10ms 短于 P1 剩 20ms → 选 P2（20→30）。', count:20, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'P2 完成', log:'t=30：P2 运行完剩余 10ms，完成。等待时间 = 30 − 20 = 10ms。', count:30 },
+    { cls:'shift', tag:'调度 ④',  log:'t=30：Q2 只剩 P1 → 调度 P1 运行至完成（30→50）。', count:30, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'P1 完成', log:'t=50：P1 完成。等待时间 = 50 − 30 = 20ms。', count:50 },
+    { cls:'done',  tag:'结论',    log:'平均等待时间 = (20 + 10) ÷ 2 = 15ms → 选 C。', count:50, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = STATES[i];
+    this._q1.textContent = st.q1;
+    this._q2.textContent = st.q2;
+    var segEls = this._segEls;
+    for (var k = 0; k < 4; k++){
+      var e = segEls[k];
+      if (k < st.seg){
+        e.style.display = 'flex';
+        e.style.background = (k <= st.done) ? '#16a34a' : (SEGS[k].q === 'Q1' ? '#3b82f6' : '#d97706');
+      } else {
+        e.style.display = 'none';
+      }
+    }
+    this._wt.style.display = st.wt ? 'block' : 'none';
+  },
+
+  result: {
+    big: '15ms',
+    html: '平均等待时间 = <b>(20 + 10) ÷ 2 = 15ms</b>，选 <b>C</b>。<br>要点：新进程一律先入 <b>Q1</b> 轮转一个时间片；未结束才<b>降入 Q2</b>；Q1 空了才调度 Q2，Q2 按<b>短进程优先</b>挑选。P1 等待 20ms、P2 等待 10ms。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

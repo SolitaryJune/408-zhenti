@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-34 · 奈奎斯特准则对接香农定理</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两条极限速率公式',
+    cls: 'key',
+    body: '<p>无噪声（奈奎斯特准则）：<code>C = 2W·log2V</code>，V 为信号状态数；有噪声（香农定理）：<code>C = W·log2(1+S/N)</code>。题意：<b>奈氏极限 ≥ 香农极限</b>。</p>' },
+  { title: '把 30dB 换算成信噪比',
+    cls: '',
+    body: '<p>dB = 10·lg(S/N) → S/N = 10^(30/10) = <code>1000</code>。注意：30dB 对应的是 <b>1000 倍</b>，不是 30 倍。</p>' },
+  { title: '算出香农极限速率',
+    cls: '',
+    body: '<p>C(香农) = W·log2(1+1000) = W·log2(1001) ≈ <code>9.97W</code>。</p>' },
+  { title: '建立并求解不等式',
+    cls: '',
+    body: '<p><code>2W·log2V ≥ 9.97W</code> → log2V ≥ 4.985 → V ≥ 2^4.985 ≈ <code>31.6</code>。</p>' },
+  { title: '取整并两端验证',
+    cls: 'good',
+    body: '<p>状态数必须是整数，向上取整 → V = <b>32</b>。验证：V=16 时 2W×4 = 8W &lt; 9.97W 不够；V=32 时 2W×5 = 10W ≥ 9.97W ✓。</p>' },
+  { title: '逐项排除干扰项',
+    cls: 'bad',
+    body: '<p>A（4）/B（8）：把 30dB 当成信噪比 30 倍、或对数底用成 lg；C（16）：不取整、或忘了用系数 2 验证。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D（32）</b>。记忆锚点：V ≥ √(1+S/N) = √1001 ≈ 31.6 → 取 32。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2017-34 · 无噪声极限速率 ≥ 30dB 香农极限，求信号状态数',
+  subtitle: '奈奎斯特：<code>2W·log2V</code> · 香农：<code>W·log2(1+S/N)</code> · 30dB',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D · 32',
+    html: '30dB ⇔ 信噪比 <b>1000</b>；香农极限 ≈ 9.97W；由 2W·log2V ≥ 9.97W 得 V ≥ √1001 ≈ 31.6，状态数向上取整为 <b>32</b>（V=16 不够，V=32 达标）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

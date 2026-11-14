@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-46 二级页表下的地址变换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var R = {};
+
+var GROUPS = [
+  { label: '页目录号 · 10 位', hex: '042H', bits: '0001000010' },
+  { label: '页号 · 10 位',     hex: '001H', bits: '0000000001' },
+  { label: '页内偏移 · 12 位', hex: '008H', bits: '000000001000' }
+];
+
+var ROWS = [
+  ['va',    '虚拟地址 a[1][2]'],
+  ['dirno', '页目录号（高 10 位）'],
+  ['ptno',  '页号（中间 10 位）'],
+  ['off',   '页内偏移（低 12 位）'],
+  ['pte1',  '页目录项物理地址'],
+  ['pte2',  '页表项物理地址']
+];
+
+var VALS = {
+  va:    '1080 1008H',
+  dirno: '042H（0001000010B）',
+  ptno:  '001H（0000000001B）',
+  off:   '008H',
+  pte1:  '0020 1108H',
+  pte2:  '0030 1004H'
+};
+
+AW.init({
+  title: '二级页表请求分页：a[1][2] 的地址变换',
+  subtitle: '页目录项/页表项均 4B · 页大小 4KB · 数组起始虚拟地址 <code>1080 0000H</code> · 页目录基址 <code>0020 1000H</code>',
+  counterLabel: '变换步',
+  intro: '点击「▶ 播放」逐步完成地址拆分与两级查表。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>虚拟地址的 10 | 10 | 12 三段划分</b>（随推导填充）'));
+    var grow = AW.el('div', 'aw-cells');
+    R.groups = [];
+    GROUPS.forEach(function(g){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '168px';
+      var box = AW.el('div', '');
+      box.style.cssText = 'height:58px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .25s';
+      var hx = AW.el('div', null, '—');
+      hx.style.cssText = 'font-family:Menlo,monospace;font-weight:700;font-size:17px;color:#0f172a';
+      var bt = AW.el('div', null, '');
+      bt.style.cssText = 'font-family:Menlo,monospace;font-size:10.5px;color:#94a3b8;margin-top:2px';
+      box.appendChild(hx); box.appendChild(bt);
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', g.label));
+      grow.appendChild(col);
+      R.groups.push({ box: box, hx: hx, bt: bt });
+    });
+    inner.appendChild(grow);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>变换结果单</b>（逐行填出）'));
+    R.rows = {};
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'display:flex;align-items:center;padding:5px 12px;border-radius:8px;' +
+        'font-size:13.5px;line-height:1.9;transition:background .25s';
+      var lab = AW.el('span', null, r[1]);
+      lab.style.cssText = 'flex:0 0 190px;color:#475569';
+      var val = AW.el('span', null, '—');
+      val.style.cssText = 'font-family:Menlo,monospace;font-weight:700;color:#94a3b8;transition:color .25s';
+      d.appendChild(lab); d.appendChild(val);
+      inner.appendChild(d);
+      R.rows[r[0]] = { row: d, val: val };
+    });
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '题面',
+      log: '32 位系统、二级页表请求分页、按字节编址；a[1024][1024] 起始虚拟地址 1080 0000H，元素占 4B；页目录基址 0020 1000H',
+      split: false, group: -1, filled: [], hl: null },
+    { cls: 'step', tag: '定地址结构',
+      log: '页目录项/页表项均 4 字节 → 每页 4096B 可放 1024 项 → 页目录号 10 位、页号 10 位、页内偏移 12 位（页大小 4KB）',
+      split: false, group: -1, filled: [], hl: null },
+    { cls: 'step', tag: '元素定位',
+      log: '按行优先：a[1][2] 前面共有 1×1024 + 2 = 1026 个元素',
+      split: false, group: -1, filled: [], hl: null },
+    { cls: 'ok', tag: '求虚拟地址',
+      log: '字节偏移 = 1026 × 4B = 4104 = 1008H；虚拟地址 = 1080 0000H + 1008H = 1080 1008H',
+      split: false, group: -1, filled: ['va'], hl: 'va' },
+    { cls: 'shift', tag: '切三段',
+      log: '把 1080 1008H 拆成 10 | 10 | 12 三段，先看高 10 位（页目录号）',
+      split: true, group: 0, filled: ['va'], hl: null },
+    { cls: 'ok', tag: '页目录号',
+      log: '高 10 位 = 0001000010B = 042H（十进制 66）',
+      split: true, group: 0, filled: ['va', 'dirno'], hl: 'dirno' },
+    { cls: 'ok', tag: '页号与偏移',
+      log: '中间 10 位 = 0000000001B = 001H；低 12 位 = 000000001000B = 008H（页内偏移）',
+      split: true, group: 1, filled: ['va', 'dirno', 'ptno', 'off'], hl: 'ptno' },
+    { cls: 'shift', tag: '查页目录',
+      log: '页目录项物理地址 = 页目录基址 + 页目录号 × 4（每项 4 字节，要乘！）',
+      split: true, group: 0, filled: ['va', 'dirno', 'ptno', 'off'], hl: null },
+    { cls: 'ok', tag: '目录项地址',
+      log: '0020 1000H + 042H×4 = 0020 1000H + 108H = 0020 1108H',
+      split: true, group: 0, filled: ['va', 'dirno', 'ptno', 'off', 'pte1'], hl: 'pte1' },
+    { cls: 'shift', tag: '页框号 → 页表基址',
+      log: '该目录项中存放的页框号为 00301H → 页表起始物理地址 = 00301H × 1000H = 0030 1000H',
+      split: true, group: 1, filled: ['va', 'dirno', 'ptno', 'off', 'pte1'], hl: null },
+    { cls: 'ok', tag: '页表项地址',
+      log: '页表项物理地址 = 0030 1000H + 001H×4 = 0030 1004H；页内偏移 008H 直接搬去拼物理地址',
+      split: true, group: 2, filled: ['va', 'dirno', 'ptno', 'off', 'pte1', 'pte2'], hl: 'pte2' },
+    { cls: 'done', tag: '完成',
+      log: 'a[1][2]：VA=1080 1008H，页目录号 042H，页号 001H，页目录项地址 0020 1108H，页表项地址 0030 1004H',
+      split: true, group: -1, filled: ['va', 'dirno', 'ptno', 'off', 'pte1', 'pte2'], hl: null, done: true },
+  ],
+
+  render: function(stage, sn){
+    R.groups.forEach(function(g, j){
+      if(sn.split){
+        g.hx.textContent = GROUPS[j].hex;
+        g.bt.textContent = GROUPS[j].bits + 'B';
+      } else {
+        g.hx.textContent = '—';
+        g.bt.textContent = '';
+      }
+      if(sn.group === j){
+        g.box.style.borderColor = '#d97706';
+        g.box.style.background = '#fef3c7';
+      } else if(sn.filled.length >= 6){
+        g.box.style.borderColor = '#16a34a';
+        g.box.style.background = '#f6fef9';
+      } else {
+        g.box.style.borderColor = '#cbd5e1';
+        g.box.style.background = '#fff';
+      }
+    });
+    ROWS.forEach(function(r){
+      var k = r[0];
+      var ref = R.rows[k];
+      var filled = sn.filled.indexOf(k) >= 0;
+      ref.val.textContent = filled ? VALS[k] : '—';
+      ref.val.style.color = filled ? '#15803d' : '#94a3b8';
+      if(sn.hl === k){ ref.row.style.background = '#fef9c3'; }
+      else if(filled){ ref.row.style.background = '#f8fafc'; }
+      else { ref.row.style.background = 'transparent'; }
+    });
+  },
+
+  result: {
+    big: '五个值全部求出',
+    html: '虚拟地址 <code>1080 1008H</code>；页目录号 <code>042H</code>、页号 <code>001H</code>、页内偏移 <code>008H</code>；页目录项物理地址 <code>0020 1108H</code>（= 0020 1000H + 042H×4）；页表项物理地址 <code>0030 1004H</code>（= 页框号 00301H×1000H + 001H×4）。<br>' +
+      '第（2）问：数组 a 在<b>虚拟地址空间必须连续</b>，在<b>物理地址空间可以不连续</b>（请求分页离散装入）。<br>' +
+      '第（3）问：数组按行优先存放，<b>按行遍历的局部性更好</b>；按列遍历每访问一个元素就跳 4KB，频繁跨页、易缺页。<br>' +
+      '记忆点：表项地址 = 基址 + 号 × 表项长 4B；页框号 × 页大小 4KB = 页起始物理地址。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

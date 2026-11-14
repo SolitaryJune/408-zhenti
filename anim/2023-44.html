@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-44 机器级代码的地址、寻址方式与端序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.calcbox{ display:inline-block; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#334155; }
+.mcode{ font-family:Menlo,Consolas,monospace; background:#e2e8f0; padding:1px 6px; border-radius:6px; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '总览：机器码表里的三个关键行', cls: 'key',
+    body: '<p>第 2 条 <code>jmp</code>：<span class="mcode">EB 09</span> @ <code>0040 1079H</code>；第 7 条 <code>jge</code>：<span class="mcode">7D 32</span> @ <code>0040 1088H</code>；第 19 条 <code>mov</code>：<span class="mcode">C7 84 82 00 20 42 00 0A 00 00 00</span>（<b>11 字节</b>）@ <code>0040 10AEH</code>。四问：地址递推 / 相对寻址 / 寻址方式与端序 / 缺页。</p>' },
+  { title: '问 1：第 20 条指令的地址', cls: 'good',
+    body: '<p>指令在内存中依次紧排：第 19 条共 11 字节 = <code>0BH</code>。<br>第 20 条虚拟地址 = <code>0040 10AEH + 0BH = 0040 10B9H</code>。</p>' },
+  { title: '问 2：jmp 与 jge 的寻址方式', cls: '',
+    body: '<p>两条都是<b>相对寻址</b>：跳转目标 = <b>下一条指令地址 + 指令中的位移量</b>（位移是有符号数）。位移紧跟在操作码后：<span class="mcode">EB 09</span>、<span class="mcode">7D 32</span>。</p>' },
+  { title: '问 2：jmp 目标地址计算', cls: 'good',
+    body: '<p>第 2 条 jmp 在 <code>0040 1079H</code>、长 2 字节、位移 <code>09H</code>：<br>目标 = <code>0040 1079H + 2 + 09H = 0040 1084H</code> ✓<br>（jge 同理验证：<code>0040 1088H + 2 + 32H = 0040 10BCH</code> ✓）</p>' },
+  { title: '问 3：源操作数的寻址方式', cls: '',
+    body: '<p>机器码尾部 <span class="mcode">0A 00 00 00</span> 就是立即数 10（汇编写作 <code>0Ah</code>）——操作数直接编码在指令里 → <b>立即（数）寻址</b>。</p>' },
+  { title: '问 3：ecx 里存的是什么', cls: '',
+    body: '<p>行优先存放：a[i][j] 地址 = <code>0042 2000H + i×64×4 + j×4</code> = <code>0042 2000H + i×256 + j×4</code>。<br>汇编目的地址是 <code>ecx + edx×4 + 0042 2000H</code>，且 edx 存 j → 对照可知 <b>ecx = i×256</b>（第 i 行相对数组首址的字节偏移）。</p>' },
+  { title: '问 3：大端还是小端', cls: 'good',
+    body: '<p>看多字节数据在机器码中的字节序：<br><code>0042 2000H</code> 存为 <span class="mcode">00 20 42 00</span>，立即数 <code>0000 000AH</code> 存为 <span class="mcode">0A 00 00 00</span> —— 都是<b>低字节在前（低地址）</b> → <b>小端方式</b>。</p>' },
+  { title: '问 4：第一次取第 19 条指令会缺页吗', cls: 'good',
+    body: '<p><b>不会。</b>页大小 4KB，程序段指令全在虚拟页 <code>00401</code>（<code>0040 1000H ～ 0040 1FFFH</code>）。执行第 19 条之前早已取过同页指令（第 1 条就在 <code>0040 1072H</code>）→ 该页已在主存，且题设不发生页面置换；第 19 条的 11 字节（<code>0040 10AEH～0040 10B8H</code>）全部页内 → 取指不缺页。</p>' },
+  { title: '易错点', cls: '',
+    body: '<p>① 相对寻址的基准是<b>下一条指令</b>地址，别忘了 +2；<br>② 位移是有符号数（本题 09H、32H 为正，向后跳）；<br>③ 端序看字节顺序：低字节在低地址 = 小端；<br>④ 缺页判断看<b>该页是否已被调入</b>（此前执行过同页指令），不是看地址对齐。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>① 第 20 条地址 <code>0040 10B9H</code>；② jmp、jge 都用<b>相对寻址</b>，jmp 目标 = <code>0040 1084H</code>；③ 源操作数<b>立即寻址</b>，ecx 存 <b>i×256</b>，机器为<b>小端</b>；④ 第一次取第 19 条指令<b>不会缺页</b>。</p>' },
+];
+
+var META = [
+  { tag: '总览',   ribbon: null },
+  { tag: '问 1',   ribbon: { k: 1, ok: true } },
+  { tag: '问 2',   ribbon: null },
+  { tag: '问 2',   ribbon: { k: 2, ok: true } },
+  { tag: '问 3',   ribbon: null },
+  { tag: '问 3',   ribbon: null },
+  { tag: '问 3',   ribbon: { k: 3, ok: true } },
+  { tag: '问 4',   ribbon: { k: 4, ok: true } },
+  { tag: '易错点', ribbon: null },
+  { tag: '结论',   ribbon: null },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var m = META[i];
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: m.tag,
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (m.ribbon) sn.ribbon = m.ribbon;
+  return sn;
+});
+
+AW.init({
+  title: '2023-44 · 机器级代码的地址、寻址方式与端序',
+  subtitle: 'jmp/jge 相对寻址 · mov 立即寻址与变址 · 小端存放 · 缺页判断',
+  counterLabel: '解析步骤',
+  ribbonTitle: '问题（✓ 已解）',
+  intro: '点击「▶ 播放」逐问解析机器级代码。',
+  snaps: snaps,
+  result: {
+    big: '第 20 条 = 0040 10B9H · 小端 · 不缺页',
+    html: '① <code>0040 10AEH + 0BH = 0040 10B9H</code>；② jmp/jge 均为<b>相对寻址</b>：jmp 目标 = <code>0040 1079H + 2 + 09H = 0040 1084H</code>；③ 源操作数 <code>0Ah</code> 为<b>立即寻址</b>，ecx 存 <b>i×256</b>，字节序 <code>00 20 42 00</code>/<code>0A 00 00 00</code> → <b>小端</b>；④ 指令全在虚拟页 00401 且该页已调入 → <b>不会缺页</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

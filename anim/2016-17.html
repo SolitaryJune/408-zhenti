@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-17 动画 · 先变址后间址的有效地址</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理类：寻址方式两步走（先变址 → 后间址）+ 选项对照
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼 + 记号约定',
+    cls: 'key',
+    body: '<p>题干：<b>先变址、后间址</b>；I 为变址寄存器编号，D 为形式地址。记号约定：<code>X</code> 表示 X 本身，<code>(X)</code> 表示 X 的<b>内容</b>，<code>((X))</code> 表示以 X 的内容为地址的单元内容。寄存器 I 的内容记作 <code>(I)</code>。</p>' },
+  { title: '第一步：先变址 → 中间地址',
+    cls: 'key',
+    body: '<p>变址寻址 = <b>形式地址 + 变址寄存器内容</b>：<code>EA1 = (I) + D</code>。这一步得到的还只是一个<b>地址</b>（中间结果），不是有效地址。</p>' },
+  { title: '第二步：后间址 → 有效地址',
+    cls: 'good',
+    body: '<p>间址 = 把上一步的地址当指针，去主存取出其<b>内容</b>作为有效地址：<code>EA = (EA1) = ((I) + D)</code> → 与选项 <b>C</b> 一致。✓</p>' },
+  { title: '排除 A：I+D',
+    cls: 'bad',
+    body: '<p><code>I+D</code> 把寄存器<b>编号</b> I 当成其<b>内容</b> (I) 直接相加——参与运算的应是寄存器的内容，且也没做间址取内容。✗</p>' },
+  { title: '排除 B 与 D',
+    cls: 'bad',
+    body: '<p><code>(I)+D</code>（B）：只完成变址、得到中间地址 EA1，<b>没有间址</b>。✗<br><code>((I))+D</code>（D）：先取寄存器内容所指单元的内容再加 D，是<b>先间址后变址</b>，次序与题干相反。✗</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C：EA = ((I)+D)</b>。口诀：<b>先变址后间址 = 先 (I)+D 拼中间地址，再取一次内容</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016-17 先变址后间址的有效地址推演',
+  subtitle: 'M 寻址方式 · I 变址寄存器编号 · D 形式地址 · 考点：复合寻址方式的记号推演',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开寻址链。',
+  snaps: snaps,
+  result: {
+    big: 'EA = ((I)+D)，答案 C',
+    html: '记忆锚点：<b>变址 = 寄存器内容 + 形式地址；间址 = 再取一次内容</b>。先变址后间址：<code>(I)+D</code> 拼出中间地址，套一层括号取内容 → <code>((I)+D)</code>。<br>易混点：<code>((I))+D</code> 是先间址后变址；<code>(I)+D</code> 只是中间地址没做间址。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

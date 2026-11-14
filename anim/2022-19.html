@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-19 扩展操作码码点分配</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.aw-box.amber{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+.small .aw-box{ font-size:10.5px; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 二地址层 4 位操作码 16 个码点条
+function bar16(k){
+  // k: 0 全灰；1 前 12 绿已用、后 4 琥珀扩展
+  var row = '<div class="aw-cells small" style="--cell:34px;--gap:3px">';
+  for (var i = 0; i < 16; i++){
+    var c = k >= 1 ? (i < 12 ? ' ok' : ' amber') : ' dim';
+    var lbl = i.toString(2);
+    while (lbl.length < 4) lbl = '0' + lbl;
+    lbl = k >= 1 ? lbl : '';
+    row += '<div class="aw-col"><div class="aw-ptr"></div>' +
+           '<div class="aw-box' + c + '">' + i + '</div>' +
+           '<div class="aw-idx">' + lbl + '</div></div>';
+  }
+  return row + '</div>';
+}
+
+// 前缀扩展组
+function prefixRow(n, x64, lit){
+  var row = '<div class="aw-cells">';
+  for (var i = 0; i < n; i++){
+    var c = i < (lit || n) ? ' amber' : ' dim';
+    row += '<div class="aw-col"><div class="aw-ptr"></div>' +
+           '<div class="aw-box' + c + '" style="width:120px;font-size:13px">前缀 × 64</div>' +
+           '<div class="aw-idx"></div></div>';
+  }
+  return row + '</div>';
+}
+
+function note(t){
+  return '<div class="aw-row-label" style="margin-top:8px">' + t + '</div>';
+}
+
+function calc(t){
+  return '<div style="display:inline-block;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 12px;font-size:14px;line-height:1.8;color:#334155">' + t + '</div>';
+}
+
+function stage(inner){
+  return '<div class="aw-scroll"><div style="width:max-content;min-width:100%">' + inner + '</div></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'16 位定长指令字，地址码 6 位；二地址 12 条、一地址 254 条，问零地址最多几条。',
+    html: stage(calc('<b>已知</b>：16 位定长指令字 · 地址码 6 位/个 · 扩展操作码。二地址指令 <code>12 条</code>、一地址指令 <code>254 条</code>，求<b>零地址指令最多几条</b>。') +
+      note('三层格式：二地址（4 位操作码）→ 一地址（10 位操作码）→ 零地址（16 位操作码）')),
+    ribbon:{k:1, ok:true} },
+  { cls:'step', tag:'二地址层', count:1,
+    log:'操作码 4 位 → 16 个码点；用 12 条，剩 4 个前缀（1100~1111）向下扩展。',
+    html: stage(calc('<b>二地址层</b>：2 个 6 位地址码占 12 位 → 操作码 <code>16 - 12 = 4 位</code>，共 <code>2^4 = 16</code> 个码点。用掉 <b>12 条</b>（绿），剩 <b>4 个前缀</b>（琥珀）向下扩展。') +
+      note('4 位操作码的 16 个码点（0~15）') + bar16(1) +
+      note('剩余 4 个前缀 → 进入一地址层')),
+    ribbon:{k:2, ok:true} },
+  { cls:'step', tag:'一地址层', count:2,
+    log:'4 前缀 × 2^6 = 256 个 10 位操作码码点；用 254 条，剩 2 个前缀。',
+    html: stage(calc('<b>一地址层</b>：1 个 6 位地址码 → 操作码 4 + 6 = <code>10 位</code>。4 个前缀各展开 <code>2^6 = 64</code> → <code>4 × 64 = 256</code> 个码点。用掉 <b>254 条</b>，剩 <b>2 个前缀</b>向下扩展。') +
+      note('4 个 4 位前缀，各扩展出 64 个码点') + prefixRow(4, true, 4) +
+      note('剩余 2 个 10 位前缀 → 进入零地址层')),
+    ribbon:{k:3, ok:true} },
+  { cls:'shift', tag:'零地址层', count:3,
+    log:'2 前缀 × 2^6 = 128 条零地址指令（操作码占满 16 位）。',
+    html: stage(calc('<b>零地址层</b>：无地址码 → 操作码 10 + 6 = <code>16 位</code>（占满指令字）。剩余 2 个 10 位前缀各展开 64 → <code>2 × 64 = 128</code> 条，这就是<b>最多</b>条数。') +
+      note('2 个 10 位前缀，各扩展出 64 个码点') + prefixRow(2, true, 2) +
+      note('零地址指令最多 128 条')),
+    ribbon:{k:4, ok:true} },
+  { cls:'step', tag:'干扰项', count:4,
+    log:'C=64（只算 1 个前缀）；B=2（把前缀数当条数）；A=0（以为码点用尽）。',
+    html: stage(calc('<b>干扰项</b>：<b>64</b>（C）——只算了 1 个剩余前缀；<b>2</b>（B）——把剩余<b>前缀个数</b>当成零地址条数，忘了每个前缀还能展开 64；<b>0</b>（A）——以为 254 条用完就没了，其实每层剩余前缀都要全部向下扩展。') +
+      note('4 个前缀 → 2 个前缀 → 2 × 64 = 128 条')),
+    ribbon:{k:5, ok:true} },
+  { cls:'done', tag:'结论', count:5, done:true,
+    log:'零地址指令最多 128 条 → 答案 D。',
+    html: stage(calc('<b>结论</b>：4 位剩 4 前缀 → 10 位剩 2 前缀 → <code>2 × 64 = 128</code> 条零地址指令 = 选项 <b>D</b>。')) },
+];
+
+AW.init({
+  title: '2022-19 · 扩展操作码的码点逐层分配',
+  subtitle: '16 位定长指令字 · 地址码 6 位 · 二地址 12 条 / 一地址 254 条 / 零地址 ?',
+  counterLabel: '推导环节',
+  ribbonTitle: '推导环节（✓ 完成）',
+  intro: '点击「▶ 播放」看码点怎么逐层扩展。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（128 条）',
+    html: '二地址层 4 位操作码用 12 条剩 <b>4 前缀</b>；一地址层 <code>4×64=256</code> 用 254 条剩 <b>2 前缀</b>；零地址层 <code>2×64 = 128</code> 条。易错：把剩余前缀数当条数（2）、只算一个前缀（64）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

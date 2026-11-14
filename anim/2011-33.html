@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-33 · TCP/IP 网络层提供什么服务</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/分析类：TCP/IP 网络层（IP）的服务特性辨析
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：问的是网络层，不是传输层',
+    cls: 'key',
+    body: '<p>TCP/IP 参考模型的<b>网络层</b>核心协议是 IP。判断它提供什么服务，抓三个维度：<b>要不要先建连接</b>（无连接 vs 有连接）、<b>可不可靠</b>（有没有确认/重传/按序保证），以及交付方式：<b>数据报 vs 虚电路</b>。</p>' },
+  { title: 'IP 的转发方式：无连接的数据报',
+    cls: '',
+    body: '<p>IP 把每个分组当作<b>独立单位</b>转发：发送前<b>不建立任何连接</b>，每个分组自带完整目的地址、独立选路、可能走不同路径——这就是<b>无连接的数据报</b>服务。</p>' },
+  { title: '可靠性：IP 不承诺',
+    cls: '',
+    body: '<p>IP <b>不确认、不重传、不保证按序</b>到达，分组丢了也不补，只做"尽力而为"交付——所以是<b>不可靠</b>的。端到端的可靠是<b>传输层 TCP</b> 的职责。</p>' },
+  { title: '排除 B：无连接 + "可靠"自相矛盾',
+    cls: 'bad',
+    body: '<p>B 说"无连接<b>可靠</b>的数据报服务"：前半句对，但可靠需要确认与重传机制，IP 并不具备，可靠与无连接在这个选项里凑不齐。✗</p>' },
+  { title: '排除 C、D：虚电路要先建连接',
+    cls: 'bad',
+    body: '<p>C、D 都写成"有连接……虚电路服务"：虚电路必须<b>先建立虚连接</b>，分组沿同一条虚路径按序转发（X.25 等网络的思路）。TCP/IP 网络层从不建立连接，与虚电路无缘。✗</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>网络层 IP = <b>无连接 + 不可靠 + 数据报</b>，答案选 <b>A</b>。记忆锚点：把"有连接、可靠"留给<b>传输层 TCP</b>；"无连接、不可靠"就是 IP。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-33 · TCP/IP 网络层提供什么服务',
+  subtitle: '考点：网络层服务特性 · 无连接/有连接 × 可靠/不可靠 × 数据报/虚电路',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 支撑 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: 'TCP/IP 网络层（IP）提供<b>无连接、不可靠的数据报服务</b>。可靠传输由<b>传输层 TCP</b> 负责；虚电路是"有连接"式网络（如 X.25）的思路，IP 从不建立连接。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-22 DMA 数据传输通路动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：DMA 传送过程与数据通路框图演示 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'DMA 方式的数据传输通路',
+  subtitle: '设备 → 设备接口 → DMA 控制器 → 主存 · CPU 只管头尾',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示一次 DMA 传送。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    var bigbox = function(txt, w){
+      var b = AW.el('div', 'aw-box dim', txt);
+      b.style.width = w + 'px';
+      b.style.height = '56px';
+      b.style.fontSize = '15px';
+      return b;
+    };
+    var arrow = function(){
+      var a = AW.el('div', '', '<span style="color:#94a3b8;font-weight:700;font-size:20px">⇄</span>');
+      a.style.alignSelf = 'center';
+      a.style.padding = '0 8px';
+      return a;
+    };
+
+    // 主行：设备接口 ⇄ DMA 控制器 ⇄ 主存
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>数据通路候选</b>（框图）'));
+    var row = AW.el('div', 'aw-cells');
+    row.style.marginBottom = '4px';
+    this._if  = bigbox('设备接口', 118);
+    this._dma = bigbox('DMA 控制器', 140);
+    this._mem = bigbox('主存', 92);
+    row.appendChild(this._if); row.appendChild(arrow());
+    row.appendChild(this._dma); row.appendChild(arrow());
+    row.appendChild(this._mem);
+    inner.appendChild(row);
+
+    // CPU 行（虚线框：只参与头尾）
+    var cpuRow = AW.el('div', 'aw-cells');
+    cpuRow.style.marginTop = '10px';
+    cpuRow.style.marginBottom = '4px';
+    var gap = AW.el('div', '');
+    gap.style.width = '158px';
+    this._cpu = bigbox('CPU', 118);
+    this._cpu.style.borderStyle = 'dashed';
+    cpuRow.appendChild(gap);
+    cpuRow.appendChild(this._cpu);
+    inner.appendChild(cpuRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '（CPU：虚线框——只做初始化与结束处理，<b>不参与数据传送</b>）'));
+
+    this._note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'开始',     log:'DMA 传送的头和尾归 CPU：初始化时向 DMA 控制器写入主存起始地址、传送字数、传送方向。', count:0, note:'CPU：初始化 DMA 控制器（头）' },
+    { cls:'ok',    tag:'设备就绪', log:'设备把数据送入【设备接口】的数据缓冲寄存器，接口向 DMA 控制器发出 DMA 请求。', count:1, note:'数据先到达设备接口的缓冲寄存器', ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'抢总线',   log:'DMA 控制器向 CPU 发总线请求（HOLD），CPU 让出总线控制权——此时 CPU 不能再用总线。', count:2, note:'DMA 控制器接管总线使用权', ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'直达主存', log:'DMA 控制器控制数据在【设备接口 ↔ 主存】之间直接传送——不经过 CPU、不进 CPU 的寄存器。', count:3, note:'数据通路 = 设备接口 ↔ 主存（DMA 控制器控制）', ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'结束报告', log:'字数计数器减到 0，传送结束：DMA 控制器归还总线，向 CPU 发中断请求报告完成（尾）。', count:4, note:'CPU：收结束中断，做后处理（尾）', ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'完成',     log:'数据传输通路位于设备接口和主存之间 → 选 C。A 是取指/访存通路，B/D 误解了 DMA 的角色。', count:5, done:true, note:'通路 = 设备接口 ↔ 主存 → 答案 C' },
+  ],
+
+  render: function(stage, sn, i){
+    var setCls = function(b, cls){ b.className = 'aw-box' + (cls ? ' ' + cls : ''); };
+    setCls(this._if, 'dim'); setCls(this._dma, 'dim'); setCls(this._mem, 'dim'); setCls(this._cpu, 'dim');
+    this._cpu.style.borderStyle = 'dashed';
+    if (i >= 1){ setCls(this._if, 'ok'); }
+    if (i >= 2){ setCls(this._dma, 'shift'); setCls(this._cpu, 'shift'); }
+    if (i >= 3){ setCls(this._if, 'ok'); setCls(this._mem, 'ok'); setCls(this._dma, 'ok'); setCls(this._cpu, 'dim'); }
+    if (i >= 4){ setCls(this._cpu, 'ok'); }
+    if (i >= 5){ setCls(this._if, 'ok'); setCls(this._mem, 'ok'); setCls(this._dma, 'ok'); setCls(this._cpu, 'dim'); }
+    this._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '答案 C',
+    html: '<p>DMA 控制器控制的数据传输通路位于<b>设备接口和主存之间</b>。CPU 与 DMA 控制器之间只传命令/状态（B 错）；CPU 与主存之间是取指/访存通路（A 错）；数据真正落地是在接口缓冲寄存器 ↔ 主存之间。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

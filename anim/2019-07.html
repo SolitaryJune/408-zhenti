@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-07 排序算法选型因素 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：四项因素逐个核对', cls: 'key',
+    body: '<p>题目问：除时空效率外，选择排序算法还要考虑哪些因素。四个说法——规模、存储方式、稳定性、初始状态——<b>逐项核对，一个都不能漏</b>。</p>' },
+  { title: 'I 数据的规模：要考虑', cls: '',
+    body: '<p>n 很小：直接插入、简单选择就够用（实现简单、常数小）；n 很大：必须用快速排序、堆排序、归并排序等 <code>O(nlog₂n)</code> 算法。规模直接决定可选的算法档次。</p>' },
+  { title: 'II 数据的存储方式：要考虑', cls: '',
+    body: '<p>快速排序要两端相向移动、堆排序靠数组下标映射父子——都依赖<b>顺序存储</b>；链式存储只适合插入、选择、归并类算法。存储结构决定算法能否高效实现。</p>' },
+  { title: 'III 算法的稳定性：要考虑', cls: '',
+    body: '<p>关键字上挂着成绩、金额等附加信息时，<b>稳定排序</b>能保证同关键字记录的原有先后次序不乱（例如按分数排完再按学院排的两级排序场景）。</p>' },
+  { title: 'IV 数据的初始状态：要考虑', cls: '',
+    body: '<p>基本有序时：直接插入可达 <code>O(n)</code>、冒泡可提前结束；而<b>快速排序在基本有序时枢轴总落在端点，退化到 O(n²)</b>。初始排列强烈影响实际表现。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>四个因素全部需要考虑，答案选 <b>D（I、II、III、IV）</b>。记忆锚点：选型四看——<b>规模、存储、稳定性、初始状态</b>；漏选任何一项（A、B、C）都是错的。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019-07 · 排序算法选型要考虑哪些因素',
+  subtitle: 'I 规模 · II 存储方式 · III 稳定性 · IV 初始状态 · 逐项核对',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（全选）',
+    html: '规模定档次、存储定实现、稳定性保次序、初始状态定实际开销——四项<b>全都要考虑</b>。常见错误是漏选 II 或 IV。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

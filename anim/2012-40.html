@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-40 动画 · 电子邮件收发流程的协议</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三段链路，判「推」还是「拉」',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>图中三段：① 用户1 → 用户1 的邮件服务器；② 服务器1 → 服务器2；③ 服务器2 → 用户2。判据只有一条：<b>SMTP 是「推」，POP3 / IMAP 是「拉」</b>。</p>' },
+  { title: '判据展开：推与拉',
+    cls: '',
+    tag: '判据',
+    body: '<p><b>发件方向</b>（用户代理→服务器、服务器→服务器）永远是主动推送，用 <b>SMTP</b>；<b>收件方向</b>（服务器→用户代理）由用户自己决定何时取信、主动拉取，用 <b>POP3 或 IMAP</b>。</p>' },
+  { title: '① 与 ②：一路 SMTP 推',
+    cls: 'good',
+    tag: '①② = SMTP',
+    body: '<p>用户1 发信：用户代理把邮件<b>推</b>给发送方邮件服务器（①）→ SMTP；邮件服务器之间中转（②）→ 还是 <b>SMTP</b>。发信从源头到接收方服务器，全程都是推。</p>' },
+  { title: '③：最后一拉，POP3',
+    cls: 'good',
+    tag: '③ = POP3',
+    body: '<p>用户2 从自己的邮箱取信：<b>拉</b>——用 <b>POP3</b>（或 IMAP）把邮件从服务器2 拉到本机。这是全流程唯一由收件方发起的一段。</p>' },
+  { title: '逐项排除 A / B / C',
+    cls: 'bad',
+    tag: '排除干扰项',
+    body: '<p><b>A 全 SMTP</b>：③ 收信不可能用「推」；<b>B</b>：① 发信不会用 POP3；<b>C</b>：①、③ 双双错位——③ 恰恰是唯一该用 POP3 的阶段。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '答案 D',
+    body: '<p>① SMTP、② SMTP、③ POP3 → 答案选 <b>D</b>。记忆锚点：<b>发信一路 SMTP 推到底，收信 POP3 / IMAP 拉</b>。</p>' },
+];
+
+var CLSMAP = { key: 'shift', bad: 'miss', good: 'ok' };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (CLSMAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '邮件收发三阶段用的协议（2012·40）',
+  subtitle: '考点：<code>SMTP 推 vs POP3 拉</code> · 用户代理与邮件服务器、服务器与服务器',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（SMTP、SMTP、POP3）',
+    html: '① 用户代理 → 发送方服务器：<b>SMTP</b>；② 发送方服务器 → 接收方服务器：<b>SMTP</b>；③ 接收方服务器 → 用户代理：<b>POP3 / IMAP</b>。POP3 只出现在最后一段「拉」的场景。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

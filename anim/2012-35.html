@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-35 动画 · 以太网 MAC 协议的服务类型</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个判据',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>以太网 MAC 子层 = <b>CSMA/CD</b>。「有/无连接」「可靠/不可靠」两对概念各有一个判据：<b>有没有连接建立阶段？有没有确认与重传？</b></p>' },
+  { title: '判据一：无连接',
+    cls: '',
+    tag: '无连接',
+    body: '<p>CSMA/CD 争到信道就<b>直接发帧</b>：没有连接建立、没有协商、帧不编号。发送前不需要对方「同意」——典型的<b>无连接</b>服务。</p>' },
+  { title: '判据二：不可靠',
+    cls: '',
+    tag: '不可靠',
+    body: '<p>接收方只做 <b>CRC 差错检测</b>：校验不过就<b>直接丢弃</b>该帧，不回确认、不要求重传。以太网是「尽力交付」，纠错交给高层（如 TCP）——<b>不可靠</b>服务。</p>' },
+  { title: '逐项排除 B / C / D',
+    cls: 'bad',
+    tag: '排除干扰项',
+    body: '<p><b>B 无连接可靠</b>：错在「可靠」，MAC 层没有任何确认重传机制；<b>C / D 有连接</b>：错在有连接，信道争用不等于连接建立。对照记忆：HDLC、TCP 才走「有连接 / 可靠」路线。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '答案 A',
+    body: '<p>答案选 <b>A（无连接不可靠服务）</b>。记忆锚点：<b>以太网 = 无连接 + 不可靠（尽力而为）</b>；TCP = 有连接 + 可靠。</p>' },
+];
+
+var CLSMAP = { key: 'shift', bad: 'miss', good: 'ok' };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (CLSMAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '以太网 MAC 协议提供的服务类型（2012·35）',
+  subtitle: '考点：<code>以太网 CSMA/CD · 有无连接 · 可靠性</code> · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（无连接不可靠）',
+    html: 'CSMA/CD <b>不建立连接、不编号确认、错帧直接丢弃</b>——无连接 + 不可靠。可靠性由高层（TCP）补齐，MAC 层只负责「尽力交付」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-43 乘法实现与溢出判断</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-43：x×y 的四问推演（软件循环 → 控制逻辑 → 三种实现 → 64 位乘积与溢出）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var XVAL  = ['7','F','F','F','F','F','F','F'];
+var PROD  = ['0','0','0','0','0','0','0','0','F','F','F','F','F','F','F','E'];
+
+var BLUE_CSS = 'border-color:#2563eb;background:#dbeafe;color:#1d4ed8;';
+var AMBER_CSS = 'border-color:#d97706;background:#fef3c7;color:#92400e;';
+var OK_CSS = 'border-color:#16a34a;background:#dcfce7;color:#14532d;';
+var MISS_CSS = 'border-color:#dc2626;background:#fee2e2;color:#b91c1c;';
+var Q_CSS = 'border-color:#cbd5e1;background:#f1f5f9;color:#94a3b8;';
+
+function hexRow(vals, cls, isProd){
+  var row = AW.el('div', 'aw-cells');
+  vals.forEach(function(v, i){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '44px';
+    var box = AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), v);
+    box.style.width = '40px';
+    box.style.height = '38px';
+    box.style.fontSize = '15px';
+    if (cls && cls[i] === 'step'){
+      box.style.cssText += (isProd && i < 8 ? BLUE_CSS : AMBER_CSS);
+    } else if (!cls || !cls[i]) { box.style.cssText += Q_CSS; }
+    col.appendChild(box);
+    if (isProd){
+      col.appendChild(AW.el('div', 'aw-idx',
+        i === 0 ? '← 高 32 位' : (i === 7 ? '高|低' : (i === 8 ? '低 32 位 →' : ''))));
+    }
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '760px';
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>x = 2<sup>31</sup> − 1</b> = <code>7FFF FFFFH</code>（32 位）'));
+  inner.appendChild(hexRow(XVAL, ['ok','ok','ok','ok','ok','ok','ok','ok'], false));
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>y = 2</b>，n = 32，乘法指令保存 2n = 64 位乘积'));
+  inner.appendChild(AW.el('div', 'aw-row-label',
+    sn.showProd ? '<b>64 位乘积</b> = <code>0000 0000 FFFF FFFEH</code>' : '<b>64 位乘积</b>（待计算）'));
+  inner.appendChild(hexRow(sn.prodVals, sn.prodCls, true));
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+var QS = [];
+(function(){ for (var i = 0; i < 16; i++) QS.push('?'); })();
+
+function plain(v){ return v.slice(); } // 全灰待填
+
+AW.init({
+  title: '2020-43 · 乘法指令的实现与 64 位乘积溢出',
+  subtitle: 'ALU 只能加减与逻辑运算 · <code>umul()</code> 无符号 / <code>imul()</code> 带符号 · x = 2<sup>31</sup>−1，y = 2',
+  counterLabel: '推演步',
+  ribbonTitle: '四大问（✓ 已解决）',
+  intro: '点击「▶ 播放」或「下一步」：先答前三问，再代入数字算第 4 问。',
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始', count:0,
+      prodVals:QS, prodCls:null, showProd:false,
+      log:'M 机的 ALU 只能做加减和逻辑运算。umul / imul 两个函数都要算 x×y——分四问拆解。',
+      note:'乘法指令可保存 2n 位乘积，本题只取低 n 位作返回值。' },
+    { cls:'step', tag:'第 1 问', count:1,
+      prodVals:QS, prodCls:null, showProd:false,
+      log:'问 1：没有乘法指令也能乘——乘法可以用"加法 + 移位"的循环程序实现（乘数某位为 1 就累加移位后的被乘数，循环 n 次）。',
+      note:'ALU 能加、有移位指令 → 软件循环即可完成乘法。', ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'第 2 问', count:2,
+      prodVals:QS, prodCls:null, showProd:false,
+      log:'问 2：用 ALU、位移器、寄存器实现乘法指令时，控制逻辑负责控制循环次数，并控制每一步的加法与移位操作。',
+      note:'控制逻辑 = 循环控制器：何时加、加到哪、何时移、移几位、何时停。', ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'第 3 问', count:3,
+      prodVals:QS, prodCls:null, showProd:false,
+      log:'问 3：① 无乘法指令（软件循环，多条指令）最长；② ALU+位移器按步循环居中；③ 阵列乘法器一个时钟周期并行完成 → 最短。',
+      note:'慢 → 快：软件循环 ① &gt; 硬件循环 ② &gt; 阵列乘法器 ③。', ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'第 4 问 开场', count:4,
+      prodVals:QS, prodCls:null, showProd:false,
+      log:'问 4：代入 x = 2 的 31 次方 − 1 = 7FFF FFFFH，y = 2。分别看无符号与带符号乘法指令的 64 位乘积。',
+      note:'x = <code>7FFF FFFFH</code>，y = 2，n = 32。' },
+    { cls:'step', tag:'算真值', count:5,
+      prodVals:QS, prodCls:null, showProd:false,
+      log:'真值 x×y = (2^31 − 1) × 2 = 2^32 − 2 = 4294967294，是正数。',
+      note:'真值 = <b>2<sup>32</sup> − 2</b>（正数，且小于 2<sup>63</sup>）。' },
+    { cls:'shift', tag:'得乘积', count:6, showProd:true,
+      prodVals:PROD,
+      prodCls:['ok','ok','ok','ok','ok','ok','ok','ok','step','step','step','step','step','step','step','step'],
+      log:'64 位乘积 = 00000000 FFFFFFFE H。无符号与带符号两种乘法指令得到同一个结果（真值为正，补码与无符号表示相同）。',
+      note:'高 32 位全 0，低 32 位 <code>FFFF FFFEH</code>。' },
+    { cls:'ok', tag:'umul 不溢出', count:7, showProd:true,
+      prodVals:PROD,
+      prodCls:['hit','hit','hit','hit','hit','hit','hit','hit','step','step','step','step','step','step','step','step'],
+      log:'umul() 只取低 32 位 = FFFFFFFE H = 4294967294 = 真值本身 → 不溢出。判断依据：2n 位乘积的高 32 位全 0。',
+      note:'高 32 位 = 全 0 → 无符号乘法<b>不溢出</b>。' },
+    { cls:'miss', tag:'imul 溢出', count:8, showProd:true,
+      prodVals:PROD,
+      prodCls:['miss','miss','miss','miss','miss','miss','miss','miss','miss','miss','miss','miss','miss','miss','miss','miss'],
+      log:'imul() 低 32 位 FFFFFFFE H 按补码解释 = −2，而真值是 4294967294 → 结果错误，溢出！（低 32 位符号位为 1，高 32 位却全 0，符号扩展不一致）',
+      note:'低 32 位补码 = −2 ≠ 真值 → 带符号乘法<b>溢出</b>。' },
+    { cls:'step', tag:'判断法则', count:9, showProd:true,
+      prodVals:PROD,
+      prodCls:['ok','ok','ok','ok','ok','ok','ok','ok','step','step','step','step','step','step','step','step'],
+      log:'无符号乘法仅取低 n 位时的溢出判断：看 2n 位乘积的高 n 位是否全为 0——全 0 不溢出，否则溢出。',
+      note:'法则：高 n 位全 0 → 不溢出；否则溢出。' },
+    { cls:'done', tag:'完成', count:10, showProd:true,
+      prodVals:PROD,
+      prodCls:['hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit'],
+      log:'第 4 问答案：两种乘法指令的 64 位乘积均为 00000000FFFFFFFE H；umul() 不溢出、imul() 溢出。',
+      note:'带符号/无符号乘法：64 位乘积相同，溢出结论不同。', noteCls:'good', done:true },
+  ],
+  result: {
+    big: 'umul 不溢出 · imul 溢出',
+    html: '64 位乘积（两种指令相同）= <code>00000000 FFFFFFFE H</code>；<br>' +
+      '<b>umul()</b> 取低 32 位 = 4294967294 = 真值 → 不溢出（高 32 位全 0）；<br>' +
+      '<b>imul()</b> 低 32 位按补码 = −2 ≠ 真值 → <b>溢出</b>。无符号溢出判断：高 n 位全 0 才不溢出。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

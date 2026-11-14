@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-06 DFS 退出递归输出 ⇒ 逆拓扑序列 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-06 概念/推理链：修改版 DFS（退出递归前输出）遍历 DAG 的输出序列性质
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：输出时机被改了',
+    cls: 'key',
+    body: '<p>题干两个关键条件：<code>输出语句移到退出递归前</code> + <code>有向无环图 G</code>，且输出包含全部顶点。</p>' +
+          '<p>原版 DFS 在<b>第一次到达顶点</b>时输出；修改后，顶点要等<b>退出递归</b>时才输出。考点：DFS 递归完成顺序与拓扑序的关系。</p>' },
+  { title: '正常 DFS 输出的是什么',
+    cls: 'bad',
+    body: '<p>标准 DFS 在进入顶点时输出，得到的是<b>DFS 序列</b>——它取决于邻接点次序，与拓扑序没有必然关系。所以选项 D 不对：输出时机一改，就不是标准 DFS 序列了。</p>' },
+  { title: '修改后：谁先被输出？',
+    cls: 'key',
+    body: '<p>顶点 v 的输出发生在<b>它的所有邻接点递归都返回之后</b>。也就是说：当 v 被输出时，v 能直接或间接到达的顶点<b>全都已经被输出</b>。</p>' +
+          '<p>（无环保证递归不会绕回 v，v 才能安心等到最后。）</p>' },
+  { title: '对每条边 v→w 排序意味着什么',
+    cls: 'good',
+    body: '<p>取任意一条边 <code>v→w</code>：DFS 从 v 走到 w，w 先递归完、先退出 → <b>w 排在 v 前面</b>。</p>' +
+          '<p>于是整个输出序列满足：<b>每条边都从后面的顶点指向前面的顶点</b>。</p>' },
+  { title: '排除干扰项 A（拓扑序）',
+    cls: 'bad',
+    body: '<p>拓扑有序要求：对每条边 <code>v→w</code>，<b>v 排在 w 前面</b>。而我们的序列恰好相反——w 在前、v 在后。</p>' +
+          '<p>所以它是<b>逆</b>拓扑有序序列，不是拓扑有序序列，A 错。</p>' },
+  { title: '排除干扰项 C（BFS 序列）',
+    cls: 'bad',
+    body: '<p>广度优先搜索要用<b>队列</b>逐层扩展，而本题只修改了递归 DFS 的输出位置，与 BFS 无关，C 错。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>修改后的 DFS（退出递归时输出）遍历 DAG 且输出全部顶点 → 输出序列是 <b>逆拓扑有序序列</b>，选 <b>B</b>。</p>' +
+          '<p>记忆锚点：<b>DFS 退出时输出 = 逆拓扑；把退出序反过来打印 = 拓扑序</b>（这也是求拓扑序的经典实现）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    count: i + 1,
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '退出递归才输出的 DFS，遍历 DAG 得到什么序列？',
+  subtitle: '考点：DFS 递归完成顺序 · 拓扑序与逆拓扑序 · 逐项推演',
+  counterLabel: '进度',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '<b>逆拓扑有序序列。</b>退出递归前输出 → 顶点输出时其所有可到达顶点均已输出 → 每条边 <code>v→w</code> 中 w 都排在 v 前面。干扰项：A 把方向想反（那才是拓扑序）；C 与队列式 BFS 无关；D 输出时机已变、不再是标准 DFS 序列。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

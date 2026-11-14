@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-06 无向图边数与连通性</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：连通的边数门槛',
+    cls: 'key',
+    body: '<p>n 个顶点的无向连通图至少需要 <b>n − 1 条边</b>（生成树）。所以 <code>|E| &lt; |V| − 1 ⇔ 必不连通</code>；但边数够多只是<b>必要</b>条件——多出的边可以全堆在局部，连通性仍不保证。</p>' },
+  { title: 'A：|V| &gt; |E| 必连通？',
+    cls: 'bad',
+    body: '<p>反例：3 个顶点只有 1 条边——|V|=3 &gt; |E|=1，第 3 个顶点孤立，图不连通。<b>A 错</b></p>' },
+  { title: 'B：|V| &lt; |E| 必连通？',
+    cls: 'bad',
+    body: '<p>反例：K4（6 条边）再添一个独立三角形（3 条边）——|V|=7 &lt; |E|=9，但有两个连通分量。<b>B 错</b></p>' },
+  { title: 'C：|E| = |V| + 1 必不连通？',
+    cls: 'bad',
+    body: '<p>反例：5 个顶点 6 条边可以连通（五边形 + 一条弦），此时恰有 |E| = |V| + 1。<b>C 错</b></p>' },
+  { title: 'D：|V| &gt; |E| + 1 必不连通？',
+    cls: 'good',
+    body: '<p>即 <code>|E| &lt; |V| − 1</code>：连生成树的边数都不够，无论怎么摆都必有顶点落在分量之外 ⇒ <b>一定不连通</b>。<b>D 对</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>D</b>。记忆锚点：<code>|E| ≥ |V| − 1</code> 是连通的<b>必要条件</b>——低于它必不连通（D），达到它推不出连通（A/B/C 全靠反例否掉）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '无向图：边数能不能决定连通性？（2022-06）',
+  subtitle: '考点：连通图至少 |V|−1 条边 · 必要条件 vs 充分条件 · 反例构造',
+  intro: '点击「▶ 播放」逐项推演 A～D。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '|E| &lt; |V| − 1 ⇒ 必不连通（生成树都要 |V|−1 条边）。反之边再多也只保证“局部热闹”：A 靠孤立点、B 靠两个分量、C 靠五边形加弦，各给一个反例即可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-44 页式虚存 → TLB → Cache 地址翻译</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 带左侧标题的"地址字段"结构行
+function fieldRow(title, parts){
+  var h = '<div style="display:flex;align-items:center;gap:10px;margin:8px 0">';
+  h += '<span style="width:86px;font-size:12.5px;color:#64748b;text-align:right;flex:0 0 auto">' + title + '</span>';
+  h += '<div style="display:flex;gap:4px;align-items:stretch;width:max-content">';
+  parts.forEach(function(p){
+    var bg = p.hl ? '#fef3c7' : '#eff6ff';
+    var bd = p.hl ? '#d97706' : '#93c5fd';
+    h += '<div style="min-width:' + p.w + 'px;height:46px;border:2px solid ' + bd + ';background:' + bg +
+      ';border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8px">' +
+      '<div style="font-weight:700;font-size:12.5px;color:#1e3a8a;white-space:nowrap">' + p.label + '</div>' +
+      '<div style="font-size:11px;color:#64748b;white-space:nowrap">' + p.sub + '</div></div>';
+  });
+  return h + '</div></div>';
+}
+
+// 十六进制/二进制格子行（cls: ''|ok|hit|miss|dim）
+function hexCells(digits, clsArr, ptrObj){
+  var STY = {
+    ok: 'background:#dcfce7;border-color:#16a34a;color:#14532d',
+    hit: 'background:#16a34a;border-color:#16a34a;color:#fff',
+    miss: 'background:#fee2e2;border-color:#dc2626;color:#b91c1c'
+  };
+  var h = '<div style="display:flex;gap:4px;margin:4px 0 2px 96px;width:max-content">';
+  digits.forEach(function(d, i){
+    var ptr = (ptrObj && ptrObj[i])
+      ? '<div style="height:18px;font-size:11.5px;font-weight:700;color:#2563eb;white-space:nowrap">' + ptrObj[i] + '</div>'
+      : '<div style="height:18px"></div>';
+    var cls = STY[clsArr[i]] || 'background:#fff;color:#0f172a';
+    h += '<div style="display:flex;flex-direction:column;align-items:center">' + ptr +
+      '<div style="width:38px;height:40px;border:2px solid #cbd5e1;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:Menlo,monospace;font-weight:700;font-size:15px;' + cls + '">' + d + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+// TLB 表（hl: 高亮行下标，-1 不高亮）
+function tlbTable(hl, hlColor){
+  var rows = [['00324H','1','F800H'], ['0008CH','1','0040H'], ['8C040H','1','0160H'], ['04320H','0','0E80H']];
+  var th = 'border:1px solid #cbd5e1;background:#f1f5f9;padding:3px 10px;font-weight:700';
+  var td = 'border:1px solid #cbd5e1;padding:3px 12px';
+  var h = '<div style="margin:6px 0 2px 96px;display:inline-block"><div style="font-size:12px;color:#64748b;margin-bottom:3px">TLB（虚页号 → 实页号，每项一个比较器）</div><table style="border-collapse:collapse;font-family:Menlo,monospace;font-size:12.5px">';
+  h += '<tr><th style="' + th + '">Tag=虚页号</th><th style="' + th + '">有效位</th><th style="' + th + '">实页号</th></tr>';
+  rows.forEach(function(r, idx){
+    var bg = (hl === idx) ? (hlColor || '#dcfce7') : '#fff';
+    h += '<tr style="background:' + bg + '"><td style="' + td + '">' + r[0] + '</td><td style="' + td + ';text-align:center">' + r[1] + '</td><td style="' + td + '">' + r[2] + '</td></tr>';
+  });
+  return h + '</table></div>';
+}
+
+// Cache 表：8 组中的组 0～2，每组两路（hlGroup/hlWay 高亮一路）
+function cacheTable(hlGroup, hlWay, hlColor){
+  var rows = [
+    ['0', ['1','F8000H'], ['F2840H','1']],
+    ['1', ['1','008C0H'], ['23008H','0']],
+    ['2', ['0','00400H'], ['01600H','1']]
+  ];
+  var th = 'border:1px solid #cbd5e1;background:#f1f5f9;padding:3px 10px;font-weight:700';
+  var td = 'border:1px solid #cbd5e1;padding:3px 12px';
+  var h = '<div style="margin:6px 0 2px 96px;display:inline-block"><div style="font-size:12px;color:#64748b;margin-bottom:3px">Cache（2 路组相联，组号 3 位 → 共 8 组，图中画出组 0～2）</div><table style="border-collapse:collapse;font-family:Menlo,monospace;font-size:12.5px">';
+  h += '<tr><th style="' + th + '">组号</th><th style="' + th + '" colspan="2">路 0：有效位 / Tag</th><th style="' + th + '" colspan="2">路 1：Tag / 有效位</th></tr>';
+  rows.forEach(function(r){
+    var g = r[0];
+    var hl0 = (hlGroup === g && hlWay === 0);
+    var hl1 = (hlGroup === g && hlWay === 1);
+    var bg0 = hl0 ? (hlColor || '#fee2e2') : '#fff';
+    var bg1 = hl1 ? (hlColor || '#fee2e2') : '#fff';
+    h += '<tr><td style="' + td + ';text-align:center;font-weight:700">' + g + '</td>' +
+      '<td style="' + td + ';text-align:center;background:' + bg0 + '">' + r[1][0] + '</td><td style="' + td + ';background:' + bg0 + '">' + r[1][1] + '</td>' +
+      '<td style="' + td + ';background:' + bg1 + '">' + r[2][0] + '</td><td style="' + td + ';text-align:center;background:' + bg1 + '">' + r[2][1] + '</td></tr>';
+  });
+  return h + '</table></div>';
+}
+
+function qcard(title, body, accent){
+  var c = accent || '#2563eb';
+  return '<div style="border:1px solid #e2e8f0;border-left:4px solid ' + c + ';border-radius:12px;padding:11px 14px;margin:8px 0 2px 96px;background:#fff;max-width:640px">' +
+    '<div style="font-weight:700;font-size:13.5px;margin-bottom:5px;color:#0f172a">' + title + '</div>' +
+    '<div style="font-size:13px;line-height:1.8;color:#334155">' + body + '</div></div>';
+}
+
+function structRows(vhl, phl, chl){
+  return fieldRow('虚拟地址 32 位', [
+    { label: '虚页号', sub: '20 位', w: 150, hl: vhl },
+    { label: '页内地址', sub: '12 位', w: 100, hl: vhl }
+  ]) + fieldRow('物理地址（拼接视角）', [
+    { label: '实页号', sub: '16 位', w: 120, hl: phl },
+    { label: '页内地址', sub: '12 位', w: 100, hl: phl }
+  ]) + fieldRow('物理地址（Cache 视角）', [
+    { label: 'Tag（标志）', sub: '20 位', w: 150, hl: chl },
+    { label: '组号', sub: '3 位', w: 52, hl: chl },
+    { label: '块内地址', sub: '5 位', w: 70, hl: chl }
+  ]);
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'读图', log:'从题 44 图读出三个结构：虚地址 20+12；物理地址 16+12 = Tag20+组号3+块内5；TLB 每项带比较器',
+    count:0,
+    html: structRows(false, false, false) +
+      qcard('审题：先把图里的"地址骨架"读出来',
+        '虚拟地址 = <b>虚页号 20 位 + 页内地址 12 位</b>（32 位）；物理地址（Cache 地址）= <b>Tag 20 位 + 组号 3 位 + 块内地址 5 位</b>，也是实页号 16 位 + 页内 12 位；TLB 的<b>每个表项都配一个比较器</b>，拿虚页号与所有表项并行比较。') },
+  { cls:'ok', tag:'（1）28 位', log:'（1）物理地址 = 20+3+5 = 28 位（= 实页号16+页内12）',
+    count:1,
+    html: structRows(false, true, true) +
+      qcard('（1）主存物理地址占多少位？',
+        '物理地址就是 Cache 地址：<b>Tag 20 位 + 组号 3 位 + 块内地址 5 位 = 28 位</b>。等价说法：实页号 16 位 + 页内地址 12 位 = 28 位。', '#16a34a') },
+  { cls:'step', tag:'（2）全相联·SRAM', log:'（2）TLB 每个表项都有比较器、无索引字段 → 全相联；速度要求最高 → SRAM',
+    count:2,
+    html: tlbTable(-1) +
+      qcard('（2）TLB 的映射方式与器件',
+        '图中每个 TLB 表项各带一个比较器，虚页号与<b>全部表项并行比较</b>，没有按索引定位的字段 → <b>全相联映射</b>。TLB 要尽快给出实页号、速度要求最高 → 用 <b>SRAM</b> 实现。', '#2563eb') },
+  { cls:'step', tag:'（3）2 路组相联', log:'（3）组号 3 位、每组 2 行 → 2 路组相联；附加位 LRU 位 + 脏位；容量 16×279 = 4464 位 = 558B',
+    count:3,
+    html: cacheTable(-1, -1) +
+      qcard('（3）映射方式 / 附加位 / 容量 / 有效位',
+        '组号 3 位 → 8 组，每组 2 行 → <b>2 路组相联</b>。LRU 替换需 <b>1 位 LRU 位</b>；回写策略需 <b>1 位修改位（脏位）</b>。每行 = 数据 32B（256 位）+ Tag 20 位 + 有效位 1 位 + LRU 1 位 + 脏位 1 位 = <b>279 位</b>；总容量 = 8 组 × 2 路 × 279 = 16 × 279 = <b>4464 位 = 558 字节</b>。<b>有效位</b>指示该行数据是否有效：为 0 时即使 Tag 匹配也不能用。', '#d97706') },
+  { cls:'ok', tag:'（4-1）TLB 命中', log:'0008C040H：虚页号 0008CH 在 TLB 命中 → 实页号 0040H → 物理地址 0040040H',
+    count:4,
+    html: hexCells(['0','0','0','8','C','0','4','0'], ['hit','hit','hit','hit','hit','','',''], { 0:'虚页号 0008CH', 5:'页内地址 040H' }) +
+      tlbTable(1) +
+      qcard('（4）虚拟地址 0008C040H → 物理地址',
+        '拆分：虚页号 = <code>0008CH</code>，页内地址 = <code>040H</code>。查 TLB：表项 <code>0008CH</code> 有效位 = 1，<b>命中</b>，实页号 = <code>0040H</code>。拼接：实页号 16 位 + 页内 12 位 = <b><code>0040040H</code></b>。', '#16a34a') },
+  { cls:'miss', tag:'（4-2）Cache 不命中', log:'0040040H：Tag=00400H、组号=2、块内=0；组 2 左路 Tag 匹配但有效位=0 → 不命中',
+    count:5,
+    html: hexCells(['0','0','4','0','0','4','0'], ['hit','hit','hit','hit','hit','ok',''], { 0:'Tag=00400H', 5:'组号=2', 6:'块内=0' }) +
+      cacheTable('2', 0) +
+      qcard('（4）是否命中 Cache？',
+        '物理地址 <code>0040040H</code> 拆成 Tag = <code>00400H</code>、组号 = 2、块内偏移 = 0。组 2 的<b>路 0</b>：Tag 恰好等于 <code>00400H</code>，但<b>有效位 = 0</b> —— Tag 匹配也无效；路 1 的 Tag = <code>01600H</code> 不匹配。所以<b>不命中</b>。', '#dc2626') },
+  { cls:'ok', tag:'（4-3）组号 3', log:'0007C260H：页内地址 C260H=0010 0110 0000B，第 7~5 位 = 011 = 3 → 组号 3',
+    count:6,
+    html: hexCells(['0','0','1','0','0','1','1','0','0','0','0','0'], ['','','ok','','ok','hit','hit','','','','',''], { 4:'组号位（第 7~5 位）' }) +
+      qcard('（4）虚拟地址 0007C260H 所在主存块映射到哪一组？',
+        '组号由物理地址<b>第 7～5 位</b>决定，这 3 位完全落在<b>页内地址</b>（低 12 位）里——虚存变换只把虚页号换成实页号，<b>页内地址原样照搬</b>，无需知道实页号。页内地址 = <code>C260H</code> = 0010 0110 0000B，第 7～5 位 = 011 = <b>3</b> → 映射到 Cache 组号 <b>3</b>。', '#16a34a') },
+  { cls:'done', tag:'完成', log:'（1）28 位；（2）全相联、SRAM；（3）2 路组相联、LRU 位+脏位、4464 位；（4）0040040H、不命中、组号 3',
+    count:6, done:true,
+    html: qcard('答案汇总',
+      '（1）主存物理地址占 <b>28 位</b>。<br>（2）TLB 采用<b>全相联</b>映射，用 <b>SRAM</b> 实现。<br>（3）Cache 采用 <b>2 路组相联</b>；附加位有 <b>LRU 位和修改位（脏位）</b>；总容量 <b>4464 位 = 558 字节</b>；有效位指示 Cache 行中的数据是否有效。<br>（4）物理地址 <b><code>0040040H</code></b>；<b>不命中</b>（组 2 中 Tag 匹配但有效位为 0）；<code>0007C260H</code> 所在主存块映射到 Cache 组号 <b>3</b>。', '#2563eb') },
+];
+
+AW.init({
+  title: '页式虚存 → TLB → Cache：一道题走完地址翻译',
+  subtitle: '虚拟地址 32 位（虚页号 20 + 页内 12）· Cache 地址 28 位（Tag 20 + 组号 3 + 块内 5）· 2 路组相联',
+  counterLabel: '已完成小问',
+  ribbonTitle: '推演进度（✓ 已完成）',
+  intro: '点击「▶ 播放」按问推演（1）～（4）。',
+  snaps: SNAPS,
+  result: {
+    big: '28 位 · 全相联 SRAM · 2 路组相联 4464 位 · 0040040H 不命中 · 组号 3',
+    html: '主线：虚页号查 TLB 得实页号 → 拼 <b>28 位物理地址</b> → 按"Tag 20 | 组 3 | 块内 5"查 Cache，<b>Tag 匹配且有效位为 1</b> 才算命中；组号 3 位全在页内地址里，<b>无需实页号即可算组号</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

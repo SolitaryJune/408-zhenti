@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-33 动画 · R1、Switch、Hub 实现的最高功能层</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理类：集线器、交换机、路由器三种设备逐台对照
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：判断标准',
+    cls: 'key',
+    body: '<p>题33～41图中 R1 是<b>路由器</b>、Switch 是 <b>100Base-T 交换机</b>、Hub 是 <b>100Base-T 集线器</b>。「实现的最高功能层」= 设备能识别并处理的最高层协议数据单元：只搬比特 → 第 1 层；能读帧头 MAC 查表转发 → 第 2 层；能读 IP 分组头查路由表选路 → 第 3 层。</p>' },
+  { title: 'Hub（集线器）：只看比特 → 第 1 层',
+    cls: 'bad',
+    body: '<p>Hub 工作在<b>物理层</b>：对信号只做<b>再生、放大</b>，然后从除入端口外的所有端口广播出去。它不识别 MAC 地址，更看不懂帧结构 → 最高功能层 = <b>1</b>。✗ 选项把它算成 2 的（B、D）都错。</p>' },
+  { title: 'Switch（交换机）：看帧 → 第 2 层',
+    cls: 'good',
+    body: '<p>Switch 工作在<b>数据链路层</b>：维护 <b>MAC 地址表</b>，按帧的目的 MAC 查表<b>定向转发、过滤</b>，能隔离冲突域 → 最高功能层 = <b>2</b>。✓</p>' },
+  { title: 'R1（路由器）：看分组 → 第 3 层',
+    cls: 'good',
+    body: '<p>R1 是路由器，工作在<b>网络层</b>：解析 <b>IP 分组头</b>、查路由表选下一跳，还能做 NAT、TTL 减 1 → 最高功能层 = <b>3</b>。✓</p>' },
+  { title: '对照四个选项',
+    cls: 'step',
+    body: '<p>三个数按 R1、Switch、Hub 排列：A（2、2、1）把路由器低估 ✗；B（2、2、2）把 Hub 高估 ✗；<b>C（3、2、1）三者全对 ✓</b>；D（3、2、2）Hub 错 ✗。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（3、2、1）</b>。记忆锚点：<b>Hub 看比特（1）、交换机看帧（2）、路由器看分组（3）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'R1、Switch、Hub 实现的最高功能层分别是多少？',
+  subtitle: '考点：OSI 参考模型 · 网络设备层次（集线器 / 交换机 / 路由器）· 逐台对照（2016-33）',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 判对 / ✗ 易错点）',
+  intro: '点击「▶ 播放」逐台设备对号入座。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（3、2、1）',
+    html: '记忆锚点：<b>Hub 是物理层设备（1）只再生广播比特；Switch 是数据链路层设备（2）按 MAC 地址表转发帧；R1 是路由器（3）按 IP 分组选路</b>。干扰项 B/D 把 Hub 高估成能处理帧，A 把路由器低估到第 2 层。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

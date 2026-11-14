@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-32 并发加/减 1 后 x 的取值</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.ix-phase{text-align:center;margin:2px 0 12px}
+.ix-phase b{display:inline-block;padding:5px 18px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:14px}
+.ix-row{display:flex;justify-content:center;gap:26px;flex-wrap:wrap}
+.ix-col{min-width:220px}
+.ix-title{font-weight:700;font-size:14px;color:#334155;text-align:center;margin-bottom:8px}
+.ix-ins{padding:8px 14px;border:2px solid #e2e8f0;border-radius:8px;background:#f8fafc;color:#94a3b8;
+  font-family:Menlo,Consolas,monospace;font-size:13.5px;margin-bottom:6px;transition:all .3s}
+.ix-ins.act{border-color:#2563eb;background:#dbeafe;color:#1d4ed8;font-weight:700}
+.ix-ins.ok{border-color:#86efac;background:#f0fdf4;color:#166534}
+.ix-state{display:flex;justify-content:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.ix-chip{padding:6px 16px;border-radius:8px;background:#f1f5f9;border:1px solid #e2e8f0;font-size:14px;color:#475569}
+.ix-chip b{font-family:Menlo,Consolas,monospace}
+.ix-x{padding:6px 20px;border-radius:8px;background:#fef9c3;border:1px solid #fde047;font-size:15px;color:#713f12;font-weight:700}
+.ix-x b{font-family:Menlo,Consolas,monospace;font-size:17px}
+.ix-note{text-align:center;font-size:13.5px;color:#64748b;margin-top:12px;min-height:20px}
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 指令状态：dim 待执行 / act 正在执行 / ok 已执行
+function st(n){ return n === 1 ? 'act' : (n === 2 ? 'ok' : 'dim'); }
+
+function ST(phase, p1, p2, r1, r2, x, note, cls, tag, log, ribbon){
+  return { phase:phase, p1:p1, p2:p2, r1:r1, r2:r2, x:x, note:note,
+           cls:cls, tag:tag, log:log, ribbon:ribbon || null, done:false };
+}
+
+var X1 = '两个操作只有一次「+1」和一次「−1」：x = 3 要加两次、x = −1 要减两次，都不可能';
+
+var SNAPS = [
+  ST('准备', [0,0,0], [0,0,0], '—', '—', 1, 'x 初值 = 1',
+    'shift', '初始', 'x 初值为 1；P1 加 1、P2 减 1，两条序列都是「load → 改 → store」，先看顺序执行'),
+  ST('顺序执行（P1 完再 P2）', [1,0,0], [0,0,0], '1', '—', 1, '',
+    'step', 'P1.load', 'P1 执行 load R1, x：把 x=1 读进寄存器 R1'),
+  ST('顺序执行（P1 完再 P2）', [2,1,0], [0,0,0], '2', '—', 1, '',
+    'step', 'P1.inc', 'P1 执行 inc R1：R1 = 2'),
+  ST('顺序执行（P1 完再 P2）', [2,2,2], [0,0,0], '2', '—', 2, '',
+    'step', 'P1.store', 'P1 执行 store x, R1：x = 2'),
+  ST('顺序执行（P1 完再 P2）', [2,2,2], [2,1,0], '2', '1', 2, '',
+    'step', 'P2.load+dec', 'P2 执行 load R2, x 得 2，dec 后 R2 = 1'),
+  ST('顺序执行（P1 完再 P2）', [2,2,2], [2,2,2], '2', '1', 1, '顺序执行：x = 1',
+    'ok', '串行结果', 'P2 执行 store x, R2：x = 1 —— 两种串行顺序（P1 先或 P2 先）结果都是 x = 1',
+    {k:1, ok:true}),
+  ST('交错情景 A（得 0）', [1,0,0], [0,0,0], '1', '—', 1, '',
+    'step', 'A·P1.load', '情景 A：P1 执行 load 读到 x = 1'),
+  ST('交错情景 A（得 0）', [1,0,0], [1,0,0], '1', '1', 1, '两个寄存器里都是旧值 1',
+    'step', 'A·P2.load', '情景 A：P2 执行 load 也读到 x = 1 —— 双方都拿到了过期数据'),
+  ST('交错情景 A（得 0）', [2,2,2], [1,0,0], '2', '1', 2, '',
+    'step', 'A·P1 写回', '情景 A：P1 连续执行 inc + store → x = 2'),
+  ST('交错情景 A（得 0）', [2,2,2], [2,2,2], '2', '0', 0, 'P2 按寄存器旧值写回，把 P1 的加法冲掉（丢失更新）：x = 0',
+    'miss', 'A·P2 写回', '情景 A：P2 用寄存器里的旧值 1−1=0 写回 → x = 0，P1 的加法被覆盖', {k:2, ok:true}),
+  ST('交错情景 B（得 2）', [0,0,0], [1,0,0], '—', '1', 1, '',
+    'step', 'B·P2.load', '情景 B：换 P2 先执行 load，读到 x = 1'),
+  ST('交错情景 B（得 2）', [1,0,0], [1,0,0], '1', '1', 1, '两个寄存器里都是旧值 1',
+    'step', 'B·P1.load', '情景 B：P1 再 load，也读到 1'),
+  ST('交错情景 B（得 2）', [1,0,0], [2,2,2], '1', '0', 0, '',
+    'step', 'B·P2 写回', '情景 B：P2 执行 dec + store → x = 0'),
+  ST('交错情景 B（得 2）', [2,2,2], [2,2,2], '2', '0', 2, 'P1 后写回，把 P2 的减法冲掉（丢失更新）：x = 2',
+    'ok', 'B·P1 写回', '情景 B：P1 基于 R1=1 执行 inc + store → x = 2', {k:3, ok:true}),
+  ST('结论', [2,2,2], [2,2,2], '2', '0', 2, 'x 的可能取值：0、1、2 → 答案 C',
+    'done', '结论', '汇总：串行得 1，交错 A 得 0，交错 B 得 2；x = 3 需加两次、x = −1 需减两次，都不可能'),
+];
+SNAPS[SNAPS.length - 1].done = true;
+SNAPS.forEach(function(s, i){ s.count = i; });
+
+AW.init({
+  title: '2011-32 两个并发进程加/减 1：x 的可能取值',
+  subtitle: 'x 初值 = 1 · P1：<code>load R1,x → inc R1 → store x,R1</code> · P2：<code>load R2,x → dec R2 → store x,R2</code>',
+  counterLabel: '步骤',
+  ribbonTitle: '三种执行顺序的 x 终值（✓ 都可能）',
+  intro: '点击「▶ 播放」逐步推演串行与两种交错情景。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    this._phase = AW.el('div', 'ix-phase');
+    stage.appendChild(this._phase);
+    var row = AW.el('div', 'ix-row');
+    var self = this;
+    this._p1 = []; this._p2 = [];
+    var c1 = AW.el('div', 'ix-col', '<div class="ix-title">P1（对 x 加 1）</div>');
+    ['load R1, x', 'inc R1', 'store x, R1'].forEach(function(t){
+      var d = AW.el('div', 'ix-ins', t);
+      c1.appendChild(d); self._p1.push(d);
+    });
+    var c2 = AW.el('div', 'ix-col', '<div class="ix-title">P2（对 x 减 1）</div>');
+    ['load R2, x', 'dec R2', 'store x, R2'].forEach(function(t){
+      var d = AW.el('div', 'ix-ins', t);
+      c2.appendChild(d); self._p2.push(d);
+    });
+    row.appendChild(c1); row.appendChild(c2);
+    stage.appendChild(row);
+    this._state = AW.el('div', 'ix-state');
+    stage.appendChild(this._state);
+    this._note = AW.el('div', 'ix-note');
+    stage.appendChild(this._note);
+  },
+
+  render: function(stage, sn){
+    var self = this;
+    this._phase.innerHTML = '<b>' + sn.phase + '</b>';
+    sn.p1.forEach(function(v, i){ self._p1[i].className = 'ix-ins ' + st(v); });
+    sn.p2.forEach(function(v, i){ self._p2[i].className = 'ix-ins ' + st(v); });
+    this._state.innerHTML =
+      '<span class="ix-chip">R1 = <b>' + sn.r1 + '</b></span>' +
+      '<span class="ix-chip">R2 = <b>' + sn.r2 + '</b></span>' +
+      '<span class="ix-x">x = <b>' + sn.x + '</b></span>';
+    this._note.textContent = sn.note || '';
+  },
+
+  result: {
+    big: 'x ∈ {0, 1, 2}（答案 C）',
+    html: '顺序执行得 <b>1</b>；两个 load 都读到旧值 1 后交错写回 → <b>丢失更新</b>，先写方被冲掉：得 <b>0</b> 或 <b>2</b>。x=3 要加两次、x=−1 要减两次，操作次数固定，不可能出现。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

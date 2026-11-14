@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>概念/分析类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-37：CSMA/CD 最小帧长减少 800bit 时最远距离的变化
+     模板：概念 / 计算推理类（逐步揭示推理链卡片）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：最小帧长约束',
+    cls: 'key',
+    body: '<p>CSMA/CD 的约束：<b>发送一帧的时间必须 ≥ 往返传播时延（争用期 2τ）</b>，否则发完帧还没检测到冲突，冲突检测失效。已知：R = <code>1 Gbps</code>，v = <code>200000 km/s</code>，ΔL = 800 bit（减少）。</p>' },
+  { title: '写出关系式',
+    cls: '',
+    body: '<p>最小帧长 L = 2Rτ，单程时延 τ = d/v。代入得：<code>L = 2R × d/v</code>，即 <b>d = L × v / (2R)</b>——距离与最小帧长成正比。</p>' },
+  { title: '求时延变化量',
+    cls: '',
+    body: '<p>ΔL = 2R × Δτ → Δτ = 800 / (2 × 10⁹) = <code>4×10⁻⁷ s</code>（单程时延减少 0.4 μs）。</p>' },
+  { title: '求距离变化量',
+    cls: '',
+    body: '<p>Δd = v × Δτ = 2×10⁸ m/s × 4×10⁻⁷ s = <b>80 m</b>。</p>' },
+  { title: '判断方向并排除干扰项',
+    cls: 'bad',
+    body: '<p>帧变短 → 能容忍的传播时延更小 → 网段必须更短 → 距离<b>减少</b> 80 m。C（减少 160 m）忘了争用期是 2τ、少除一个 2；A、B 方向判反。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-37：CSMA/CD 帧长与网段距离联动',
+  subtitle: 'R = 1 Gbps · v = 2×10⁸ m/s · 最小帧长减少 800 bit',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：减少 80 m',
+    html: '记忆锚点：<b>L = 2R·d/v，帧长与距离同增同减，Δd = ΔL × v / (2R)</b>。<br>800 bit × (2×10⁸ / 2×10⁹) = 80 m。干扰项 C 是少了「÷2」的 160 m——争用期是往返 2τ。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

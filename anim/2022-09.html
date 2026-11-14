@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-09 影响散列平均查找长度的因素</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：ASL 由什么决定',
+    cls: 'key',
+    body: '<p>散列查找的成本 = 一次散列计算 + 冲突后的探测/链接次数。平均查找长度 ASL 刻画「平均要多撞几次才能找到」，所以一切<b>影响冲突频率</b>和<b>冲突后移动距离</b>的因素都影响 ASL。逐项检验 I、II、III。</p>' },
+  { title: 'I. 装填因子',
+    cls: 'good',
+    body: '<p>α = 表中元素数 ÷ 表长。α 越大表越满，冲突概率越高，ASL 随之增大；减小 α 能直接降低 ASL。<b>影响 ✓</b></p>' },
+  { title: 'II. 散列函数',
+    cls: 'good',
+    body: '<p>函数越均匀，关键字越分散、冲突越少；设计不佳（大量关键字挤进同一区间）时 ASL 明显增大。<b>影响 ✓</b></p>' },
+  { title: 'III. 冲突解决策略',
+    cls: 'good',
+    body: '<p>同样的装填因子下，线性探测法有「堆积」现象、ASL 偏大；链地址法、二次探测等表现不同——同一批数据换一种策略，ASL 就变。<b>影响 ✓</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>I、II、III 全部影响 ⇒ 答案 <b>D</b>。记忆锚点：ASL = α 的函数 + 散列函数好坏 + 冲突策略好坏，三者缺一不可。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪些因素影响散列表的平均查找长度？（2022-09）',
+  subtitle: '考点：装填因子 · 散列函数 · 冲突处理策略',
+  intro: '点击「▶ 播放」逐项检验 I～III。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（I、II、III 都影响）',
+    html: 'α 越大冲突越多；散列函数不均匀冲突集中；策略决定冲突后的探测代价（线性探测有堆积、链地址法各异）。三项共同决定 ASL，缺一不可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

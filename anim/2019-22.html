@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-22 DMA 方式四句话逐条判断</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：DMA 三阶段框架', cls: 'key', tag: '审题',
+    body: '<p>DMA（直接存储器存取）传送分三步：<b>预处理（初始化）→ 数据传送 → 后处理</b>。数据传送本身由 DMA 控制器掌管总线完成，CPU 只在前后两端介入。拿这个框架逐条核对四句话。</p>' },
+  { title: 'I. DMA 传送前由设备驱动程序设置传送参数', cls: 'good', tag: 'I 正确',
+    body: '<p>对——<b>预处理</b>阶段：设备驱动程序向 DMA 控制器写入主存起始地址、传送字数、传送方向等传送参数（初始化 DMA 控制器）。</p>' },
+  { title: 'II. 数据传送前由 DMA 控制器请求总线使用权', cls: 'good', tag: 'II 正确',
+    body: '<p>对——DMA 控制器与 CPU 都挂在系统总线上，传送前必须通过总线仲裁向 CPU <b>申请总线使用权</b>。</p>' },
+  { title: 'III. 数据传送由 DMA 控制器直接控制总线完成', cls: 'good', tag: 'III 正确',
+    body: '<p>对——取得总线后，成块数据在主存与设备间直接传送，<b>CPU 不干预</b>，"直接存储器存取"由此得名。</p>' },
+  { title: 'IV. DMA 传送结束后的处理由中断服务程序完成', cls: 'good', tag: 'IV 正确',
+    body: '<p>对——<b>后处理</b>阶段：传送结束，DMA 控制器向 CPU 发中断请求，由中断服务程序完成数据校验、释放缓冲区等善后工作。</p>' },
+  { title: '结论：四句话全对', cls: 'good', tag: '完成',
+    body: '<p>I、II、III、IV 全部正确，答案选 <b>D</b>。记忆锚点：<b>CPU 管两头（设参数、做善后），DMA 管中间（抢总线、传数据）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  var logCls = s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : (s.cls === 'key' ? 'shift' : 'step'));
+  return {
+    cls: last ? 'done' : logCls,
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2019·22 DMA 方式的完整流程',
+  subtitle: '框架：<code>预处理 → 数据传送 → 后处理</code> · 四句话逐条核对',
+  intro: '点击「▶ 播放」逐条核对四句叙述。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（全对）',
+    html: '四句话分别对应：<b>驱动程序设参数（预处理）→ DMA 请求总线 → DMA 直接控制总线传数据（CPU 不干预）→ 中断服务程序善后（后处理）</b>。易错点：以为 DMA 完全不需要中断——中断被"挤"到了一头一尾，后处理仍靠中断服务程序。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

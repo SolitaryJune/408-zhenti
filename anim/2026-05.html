@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-05 哈夫曼树构造与叶结点深度 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 叶：a=1,b=2,c=4,d=5,e=8,f=10,g=12
+// 每步森林保持有序；merged=true 的格子是新合并出的内部结点
+function styledRow(chars, paint, ptrMap){
+  var row = AW.cellRow(chars, null, ptrMap || null, 1);
+  if (paint){
+    for (var k in paint){
+      var col = row.children[+k - 1];
+      if (!col) continue;
+      var boxEl = col.children[1];
+      var p = paint[k];
+      if (p === 'amber'){ boxEl.style.background='#fef3c7'; boxEl.style.borderColor='#d97706'; boxEl.style.color='#92400e'; }
+      else if (p === 'green'){ boxEl.style.background='#dcfce7'; boxEl.style.borderColor='#16a34a'; boxEl.style.color='#14532d'; }
+      else if (p === 'red'){ boxEl.style.background='#fee2e2'; boxEl.style.borderColor='#dc2626'; boxEl.style.color='#b91c1c'; }
+      else if (p === 'blue'){ boxEl.style.background='#dbeafe'; boxEl.style.borderColor='#2563eb'; boxEl.style.color='#1e40af'; }
+      else if (p === 'dim'){ boxEl.style.opacity='.45'; }
+    }
+  }
+  return row;
+}
+
+function depthTableHTML(){
+  var rows = [
+    ['叶（权值）', 'e(8)', 'f(10)', 'g(12)', 'd(5)', 'c(4)', 'a(1)', 'b(2)'],
+    ['深度', '3', '3', '3', '4', '5', '6', '6'],
+    ['WPL 贡献', '24', '30', '36', '20', '20', '6', '12'],
+  ];
+  var h = '<table style="border-collapse:collapse;margin:8px 0;font-size:13.5px">';
+  rows.forEach(function(r, ri){
+    h += '<tr>';
+    r.forEach(function(c, ci){
+      var bg = ci === 0 ? '#f1f5f9' : (ri === 1 && ci <= 3 ? '#dcfce7' : '#fff');
+      var w = ci === 0 ? 'font-weight:700' : '';
+      if (ri === 2 && ci > 0){ w += ';color:#64748b'; }
+      h += '<td style="border:1.5px solid #cbd5e1;padding:4px 12px;background:' + bg + ';' + w + '">' + c + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table>';
+  return h;
+}
+
+var forestBox = null, noteLine = null;
+
+function build(stage){
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl = AW.el('div', 'aw-row-label', '<b>森林中的权值</b>（绿=叶，琥珀=合并出的新结点；上方标注「合」的是非叶结点）');
+  forestBox = AW.el('div', '');
+  noteLine = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(lbl);
+  wrap.appendChild(forestBox);
+  wrap.appendChild(noteLine);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  forestBox.innerHTML = '';
+  forestBox.appendChild(styledRow(sn.forest, sn.paint, sn.ptr));
+  if (sn.showDepth) forestBox.appendChild(AW.el('div', '', depthTableHTML()));
+  noteLine.innerHTML = sn.note || '';
+}
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    forest:['1','2','4','5','8','10','12'], paint:{1:'green',2:'green',3:'green',4:'green',5:'green',6:'green',7:'green'},
+    note:'7 个叶的权值：a=1，b=2，c=4，d=5，e=8，f=10，g=12。哈夫曼构造：<b>每轮取两个最小的合并</b>，新权放回森林并保持有序。',
+    log:'初始森林：1,2,4,5,8,10,12（全是叶）。' },
+  { cls:'shift', tag:'合并 1+2', count:1, ribbon:{k:1, ok:true},
+    forest:['3','4','5','8','10','12'], paint:{1:'amber'},
+    ptr:{1:'合=1+2'},
+    note:'取最小的 1(a)、2(b) 合并为新结点 <b>3</b>；森林变为 3,4,5,8,10,12。',
+    log:'第 1 轮：1+2=3，新结点入列。' },
+  { cls:'shift', tag:'合并 3+4', count:2, ribbon:{k:2, ok:true},
+    forest:['5','7','8','10','12'], paint:{2:'amber'},
+    ptr:{2:'合=3+4'},
+    note:'再取两个最小的 3（新结点）、4(c) 合并为 <b>7</b>；森林变为 5,7,8,10,12。',
+    log:'第 2 轮：3+4=7。' },
+  { cls:'shift', tag:'合并 5+7', count:3, ribbon:{k:3, ok:true},
+    forest:['8','10','12','12'], paint:{3:'amber'},
+    ptr:{3:'合=5+7'},
+    note:'取 5(d) 与 7（新结点）合并为 <b>12</b>；森林变为 8,10,12,12 —— 注意此刻有<b>两个 12</b>：一个是叶 g，一个是新合并结点。',
+    log:'第 3 轮：5+7=12，森林里出现两个 12。' },
+  { cls:'shift', tag:'合并 8+10', count:4, ribbon:{k:4, ok:true},
+    forest:['12','12','18'], paint:{3:'amber'},
+    ptr:{3:'合=8+10'},
+    note:'取 8(e)、10(f) 合并为 <b>18</b>；森林变为 12,12,18。',
+    log:'第 4 轮：8+10=18。' },
+  { cls:'shift', tag:'合并 12+12', count:5, ribbon:{k:5, ok:true},
+    forest:['18','24'], paint:{2:'amber'},
+    ptr:{2:'合=12+12'},
+    note:'两个 12（叶 g 与合并结点）取出一对合并为 <b>24</b>。无论叶 g 放左还是放右，深度结构完全相同。',
+    log:'第 5 轮：12+12=24（叶 g 与 5+7 结点成为兄弟）。' },
+  { cls:'shift', tag:'合并 18+24', count:6, ribbon:{k:6, ok:true},
+    forest:['42'], paint:{1:'amber'},
+    ptr:{1:'根=18+24'},
+    note:'最后 18 与 24 合并为根 <b>42</b>，哈夫曼树构造完成。',
+    log:'第 6 轮：18+24=42，即整棵树的根。' },
+  { cls:'ok', tag:'读深度', count:6, showDepth:true,
+    forest:['42'], paint:{1:'blue'}, ptr:{1:'根'},
+    note:'结构：根 42 → 左 18（挂叶 8、10）、右 24（挂叶 g 与结点 12）→ 结点 12 挂 5 与 7 → 7 挂 3、4 → 3 挂 1、2。深度：e、f、g 在第 <b>3</b> 层，d 在第 4 层，c 在第 5 层，a、b 在第 6 层；WPL = 148。',
+    log:'与 e(8) 同深度的叶：第 3 层上的 10 与 12，即 f 和 g。' },
+  { cls:'done', tag:'结论', count:6, showDepth:true,
+    forest:['42'], paint:{1:'blue'}, ptr:{1:'根'},
+    note:'<b style="color:#16a34a">与 e 深度相同的叶仅有 f、g → 答案 D</b>。两个 12 的取舍不影响深度结构。',
+    log:'叶 8、10、12 同在最浅层（深度 3），选 D。',
+    done:true },
+];
+
+AW.init({
+  title: '2026-05 · 哈夫曼树：与 e 同深度的叶是谁',
+  subtitle: '叶权 a~g = 1,2,4,5,8,10,12 · <code>每轮取两小合并，读出各叶深度</code>',
+  counterLabel: '合并轮数',
+  ribbonTitle: '合并轮（✓ 完成）',
+  intro: '点击「▶ 播放」，看哈夫曼树如何一步步合并出来。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: '答案 D（f、g）',
+    html: '六轮合并：1+2=3 → 3+4=7 → 5+7=12 → 8+10=18 → 12+12=24 → 18+24=42。深度 3 的最浅层挂着权 <b>8、10、12</b> 三个叶，即 e、f、g——与 e 同深度的叶仅有 <b>f、g</b>，选 <b>D</b>（WPL=148）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

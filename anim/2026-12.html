@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-12 计算机系统层次结构 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题目问"<b>错误的是</b>"。考点：<b>计算机系统层次结构</b>——每层是谁、谁在谁之上、ISA 的角色。</p>' },
+  { title: '先摆出标准层次',
+    cls: '',
+    body: '<p>自上而下：应用软件 → 语言处理程序/操作系统 → <b>指令集体系结构（ISA）</b> → <b>计算机组成（微架构）</b> → 数字逻辑 → <b>器件及物理封装</b>。两端正是选项 A 描述的样子。</p>' },
+  { title: '逐项分析 A',
+    cls: 'good',
+    body: '<p>A（最上层应用软件层、最下层器件及物理封装层）：<b>对</b>。这正是层次结构的两个极端。</p>' },
+  { title: '逐项分析 B',
+    cls: 'good',
+    body: '<p>B（ISA 是软硬件接口且必不可少）：<b>对</b>。ISA 规定指令、寄存器、寻址方式，软件靠它才能在硬件上运行。</p>' },
+  { title: '逐项分析 C（本题答案）',
+    cls: 'bad',
+    body: '<p>C（计算机组成即微架构属于 ISA 的"物理实现层"）：<b>错</b>。微架构是 ISA 之下<b>独立的逻辑设计层</b>，负责组织数据通路与控制器；"物理实现层"指其下的数字逻辑层与最底层的器件及物理封装层。"实现 ISA" 不等于 "物理实现层"。</p>' },
+  { title: '逐项分析 D',
+    cls: 'good',
+    body: '<p>D（操作系统通过 ISA 进行抽象、向上层提供服务）：<b>对</b>。OS 用 ISA 提供的特权指令等机制，向上抽象出进程、虚存、文件。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>错误的说法是 <b>C</b>。记忆锚点：编程可见的归 ISA；微架构是逻辑实现层，物理实现层在最底层。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title + '：' + s.body.replace(/<[^>]+>/g, ''),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+// 明确标记：最后一步为 done:true（配合上方 map 生成）
+snaps[snaps.length - 1].done = true;
+
+AW.init({
+  title: '2026·12 计算机系统层次结构辨析',
+  subtitle: '考点：层次结构中各层位置 · ISA 与微架构的边界 · 找错误项',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>微架构 ≠ 物理实现层</b>。计算机组成（微架构）是 ISA 之下的逻辑设计层；物理实现层是数字逻辑层与器件及物理封装层。A/B/D 都是层次结构的正确描述。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

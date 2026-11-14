@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-09 线性探测散列表</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var HTROW, CALC;
+
+function paintHT(cells, cls, ptr, calcHtml){
+  HTROW.innerHTML = '';
+  for(var i = 0; i < 7; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptr && ptr[i]) || ''));
+    col.appendChild(AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), cells[i] === '' ? '&nbsp;' : cells[i]));
+    col.appendChild(AW.el('div', 'aw-idx', String(i)));
+    HTROW.appendChild(col);
+  }
+  CALC.innerHTML = calcHtml || '&nbsp;';
+}
+
+AW.init({
+  title: '2018·数据结构（九） 线性探测散列表与查找成功 ASL',
+  subtitle: '表长 7 · H(k) = k % 7 · 线性探测再散列 · 依次插入 22, 43, 15',
+  counterLabel: '累计比较次数',
+  ribbonTitle: '第几个关键字（✓ 存入成功）',
+  intro: '点击「▶ 播放」，逐步演示插入与探测计数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    HTROW = AW.el('div', 'aw-cells');
+    CALC = AW.el('div', 'aw-row-label', '&nbsp;');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>散列表 HT</b>（下标 0~6，上方为探测指针）'));
+    wrap.appendChild(HTROW);
+    wrap.appendChild(CALC);
+    stage.appendChild(wrap);
+    paintHT(['','','','','','',''], [], {}, '空表；H(k) = k % 7，冲突则探测下一格（到表尾绕回 0）');
+  },
+
+  render: function(stage, sn){
+    paintHT(sn.cells, sn.cls, sn.ptr, sn.calc);
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'表长 7、初始为空；H(k)=k%7', count:0,
+      cells:['','','','','','',''], cls:[], ptr:{},
+      calc:'H(22)=1、H(43)=1、H(15)=1 —— 三个关键字同散列地址，正好考查线性探测' },
+    { cls:'ok', tag:'插入 22', log:'H(22)=1：槽 1 为空 → 存入，比较 1 次', count:1, ribbon:{k:1, ok:true},
+      cells:['','22','','','','',''], cls:['','ok','','','','',''], ptr:{1:'存入'},
+      calc:'22：槽 1 空 → 直接存入，比较 1 次' },
+    { cls:'miss', tag:'43 冲突', log:'H(43)=1：槽 1 已被 22 占 → 冲突，探测下一格（槽 2）', count:2,
+      cells:['','22','','','','',''], cls:['','miss','','','','',''], ptr:{1:'✗'},
+      calc:'43：比较第 2 次（探测槽 1 失败）→ 探测槽 2' },
+    { cls:'ok', tag:'插入 43', log:'槽 2 为空 → 43 存入槽 2，共比较 2 次', count:3, ribbon:{k:2, ok:true},
+      cells:['','22','43','','','',''], cls:['','ok','ok','','','',''], ptr:{2:'存入'},
+      calc:'43：槽 2 空 → 存入，比较 2 次' },
+    { cls:'miss', tag:'15 冲突', log:'H(15)=1：槽 1 被占 → 冲突，探测槽 2', count:4,
+      cells:['','22','43','','','',''], cls:['','miss','','','','',''], ptr:{1:'✗'},
+      calc:'15：比较第 4 次（探测槽 1 失败）→ 探测槽 2' },
+    { cls:'miss', tag:'15 再冲突', log:'槽 2 也被 43 占 → 再冲突，探测槽 3', count:5,
+      cells:['','22','43','','','',''], cls:['','','miss','','','',''], ptr:{2:'✗'},
+      calc:'15：比较第 5 次（探测槽 2 失败）→ 探测槽 3' },
+    { cls:'ok', tag:'插入 15', log:'槽 3 为空 → 15 存入槽 3，共比较 3 次', count:6, ribbon:{k:3, ok:true},
+      cells:['','22','43','15','','',''], cls:['','ok','ok','ok','','',''], ptr:{3:'存入'},
+      calc:'15：槽 3 空 → 存入，比较 3 次' },
+    { cls:'done', tag:'完成', log:'查找成功 ASL = (1+2+3)/3 = 2 → 答案 C', count:6, done:true,
+      cells:['','22','43','15','','',''], cls:['','hit','hit','hit','','',''], ptr:{},
+      calc:'ASL成功 = (1 + 2 + 3) / 3 = 2（分母是表中元素个数 3，不是表长 7）' },
+  ],
+
+  result: {
+    big: 'ASL = 2',
+    html: '22、43、15 依次占用槽 1、2、3，查找成功的比较次数分别为 <b>1、2、3</b>，ASL = (1+2+3)/3 = <b>2</b>，答案 <b>C</b>。记忆锚点：<b>线性探测会产生堆积</b>——同散列地址的关键字越往后比较次数越多；分母是元素个数而非表长。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

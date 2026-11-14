@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-38 算法动画：TCP 拥塞窗口恢复</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2022-38：超时后 cwnd 从 1 KB 涨回 16 KB 的慢开始/拥塞避免柱状图
+     外壳与控件全部由 assets/anim-engine.js 提供。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 12 根柱：超时后(1KB) + RTT1..RTT11（结束时 cwnd）
+var BARS = [
+  { label: '超时后', v: 1,  phase: 'reset' },
+  { label: 'RTT1',  v: 2,  phase: 'ss' },
+  { label: 'RTT2',  v: 4,  phase: 'ss' },
+  { label: 'RTT3',  v: 8,  phase: 'ss2ca' },
+  { label: 'RTT4',  v: 9,  phase: 'ca' },
+  { label: 'RTT5',  v: 10, phase: 'ca' },
+  { label: 'RTT6',  v: 11, phase: 'ca' },
+  { label: 'RTT7',  v: 12, phase: 'ca' },
+  { label: 'RTT8',  v: 13, phase: 'ca' },
+  { label: 'RTT9',  v: 14, phase: 'ca' },
+  { label: 'RTT10', v: 15, phase: 'ca' },
+  { label: 'RTT11', v: 16, phase: 'ca' },
+];
+var PX_PER_KB = 12;   // 柱高比例
+var BAR_W = 40;
+
+function barColor(phase){
+  if (phase === 'reset') return '#dc2626';   // 红：超时重置
+  if (phase === 'ss' || phase === 'ss2ca') return '#d97706'; // 琥珀：慢开始
+  return '#16a34a';                           // 绿：拥塞避免
+}
+
+AW.init({
+  title: '2022-38：超时后拥塞窗口再次涨到 16 KB 要几个 RTT？',
+  subtitle: 'MSS = <code>1 KB</code> · 超时时 cwnd = <code>16 KB</code> → ssthresh 减半、cwnd 归 1',
+  counterLabel: '已用 RTT',
+  ribbonTitle: 'RTT 轮次（✓ 已完成）',
+  intro: '点击「▶ 播放」逐轮演示拥塞窗口的增长。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var chart = AW.el('div', '');
+    chart.style.position = 'relative';
+    chart.style.height = (16 * PX_PER_KB + 56) + 'px';
+    chart.style.minWidth = (BARS.length * (BAR_W + 14) + 20) + 'px';
+    chart.style.display = 'flex';
+    chart.style.alignItems = 'flex-end';
+    chart.style.gap = '14px';
+    chart.style.padding = '0 10px';
+    chart.style.borderBottom = '2px solid #cbd5e1';
+
+    // ssthresh = 8 KB 参考线
+    var line = AW.el('div', '');
+    line.style.position = 'absolute';
+    line.style.left = '0'; line.style.right = '0';
+    line.style.bottom = (8 * PX_PER_KB + 26) + 'px';
+    line.style.borderTop = '2px dashed #d97706';
+    var lineTxt = AW.el('div', '', 'ssthresh = 8 KB');
+    lineTxt.style.position = 'absolute';
+    lineTxt.style.right = '4px';
+    lineTxt.style.bottom = (8 * PX_PER_KB + 30) + 'px';
+    lineTxt.style.fontSize = '12px';
+    lineTxt.style.fontWeight = '700';
+    lineTxt.style.color = '#92400e';
+    line.appendChild(lineTxt);
+    chart.appendChild(line);
+
+    var refs = [];
+    BARS.forEach(function(b){
+      var col = AW.el('div', '');
+      col.style.display = 'flex';
+      col.style.flexDirection = 'column';
+      col.style.alignItems = 'center';
+      col.style.justifyContent = 'flex-end';
+      col.style.width = BAR_W + 'px';
+
+      var val = AW.el('div', '', '');
+      val.style.fontSize = '12.5px';
+      val.style.fontWeight = '700';
+      val.style.color = '#64748b';
+      val.style.height = '20px';
+      val.style.lineHeight = '20px';
+
+      var bar = AW.el('div', '');
+      bar.style.width = BAR_W + 'px';
+      bar.style.height = '0px';
+      bar.style.background = '#e2e8f0';
+      bar.style.borderRadius = '8px 8px 0 0';
+      bar.style.transition = 'height .5s ease, background .3s';
+
+      var xl = AW.el('div', '', b.label);
+      xl.style.fontSize = '11px';
+      xl.style.color = '#94a3b8';
+      xl.style.fontFamily = 'monospace';
+      xl.style.marginTop = '4px';
+
+      col.appendChild(val);
+      col.appendChild(bar);
+      chart.appendChild(col);
+      refs.push({ bar: bar, val: val, xl: xl });
+    });
+    wrap.appendChild(chart);
+    stage.appendChild(wrap);
+    this._refs = refs;
+    this._line = line;
+  },
+
+  render: function(stage, sn, i){
+    var refs = this._refs;
+    var lit = sn.lit || 0;
+    refs.forEach(function(r, j){
+      var b = BARS[j];
+      var on = j < lit;
+      r.bar.style.height = on ? (b.v * PX_PER_KB) + 'px' : '0px';
+      r.bar.style.background = on ? barColor(b.phase) : '#e2e8f0';
+      r.val.textContent = on ? (b.v + ' KB') : '';
+      r.val.style.color = on ? barColor(b.phase) : '#64748b';
+      r.xl.style.color = on ? '#334155' : '#94a3b8';
+    });
+    if (this._line) this._line.style.display = (i >= 1) ? 'block' : 'none';
+  },
+
+  snaps: [
+    { cls:'step',  tag:'超时！', log:'甲一直有数据发送。cwnd = 16 KB 时计时器超时 → 判定网络出现拥塞。', count:0, lit:0 },
+    { cls:'miss',  tag:'拥塞处理', log:'两个动作：ssthresh = 16/2 = 8 KB；cwnd 重置为 1 MSS = 1 KB，重新慢开始。', count:0, lit:1 },
+    { cls:'ok',    tag:'慢开始', log:'第 1 个 RTT：cwnd 1 → 2 KB（每轮翻倍）。', count:1, lit:2, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'慢开始', log:'第 2 个 RTT：cwnd 2 → 4 KB。', count:2, lit:3, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'到达门限', log:'第 3 个 RTT：cwnd 4 → 8 KB，到达 ssthresh = 8 → 转入拥塞避免。', count:3, lit:4, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 4 个 RTT：cwnd 8 → 9 KB（每轮只加 1 MSS）。', count:4, lit:5, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 5 个 RTT：cwnd 9 → 10 KB。', count:5, lit:6, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 6 个 RTT：cwnd 10 → 11 KB。', count:6, lit:7, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 7 个 RTT：cwnd 11 → 12 KB。', count:7, lit:8, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 8 个 RTT：cwnd 12 → 13 KB。', count:8, lit:9, ribbon:{k:8, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 9 个 RTT：cwnd 13 → 14 KB。', count:9, lit:10, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'拥塞避免', log:'第 10 个 RTT：cwnd 14 → 15 KB。', count:10, lit:11, ribbon:{k:10, ok:true} },
+    { cls:'ok',    tag:'恢复目标', log:'第 11 个 RTT：cwnd 15 → 16 KB，恢复到超时前的水平。', count:11, lit:12, ribbon:{k:11, ok:true} },
+    { cls:'done',  tag:'完成', log:'合计：慢开始 3 RTT + 拥塞避免 8 RTT = 11 RTT → 选 C。', count:11, lit:12, done:true },
+  ],
+
+  result: {
+    big: '11 RTT（选 C）',
+    html: '超时 → <b>ssthresh = 8 KB、cwnd 归 1 KB</b>；慢开始 1→2→4→8（3 RTT，翻倍），到达门限转拥塞避免 9→…→16（8 RTT，每轮 +1 MSS）。口诀：<b>未到门限翻倍，达到门限加 1</b>。干扰项 D 忘了慢开始是指数增长。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

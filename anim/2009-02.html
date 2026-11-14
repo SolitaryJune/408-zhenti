@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-02 动画 · 由出队顺序反推栈容量</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：按需进栈模拟，盯住栈深峰值
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var MAXS = 7;                       // 栈最多 7 个元素
+var stackBox = null, queueBox = null, depthLine = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl1 = AW.el('div', 'aw-row-label', '<b>栈 S</b>（左端为栈底，右端为栈顶）');
+  stackBox = AW.el('div', '');
+  var lbl2 = AW.el('div', 'aw-row-label', '<b>队列 Q</b>（出队次序从左到右）');
+  queueBox = AW.el('div', '');
+  depthLine = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(lbl1); wrap.appendChild(stackBox);
+  wrap.appendChild(lbl2); wrap.appendChild(queueBox);
+  wrap.appendChild(depthLine);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var i, cells, classes, ptr;
+  // 栈：固定 MAXS 格
+  cells = []; classes = []; ptr = {};
+  for(i = 0; i < MAXS; i++){
+    if(i < sn.st.length){ cells.push(sn.st[i]); classes.push(i === sn.st.length - 1 ? 'hit' : 'ok'); }
+    else { cells.push(''); classes.push('dim'); }
+  }
+  if(sn.st.length > 0) ptr[sn.st.length] = '栈顶';
+  stackBox.innerHTML = '';
+  stackBox.appendChild(AW.cellRow(cells, classes, ptr, 1));
+  // 队列：固定 MAXS 格
+  cells = []; classes = [];
+  for(i = 0; i < MAXS; i++){
+    if(i < sn.q.length){ cells.push(sn.q[i]); classes.push(i === sn.q.length - 1 ? 'hit' : 'ok'); }
+    else { cells.push(''); classes.push('dim'); }
+  }
+  queueBox.innerHTML = '';
+  queueBox.appendChild(AW.cellRow(cells, classes, null, 1));
+  depthLine.innerHTML = '当前栈深 <b>' + sn.st.length + '</b> · 历史最大栈深 <b>' + sn.md + '</b>';
+}
+
+AW.init({
+  title: '栈容量模拟：出队序 b d c f e a g',
+  subtitle: '元素 <code>a b c d e f g</code> 依次进栈 · 出栈后立即入队 · 求最小栈容量（2009-02）',
+  counterLabel: '已出队',
+  ribbonTitle: '出队序号（✓ 已出队）',
+  intro: '点击「▶ 播放」逐步演示每个进栈/出栈操作。',
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'初始：栈空、队空。元素按 a b c d e f g 顺序进栈，出栈后立即入队，所以要拼出队序 b d c f e a g。', count:0, st:[], q:[], md:0 },
+    { cls:'shift', tag:'进栈', log:'a 进栈（栈：a）。', count:0, st:['a'], q:[], md:1 },
+    { cls:'shift', tag:'进栈', log:'b 进栈（栈：a b）。要第一个出队的是 b，栈顶恰好是 b。', count:0, st:['a','b'], q:[], md:2 },
+    { cls:'ok', tag:'出栈入队', log:'b 出栈并立即入队 —— 出队第 1 个：b（栈：a）。', count:1, st:['a'], q:['b'], md:2, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'进栈', log:'c 进栈（栈：a c）。', count:1, st:['a','c'], q:['b'], md:2 },
+    { cls:'shift', tag:'连压·栈深 3', log:'d 进栈（栈：a c d）。d 必须先于 c 出队，而 c 已在栈里，只能 c、d 连压 —— 栈深首次达到 3！', count:1, st:['a','c','d'], q:['b'], md:3 },
+    { cls:'ok', tag:'出栈入队', log:'d 出栈入队 —— 出队第 2 个：d（栈：a c）。', count:2, st:['a','c'], q:['b','d'], md:3, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'出栈入队', log:'c 出栈入队 —— 出队第 3 个：c（栈：a）。', count:3, st:['a'], q:['b','d','c'], md:3, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'进栈', log:'e 进栈（栈：a e）。', count:3, st:['a','e'], q:['b','d','c'], md:3 },
+    { cls:'shift', tag:'连压·栈深 3', log:'f 进栈（栈：a e f）。f 要先于 e 出队，e、f 又得连压 —— 栈深第二次达到 3。', count:3, st:['a','e','f'], q:['b','d','c'], md:3 },
+    { cls:'ok', tag:'出栈入队', log:'f 出栈入队 —— 出队第 4 个：f（栈：a e）。', count:4, st:['a','e'], q:['b','d','c','f'], md:3, ribbon:{k:4, ok:true} },
+    { cls:'ok', tag:'出栈入队', log:'e 出栈入队 —— 出队第 5 个：e（栈：a）。', count:5, st:['a'], q:['b','d','c','f','e'], md:3, ribbon:{k:5, ok:true} },
+    { cls:'ok', tag:'出栈入队', log:'a 出栈入队 —— 出队第 6 个：a（栈空）。', count:6, st:[], q:['b','d','c','f','e','a'], md:3, ribbon:{k:6, ok:true} },
+    { cls:'shift', tag:'进栈', log:'g 进栈（栈：g）。', count:6, st:['g'], q:['b','d','c','f','e','a'], md:3 },
+    { cls:'done', tag:'完成', log:'g 出栈入队 —— 出队第 7 个：g。队序 b d c f e a g 与题面一致；全程最大栈深 = 3 → 栈容量至少为 3。', count:7, st:[], q:['b','d','c','f','e','a','g'], md:3, ribbon:{k:7, ok:true}, done:true },
+  ],
+
+  result: {
+    big: '容量至少为 3（选 C）',
+    html: '峰值出现在<b>c、d 连压</b>与<b>e、f 连压</b>两个时刻，栈深都达到 <b>3</b>；容量为 2 时 d 根本进不了栈，序列无法完成。记忆点：<b>按需进栈 + 盯住栈深峰值</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

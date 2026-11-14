@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-46 二级页表：地址划分与地址转换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .segbox{ display:inline-block; padding:8px 12px; border:2px solid #cbd5e1; border-radius:10px;
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13px; letter-spacing:1px;
+    background:#fff; color:#0f172a; transition:all .2s; }
+  .segbox.dim{ opacity:.4; }
+  .segbox.ok{ background:#dcfce7; border-color:#16a34a; color:#14532d; }
+  .segbox.hit{ background:#16a34a; border-color:#16a34a; color:#fff; animation:aw-pop .45s ease; }
+  .segcap{ font-size:11px; color:#94a3b8; margin-top:4px; text-align:center; }
+  .segtb{ border-collapse:collapse; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; margin-top:6px; }
+  .segtb th, .segtb td{ border:1px solid #e2e8f0; padding:5px 12px; text-align:center; }
+  .segtb th{ background:#f1f5f9; color:#475569; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var A1 = ['0000000100', '0000000000', '000000000000']; // 0100 0000H
+var A2 = ['0000000100', '0100010010', '000001001000']; // 0111 2048H
+var CAP1 = ['页目录号 = 4', '页表索引 = 0', '页内偏移 = 0'];
+var CAP2 = ['页目录号 = 4', '页表索引 = 274', '页内偏移 = 72'];
+
+var NOTES = [
+  '虚拟地址 <b>32 位</b> = 页目录号 <b>10 位</b> + 页表索引 <b>10 位</b> + 页内偏移 <b>12 位</b>（按字节编址）。',
+  '问 ①：页内偏移 12 位 → 页大小 = <code>2^12 = 4096B（4KB）</code>；<b>页框大小 = 页大小 = 4KB</b>。',
+  '问 ①（续）：页号部分 = 32 − 12 = 20 位 → 虚拟地址空间 = <code>2^32 ÷ 2^12 = 2^20 = 1048576 页</code>。',
+  '问 ②：页目录号 10 位 → 页目录有 <code>2^10 = 1024</code> 项 × 4B = <b>4KB</b> → 恰好占 <b>1 页</b>。',
+  '问 ②（续）：进程 2^20 页 → 页表共 <code>2^20 × 4B = 4MB</code> → 4MB ÷ 4KB = <b>1024 页</b>。',
+  '问 ②（结论）：页目录 1 页 + 页表 1024 页 = <b>共 1025 页</b>。4MB 的页表单页放不下，正是二级页表把它拆成 1024 个 4KB"页表页"。',
+  '问 ③：地址 <code>0100 0000H</code> = 00000001 00000000 00000000 00000000B → 高 10 位页目录号 = <code>0000000100B = 4</code>。',
+  '问 ③：地址 <code>0111 2048H</code> = 00000001 00010001 00100000 01001000B → 高 10 位页目录号 = <code>0000000100B = 4</code>（页表索引 274、偏移 72 不同，但不影响页目录）。',
+  '问 ③（结论）：两地址<b>页目录号同为 4</b> → 查到<b>同一个页目录项</b> → 指向<b>同一个二级页表</b> → 地址转换共访问 <b>1 个</b>二级页表。',
+  '三问汇总：① 页 = 页框 = 4096B，虚拟空间 2^20 页；② 页目录 + 页表 = 1025 页；③ 只访问 1 个二级页表。'
+];
+
+var S = { segs: [] };
+
+function buildRow(labelText, bins, caps){
+  var lab = AW.el('div', 'aw-row-label', labelText);
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap';
+  var segs = [];
+  bins.forEach(function(b, i){
+    var col = AW.el('div', '');
+    var box = AW.el('div', 'segbox dim', b);
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'segcap', caps[i]));
+    row.appendChild(col);
+    segs.push(box);
+  });
+  return { lab: lab, row: row, segs: segs };
+}
+
+function setRow(r, states){
+  r.segs.forEach(function(b, i){
+    var st = states[i] === undefined ? 'dim' : states[i];
+    b.className = 'segbox' + (st ? ' ' + st : '');
+  });
+}
+
+AW.init({
+  title: '【2015-46】二级页表：页大小、页表占页与地址转换（6 分大题）',
+  subtitle: '按字节编址 · 虚拟地址 32 位 = <code>页目录号 10 位 + 页表索引 10 位 + 页内偏移 12 位</code> · 页目录项/页表项均 4B',
+  counterLabel: '步',
+  ribbonTitle: '三问进度（✓ 已完成）',
+  intro: '点击「▶ 播放」：先拆位段回答第 ① 问，再算页目录/页表占页，最后比较两个地址的页目录号。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var head = AW.el('div', 'aw-row-label', '<b>虚拟地址 32 位的划分</b>（绿 = 当前关注的位段）');
+    inner.appendChild(head);
+
+    S.r1 = buildRow('地址一：<code>0100 0000H</code>', A1, CAP1);
+    inner.appendChild(S.r1.lab);
+    inner.appendChild(S.r1.row);
+
+    S.r2 = buildRow('地址二：<code>0111 2048H</code>', A2, CAP2);
+    inner.appendChild(S.r2.lab);
+    inner.appendChild(S.r2.row);
+
+    S.note = AW.el('div', 'aw-row-label', '');
+    S.note.style.cssText = 'margin-top:12px;font-size:14px;color:#334155;line-height:1.75';
+    inner.appendChild(S.note);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    setRow(S.r1, ['dim','dim','dim']);
+    setRow(S.r2, ['dim','dim','dim']);
+    if (i === 1){ setRow(S.r1, ['','','ok']); setRow(S.r2, ['','','ok']); }
+    else if (i === 2){ setRow(S.r1, ['ok','ok','']); setRow(S.r2, ['ok','ok','']); }
+    else if (i === 6){ setRow(S.r1, ['hit','','']); }
+    else if (i === 7){ setRow(S.r1, ['ok','','']); setRow(S.r2, ['hit','','']); }
+    else if (i >= 8){ setRow(S.r1, ['hit','','']); setRow(S.r2, ['hit','','']); }
+    S.note.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'虚拟地址 32 位 = 页目录号 10 位 + 页表索引 10 位 + 页内偏移 12 位', count:0 },
+    { cls:'ok',    tag:'问①',    log:'偏移 12 位 → 页大小 = 页框大小 = 2^12 = 4096B（4KB）', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'问①续', log:'页号 20 位 → 虚拟地址空间 = 2^32 ÷ 2^12 = 2^20 = 1048576 页', count:2 },
+    { cls:'step',  tag:'问②',   log:'页目录：2^10 项 × 4B = 4KB → 占 1 页', count:3 },
+    { cls:'step',  tag:'问②续', log:'页表：2^20 项 × 4B = 4MB → 占 4MB ÷ 4KB = 1024 页', count:4 },
+    { cls:'ok',    tag:'问②结', log:'页目录 + 页表 = 1 + 1024 = 共 1025 页 ✓', count:5, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'问③a',  log:'0100 0000H 的高 10 位页目录号 = 0000000100B = 4', count:6 },
+    { cls:'shift', tag:'问③b',  log:'0111 2048H 的高 10 位页目录号 = 0000000100B = 4（页表索引 274 不同）', count:7 },
+    { cls:'ok',    tag:'问③结', log:'页目录号相同 → 同一个页目录项 → 同一个二级页表 → 共访问 1 个二级页表 ✓', count:8, ribbon:{k:3, ok:true} },
+    { cls:'done',  tag:'完成',   log:'① 页/页框 = 4096B、2^20 页；② 共 1025 页；③ 访问 1 个二级页表', count:9, done:true },
+  ],
+
+  result: {
+    big: '页 4KB · 页目录+页表 1025 页 · 1 个二级页表',
+    html: '① 页 = 页框 = <code>2^12 = 4096B</code>；虚拟地址空间 <code>2^20 = 1048576 页</code>。<br>② 页目录 <code>2^10×4B = 4KB</code> 占 <b>1 页</b>；页表 <code>2^20×4B = 4MB</code> 占 <b>1024 页</b>；合计 <b>1025 页</b>。<br>③ 两地址高 10 位页目录号均为 <code>4</code> → 同一个页目录项 → 同一个二级页表，共访问 <b>1</b> 个。记忆点：<b>偏移定页大小；页目录号相同 ⇒ 同一二级页表</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

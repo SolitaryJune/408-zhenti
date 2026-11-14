@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-20 总线事务方式辨析：突发传输</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/推理链类（概念辨析） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：一个首地址 + 多个连续数据', cls: 'key',
+    log: '主设备只给一个首地址，从设备连续读/写若干连续单元',
+    body: '<p>题干特征：主设备<b>只给一个首地址</b>，从设备就能从首地址开始<b>连续读写多个数据</b>——问这叫什么总线事务方式。</p>' },
+  { title: '突发传输（正确答案 C）', cls: 'good',
+    log: '突发（猝发）传输：地址只发一次，数据连续传送、地址自动增量',
+    body: '<p><b>突发传输</b>（burst，又称猝发传输）：一次总线事务中地址阶段只发一个首地址，数据阶段连续传送多个数据，后续地址<b>自动增量</b> → 与题干完全吻合，选 <b>C</b>。</p>' },
+  { title: '排除 A：并行传输', cls: 'bad',
+    log: '并行说的是多位同传，与"首地址带一串数据"无关',
+    body: '<p>并行传输指 n 位数据<b>同时在 n 根数据线</b>上传送，描述数据位的组织方式，与连续单元读写无关 → A 不符。</p>' },
+  { title: '排除 B：串行传输', cls: 'bad',
+    log: '串行是一位一位地传，与题意更远',
+    body: '<p>串行传输指数据在一根线上<b>按位逐个</b>传送，与题干描述相距更远 → B 不符。</p>' },
+  { title: '排除 D：同步传输', cls: 'bad',
+    log: '同步说的是定时方式（何时传），不回答"怎样连续传"',
+    body: '<p>同步传输是用<b>统一时钟定时</b>的方式，回答"何时传送"；突发/非突发事务都可以采用同步或异步定时 → D 不符。</p>' },
+  { title: '结论', cls: 'good',
+    log: '答案 C：突发传输（猝发传输）',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>"一个首地址 + 连续多个数据" = 突发（猝发）传输</b>，地址只发一次。</p>' },
+];
+
+var RIB = { 1:{k:1, ok:true}, 2:{k:2, ok:false}, 3:{k:3, ok:false}, 4:{k:4, ok:false} };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : (s.cls === 'key' ? 'shift' : 'step'))),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    ribbon: RIB[i],
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2014-20 · 一次地址读多个数据的事务方式',
+  subtitle: '考点：总线事务方式辨析 · 并行 / 串行 / 突发 / 同步 逐项推演',
+  counterLabel: '步骤',
+  ribbonTitle: '选项核验（✓ 正确 / ✗ 不符）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（突发传输）',
+    html: '<b>突发传输</b>：一次总线事务只给一个首地址，随后连续读写多个数据、地址自动增量。并行/串行说的是数据位的组织方式，同步说的是定时方式，都与"首地址 + 连续数据"无关。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

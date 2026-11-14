@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-28 分段共享段表辨析（找错误项）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：共享段表是什么',
+    cls: 'key',
+    body: '<p>共享段表：<b>全系统只有一张</b>，登记所有被共享的段。P1、P2 共享段 S → 段 S 在共享段表中只占一个表项。题目要求找出<b>错误</b>的叙述。</p>' },
+  { title: '选项 A：物理内存中仅保存一份段 S',
+    cls: 'good',
+    body: '<p>共享的意义正在于此：段 S 在物理内存中<b>只存一份</b>，P1、P2 的段表项都指向这同一副本。<b>√ 正确</b></p>' },
+  { title: '选项 B：段 S 在 P1 和 P2 中应具有相同的段号',
+    cls: 'bad',
+    body: '<p>段号是<b>各进程自己地址空间</b>里的编号，两个进程的分段划分互不相干，S 在 P1、P2 中<b>完全可以有不同的段号</b>。"应该相同"不成立。<b>错误，当选。</b></p>' },
+  { title: '选项 C：P1 和 P2 共享段 S 在共享段表中的段表项',
+    cls: 'good',
+    body: '<p>段 S 在共享段表中只有<b>一个</b>表项，表项中的<b>共享进程计数字段</b>记录着 P1、P2 等使用者，两个进程共享该表项。<b>√ 正确</b></p>' },
+  { title: '选项 D：都不再使用段 S 时才回收其内存',
+    cls: 'good',
+    body: '<p>由共享计数控制：每有一个进程不再使用就把计数减 1，<b>计数减到 0</b>（所有进程都不再使用）才回收段 S 占用的内存。<b>√ 正确</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>错误项是 <b>B</b>。记忆锚点：<b>物理一份、表项一个、段号各自编</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019-28 · 分段共享：共享段表（找错误项）',
+  subtitle: '考点：分段存储管理中的段共享 · 逐项推演',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '错误项 B：段号是各进程<b>地址空间内的局部编号</b>，共享段 S 在 P1、P2 中<b>可以不同段号</b>。正确说法：物理内存只有一份 S（A）、共享一个段表项（C）、全部不再使用才回收（D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

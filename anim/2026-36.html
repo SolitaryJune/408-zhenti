@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-36 VLAN 隔离下 H3 收到哪些帧 · 转发推演动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 图中端口分配：VLAN1 = {H1:13, H2:2, H3:5}，VLAN2 = {H4:8, H5:9, H6:12} */
+var VLAN1 = [
+  { h:'H1', tail:'4D-01', port:13 },
+  { h:'H2', tail:'4D-02', port:2 },
+  { h:'H3', tail:'4D-03', port:5 },
+];
+var VLAN2 = [
+  { h:'H4', tail:'4D-04', port:8 },
+  { h:'H5', tail:'4D-05', port:9 },
+  { h:'H6', tail:'4D-06', port:12 },
+];
+
+var v1Box, v2Box, frameBox, inboxBox;
+
+function hostChip(h, sn, inVlan1){
+  var src = sn.src === h.h;
+  var dst = sn.dst === h.h;
+  var flood = sn.flood && sn.flood.indexOf(h.h) >= 0;
+  var isH3 = h.h === 'H3';
+  var cls = 'aw-box';
+  var extra = '';
+  if (isH3 && sn.h3 === 'ok') cls += ' ok';
+  if (isH3 && sn.h3 === 'miss') cls += ' miss';
+  if (src) cls += ' hit';
+  if (dst && !isH3) cls += ' ok';
+  if (flood && !src && !dst) extra = 'background:#f6fef9';
+  if (src) extra = 'background:#fef3c7;border-color:#d97706';
+  if (dst) extra = 'background:#dcfce7;border-color:#16a34a';
+  var badge = '';
+  if (src) badge = '<div style="font-size:10.5px;color:#d97706;font-weight:700">发源 ▲</div>';
+  else if (dst) badge = '<div style="font-size:10.5px;color:#16a34a;font-weight:700">目的 ▼</div>';
+  else if (flood) badge = '<div style="font-size:10.5px;color:#16a34a;font-weight:700">泛洪收到</div>';
+  return '<div style="text-align:center"><div class="' + cls + '" style="width:auto;min-width:92px;height:44px;font-size:13px;' + extra + '">' +
+         h.h + '<br><span style="font-size:10px;font-weight:400">…' + h.tail + ' · P' + h.port + '</span></div>' + badge + '</div>';
+}
+
+function vlanBlock(title, list, sn, inVlan1){
+  var s = '<div style="flex:1;min-width:280px;border:2px dashed #94a3b8;border-radius:14px;padding:10px 12px;background:#fff">';
+  s += '<div style="font-size:13px;font-weight:800;color:#334155;margin-bottom:8px">' + title + '</div>';
+  s += '<div style="display:flex;gap:8px;justify-content:center">' +
+       list.map(function(h){ return hostChip(h, sn, inVlan1); }).join('') + '</div></div>';
+  return s;
+}
+
+var snaps = [
+  { cls:'step', tag:'读图', count:0,
+    log:'交换机按端口划分了 2 个 VLAN。从图读出成员：VLAN1 = {H1(P13), H2(P2), H3(P5)}，VLAN2 = {H4(P8), H5(P9), H6(P12)}。H3 在 VLAN1。VLAN 之间二层隔离：跨 VLAN 的帧直接丢弃，广播只在各自 VLAN 内泛洪。',
+    src:null, dst:null, flood:null, h3:null,
+    frame:'准备判定 4 个帧 F1～F4 中，哪些能到 H3。',
+    inbox:[] },
+  { cls:'ok', tag:'F1：同 VLAN 单播', count:1, ribbon:{k:1, ok:true},
+    log:'F1：SA=…4D-01（H1·VLAN1），DA=…4D-03（H3·VLAN1）。同 VLAN 单播 → 交换机查 MAC 表，从端口 5 转出 → <b>H3 收到 ✓</b>。',
+    src:'H1', dst:'H3', flood:null, h3:'ok',
+    frame:'F1：DA = 00-1A-2B-3C-4D-03（H3·VLAN1）｜SA = 00-1A-2B-3C-4D-01（H1·VLAN1）→ <b>同 VLAN 单播，转发到端口 5</b> → H3 ✓',
+    inbox:['F1 ✓'] },
+  { cls:'miss', tag:'F2：跨 VLAN 丢弃', count:2, ribbon:{k:2, ok:false},
+    log:'F2：SA=…4D-05（H5·VLAN2），DA=…4D-03（H3·VLAN1）。源与目的不同 VLAN → 二层隔离，交换机<b>直接丢弃</b> → <b>H3 收不到 ✗</b>。',
+    src:'H5', dst:null, flood:null, h3:'miss',
+    frame:'F2：DA = 00-1A-2B-3C-4D-03（H3·VLAN1）｜SA = 00-1A-2B-3C-4D-05（H5·VLAN2）→ <b>跨 VLAN，直接丢弃</b> → H3 ✗',
+    inbox:['F1 ✓', 'F2 ✗'] },
+  { cls:'ok', tag:'F3：VLAN1 内广播', count:3, ribbon:{k:3, ok:true},
+    log:'F3：SA=…4D-02（H2·VLAN1），DA=FF-FF-FF-FF-FF-FF 广播。广播只在源所在 VLAN 内泛洪（除入端口外全部端口）→ VLAN1 的 P13、P5 都收到 → <b>H3 收到 ✓</b>。',
+    src:'H2', dst:null, flood:['H1', 'H3'], h3:'ok',
+    frame:'F3：DA = FF-FF-FF-FF-FF-FF（广播）｜SA = 00-1A-2B-3C-4D-02（H2·VLAN1）→ <b>在 VLAN1 内泛洪</b> → H3 ✓',
+    inbox:['F1 ✓', 'F2 ✗', 'F3 ✓'] },
+  { cls:'miss', tag:'F4：VLAN2 内广播', count:4, ribbon:{k:4, ok:false},
+    log:'F4：SA=…4D-06（H6·VLAN2），DA=广播。泛洪范围被 VLAN 切开，只在 VLAN2 内转一圈 → H3（VLAN1）<b>收不到 ✗</b>。',
+    src:'H6', dst:null, flood:['H4', 'H5'], h3:'miss',
+    frame:'F4：DA = FF-FF-FF-FF-FF-FF（广播）｜SA = 00-1A-2B-3C-4D-06（H6·VLAN2）→ <b>只在 VLAN2 内泛洪</b> → H3 ✗',
+    inbox:['F1 ✓', 'F2 ✗', 'F3 ✓', 'F4 ✗'] },
+  { cls:'done', tag:'结论', count:4,
+    log:'H3 收到的是 <b>F1（同 VLAN 单播）</b>与 <b>F3（VLAN1 内广播）</b> → 选 B。广播域被 VLAN 切开，跨 VLAN 的单播和别家广播都到不了 H3。',
+    src:null, dst:'H3', flood:null, h3:'ok',
+    frame:'结论：H3 ∈ VLAN1，只收「本 VLAN 发来的单播」和「本 VLAN 内的广播」→ <b>F1、F3</b>。',
+    inbox:['F1 ✓', 'F2 ✗', 'F3 ✓', 'F4 ✗'] },
+];
+
+snaps.forEach(function(sn, i){ sn.done = i === snaps.length - 1; });
+
+AW.init({
+  title: '2026-36 · VLAN 隔离：H3 能收到哪些帧',
+  subtitle: 'VLAN1 = <code>H1/H2/H3</code> · VLAN2 = <code>H4/H5/H6</code> · 逐帧判定（琥珀=发源，绿=收到）',
+  counterLabel: '已判定帧数',
+  ribbonTitle: '帧判定（✓ H3 收到 / ✗ 收不到）',
+  intro: '点击「▶ 播放」，逐帧看交换机怎么处理、H3 的收件箱亮什么。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var vlanRow = AW.el('div', '');
+    vlanRow.style.display = 'flex';
+    vlanRow.style.gap = '14px';
+    vlanRow.style.alignItems = 'stretch';
+    v1Box = AW.el('div', '');
+    v2Box = AW.el('div', '');
+    vlanRow.appendChild(v1Box);
+    vlanRow.appendChild(v2Box);
+    frameBox = AW.el('div', 'aw-row-label', '');
+    frameBox.style.marginTop = '10px';
+    inboxBox = AW.el('div', 'aw-row-label', '');
+    wrap.appendChild(vlanRow);
+    wrap.appendChild(frameBox);
+    wrap.appendChild(inboxBox);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    v1Box.innerHTML = vlanBlock('VLAN1（端口 13 / 2 / 5）', VLAN1, sn, true);
+    v2Box.innerHTML = vlanBlock('VLAN2（端口 8 / 9 / 12）', VLAN2, sn, false);
+    frameBox.innerHTML = sn.frame;
+    var chips = sn.inbox.map(function(v){
+      var ok = v.indexOf('✓') >= 0;
+      return '<span class="aw-box ' + (ok ? 'ok' : 'miss') + '" style="display:inline-flex;width:auto;min-width:64px;height:32px;font-size:13px;margin-right:6px">' + v + '</span>';
+    }).join('');
+    inboxBox.innerHTML = '<b>H3 的收件箱：</b>' + (chips || '（空）');
+  },
+  snaps: snaps,
+  result: {
+    big: 'H3 收到 F1、F3（选 B）',
+    html: '<b>F1</b>：H1→H3 同 VLAN 单播，交换机查表转发 → 收到。<b>F3</b>：H2 的广播只在 VLAN1 泛洪 → 收到。<b>F2</b>（VLAN2→VLAN1 单播）被二层隔离丢弃；<b>F4</b>（VLAN2 广播）只在 VLAN2 泛洪。广播域被 VLAN 切开 → 选 <b>B（仅 F1、F3）</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

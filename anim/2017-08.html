@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-08 动画：折半查找判定树形态判据</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-08 判定树形态判据推理（概念/推理链类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>判定树的形态只由<b>表长 n</b> 和取整规则决定，与元素值无关。按教材向上取整 <code>mid = ⌈(low+high)/2⌉</code>：每次对半分，任一结点必须满足<b>左子树结点数 ≥ 右子树结点数，且至多多 1</b>。逐结点验算即可。</p>' },
+  { title: '盘点各选项结点数', cls: 'step',
+    body: '<p>A：10 个（1+2+4+3）；B：11 个（1+2+4+4）；C：9 个（1+2+4+2）；D：10 个（1+2+4+3）。注意 <b>A、D 总结点数都是 10</b>——只数个数分不出胜负，必须看结构。</p>' },
+  { title: '验证 A：全程满足判据', cls: 'good',
+    body: '<p>根：左 5 右 4（左多 1）✓；左半两个 5 结点子树各左 2 右 2 ✓；其下 2 结点子树均为<b>左</b>孩子（1 对 0）✓；右半 4 结点子树左 2 右 1 ✓；其下 2 结点子树左孩子 ✓。全程满足 → A 是 n=10 的判定树。</p>' },
+  { title: '排除 B / C / D', cls: 'bad',
+    body: '<p><b>B</b>：右半的两个 2 结点子树挂<b>右</b>孩子（右比左多）✗；<b>C</b>：左半 4 结点子树左 1 右 2，右子树反而多 ✗；<b>D</b>：根就左 4 右 5 ✗。都违反「左 ≥ 右」。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>只有 A 能全程满足同一划分规则 → 选 <b>A</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2017-08　哪棵树可能是折半查找判定树？',
+  subtitle: '考点：<code>折半查找判定树</code> · 形态只与表长 n 有关 · 向上取整版判据',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：判定树 = 折半过程的树化。向上取整版判据：任一结点<b>左子树结点数 ≥ 右子树结点数、至多多 1</b>。A、D 总结点数都是 10，区分点在左右子树的分配方式；B、C 则在某个结点处出现「右比左多」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

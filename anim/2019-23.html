@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-23 用户级线程与内核级线程（找错误项）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找"错误"项',
+    cls: 'key',
+    body: '<p>主线：用户级线程由<b>用户态线程库</b>创建和管理，操作系统<b>只看见进程、看不见这种线程</b>；内核级线程才由内核直接管理、直接调度。</p>' },
+  { title: '选项 A：内核级线程的调度由操作系统完成',
+    cls: 'good',
+    body: '<p>内核级线程的线程控制块在内核中，其调度和切换都由<b>操作系统完成</b>。说法正确。</p>' },
+  { title: '选项 B：OS 为每个用户级线程建立一个线程控制块',
+    cls: 'bad',
+    body: '<p>用户级线程对 OS 透明，操作系统<b>不会</b>为它建立线程控制块；TCB 由用户级<b>线程库</b>在用户空间维护，OS 只为<b>进程</b>建立 PCB。<b>错误，当选。</b></p>' },
+  { title: '选项 C：用户级线程间的切换效率更高',
+    cls: 'good',
+    body: '<p>用户级线程之间的切换在<b>用户态</b>即可完成，无需陷入内核、无需模式切换，开销小 → 效率<b>高于</b>内核级线程间的切换。说法正确。</p>' },
+  { title: '选项 D：可在不支持内核级线程的 OS 上实现',
+    cls: 'good',
+    body: '<p>用户级线程只依赖线程库，<b>不依赖内核对线程的支持</b>，因此可以在不支持内核级线程的操作系统上实现。说法正确。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>错误项是 <b>B</b>。记忆锚点：<b>用户级线程 = 线程库的私有产物，内核一概不知</b>——所以没有 OS 建的 TCB、切换快、不依赖内核线程机制。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019-23 · 用户级线程 vs 内核级线程（找错误项）',
+  subtitle: '考点：线程的实现方式 · 逐项推演',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '操作系统只为进程建立 PCB；<b>用户级线程的控制块由用户线程库维护</b>。A、C、D 均为两种线程对比的标准结论：内核级线程由 OS 调度；用户级线程切换不进内核、效率高，且不依赖内核线程机制。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

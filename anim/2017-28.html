@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-28 · 多道程序系统的优点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：多道程序的本质',
+    cls: 'key',
+    log: '多道程序 = 内存同时驻留多道作业，CPU 与 I/O 并行',
+    body: '<p>与单道程序（内存一次只有一道作业、CPU 常空等 I/O）相比，多道程序把多道作业同时驻留内存，<b>CPU 与 I/O 设备并行工作</b>——一个作业等 I/O 时，CPU 立即转去运行另一道。所有优点都由此而来。</p>' },
+  { title: 'I. CPU 利用率高 ✓',
+    cls: 'good',
+    log: 'I 正确：CPU 不再空等 I/O，几乎总有作业可运行',
+    ribbon: { k:1, ok:true },
+    body: '<p>单道时 CPU 在 I/O 期间干等；多道时一作业等 I/O，CPU 就跑另一道，<b>CPU 利用率显著提高</b>。属于优点。</p>' },
+  { title: 'II. 系统开销小 ✗',
+    cls: 'bad',
+    log: 'II 错误：多道程序的管理开销反而增大',
+    ribbon: { k:2, ok:false },
+    body: '<p>多道程序需要<b>进程管理、内存分配与保护、进程切换、同步互斥</b>等，系统开销<b>反而增大</b>。"资源利用率高"不等于"开销小"——这条不是优点。</p>' },
+  { title: 'III. 系统吞吐量大 ✓',
+    cls: 'good',
+    log: 'III 正确：并行工作使单位时间完成的作业更多',
+    ribbon: { k:3, ok:true },
+    body: '<p>CPU 与设备并行、作业轮番推进，<b>单位时间完成的作业数（吞吐量）明显增大</b>。属于优点。</p>' },
+  { title: 'IV. I/O 设备利用率高 ✓',
+    cls: 'good',
+    log: 'IV 正确：设备可与 CPU 并行，服务更多作业',
+    ribbon: { k:4, ok:true },
+    body: '<p>设备不再只为一个作业服务，可与 CPU 并行运转并<b>接续为多道作业服务</b>，I/O 设备利用率提高。属于优点。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '仅 I、III、IV 是优点 → 答案 D',
+    body: '<p>答案选 <b>D（仅 I、III、IV）</b>。记忆锚点：多道程序"三高"——<b>CPU 利用率、吞吐量、设备利用率</b>都高，唯独<b>系统开销更高</b>，II 是反向干扰。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'bad' ? 'miss' : s.cls === 'good' ? 'ok' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last
+  };
+});
+
+AW.init({
+  title: '2017-28 · 多道程序系统相对单道程序的优点',
+  subtitle: '陈述：I CPU利用率 ｜ II 系统开销 ｜ III 吞吐量 ｜ IV 设备利用率 · 逐项判定',
+  ribbonTitle: '陈述判定（✓ 是优点 / ✗ 不是）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：仅 I、III、IV',
+    html: '记忆锚点：多道程序提高<b>资源利用率</b>（CPU、设备）与<b>吞吐量</b>，但管理复杂度上升，<b>系统开销变大</b>——II 是典型反向干扰项。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

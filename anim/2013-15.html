@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-15 海明码校验位数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：纠一位错要几个校验位', cls: 'key',
+    body: '<p>8 位数据、要求<b>纠正一位错</b>。海明码的不等式：<code>2^k ≥ n + k + 1</code>（n = 信息位数，k = 校验位数）。</p>' },
+  { title: '不等式从哪来', cls: '',
+    body: '<p>k 位校验能产生 <code>2^k</code> 种状态，必须区分：无错 <b>1</b> 种 + 信息位出错 <b>8</b> 种 + 校验位自身出错 <b>k</b> 种，共 <code>1 + 8 + k</code> 种。区分不了就谈不上"定位纠错"。</p>' },
+  { title: '试 k = 2 → 不够（选项 A）', cls: 'bad',
+    body: '<p><code>2^2 = 4</code>，需区分 1+8+2 = <b>11</b> 种：4 &lt; 11，不够 → 选项 A 错。</p>' },
+  { title: '试 k = 3 → 仍不够（选项 B）', cls: 'bad',
+    body: '<p><code>2^3 = 8</code>，需区分 1+8+3 = <b>12</b> 种：8 &lt; 12，不够 → 选项 B 错。这是背错公式 <code>2^k ≥ n</code> 的人最容易选的答案。</p>' },
+  { title: '试 k = 4 → 恰好满足（选项 C）', cls: 'good',
+    body: '<p><code>2^4 = 16</code>，需区分 1+8+4 = <b>13</b> 种：16 ≥ 13 ✓。总码长 12 位，16 种校验结果覆盖 13 种情况，可行 → 选项 <b>C 正确</b>。</p>' },
+  { title: 'k = 5 为什么不选（选项 D）', cls: 'bad',
+    body: '<p><code>2^5 = 32</code> ≥ 14 当然也能纠错，但题目问"<b>至少</b>"——4 位已满足，5 位浪费且不是最小值 → 选项 D 错。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<code>2^k ≥ n + k + 1</code>，8 位数据纠一位错 → k = <b>4</b>。</p>' },
+];
+
+var RIBBON_AT = { 2: { k: 1, ok: false }, 3: { k: 2, ok: false }, 4: { k: 3, ok: true }, 5: { k: 4, ok: false } };
+
+var SCLS = { '': 'step', key: 'shift', good: 'ok', bad: 'miss' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : SCLS[s.cls || ''],
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBON_AT[i]) {
+    sn.ribbon = RIBBON_AT[i];
+    sn.cls = sn.ribbon.ok ? 'ok' : 'miss';
+    sn.tag = (sn.ribbon.ok ? '选项 ' : '选项 ') + ['A', 'B', 'C', 'D'][sn.ribbon.k - 1] + (sn.ribbon.ok ? ' ✓' : ' ✗');
+  }
+  return sn;
+});
+
+AW.init({
+  title: '2013 真题 · 海明码校验位数',
+  subtitle: '8 位数据 · 纠正一位错 · 用不等式 <code>2^k ≥ n + k + 1</code> 试值',
+  counterLabel: '步骤',
+  ribbonTitle: '选项核对（✓ 正确 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」逐步展开推理链：先推不等式，再对 k = 2,3,4,5 逐个试值。',
+  snaps: snaps,
+  result: {
+    big: '答案 C：4 位',
+    html: '不等式 <code>2^k ≥ n + k + 1</code>，n = 8 时：<code>2^3=8 &lt; 12 ✗</code>，<code>2^4=16 ≥ 13 ✓</code>。<br>记忆锚点：「+1」是无错状态、「+k」是校验位自身也可能出错——漏掉这两项就会误选 3 位。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

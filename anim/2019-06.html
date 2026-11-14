@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-06 表达式的共享 DAG · 最少顶点数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var NS = 'http://www.w3.org/2000/svg';
+
+// 表达式二叉树（不共享）：9 个结点
+var T9 = { '*':[210,35], '+1':[110,120], '/':[310,120], 'x1':[55,205], 'y1':[165,205],
+           '+2':[255,205], 'x3':[365,205], 'x2':[205,290], 'y2':[305,290] };
+var T9E = [ ['*','+1'], ['*','/'], ['+1','x1'], ['+1','y1'], ['/','+2'], ['/','x3'], ['+2','x2'], ['+2','y2'] ];
+var T9_LABEL = { '*':'*', '+1':'+', '/':'/', 'x1':'x', 'y1':'y', '+2':'+', 'x3':'x', 'x2':'x', 'y2':'y' };
+var DUPS = ['x1','x2','x3','y1','y2','+1','+2'];   // 重复可合并的结点
+
+// 共享后的 DAG：5 个顶点
+var D5 = { '*':[210,35], '+':[110,125], '/':[310,125], 'y':[60,215], 'x':[210,215] };
+var D5E = [ ['*','+'], ['*','/'], ['+','y'], ['+','x'], ['/','+'], ['/','x'] ];
+
+function el2(tag, attrs){
+  var e = document.createElementNS(NS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function arrowPts(x, y, ang){
+  var L = 9, W = 6;
+  return x + ',' + y + ' ' +
+    (x - L*Math.cos(ang) + W*Math.sin(ang)) + ',' + (y - L*Math.sin(ang) - W*Math.cos(ang)) + ' ' +
+    (x - L*Math.cos(ang) - W*Math.sin(ang)) + ',' + (y - L*Math.sin(ang) + W*Math.cos(ang));
+}
+function drawGraph(svg, pos, edges, labels, prefix, arrow){
+  edges.forEach(function(ed, i){
+    var a = pos[ed[0]], b = pos[ed[1]];
+    var dx = b[0]-a[0], dy = b[1]-a[1], len = Math.sqrt(dx*dx + dy*dy);
+    var ux = dx/len, uy = dy/len, r = 20;
+    var sx = a[0] + ux*r, sy = a[1] + uy*r;
+    var ex = b[0] - ux*r, ey = b[1] - uy*r;
+    var l = el2('line', { x1:sx, y1:sy, x2:ex, y2:ey, stroke:'#cbd5e1', 'stroke-width':2 });
+    l.id = prefix + 'e' + i;
+    svg.appendChild(l);
+    if (arrow){
+      var tri = el2('polygon', { points:arrowPts(ex, ey, Math.atan2(uy, ux)), fill:'#cbd5e1' });
+      tri.id = prefix + 'p' + i;
+      svg.appendChild(tri);
+    }
+  });
+  for (var name in pos){
+    var c = el2('circle', { cx:pos[name][0], cy:pos[name][1], r:20, fill:'#ffffff', stroke:'#94a3b8', 'stroke-width':2.5 });
+    c.id = prefix + 'n' + name;
+    svg.appendChild(c);
+    var t = el2('text', { x:pos[name][0], y:pos[name][1]+5.5, 'text-anchor':'middle', 'font-size':16, 'font-weight':700, fill:'#0f172a' });
+    t.textContent = labels[name];
+    t.id = prefix + 't' + name;
+    svg.appendChild(t);
+  }
+}
+
+var snaps = [
+  { cls:'step',  tag:'表达式树', fig:'tree',
+    log:'先把 ((x+y)*((x+y)/x)) 按普通二叉树完全展开：运算符 4 个（*、/、两个 +）+ 操作数 5 个（x,y,x,y,x）= 9 个结点——这就是选项 D 的来源。' },
+  { cls:'shift', tag:'找公共子式', fig:'tree', dups:true,
+    log:'红色标出可共享的结点：子式 (x+y) 出现 2 次（两个 +），操作数 x 出现 3 次、y 出现 2 次。DAG 允许它们共用同一个顶点。' },
+  { cls:'ok',    tag:'合并成 5 个顶点', fig:'dag',
+    log:'合并后只剩 5 个顶点：x、y、+、*、/ 各一个。若只合并 + 而不合并 x、y，会得 6 个——选项 B 的陷阱；合并必须做到底。' },
+  { cls:'ok',    tag:'连边结构', fig:'dag', edges:['*-+','*-/','+-y','+-x','/-+','/-x'],
+    log:'连边（琥珀色）：t = +(x,y)；根 * 的左孩子是 t、右孩子是 /；/ 的左孩子也是 t、右孩子是 x。一个顶点可以被多个父结点引用。' },
+  { cls:'ok',    tag:'读回验证', fig:'dag', edges:['*-+','*-/','+-y','+-x','/-+','/-x'], all:true,
+    log:'读回验证：*( +(x,y), /(+(x,y), x) ) = ((x+y)*((x+y)/x))，与原表达式完全一致 ✓。' },
+  { cls:'done',  tag:'结论', fig:'dag', edges:['*-+','*-/','+-y','+-x','/-+','/-x'], all:true, done:true,
+    log:'该表达式的 DAG 至少需要 5 个顶点 → 选 A（5）。' },
+];
+
+AW.init({
+  title: '2019-06 · 表达式 ((x+y)*((x+y)/x)) 的共享 DAG',
+  subtitle: '完全展开 9 个结点 → 合并公共子式 → <b>5 个顶点</b>',
+  counterLabel: '分析步',
+  intro: '点击「▶ 播放」观察公共子表达式如何合并。',
+  snaps: snaps,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var flex = AW.el('div', '');
+    flex.style.cssText = 'display:flex;gap:26px;flex-wrap:wrap;justify-content:center';
+    function block(pos, edges, labels, prefix, cap, arrow){
+      var box = AW.el('div', '');
+      box.appendChild(AW.el('div', 'aw-row-label', cap));
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('width', 400);
+      svg.setAttribute('height', prefix === 'T' ? 322 : 248);
+      drawGraph(svg, pos, edges, labels, prefix, arrow);
+      box.appendChild(svg);
+      return box;
+    }
+    var tb = block(T9, T9E, T9_LABEL, 'T', '<b>① 表达式二叉树</b>（不共享）：9 个结点', false);
+    tb.id = 'treeBlock';
+    var db = block(D5, D5E, { '*':'*','+':'+','/':'/','x':'x','y':'y' }, 'D', '<b>② 共享后的 DAG</b>：5 个顶点', true);
+    db.id = 'dagBlock';
+    db.style.display = 'none';
+    flex.appendChild(tb);
+    flex.appendChild(db);
+    wrap.appendChild(flex);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    document.getElementById('treeBlock').style.display = (sn.fig === 'tree') ? '' : 'none';
+    document.getElementById('dagBlock').style.display = (sn.fig === 'dag') ? '' : 'none';
+    function paintNode(prefix, name, red){
+      var c = document.getElementById(prefix + 'n' + name);
+      var t = document.getElementById(prefix + 't' + name);
+      if (red){
+        c.setAttribute('fill', '#fee2e2'); c.setAttribute('stroke', '#dc2626');
+        t.setAttribute('fill', '#b91c1c');
+      } else {
+        c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#94a3b8');
+        t.setAttribute('fill', '#0f172a');
+      }
+    }
+    for (var name in T9){
+      paintNode('T', name, !!(sn.dups && DUPS.indexOf(name) >= 0));
+    }
+    for (var name2 in D5){
+      paintNode('D', name2, false);
+    }
+    function paintEdges(prefix, edges, hitSet, allGreen){
+      edges.forEach(function(ed, k){
+        var key = ed[0] + '-' + ed[1];
+        var col = '#cbd5e1', w = 2;
+        if (allGreen || (hitSet && hitSet[key])){ col = allGreen ? '#16a34a' : '#d97706'; w = 3.5; }
+        var l = document.getElementById(prefix + 'e' + k);
+        l.setAttribute('stroke', col);
+        l.setAttribute('stroke-width', w);
+        var p = document.getElementById(prefix + 'p' + k);
+        if (p) p.setAttribute('fill', col);
+      });
+    }
+    paintEdges('T', T9E, null, false);
+    paintEdges('D', D5E, edgeSet2(sn.edges), sn.all);
+  },
+
+  result: {
+    big: '答案 A（5 个顶点）',
+    html: '不同操作数 + 不同子式，各记一个顶点：x、y、+、*、/ 共 <b>5 个</b>。陷阱：D（9）是没共享的表达式树；B（6）是只合并了 (x+y)、没合并重复的 x 和 y。',
+  },
+});
+
+function edgeSet2(list){
+  var m = {};
+  if (list) for (var i = 0; i < list.length; i++) m[list[i]] = 1;
+  return m;
+}
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

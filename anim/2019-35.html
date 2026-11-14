@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-35 滑动窗口约束推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PITCH = 48, CELL = 44, N = 8;      // 3 bit 序号 → 8 个序号
+var cells = [], swBar = null, rwBar = null;
+
+// 每一步的舞台状态（下标对应 snaps）
+var LOOK = [
+  { sw: null,      rw: null,      mark: {} },
+  { sw: [0, 5],    rw: null,      mark: {} },
+  { sw: [0, 5],    rw: [5, 3],    mark: { 5: 'ok', 6: 'ok', 7: 'ok' } },
+  { sw: [0, 5],    rw: [5, 4],    mark: { 0: 'miss' }, warn: true },
+  { sw: null,      rw: null,      mark: {} },
+  { sw: [0, 5],    rw: [5, 3],    mark: { 5: 'ok', 6: 'ok', 7: 'ok' } },
+  { sw: [0, 5],    rw: [5, 3],    mark: { 5: 'hit', 6: 'hit', 7: 'hit' } },
+];
+
+function makeBar(text, line, bg){
+  var d = AW.el('div', '');
+  d.style.cssText = 'position:absolute;left:0;height:26px;border-radius:8px;border:2px solid ' + line +
+    ';background:' + bg + ';display:flex;align-items:center;justify-content:center;' +
+    'font-size:12.5px;font-weight:700;color:' + line + ';white-space:nowrap;' +
+    'transition:transform .5s cubic-bezier(.22,.8,.3,1), width .5s cubic-bezier(.22,.8,.3,1), background .3s, border-color .3s;';
+  d.innerHTML = text;
+  return d;
+}
+function setBar(bar, s, w, text){
+  bar.style.transform = 'translateX(' + (s * PITCH) + 'px)';
+  bar.style.width = (w * CELL + (w - 1) * 4) + 'px';
+  if(text != null) bar.innerHTML = text;
+}
+function resetCells(mark){
+  for(var i = 0; i < N; i++){
+    var b = cells[i];
+    b.className = 'aw-box' + (mark && mark[i] ? ' ' + mark[i] : '');
+  }
+}
+
+AW.init({
+  title: '2019·35 滑动窗口：3 bit 序号、发送窗口 5，接收窗口最大？',
+  subtitle: '序号字段 3 bit → 序号空间 <code>2³ = 8</code> · 总约束 <code>W_S + W_R ≤ 2ⁿ</code>',
+  counterLabel: '窗口合计',
+  ribbonTitle: '接收窗口试探（✓ 可行 / ✗ 越界）',
+  intro: '点击「▶ 播放」，在序号带上推演两个窗口的约束关系。',
+
+  build: function(stage){
+    cells = [];
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var boxWrap = AW.el('div', '');
+    boxWrap.style.cssText = 'position:relative;width:max-content;';
+    var band = AW.el('div', 'aw-cells');
+    for(var i = 0; i < N; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b = AW.el('div', 'aw-box', String(i));
+      cells.push(b);
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', '序号' + i));
+      band.appendChild(col);
+    }
+    boxWrap.appendChild(band);
+    var layer = AW.el('div', '');
+    layer.style.cssText = 'position:relative;width:' + (N * PITCH - 4) + 'px;height:64px;margin-top:10px;';
+    swBar = makeBar('发送窗口 5', '#2563eb', '#dbeafe');
+    swBar.style.top = '0px';
+    rwBar = makeBar('接收窗口 3', '#16a34a', '#dcfce7');
+    rwBar.style.top = '30px';
+    layer.appendChild(swBar);
+    layer.appendChild(rwBar);
+    boxWrap.appendChild(layer);
+    inner.appendChild(boxWrap);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '蓝条 = 发送窗口 W_S（占 5 个序号）· 绿条 = 接收窗口 W_R · 红条/红格 = 越界冲突'));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'分组序号 3 bit → 序号空间 2³ = 8 个（0～7），序号循环使用', count:8 },
+    { cls:'step',  tag:'发送窗口', log:'发送窗口 W_S = 5：占用序号 0～4（蓝条覆盖）', count:5 },
+    { cls:'ok',    tag:'W_R=3 合法', log:'接收窗口最多滑到 5～7（绿条）：发送 5 个 + 接收 3 个 = 8 个序号，恰好不重叠，重传的旧帧也能被识别', count:8, ribbon:{k:3, ok:true} },
+    { cls:'miss',  tag:'W_R=4 越界', log:'若 W_R = 4：接收窗口要跨入下一轮的序号 0（红条溢出）——发送方重传的旧 0 号帧与"新 0 号帧"序号相同，接收方无法区分 → 不允许', count:9, ribbon:{k:4, ok:false} },
+    { cls:'step',  tag:'一般公式', log:'滑动窗口协议总约束：W_S + W_R ≤ 2ⁿ（两窗口合计不得超过序号空间）', count:8 },
+    { cls:'ok',    tag:'代入计算', log:'W_R ≤ 2³ − 5 = 3：接收窗口最大为 3', count:8 },
+    { cls:'done',  tag:'完成', log:'接收窗口最大是 3，选 B', count:8, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = LOOK[i] || LOOK[0];
+    resetCells(st.mark);
+    if(st.sw){
+      swBar.style.display = 'flex';
+      setBar(swBar, st.sw[0], st.sw[1], '发送窗口 5');
+    } else swBar.style.display = 'none';
+    if(st.rw){
+      rwBar.style.display = 'flex';
+      if(st.warn){
+        setBar(rwBar, st.rw[0], st.rw[1], '接收窗口 4 → 越界!');
+        rwBar.style.borderColor = '#dc2626'; rwBar.style.background = '#fee2e2'; rwBar.style.color = '#b91c1c';
+      } else {
+        setBar(rwBar, st.rw[0], st.rw[1], '接收窗口 3');
+        rwBar.style.borderColor = '#16a34a'; rwBar.style.background = '#dcfce7'; rwBar.style.color = '#15803d';
+      }
+    } else rwBar.style.display = 'none';
+  },
+
+  result: {
+    big: '最大接收窗口 = 3',
+    html: '总约束 <b>W_S + W_R ≤ 2ⁿ</b>：2³ − 5 = <b>3</b>，选 <b>B</b>。干扰项 C（4）来自对称式 W_R ≤ 2^(n-1)——它只在发送窗口同样取最大时成立；本题 W_S 固定为 5，必须用总量约束。GBN 的"接收窗口只能为 1"是特例，不是一般情形。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

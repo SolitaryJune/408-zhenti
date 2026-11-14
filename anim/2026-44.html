@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-44 数据通路控制信号取值 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '第（1）问：①② 是什么部件',
+    cls: 'key',
+    body: '<p>①、② 分别位于 GPRs 读地址端口 ra、rb 之前，各有两个输入（① IR.rt / 15，② IR.rs / 0）、一个输出，由控制信号选择——都是<b>多路选择器（MUX）</b>。</p>' },
+  { title: '第（2）问：ExtOp 至少几位（上）',
+    cls: '',
+    body: '<p>扩展器输入固定是 <code>IR11~0</code>（12 位）。I 型的 imm8 可带符号或无符号，M 型的 offset 带符号，于是需要支持 <b>3 种</b>扩展情况：</p><p>1. imm8 无符号 → 对 <code>IR7~0</code> 零扩展（高位补 0）；<br>2. imm8 带符号 → 对 <code>IR7~0</code> 符号扩展（高位补 IR7）；<br>3. offset 带符号 → 对 <code>IR11~0</code> 符号扩展（高位补 IR11）。</p>' },
+  { title: '第（2）问：ExtOp 至少几位（下）',
+    cls: '',
+    body: '<p>3 种情况要用不同编码区分：2 位编码有 4 种组合 ≥ 3 种情况 → ExtOp 至少 <b>2 位</b>。</p>' },
+  { title: '第（3）问：取指周期信号',
+    cls: '',
+    body: '<p>取指 = 从 M[PC] 读指令送 IR，且同一周期完成 PC 增量：</p>' +
+      '<table><tr><th>信号</th><th>取值</th><th>理由</th></tr>' +
+      '<tr><td><code>MARsrc</code></td><td><b>0</b></td><td>MAR←PC（选 PC 那路，选 ALU 输出就成了 PC+2）</td></tr>' +
+      '<tr><td><code>ALUAsrc</code></td><td><b>0</b></td><td>A←PC</td></tr>' +
+      '<tr><td><code>ALUBsrc</code></td><td><b>01</b></td><td>B←常数 2（输入 1，两位编码 01）</td></tr>' +
+      '<tr><td><code>RegWr</code></td><td><b>0</b></td><td>取指不写通用寄存器</td></tr></table>' +
+      '<p>ALU 输出 PC+2 经 PCin 写回 PC。</p>' },
+  { title: '第（4）问：左移指令的信号（上）',
+    cls: '',
+    body: '<p>左移是 R 型：<code>R[rt]←R[rt] 左移 num 位</code>，num 在 <code>IR7~4</code>：</p>' +
+      '<table><tr><th>信号</th><th>取值</th><th>理由</th></tr>' +
+      '<tr><td><code>ALUBsrc</code></td><td><b>10</b></td><td>B←扩展器输出（输入 2），其 bits 7~4 即 num</td></tr>' +
+      '<tr><td><code>RegWsrc</code></td><td><b>1</b></td><td>结果来自 ALU 输出</td></tr>' +
+      '<tr><td><code>RegDst</code></td><td><b>1</b></td><td>rw←IR.rt，目的寄存器是 rt</td></tr>' +
+      '<tr><td><code>RegWr</code></td><td><b>1</b></td><td>允许写回</td></tr></table>' },
+  { title: '第（4）问：ExtOp 能否与 M 型相同',
+    cls: '',
+    body: '<p><b>可以相同</b>。num 位于 <code>IR7~4</code>；扩展器无论对 <code>IR11~0</code> 做符号扩展还是零扩展，改变的都只是高 4 位（IR11~8），<b>不会影响 IR7~4</b>。故左移指令对 ExtOp 取值不敏感，可任意（含与 M 型相同）。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>（1）多路选择器；（2）ExtOp 至少 2 位（3 种扩展）；（3）MARsrc=0、ALUAsrc=0、ALUBsrc=01、RegWr=0；（4）ALUBsrc=10、RegWsrc=1、RegDst=1、RegWr=1，ExtOp 可与 M 型相同。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title + '：' + s.body.replace(/<[^>]+>/g, ''),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+// 明确标记：最后一步为 done:true（配合上方 map 生成）
+snaps[snaps.length - 1].done = true;
+
+AW.init({
+  title: '2026·44 数据通路部件与控制信号取值',
+  subtitle: '考点：多路选择器识别 · ExtOp 位数 · 取指周期与左移执行周期的信号取值（按问推演）',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐问展开推演链。',
+  snaps: snaps,
+  result: {
+    big: '（3）MARsrc=0 · ALUAsrc=0 · ALUBsrc=01 · RegWr=0',
+    html: '（4）<b>ALUBsrc=10、RegWsrc=1、RegDst=1、RegWr=1</b>，ExtOp 可与 M 型相同（num 在 IR7~4 不受扩展方式影响）。记忆锚点：取指用 PC 本身访存、ALU 只算 PC+2；左移的 B 操作数来自扩展器。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

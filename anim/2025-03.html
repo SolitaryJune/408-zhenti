@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-03 顺序存储二叉树合法性动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '顺序存储二叉树：哪个数组不能表示二叉树？',
+  subtitle: '下标 i 的孩子在 <code>2i</code>、<code>2i+1</code>；-1 表示不存在 · 判据：<b>i 号存在 ⇒ 父 ⌊i/2⌋ 必须存在</b>',
+  counterLabel: '已验证',
+  ribbonTitle: '四个选项（✓ 合法 / ✗ 矛盾）',
+  intro: '点击「▶ 播放」逐个验证四个数组。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._optLabel = AW.el('div', 'aw-row-label', '');
+    this._arrWrap = AW.el('div', '');
+    this._judge = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._optLabel);
+    inner.appendChild(this._arrWrap);
+    inner.appendChild(this._judge);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'判据', log:'顺序存储：i 号结点的孩子在 2i、2i+1；反过来，i 号存在则父 ⌊i/2⌋ 必须存在。逐个验证', count:0 },
+    { cls:'ok', tag:'A 合法', log:'A：6 号（35）的父 ⌊6/2⌋=3 号（40）存在；4、5 号为 -1 只是"父在而孩子空"，合法', count:1, ribbon:{k:'A', ok:true} },
+    { cls:'ok', tag:'B 合法', log:'B：4 号（18）、5 号（35）的父都是 2 号（40），存在，合法', count:2, ribbon:{k:'B', ok:true} },
+    { cls:'ok', tag:'C 合法', log:'C：7 号（12）的父 ⌊7/2⌋=3 号（10）存在；6 号为 -1 不影响（只要求孩子存在⇒父存在），合法', count:3, ribbon:{k:'C', ok:true} },
+    { cls:'step', tag:'看 D', log:'D 共 10 个元素：17,20,35,-1,18,45,-1,-1,19,27。重点检查有值的 9 号（19）', count:4 },
+    { cls:'miss', tag:'矛盾！', log:'9 号（19）的父 = ⌊9/2⌋ = 4 号，而 R[4] = -1：空结点却"挂出了孩子"，D 不能表示二叉树', count:5, ribbon:{k:'D', ok:false} },
+    { cls:'done', tag:'完成', log:'孩子存在则父亲必须存在——9 号违反判据，答案选 D', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var ARR = {
+      A: ['20','15','40','-1','-1','35'],
+      B: ['15','40','10','18','35','-1','-1'],
+      C: ['15','40','10','-1','-1','-1','12'],
+      D: ['17','20','35','-1','18','45','-1','-1','19','27'],
+    };
+    var cur = null;
+    if (i === 1) cur = { opt:'A', hi:{6:'ok', 3:'ok'}, ptr:{6:'检查 6 号', 3:'父 ⌊6/2⌋'} };
+    else if (i === 2) cur = { opt:'B', hi:{4:'ok', 5:'ok', 2:'ok'}, ptr:{4:'检查', 5:'检查', 2:'父 2 号'} };
+    else if (i === 3) cur = { opt:'C', hi:{7:'ok', 3:'ok'}, ptr:{7:'检查 7 号', 3:'父 ⌊7/2⌋'} };
+    else if (i === 4) cur = { opt:'D', hi:{9:'hit'}, ptr:{9:'检查 9 号'} };
+    else if (i === 5 || i === 6) cur = { opt:'D', hi:{9:'miss', 4:'miss'}, ptr:{9:'检查 9 号', 4:'父=⌊9/2⌋'} };
+
+    if (!cur){
+      this._optLabel.innerHTML = '<b>规则</b>：R[i] 的左孩子在 2i、右孩子在 2i+1';
+      this._arrWrap.innerHTML = '';
+      this._judge.innerHTML = '反过来看：i 号结点存在（值≠-1）⇒ R[⌊i/2⌋] 必须≠-1。';
+      return;
+    }
+    this._optLabel.innerHTML = '<b>选项 ' + cur.opt + '</b>：R[ ] = {' + ARR[cur.opt].join(', ') + '}（下标从 1 开始）';
+    var chars = ARR[cur.opt], cls = [];
+    for (var c = 0; c < chars.length; c++){
+      if (chars[c] === '-1'){ cls.push(cur.hi[c+1] || 'dim'); }
+      else { cls.push(cur.hi[c+1] || ''); }
+    }
+    this._arrWrap.innerHTML = '';
+    this._arrWrap.appendChild(AW.cellRow(chars, cls, cur.ptr, 1));
+    this._judge.innerHTML = (i <= 3)
+      ? '最高下标结点的父都存在 ✓，<b>' + cur.opt + ' 合法</b>'
+      : (i === 4
+        ? '逐个核对 D 里有值的结点：9 号（值 19）——它的父是谁？'
+        : '<b>R[9]=19 存在，但父 R[4]=-1 不存在 ⇒ 矛盾！</b>');
+  },
+
+  result: {
+    big: '答案 D',
+    html: '判据：<b>孩子能存在，父亲必先在</b>——R[9]=19 存在而 R[⌊9/2⌋]=R[4]=-1，空结点挂出了孩子，矛盾。<br>A、B、C 中所有有值结点的父结点都存在（父存在而孩子为 -1 是合法的），选 <b>D</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

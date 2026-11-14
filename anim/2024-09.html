@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-09 大根堆连续两次删除</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 每个快照的堆数组（不足 8 位补空串） */
+var HEAPS = [
+  ['28', '22', '20', '19', '8', '12', '15', '5'],
+  ['5', '22', '20', '19', '8', '12', '15', ''],
+  ['22', '5', '20', '19', '8', '12', '15', ''],
+  ['22', '19', '20', '5', '8', '12', '15', ''],
+  ['15', '19', '20', '5', '8', '12', '', ''],
+  ['20', '19', '15', '5', '8', '12', '', ''],
+  ['20', '19', '15', '5', '8', '12', '', '']
+];
+/* 每个快照的格子配色：''=普通, ok=绿, hit=蓝闪, amber=琥珀(交换中), dim=淡 */
+var CLS = [
+  ['', '', '', '', '', '', '', ''],
+  ['hit', '', '', '', '', '', '', 'dim'],
+  ['amber', 'amber', '', '', '', '', '', ''],
+  ['', 'amber', '', 'amber', '', '', '', ''],
+  ['hit', '', '', '', '', '', 'dim', ''],
+  ['amber', '', 'amber', '', '', '', '', ''],
+  ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', '', '']
+];
+/* 每个快照的指针标签 */
+var PTR = [
+  ['', '', '', '', '', '', '', ''],
+  ['5 补顶', '', '', '', '', '', '', '原尾'],
+  ['父', '较大孩子', '', '', '', '', '', ''],
+  ['', '父', '', '较大孩子', '', '', '', ''],
+  ['15 补顶', '', '', '', '', '', '原尾', ''],
+  ['父', '', '较大孩子', '', '', '', '', ''],
+  ['新堆顶', '', '', '', '', '', '', '']
+];
+
+var hRow;
+var AMBER = 'border-color:#d97706;background:#fef3c7';
+
+function paint(i) {
+  for (var j = 0; j < 8; j++) {
+    var box = hRow.children[j].children[1];
+    var ptr = hRow.children[j].children[0];
+    box.textContent = HEAPS[i][j];
+    var c = CLS[i][j];
+    if (c === 'amber') {
+      box.className = 'aw-box';
+      box.setAttribute('style', AMBER);
+    } else {
+      box.className = 'aw-box' + (c ? ' ' + c : '');
+      box.setAttribute('style', '');
+    }
+    ptr.textContent = PTR[i][j];
+  }
+}
+
+AW.init({
+  title: '大根堆连续删除两个堆顶（2024-09）',
+  subtitle: '初始堆：28，22，20，19，8，12，15，5 · 删除三板斧：<b>摘堆顶 → 尾补顶 → 与较大孩子下沉</b>',
+  counterLabel: '向下调整交换',
+  intro: '点击「▶ 播放」，逐次观察堆顶删除后的下沉调整。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>堆数组</b>（下标从 1 开始；i 号结点的孩子在 2i、2i+1）'));
+    hRow = AW.cellRow(['', '', '', '', '', '', '', ''], ['', '', '', '', '', '', '', ''], null, 1);
+    inner.appendChild(hRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'step', tag: '初始', log: '大根堆（数组形态，1 号为堆顶）：28 是最大元素，其余满足父 ≥ 子', count: 0 },
+    { cls: 'ok', tag: '删除①出堆', log: '第 1 次删除：堆顶 28 出堆；把尾元素 5 补到堆顶', count: 0 },
+    { cls: 'shift', tag: '下沉①', log: '向下调整：5 比两个孩子 22、20 都小，与较大孩子 22 交换（选较大者才保住大根性质）', count: 1 },
+    { cls: 'shift', tag: '下沉②', log: '5 再与较大孩子 19 交换；5 已无孩子，第 1 次删除完成，堆 = 22,19,20,5,8,12,15', count: 2 },
+    { cls: 'ok', tag: '删除②出堆', log: '第 2 次删除：堆顶 22 出堆；尾元素 15 补到堆顶', count: 2 },
+    { cls: 'shift', tag: '下沉③', log: '向下调整：15 的两个孩子是 19、20，与较大孩子 20 交换；15 的孩子只剩 12，无需再换', count: 3 },
+    { cls: 'done', tag: '完成', log: '两次删除后新堆（数组形态）= 20，19，15，5，8，12 —— 选 B', count: 3, done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: '新堆 20，19，15，5，8，12（选 B）',
+    html: '堆的每次删除：<b>① 摘走堆顶 → ② 尾元素补顶 → ③ 与较大孩子逐层下沉</b>。两次删除共 3 次交换（5↔22、5↔19、15↔20）。易错：下沉必须换<b>较大的孩子</b>，换小了立刻破坏大根堆。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

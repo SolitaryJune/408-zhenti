@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-12 int→short→int 截断与符号扩展动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：位模式的截断与符号扩展过程演示 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'int → short → int：截断与符号扩展',
+  subtitle: 'C 代码：<code>int i=32777; short si=i; int j=si;</code> · 求 j 的值',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步观察位模式的变化。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var mkRow = function(labelText, cells){
+      var block = AW.el('div', '');
+      block.style.marginBottom = '12px';
+      block.appendChild(AW.el('div', 'aw-row-label', '<b>' + labelText + '</b>'));
+      var row = AW.el('div', 'aw-cells');
+      var boxes = [];
+      cells.forEach(function(c){
+        var b = AW.el('div', 'aw-box dim', c);
+        b.style.fontSize = '15px';
+        row.appendChild(b);
+        boxes.push(b);
+      });
+      block.appendChild(row);
+      inner.appendChild(block);
+      return boxes;
+    };
+
+    this._r1 = mkRow('int i = 32777（32 位，按书写序高位在左）', ['00','00','80','09']);
+    this._r2 = mkRow('short si（16 位）', ['80','09']);
+    this._r3 = mkRow('int j（32 位）', ['?','?','?','?']);
+    this._note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._note);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'开始',     log:'三行分别是 i（int）、si（short）、j（int）的位模式，随步骤逐个点亮。', count:0, note:'待演示：先把 32777 化成十六进制' },
+    { cls:'ok',    tag:'化十六进制', log:'32777 = 8000H + 9 = 8009H，int i 的位模式（书写序）为 00 00 80 09，最高字节 00，符号位 0。', count:1, note:'i = 32777 → 位模式 00 00 80 09H', ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'截断',     log:'short si = i：32 位 → 16 位【直接截取低 16 位】，si 的位模式为 8009H。', count:2, note:'si 位模式 = 80 09H（截断发生，不报错）', ribbon:{k:2, ok:true} },
+    { cls:'miss',  tag:'变负数',   log:'8009H 最高位是 1：按【有符号 short】解释是负数，值 = 8009H − 10000H = −32759（实际溢出了，但 C 语言不报错）。', count:3, note:'si 的值 = −32 759（位模式 8009H 按有符号 short 解释）', ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'符号扩展', log:'int j = si：16 位 → 32 位做【符号扩展】，高 16 位补符号位 1 → FF FF 80 09H；位模式变了，数值不变。', count:4, note:'j 的位模式 = FF FF 80 09H（符号扩展）', ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'完成',     log:'FF FF 80 09H 按 int 解释仍是 −32759 → j = −32 759，选 B。', count:5, done:true, note:'j = −32 759 → 答案 B' },
+  ],
+
+  render: function(stage, sn, i){
+    var setCls = function(boxes, cls){
+      boxes.forEach(function(b){ b.className = 'aw-box' + (cls ? ' ' + cls : ''); });
+    };
+    setCls(this._r1, 'dim'); setCls(this._r2, 'dim'); setCls(this._r3, 'dim');
+    this._r3.forEach(function(b, k){ b.textContent = ['?','?','?','?'][k]; });
+    if (i >= 1){ setCls(this._r1, 'ok'); }
+    if (i >= 2){
+      setCls(this._r2, 'shift');
+      this._r1.forEach(function(b, k){ if(k < 2) b.className = 'aw-box dim'; });
+    }
+    if (i >= 3){ setCls(this._r2, 'miss'); }
+    if (i >= 4){
+      this._r3.forEach(function(b, k){ b.textContent = ['FF','FF','80','09'][k]; });
+      setCls(this._r3, 'shift');
+    }
+    if (i >= 5){ setCls(this._r2, 'miss'); setCls(this._r3, 'ok'); }
+    this._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: 'j = −32 759',
+    html: '<p>答案 <b>B（−32 759）</b>。记忆锚点：<b>截断</b>只砍高位、不管数值；<b>符号扩展</b>补符号位、保证数值不变。<code>8009H</code> 按 short 解释是负数——选 D（32 777）的人是做了零扩展或忘了变号。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

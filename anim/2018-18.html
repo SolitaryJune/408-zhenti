@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-18 变址寻址访问 double 数组</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 带自定义下标标签的格子行
+function boxRow(chars, classes, labels, ptrMap){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptrMap && ptrMap[i]) || ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), String(ch)));
+    col.appendChild(AW.el('div', 'aw-idx', labels ? String(labels[i]) : ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+var ADDRS = ['2000H','2008H','2010H','2018H','2020H','2028H'];
+
+AW.init({
+  title: '变址寻址：哪次循环取到 2100H？',
+  subtitle: 'double 数组首地址 <code>2000H</code> · 每元素 8B · 地址 = <code>2000H + i×8</code> · 取完 i 自动 +1',
+  counterLabel: '已循环次数',
+  ribbonTitle: '推演进度（✓ 已完成）',
+  intro: '点击「▶ 播放」先跑几轮循环找规律，再解方程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>数组 A 的前几个元素</b>（格子下 = 字节地址）'));
+    this._rowA = AW.el('div', '');
+    inner.appendChild(this._rowA);
+    this._rowT = AW.el('div', '');
+    this._lbT = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._lbT);
+    inner.appendChild(this._rowT);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    // 数组行：显示前 6 个元素，指针指向当前循环的下标
+    var ptr = null;
+    if(i <= 3){ ptr = { 1: 'i=0' }; }
+    if(i === 2){ ptr = { 2: 'i=1' }; }
+    if(i === 3){ ptr = { 3: 'i=2' }; }
+    var cls = ['', '', '', '', '', ''];
+    if(i >= 1){ cls[0] = 'hit'; }
+    if(i >= 2){ cls[1] = 'hit'; }
+    if(i >= 3){ cls[2] = 'hit'; }
+    this._rowA.innerHTML = '';
+    this._rowA.appendChild(boxRow(['A[0]','A[1]','A[2]','A[3]','A[4]','A[5]'], cls, ADDRS, ptr));
+
+    // 目标元素行：从列方程这一步（i>=5）开始出现
+    if(i >= 5){
+      this._lbT.innerHTML = '<b>目标元素</b>（地址 2100H）';
+      var tc = (i >= 6) ? 'hit' : 'ok';
+      this._rowT.innerHTML = '';
+      this._rowT.appendChild(boxRow(['A[32]'], [tc], ['2100H'], { 1: 'i=32' }));
+    } else {
+      this._lbT.innerHTML = '';
+      this._rowT.innerHTML = '';
+    }
+  },
+
+  snaps: [
+    { cls:'shift', tag:'列公式', log:'首地址 2000H，double 占 8B；变址寄存器存下标 i，初值 0：元素地址 = 2000H + i×8', count:0, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'第 1 轮循环', log:'i = 0：取 A[0]，地址 2000H + 0×8 = 2000H；取完 i ← 1', count:1, ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'第 2 轮循环', log:'i = 1：取 A[1]，地址 2000H + 8 = 2008H；取完 i ← 2', count:2, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'第 3 轮循环', log:'i = 2：取 A[2]，地址 2000H + 16 = 2010H；取完 i ← 3', count:3, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'找规律', log:'每多一轮地址 +8：地址 = 2000H + 8i。不必数到 2100H，直接列方程', count:3, ribbon:{k:5, ok:true} },
+    { cls:'step', tag:'列方程', log:'某轮取的元素地址 = 2100H：2000H + 8i = 2100H → 8i = 100H', count:3, ribbon:{k:6, ok:true} },
+    { cls:'ok', tag:'解方程', log:'8i = 100H = 16² = 256，i = 256 ÷ 8 = 32（十六进制的 100 不是一百）', count:3, ribbon:{k:7, ok:true} },
+    { cls:'done', tag:'完成', log:'进入该次循环时变址寄存器的内容 = 32，答案 B', count:3, done:true },
+  ],
+
+  result: {
+    big: 'i = 32（答案 B）',
+    html: '地址差 <code>2100H − 2000H = 100H = 256</code>，除以元素大小 8B → <b>32</b>。易错点：<code>100H</code> 是 256 不是 100（干扰项 D）；除以 4 得 64 是把 double 当成了 int（干扰项 C）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

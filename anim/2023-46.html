@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-46 键盘输入系统调用的完整过程</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var OPTEXT = {
+  1:'① 将 P 插入就绪队列',
+  2:'② 将 P 插入阻塞队列',
+  3:'③ 字符从键盘控制器读入系统缓冲区',
+  4:'④ 启动键盘中断处理程序',
+  5:'⑤ 进程 P 从系统调用返回',
+  6:'⑥ 用户在键盘上输入字符',
+};
+var OPS = [1,2,3,4,5,6];
+
+var pBox, cpuBox, opEls = {};
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+
+  var top = AW.el('div', 'aw-cells');
+  var pc = AW.el('div', '');
+  pc.style.cssText = 'border:2px solid #cbd5e1;border-radius:12px;padding:6px 14px;font-size:13.5px;background:#fff;transition:all .25s;';
+  pc.innerHTML = '进程 P：<span class="ps" style="font-weight:700">执行</span>';
+  pBox = pc.querySelector('.ps');
+  top.appendChild(pc);
+
+  var cc = AW.el('div', '');
+  cc.style.cssText = 'border:2px solid #cbd5e1;border-radius:12px;padding:6px 14px;font-size:13.5px;background:#fff;margin-left:14px;transition:all .25s;';
+  cc.innerHTML = 'CPU：<span class="cm" style="font-weight:700">用户态</span>';
+  cpuBox = cc.querySelector('.cm');
+  top.appendChild(cc);
+  inner.appendChild(top);
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>六个相关操作</b>（暗淡 = 尚未发生；按真实时间次序依次亮起）'));
+
+  var opRow = AW.el('div', 'aw-cells');
+  OPS.forEach(function(n){
+    var c = AW.el('div', '');
+    c.style.cssText = 'border:2px solid #e2e8f0;border-radius:10px;padding:7px 10px;font-size:12.5px;color:#94a3b8;background:#f8fafc;opacity:.35;transition:all .35s;width:max-content;';
+    c.textContent = OPTEXT[n];
+    opRow.appendChild(c);
+    opEls[n] = c;
+  });
+  inner.appendChild(opRow);
+
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn, i){
+  // 进程状态
+  var p = sn.p;
+  pBox.textContent = p;
+  var pc0 = pBox.parentNode.parentNode;
+  if(p.indexOf('阻塞') >= 0){ pc0.style.borderColor = '#dc2626'; pBox.style.color = '#b91c1c'; }
+  else if(p.indexOf('就绪') >= 0){ pc0.style.borderColor = '#16a34a'; pBox.style.color = '#15803d'; }
+  else { pc0.style.borderColor = '#2563eb'; pBox.style.color = '#1d4ed8'; }
+
+  // CPU 态
+  cpuBox.textContent = sn.cm;
+  var cc0 = cpuBox.parentNode.parentNode;
+  if(sn.cm === '内核态'){ cc0.style.borderColor = '#d97706'; cpuBox.style.color = '#92400e'; }
+  else { cc0.style.borderColor = '#2563eb'; cpuBox.style.color = '#1d4ed8'; }
+
+  // 操作卡
+  var ops = sn.ops || [];
+  OPS.forEach(function(n){
+    var c = opEls[n];
+    var pos = ops.indexOf(n);
+    if(pos < 0){
+      c.style.opacity = '.35'; c.style.borderColor = '#e2e8f0'; c.style.background = '#f8fafc'; c.style.color = '#94a3b8';
+    } else if(sn.cur === n){
+      c.style.opacity = '1'; c.style.borderColor = '#2563eb'; c.style.background = '#dbeafe'; c.style.color = '#1d4ed8'; c.style.fontWeight = '700';
+    } else {
+      c.style.opacity = '1'; c.style.borderColor = '#16a34a'; c.style.background = '#f6fef9'; c.style.color = '#15803d'; c.style.fontWeight = '500';
+    }
+  });
+}
+
+AW.init({
+  title: '键盘输入字符：进程 P 的完整时序',
+  subtitle: 'P 执行系统调用从键盘接收一个字符 · 操作①～⑥按真实时间次序排列',
+  counterLabel: '已发生操作',
+  ribbonTitle: '操作编号点亮次序（✓ 按发生顺序）',
+  intro: '点击「▶ 播放」按真实时间次序推进六个操作。',
+  build: build,
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始', count:0,
+      log:'P 在用户程序中执行系统调用「从键盘读一个字符」，陷入内核（CPU：用户态 → 内核态）',
+      p:'执行（系统调用中）', cm:'内核态', ops:[] },
+    { cls:'shift', tag:'② 阻塞', count:1,
+      log:'②：P 要等键盘输入，内核把 P 插入阻塞队列，P 转为阻塞态',
+      p:'阻塞', cm:'内核态', ops:[2], cur:2, ribbon:{ k:2, ok:true } },
+    { cls:'step', tag:'CPU 切换', count:1,
+      log:'P 已阻塞，CPU 必然从 P 切换到其他进程执行（第 2 问前半：②之后一定切换）',
+      p:'阻塞（队列中）', cm:'内核态', ops:[2] },
+    { cls:'step', tag:'⑥ 输入', count:2,
+      log:'⑥：用户敲下字符，字符进入键盘控制器，控制器向 CPU 发出中断',
+      p:'阻塞（队列中）', cm:'内核态', ops:[2,6], cur:6, ribbon:{ k:6, ok:true } },
+    { cls:'step', tag:'④ 中断处理', count:3,
+      log:'④：CPU 响应中断，启动键盘中断处理程序（CPU 处于内核态）',
+      p:'阻塞（队列中）', cm:'内核态', ops:[2,6,4], cur:4, ribbon:{ k:4, ok:true } },
+    { cls:'ok', tag:'③ 驱动读入', count:4,
+      log:'③：中断处理程序把字符从键盘控制器读入系统缓冲区——这段代码属于键盘驱动程序（第 3 问）',
+      p:'阻塞（队列中）', cm:'内核态', ops:[2,6,4,3], cur:3, ribbon:{ k:3, ok:true } },
+    { cls:'ok', tag:'① 就绪', count:5,
+      log:'①：输入完成，中断处理结束时把 P 插入就绪队列，P 转为就绪态（之后才能被调度选中）',
+      p:'就绪', cm:'内核态', ops:[2,6,4,3,1], cur:1, ribbon:{ k:1, ok:true } },
+    { cls:'step', tag:'被调度', count:5,
+      log:'CPU 调度程序从就绪队列中选中 P（第 2 问后半：①之后才能选中 P）',
+      p:'就绪 → 被选中', cm:'内核态', ops:[2,6,4,3,1] },
+    { cls:'ok', tag:'⑤ 返回', count:6,
+      log:'⑤：P 从系统调用返回，CPU 由内核态转回用户态，继续执行用户程序',
+      p:'执行（用户程序）', cm:'用户态', ops:[2,6,4,3,1,5], cur:5, ribbon:{ k:5, ok:true } },
+    { cls:'done', tag:'完成', count:6,
+      log:'四问结论见结果卡：③→①→⑤、⑥→④；②后必切换、①后可选 P；③属驱动程序；中断处理时 P 阻塞、CPU 内核态',
+      p:'执行（用户程序）', cm:'用户态', ops:[2,6,4,3,1,5], done:true },
+  ],
+  result: {
+    big: '1)③→①→⑤，⑥→④　2)②后必切换、①后可选P　3)③属驱动程序　4)P阻塞、CPU内核态',
+    html: '<b>（1）</b>操作①的前一个操作是③、后一个操作是⑤；操作⑥的后一个操作是④。<br>' +
+          '<b>（2）</b>在操作②之后 CPU 一定从进程 P 切换到其他进程；在操作①之后 CPU 调度程序才能选中进程 P 执行。<br>' +
+          '<b>（3）</b>操作③（把字符从键盘控制器读入系统缓冲区）的代码属于键盘驱动程序。<br>' +
+          '<b>（4）</b>键盘中断处理程序执行时，进程 P 处于阻塞状态，CPU 处于内核态。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-46 连续/链接分配下插入一条记录</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CONTIG_LBL, CONTIG_BOX, LINK_LBL, LINK_BOX, CALC_LINE;
+
+var FREE_CSS  = 'border:2px solid #cbd5e1;background:#f8fafc;color:#64748b';
+var GREEN_CSS = 'border:2px solid #16a34a;background:#dcfce7;color:#14532d';
+var BLUE_CSS  = 'border:2px solid #2563eb;background:#dbeafe;color:#1e3a8a';
+var AMBER_CSS = 'border:2px solid #d97706;background:#fef3c7;color:#92400e';
+
+// 画一块示意块
+function blk(main, sub, css, width){
+  var d = AW.el('div', '');
+  d.style.cssText = 'border-radius:10px;padding:9px 12px;text-align:center;font-size:14px;font-weight:700;' +
+    'line-height:1.4;flex:0 1 auto;' + css + (width ? 'width:' + width + ';' : '');
+  d.innerHTML = main + (sub ? '<div style="font-size:11.5px;font-weight:400">' + sub + '</div>' : '');
+  return d;
+}
+
+// 问1：连续分配示意。mode: 0 插入前 / 1 前移中 / 2 已写入
+function drawContig(mode){
+  CONTIG_BOX.innerHTML = '';
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;gap:6px;align-items:stretch;margin:6px 0';
+  if(mode === 0){
+    row.appendChild(blk('前空闲区', '有空闲空间', FREE_CSS));
+    row.appendChild(blk('记录 1..29', '共 29 块', GREEN_CSS, '180px'));
+    row.appendChild(blk('记录 30..200', '共 171 块', BLUE_CSS, '240px'));
+    row.appendChild(blk('后空闲区', '有空闲空间', FREE_CSS));
+  } else {
+    row.appendChild(blk('记录 1..29', '已前移一格（读+写 ×29）', mode === 1 ? GREEN_CSS : GREEN_CSS, '180px'));
+    row.appendChild(blk(mode === 1 ? '腾出空位' : '★ 新记录', mode === 1 ? '等待写入' : '成为第 30 条', AMBER_CSS, '150px'));
+    row.appendChild(blk('记录 30..200', '原第 30~200 条，原地不动', BLUE_CSS, '240px'));
+    row.appendChild(blk('后空闲区', '', FREE_CSS));
+  }
+  CONTIG_BOX.appendChild(row);
+  var note = AW.el('div', 'aw-row-label', '');
+  note.style.cssText = 'margin-top:4px;font-size:12.5px';
+  note.innerHTML = mode === 0 ? '插入前：记录 1..200 连续存放，前后均有空闲'
+    : mode === 1 ? '方案：把前 29 条整体前移一格（只动 29 条，比后移 171 条省得多）'
+    : '插入后：共 201 条记录，起始块号比原来前移一格';
+  CONTIG_BOX.appendChild(note);
+}
+
+// 问2：链接分配示意。mode: 0 查找 / 1 写新块 / 2 改指针 / 3 块结构 / 4 最大长度
+function drawLink(mode){
+  LINK_BOX.innerHTML = '';
+  if(mode === 3){
+    var r1 = AW.el('div', '');
+    r1.style.cssText = 'display:flex;gap:6px;margin:6px 0';
+    r1.appendChild(blk('记录数据', '1020 B', GREEN_CSS, '150px'));
+    r1.appendChild(blk('链接指针', '4 B（32 位）', AMBER_CSS, '150px'));
+    var note = AW.el('div', 'aw-row-label', '一个 1KB 磁盘块的内部结构：1024 B = 1020 B 数据 + 4 B 指针');
+    note.style.cssText = 'margin-top:4px;font-size:12.5px';
+    LINK_BOX.appendChild(r1);
+    LINK_BOX.appendChild(note);
+    return;
+  }
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;gap:5px;align-items:center;margin:6px 0;flex-wrap:wrap';
+  var arrow = function(){
+    var a = AW.el('div', '', '→');
+    a.style.cssText = 'font-size:17px;color:#64748b';
+    return a;
+  };
+  row.appendChild(blk('块1', '', GREEN_CSS, '58px'));
+  row.appendChild(arrow());
+  row.appendChild(blk('块2', '', GREEN_CSS, '58px'));
+  row.appendChild(arrow());
+  row.appendChild(blk('…', '', GREEN_CSS, '44px'));
+  row.appendChild(arrow());
+  row.appendChild(blk('块29', mode >= 2 ? '指针已改' : '', mode >= 2 ? GREEN_CSS : BLUE_CSS, '80px'));
+  if(mode >= 1){
+    row.appendChild(arrow());
+    row.appendChild(blk('新块X', mode >= 1 ? '新记录·指针→块30' : '', AMBER_CSS, '120px'));
+  }
+  row.appendChild(arrow());
+  row.appendChild(blk('块30', '', BLUE_CSS, '72px'));
+  row.appendChild(arrow());
+  row.appendChild(blk('…', '', BLUE_CSS, '44px'));
+  row.appendChild(arrow());
+  row.appendChild(blk('块200', '', BLUE_CSS, '76px'));
+  LINK_BOX.appendChild(row);
+  var note = AW.el('div', 'aw-row-label', '');
+  note.style.cssText = 'margin-top:4px;font-size:12.5px';
+  if(mode === 0) note.innerHTML = '顺链查找：从块1 一路读到块29（共 29 次访盘）才能知道块30 在哪';
+  else if(mode === 1) note.innerHTML = '写入新块 X：内容 = 新记录，其指针指向原块30（1 次访盘），块30 及以后全部不动';
+  else if(mode === 2) note.innerHTML = '改块29 的指针指向新块 X（1 次访盘）——接链完成，共 29 + 2 = 31 次';
+  else note.innerHTML = '指针 4B = 32 位 → 可寻址 2^32 个块；最大文件 = 2^32 × 1020 B';
+  LINK_BOX.appendChild(note);
+}
+
+var CALC = [
+  '文件 F：200 条记录 = 200 块；插入后 201 条 = 201 块',
+  '两方案对比：后移 171 条 = 171×2+1 = 343 次；前移 29 条 = 29×2+1 = 59 次 → 前移最省',
+  '前移：29 条 × (读 1 次 + 写 1 次) = 58 次',
+  '写入新记录 +1 次 → 问 1 最少 = 59 次',
+  'FCB 改动：① 起始块号（文件前移一格）② 文件长度（200 → 201 条）',
+  '问 2：链接分配顺链找块29，读第 1..29 块 = 29 次',
+  '写入新块 X（指针指向块30）= 1 次',
+  '改块29 指针 = 1 次 → 问 2 共 31 次',
+  '块 1KB = 1024B，扣掉 4B 指针 → 数据区 1020B',
+  '指针 4B = 32 位 → 可寻址 2^32 个块',
+  '最大文件 = 2^32 × 1020B = 4 GB × 1020 = 4080 GB',
+  '答案：(1) 59 次 + FCB 改起始块号与文件长度；(2) 31 次；最大 4080 GB',
+];
+
+AW.init({
+  title: '【2014-46】连续 / 链接分配：插入第 30 条记录',
+  subtitle: '200 条记录 · 1 块 1 条 · 问 1 最少访盘次数 + FCB 变化 · 问 2 访盘次数 + 最大文件长度',
+  counterLabel: '累计访盘',
+  ribbonTitle: '得分点（✓ 已确认）',
+  intro: '点击「▶ 播放」，按问 1（连续分配）→ 问 2（链接分配）的顺序推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    CONTIG_LBL = AW.el('div', 'aw-row-label', '<b>问 1 · 连续分配</b>（1 块存 1 条记录，前后均有空闲空间）');
+    CONTIG_BOX = AW.el('div', '');
+    inner.appendChild(CONTIG_LBL);
+    inner.appendChild(CONTIG_BOX);
+
+    LINK_LBL = AW.el('div', 'aw-row-label', '<b>问 2 · 链接分配</b>（1 块 = 记录 + 4B 链接指针）');
+    LINK_BOX = AW.el('div', '');
+    inner.appendChild(LINK_LBL);
+    inner.appendChild(LINK_BOX);
+
+    CALC_LINE = AW.el('div', 'aw-row-label', '');
+    CALC_LINE.style.cssText = 'margin-top:12px;font-size:14.5px;color:#334155;line-height:1.7;font-family:Menlo,Consolas,monospace';
+    inner.appendChild(CALC_LINE);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var self = this;
+    var showContig = i <= 4;
+    CONTIG_BOX.style.display = showContig ? '' : 'none';
+    CONTIG_LBL.style.display = showContig ? '' : 'none';
+    LINK_BOX.style.display = showContig ? 'none' : '';
+    LINK_LBL.style.display = showContig ? 'none' : '';
+
+    if(showContig){
+      var m = (i <= 1) ? 0 : (i === 2 ? 1 : 2);
+      drawContig(m);
+    } else {
+      var lm = (i <= 5) ? 0 : (i === 6 ? 1 : (i === 7 ? 2 : (i === 8 ? 3 : 4)));
+      drawLink(lm);
+    }
+    CALC_LINE.innerHTML = CALC[Math.min(i, CALC.length - 1)];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'文件 F 有 200 条记录（1 块 1 条），要把内存中的一条插入为第 30 条', count:0 },
+    { cls:'step', tag:'问1 选方案', log:'连续分配两条路：后移 171 条（343 次）或前移 29 条（59 次）——前后都有空闲，前移最省', count:0 },
+    { cls:'shift', tag:'前移 29 条', log:'原第 1..29 条整体前移一格：每条"读 + 写"2 次访盘 → 58 次', count:58 },
+    { cls:'ok', tag:'写入新记录', log:'新记录写入腾出的空位：+1 次 → 问 1 最少 59 次访盘', count:59, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'问1 FCB 变化', log:'文件前移一格 → 起始块号改变；记录数 200→201 → 文件长度改变', count:59, ribbon:{k:2, ok:true} },
+    { cls:'miss', tag:'问2 顺链查找', log:'链接分配插入不用移动旧块：先顺链找到块29 → 读第 1..29 块共 29 次', count:29 },
+    { cls:'step', tag:'问2 写新块', log:'写入新块 X：存新记录，其指针指向原块30 → 1 次（块30 之后全部不动）', count:30 },
+    { cls:'ok', tag:'问2 改指针', log:'改块29 的指针指向新块 X → 1 次 → 问 2 共 31 次访盘', count:31, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'最大长度①', log:'块 1KB = 1024B，扣掉 4B 指针 → 每块数据区 1020B', count:31 },
+    { cls:'step', tag:'最大长度②', log:'指针 4B = 32 位 → 可寻址 2^32 个块', count:31 },
+    { cls:'ok', tag:'最大长度③', log:'最大文件 = 2^32 × 1020B = 4 GB × 1020 = 4080 GB', count:31, ribbon:{k:4, ok:true} },
+    { cls:'done', tag:'完成', log:'答案：(1) 最少 59 次，FCB 改起始块号 + 文件长度；(2) 31 次，最大 4080 GB', count:31, done:true },
+  ],
+
+  result: {
+    big: '59 次 / 31 次 / 4080 GB',
+    html: '<b>(1) 连续分配</b>：前移 29 条（58 次）+ 写新记录（1 次）= <b>59 次</b>；FCB 中<b>起始块号</b>与<b>文件长度</b>改变。<br>' +
+      '<b>(2) 链接分配</b>：顺链读 29 块 + 写新块与改指针 2 次 = <b>31 次</b>；最大文件 = <b>2^32 × 1020B = 4080 GB</b>。<br>' +
+      '记忆点：连续分配插入靠"移动邻块"，链接分配插入只改两根"链扣"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

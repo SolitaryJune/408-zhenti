@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-40 · 递归解析各发几条请求</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/分析类：递归 vs 迭代域名解析的请求条数推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：无缓存 + 递归',
+    cls: 'key',
+    body: '<p>本地域名服务器<b>无缓存</b>（必须向外查询），且题目明确采用<b>递归</b>方法解析另一网络的主机域名。要数的是"域名<b>请求</b>消息"的条数：用户主机发几条、本地域名服务器发几条。</p>' },
+  { title: '递归 vs 迭代',
+    cls: '',
+    body: '<p><b>递归查询</b>：请求者发一条请求后只等最终结果，被请求的服务器"替人问到底"。<b>迭代查询</b>：服务器只告诉请求者"下一步该问谁"，后续查询由请求者自己一次次发出。</p>' },
+  { title: '用户主机：一条',
+    cls: 'good',
+    body: '<p>主机 → 本地域名服务器：只发出 <b>1 条</b>递归查询请求，然后坐等结果——主机从不参与后面服务器之间的查询传递。</p>' },
+  { title: '本地域名服务器：也是一条',
+    cls: 'good',
+    body: '<p>题目采用<b>递归</b>：本地域名服务器只向根域名服务器发出 <b>1 条</b>请求；根 → 顶级 → 权威的后续查询由各级服务器<b>递归代查</b>，结果沿原路逐级返回。所以它也只发 1 条。</p>' },
+  { title: '对比：如果是迭代呢',
+    cls: 'bad',
+    body: '<p>若本地域名服务器采用<b>迭代</b>：它得自己逐级问——先问根、再问顶级、再问权威，发出<b>多条</b>请求。这正是干扰项"一条、多条"（B）的陷阱来源。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>用户主机 1 条、本地域名服务器 1 条 → 答案选 <b>A（一条、一条）</b>。记忆锚点：<b>递归一条问到底，迭代层层自己问</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-40 · 递归解析各发几条请求',
+  subtitle: '考点：递归 vs 迭代域名解析 · 请求消息条数推演',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（一条、一条）',
+    html: '递归方式下：用户主机向本地服务器发 <b>1 条</b>请求；本地服务器也只向根服务器发 <b>1 条</b>请求，后续由各级服务器递归代查、结果沿原路返回。若采用迭代，本地服务器才要发多条。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

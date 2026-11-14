@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-39：TCP 拥塞控制——超时后逐 RTT 推演拥塞窗口
+     模板：算法 / 过程演示类（持久 DOM + cwnd 序列格子）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2009-39：超时后 4 个 RTT 的拥塞窗口',
+  subtitle: 'MSS = 1KB · cwnd = 16KB 时发生超时 · 慢启动 → 拥塞避免',
+  counterLabel: 'cwnd（KB）',
+  ribbonTitle: 'RTT（✓ 传输成功 / ✗ 超时）',
+  intro: '点击「▶ 播放」逐 RTT 推演拥塞窗口变化。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._inner = inner;
+  },
+
+  snaps: [
+    { cls:'miss', tag:'超时重置', log:'cwnd = 16KB 时发生超时 → 判定拥塞：ssthresh = 16/2 = 8KB；cwnd 重置为 1KB，重新慢启动', count:1 },
+    { cls:'ok', tag:'慢启动 ×2', log:'第 1 个 RTT 传输成功：慢启动指数增长，cwnd = 1 → 2 KB', count:2, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'慢启动 ×2', log:'第 2 个 RTT 传输成功：cwnd = 2 → 4 KB', count:4, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'到达门槛', log:'第 3 个 RTT 传输成功：cwnd = 4 → 8 KB，恰好等于 ssthresh = 8KB → 改用拥塞避免', count:8, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'拥塞避免 +1', log:'第 4 个 RTT 传输成功：拥塞避免线性增长，cwnd = 8 + 1 = 9 KB', count:9, ribbon:{k:4, ok:true} },
+    { cls:'done', tag:'完成', log:'第 4 个 RTT 内发送的段全部得到确认时 cwnd = 9 KB → 答案选 C', count:9, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var inner = this._inner;
+    inner.innerHTML = '';
+    var lbl = AW.el('div', 'aw-row-label', '<b>拥塞窗口 cwnd</b>（KB）· 慢启动每 RTT 翻倍，到 ssthresh 后每 RTT 加 1');
+    inner.appendChild(lbl);
+    var vals = ['1', '2', '4', '8', '9'];
+    var classes = vals.map(function(_, idx){
+      var lightStep = idx + 1;
+      if (i >= lightStep) return (i === lightStep) ? 'hit' : 'ok';
+      return '';
+    });
+    var ptr = (i >= 4) ? { 4: 'ssthresh=8KB' } : null;
+    inner.appendChild(AW.cellRow(vals, classes, ptr, 0));
+    var labs = AW.el('div', 'aw-cells');
+    ['超时后', 'RTT1', 'RTT2', 'RTT3', 'RTT4'].forEach(function(t){
+      var c = AW.el('div', 'aw-col');
+      c.innerHTML = '<div class="aw-idx" style="margin-top:6px;white-space:nowrap">' + t + '</div>';
+      labs.appendChild(c);
+    });
+    inner.appendChild(labs);
+  },
+
+  result: {
+    big: 'cwnd = 9 KB → 选 C',
+    html: '超时 → <b>ssthresh 减半为 8KB、cwnd 归 1KB</b>；慢启动逐 RTT 翻倍：1→2→4→8，恰好到达 ssthresh 后转<b>拥塞避免</b>，第 4 个 RTT 线性加 1 → <b>9 KB，选 C</b>。<br>干扰项：B（8KB）误以为到门槛就停住；D（16KB）忘了超时把窗口打回 1KB。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

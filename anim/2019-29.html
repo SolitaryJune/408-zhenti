@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-29 LRU 页置换动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SEQ = ['0','1','2','7','0','5','3','5','0','2','7','6'];
+
+// 预演 LRU（frames：左 = 最久未用 …… 右 = 最近使用）
+var STATES = [ { frames: [], act: 'start', victim: '' } ];
+(function(){
+  var f = [];
+  for (var j = 0; j < SEQ.length; j++){
+    var p = SEQ[j];
+    var idx = f.indexOf(p);
+    if (idx >= 0){ f.splice(idx, 1); f.push(p); STATES.push({ frames: f.slice(), act: 'hit', victim: '' }); }
+    else if (f.length < 4){ f.push(p); STATES.push({ frames: f.slice(), act: 'fill', victim: '' }); }
+    else { var v = f.shift(); f.push(p); STATES.push({ frames: f.slice(), act: 'rep', victim: v }); }
+  }
+})();
+
+var snaps = [ { cls:'step', tag:'初始', log:'为进程 P 预分配 4 个页框（局部置换），均空闲；置换算法 LRU：淘汰最久未使用的页。', count:0 } ];
+var repCnt = 0;
+STATES.slice(1).forEach(function(st, j){
+  var p = SEQ[j];
+  var o;
+  if (st.act === 'hit'){
+    o = { cls:'ok', tag:'命中', log:'访问 ' + p + '：页 ' + p + ' 已在内存 → 命中，把它移到"最近使用"端。' };
+  } else if (st.act === 'fill'){
+    o = { cls:'miss', tag:'缺页·调入', log:'访问 ' + p + '：缺页，但页框有空 → 直接调入页 ' + p + '（不淘汰页，不算置换）。' };
+  } else {
+    repCnt++;
+    o = { cls:'miss', tag:'缺页·置换', log:'访问 ' + p + '：缺页且 4 个页框已满 → 淘汰最久未用的页 ' + st.victim + '，换入页 ' + p + '（第 ' + repCnt + ' 次置换）。' };
+  }
+  o.count = j + 1;
+  o.ribbon = { k: j + 1, ok: st.act === 'hit' };
+  snaps.push(o);
+});
+snaps.push({ cls:'done', tag:'结论', log:'12 次访问结束：缺页共 9 次（4 次初始调入 + 5 次置换）→ 页置换总次数 = 5，选 C。', count:12, done:true });
+
+AW.init({
+  title: '2019-29 · LRU 页置换：4 个页框 · 12 次访问',
+  subtitle: '访问序列 <code>0 1 2 7 0 5 3 5 0 2 7 6</code> · LRU + 局部置换 · 求页置换总次数',
+  counterLabel: '已访问',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺页）',
+  intro: '点击「▶ 播放」逐步演示每一次访页。',
+  snaps: snaps,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.minWidth = '620px';
+
+    var l1 = AW.el('div', 'aw-row-label', '<b>访问序列</b>（绿 = 命中，红 = 缺页）');
+    var seqBox = AW.el('div', '');
+    var l2 = AW.el('div', 'aw-row-label', '<b>页框内容</b>（按最近使用排序：最左 = 最久未用，即 LRU 的淘汰对象；最右 = 最近使用）');
+    var frmBox = AW.el('div', '');
+
+    inner.appendChild(l1); inner.appendChild(seqBox);
+    inner.appendChild(l2); inner.appendChild(frmBox);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+
+    // 持久 DOM：一次建好，render 只改类名/文本（保留 CSS 过渡）
+    this._seqRow = AW.cellRow(SEQ, ['','','','','','','','','','','',''], null, 1);
+    seqBox.appendChild(this._seqRow);
+    this._frmRow = AW.cellRow(['','','',''], ['','','',''], null, 1);
+    frmBox.appendChild(this._frmRow);
+    this._seqBoxes = this._seqRow.querySelectorAll('.aw-box');
+    this._seqPtrs  = this._seqRow.querySelectorAll('.aw-ptr');
+    this._frmBoxes = this._frmRow.querySelectorAll('.aw-box');
+  },
+
+  render: function(stage, sn, i){
+    var j, k;
+    for (j = 0; j < SEQ.length; j++){
+      var cls = '';
+      if (j < i) cls = (STATES[j + 1].act === 'hit') ? 'ok' : 'miss';
+      else if (j === i && i > 0) cls = (STATES[j + 1].act === 'hit') ? 'hit' : 'miss';
+      this._seqBoxes[j].className = 'aw-box' + (cls ? ' ' + cls : '');
+      this._seqPtrs[j].textContent = (j === i && i > 0) ? '当前' : '';
+    }
+    var st = STATES[Math.min(i, STATES.length - 1)];
+    for (k = 0; k < 4; k++){
+      var has = k < st.frames.length;
+      this._frmBoxes[k].textContent = has ? st.frames[k] : '';
+      var fc = '';
+      if (has && k === st.frames.length - 1 && i > 0) fc = (st.act === 'hit') ? 'hit' : 'miss';
+      this._frmBoxes[k].className = 'aw-box' + (fc ? ' ' + fc : '');
+    }
+  },
+
+  result: {
+    big: '置换 5 次',
+    html: '缺页 <b>9</b> 次 = 4 次初始调入（页 0、1、2、7）+ <b>5</b> 次页置换（依次淘汰页 1、2、7、3、5）。<br>LRU 只淘汰<b>最久未使用</b>的页；局部置换规定淘汰范围仅限本进程的 4 个页框。页置换总次数 = <b>5</b> → 选 <b>C</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

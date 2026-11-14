@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-28 · 请求分页地址变换 + 改进型 Clock</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+/* 页面专属小样式（仅本页舞台内容使用） */
+.hrow{ display:flex; gap:10px; align-items:stretch; flex-wrap:wrap; margin:8px 0 2px; }
+.ptcell{ border:2px solid #cbd5e1; border-radius:10px; padding:9px 12px; min-width:104px;
+  text-align:center; font-size:13.5px; background:#fff; color:#334155; transition:all .25s; }
+.ptcell b{ display:block; font-size:15px; color:#0f172a; }
+.ptcell .meta{ font-size:11px; color:#64748b; margin-top:3px; font-family:Menlo,monospace; white-space:nowrap; }
+.ptcell .badge{ display:inline-block; font-size:10.5px; font-weight:700; border-radius:6px;
+  padding:1px 7px; margin-top:5px; background:#e2e8f0; color:#475569; }
+.ptcell.ok{ border-color:var(--green); background:var(--green-bg); }
+.ptcell.ok .badge{ background:var(--green); color:#fff; }
+.ptcell.miss{ border-color:var(--red); background:var(--red-bg); }
+.ptcell.miss .badge{ background:var(--red); color:#fff; }
+.ptcell.pick{ border-color:var(--amber); background:var(--amber-bg); }
+.ptcell.pick .badge{ background:var(--amber); color:#fff; }
+.ptcell.dim{ opacity:.45; }
+.rulebox{ border:1px dashed #94a3b8; border-radius:12px; padding:10px 14px; font-size:13px;
+  line-height:1.9; color:#334155; background:#f8fafc; margin-top:8px; max-width:520px; }
+.bigaddr{ font-size:30px; font-weight:800; color:var(--green); font-family:Menlo,monospace;
+  margin:10px 0 2px; }
+.hnote{ font-size:12.5px; color:#64748b; margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 页表快照：页2（帧20H，P=0,A=0,M=0）、页3（帧60H，P=1,A=1,M=0）、页4（帧80H，P=1,A=1,M=1） */
+function pt(label, frame, pm, cls, badge){
+  var b = badge ? '<span class="badge">' + badge + '</span>' : '';
+  return '<div class="ptcell ' + (cls || '') + '"><b>' + label + '</b>' +
+         '<div class="meta">帧 ' + frame + '</div><div class="meta">' + pm + '</div>' + b +
+         '</div>';
+}
+
+var P2 = 'P=0 A=0 M=0', P3 = 'P=1 A=1 M=0', P4 = 'P=1 A=1 M=1';
+
+function stage0(){
+  return '<div class="hrow">' +
+    pt('页 2', '20H', P2, '', '', '') +
+    pt('页 3', '60H', P3, '', '', '') +
+    pt('页 4', '80H', P4, '', '', '') + '</div>' +
+    '<div class="hnote">页大小 4KB，按字节编址；进程 P 固定分配 2 个页框，采用改进型 Clock 置换。</div>';
+}
+function stage1(){
+  return '<div class="hrow">' +
+    '<div class="ptcell ok"><b>页号 02H</b><div class="meta">高 8 位</div><div class="meta">查页表用</div></div>' +
+    '<div class="ptcell ok"><b>偏移 A01H</b><div class="meta">低 12 位</div><div class="meta">原样拼接</div></div>' +
+    '</div><div class="hnote">4KB = 1000H → 页内偏移占 12 位（3 位十六进制），02A01H 拆成页号 02H 与偏移 A01H。</div>';
+}
+function stage2(){
+  return '<div class="hrow">' +
+    pt('页 2', '20H', P2, 'miss', '存在位 0 ✗') +
+    pt('页 3', '60H', P3, 'dim', '', '') +
+    pt('页 4', '80H', P4, 'dim', '', '') + '</div>' +
+    '<div class="hnote">页 2 不在内存：页框号 20H 无效（选项 B 20A01H 是陷阱）。</div>';
+}
+function stage3(){
+  return '<div class="hrow">' +
+    pt('页 3', '60H', 'A=1 M=0', '', '占帧 60H') +
+    pt('页 4', '80H', 'A=1 M=1', '', '占帧 80H') + '</div>' +
+    '<div class="hnote">2 个固定页框全被占用：必须按改进型 Clock 换出一页，才能装入页 2。</div>';
+}
+function stage4(){
+  return '<div class="rulebox">' +
+    '第一轮：找 (A=0, M=0)，找到即换出；本轮不改访问位<br>' +
+    '第二轮：找 (A=0, M=1)，找到即换出；本轮扫过的页把 <b>A 清 0</b><br>' +
+    '仍未找到 → 重复第一轮（此时必有 (0,0)）</div>' +
+    '<div class="hnote">改进型 Clock：优先淘汰"没访问也没改"的页，其次"没访问但改过"的页。</div>';
+}
+function stage5(){
+  return '<div class="hrow">' +
+    pt('页 3', '60H', '(A,M)=(1,0)', '', '× 非目标') +
+    pt('页 4', '80H', '(A,M)=(1,1)', '', '× 非目标') + '</div>' +
+    '<div class="hnote">第一轮找 (0,0)：页 3 是 (1,0)、页 4 是 (1,1)，都不符合 → 落空。</div>';
+}
+function stage6(){
+  return '<div class="hrow">' +
+    pt('页 3', '60H', '扫过清 A → (0,0)', '', 'A 被清 0') +
+    pt('页 4', '80H', '扫过清 A → (0,1)', '', 'A 被清 0') + '</div>' +
+    '<div class="hnote">第二轮找 (0,1)：检查时页 3 是 (1,0)、页 4 是 (1,1)，均不符合；检查后把访问位 A 清 0 → 本轮也落空。</div>';
+}
+function stage7(){
+  return '<div class="hrow">' +
+    pt('页 3', '60H', '(A,M)=(0,0)', 'pick', '★ 换出页 3') +
+    pt('页 4', '80H', '(A,M)=(0,1)', 'dim', '', '') + '</div>' +
+    '<div class="hnote">第三轮重复第一轮规则找 (0,0)：页 3 现在是 (0,0) → 选中页 3 作为牺牲页。</div>';
+}
+function stage8(){
+  return '<div class="hrow">' +
+    pt('页 2', '60H', 'P=1 A=0 M=0', 'ok', '装入 60H ✓') +
+    pt('页 3', '—', '已换出到磁盘', 'dim', '', '') +
+    pt('页 4', '80H', 'A=1 M=1', '', '', '') + '</div>' +
+    '<div class="hnote">页 2 从磁盘装入腾出的页框 60H，页表更新：存在位 = 1，页框号 = 60H。</div>';
+}
+function stage9(){
+  return '<div class="hrow">' +
+    '<div class="ptcell ok"><b>页框号 60H</b><div class="meta">查表得到</div></div>' +
+    '<div class="ptcell ok"><b>偏移 A01H</b><div class="meta">原样不变</div></div>' +
+    '</div><div class="bigaddr">= 60A01H</div>' +
+    '<div class="hnote">物理地址 = 页框号 60H 与页内偏移 A01H 拼接 → 60A01H，选 C。</div>';
+}
+
+AW.init({
+  title: '请求分页地址变换 + 改进型 Clock 置换（2021-28）',
+  subtitle: '页大小 <code>4KB</code> · 虚拟地址 <code>02A01H</code> · 2 个固定页框 · 改进型 Clock',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」，走完"拆地址 → 缺页 → Clock 选牺牲页 → 重新变换"全流程。',
+
+  snaps: [
+    { cls: 'shift', tag: '题面', log: '进程 P 页表（部分）：页 2 不在内存，页 3、页 4 各占一个页框', html: stage0(), count: 0 },
+    { cls: 'step', tag: '拆地址', log: '02A01H → 页号 02H，页内偏移 A01H（低 12 位）', html: stage1(), count: 1 },
+    { cls: 'miss', tag: '缺页！', log: '查页表：页 2 存在位 = 0 → 不在内存，触发缺页中断', html: stage2(), count: 2 },
+    { cls: 'step', tag: '腾页框', log: '2 个页框全被占：页 3（帧 60H，A=1,M=0）、页 4（帧 80H，A=1,M=1），必须换出一页', html: stage3(), count: 3 },
+    { cls: 'shift', tag: '规则', log: '改进型 Clock 规则：先找 (0,0)，再找 (0,1)（扫过清 A），再重复找 (0,0)', html: stage4(), count: 4 },
+    { cls: 'step', tag: '第一轮', log: '第一轮找 (A=0,M=0)：页 3 是 (1,0)、页 4 是 (1,1)，均不符合 → 落空', html: stage5(), count: 5 },
+    { cls: 'step', tag: '第二轮', log: '第二轮找 (A=0,M=1)：检查时都不符合，扫过把 A 清 0 → 页 3 变 (0,0)、页 4 变 (0,1)，本轮落空', html: stage6(), count: 6 },
+    { cls: 'shift', tag: '第三轮', log: '第三轮找 (A=0,M=0)：页 3 已是 (0,0) → 选中页 3 换出', html: stage7(), count: 7 },
+    { cls: 'ok', tag: '装入', log: '页 2 装入腾出的帧 60H，页表更新：存在位 = 1，页框号 = 60H', html: stage8(), count: 8 },
+    { cls: 'done', tag: '完成', log: '重新地址变换：物理地址 = 页框号 60H 拼偏移 A01H = 60A01H', html: stage9(), count: 9, done: true },
+  ],
+
+  result: {
+    big: '60A01H（答案 C）',
+    html: '页 2 存在位为 0 → <b>缺页</b>；改进型 Clock 三轮扫描（(0,0)→(0,1) 清 A→再 (0,0)）选中<b>页 3</b> 换出 → 页 2 装入帧 <code>60H</code> → 物理地址 = <code>60A01H</code>。记忆锚点：不在内存的页没有有效页框号（20H 是陷阱）；扫描过的页访问位要清 0。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

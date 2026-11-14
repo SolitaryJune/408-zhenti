@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-15 存储芯片组地址定位 · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var GROUPS = [
+  { no: '第 0 组', sel: '00', range: '0000H ~ 07FFH' },
+  { no: '第 1 组', sel: '01', range: '0800H ~ 0FFFH' },
+  { no: '第 2 组', sel: '10', range: '1000H ~ 17FFH' },
+  { no: '第 3 组', sel: '11', range: '1800H ~ 1FFFH' },
+];
+// 0B1FH 的低 13 位（A12 ~ A0）：0 1011 0001 1111
+var BITS  = ['0','1','0','1','1','0','0','0','1','1','1','1','1'];
+var LABELS = ['A12','A11','A10','A9','A8','A7','A6','A5','A4','A3','A2','A1','A0'];
+
+var D = {};
+
+var snaps = [
+  { cls: 'step', tag: '开始', count: 0,
+    log: '用若干 2K×4 位芯片组成 8K×8 位存储器，地址 0B1FH 落在哪块芯片上？目标：求该芯片的最小地址。' },
+  { cls: 'step', tag: '组织结构', count: 1,
+    log: '位扩展：2 片 2K×4 并联凑 8 位数据 → 一组 2K×8；字扩展：4 组依次编址凑 8K 单元。总容量 8K = 2^13 → 芯片地址 13 位。' },
+  { cls: 'step', tag: '组地址表', count: 2,
+    log: '每组 2K = 800H 个单元：第 0 组 0000H~07FFH、第 1 组 0800H~0FFFH、第 2 组 1000H~17FFH、第 3 组 1800H~1FFFH。高 2 位 A12A11 选组，低 11 位片内寻址。' },
+  { cls: 'shift', tag: '展开 0B1FH', count: 3,
+    log: '0B1FH = 0000 1011 0001 1111B，取低 13 位参与芯片选址（高位 000 前缀不在 8K 空间内）。' },
+  { cls: 'shift', tag: '拆位', count: 4,
+    log: '高 2 位 A12A11 = 01 → 用于选组；低 11 位 A10~A0 = 011 0001 1111B = 31FH → 片内偏移。' },
+  { cls: 'ok', tag: '选组：第 1 组', count: 5,
+    log: 'A12A11 = 01 → 第 1 组（0800H ~ 0FFFH），0B1FH 正落在 0800H ~ 0FFFH 之间。' },
+  { cls: 'ok', tag: '求最小地址', count: 6,
+    log: '该组（所在芯片）的最小地址 = 组基址 0800H（片内偏移 31FH 不影响基址）。' },
+  { cls: 'done', tag: '完成', count: 7, done: true,
+    log: '0B1FH 所在芯片的最小地址是 0800H → 选 D。' },
+];
+
+AW.init({
+  title: '2010-15 · 0B1FH 所在芯片的最小地址',
+  subtitle: '2K×4 位芯片 → 8K×8 位存储器 · 13 位地址 = <code>A12A11 选组 + A10~A0 片内</code>',
+  counterLabel: '推导步',
+  ribbonTitle: '推导进度（✓）',
+  intro: '点击「▶ 播放」：先排组地址表，再把 0B1FH 按位拆开定位。',
+  snaps: snaps,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>存储器组织：</b>每组 = 2 片 2K×4 位<b>位扩展</b>（共用同一地址），共 <b>4 组字扩展</b>'));
+    var grow = AW.el('div', '');
+    grow.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin:6px 0';
+    D.groupBoxes = [];
+    GROUPS.forEach(function(g){
+      var box = AW.el('div', 'aw-stepcard');
+      box.style.cssText = 'padding:8px 12px;margin:0;transition:border-color .25s,background .25s;min-width:150px';
+      box.innerHTML = '<b>' + g.no + '</b>（A12A11 = ' + g.sel + '）<br>' +
+        '<code>' + g.range + '</code><br>' +
+        '<span style="font-size:11.5px;color:#64748b">2 片 2K×4 位</span>';
+      grow.appendChild(box);
+      D.groupBoxes.push(box);
+    });
+    inner.appendChild(grow);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>目标地址 0B1FH 的低 13 位拆分：</b>'));
+    var bitRow = AW.el('div', 'aw-cells');
+    D.bitBoxes = [];
+    BITS.forEach(function(b, i){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', LABELS[i]));
+      var box = AW.el('div', 'aw-box', b);
+      box.style.cssText = 'width:38px;height:38px;font-size:16px';
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', String(12 - i)));
+      bitRow.appendChild(col);
+      D.bitBoxes.push(box);
+    });
+    D.bitRowWrap = AW.el('div', '');
+    D.bitRowWrap.style.cssText = 'opacity:.35;transition:opacity .25s';
+    D.bitRowWrap.appendChild(bitRow);
+    inner.appendChild(D.bitRowWrap);
+
+    D.res = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(D.res);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    // 位拆分行：i≥3 才完整显示
+    D.bitRowWrap.style.opacity = (i >= 3) ? '1' : '0.35';
+    D.bitBoxes.forEach(function(box, k){
+      if (i >= 4 && k < 2) box.className = 'aw-box hit';
+      else if (i >= 4) box.className = 'aw-box ok';
+      else box.className = 'aw-box';
+    });
+    // 组高亮：i≥5 点亮第 1 组
+    D.groupBoxes.forEach(function(box, k){
+      if (i >= 5 && k === 1){
+        box.style.borderColor = '#16a34a';
+        box.style.background = '#f6fef9';
+      } else {
+        box.style.borderColor = '';
+        box.style.background = '#fff';
+      }
+    });
+    // 结论行
+    if (i >= 6){
+      D.res.innerHTML = '→ 片内偏移 <code>31FH</code>，所在芯片组 = <b style="color:#16a34a">0800H ~ 0FFFH</b>，' +
+        '最小地址 = <b style="color:#16a34a">0800H</b>';
+    } else if (i >= 5){
+      D.res.innerHTML = '→ A12A11 = 01 → <b>第 1 组：0800H ~ 0FFFH</b>';
+    } else {
+      D.res.innerHTML = '';
+    }
+  },
+
+  result: {
+    big: '答案 D（0800H）',
+    html: '8K×8 位 → 13 位地址；2K 片内占低 11 位、<b>高 2 位 A12A11 选组</b>。0B1FH 的 A12A11 = 01 → 第 1 组（0800H ~ 0FFFH），该芯片最小地址 <b>0800H</b>。记忆锚点：<b>字扩展组基址 = 组号 × 800H</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

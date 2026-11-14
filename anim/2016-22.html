@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-22 动画 · 异常与中断的归属判断</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理类：四个事件按"内部异常 / 外部中断"逐项归位
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：题干给的判据',
+    cls: 'key',
+    body: '<p><b>异常</b> = 指令执行过程中在<b>处理器内部</b>发生的特殊事件（内中断）；<b>中断</b> = 来自<b>处理器外部</b>的请求事件（外中断）。对每个事件只问一句：<b>由谁、在哪儿引发？</b></p>' },
+  { title: 'A 访存时缺页 —— 异常（说法错误）',
+    cls: 'bad',
+    body: '<p>CPU 执行访存指令、查页表时发现页不在内存，由<b>指令执行本身</b>在处理器内部引发，属于<b>异常</b>（可修复的故障类）。题干说它是"中断" → <b>错误</b> → 这就是答案。✗</p>' },
+  { title: 'B 整数除以 0 —— 异常',
+    cls: 'good',
+    body: '<p>除 0 由正在执行的<b>除法指令</b>在处理器内部触发，是异常的教科书例子。说法正确。✓</p>' },
+  { title: 'C DMA 传送结束 —— 中断',
+    cls: 'good',
+    body: '<p>DMA 传送由 DMA 控制器独立完成，结束时控制器（外设一侧）向 CPU <b>发出请求</b>——典型的外中断。说法正确。✓</p>' },
+  { title: 'D 存储保护错 —— 异常',
+    cls: 'good',
+    body: '<p>指令执行中处理器内部检测出越权/越界访问并报错，由<b>指令执行</b>引发 → 异常。说法正确。✓</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。一句话判据：<b>指令执行在 CPU 内部引发的 → 异常；外部设备发来的请求 → 中断</b>。判位置更要判"由谁引发"。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016-22 异常与中断的归属判断',
+  subtitle: '异常 = 处理器内部、指令执行引发 · 中断 = 外部请求 · 考点：异常/中断分类（选错误叙述）',
+  counterLabel: '推理进度',
+  ribbonTitle: '逐项判定（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐项归位四个事件。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（缺页不是中断）',
+    html: '记忆锚点：<b>缺页是执行访存指令时由 CPU 内部（页机制）引发的异常</b>（故障类），不是外部请求。<br>典型对照：除 0、存储保护错 = 异常；DMA 结束、键盘输入 = 中断。判据是"由谁引发"，不是部件的物理位置。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

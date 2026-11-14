@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-07 保证连通的最少边数 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// K6 + 孤立点的最坏摆法示意
+function k6Svg(){
+  var pts = [], cx = 130, cy = 105, R = 78;
+  for (var i = 0; i < 6; i++){
+    var a = Math.PI / 2 + i * Math.PI / 3;
+    pts.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+  }
+  var s = '<svg width="300" height="190" style="display:inline-block;vertical-align:middle">';
+  for (var i2 = 0; i2 < 6; i2++){
+    for (var j = i2 + 1; j < 6; j++){
+      s += '<line x1="' + pts[i2][0] + '" y1="' + pts[i2][1] + '" x2="' + pts[j][0] + '" y2="' + pts[j][1] + '" stroke="#cbd5e1" stroke-width="1.4"/>';
+    }
+  }
+  for (var k = 0; k < 6; k++){
+    s += '<circle cx="' + pts[k][0] + '" cy="' + pts[k][1] + '" r="15" fill="#fff" stroke="#94a3b8" stroke-width="2"/>';
+  }
+  s += '<circle cx="255" cy="150" r="15" fill="#fee2e2" stroke="#dc2626" stroke-width="2.5"/>' +
+       '<text x="255" y="155" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">7</text>' +
+       '<text x="255" y="182" text-anchor="middle" font-size="11" fill="#b91c1c">孤立！</text>';
+  return s + '</svg>';
+}
+
+var STEPS = [
+  { title: '审题眼：「任何情况下都连通」', cls: 'key',
+    body: '<p>7 个顶点、e 条边，但<b>边的摆法任意</b>。要求无论怎么摆都连通，就要扛住最坏的摆法——求的是「保底」边数，不是「恰好连通」的边数。</p>' },
+  { title: '6 条边（生成树）为什么不行', cls: 'bad',
+    body: '<p>6 = n − 1 是生成树的边数，但生成树只是<b>某一种</b>摆法；只要挪动一条边、让某个顶点挂两条边，另一处就断开。任意摆法下 6 条边几乎必然不连通。</p>' },
+  { title: '15 条边也不行：最坏摆法', cls: 'bad',
+    body: '<p>把 15 条边全部塞进 6 个顶点 → 恰好构成完全图 <b>K6</b>（C(6,2) = 15 条边），第 7 个顶点孤立：</p>' +
+          '<div style="text-align:center">' + k6Svg() + '</div>' +
+          '<p>15 条边时「不连通的摆法」真实存在，所以 15 是保底失败的下界。</p>' },
+  { title: '16 条边必然连通：反证', cls: 'good',
+    body: '<p>假设 16 条边仍不连通：按连通块拆开，最大连通块至多 6 个顶点，内部边至多 C(6,2) = 15 条；其余顶点至多 1 个，贡献 0 条边 → 总边数 ≤ 15，与 16 矛盾。</p>' +
+          '<p>直观：第 16 条边再也挤不进 6 个顶点内部，<b>必然一端牵住第 7 个顶点</b>，孤立点被消灭。</p>' },
+  { title: '通式与结论', cls: 'good',
+    body: '<p>保证连通的最少边数 = <b>C(n−1, 2) + 1</b>：先让 n−1 个顶点摆成最坏的完全图，再强制 1 条边救出孤立点。<br>' +
+          'n = 7：C(6,2) + 1 = 15 + 1 = <b style="color:#16a34a;font-size:17px">16</b>，答案选 <b style="font-size:16px">C</b>。</p>' +
+          '<p>对照干扰项：6 = 生成树边数、15 = K6 边数（反例）、21 = C(7,2) 完全图边数（那是「最多」）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-07 · 7 个顶点「任意摆边都连通」要几条边',
+  subtitle: '考点：连通性与边数下界 · <code>C(n−1, 2) + 1</code> · 反证法',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步推理最少边数。',
+  snaps: snaps,
+  result: {
+    big: '16 条（答案 C）',
+    html: '最坏摆法：K6 吃掉 15 条边、第 7 个点孤立 → 15 条不够；16 条边时最大连通块至多 C(6,2)=15 条内部边，必有一条边伸向第 7 个顶点 → <b>必然连通</b>。通式 C(n−1,2)+1。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

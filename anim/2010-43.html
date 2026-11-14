@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-43 指令格式与 add (R4),(R5)+ · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var BITS = '0010001100010101'.split('');
+var GRPNAMES = { 0: 'OP', 4: 'Ms', 7: 'Rs', 10: 'Md', 13: 'Rd' };
+
+var D = {};
+
+function cardBox(){
+  var c = AW.el('div', 'aw-stepcard');
+  c.style.cssText = 'padding:10px 14px;margin:6px 0;transition:opacity .25s';
+  return c;
+}
+
+var snaps = [
+  { cls: 'step', tag: '开始', count: 0,
+    log: '字长 16 位、主存 128KB 按字编址、单字长指令：OP(4位)｜Ms(3位)｜Rs(3位)｜Md(3位)｜Rd(3位)。转移指令用相对寻址、补码偏移。' },
+  { cls: 'ok', tag: '指令数与寄存器数', count: 1,
+    log: '(1) 操作码 4 位 → 最多 2^4 = 16 条指令；寄存器编号 3 位 → 最多 2^3 = 8 个通用寄存器。' },
+  { cls: 'ok', tag: 'MAR / MDR 位数', count: 2,
+    log: '(1) 128KB 按字编址、字长 16 位：128KB ÷ 2B = 64K 字 → 地址 16 位，MAR 至少 16 位；一次存取一个字，MDR 至少 16 位。' },
+  { cls: 'ok', tag: '目标地址范围', count: 3,
+    log: '(2) 相对寻址目标地址 = (PC) + 补码偏移量，按 16 位模运算 → 可覆盖整个 64K 空间：0000H ~ FFFFH。' },
+  { cls: 'step', tag: '解析字段', count: 4,
+    log: '(3) add (R4),(R5)+：OP = 0010；源 (R4) 寄存器间接 → Ms = 001、Rs = 100；目的 (R5)+ 寄存器间接自增 → Md = 010、Rd = 101。' },
+  { cls: 'shift', tag: '拼装机器码', count: 5,
+    log: '按 OP｜Ms｜Rs｜Md｜Rd 拼接：0010 0011 0001 0101B = 2315H。' },
+  { cls: 'ok', tag: '取源操作数', count: 6,
+    log: '源 (R4)：R4 = 1234H → 访存读 (1234H) = 5678H，源操作数 5678H。' },
+  { cls: 'ok', tag: '取目的操作数', count: 7,
+    log: '目的 (R5)：R5 = 5678H → 访存读 (5678H) = 1234H，目的操作数 1234H。' },
+  { cls: 'ok', tag: '加法写回', count: 8,
+    log: '执行加法：目的 ← 源 + 目的 = 5678H + 1234H = 68ACH，写回存储单元 5678H。' },
+  { cls: 'shift', tag: 'R5 自增', count: 9,
+    log: '(Rn)+ 为先取数后自增：R5 = 5678H + 1 = 5679H，写回 R5。' },
+  { cls: 'done', tag: '完成', count: 10, done: true,
+    log: '机器码 2315H；执行后 R5 = 5679H、存储单元 5678H = 68ACH，其余不变。' },
+];
+
+AW.init({
+  title: '2010-43 · 指令格式与 add (R4),(R5)+ 的机器码',
+  subtitle: 'OP(4)｜Ms(3)｜Rs(3)｜Md(3)｜Rd(3) · 相对寻址 · <code>add (R4),(R5)+</code>',
+  counterLabel: '推导步',
+  ribbonTitle: '推导进度（✓）',
+  intro: '点击「▶ 播放」：先推资源位数，再拼机器码、推演执行。',
+  snaps: snaps,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>第(1)问 · 由字段宽度推资源：</b>'));
+    D.s1a = cardBox();
+    D.s1b = cardBox();
+    inner.appendChild(D.s1a);
+    inner.appendChild(D.s1b);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>第(2)问 · 转移指令目标地址范围：</b>'));
+    D.s2 = cardBox();
+    inner.appendChild(D.s2);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>第(3)问 · add (R4),(R5)+ 机器码与执行：</b>'));
+    D.fcard = cardBox();
+    inner.appendChild(D.fcard);
+
+    // 16 位机器码格
+    D.bitWrap = AW.el('div', '');
+    D.bitWrap.style.cssText = 'opacity:.35;transition:opacity .25s';
+    var row = AW.el('div', 'aw-cells');
+    D.bitBoxes = [];
+    BITS.forEach(function(b, i){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', GRPNAMES[i] || ''));
+      var box = AW.el('div', 'aw-box dim', b);
+      box.style.cssText = 'width:36px;height:36px;font-size:15px';
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', String(15 - i)));
+      row.appendChild(col);
+      D.bitBoxes.push(box);
+    });
+    D.bitWrap.appendChild(row);
+    D.hex = AW.el('div', 'aw-row-label', '');
+    D.bitWrap.appendChild(D.hex);
+    inner.appendChild(D.bitWrap);
+
+    // 寄存器 / 存储单元状态
+    var st = AW.el('div', '');
+    st.style.cssText = 'display:flex;gap:16px;margin:10px 0;flex-wrap:wrap';
+    D.stBoxes = {};
+    [['R4', '1234H'], ['R5', '5678H'], ['M[1234H]', '5678H'], ['M[5678H]', '1234H']].forEach(function(p){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var box = AW.el('div', 'aw-box', p[1]);
+      box.style.cssText = 'width:86px;height:40px;font-size:14px';
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', p[0]));
+      st.appendChild(col);
+      D.stBoxes[p[0]] = { box: box, init: p[1] };
+    });
+    inner.appendChild(st);
+
+    D.exec = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(D.exec);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    D.s1a.style.opacity = i >= 1 ? '1' : '0.35';
+    D.s1a.innerHTML = i >= 1
+      ? '<p>操作码 <b>4 位</b> → 最多 2<sup>4</sup> = <b>16 条指令</b>；寄存器编号 <b>3 位</b> → 最多 2<sup>3</sup> = <b>8 个通用寄存器</b>。</p>'
+      : '<p>操作码 4 位 → ？条指令；寄存器编号 3 位 → ？个寄存器。</p>';
+    D.s1b.style.opacity = i >= 2 ? '1' : '0.35';
+    D.s1b.innerHTML = i >= 2
+      ? '<p>128KB 按字编址、字长 16 位（2B）：128KB ÷ 2B = 64K 字 → 地址 16 位，<b>MAR 至少 16 位</b>；一次按字存取 → <b>MDR 至少 16 位</b>。</p>'
+      : '<p>128KB 按字编址 → MAR、MDR 各多少位？</p>';
+    D.s2.style.opacity = i >= 3 ? '1' : '0.35';
+    D.s2.innerHTML = i >= 3
+      ? '<p>目标地址 = (PC) + 补码偏移量，按 <b>16 位模运算</b>，可覆盖整个 64K 空间 → <b>0000H ~ FFFFH</b>（0～65535）。</p>'
+      : '<p>相对寻址 + 补码偏移 → 目标地址范围？</p>';
+
+    D.fcard.style.opacity = i >= 4 ? '1' : '0.35';
+    D.fcard.innerHTML = i >= 4
+      ? '<p>OP = <code>0010</code>（add）· 源 (R4)：Ms = <code>001</code>、Rs = <code>100</code> · 目的 (R5)+：Md = <code>010</code>、Rd = <code>101</code></p>'
+      : '<p>add (R4),(R5)+ → 各字段编码？</p>';
+
+    D.bitWrap.style.opacity = i >= 5 ? '1' : '0.35';
+    D.bitBoxes.forEach(function(box, k){
+      box.className = 'aw-box' + (i >= 5 ? (k < 4 ? ' hit' : ' ok') : ' dim');
+    });
+    D.hex.innerHTML = i >= 5
+      ? '拼接 = 0010 0011 0001 0101B = <b style="color:#d97706">2315H</b>'
+      : '';
+
+    var st = D.stBoxes;
+    var r5 = (i >= 9) ? '5679H' : '5678H';
+    var m5678 = (i >= 8) ? '68ACH' : '1234H';
+    st['R4'].box.textContent = '1234H';
+    st['R5'].box.textContent = r5;
+    st['M[1234H]'].box.textContent = '5678H';
+    st['M[5678H]'].box.textContent = m5678;
+    Object.keys(st).forEach(function(k){ st[k].box.className = 'aw-box'; });
+    if (i === 6){ st['R4'].box.className = 'aw-box hit'; st['M[1234H]'].box.className = 'aw-box hit'; }
+    else if (i === 7){ st['R5'].box.className = 'aw-box hit'; st['M[5678H]'].box.className = 'aw-box hit'; }
+    else if (i === 8){ st['M[5678H]'].box.className = 'aw-box ok'; }
+    else if (i >= 9){ st['R5'].box.className = 'aw-box ok'; st['M[5678H]'].box.className = 'aw-box ok'; }
+
+    if (i >= 10){
+      D.exec.innerHTML = '结果：<b style="color:#16a34a">R5 = 5679H</b>，<b style="color:#16a34a">M[5678H] = 68ACH</b>；R4、M[1234H] 不变。';
+    } else if (i === 9){
+      D.exec.innerHTML = '自增：R5 = 5678H + 1 = <b>5679H</b>（(Rn)+ 先取数、后自增）';
+    } else if (i === 8){
+      D.exec.innerHTML = '加法：5678H + 1234H = <b>68ACH</b> → 写回 M[5678H]';
+    } else if (i === 7){
+      D.exec.innerHTML = '目的：(R5) = 5678H → M[5678H] = <b>1234H</b>';
+    } else if (i === 6){
+      D.exec.innerHTML = '源：(R4) = 1234H → M[1234H] = <b>5678H</b>';
+    } else {
+      D.exec.innerHTML = '';
+    }
+  },
+
+  result: {
+    big: '2315H · R5=5679H · M[5678H]=68ACH',
+    html: '(1) 最多 <b>16 条指令</b>、<b>8 个通用寄存器</b>、MAR/MDR 至少各 <b>16 位</b>；(2) 转移目标地址范围 <b>0000H ~ FFFFH</b>；(3) <code>add (R4),(R5)+</code> 的机器码 = <b>2315H</b>；执行后 <b>R5 = 5679H</b>、<b>5678H 单元 = 68ACH</b>（68ACH = 5678H + 1234H）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

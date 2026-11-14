@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-02 双向链表 p2 指针改链 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 链：head → a1 → a2 → a3 → NULL（n = 3 ≥ 3）
+// 每个结点画成一列：上=cu 指针位置，中=结点（数据），下=p2 当前指向
+var NODES = [
+  { name:'head', data:'head' },
+  { name:'a1',   data:'a1'   },
+  { name:'a2',   data:'a2'   },
+  { name:'a3',   data:'a3'   },
+  { name:'NULL', data:'∅'    },
+];
+// p1 链：head→a1→a2→a3→NULL；初始 p2：head=NULL, a1=head, a2=a1, a3=a2
+var P1   = ['a1','a2','a3','NULL','—'];
+var P2_0 = ['NULL','head','a1','a2','—'];
+
+function nodeCol(i, st, cuIdx, justSet){
+  var nd = NODES[i];
+  var isNull = (i === 4);
+  var p2v = st ? st.p2[i] : P2_0[i];
+  var isCu = (cuIdx === i);
+  var isNullCol = false;
+  var dataCls = 'aw-box';
+  if (isNull){ dataCls += ' dim'; }
+  else if (isCu){ dataCls += ' hit'; }
+  else if (st && st.done && i > 0 && i < 4){ dataCls += ' ok'; }
+  else if (st && st.visited && st.visited[i]){ dataCls += ' ok'; }
+
+  var p2Cls = '';
+  var p2Style = '';
+  if (!isNull){
+    if (justSet === i){ p2Style = 'background:#fef3c7;border-color:#d97706;color:#92400e;'; }
+    else if (st && st.visited && st.visited[i]){ p2Style = 'background:#dcfce7;border-color:#16a34a;color:#14532d;'; }
+    if (p2v === 'NULL') p2Cls = '（NULL）';
+  }
+  var cuTag = isCu ? '<div style="height:20px;font-size:12px;font-weight:700;color:#2563eb">cu ▼</div>' : '<div style="height:20px"></div>';
+  var p2Line = isNull ? '<div style="height:34px"></div>'
+    : '<div class="aw-box" style="width:64px;height:34px;font-size:13px;' + p2Style + '">p2→' + p2v + '</div>';
+  var w = (isNull ? 44 : 72);
+  return '<div style="display:inline-flex;flex-direction:column;align-items:center;margin-right:10px;vertical-align:top">' +
+         cuTag +
+         '<div class="' + dataCls + '" style="width:' + w + 'px;height:44px">' + nd.data + '</div>' +
+         p2Line +
+         '</div>';
+}
+
+function arrows(){
+  var h = '';
+  for (var i = 0; i < 4; i++){
+    h += '<div style="display:inline-block;margin-right:10px;padding-top:96px;color:#94a3b8;font-weight:700">→</div>';
+  }
+  return h;
+}
+
+var stageBox = null, codeLine = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl = AW.el('div', 'aw-row-label', '<b>双向链表</b>（带头结点，n=3；结点结构：p2 指前驱、p1 指后继；蓝▼=当前 cu，琥珀=p2 本步被修改，绿=已改好）');
+  stageBox = AW.el('div', '');
+  codeLine = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(lbl);
+  wrap.appendChild(stageBox);
+  wrap.appendChild(codeLine);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var cuIdx = sn.cu == null ? -1 : sn.cu;
+  var h = '<div style="white-space:nowrap">';
+  for (var i = 0; i < 5; i++){
+    h += nodeCol(i, sn, cuIdx, sn.justSet);
+    if (i < 4) h += '<div style="display:inline-block;margin-right:10px;padding-top:96px;color:#94a3b8;font-weight:700">→</div>';
+  }
+  h += '</div>';
+  stageBox.innerHTML = h;
+  codeLine.innerHTML = sn.code || '';
+}
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0, cu:-1,
+    p2:['NULL','head','a1','a2','—'],
+    code:'目标：对每个结点执行 <code>cu->p2 = cu->p1->p1</code>；p1 所指结点不存在时 p2 置 NULL。',
+    log:'初始：cu = head。注意头结点 p2 初值为 NULL（无前驱），尾结点 a3 的 p1 为 NULL —— 这两处是四个选项的分水岭。' },
+  { cls:'step', tag:'cu = head', count:1, ribbon:{k:1, ok:true}, cu:0, visited:{0:1}, justSet:0,
+    p2:['a2','head','a1','a2','—'],
+    code:'cu=head：p1=a1 非空 → <code>head->p2 = head->p1->p1 = a1->p1 = a2</code>；cu = head->p1 = a1',
+    log:'head 的 p1 是 a1，a1 的 p1 是 a2 → head 的 p2 由 NULL 改为 a2。头结点也被正确处理（D 不挑结点）。' },
+  { cls:'step', tag:'cu = a1', count:2, ribbon:{k:2, ok:true}, cu:1, visited:{0:1,1:1}, justSet:1,
+    p2:['a2','a3','a1','a2','—'],
+    code:'cu=a1：p1=a2 非空 → <code>a1->p2 = a2->p1 = a3</code>；cu = a2',
+    log:'a1 的 p2 改为 a3。' },
+  { cls:'step', tag:'cu = a2', count:3, ribbon:{k:3, ok:true}, cu:2, visited:{0:1,1:1,2:1}, justSet:2,
+    p2:['a2','a3','NULL','a2','—'],
+    code:'cu=a2：p1=a3 非空 → <code>a2->p2 = a3->p1 = NULL</code>；cu = a3',
+    log:'a2 的 p2 改为 NULL（a3 的 p1 是 NULL，赋值合法，无需特判倒数第二个结点）。' },
+  { cls:'shift', tag:'cu = a3', count:4, ribbon:{k:4, ok:true}, cu:3, visited:{0:1,1:1,2:1,3:1}, justSet:3,
+    p2:['a2','a3','NULL','NULL','—'],
+    code:'cu=a3：p1=NULL → <code>else cu->p2 = NULL</code>；cu = a3->p1 = NULL',
+    log:'尾结点 a3 的 p1 为 NULL，走 else 分支：p2 置 NULL，cu 前进为 NULL —— 既不崩溃也不死循环，这是 D 的关键。' },
+  { cls:'step', tag:'A 复盘', count:5, cu:-1,
+    p2:['a2','a3','NULL','NULL','—'],
+    code:'A：<code>cu->p2 = cu->p1->p1;</code> 无保护',
+    log:'选项 A 复盘：cu 走到 a3 时 cu->p1 为 NULL，仍执行 cu->p1->p1 —— 解引用空指针，程序出错。' },
+  { cls:'step', tag:'B 复盘', count:6, cu:-1,
+    p2:['NULL','head','a1','a2','—'],
+    code:'B：循环条件 <code>cu != NULL && cu->p2 != NULL</code>',
+    log:'选项 B 复盘：第一次判断时 cu = head，而 head->p2 初值恰是 NULL → 循环一次都不执行，什么都没改。' },
+  { cls:'step', tag:'C 复盘', count:7, cu:-1,
+    p2:['a2','a3','NULL','a2','—'],
+    code:'C：尾结点处 if 不成立且 <code>cu</code> 不更新',
+    log:'选项 C 复盘：cu = a3 时 cu->p1 为 NULL，if 跳过、cu 不变 → while 条件永远成立，死循环。' },
+  { cls:'done', tag:'结论', count:8, cu:-1, visited:{0:1,1:1,2:1,3:1},
+    p2:['a2','a3','NULL','NULL','—'],
+    code:'D：<code>if (cu->p1 != NULL) cu->p2 = cu->p1->p1; else cu->p2 = NULL;</code>',
+    log:'只有 D 同时处理了「头结点 p2 初值 NULL」与「尾结点 p1 为 NULL」，4 个结点全部改对后 cu=NULL 正常结束 → 选 D。',
+    done:true },
+];
+
+AW.init({
+  title: '2026-02 · 把每个结点的 p2 改为「p1 所指结点的直接后继」',
+  subtitle: '带头结点双向链表 · <code>p2 指前驱、p1 指后继</code> · 演示 D 选项在 head→a1→a2→a3 上执行',
+  counterLabel: '已执行步',
+  ribbonTitle: '结点（✓ p2 已正确改写）',
+  intro: '点击「▶ 播放」逐结点执行 D 代码，再看 A/B/C 各错在哪。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '改链要覆盖<b>每个结点</b>：头结点 p2 初值为 NULL（B 的循环条件直接失效），尾结点 p1 为 NULL（A 解引用空指针、C 死循环）。D 用 <code>if/else</code> 同时兜住两种情况：p1 存在就 <code>p2 = p1->p1</code>，p1 为空就 <code>p2 = NULL</code>，遍历沿 p1 进行不受改 p2 影响。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

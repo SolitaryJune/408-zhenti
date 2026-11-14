@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-42 大根堆找最小的 10 个数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 题目：n (n>100000) 个数找最小 10 个。示例用 12 个数演示：
+   前 10 个依次进堆，第 11、12 个触发“比堆顶小才进堆” */
+var M = ['50', '23', '81', '7', '66', '12', '94', '35', '58', '41', '9', '30'];
+
+/* 每步：scn = M 中已扫描个数；cur = 当前正在处理的 M 下标；heap = 堆内元素（降序显示，首位=堆顶） */
+var HEAPD = [
+  ['', '', '', '', '', '', '', '', '', ''],
+  ['∞', '∞', '∞', '∞', '∞', '∞', '∞', '∞', '∞', '∞'],
+  ['∞', '∞', '∞', '∞', '∞', '∞', '∞', '∞', '∞', '50'],
+  ['94', '81', '66', '58', '50', '41', '35', '23', '12', '7'],
+  ['81', '66', '58', '50', '41', '35', '23', '12', '9', '7'],
+  ['66', '58', '50', '41', '35', '30', '23', '12', '9', '7'],
+  ['66', '58', '50', '41', '35', '30', '23', '12', '9', '7'],
+  ['66', '58', '50', '41', '35', '30', '23', '12', '9', '7'],
+  ['66', '58', '50', '41', '35', '30', '23', '12', '9', '7'],
+];
+var SCANS = [0, 0, 1, 10, 11, 12, 12, 12, 12];
+var CURS  = [-1, -1, 0, -1, 10, 11, -1, -1, -1];
+
+var mRow, hRow;
+
+function paint(i){
+  var j, b, p;
+  for (j = 0; j < 12; j++){
+    b = mRow.children[j].children[1];
+    p = mRow.children[j].children[0];
+    if (j < SCANS[i]){
+      b.className = 'aw-box' + (j === CURS[i] ? ' hit' : ' ok');
+    } else {
+      b.className = 'aw-box' + (j === CURS[i] ? ' hit' : '');
+    }
+    p.textContent = (j === CURS[i]) ? '▲s' : '';
+  }
+  var hp = HEAPD[i];
+  for (j = 0; j < 10; j++){
+    b = hRow.children[j].children[1];
+    b.textContent = hp[j];
+    b.className = 'aw-box' + (j === 0 ? ' hit' : (hp[j] === '∞' ? ' dim' : ' ok'));
+  }
+}
+
+AW.init({
+  title: '用规模恒为 10 的大根堆找最小的 10 个数（2022-42）',
+  subtitle: 'n &gt; 100000 · 示例取 12 个数演示 · 堆顶 = 当前 10 个候选中的最大者',
+  counterLabel: '已扫描元素',
+  intro: '点击「▶ 播放」：先装满堆，再看后到的数如何“顶掉”堆顶。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>输入数组 M</b>（示例 12 个数，绿=已扫描）'));
+    mRow = AW.cellRow(M, ['', '', '', '', '', '', '', '', '', '', '', ''], null, 1);
+    inner.appendChild(mRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>大根堆 H</b>（容量 10，按值降序显示，首位=堆顶；∞=初始最大值）'));
+    hRow = AW.cellRow(['', '', '', '', '', '', '', '', '', ''], ['', '', '', '', '', '', '', '', '', ''], null, 1);
+    inner.appendChild(hRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'shift', tag: '开始',    log: 'n 超过 10 万，全排序 O(n log n) 太贵。维护恰好 10 个元素的大根堆 H：堆顶 = 当前 10 个候选中最大者，新数比堆顶小才有资格进堆', count: 0 },
+    { cls: 'step',  tag: '初始化',  log: 'H 初始化为 10 个 +∞（该类型可表示的最大值）⇒ 任何数都比堆顶小，前 10 个数必然依次进堆', count: 0 },
+    { cls: 'ok',    tag: '扫描 s=50', log: 's=50 < 堆顶 ∞ ⇒ 删除堆顶、50 入堆并下沉（示例数据，题目为 n>100000 个数）', count: 1 },
+    { cls: 'ok',    tag: '装满堆',  log: '23、81、7、66、12、94、35、58、41 依次同样处理，堆中装满前 10 个数；堆顶 = 最大者 94', count: 10 },
+    { cls: 'ok',    tag: '扫描 s=9', log: 's=9 < 堆顶 94 ⇒ 弹出 94、9 入堆下沉；新堆顶 = 81', count: 11 },
+    { cls: 'ok',    tag: '扫描 s=30', log: 's=30 < 堆顶 81 ⇒ 弹出 81、30 入堆下沉；新堆顶 = 66', count: 12 },
+    { cls: 'ok',    tag: '扫描结束', log: 'M 中再无未处理元素 ⇒ 堆里就是最小的 10 个数：7 9 12 23 30 35 41 50 58 66（被顶掉的 94、81 恰是最大的两个）', count: 12 },
+    { cls: 'step',  tag: '复杂度',  log: '每个元素平均只做 1 次与堆顶的比较，入选才下沉（堆高 log2 10 ≈ 3.3，是常数）⇒ 平均时间 O(n)；堆数组恒为 10 个元素 ⇒ 额外空间 O(1)', count: 12 },
+    { cls: 'done',  tag: '完成',    log: '算法思想：10 个元素的大根堆守门，比堆顶小才替换进堆；平均时间 O(n)、额外空间 O(1)', count: 12, done: true },
+  ],
+  render: function(stage, sn, i){ paint(i); },
+  result: {
+    big: '平均 O(n) 时间 · O(1) 空间',
+    html: '维护一个 <b>10 个元素的大根堆</b>（初始均为该类型最大值）：扫描 M，若 s &lt; 堆顶则删堆顶、插 s；扫完堆中即最小 10 个数。堆规模恒为 10 ⇒ 平均时间复杂度 <b>O(n)</b>，额外空间 <b>O(1)</b>。注意用<b>大根堆</b>——堆顶要当“最差候选”守门，小根堆做不到。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

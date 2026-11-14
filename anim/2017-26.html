@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-26 · 按簇分配磁盘空间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（tools/anim_algo_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function unitHTML(){
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+    '<div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:6px 12px;font-size:13px">簇 = <b>1KB = 1024B</b>（分配单位）</div>' +
+    '<div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:6px 12px;font-size:13px">扇区 = <b>512B</b>（物理读写单位，干扰项）</div>' +
+    '<div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:6px 12px;font-size:13px">文件大小 = <b>1026B</b></div>' +
+  '</div>';
+}
+
+function fileBar(){
+  return '<div class="aw-row-label"><b>文件 1026B</b>（按比例示意）</div>' +
+    '<div style="display:flex;gap:6px">' +
+    '<div style="flex:1024 1 0;border:2px solid #16a34a;background:#f6fef9;border-radius:10px;padding:8px;text-align:center;min-width:150px"><div style="font-weight:700">1024B</div><div style="font-size:11px;color:#64748b">装进簇①</div></div>' +
+    '<div style="flex:2 1 0;border:2px solid #d97706;background:#fffbeb;border-radius:10px;padding:8px;text-align:center;min-width:70px"><div style="font-weight:700">2B</div><div style="font-size:11px;color:#64748b">进簇②</div></div>' +
+    '</div>';
+}
+
+function clusters(state){
+  var c1 = '<div style="flex:1 1 220px;min-width:200px;border:2px ' + (state >= 1 ? 'solid #16a34a' : 'dashed #cbd5e1') +
+           ';background:' + (state >= 1 ? '#f6fef9' : '#fff') + ';border-radius:14px;padding:12px 14px">' +
+           '<div style="font-weight:700;font-size:14px">簇①（1KB = 1024B）</div>' +
+           (state >= 1 ? '<div style="font-size:12.5px;color:#15803d;margin-top:4px">已装入 1024B ✓</div>'
+                       : '<div style="font-size:12.5px;color:#94a3b8;margin-top:4px">未分配</div>') + '</div>';
+  var c2 = '<div style="flex:1 1 220px;min-width:200px;border:2px ' + (state >= 2 ? 'solid #d97706' : 'dashed #cbd5e1') +
+           ';background:' + (state >= 2 ? '#fffbeb' : '#fff') + ';border-radius:14px;padding:12px 14px">' +
+           '<div style="font-weight:700;font-size:14px">簇②（1KB = 1024B）</div>' +
+           (state >= 2 ? '<div style="font-size:12.5px;color:#92400e;margin-top:4px">只装 2B，其余 1022B 是簇内碎片</div>'
+                       : '<div style="font-size:12.5px;color:#94a3b8;margin-top:4px">未分配</div>') + '</div>';
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">' + c1 + c2 + '</div>';
+}
+
+function calcLine(txt){
+  return '<div style="margin-top:12px;font-size:14px;padding:9px 12px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:10px">' + txt + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题',  log:'分配以簇为单位：簇 = 1KB = 1024B；文件 1026B。扇区 512B 只是物理读写单位', count:0, html: unitHTML() + clusters(0) },
+  { cls:'step', tag:'需几簇', log:'1026B > 1024B，1 簇装不下 → 需要簇数 = ⌈1026 / 1024⌉ = 2 簇', count:1, html: unitHTML() + clusters(0) + calcLine('⌈1026 / 1024⌉ = <b>2 簇</b>') },
+  { cls:'ok',   tag:'簇①',   log:'第 1 簇装入 1024B（整簇用满）', count:2, ribbon:{k:1, ok:true}, html: unitHTML() + fileBar() + clusters(1) },
+  { cls:'shift',tag:'簇②',   log:'剩下 2B 进入第 2 簇，浪费的 1022B 属于簇内碎片', count:3, ribbon:{k:2, ok:true}, html: unitHTML() + fileBar() + clusters(2) },
+  { cls:'step', tag:'算空间', log:'分配空间按簇计：2 簇 × 1024B = 2048B，不是按文件实际字节数 1026B', count:4, html: unitHTML() + fileBar() + clusters(2) + calcLine('2 × 1024B = <b>2048B</b>') },
+  { cls:'done', tag:'完成',  log:'分配给该文件的磁盘空间为 2048B → 答案 D', count:5, done:true,
+    html: unitHTML() + clusters(2) + '<div style="margin-top:10px;font-size:15px;font-weight:700;color:#16a34a">2 簇 = 2048B → 答案 D</div>' }
+];
+
+AW.init({
+  title: '2017-26 · 1026B 的文件分到多少磁盘空间',
+  subtitle: '簇 1KB · 扇区 512B · 文件 1026B · 分配单位：簇',
+  counterLabel: '推演步',
+  ribbonTitle: '簇分配（✓ 已分配）',
+  intro: '点击「▶ 播放」：看 1026B 如何装进 1KB 的簇，再算总分配量。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：2048B',
+    html: '分配单位是<b>簇</b>：1026B → 2 簇 → 2 × 1024B = <b>2048B</b>，多出的 1022B 是簇内碎片。A（1026B）按实际字节、B/C（1536B/1538B）按 512B 扇区拼凑，都错在没用"簇"这个分配单位。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

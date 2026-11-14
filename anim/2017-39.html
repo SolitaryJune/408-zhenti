@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-39 · TCP 慢启动：发送窗口何时达到 32KB</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法 / 过程演示类题目动画（外壳与控件由 assets/anim-engine.js 提供） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CW = ['1KB', '2KB', '4KB', '8KB', '16KB', '32KB'];
+var TM = ['0', '5', '10', '15', '20', '25'];
+var cwBoxes = [];
+var tmBoxes = [];
+var infoLine;
+
+AW.init({
+  title: '2017-39 · TCP 慢启动：发送窗口何时达到 32KB',
+  subtitle: 'MSS = <code>1KB</code> · RTT = <code>5ms</code> · 接收缓存 <code>64KB</code> · 发送窗口 = min(cwnd, rwnd)',
+  counterLabel: '经过 RTT',
+  ribbonTitle: 'RTT 轮次（✓ cwnd 翻倍）',
+  intro: '点击「▶ 播放」逐个 RTT 推演拥塞窗口增长。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>拥塞窗口 cwnd</b>（慢启动：每经过一个 RTT 翻倍）'));
+    var r1 = AW.el('div', 'aw-cells');
+    for (var i = 0; i < 6; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b = AW.el('div', 'aw-box dim', CW[i]);
+      b.style.fontSize = '13px';
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', 'RTT' + i));
+      r1.appendChild(col);
+      cwBoxes.push(b);
+    }
+    inner.appendChild(r1);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>累计时间</b>（ms，每 RTT 5ms）'));
+    var r2 = AW.el('div', 'aw-cells');
+    for (var j = 0; j < 6; j++){
+      var col2 = AW.el('div', 'aw-col');
+      col2.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b2 = AW.el('div', 'aw-box dim', TM[j]);
+      col2.appendChild(b2);
+      col2.appendChild(AW.el('div', 'aw-idx', ''));
+      r2.appendChild(col2);
+      tmBoxes.push(b2);
+    }
+    inner.appendChild(r2);
+
+    infoLine = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(infoLine);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '建立',
+      log: '连接建立成功：cwnd = 1KB（1 个 MSS）；rwnd = 64KB → 发送窗口 = min(1, 64) = 1KB',
+      count: 0, lit: 1,
+      info: 't = 0ms，发送窗口 1KB；64KB 接收缓存远大于目标 32KB，全程瓶颈是 cwnd' },
+    { cls: 'ok', tag: '×2',
+      log: '第 1 个 RTT：确认陆续到达，cwnd 翻倍 → 2KB，累计 5ms',
+      count: 1, lit: 2, ribbon: {k:1, ok:true},
+      info: '1 → 2，慢启动指数增长' },
+    { cls: 'ok', tag: '×2',
+      log: '第 2 个 RTT：cwnd 翻倍 → 4KB，累计 10ms',
+      count: 2, lit: 3, ribbon: {k:2, ok:true},
+      info: '2 → 4' },
+    { cls: 'ok', tag: '×2',
+      log: '第 3 个 RTT：cwnd 翻倍 → 8KB，累计 15ms',
+      count: 3, lit: 4, ribbon: {k:3, ok:true},
+      info: '4 → 8' },
+    { cls: 'ok', tag: '×2',
+      log: '第 4 个 RTT：cwnd 翻倍 → 16KB，累计 20ms',
+      count: 4, lit: 5, ribbon: {k:4, ok:true},
+      info: '8 → 16' },
+    { cls: 'ok', tag: '达标',
+      log: '第 5 个 RTT：cwnd 翻倍 → 32KB；32KB < 64KB 接收缓存 → 发送窗口达到 32KB，累计 25ms',
+      count: 5, lit: 6, ribbon: {k:5, ok:true},
+      info: '16 → 32，发送窗口 = min(32, 64) = 32KB，目标达成' },
+    { cls: 'step', tag: '辨析',
+      log: '误选 30ms（B）是多算了一个 RTT；误选 160ms/165ms（C/D）是用了拥塞避免"每 RTT 加 1KB"的线性增长口径',
+      count: 5, lit: 6,
+      info: '慢启动是每 RTT 翻倍（指数），不是加法增长' },
+    { cls: 'done', tag: '结论',
+      log: '从 1KB 到 32KB 共翻倍 5 次 = 5 个 RTT，时间 = 5 × 5ms = 25ms → 选 A',
+      count: 5, lit: 6, done: true,
+      info: '' },
+  ],
+
+  render: function(stage, sn){
+    for (var i = 0; i < 6; i++){
+      var cls = i < sn.lit ? (i === sn.lit - 1 ? ' hit' : ' ok') : ' dim';
+      cwBoxes[i].className = 'aw-box' + cls;
+      tmBoxes[i].className = 'aw-box' + cls;
+    }
+    infoLine.textContent = sn.info || '';
+  },
+
+  result: {
+    big: '答案 A · 25ms',
+    html: '发送窗口 = min(cwnd, rwnd)，rwnd = 64KB 不是瓶颈。慢启动每 RTT 翻倍：<b>1→2→4→8→16→32</b> 共 5 跳，5 × RTT = 5 × 5ms = <b>25ms</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

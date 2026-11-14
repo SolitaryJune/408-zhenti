@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-34 差分曼彻斯特编码波形 → 位串解码</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类：差分曼彻斯特波形逐位解码（SVG 波形 + 判定位格）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var H = 20, L = 90, X0 = 20, PW = 90;   // 高/低电平 y 值、波形起点 x、码元宽
+var BITS = [
+  { b: 1, log: '位 1：开始处相对初始高电平无跳变 → 记 1',
+          why: '位 1：以信号初始电平（<b>高</b>）为参考，开始处<b>无跳变</b> → 记 <b>1</b>（中间的跳变只用于同步）' },
+  { b: 0, log: '位 2：开始处有跳变（低→高）→ 记 0',
+          why: '位 2：开始处电平 <b>低→高 跳变</b> → 记 <b>0</b>' },
+  { b: 1, log: '位 3：开始处无跳变 → 记 1',
+          why: '位 3：开始处电平保持低，<b>无跳变</b> → 记 <b>1</b>' },
+  { b: 1, log: '位 4：开始处无跳变 → 记 1',
+          why: '位 4：开始处电平保持高，<b>无跳变</b> → 记 <b>1</b>' },
+  { b: 1, log: '位 5：开始处无跳变 → 记 1',
+          why: '位 5：开始处电平保持低，<b>无跳变</b> → 记 <b>1</b>' },
+  { b: 0, log: '位 6：开始处有跳变（高→低）→ 记 0',
+          why: '位 6：开始处电平 <b>高→低 跳变</b> → 记 <b>0</b>' },
+  { b: 0, log: '位 7：开始处有跳变（高→低）→ 记 0',
+          why: '位 7：开始处电平 <b>高→低 跳变</b> → 记 <b>0</b>' },
+  { b: 1, log: '位 8：开始处无跳变 → 记 1',
+          why: '位 8：开始处电平保持高，<b>无跳变</b> → 记 <b>1</b>' },
+];
+
+// 波形折线（x 以码元为单位 0~8：边界在整数处，码元中点在 x.5 处）
+var PTS = [
+  [0, H], [0.5, H], [0.5, L], [1, L], [1, H], [1.5, H], [1.5, L], [2, L],
+  [2.5, L], [2.5, H], [3, H], [3.5, H], [3.5, L], [4, L], [4.5, L], [4.5, H],
+  [5, H], [5, L], [5.5, L], [5.5, H], [6, H], [6, L], [6.5, L], [6.5, H],
+  [7, H], [7.5, H], [7.5, L], [8, L]
+];
+
+var svgNS = 'http://www.w3.org/2000/svg';
+var hlRect, bitsBox, verdictBox;
+
+function px(x){ return X0 + x * PW; }
+function svgEl(tag, attrs){
+  var d = document.createElementNS(svgNS, tag);
+  for(var k in attrs) d.setAttribute(k, attrs[k]);
+  return d;
+}
+
+AW.init({
+  title: '差分曼彻斯特编码：波形还原二进制位串',
+  subtitle: '规则：码元<code>开始处有跳变 → 0</code>、<code>无跳变 → 1</code> · 每个码元<code>中间必有跳变</code>（同步用） · 共 8 位',
+  counterLabel: '已解码位数',
+  ribbonTitle: '位序号（✓ 已判定）',
+  intro: '点击「▶ 播放」，从位 1 开始逐位判定。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var rule = AW.el('div', 'aw-row-label',
+      '<b>差分曼彻斯特解码规则</b>：看码元<b>开始处</b>有没有电平跳变——有跳变记 <b>0</b>，无跳变记 <b>1</b>；<b>中间</b>的跳变每个码元都有，只管同步。位 1 以信号初始电平（高）为参考。');
+    inner.appendChild(rule);
+
+    var svg = svgEl('svg', { width: 780, height: 150, viewBox: '0 0 780 150' });
+    svg.style.cssText = 'background:#fff;border:1px solid #e2e8f0;border-radius:12px;';
+
+    // 高/低电平参考线与标注
+    svg.appendChild(svgEl('line', { x1: 14, y1: H, x2: 770, y2: H, stroke: '#e2e8f0', 'stroke-width': 1 }));
+    svg.appendChild(svgEl('line', { x1: 14, y1: L, x2: 770, y2: L, stroke: '#e2e8f0', 'stroke-width': 1 }));
+    var lab1 = svgEl('text', { x: 4, y: H + 4, 'font-size': 11, fill: '#94a3b8' }); lab1.textContent = '高';
+    var lab2 = svgEl('text', { x: 4, y: L + 4, 'font-size': 11, fill: '#94a3b8' }); lab2.textContent = '低';
+    svg.appendChild(lab1); svg.appendChild(lab2);
+
+    // 位区间虚线边界（9 条）
+    for(var i = 0; i <= 8; i++){
+      svg.appendChild(svgEl('line', {
+        x1: px(i), y1: 14, x2: px(i), y2: 128,
+        stroke: '#94a3b8', 'stroke-width': 1.5, 'stroke-dasharray': '5,4'
+      }));
+    }
+    // 位序号标签
+    for(var j = 0; j < 8; j++){
+      var t = svgEl('text', { x: px(j + 0.5), y: 10, 'font-size': 11, fill: '#64748b', 'text-anchor': 'middle' });
+      t.textContent = '位' + (j + 1);
+      svg.appendChild(t);
+    }
+
+    // 当前码元高亮框
+    hlRect = svgEl('rect', { x: px(0), y: 16, width: PW, height: 110, rx: 8, fill: '#fbbf24', opacity: 0.22 });
+    svg.appendChild(hlRect);
+
+    // 波形折线
+    var dstr = '';
+    PTS.forEach(function(p, idx){ dstr += (idx ? ' ' : '') + px(p[0]) + ',' + p[1]; });
+    svg.appendChild(svgEl('polyline', {
+      points: dstr, fill: 'none', stroke: '#0f172a', 'stroke-width': 2.5, 'stroke-linejoin': 'miter'
+    }));
+    inner.appendChild(svg);
+
+    bitsBox = AW.el('div', '');
+    bitsBox.style.cssText = 'margin-top:12px;';
+    inner.appendChild(bitsBox);
+
+    verdictBox = AW.el('div', '');
+    verdictBox.style.cssText = 'margin-top:10px;font-size:14.5px;color:#334155;';
+    inner.appendChild(verdictBox);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: (function(){
+    var arr = [{ cls: 'step', tag: '规则', count: 0,
+      log: '信号初始电平为高。规则：开始处有跳变→0、无跳变→1；每个码元中间必有跳变。位 1 以初始电平为参考' }];
+    BITS.forEach(function(b, idx){
+      arr.push({ cls: 'ok', tag: '位 ' + (idx + 1) + ' → ' + b.b, log: b.log, why: b.why,
+        count: idx + 1, ribbon: { k: idx + 1, ok: true } });
+    });
+    arr.push({ cls: 'done', tag: '完成', count: 8,
+      log: '8 位解码完毕：1 0 1 1 1 0 0 1 → 位串 1011 1001，对照选项选 A', done: true });
+    return arr;
+  })(),
+
+  render: function(stage, sn, i){
+    if(i >= 1 && i <= 8){
+      hlRect.style.display = '';
+      hlRect.setAttribute('x', px(i - 1));
+    } else {
+      hlRect.style.display = 'none';
+    }
+    bitsBox.innerHTML = '';
+    var chars = [], classes = [], ptr = {}, j;
+    if(i >= 9){
+      for(j = 0; j < 8; j++){ chars.push(String(BITS[j].b)); classes.push('hit'); }
+    } else {
+      for(j = 1; j <= 8; j++){
+        if(i >= 1 && j < i){ chars.push(String(BITS[j - 1].b)); classes.push('ok'); }
+        else if(i >= 1 && j === i){ chars.push(String(BITS[j - 1].b)); classes.push('hit'); ptr[j] = '位' + j; }
+        else { chars.push('·'); classes.push('dim'); }
+      }
+    }
+    bitsBox.appendChild(AW.cellRow(chars, classes, ptr));
+    verdictBox.innerHTML = sn.why || '点击「下一步」从位 1 开始逐位判定。';
+  },
+
+  result: {
+    big: '答案 A：1011 1001',
+    html: '差分曼彻斯特只看码元<b>开始处</b>：<b>有跳变记 0、无跳变记 1</b>；中间跳变只负责同步，不参与判定。位 1 以信号初始电平（高）为参考。8 位依次为 <code>1 0 1 1 1 0 0 1</code>，选 <b>A</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

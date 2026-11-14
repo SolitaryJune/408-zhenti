@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-14 float 型 12.1 的 IEEE 754 编码 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function paintRow(chars, paint, idxLabels){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    var box = AW.el('div', 'aw-box', ch);
+    var p = paint && paint[i + 1];
+    if (p === 'amber'){ box.style.background = '#fef3c7'; box.style.borderColor = '#d97706'; box.style.color = '#92400e'; }
+    else if (p === 'green'){ box.style.background = '#dcfce7'; box.style.borderColor = '#16a34a'; box.style.color = '#14532d'; }
+    else if (p === 'red'){ box.style.background = '#fee2e2'; box.style.borderColor = '#dc2626'; box.style.color = '#b91c1c'; }
+    else if (p === 'dim'){ box.style.opacity = '.45'; }
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', (idxLabels && idxLabels[i]) || String(i + 1)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+// 尾数 23 位 + G/R/S = 26 格
+var FRAC = '10000011001100110011001'.split('');
+var FROUND = '10000011001100110011010'.split('');
+var IDX = (function(){
+  var a = [];
+  for (var i = 1; i <= 23; i++) a.push('f' + i);
+  a.push('G'); a.push('R'); a.push('S');
+  return a;
+})();
+
+var box = null, note = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  wrap.appendChild(AW.el('div', 'aw-row-label',
+    '<b>尾数位格</b>（单精度小数点后 23 位 + 保护位 G / 舍入位 R / 粘位 S；绿 = 保留尾数，琥珀 = 舍弃部分或变化位）'));
+  box = AW.el('div', '');
+  note = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(box);
+  wrap.appendChild(note);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  box.innerHTML = '';
+  if (sn.cells){ box.appendChild(paintRow(sn.cells, sn.paint, IDX)); }
+  note.innerHTML = sn.note || '';
+}
+
+function dimPaint(){ var p = {}; for (var i = 1; i <= 26; i++) p[i] = 'dim'; return p; }
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    log:'12.1 = 1100.000110011001100⋯B（0.1 = 0.0001 1001 1001⋯B，1100 循环）。',
+    cells:null, paint:{},
+    note:'规格化：12.1 = <b>1.100 0000 1100 1100 1100 1100 11⋯B × 2 的 3 次幂</b>（小数点左移 3 位）。' },
+  { cls:'step', tag:'定阶码', count:1,
+    log:'符号位 = 0（正数）；阶码 = 3 + 127（偏置）= 130 = 1000 0010B。',
+    cells:null, paint:{},
+    note:'IEEE 754 单精度 = 1 位符号 + 8 位阶码（偏置 127）+ 23 位尾数。' },
+  { cls:'ok', tag:'取尾数', count:2,
+    log:'取小数点后 23 位尾数：1000 0011 0011 0011 0011 001（绿）；第 24 位起被舍弃：G=1、R=0、S=1（后面还有 1，粘位为 1）。',
+    cells:FRAC, paint:(function(){ var p = dimPaint(); for (var i=1;i<=23;i++) p[i]='green'; p[24]='amber'; p[25]='amber'; p[26]='amber'; return p; })(),
+    note:'23 位尾数 <b>1000 0011 0011 0011 0011 001</b>；舍弃部分自第 24 位起 = 1100 11⋯ → G=1、R=0、S=1' },
+  { cls:'shift', tag:'舍入判断', count:3,
+    log:'就近舍入：G=1 且 R、S 不全为 0 → 被舍部分<b>大于一半</b>，尾数末位加 1。（仅当 G=1 且 R=S=0 恰为一半时才"取偶"。）',
+    cells:FRAC, paint:(function(){ var p = dimPaint(); for (var i=1;i<=23;i++) p[i]='green'; p[24]='amber'; return p; })(),
+    note:'判断式：G=1 且（R=1 或 S=1）→ 进位。本题 R=0 但 S=1，照样进位。' },
+  { cls:'shift', tag:'尾数加 1', count:4,
+    log:'尾数末两位由 0,1 进位成 1,0：1000 0011 0011 0011 0011 001 + 1 = 1000 0011 0011 0011 0011 010。',
+    cells:FROUND, paint:(function(){ var p = dimPaint(); for (var i=1;i<=21;i++) p[i]='green'; p[22]='amber'; p[23]='amber'; return p; })(),
+    note:'舍入后尾数：<b>1000 0011 0011 0011 0011 010</b>（琥珀为变化位）' },
+  { cls:'ok', tag:'拼接机器数', count:5,
+    log:'拼接：0 | 1000 0010 | 1000 0011 0011 0011 0011 010 → 0100 0001 0100 0001 1001 1001 1001 1010B = 4141 999AH。',
+    cells:FROUND, paint:(function(){ var p = {}; for (var i=1;i<=23;i++) p[i]='green'; p[24]='green'; p[25]='green'; p[26]='green'; return p; })(),
+    note:'机器数 = <b>4141 999AH</b>' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'x 的机器数 = 4141 999AH，与选项 B 一致。',
+    cells:FROUND, paint:(function(){ var p = {}; for (var i=1;i<=23;i++) p[i]='green'; p[24]='green'; p[25]='green'; p[26]='green'; return p; })(),
+    note:'答案：<b>4141 999AH</b>（选项 B）' },
+];
+
+AW.init({
+  title: '2026·14 float 型 12.1 的 IEEE 754 编码',
+  subtitle: '单精度 · 阶码偏置 127 · 就近舍入（中间值取偶）',
+  counterLabel: '步骤',
+  ribbonTitle: '编码步骤（✓ 完成）',
+  intro: '点击「▶ 播放」逐步完成二进制转换、规格化与舍入。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: '4141 999AH',
+    html: '答案选 <b>B</b>。关键三步：规格化得 1.100 0000 1100 1100⋯×2 的 3 次幂 → 阶码 130、23 位尾数 1000 0011 0011 0011 0011 001 → 舍弃部分 G=1、R=0、S=1 <b>大于一半</b>，尾数加 1 得 …010。<br>易错：直接截断得 4141 9999H（干扰项 A）；忘加偏置 127 也是常见失分点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

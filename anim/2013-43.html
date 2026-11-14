@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-43 突发传送与 CPU 执行时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：四问一条链', cls: 'key',
+    body: '<p>CPU 800MHz（命中 CPI = 4）、总线 200MHz 宽 32 位、主存 8 体交叉（体周期 40ns）、块 32B、突发一次传 32B。<br>链路：<b>周期与带宽 → 事务数 → 一次事务时间 → CPU 时间</b>。</p>' },
+  { title: '（1）CPU 时钟周期', cls: '',
+    body: '<p><code>1 ÷ 800MHz = 1.25ns</code>。CPI = 4 指命中时每条指令 4 个 CPU 周期。</p>' },
+  { title: '（1）总线周期与带宽', cls: 'good',
+    body: '<p>总线时钟周期 = <code>1 ÷ 200MHz = 5ns</code>；带宽 = 宽度 × 频率 = <code>32位 ÷ 8 = 4B</code>，4B × 200M/s = <b>800MB/s</b>。</p>' },
+  { title: '（2）只需 1 个突发事务', cls: 'good',
+    body: '<p>Cache 块 32B，一次读突发传送恰好 32B → 读一个主存块只需 <b>1 个</b>读突发传送总线事务。</p>' },
+  { title: '（3）第 1 段：送首地址', cls: '',
+    body: '<p>送首地址和命令占 1 个总线周期 = <b>5ns</b>。事务时间累计：5ns。</p>' },
+  { title: '（3）第 2 段：存储器准备数据', cls: '',
+    body: '<p>8 体交叉：第一个字 40ns 读出，此后每隔 5ns 出一个字，第 8 个字需 <code>40 + 7×5 = 75ns</code>。累计：5 + 75 = 80ns。</p>' },
+  { title: '（3）第 3 段：传最后 1 个数据', cls: 'good',
+    body: '<p>最后一个字送上总线再花 1 个总线周期 = 5ns。一次事务合计 <code>5 + 75 + 5 = 85ns</code>。</p>' },
+  { title: '（4）基础执行时间', cls: '',
+    body: '<p>访存全按命中计：<code>100 条 × CPI 4 × 1.25ns = 500ns</code>。</p>' },
+  { title: '（4）缺失次数与损失', cls: '',
+    body: '<p>访存次数 = <code>100 × 1.2 = 120</code> 次，缺失率 5% → 缺失 <code>120 × 5% = 6</code> 次；每次损失 = 一次事务 85ns → 额外 <code>6 × 85 = 510ns</code>。</p>' },
+  { title: '（4）总 CPU 执行时间', cls: 'good',
+    body: '<p><code>500 + 510 = 1010ns</code> → 全题得解。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案：<b>1.25ns、5ns、800MB/s；1 个事务；85ns；1010ns</b>。记忆锚点：突发事务时间 = 地址 1 拍 + 交错读出 + 最后 1 拍；缺失按<b>访存次数</b>算。</p>' },
+];
+
+var RIBBON_AT = { 2: { k: 1, ok: true }, 3: { k: 2, ok: true }, 6: { k: 3, ok: true }, 9: { k: 4, ok: true } };
+
+var COUNTS = ['0', '0', '0', '0', '5', '80', '85', '500', '1010', '1010', '1010'];
+
+var SCLS = { '': 'step', key: 'shift', good: 'ok', bad: 'miss' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : SCLS[s.cls || ''],
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: COUNTS[i],
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBON_AT[i]) {
+    sn.ribbon = RIBBON_AT[i];
+    sn.cls = 'ok';
+    sn.tag = ['问(1) ✓', '问(2) ✓', '问(3) ✓', '问(4) ✓'][sn.ribbon.k - 1];
+  }
+  return sn;
+});
+
+AW.init({
+  title: '2013 真题 · 突发传送与 CPU 执行时间（大题）',
+  subtitle: 'CPU <code>800MHz</code> · 总线 <code>200MHz / 32 位</code> · 8 体交叉 40ns · 块 32B · 四问逐层推进',
+  counterLabel: '累计 ns',
+  ribbonTitle: '各问要点（✓ 已推得）',
+  intro: '点击「▶ 播放」按问展开：先算周期与带宽，再算事务数与事务时间，最后算 CPU 执行时间。',
+  snaps: snaps,
+  result: {
+    big: 'CPU 执行时间 1010ns',
+    html: '（1）CPU 周期 <code>1.25ns</code>、总线周期 <code>5ns</code>、带宽 <code>800MB/s</code>；（2）<b>1 个</b>突发事务；（3）<code>5 + 75 + 5 = 85ns</code>；（4）<code>100×4×1.25 + 6×85 = 500 + 510 = 1010ns</code>。<br>记忆锚点：缺失次数按<b>访存次数 120</b> 算（120 × 5% = 6），不是按指令数。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

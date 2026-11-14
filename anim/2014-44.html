@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-44 指令系统与五段流水线综合分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（指令表逐条分析 + 相关/冒险判定） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 程序段 P 的 6 条指令（地址 / 机器代码 / 汇编 / 注释），row 是界面行下标
+var INS = [
+  { no:1, addr:'08048100H', code:'00022080H', asm:'loop: sll R4, R2, 2',   note:'(R2)&lt;&lt;2 → R4' },
+  { no:2, addr:'08048104H', code:'00083020H', asm:'add R4, R4, R3',        note:'(R4)+(R3) → R4' },
+  { no:3, addr:'08048108H', code:'8C850000H', asm:'load R5, 0(R4)',        note:'((R4)+0) → R5' },
+  { no:4, addr:'0804810CH', code:'00250820H', asm:'add R1, R1, R5',        note:'(R1)+(R5) → R1' },
+  { no:5, addr:'08048110H', code:'20420001H', asm:'add R2, R2, 1',         note:'(R2)+1 → R2' },
+  { no:6, addr:'08048114H', code:'1446FFFAH', asm:'bne R2, R6, loop',      note:'if (R2)!=(R6) goto loop' },
+];
+
+// 每步的行状态：'' 普通 / 'hot' 正在分析 / 'bad' 阻塞 / 'ok' 不阻塞 / 'dim' 收起
+var ST = [
+  { rows:['','','','','',''], dep:'', q:0 },
+  { rows:['','','','','',''], dep:'', q:1 },
+  { rows:['hot','','','','',''], dep:'', q:2 },
+  { rows:['','','','','','hot'], dep:'', q:3 },
+  { rows:['','','','','','hot'], dep:'', q:4 },
+  { rows:['hot','bad','','','',''], dep:'指令2 ← 指令1：add R4,R4,R3 要用指令1 sll 刚写入的 R4；无转发，等写回 → 指令2 阻塞', q:4 },
+  { rows:['','hot','bad','','',''], dep:'指令3 ← 指令2：load R5,0(R4) 的访存基址 R4 由指令2 刚算出 → 指令3 阻塞', q:4 },
+  { rows:['','','hot','bad','',''], dep:'指令4 ← 指令3：add R1,R1,R5 用指令3 刚 load 出的 R5（load-use）→ 指令4 阻塞', q:4 },
+  { rows:['','','','','hot','bad'], dep:'指令6 ← 指令5：bne 判断用的 R2 由指令5 刚加 1 → 指令6 阻塞', q:4 },
+  { rows:['','','','','','hot'], dep:'指令6 是分支指令：条件 (R2)≠(R6)? 判定前取指部件不知道下一条取哪 → 控制冒险（分支执行引起 3 拍阻塞）', q:4 },
+  { rows:['ok','','','','hot',''], dep:'下一轮指令1 读 R2 ← 上一轮指令5 写入；bne 的 3 拍阻塞提供了足够时间，指令5 早已写回 R2 → 指令1 不阻塞', q:4 },
+  { rows:['ok','bad','bad','bad','','bad'], dep:'汇总：数据相关阻塞 2、3、4、6；控制冒险：指令6', q:4 },
+];
+
+AW.init({
+  title: '2014-44 · 程序段 P：编址、元素大小、OFFSET 与流水线冒险',
+  subtitle: '32 位定长指令字 · bne 格式 OP(6)|Rs(5)|Rd(5)|OFFSET(16 补码) · 五段流水线无转发，分支阻塞 3 拍',
+  counterLabel: '已答题数',
+  ribbonTitle: '相关指令（✗ 阻塞 / ✓ 不阻塞）',
+  intro: '点击「▶ 播放」：先答前三问（看表），再逐对排查数据相关与控制冒险。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.minWidth = '640px';
+
+    // 前三问结论卡
+    var qWrap = AW.el('div', '');
+    var qTexts = [
+      '(1) M 按<b style="color:#15803d">字节编址</b>：相邻指令地址差 4，一条指令 32 位 = 4 字节 → 每个地址单位代表 1 字节。',
+      '(2) 数组 A 每个元素占 <b style="color:#15803d">4 字节 = 32 位</b>：sll 把 i 左移 2 位即 i×4 → 元素地址间隔 4B。',
+      '(3) bne 机器代码 1446FFFAH：OP=000101、Rs=R2、Rd=R6，OFFSET = <b style="color:#d97706">FFFAH = −6</b>（16 位补码）。',
+      '(3) 转移目标地址 = <b style="color:#d97706">(PC + 4) + OFFSET × 4</b>：08048118H + (−6)×4 = 08048100H = loop。',
+    ];
+    var qEls = [];
+    qTexts.forEach(function(t){
+      var c = AW.el('div', '');
+      c.style.cssText = 'display:none;font-size:13.5px;line-height:1.8;color:#334155;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;margin-bottom:8px';
+      c.innerHTML = t;
+      qWrap.appendChild(c);
+      qEls.push(c);
+    });
+
+    // 指令表
+    var tbl = AW.el('table', '');
+    tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px';
+    var thead = '<tr>' + ['编号','地址','机器代码','汇编代码','注释'].map(function(h){
+      return '<th style="border:1.5px solid #e2e8f0;background:#f1f5f9;padding:6px 8px;text-align:left">' + h + '</th>';
+    }).join('') + '</tr>';
+    var rowEls = [];
+    var tbody = '';
+    INS.forEach(function(ins){
+      tbody += '<tr><td style="border:1.5px solid #e2e8f0;padding:6px 8px;font-weight:700">' + ins.no +
+        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px;font-family:Menlo,Consolas,monospace">' + ins.addr +
+        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px;font-family:Menlo,Consolas,monospace">' + ins.code +
+        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px">' + ins.asm +
+        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px;color:#64748b">' + ins.note + '</td></tr>';
+    });
+    tbl.innerHTML = thead + tbody;
+    var bodies = tbl.querySelectorAll('tbody tr');
+    for (var k = 0; k < bodies.length; k++) rowEls.push(bodies[k]);
+
+    // 相关分析文字面板
+    var dep = AW.el('div', '');
+    dep.style.cssText = 'display:none;font-size:13.5px;line-height:1.8;color:#334155;background:#fffbeb;border:2px solid #d97706;border-radius:12px;padding:10px 14px;margin-top:14px;min-height:52px';
+
+    inner.appendChild(qWrap); inner.appendChild(tbl); inner.appendChild(dep);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._qEls = qEls; this._rowEls = rowEls; this._dep = dep;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'题面',       log:'循环体 P 共 6 条指令（左移、加基址、取数、累加、自增、分支）。M 为 32 位定长指令字；bne 格式：OP 6 位 | Rs 5 位 | Rd 5 位 | OFFSET 16 位补码。', count:0 },
+    { cls:'ok',    tag:'(1) 编址单位', log:'指令地址 08048100H → 08048104H → …，相邻相差 4；一条指令 32 位定长 = 4 字节 → 每个地址单位代表 1 字节，按字节编址。', count:1 },
+    { cls:'shift', tag:'(2) 元素位数', log:'指令1 sll R4,R2,2：把 i 左移 2 位 = i×4；add R4,R4,R3 得元素地址 = 首地址 + i×4 → 每个元素占 4 字节 = 32 位。', count:2 },
+    { cls:'shift', tag:'(3) OFFSET',   log:'指令6 bne 机器代码 1446FFFAH：OP=000101、Rs=R2、Rd=R6，低 16 位 OFFSET = FFFAH = −6（补码）。', count:3 },
+    { cls:'ok',    tag:'(3) 公式',     log:'转移目标 = loop = 08048100H；bne 取指后 PC = 08048114H + 4 = 08048118H；08048100H − 08048118H = −24 = −6×4 → 目标地址 = (PC+4) + OFFSET×4。', count:4 },
+    { cls:'miss',  tag:'相关①',       log:'指令2 add R4,R4,R3 要用指令1 sll 刚写的 R4；硬件无转发，只能等写回 → 指令2 因数据相关阻塞。', count:4, ribbon:{k:2, ok:false} },
+    { cls:'miss',  tag:'相关②',       log:'指令3 load R5,0(R4) 的访存基址 R4 由指令2 刚算出 → 指令3 阻塞。', count:4, ribbon:{k:3, ok:false} },
+    { cls:'miss',  tag:'相关③',       log:'指令4 add R1,R1,R5 用指令3 刚 load 出的 R5（load-use，等待最长）→ 指令4 阻塞。', count:4, ribbon:{k:4, ok:false} },
+    { cls:'miss',  tag:'相关④',       log:'指令6 bne 判断 R2 与 R6，R2 由指令5 add R2,R2,1 刚写入 → 指令6 因数据相关阻塞。', count:4, ribbon:{k:6, ok:false} },
+    { cls:'shift', tag:'控制冒险',     log:'指令6 是分支指令：条件判定前取指部件不知道下一条取哪里 → 控制冒险（题目设分支执行引起 3 个时钟周期阻塞）。', count:4 },
+    { cls:'ok',    tag:'为何①不阻塞', log:'下一轮指令1 读的 R2 由上一轮指令5 写入；分支 bne 的 3 拍阻塞提供了足够时间，指令5 早已完成写回 → 指令1 不会因此阻塞。', count:4, ribbon:{k:1, ok:true} },
+    { cls:'done',  tag:'结论',        log:'汇总：(1) 字节编址；(2) 元素 32 位；(3) OFFSET = −6，目标地址 = (PC+4) + OFFSET×4；(4) 数据相关阻塞指令 2、3、4、6，控制冒险在指令6。', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = ST[i];
+    var qEls = this._qEls;
+    for (var k = 0; k < 4; k++) qEls[k].style.display = (st.q > k) ? 'block' : 'none';
+    var rowEls = this._rowEls;
+    st.rows.forEach(function(s, r){
+      var e = rowEls[r];
+      if (s === 'hot'){ e.style.background = '#fffbeb'; e.style.boxShadow = 'inset 3px 0 0 #d97706'; }
+      else if (s === 'bad'){ e.style.background = '#fff8f8'; e.style.boxShadow = 'inset 3px 0 0 #dc2626'; }
+      else if (s === 'ok'){ e.style.background = '#f6fef9'; e.style.boxShadow = 'inset 3px 0 0 #16a34a'; }
+      else if (s === 'dim'){ e.style.opacity = '.45'; e.style.background = ''; e.style.boxShadow = ''; }
+      else { e.style.background = ''; e.style.boxShadow = ''; e.style.opacity = '1'; }
+    });
+    if (st.dep){ this._dep.style.display = 'block'; this._dep.innerHTML = '<b>相关/冒险判定：</b>' + st.dep; }
+    else { this._dep.style.display = 'none'; this._dep.innerHTML = ''; }
+  },
+
+  result: {
+    big: '阻塞：2、3、4、6 · 冒险：指令 6',
+    html: '(1) <b>字节编址</b>；(2) 元素占 <b>32 位</b>（sll 左移 2 位 = ×4）；(3) OFFSET = <b>FFFAH = −6</b>，转移目标地址 = <b>(PC + 4) + OFFSET × 4</b>；(4) 因数据相关阻塞的指令：<b>2、3、4、6</b>；控制冒险：<b>指令 6</b>（bne）；分支的 3 拍阻塞让指令 5 先写回 R2，故指令 1 不阻塞。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

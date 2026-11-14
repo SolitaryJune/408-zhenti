@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-46 页划分与指令 Cache 组相联的地址拆分</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .seg{ border-collapse: collapse; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px; margin-top: 6px; }
+  .seg th, .seg td{ border: 1px solid #e2e8f0; padding: 5px 12px; text-align: center; }
+  .seg th{ background: #f1f5f9; color: #475569; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+/* 32 位地址拆成两行各 16 位显示 */
+var B_PUSH1 = '0000000001000000'.split('');
+var B_PUSH2 = '0001000000000000'.split('');
+var B_RET1  = '0000000001000000'.split('');
+var B_RET2  = '0001000001001010'.split('');
+var B_CALL1 = '0000000001000000'.split('');
+var B_CALL2 = '0001000000100101'.split('');
+var PLACE   = '----------------'.split('');
+
+function arr(n, c){ var a = []; for (var i = 0; i < n; i++) a.push(c); return a; }
+
+function drawBits(container, chars, classes, msb){
+  container.innerHTML = '';
+  for (var i = 0; i < 16; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), chars[i]));
+    col.appendChild(AW.el('div', 'aw-idx', String(msb ? 31 - i : 15 - i)));
+    container.appendChild(col);
+  }
+}
+
+/* 位段示意 / call 地址的低 16 位配色：i0..5=tag(灰) i6..9=组号(深绿) i10..15=块内(浅绿) */
+function seg2(mode){
+  var a = [];
+  for (var i = 0; i < 16; i++){
+    var c;
+    if (i < 6) c = 'dim';
+    else if (i < 10) c = (mode === 'idx') ? 'hit' : 'hit';
+    else c = (mode === 'off') ? 'hit' : 'ok';
+    a.push(c);
+  }
+  return a;
+}
+
+function segTable(){
+  return '<table class="seg"><tr><th>位段</th><th>bits[31:10]</th><th>bits[9:6]</th><th>bits[5:0]</th></tr>' +
+    '<tr><th>含义</th><td>标记 tag（22 位）</td><td>Cache 组号（4 位）</td><td>块内地址（6 位）</td></tr></table>';
+}
+
+AW.init({
+  title: '2019·46 页划分 + 指令 Cache 组相联地址拆分（7 分大题）',
+  subtitle: '主存地址 <code>32 位</code> · 页大小 <code>4KB</code> · 指令 Cache <code>64 行 / 4 路组相联</code> · 主存块 <code>64B</code>',
+  counterLabel: '步',
+  ribbonTitle: '关键步骤（✓ 已完成）',
+  intro: '点击「▶ 播放」：先判同一页，再拆 Cache 地址三段，最后定位 call 的组号。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.lab1 = AW.el('div', 'aw-row-label', '');
+    S.r1 = AW.el('div', 'aw-cells');
+    inner.appendChild(S.lab1);
+    inner.appendChild(S.r1);
+    S.lab2 = AW.el('div', 'aw-row-label', '');
+    S.r2 = AW.el('div', 'aw-cells');
+    inner.appendChild(S.lab2);
+    inner.appendChild(S.r2);
+    S.note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.note);
+    S.sum = AW.el('div', 'aw-stepcard', '');
+    inner.appendChild(S.sum);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    if (i === 0){
+      S.lab1.innerHTML = '<b>32 位主存地址</b>（拆两行显示：上行 bits31..16，下行 bits15..0）';
+      drawBits(S.r1, PLACE, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '';
+      drawBits(S.r2, PLACE, arr(16, 'dim'), false);
+      S.note.innerHTML = '页大小 4KB = 2<sup>12</sup>B → <b>低 12 位是页内偏移，高 20 位是页号</b>。';
+      S.sum.innerHTML = '<h4>要回答的两件事</h4><p>① 第 1 行 push（00401000H）与第 30 行 ret（0040104AH）是否在同一页？② Cache 三段划分，以及读取 call（00401025H）时只可能命中哪一组？</p>';
+    } else if (i === 1){
+      S.lab1.innerHTML = '<b>第 1 行 push：00401000H</b>（绿色 = 高 20 位页号）';
+      drawBits(S.r1, B_PUSH1, arr(16, 'ok'), true);
+      S.lab2.innerHTML = '<b>第 30 行 ret：0040104AH</b>';
+      drawBits(S.r2, B_RET2, ['ok', 'ok', 'ok', 'ok', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim'], false);
+      S.note.innerHTML = '两行绿色部分（高 20 位）都是 <code>00401H</code> → <b>页号相同，在同一页中</b>（低 12 位不同不影响）✓';
+      S.sum.innerHTML = '<h4>判定：同一页 ✓</h4><p>push 与 ret 的高 20 位页号均为 00401H（每页 2<sup>12</sup>B，页号 = 地址 ÷ 4096 取整）。</p>';
+    } else if (i === 2){
+      S.lab1.innerHTML = '<b>位段示意 bits31..16</b>（灰 = tag 区）';
+      drawBits(S.r1, B_CALL1, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '<b>bits15..0</b>（深绿 = 组号，浅绿 = 块内）';
+      drawBits(S.r2, B_CALL2, seg2('map'), false);
+      S.note.innerHTML = '组数 = 64 行 ÷ 4 路 = <b>16 组</b> → 组号 <b>4 位</b>；块 64B → 块内 <b>6 位</b>；tag = 32 − 6 − 4 = <b>22 位</b>。';
+      S.sum.innerHTML = '<h4>Cache 地址三段划分</h4>' + segTable();
+    } else if (i === 3){
+      S.lab1.innerHTML = '<b>位段示意 bits31..16</b>';
+      drawBits(S.r1, B_CALL1, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '<b>bits15..0</b>';
+      drawBits(S.r2, B_CALL2, seg2('map'), false);
+      S.note.innerHTML = '地址划分：<b>tag[31:10] 22 位 + 组号[9:6] 4 位 + 块内[5:0] 6 位</b>（组内两行各 16 位连续拼接）。';
+      S.sum.innerHTML = '<h4>Cache 地址三段划分</h4>' + segTable() + '<p>组号定位：组号 = （主存块号）mod 16，而块号 = 地址 ÷ 64B。</p>';
+    } else if (i === 4){
+      S.lab1.innerHTML = '<b>第 16 行 call：00401025H</b> = 0000 0000 0100 0000 0001 0000 0010 0101B';
+      drawBits(S.r1, B_CALL1, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '<b>bits15..0</b>（深绿 = 组号位，浅绿 = 块内位）';
+      drawBits(S.r2, B_CALL2, seg2('map'), false);
+      S.note.innerHTML = '把 call 的 32 位地址代入三段划分，逐段取出。';
+      S.sum.innerHTML = '<h4>代入 call 地址 00401025H</h4>' + segTable();
+    } else if (i === 5){
+      S.lab1.innerHTML = '<b>call：00401025H</b>（bits31..16 全属 tag）';
+      drawBits(S.r1, B_CALL1, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '<b>块内地址 = bits[5:0]</b>（深绿 6 位）';
+      drawBits(S.r2, B_CALL2, seg2('off'), false);
+      S.note.innerHTML = '块内地址 = bits[5:0] = <code>100101B = 25H</code>。';
+      S.sum.innerHTML = '<h4>块内地址</h4><p>bits[5:0] = 100101B = 25H（块内偏移 37 号字节）。</p>';
+    } else if (i === 6){
+      S.lab1.innerHTML = '<b>call：00401025H</b>';
+      drawBits(S.r1, B_CALL1, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '<b>组号 = bits[9:6]</b>（深绿 4 位）';
+      drawBits(S.r2, B_CALL2, seg2('idx'), false);
+      S.note.innerHTML = '组号 = bits[9:6] = <code>0000B = 0</code> → <b>只可能在第 0 组命中</b>（tag 是否匹配决定是否真命中，但组号唯一确定）✓';
+      S.sum.innerHTML = '<h4>组号定位</h4><p>bits[9:6] = 0000B → 第 <b>0</b> 组。理由：组号由地址唯一确定，与 tag 无关。</p>';
+    } else {
+      S.lab1.innerHTML = '<b>结论</b>';
+      drawBits(S.r1, B_CALL1, arr(16, 'dim'), true);
+      S.lab2.innerHTML = '<b>bits15..0</b>';
+      drawBits(S.r2, B_CALL2, seg2('map'), false);
+      S.note.innerHTML = 'push 与 ret <b>在同一页</b>；地址划分 <b>tag 22 位 + 组号 4 位 + 块内 6 位</b>；call 只可能在<b>第 0 组</b>命中。';
+      S.sum.innerHTML = '<h4>最终答案</h4>' + segTable() +
+        '<p>① 同一页（高 20 位页号均为 00401H）；② bits[5:0] 块内、bits[9:6] 组号、bits[31:10] 标记；③ call 的组号字段 = 0000，只可能在<b>第 0 组</b>命中。</p>';
+    }
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '审题', log: '页 4KB：低 12 位页内偏移，高 20 位页号', count: 0 },
+    { cls: 'ok', tag: '同一页判定', log: 'push 00401000H 与 ret 0040104AH 的高 20 位都是 00401H → 同一页', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'shift', tag: 'Cache 参数', log: '64 行 ÷ 4 路 = 16 组 → 组号 4 位；块 64B → 块内 6 位；tag = 32−6−4 = 22 位', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '位段拆分', log: '地址划分：tag[31:10] + 组号[9:6] + 块内[5:0]', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'step', tag: '代入 call', log: 'call 在 00401025H = 0000 0000 0100 0000 0001 0000 0010 0101B', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'step', tag: '取块内地址', log: '块内地址 = bits[5:0] = 100101B = 25H', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'ok', tag: '取组号', log: '组号 = bits[9:6] = 0000B → 只可能在第 0 组命中', count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'done', tag: '完成', log: '同一页 ✓；tag22 + 组号4 + 块内6；call 在第 0 组', count: 7, done: true },
+  ],
+
+  result: {
+    big: '同一页 · tag22/组号4/块内6 · 第 0 组',
+    html: '<b>①</b> 页号 = 高 20 位：push 与 ret 均为 <code>00401H</code> → 同一页。<b>②</b> 64 行 ÷ 4 路 = 16 组 → 组号 4 位；块 64B → 块内 6 位；tag = 32−6−4 = <b>22 位</b>（[31:10] tag、[9:6] 组号、[5:0] 块内）。<b>③</b> call 地址 00401025H 的组号字段 = <code>0000</code> → 只可能在<b>第 0 组</b>命中。记忆锚点：<b>组号 = （地址 ÷ 块大小）mod 组数</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

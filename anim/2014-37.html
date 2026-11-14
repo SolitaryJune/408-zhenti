@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-37 动画 · CDMA 解码 A 站数据</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 收到的 12 个码片，分 3 段（每比特 4 码片）
+var RX = [2, 0, 2, 0, 0, -2, 0, -2, 0, 2, 0, 2];
+var CHIP_A = [1, 1, 1, 1];
+var SEG_SUM = [4, -4, 4];
+var SEG_BIT = ['1', '0', '1'];
+
+var segBox = null, aBox = null, calcEl = null, bitsBox = null;
+
+function segCells(i){
+  // 三段各 4 格：当前段高亮，已算段绿，未来段暗
+  var html = '<div style="display:flex;gap:18px">';
+  for (var s = 0; s < 3; s++){
+    html += '<div style="padding:6px;border:2px dashed ' + (i - 1 === s ? '#d97706' : '#e2e8f0') +
+            ';border-radius:12px"><div class="aw-cells">';
+    for (var k = 0; k < 4; k++){
+      var v = RX[s * 4 + k];
+      var cls = '';
+      if (i === 0) cls = 'dim';
+      else if (s < i - 1) cls = 'ok';
+      else if (s === i - 1) cls = 'hit';
+      else cls = 'dim';
+      html += '<div class="aw-box ' + cls + '" style="width:40px;height:40px;font-size:15px">' +
+              (v > 0 ? '+' + v : v) + '</div>';
+    }
+    html += '</div><div style="text-align:center;font-size:11px;color:#94a3b8;margin-top:4px">第 ' + (s + 1) + ' 段</div></div>';
+  }
+  return html + '</div>';
+}
+
+AW.init({
+  title: 'CDMA · 用 A 的码片序列解码（2014·37）',
+  subtitle: 'A = <code>(1,1,1,1)</code> · 收到 <code>(2,0,2,0, 0,−2,0,−2, 0,2,0,2)</code> · 每比特 4 码片',
+  counterLabel: '已解码比特',
+  ribbonTitle: '三个比特周期（✓ 解码完成）',
+  intro: '点击「▶ 播放」逐步演示：切段 → 逐段与 A 码片做内积 → 规格化 → 得到 A 的数据。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>链路上收到的叠加序列</b>（12 码片 = 3 个比特周期 × 4 码片）'));
+    segBox = AW.el('div', '');
+    inner.appendChild(segBox);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>A 的码片序列</b> (1, 1, 1, 1)，与当前段逐位相乘'));
+    aBox = AW.el('div', 'aw-cells');
+    inner.appendChild(aBox);
+
+    calcEl = AW.el('div', '');
+    calcEl.style.cssText = 'margin:10px 0 6px;font-size:14px;line-height:1.8;color:#334155;font-family:Menlo,monospace;';
+    inner.appendChild(calcEl);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>A 发送的数据</b>（按段依次得出）'));
+    bitsBox = AW.el('div', 'aw-cells');
+    inner.appendChild(bitsBox);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    segBox.innerHTML = segCells(i);
+
+    // A 码片序列 4 格
+    aBox.innerHTML = '';
+    var aCls = (i >= 1 && i <= 3) ? 'hit' : 'dim';
+    for (var k = 0; k < 4; k++){
+      aBox.insertAdjacentHTML('beforeend',
+        '<div class="aw-box ' + aCls + '" style="width:40px;height:40px;font-size:15px">' + CHIP_A[k] + '</div>');
+    }
+
+    // 计算式
+    if (i === 0){
+      calcEl.innerHTML = '解码规则：内积 = 逐位相乘求和；规格化 = 内积 ÷ 4；<b>&gt;0 → 1，&lt;0 → 0，=0 → 未发送</b>。';
+    } else if (i <= 3){
+      var s = i - 1;
+      var terms = [];
+      for (var k2 = 0; k2 < 4; k2++){
+        terms.push('(' + fmt(RX[s * 4 + k2]) + '×' + CHIP_A[k2] + ')');
+      }
+      calcEl.innerHTML = '第 ' + (s + 1) + ' 段：' + terms.join(' + ') + ' = <b>' + SEG_SUM[s] +
+                         '</b>；规格化 ' + SEG_SUM[s] + ' ÷ 4 = ' + (SEG_SUM[s] / 4) +
+                         ' → A 发送 <b>' + SEG_BIT[s] + '</b>';
+    } else {
+      calcEl.innerHTML = '三段依次为 1、0、1 → A 发送 <b>101</b>';
+    }
+
+    // 结果比特行
+    bitsBox.innerHTML = '';
+    for (var b = 0; b < 3; b++){
+      var cls = '';
+      if (i >= 1 && b === 0) cls = 'hit';
+      if (i >= 2 && b === 1) cls = 'hit';
+      if (i >= 3 && b === 2) cls = 'hit';
+      if (i >= 4) cls = 'ok';
+      bitsBox.insertAdjacentHTML('beforeend',
+        '<div class="aw-box ' + (cls || 'dim') + '" style="width:48px;font-size:18px">' +
+        (cls ? SEG_BIT[b] : '·') + '</div>');
+    }
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '切段', log: '收到 12 码片 → 切成 3 段，每段 4 码片对应 1 个比特', count: 0 },
+    { cls: 'ok',    tag: '第 1 段 → 1', log: '第 1 段 (2,0,2,0)：内积 2+0+2+0 = 4，4÷4 = 1 → A 发 1', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'ok',    tag: '第 2 段 → 0', log: '第 2 段 (0,−2,0,−2)：内积 0−2+0−2 = −4，−4÷4 = −1 → A 发 0', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'ok',    tag: '第 3 段 → 1', log: '第 3 段 (0,2,0,2)：内积 0+2+0+2 = 4，4÷4 = 1 → A 发 1', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'shift', tag: '汇总', log: '三段比特依次 1、0、1 → A 发送的数据 = 101', count: 4 },
+    { cls: 'done',  tag: '完成', log: 'A 发送 101 → 答案 B', count: 5, done: true },
+  ],
+
+  result: {
+    big: '答案 B（101）',
+    html: 'CDMA 解码三步：<code>切段（每比特 4 码片）→ 与目标站码片内积 → 除以 4 看正负</code>。正→1，负→0，零→未发送。题目问 A 就用 <b>A 的 (1,1,1,1)</b>，用错序列就会掉进干扰项。',
+  },
+});
+
+function fmt(v){
+  return v < 0 ? '(' + v + ')' : String(v);
+}
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

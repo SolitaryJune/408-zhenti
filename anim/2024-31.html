@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-31 · 键盘输入数据的旅程</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     数据流过程动画：键盘中断服务例程结束时数据的位置（答案 C：内核缓冲区）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var STAGES = [
+  { name: '① 键盘按键',   sub: '用户敲下字符 A' },
+  { name: '② 控制器·数据寄存器', sub: '硬件与 CPU 的交接点' },
+  { name: '③ 内核缓冲区', sub: '键盘输入缓冲区' },
+  { name: '④ 用户缓冲区', sub: '用户进程 read 时才到达' },
+];
+
+AW.init({
+  title: '键盘中断服务例程结束时，字符 A 在哪里？',
+  subtitle: '数据流：<code>键盘 → 控制器数据寄存器 → 内核缓冲区 →（read 时）用户缓冲区</code>',
+  counterLabel: '步骤',
+  ribbonTitle: '旅程站点（✓ 已经过）',
+  intro: '点击「▶ 播放」跟踪字符 A 的旅程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var flow = AW.el('div', 'aw-row-label', '<b>数据流向</b>：① 按键 → ② 控制器寄存器（ISR 取走）→ ③ 内核缓冲区 → ④ 用户缓冲区（read 时才复制）');
+    stage.appendChild(flow);
+    var row = AW.el('div', 'aw-cells');
+    row.style.gap = '18px';
+    this._cols = [];
+    for(var k = 0; k < STAGES.length; k++){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '160px';
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', STAGES[k].name);
+      box.style.width = '160px';
+      box.style.height = '64px';
+      box.style.fontSize = '13px';
+      box.style.lineHeight = '1.4';
+      var idx = AW.el('div', 'aw-idx', STAGES[k].sub);
+      idx.style.textAlign = 'center';
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(idx);
+      row.appendChild(col);
+      this._cols.push({ ptr: ptr, box: box });
+    }
+    stage.appendChild(row);
+    this._note = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._note);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'按下按键', log:'用户敲下字符 A：键盘控制器把字符放入自己的数据寄存器，并向 CPU 发出中断请求', count:1, pos:1 },
+    { cls:'shift', tag:'响应中断', log:'CPU 检测到键盘中断：若正在执行用户程序（用户态），先完成用户态 → 内核态的切换，再响应中断', count:2, pos:1 },
+    { cls:'shift', tag:'ISR 取字符', log:'执行键盘中断服务程序：第一步就是从键盘控制器的数据寄存器读出字符 A', count:3, pos:2 },
+    { cls:'ok',    tag:'写入内核', log:'ISR 把字符 A 写入内核缓冲区（键盘输入缓冲区）', count:4, pos:3, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'ISR 结束', log:'ISR 执行结束、中断返回。此刻数据在【内核缓冲区】——这正是题目问的位置 → 选 C', count:5, pos:3 },
+    { cls:'step',  tag:'之后的事', log:'用户进程随后执行 read() 时，才把字符从内核缓冲区复制到用户缓冲区（所以 A 错：那发生在 ISR 结束之后）', count:6, pos:3, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'结论', log:'ISR 结束时数据在内核缓冲区，选 C；B 错：寄存器只是临时落点；D 错：字符已在第 3 步被 ISR 取走', count:7, pos:3, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var cols = this._cols || [];
+    var pos = sn.pos || 1;
+    for(var k = 0; k < cols.length; k++){
+      var st = k + 1;
+      var cls = 'aw-box';
+      if(st < pos) cls += ' ok';
+      else if(st === pos) cls += ' hit';
+      cols[k].box.className = cls;
+      cols[k].ptr.textContent = (st === pos) ? '● A 在此' : '';
+    }
+    var info = STAGES[pos - 1].name + '：' + STAGES[pos - 1].sub;
+    this._note.innerHTML = '字符 A 当前位置：<b>' + info + '</b>';
+  },
+
+  result: {
+    big: '答案 C',
+    html: '键盘中断服务例程（ISR）把字符从<b>键盘控制器的数据寄存器</b>读出、写入<b>内核缓冲区</b>后才结束。<br>等用户进程 <code>read()</code> 时，才把数据从内核缓冲区复制到用户缓冲区——所以 A 错（发生在 ISR 之后）、D 错（寄存器早已被取空）、B 错（寄存器只是临时落点）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

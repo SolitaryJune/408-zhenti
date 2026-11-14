@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-41 三指针求三个有序集合最小距离动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-41 三指针贪心：D = 2×(max−min)，每轮移动最小值指针
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var A = ['-1', '0', '9'];                 // S1
+var B = ['-25', '-10', '10', '11'];       // S2
+var C = ['2', '9', '17', '30', '41'];     // S3
+
+var rowA, rowB, rowC, calcLine, noteLine;
+
+function arrRow(label, arr, ptrIdx){
+  var box = AW.el('div', '');
+  box.appendChild(AW.el('div', 'aw-row-label', label));
+  var chars = [], classes = [];
+  for(var t = 0; t < arr.length; t++){
+    chars.push(arr[t]);
+    if(ptrIdx != null && t === ptrIdx){ classes.push('hit'); }
+    else if(ptrIdx != null && t < ptrIdx){ classes.push('dim'); }
+    else { classes.push(''); }
+  }
+  var ptrMap = {};
+  if(ptrIdx != null){ ptrMap[ptrIdx + 1] = '↑'; }
+  box.appendChild(AW.cellRow(chars, classes, ptrMap));
+  return box;
+}
+
+AW.init({
+  title: '三指针求三个升序集合的最小距离 D',
+  subtitle: 'D = |a−b| + |b−c| + |c−a| = <b>2×(max − min)</b> · 每轮：算 D → 更新 Dmin → 移动<b>最小值</b>指针',
+  counterLabel: '计算轮数',
+  ribbonTitle: '计算轮次（✓ 完成）',
+  intro: '点击「▶ 播放」：S₁={-1,0,9}，S₂={-25,-10,10,11}，S₃={2,9,17,30,41}，看 Dmin 怎么被压到 2。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    rowA = arrRow('<b>S₁（指针 i）</b>', A, 0);
+    inner.appendChild(rowA);
+    rowB = arrRow('<b>S₂（指针 j）</b>', B, 0);
+    inner.appendChild(rowB);
+    rowC = arrRow('<b>S₃（指针 k）</b>', C, 0);
+    inner.appendChild(rowC);
+    calcLine = AW.el('div', 'aw-row-label', '');
+    calcLine.style.marginTop = '12px';
+    calcLine.style.padding = '10px 12px';
+    calcLine.style.background = '#f8fafc';
+    calcLine.style.borderRadius = '10px';
+    calcLine.style.color = '#334155';
+    inner.appendChild(calcLine);
+    noteLine = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(noteLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始化', log:'三指针 i=j=k=0，分别指向各数组开头；Dmin 初始化为足够大。', count:0 },
+    { cls:'step', tag:'第1轮', log:'(a,b,c) = (−1, −25, 2)：max=2、min=−25 → D = 2×27 = 54；Dmin=54。最小是 b → j 右移。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'第2轮', log:'(a,b,c) = (−1, −10, 2)：max=2、min=−10 → D = 2×12 = 24；Dmin=24。最小是 b → j 右移。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'第3轮', log:'(a,b,c) = (−1, 10, 2)：max=10、min=−1 → D = 2×11 = 22；Dmin=22。最小是 a → i 右移。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'第4轮', log:'(a,b,c) = (0, 10, 2)：max=10、min=0 → D = 2×10 = 20；Dmin=20。最小是 a → i 右移。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'step', tag:'第5轮', log:'(a,b,c) = (9, 10, 2)：max=10、min=2 → D = 2×8 = 16；Dmin=16。最小是 c → k 右移。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'ok',   tag:'第6轮', log:'(a,b,c) = (9, 10, 9)：max=10、min=9 → D = 2×1 = 2；Dmin=2。最小是 a → i 右移后 i=3 越界，循环结束。', count:6, ribbon:{k:6, ok:true} },
+    { cls:'done', tag:'完成',   log:'最小距离 Dmin = 2，对应三元组 (9, 10, 9)。时间 O(n₁+n₂+n₃)、空间 O(1)。', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var pA = 0, pB = 0, pC = 0;
+    if(i >= 4 && i <= 5){ pA = 1; }
+    if(i >= 6){ pA = 2; }
+    if(i >= 2){ pB = 1; }
+    if(i >= 3){ pB = 2; }
+    if(i >= 6){ pC = 1; }
+
+    var nRowA = arrRow('<b>S₁（指针 i）</b>', A, pA);
+    rowA.parentNode.replaceChild(nRowA, rowA); rowA = nRowA;
+    var nRowB = arrRow('<b>S₂（指针 j）</b>', B, pB);
+    rowB.parentNode.replaceChild(nRowB, rowB); rowB = nRowB;
+    var nRowC = arrRow('<b>S₃（指针 k）</b>', C, pC);
+    rowC.parentNode.replaceChild(nRowC, rowC); rowC = nRowC;
+
+    var calc = '';
+    if(i === 0){ calc = 'D = 2×(max − min)，三指针从头开始。'; }
+    else if(i === 1){ calc = 'max=2, min=−25 → <b>D = 2×27 = 54</b> → Dmin = 54 → 最小是 b，j++'; }
+    else if(i === 2){ calc = 'max=2, min=−10 → <b>D = 2×12 = 24</b> → Dmin = 24 → 最小是 b，j++'; }
+    else if(i === 3){ calc = 'max=10, min=−1 → <b>D = 2×11 = 22</b> → Dmin = 22 → 最小是 a，i++'; }
+    else if(i === 4){ calc = 'max=10, min=0 → <b>D = 2×10 = 20</b> → Dmin = 20 → 最小是 a，i++'; }
+    else if(i === 5){ calc = 'max=10, min=2 → <b>D = 2×8 = 16</b> → Dmin = 16 → 最小是 c，k++'; }
+    else if(i === 6){ calc = 'max=10, min=9 → <b>D = 2×1 = 2</b> → <b>Dmin = 2</b> → i++ 后越界，结束'; }
+    else { calc = '<b>Dmin = 2，三元组 (9, 10, 9)</b>'; }
+    calcLine.innerHTML = calc;
+
+    if(i === 0){ noteLine.innerHTML = '为什么只看 max 和 min？三个绝对值里，中间数的项两两抵消。'; }
+    else if(i >= 1 && i <= 6){ noteLine.innerHTML = '贪心策略：只把<b>最小值</b>的指针右移，才可能缩小 max−min。'; }
+    else { noteLine.innerHTML = '<b>答案：Dmin = 2，三元组 (9, 10, 9)</b>。每个指针最多扫完本数组一次 → 时间 O(n₁+n₂+n₃)，空间 O(1)。'; }
+  },
+
+  result: {
+    big: 'Dmin = 2',
+    html: '<b>三元组 (9, 10, 9)。</b>核心化简：<code>D = |a−b|+|b−c|+|c−a| = 2×(max−min)</code>。三指针从各数组开头出发，每轮算 D、更新 Dmin，再把<b>最小值</b>所在数组的指针右移，任一指针越界即停。时间复杂度 <code>O(n₁+n₂+n₃)</code>，空间复杂度 <code>O(1)</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-39 等长子网划分定位 · 位拆解动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 123.4.5.211 第四字节：211 = 11010011；/27 → 高 3 位子网位、低 5 位主机位 */
+var BITS_211 = ['1', '1', '0', '1', '0', '0', '1', '1'];
+var BITS_NET = ['1', '1', '0', '0', '0', '0', '0', '0'];
+/* 第四字节按 /27 分成的 8 个块 */
+var BLOCKS = ['0~31', '32~63', '64~95', '96~127', '128~159', '160~191', '192~223', '224~255'];
+
+var bitBox, blockBox, infoBox;
+
+function bitRow(bits, kind){
+  /* kind: 'plain' | 'mark'（高 3 位琥珀） | 'net'（低 5 位归零绿色） */
+  var s = '<div style="display:flex;gap:4px;width:max-content">';
+  bits.forEach(function(b, i){
+    var bg = '#fff', bd = '#cbd5e1', fg = '#0f172a';
+    if (kind === 'mark' && i < 3){ bg = '#fef3c7'; bd = '#d97706'; fg = '#92400e'; }
+    if (kind === 'net' && i >= 3){ bg = '#dcfce7'; bd = '#16a34a'; fg = '#14532d'; }
+    if (kind === 'net' && i < 3){ bg = '#fef3c7'; bd = '#d97706'; fg = '#92400e'; }
+    if (kind === 'plain' && i < 3){ bg = '#fff'; bd = '#cbd5e1'; }
+    var role = i < 3 ? '子网位' : '主机位';
+    s += '<div style="text-align:center">' +
+         '<div style="width:40px;height:40px;border:2px solid ' + bd + ';border-radius:9px;background:' + bg +
+         ';color:' + fg + ';display:flex;align-items:center;justify-content:center;font-family:Menlo,monospace;font-weight:800;font-size:19px;transition:all .3s">' + b + '</div>' +
+         '<div style="font-size:10px;color:#94a3b8;margin-top:3px">' + role + '</div></div>';
+  });
+  return s + '</div>';
+}
+
+function blockRow(hi){
+  var s = '<div style="display:flex;gap:4px;width:max-content;flex-wrap:wrap">';
+  BLOCKS.forEach(function(b, i){
+    var on = i === hi;
+    s += '<div style="min-width:64px;text-align:center;padding:5px 4px;border-radius:8px;font-family:Menlo,monospace;font-size:11.5px;' +
+         (on ? 'background:#16a34a;color:#fff;font-weight:700' : 'background:#f1f5f9;color:#64748b') + '">' + b + '</div>';
+  });
+  return s + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'读题', count:22, showBits:false, showBlocks:false,
+    log:'把 IP 网络 123.4.4.0/22 划分为规模均等的 <b>32 个子网</b>，问 123.4.5.211 落在哪一块。先定前缀，再定位址。' },
+  { cls:'shift', tag:'借 5 位 → /27', count:27, showBits:false, showBlocks:false, ribbon:{k:1, ok:true},
+    log:'/22 的主机号占 32−22 = 10 位；32 个等长子网需要 2⁵ = 32 → 借 <b>5 位</b>作子网号 → 新前缀 <b>/27</b>，掩码 255.255.255.224。' },
+  { cls:'step', tag:'块大小 = 32 个地址', count:27, showBits:false, showBlocks:true, ribbon:{k:2, ok:true},
+    log:'每块地址数 = 2^(32−27) = <b>32</b>；/22 的范围是 123.4.4.0 ~ 123.4.7.255（第三字节 4~7）。第三字节为 5 的块中，第四字节被分成 8 块（如下）。' },
+  { cls:'step', tag:'211 = 11010011', count:27, showBits:true, bitKind:'mark', showBlocks:true, ribbon:{k:3, ok:true},
+    log:'写出 123.4.5.211 的第四字节：<b>211 = 11010011</b>（琥珀色高 3 位将来是子网位）。' },
+  { cls:'step', tag:'识别子网位 / 主机位', count:27, showBits:true, bitKind:'mark', showBlocks:true,
+    log:'/27 意味着前 27 位是网络位：对第四字节来说，<b>高 3 位（110）是子网位</b>，低 5 位是主机号。' },
+  { cls:'ok', tag:'主机位归零 → 192', count:27, showBits:true, bitKind:'net', showBlocks:true, ribbon:{k:4, ok:true},
+    log:'求网络地址：主机位全部归 0 → <b>11000000 = 192</b> → 所在子网的网络地址是 <b>123.4.5.192</b>。' },
+  { cls:'ok', tag:'验证落块', count:27, showBits:true, bitKind:'net', showBlocks:true, blockHi:6, ribbon:{k:5, ok:true},
+    log:'验证：第四字节 192~223 这一块正是 110xxxxx，211 落在其中 → 所在子网 <b>123.4.5.192/27</b>（范围 123.4.5.192 ~ 123.4.5.223）。' },
+  { cls:'done', tag:'结论', count:27, showBits:true, bitKind:'net', showBlocks:true, blockHi:6,
+    log:'答案选 <b>C：123.4.5.192/27</b>。要点：借位 5 位定前缀，主机位归零定网络地址。',
+  },
+];
+
+snaps.forEach(function(sn, i){ sn.done = i === snaps.length - 1; });
+
+AW.init({
+  title: '2026-39 · 123.4.4.0/22 分 32 个等长子网：定位 123.4.5.211',
+  subtitle: '<code>/22 → 借 5 位 → /27</code> · <code>211 = 11010011 → 主机位归零 → 192</code>',
+  counterLabel: '网络前缀长度',
+  ribbonTitle: '关键步骤（✓ 已完成）',
+  intro: '点击「▶ 播放」：定前缀 → 定块大小 → 位拆解 → 归零得网络地址。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    bitBox = AW.el('div', '');
+    blockBox = AW.el('div', 'aw-row-label', '');
+    infoBox = AW.el('div', 'aw-row-label', '');
+    wrap.appendChild(bitBox);
+    wrap.appendChild(blockBox);
+    wrap.appendChild(infoBox);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    bitBox.innerHTML = sn.showBits
+      ? '<div class="aw-row-label"><b>123.4.5.</b>' + '211 的第四字节（8 位）</div>' + bitRow(sn.bitKind === 'net' ? BITS_NET : BITS_211, sn.bitKind) +
+        '<div class="aw-row-label">读法：' + (sn.bitKind === 'net' ? '110 <b>00000</b> → 192（主机位已归零）' : '110 10011 = 211') + '</div>'
+      : '<div class="aw-row-label">（尚未拆位）</div>';
+    blockBox.innerHTML = sn.showBlocks
+      ? '<b>第三字节 = 5 时的第四字节 8 个 /27 块：</b>' + blockRow(sn.blockHi == null ? -1 : sn.blockHi)
+      : '';
+    infoBox.innerHTML = '前缀 /22 → /27 · 每块 2⁵ = 32 个地址';
+  },
+  snaps: snaps,
+  result: {
+    big: '123.4.5.192/27（选 C）',
+    html: '/22 有 10 位主机号，分 32 个等长子网借 5 位 → <b>/27</b>（掩码 255.255.255.224），每块 32 个地址。211 = <b>11010011</b>，保留高 3 位子网位、低 5 位归零 → <b>11000000 = 192</b> → <b>123.4.5.192/27</b>，块范围 192~223 恰含 211。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

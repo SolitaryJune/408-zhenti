@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-35 · VLAN 隔离下的 ARP 表范围</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念推理动画：VLAN 划分 → H4 的 ARP 表只含同 VLAN 主机（答案 D：H6 不可能）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：ARP 表 = 广播域的产物',
+    cls: 'key',
+    body: '<p>交换机<b>按端口划分 VLAN1/2/3</b>，ARP 请求是本广播域内的<b>广播帧</b>。要判断"哪些表项不会出现在 H4 的 ARP 表中"，先查 H4 的广播域边界在哪。</p>' },
+  { title: '读图：每台主机在哪个 VLAN',
+    cls: 'key',
+    body: '<p>VLAN1 = 端口 <code>1~5、13~17</code>；VLAN2 = <code>6~8、18~20</code>；VLAN3 = <code>9~12、21~24</code>。对应主机：<code>H1(口13)、H2(口1)、H3(口2)、H4(口5)</code> 都在 <b>VLAN1</b>；<code>H5(口8)</code> 在 VLAN2；<code>H6(口9)、H7(口12)</code> 在 <b>VLAN3</b>。</p>' },
+  { title: 'H4 的 ARP 表可能有哪些',
+    cls: 'good',
+    body: '<p>H4 在 VLAN1，广播只在本 VLAN 内扩散 → ARP 表只可能有 <b>H1（192.168.3.91）、H2（192.168.3.81）、H3（192.168.3.125）</b>及 H4 自己的表项；H5/H6/H7 跨 VLAN，二层不通，不会出现。</p>' },
+  { title: '逐项核对 A、B、C',
+    cls: 'bad',
+    body: '<p>A = <code>192.168.3.81 / 00-18-A2-3B-36-21</code> = H2；B = <code>192.168.3.91 / 00-3E-C2-39-12-B5</code> = H1；C = <code>192.168.3.125 / 00-E5-78-4A-09-B2</code> = H3——三者都在 VLAN1，<b>可能出现</b>，都不是答案。</p>' },
+  { title: 'D 项：H6，跨 VLAN 不可能出现',
+    cls: 'bad',
+    body: '<p>D = <code>192.168.3.129 / 00-08-6E-05-A7-82</code> = <b>H6（端口 9，VLAN3）</b>。H4 的 ARP 广播被 VLAN1 边界挡住，永远学不到 H6 的映射。✗ 不会出现在 H4 的 ARP 表中。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>VLAN 隔离广播域 → ARP 广播不出 VLAN → ARP 表只含同 VLAN 主机</b>；IP 同网段 ≠ 二层可达。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'VLAN 划分交换机：H4 的 ARP 表里不会有谁',
+  subtitle: '考点：VLAN 隔离广播域 · ARP 广播范围 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '选 <b>D</b>（192.168.3.129 = H6，VLAN3）。记忆锚点：<b>VLAN 隔离广播域，ARP 广播不出本 VLAN</b>，H4 的 ARP 表只可能有同在 VLAN1 的 H1、H2、H3 的表项。干扰项 A/B/C 都是 VLAN1 成员；易错点：IP 同网段不代表二层可达。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

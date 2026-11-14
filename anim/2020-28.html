@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-28 有效访存时间的影响因素</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先写公式',
+    cls: 'key',
+    body: '<p>请求分页系统的有效（平均）访存时间公式：<code>EAT = (1−p)×内存访问时间 + p×缺页中断处理时间</code>，其中 p 是<b>缺页率</b>。四个因素往公式里对号入座即可。</p>' },
+  { title: '因素 I：缺页率',
+    cls: 'good',
+    body: '<p>I（缺页率）：<b>影响</b>。它就是公式里的权重 p：缺页率越高，走「缺页慢路径」的比例越大，平均访存时间被大幅拉高。</p>' },
+  { title: '因素 II：磁盘读写时间',
+    cls: 'good',
+    body: '<p>II（磁盘读写时间）：<b>影响</b>。缺页时要启动磁盘把缺的页面调入内存，这是缺页中断处理时间里最大的一块。</p>' },
+  { title: '因素 III：内存访问时间',
+    cls: 'good',
+    body: '<p>III（内存访问时间）：<b>影响</b>。不缺页时每次访存都要花这个时间，它是公式第一项——出现频率最高的一项。</p>' },
+  { title: '因素 IV：缺页处理程序的 CPU 时间',
+    cls: 'good',
+    body: '<p>IV（执行缺页处理程序的 CPU 时间）：<b>影响</b>。缺页处理不只是磁盘 I/O：处理程序要保护现场、查页表、选淘汰页、更新页表，这些指令执行也要花 CPU 时间，同样计入缺页中断处理时间。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>I、II、III、IV <b>全部影响</b>有效访存时间，答案选 <b>D</b>。记忆点：<code>EAT = (1−p)×III + p×(IV + II)</code>——I 是权重，II/III/IV 是两个分支的花销。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪些因素影响请求分页的有效（平均）访存时间',
+  subtitle: '考点：<code>虚拟内存 · 有效访存时间 EAT</code> · 四个因素对号入座',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（全部影响）',
+    html: 'EAT = <b>(1−p)×内存访问时间</b> + <b>p×（缺页处理程序 CPU 时间 + 磁盘读写时间）</b>。缺页率 I 是权重，III 是快路径花销，II 和 IV 是慢路径花销——四个缺一不可。易错：只盯磁盘 I/O 漏掉处理程序的 CPU 时间（IV）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

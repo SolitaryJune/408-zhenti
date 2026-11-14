@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-35 动画 · 确认帧会被哪些主机物理层收到</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：数据帧 + 确认帧在 Switch/Hub 拓扑中的转发推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 拓扑节点（绝对定位）：R2、Switch、Hub 在上排；H1、H2 挂 Switch；H3、H4 挂 Hub */
+var NODES = [
+  { id:'R2',  x:0,   y:20,  w:80,  label:'R2',     sub:'路由器·网关' },
+  { id:'SW',  x:240, y:20,  w:104, label:'Switch', sub:'数据链路层' },
+  { id:'HUB', x:520, y:20,  w:80,  label:'Hub',    sub:'物理层' },
+  { id:'H1',  x:150, y:130, w:76,  label:'H1',     sub:'192.168.3.2' },
+  { id:'H2',  x:300, y:130, w:76,  label:'H2',     sub:'192.168.3.3' },
+  { id:'H3',  x:470, y:130, w:76,  label:'H3',     sub:'192.168.3.251' },
+  { id:'H4',  x:620, y:130, w:76,  label:'H4',     sub:'192.168.3.252' }
+];
+
+/* 节点状态配色：send=帧正经过（琥珀） ok=收到确认帧（绿） miss=收不到（红） dim=无关 */
+var ST = {
+  '':    { bg:'#ffffff', bd:'#cbd5e1', fg:'#0f172a', op:1 },
+  send:  { bg:'#fef3c7', bd:'#d97706', fg:'#92400e', op:1 },
+  ok:    { bg:'#dcfce7', bd:'#16a34a', fg:'#14532d', op:1 },
+  miss:  { bg:'#fee2e2', bd:'#dc2626', fg:'#b91c1c', op:1 },
+  dim:   { bg:'#ffffff', bd:'#cbd5e1', fg:'#94a3b8', op:.45 }
+};
+
+var nodeEls = {};
+var frameEl = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.cssText = 'position:relative;width:700px;height:200px;';
+
+  /* 连接线：横线 h(x,y,w) / 竖线 v(x,y,h) */
+  function seg(x, y, w, h){
+    var s = AW.el('div', '');
+    s.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y + 'px;width:' + w +
+                      'px;height:' + h + 'px;background:#94a3b8;border-radius:2px;';
+    inner.appendChild(s);
+  }
+  seg(80, 43, 160, 2);    /* R2 — Switch */
+  seg(344, 43, 176, 2);   /* Switch — Hub */
+  seg(291, 66, 2, 34);    /* Switch 下引线 */
+  seg(188, 100, 152, 2);  /* Switch 下母线 */
+  seg(187, 100, 2, 30);   /* H1 上引线 */
+  seg(337, 100, 2, 30);   /* H2 上引线 */
+  seg(559, 66, 2, 34);    /* Hub 下引线 */
+  seg(508, 100, 152, 2);  /* Hub 下母线 */
+  seg(507, 100, 2, 30);   /* H3 上引线 */
+  seg(657, 100, 2, 30);   /* H4 上引线 */
+
+  NODES.forEach(function(n){
+    var d = AW.el('div', '');
+    d.style.cssText = 'position:absolute;left:' + n.x + 'px;top:' + n.y + 'px;width:' + n.w +
+      'px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;padding:5px 0;' +
+      'text-align:center;font-weight:700;font-size:13.5px;color:#0f172a;transition:all .25s;';
+    d.innerHTML = n.label + '<span style="display:block;font-size:10px;font-weight:400;color:#64748b;">' + n.sub + '</span>';
+    nodeEls[n.id] = d;
+    inner.appendChild(d);
+  });
+
+  frameEl = AW.el('div', '');
+  frameEl.style.cssText = 'margin-top:8px;width:700px;background:#f8fafc;border:1px solid #e2e8f0;' +
+    'border-radius:10px;padding:9px 12px;font-size:13px;color:#334155;';
+  wrap.appendChild(inner);
+  wrap.appendChild(frameEl);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  NODES.forEach(function(n){
+    var d = nodeEls[n.id];
+    var st = ST[(sn.who && sn.who[n.id]) || ''];
+    d.style.background = st.bg;
+    d.style.borderColor = st.bd;
+    d.style.color = st.fg;
+    d.style.opacity = st.op;
+  });
+  frameEl.innerHTML = sn.frame || '';
+}
+
+/* 每个 snap 描述一步：who=各节点状态，frame=当前帧信息 */
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    frame:'拓扑：H1、H2 接 Switch；H3、H4 接 Hub；Switch 与 Hub 级联，Switch 上连网关 R2。',
+    log:'初始：Hub 是物理层设备（来啥广播啥），Switch 是数据链路层设备（查 MAC 地址表转发）。',
+    who:{} },
+  { cls:'step', tag:'发数据帧', count:1,
+    frame:'数据帧 H2 → H4（目的 MAC = H4 的地址）',
+    log:'H2 向 H4 发数据帧；Switch 从 H2 端口收到，登记「MAC H2 ↔ H2 端口」（自学习）。',
+    who:{ H2:'send' } },
+  { cls:'shift', tag:'洪泛', count:2,
+    frame:'Switch 洪泛数据帧：从 H1、R2、Hub 端口全部发出（除入端口外）',
+    log:'地址表中没有 H4 → Switch 向除入端口外的所有端口洪泛：H1、R2、Hub 都收到。',
+    who:{ H2:'dim', SW:'send', H1:'send', R2:'send', HUB:'send' } },
+  { cls:'ok', tag:'到达 H4', count:3,
+    frame:'Hub 物理层广播数据帧 → H3、H4 都收到，H4 是目的主机',
+    log:'Hub 把数据帧广播给 H3、H4；H4 收到数据帧（注意：H1 收到的是洪泛的数据帧，不是确认帧）。',
+    who:{ H1:'dim', H3:'send', H4:'ok' } },
+  { cls:'step', tag:'回确认帧', count:4,
+    frame:'确认帧 H4 → H2（目的 MAC = H2 的地址）',
+    log:'H4 立即回确认帧；Hub 收到后物理层无条件广播 → 同在 Hub 上的 H3 也将收到。',
+    who:{ H3:'dim', H4:'send', HUB:'send' } },
+  { cls:'ok', tag:'H3 收到 ✓', count:5, ribbon:{ k:3, ok:true },
+    frame:'确认帧经 Hub 广播 → H3 从物理层收到 ✓',
+    log:'H3 与 H4 同接 Hub，从物理层收到广播的确认帧 ✓（除 H4 外第 1 台主机）。',
+    who:{ H3:'ok', HUB:'send', H4:'dim' } },
+  { cls:'ok', tag:'H2 收到 ✓', count:6, ribbon:{ k:2, ok:true },
+    frame:'Switch 查表：MAC H2 ↔ H2 端口 → 只从 H2 端口定向转发',
+    log:'Switch 从上行口收到确认帧，目的 H2 已在地址表 → 定向转发，H2 从物理层收到 ✓（第 2 台）。',
+    who:{ SW:'send', H2:'ok' } },
+  { cls:'miss', tag:'H1 收不到 ✗', count:7, ribbon:{ k:1, ok:false },
+    frame:'确认帧被 Switch 定向转发 → H1 收不到 ✗',
+    log:'H1 收到过数据帧，但收不到确认帧——Switch 按地址表过滤了它（选 C 的典型错误）。',
+    who:{ H1:'miss' } },
+  { cls:'miss', tag:'R2 收不到 ✗', count:8, ribbon:{ k:4, ok:false },
+    frame:'确认帧也没有被转发给 R2 ✗',
+    log:'R2 是路由器不是主机，且确认帧根本没被 Switch 转发到它的端口。',
+    who:{ R2:'miss' } },
+  { cls:'done', tag:'完成', count:9, done:true,
+    frame:'除 H4 外，从物理层收到确认帧的主机 = 仅 H2、H3',
+    log:'结论：仅 H2、H3 从物理层收到确认帧 → 选 D。',
+    who:{ H2:'ok', H3:'ok', H1:'dim', R2:'dim' } },
+];
+
+AW.init({
+  title: '除 H4 外，哪些主机从物理层收到确认帧？',
+  subtitle: '考点：Hub（物理层·广播）与 Switch（链路层·查表转发）的区别 · 帧转发过程推演（2016-35）',
+  counterLabel: '演示进度',
+  ribbonTitle: '候选主机（第1=H1 第2=H2 第3=H3 第4=R2）',
+  intro: '点击「▶ 播放」跟踪数据帧与确认帧的传播路径。',
+  snaps: snaps,
+  build: build,
+  render: render,
+  result: {
+    big: '仅 H2、H3（选 D）',
+    html: '确认帧的两条到达路径：<b>H4 → Hub（无条件广播）→ H3 ✓</b>；<b>H4 → Hub → Switch（查 MAC 表定向转发）→ H2 ✓</b>。H1、R2 被 Switch 过滤。关键铺垫：H2 先发的数据帧让 Switch 学到了「MAC H2 ↔ H2 端口」，确认帧才不会被洪泛。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

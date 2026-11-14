@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-42 cmpCountSort 计数排序变体</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var A42 = ['25','-10','25','10','11','19'];
+
+function cell6(vals, cls, ptrs){
+  var h = '<div class="aw-cells">';
+  for(var i = 0; i < 6; i++){
+    var has = vals && vals[i] != null;
+    var v = has ? vals[i] : '·';
+    var c = cls && cls[i] ? ' ' + cls[i] : (has ? '' : ' dim');
+    h += '<div class="aw-col"><div class="aw-ptr">' + ((ptrs && ptrs[i]) || '') + '</div>' +
+         '<div class="aw-box' + c + '">' + v + '</div>' +
+         '<div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  return h + '</div>';
+}
+function rows42(aCls, aPtr, cVals, cCls, bVals, bCls, bPtr, note){
+  var h = '<div class="aw-scroll">';
+  h += '<div class="aw-row-label"><b>a</b>（原始数组）</div>' + cell6(A42, aCls, aPtr);
+  h += '<div class="aw-row-label" style="margin-top:6px"><b>count</b>（归位下标）</div>' + cell6(cVals, cCls, null);
+  h += '<div class="aw-row-label" style="margin-top:6px"><b>b</b>（结果数组）</div>' + cell6(bVals, bCls, bPtr);
+  if(note) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:8px">' + note + '</div>';
+  return h + '</div>';
+}
+var KEYC = ['','','','','',''];
+function mark(idx, base){
+  var a = (base || ['','','','','','']).slice();
+  a[idx] = 'hit';
+  return a;
+}
+
+AW.init({
+  title: 'cmpCountSort：计数排序变体三问',
+  subtitle: 'a = {25, −10, 25, 10, 11, 19} · 每对 (i,j) 恰比较一次，计数给"大者"',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步推演三问。',
+
+  snaps: [
+    { cls:'step', tag:'算法思想', log:'每对 (i,j)（i&lt;j）比较一次：a[i]&lt;a[j] → count[j]++，否则 count[i]++——计数加给较大者（相等算靠前者）', count:0,
+      html: rows42(null, null, null, null, null, null, null,
+        'count[k] 最终 = <b>小于 a[k] 的元素个数 + 排在 k 之后的相等元素个数</b>，恰是 a[k] 在 b 中的归位下标。') },
+
+    { cls:'shift', tag:'比较 i=0', log:'i=0：a[0]=25 与后面 5 个比较都不小 → count[0] 累加到 5（与 a[2] 的 25 相等也算自己的）', count:1,
+      html: rows42(mark(0), null, ['5','0','0','0','0','0'], ['hit','','','','',''], null, null, null,
+        '对 (0,1)(0,2)(0,3)(0,4)(0,5)：25 不小于任何后者 → 全部 count[0]+1。与 a[2] 相等时走 else 分支，也算靠前者 a[0] 的。') },
+
+    { cls:'step', tag:'比较 i=1', log:'i=1：−10 比谁都小 → count[1] 不加，count[2..5] 各 +1', count:2,
+      html: rows42(mark(1), null, ['5','0','1','1','1','1'], ['','hit','hit','hit','hit','hit'], null, null, null,
+        '−10 是最小值，每对都是 a[i] &lt; a[j] → count[j]+1。') },
+
+    { cls:'ok', tag:'count 完成', log:'其余对继续累计：count = [5,0,4,1,2,3]（共比较 15 对）', count:3,
+      html: rows42(null, null, ['5','0','4','1','2','3'], ['hit','','hit','','',''], null, null, null,
+        'a[2]=25 压过 10/11/19 → count[2]=4；10&lt;11&lt;19 → count[4]=2、count[5]=3。') },
+
+    { cls:'ok', tag:'第 1 问', log:'按 b[count[i]]=a[i] 归位：b = {−10,10,11,19,25,25}', count:4,
+      html: rows42(null, null, ['5','0','4','1','2','3'], ['ok','ok','ok','ok','ok','ok'],
+        ['-10','10','11','19','25','25'], ['ok','ok','ok','ok','key','key'], ['','','','','←a[2]','←a[0]'],
+        '<b>b = {−10, 10, 11, 19, 25, 25}</b> —— 第 1 问答案。') },
+
+    { cls:'step', tag:'第 2 问', log:'比较次数：i∈[0,n−2]、j∈[i+1,n−1]，每对恰一次 → n(n−1)/2（n=6 时 15 次）', count:5,
+      html: rows42(null, null, ['5','0','4','1','2','3'], ['ok','ok','ok','ok','ok','ok'],
+        ['-10','10','11','19','25','25'], ['ok','ok','ok','ok','',''], null,
+        '比较次数 = <b>n(n−1)/2</b>，与数据初始状态无关。') },
+
+    { cls:'miss', tag:'第 3 问·不稳定', log:'两个 25：先出现的 a[0] 拿 count=5 去了 b[5]，后出现的 a[2] 拿 count=4 去了 b[4]——相对次序颠倒 → 不稳定', count:6,
+      html: rows42(null, null, ['5','0','4','1','2','3'], ['hit','','hit','','',''],
+        ['-10','10','11','19','25','25'], ['','','','miss','miss',''], ['','','','←a[2]','←a[0]',''],
+        '先出现的 25 反而排到了后面 —— <b>不稳定</b>。原因：相等元素比较时计数加给了<b>靠前者</b>。') },
+
+    { cls:'ok', tag:'改为稳定', log:'修改：相等时把计数加给靠后的 j——先出现的 25 得 4 排前、后出现的得 5 排后 → 稳定', count:7,
+      html: rows42(null, null, null, null, ['-10','10','11','19','25','25'], ['','','','ok','ok','ok'], ['','','','←a[0]','←a[2]',''],
+        '改法：<code>if (a[i] &lt; a[j] || (a[i] == a[j] &amp;&amp; i &lt; j)) count[j]++; else count[i]++;</code> 相等时计数给靠后者，先出现的排在前面。') },
+
+    { cls:'done', tag:'完成', log:'三问结论：b={−10,10,11,19,25,25}；比较 n(n−1)/2 次；不稳定，相等改计给靠后者即稳定', count:8, done:true,
+      html: rows42(null, null, ['5','0','4','1','2','3'], ['ok','ok','ok','ok','ok','ok'],
+        ['-10','10','11','19','25','25'], ['ok','ok','ok','ok','ok','ok'], null,
+        '<b>①</b> b = {−10,10,11,19,25,25}；<b>②</b> n(n−1)/2 次；<b>③</b> 不稳定 → 相等时计数改给靠后者。') },
+  ],
+
+  result: {
+    big: '15 次比较 · 不稳定',
+    html: '<b>①</b> b = {−10,10,11,19,25,25}；<b>②</b> 比较次数 n(n−1)/2；<b>③</b> 不稳定（两个 25 次序颠倒），把相等情形的计数改给靠后者即可稳定：<code>a[i]==a[j] &amp;&amp; i&lt;j</code> 时 count[j]++。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

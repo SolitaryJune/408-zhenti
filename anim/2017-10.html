@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-10 动画：归并排序 vs 插入排序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-10 归并/插入排序理由辨析（概念/推理链类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>「内部排序选归并不选插入的理由」——这是一笔工程账，共三笔：代码长短、空间多少、效率高低。逐条核对真假。</p>' },
+  { title: '理由Ⅰ：归并代码更短？', cls: 'bad',
+    body: '<p><b>错</b>。归并要递归划分＋辅助数组＋合并过程，代码比插入排序<b>长</b>；插入排序才是短小简单的那个。</p>' },
+  { title: '理由Ⅱ：归并占用空间更少？', cls: 'bad',
+    body: '<p><b>错</b>。归并需要 <code>O(n)</code> 的辅助数组；插入排序原地排序，辅助空间 <code>O(1)</code>。归并空间开销反而<b>更大</b>。</p>' },
+  { title: '理由Ⅲ：归并运行效率更高？', cls: 'good',
+    body: '<p><b>对</b>。归并 <code>O(n log n)</code> 且与初始序列无关；插入排序 <code>O(n²)</code>（基本有序时最好 O(n)）。规模大时差距悬殊。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>站得住脚的理由只有 Ⅲ → 选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2017-10　选归并不选插入排序的理由',
+  subtitle: '考点：<code>内部排序算法比较</code> · 代码量 / 空间 / 效率 三笔账',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 Ⅲ）',
+    html: '记忆锚点：归并换插入的三笔账——<b>代码更长、空间更多、效率更高</b>。归并以 O(n) 空间换 O(n log n) 时间；插入排序的优势是简单、省空间、基本有序时接近 O(n)。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

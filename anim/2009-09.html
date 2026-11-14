@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-09 动画 · 小根堆插入 3 的向上调整</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：堆插入 → 逐层与父结点比较上浮
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var heapBox = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl = AW.el('div', 'aw-row-label', '<b>堆数组</b>（下标 1～9，下标 i 的父结点在 ⌊i/2⌋：9 → 4 → 2 → 1）');
+  heapBox = AW.el('div', '');
+  wrap.appendChild(lbl);
+  wrap.appendChild(heapBox);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var i, cells = [], classes = [], ptr = {};
+  for(i = 0; i < 9; i++){
+    cells.push(sn.arr[i] === 0 ? '' : String(sn.arr[i]));
+    classes.push('');
+  }
+  if(sn.cur){ classes[sn.cur - 1] = 'hit'; ptr[sn.cur] = '↑ 3'; }
+  if(sn.par){ classes[sn.par - 1] = 'ok'; ptr[sn.par] = '父结点'; }
+  heapBox.innerHTML = '';
+  heapBox.appendChild(AW.cellRow(cells, classes, ptr, 1));
+}
+
+AW.init({
+  title: '小根堆插入 3：向上调整演示',
+  subtitle: '原堆 <code>5,8,12,19,28,20,15,22</code> · 插入 3 后与父结点逐层比较、小则交换（2009-09）',
+  counterLabel: '已比较',
+  ribbonTitle: '比较轮次（✓ 触发交换）',
+  intro: '点击「▶ 播放」，看 3 从堆尾一路「上浮」到堆顶。',
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'初始小根堆：下标 1～8 为 5, 8, 12, 19, 28, 20, 15, 22，第 9 格空着（插入点）。', count:0, arr:[5,8,12,19,28,20,15,22,0], cur:0, par:0 },
+    { cls:'shift', tag:'放入 3', log:'先把 3 放到第 9 个位置 —— 它是下标 4（结点 19）的右孩子，随后开始向上调整。', count:0, arr:[5,8,12,19,28,20,15,22,3], cur:9, par:0 },
+    { cls:'ok', tag:'交换 3↔19', log:'第 1 次比较：3 < 父结点 19（下标 4），交换，3 上浮到下标 4。', count:1, arr:[5,8,12,3,28,20,15,22,19], cur:4, par:9, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'交换 3↔8', log:'第 2 次比较：3 < 父结点 8（下标 2），交换，3 上浮到下标 2。', count:2, arr:[5,3,12,8,28,20,15,22,19], cur:2, par:4, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'交换 3↔5', log:'第 3 次比较：3 < 父结点 5（下标 1），交换，3 上浮到堆顶（下标 1）。', count:3, arr:[3,5,12,8,28,20,15,22,19], cur:1, par:2, ribbon:{k:3, ok:true} },
+    { cls:'done', tag:'完成', log:'3 已在下标 1，没有父结点，调整结束：共比较 3 次、交换 3 次，其余结点位置未动。', count:3, arr:[3,5,12,8,28,20,15,22,19], cur:1, par:0, done:true },
+  ],
+
+  result: {
+    big: '3, 5, 12, 8, 28, 20, 15, 22, 19',
+    html: '与选项 <b>A</b> 完全一致，且逐层验证仍满足「父 ≤ 子」。记忆点：插入只调整<b>根到新结点的一条路径</b>（9 → 4 → 2 → 1），小根堆规则是「子小于父则交换上浮」；B、C、D 动了大量无关结点，均不可能。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

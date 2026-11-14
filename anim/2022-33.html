@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-33 概念辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2022-33：OSI 中实现相邻结点间流量控制的层（概念辨析/逐项排除）
+     外壳与控件全部由 assets/anim-engine.js 提供。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：谁和谁之间？',
+    cls: 'key',
+    body: '<p>题干关键词：<b>相邻结点间</b> ＋ <b>流量控制</b>。「相邻结点」＝同一段链路直接相连的两个结点（主机 ↔ 交换机/路由器）。判断归属层的唯一办法：看它控制的是<b>谁和谁之间</b>的流量。</p>' },
+  { title: '逐项分析 A：物理层',
+    cls: 'bad',
+    body: '<p>A（物理层）：<b>错</b>。物理层只负责在传输媒体上收发<b>比特流</b>，连帧/报文的概念都没有，不存在流量控制机制。</p>' },
+  { title: '逐项分析 B：数据链路层',
+    cls: 'good',
+    body: '<p>B（数据链路层）：<b>对</b>。链路两端的接收方来不及收时，让发送方停等/降速（停止-等待协议、链路级滑动窗口），作用范围恰好是<b>一条链路的两端＝相邻结点</b>。</p>' },
+  { title: '逐项分析 C：网络层',
+    cls: 'bad',
+    body: '<p>C（网络层）：<b>错</b>。网络层面向<b>分组转发与路由</b>，其流量问题主要归入拥塞控制讨论，不是「相邻结点间」的流量控制。</p>' },
+  { title: '逐项分析 D：传输层',
+    cls: 'bad',
+    body: '<p>D（传输层）：<b>错</b>。传输层确实有流量控制（TCP 滑动窗口），但它是<b>端到端</b>的、跨越整个网络——是「端到端」不是「相邻结点」，范围不匹配。这是最强干扰项。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>链路层管相邻结点、传输层管端到端</b>——题干见「相邻结点间流量控制」直接选数据链路层。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2022-33：相邻结点间流量控制属于哪一层？',
+  subtitle: '考点：<code>OSI 参考模型 · 各层功能</code> · 逐项排除法',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '数据链路层负责<b>相邻结点间</b>的流量控制。干扰项 D（传输层）是<b>端到端</b>流量控制，机制对但范围不对——这是本题最常见的失分点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

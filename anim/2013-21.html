@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-21 磁盘平均存取时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：四段时间', cls: 'key',
+    body: '<p>转速 10000rpm、寻道 6ms、传输率 20MB/s、控制器延迟 0.2ms，读一个 4KB 扇区。<br>分解：<b>寻道 + 旋转延迟（半圈） + 传输 + 控制器延迟</b>。</p>' },
+  { title: '第 1 段：平均寻道 6ms', cls: '',
+    body: '<p>磁头移到目标磁道，题目直接给定 <b>6ms</b>。累计：6ms。</p>' },
+  { title: '第 2 段：平均旋转延迟 3ms', cls: '',
+    body: '<p>10000 rpm → 每转 <code>60s ÷ 10000 = 6ms</code>；平均要等<b>半圈</b>：6 ÷ 2 = <b>3ms</b>。累计：9ms。</p>' },
+  { title: '第 3 段：传输 4KB ≈ 0.2ms', cls: '',
+    body: '<p><code>4KB ÷ 20MB/s</code>：4096B ÷ (20×10<sup>6</sup> B/s) ≈ 0.0002s = <b>0.2ms</b>。累计：9.2ms。</p>' },
+  { title: '第 4 段：控制器延迟 0.2ms', cls: '',
+    body: '<p>题目给定的磁盘控制器延迟 <b>0.2ms</b>。累计：9.4ms。</p>' },
+  { title: '求和并对照选项', cls: 'good',
+    body: '<p>6 + 3 + 0.2 + 0.2 = <b>9.4ms</b> → 选项 <b>B</b>。</p>' },
+  { title: '排除 A（9ms）', cls: 'bad',
+    body: '<p>9ms = 6 + 3：漏掉了<b>传输时间</b>和<b>控制器延迟</b>两小段，分解不完整。</p>' },
+  { title: '排除 C（12ms）与 D（12.4ms）', cls: 'bad',
+    body: '<p>把旋转延迟算成<b>一整圈 6ms</b>：6+6 = 12ms（再漏后两段即 C）；6+6+0.2+0.2 = 12.4ms（含后两段但旋转取整圈，即 D）。平均只需等半圈。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：平均旋转延迟 = 半圈 = <code>转一圈时间 ÷ 2</code>；别忘传输段和题目给的控制器延迟。</p>' },
+];
+
+var RIBBON_AT = { 5: { k: 2, ok: true }, 6: { k: 1, ok: false }, 7: { k: 3, ok: false }, 8: { k: 4, ok: false } };
+
+var COUNTS = ['0', '6', '9', '9.2', '9.4', '9.4', '9.4', '9.4', '9.4'];
+
+var SCLS = { '': 'step', key: 'shift', good: 'ok', bad: 'miss' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : SCLS[s.cls || ''],
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: COUNTS[i],
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBON_AT[i]) {
+    sn.ribbon = RIBBON_AT[i];
+    sn.cls = sn.ribbon.ok ? 'ok' : 'miss';
+    sn.tag = '选项 ' + ['A', 'B', 'C', 'D'][sn.ribbon.k - 1] + (sn.ribbon.ok ? ' ✓' : ' ✗');
+  }
+  return sn;
+});
+
+AW.init({
+  title: '2013 真题 · 磁盘读一个扇区的平均时间',
+  subtitle: '转速 <code>10000rpm</code> · 寻道 <code>6ms</code> · 传输率 <code>20MB/s</code> · 控制器延迟 <code>0.2ms</code> · 扇区 4KB',
+  counterLabel: '累计 ms',
+  ribbonTitle: '选项核对（✓ 正确 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」逐段累加：寻道 → 半圈旋转 → 传输 → 控制器延迟。',
+  snaps: snaps,
+  result: {
+    big: '9.4ms',
+    html: '答案 <b>B</b>。<code>6（寻道）+ 3（半圈）+ 0.2（传输）+ 0.2（控制器）= 9.4ms</code>。<br>记忆锚点：平均旋转延迟是<b>转一圈时间的一半</b>（6ms ÷ 2 = 3ms）；D（12.4ms）就是把它算成整圈的陷阱。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

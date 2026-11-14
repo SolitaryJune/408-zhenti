@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-03 循环队列初始 front/rear · 入队推演动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+// 取 n = 6 画图：数组 A[0..5]
+function arrRow(chars, classes, ptrs){
+  return AW.cellRow(chars, classes, ptrs || null, 0);   // 下标从 A[0] 开始
+}
+
+var Q = '?';
+
+var snaps = [
+  { cls:'step', tag:'题面', count:0,
+    html:'<div class="aw-row-label"><b>循环队列</b>存于一维数组 A[0..n−1]（取 n = 6 画图），初始为空</div>' +
+         arrRow([Q,Q,Q,Q,Q,Q], ['dim','dim','dim','dim','dim','dim']) +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:10px">front、rear 的<b>初始值</b>待定。要求：第 1 个进队的元素必须存在 <b>A[0]</b>。</div>',
+    log:'循环队列存于数组 A[0..n−1]（取 n=6 画图），初始为空，front/rear 待定。' },
+
+  { cls:'shift', tag:'约定', count:1,
+    html:'<div style="font-size:14.5px;line-height:2.1;color:#334155">' +
+         '本题两条口径：<br>' +
+         '① 队列<b>非空</b>时，<b style="color:#2563eb">front 指队头元素</b>、<b style="color:#d97706">rear 指队尾元素</b>（指向元素本身，不是空位）；<br>' +
+         '② 入队动作：<code>rear = (rear + 1) % n</code> <b>先加 1</b>，再存入 <code>A[rear]</code>；front 只在出队时移动。</div>',
+    log:'口径①：front/rear 分别指向队头/队尾元素；口径②：入队先加 1 再存入。' },
+
+  { cls:'step', tag:'目标', count:2,
+    html:'<div style="font-size:15px;line-height:2;color:#334155">' +
+         '要求第 1 个进队的元素存在 <b style="color:#16a34a">A[0]</b>。入队时 rear 先加 1 才定位置——<br>' +
+         '<b>反推：rear 加 1 后必须等于 0。</b></div>',
+    log:'目标：第 1 个元素落在 A[0] ⇒ 「rear 加 1 之后」必须指向 0 号单元。' },
+
+  { cls:'ok', tag:'定 rear', count:3,
+    html:'<div class="aw-row-label"><b>初始 rear</b> 的位置（数组画成环形，加 1 越过 5 就回到 0）</div>' +
+         arrRow([Q,Q,Q,Q,Q,Q], ['dim','dim','dim','dim','dim','hit'], {6:'rear = n−1'}) +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:10px">' +
+         '初始 <b>rear = n−1</b>：入队时 rear=(n−1+1) mod n = <b>0</b>，第 1 个元素恰好存入 A[0]。✓</div>',
+    log:'反推得初始 rear = n−1：(n−1+1) mod n = 0，存入位置正是 A[0]。' },
+
+  { cls:'ok', tag:'定 front', count:4,
+    html:'<div class="aw-row-label">front 与 rear 的初始位置</div>' +
+         arrRow([Q,Q,Q,Q,Q,Q], ['dim','dim','dim','dim','dim','hit'], {1:'front = 0', 6:'rear = n−1'}) +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:10px">' +
+         'front 指向队头元素，而<b>入队不移动 front</b>；第 1 个元素进队后 front 必须指向 A[0] ⇒ 初始 <b>front = 0</b>。</div>',
+    log:'入队不动 front ⇒ 第 1 个元素进队后 front 要指向 A[0]，初始 front = 0。' },
+
+  { cls:'ok', tag:'验证', count:5,
+    html:'<div class="aw-row-label">第 1 个元素 a 入队后</div>' +
+         arrRow(['a',Q,Q,Q,Q,Q], ['hit','dim','dim','dim','dim','dim'], {1:'front·rear=0'}) +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:10px">' +
+         'rear=(n−1+1)%n=0，a 存入 A[0]；front=0、rear=0 都指向 A[0]——单元素队列<b>头尾重合</b>，符合口径。✓</div>',
+    log:'验证：a 存入 A[0]，front=rear=0 指向它，头尾重合，口径自洽。' },
+
+  { cls:'ok', tag:'再验', count:6,
+    html:'<div class="aw-row-label">第 2 个元素 b 入队后</div>' +
+         arrRow(['a','b',Q,Q,Q,Q], ['ok','hit','dim','dim','dim','dim'], {1:'front=0', 2:'rear=1'}) +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:10px">' +
+         'b 存入 A[1]，rear 变 1，front 仍指向 A[0]（队头）——继续自洽。✓</div>',
+    log:'再入队 b：存 A[1]，rear=1，front 不动仍指队头 A[0]。' },
+
+  { cls:'miss', tag:'排除', count:7,
+    html:'<div style="font-size:14.5px;line-height:2.1;color:#334155">' +
+         'A（0, 0）：rear=0 时按「先加再存」，第 1 个元素落到 <b>A[1]</b>，违背要求 ✗<br>' +
+         'C（n−1, 0）、D（n−1, n−1）：front=n−1 指不到 A[0]，与「front 指队头元素」矛盾 ✗<br>' +
+         '只剩 B（0, n−1）。</div>',
+    log:'排除 A/C/D：A 会让首元素落 A[1]，C/D 的 front 指不到 A[0]。' },
+
+  { cls:'done', tag:'结论', count:8, done:true,
+    html:'<div style="font-size:15px;line-height:2.1;color:#334155">' +
+         '「<b>指向元素本身</b> + <b>先加 1 再存入</b>」的口径下，要让第 1 个元素落在 A[0]：<br>' +
+         '初始 <b style="color:#16a34a;font-size:17px">front = 0，rear = n−1</b> —— 答案选 <b style="color:#dc2626;font-size:18px">B</b>。</div>',
+    log:'结论：初始 front=0、rear=n−1，答案 B。' },
+];
+
+AW.init({
+  title: '2011-03 · 循环队列的初始 front 与 rear',
+  subtitle: '数组 <code>A[0..n−1]</code>（n=6 画图）· front/rear 指向队头/队尾元素 · 入队先加 1 再存入',
+  counterLabel: '推进步数',
+  intro: '点击「▶ 播放」看第 1 个元素如何被送到 A[0]。',
+  snaps: snaps,
+  result: {
+    big: '答案 B · (0, n−1)',
+    html: '入队动作是 <code>rear=(rear+1)%n</code> 后存入，要落在 A[0] 必须<b>初始 rear = n−1</b>；front 指向队头元素且入队不移动，故<b>初始 front = 0</b>。干扰项 A 混用了「rear 指向队尾下一空位」的口径（先存再加）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-23 不可能导致饥饿的调度算法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：什么叫"饥饿"',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>饥饿 = 进程<b>长期等不到处理机或资源</b>而无法推进。判断标准：该算法"挑下一个进程"的规则，是否可能让某一类进程<b>永远排不上队</b>。</p>' },
+  { title: 'A 时间片轮转：不可能饥饿（正确答案）',
+    cls: 'good',
+    tag: '选项 A',
+    body: '<p>就绪进程排成 <b>FIFO 队列</b>，人人轮流上一个时间片，排到就上处理机。任何进程的等待时间都有<b>上界</b>——前面的进程迟早执行完，队头迟早轮到自己。所以<b>不可能饥饿</b>。</p>' },
+  { title: 'B 静态优先数调度：可能饥饿',
+    cls: 'bad',
+    tag: '选项 B',
+    body: '<p>优先级固定不变，不会因等待久了而升高。只要高优先级进程<b>源源不断</b>，低优先级进程可能一直被压在后面 → <b>可能饥饿</b>。</p>' },
+  { title: 'C 非抢占式短作业优先：可能饥饿',
+    cls: 'bad',
+    tag: '选项 C',
+    body: '<p>每次调度都挑估计<b>最短</b>的作业。长作业运行时不会被抢，但每次轮到调度时，新来的更短作业仍会排到它前面 → 长作业可能被无限推后，<b>可能饥饿</b>。</p>' },
+  { title: 'D 抢占式短作业优先：更可能饥饿',
+    cls: 'bad',
+    tag: '选项 D',
+    body: '<p>更短的作业一到就<b>抢占</b>处理机，长作业被反复打断、一再推迟，饥饿的可能性比非抢占式更大 → <b>可能饥饿</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>按"到达顺序"轮流的算法（时间片轮转）等待时间有上界，不会饿死人；按"优先级/长短"挑人的算法都可能让某类进程永远排队</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-23】不可能导致饥饿的调度算法',
+  subtitle: '考点：饥饿（starvation）· 四种调度算法逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '时间片轮转按 FIFO 轮流给时间片，等待时间有上界，<b>不可能饥饿</b>；静态优先数（B）、非抢占式 SJF（C）、抢占式 SJF（D）都可能让长作业/低优先级进程永远排队。记忆点：<b>轮转靠"排队"，饥饿源于"挑人"</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

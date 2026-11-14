@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-29 哪些技术能降低平均访存时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：标尺先立好',
+    cls: 'key',
+    body: '<p>页式虚拟存储下：<b>平均访存时间 ≈ 正常访问时间 + 缺页率 × 缺页处理代价</b>，正常访问还要叠加查页表的开销。所以有效手段只有两类：<b>① 让地址转换/查表更快；② 让缺页更少或缺页代价更低</b>。四项技术逐一对照。</p>' },
+  { title: 'I. TLB：有效',
+    cls: 'good',
+    ribbon: { k: 1, ok: true },
+    body: '<p>TLB 缓存近期用过的页表项，命中时<b>免去查内存中的页表</b>，直接拿到页框号 → 加快地址转换 → <b>缩短每次访问的时间</b>。<b>√ 有效（第①类）</b></p>' },
+  { title: 'II. 多级页表：无效（反而更慢）',
+    cls: 'bad',
+    ribbon: { k: 2, ok: false },
+    body: '<p>多级页表是<b>"用时间换空间"</b>：把单级大页表拆成分散的小页表，节省的是页表占用的内存与连续性；代价是查一次页表变成查多次，<b>每多一级就多一次访存</b> → 平均访存时间不降反升。<b>× 无效</b></p>' },
+  { title: 'III. 工作集模型：有效',
+    cls: 'good',
+    ribbon: { k: 3, ok: true },
+    body: '<p>按工作集为进程分配页框，让近期要访问的页面基本驻留内存 → <b>显著降低缺页率</b> → 缺页处理变少 → 平均访存时间下降。<b>√ 有效（第②类）</b></p>' },
+  { title: 'IV. 页缓冲队列：有效',
+    cls: 'good',
+    ribbon: { k: 4, ok: true },
+    body: '<p>被淘汰的页先进入<b>页缓冲队列</b>暂不写回磁盘；若马上又被访问，可直接从队列取回，<b>免去磁盘 I/O</b> → 降低<b>缺页处理代价</b> → 平均访存时间下降。<b>√ 有效（第②类）</b></p>' },
+  { title: '排除干扰项 A',
+    cls: 'bad',
+    body: '<p>选 A（仅 I、II）的人把<b>多级页表</b>当成了提速技术——它省的是内存，不是访存时间；真正与它搭配提速的是 TLB（先查 TLB，命中就不用逐级查页表）。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>有效的是 <b>I、III、IV</b> → 答案选 <b>D</b>。记忆锚点：<b>TLB 加快转换，工作集降缺页率，页缓冲队列降缺页代价</b>；多级页表是省内存技术，方向相反。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var o = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (s.ribbon) o.ribbon = s.ribbon;
+  return o;
+});
+
+AW.init({
+  title: '2026-29 · 哪些技术能降低系统平均访存时间',
+  subtitle: '考点：<code>平均访存时间 = 转换开销 + 缺页率 × 缺页代价</code> · 四项技术逐项判定',
+  counterLabel: '推理步',
+  ribbonTitle: '技术判定（✓ 有效 / ✗ 无效）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（I、III、IV）',
+    html: '记忆锚点：<b>TLB 加快地址转换；工作集模型降低缺页率；页缓冲队列降低缺页代价</b>。多级页表是"用时间换空间"的省内存技术，查表反而更慢。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

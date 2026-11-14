@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-34 · 哪种调制需要 2 个不同频率载波</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析动画：ASK / PSK / FSK / DPSK 各自需要几个载波（答案 C：FSK）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：数的是"不同频率的载波"',
+    cls: 'key',
+    body: '<p>题干关键词：<code>二进制数字调制</code>、<code>2 个不同频率载波</code>。二进制调制用载波参数表示 0/1 两个码元：ASK 调<b>幅度</b>、FSK 调<b>频率</b>、PSK/DPSK 调<b>相位</b>。谁要按码元"换频率"，谁就需要 2 个载波。</p>' },
+  { title: 'A 选项：ASK（幅移键控）',
+    cls: 'bad',
+    body: '<p>ASK 用<b>幅度</b>表示码元（如 0 → 幅度为 0，1 → 恒定幅度），载波频率固定不变，只需 <b>1 个</b>载波。✗</p>' },
+  { title: 'B 选项：PSK（相移键控）',
+    cls: 'bad',
+    body: '<p>PSK 用<b>相位</b>表示码元（0 → 相位 0，1 → 相位 π），频率不变，只需 <b>1 个</b>载波。两种码元状态 ≠ 两个载波。✗</p>' },
+  { title: 'D 选项：DPSK（差分相移键控）',
+    cls: 'bad',
+    body: '<p>DPSK 用<b>相邻码元的相位变化</b>编码（相位有变化表示 1、无变化表示 0），仍然是同一频率的 <b>1 个</b>载波。✗</p>' },
+  { title: 'C 选项：FSK（频移键控）',
+    cls: 'good',
+    body: '<p>FSK 用<b>频率</b>表示码元：码元 0 用频率 <code>f1</code>，码元 1 用频率 <code>f2</code>——正好需要 <b>2 个不同频率</b>的载波。✓</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（FSK）</b>。记忆锚点：<b>调幅 1 个、调相 1 个、调频 2 个</b>——只有"换频率"才必须备两个不同频率的载波。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '二进制数字调制：谁需要 2 个不同频率载波',
+  subtitle: '考点：ASK / PSK / FSK / DPSK 的调制对象与载波个数 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '选 <b>C（FSK）</b>。记忆锚点：<b>ASK 调幅、PSK/DPSK 调相都只用 1 个载波；FSK 调频，二进制时用 f1、f2 两个不同频率的载波</b>。干扰项 A/B/D 的误区：把"两种码元状态"错当成"两个载波"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

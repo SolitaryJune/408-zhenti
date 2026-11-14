@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-18 主存 MM 与控制存储器 CS 的对比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：MM 与 CS 各是什么',
+    cls: 'key',
+    body: '<p>MM = 主存储器（内存，存指令和数据）；CS = 控制存储器（位于微程序控制器中，存微指令）。本题要挑出<b>错误</b>的叙述。</p>' },
+  { title: '四个维度对比',
+    cls: 'step',
+    body: '<p>位置：MM 在 CPU 外，CS 在 CPU 内；内容：MM 存指令和数据，CS 存微指令；访问：MM 按地址访问，CS 按<b>微地址</b>访问；介质：MM 用 RAM+ROM，CS 用 ROM。</p>' },
+  { title: '核对 A、C、D',
+    cls: 'good',
+    body: '<p>A：MM 在 CPU 外、CS 在 CPU 内 ✓；C：MM 存指令和数据、CS 存微指令 ✓；D：MM 用 RAM 和 ROM 实现、CS 用 ROM 实现 ✓ —— 三项说法都正确。</p>' },
+  { title: 'B 错在哪',
+    cls: 'bad',
+    body: '<p>"MM 按地址访问，CS 按内容访问"——<b>错</b>。控存中的微指令也是按<b>微地址</b>逐条取出执行的；"按内容访问"是<b>相联存储器</b>（如 TLB、Cache 标记比较）的特征。</p>' },
+  { title: '干扰项溯源',
+    cls: 'step',
+    body: '<p>本题的陷阱是把相联存储器"按内容访问"的特性错安到控存头上。记住：按内容（按字段值）并行比较查找的是相联存储器。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>（错误项）。记忆锚点：控存<b>按微地址</b>访问。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '主存 MM 与控存 CS：哪句说错了',
+  subtitle: '位置 · 内容 · 访问方式 · 实现介质 · 四维对比找错误项',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: 'CS（控存）按<b>微地址</b>访问，不是按内容访问；按内容访问是相联存储器的特征。A、C、D 均为正确说法。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-05 动画 · 完全二叉树最多有多少结点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/纯计算推理类：第 6 层 8 个叶子 → 最多结点数
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>完全二叉树，第 6 层（根为第 1 层）恰有 <code>8</code> 个叶结点，求结点总数「<b>最多</b>」多少。思路：让每一层都尽量放满，第 6 层除叶子外的结点尽量多生一层。</p>' },
+  { title: '第 6 层的容量',
+    cls: 'step',
+    body: '<p>第 1～5 层放满是满二叉树：<code>1+2+4+8+16 = 31</code> 个结点；第 6 层最多可排 <code>32</code> 个结点（每层翻倍）。</p>' },
+  { title: '8 个叶子意味着什么',
+    cls: 'key',
+    body: '<p>叶结点<b>没有孩子</b>。第 6 层其余 <code>32 − 8 = 24</code> 个结点不是叶子——要「最多」，就让它们每个都带满 <code>2</code> 个孩子伸到第 7 层。</p>' },
+  { title: '第 7 层能长多少',
+    cls: 'step',
+    body: '<p>第 7 层最多得到 <code>24 × 2 = 48</code> 个结点；完全二叉树第 7 层结点从左到右<b>连续排列</b>，这样的形态合法。</p>' },
+  { title: '合计',
+    cls: 'good',
+    body: '<p>结点总数最多 = <code>31</code>（前 5 层）<code>+ 32</code>（第 6 层）<code>+ 48</code>（第 7 层）= <b>111</b> → 选 <b>C</b>。</p>' },
+  { title: '排除干扰项',
+    cls: 'bad',
+    body: '<p><code>39</code> = 31 + 8：误把「第 6 层只有 8 个结点」当题意；<code>119</code>：需要第 6 层有 28 个非叶结点，与「只有 8 个叶子」矛盾；<code>52</code>：树到第 6 层为止且第 6 层 21 个结点时，21 个全是叶子，也不是 8 个。✗</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（111 个结点）</b>。核心记忆点：<b>叶结点只约束「自己没有孩子」</b>，同层其余结点还能继续向下生长。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '完全二叉树的结点个数最多是多少？',
+  subtitle: '考点：第 6 层恰有 8 个叶结点 · 每层尽量放满 · 31 + 32 + 48（2009-05）',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 推进 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（111）',
+    html: '分层算账：<b>31 + 32 + 48 = 111</b>。关键一步是识别「第 6 层其余 24 个结点可以各带 2 个孩子」；干扰项 39 是漏掉这 24 个结点、119 与 52 则和「第 6 层恰有 8 叶」矛盾。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

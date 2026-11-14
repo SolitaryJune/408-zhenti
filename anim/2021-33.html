@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-33 TCP/IP 模型 · 传输层相邻下一层的功能</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理类：先定位"传输层的下一层"，再逐项辨析四个功能归属
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：先定位"下一层"',
+    cls: 'key',
+    body: '<p>TCP/IP 参考模型自上而下：<code>应用层 → 传输层 → 网际层 → 网络接口层</code>。与传输层<b>相邻的下一层</b>就是<b>网际层（IP 层）</b>——本题实际在问：网际层的主要功能是什么。</p>' },
+  { title: 'A 对话管理 ✗',
+    cls: 'bad',
+    body: '<p>对话管理（建立、同步、终止会话）是 OSI <b>会话层</b>的功能；TCP/IP 四层模型中根本没有会话层这一层，无处安放。</p>' },
+  { title: 'B 路由选择 ✓',
+    cls: 'good',
+    body: '<p>网际层负责把 IP 数据报从源主机<b>跨多个网络</b>送到目的主机，为每个数据报<b>选择传输路径（路由选择）</b>正是它的核心功能。<b>正确</b>。</p>' },
+  { title: 'C 端到端报文段传输 ✗',
+    cls: 'bad',
+    body: '<p>"报文段"是<b>传输层</b>的协议数据单元（TCP 报文段），端到端进程之间的数据传送是传输层<b>自己</b>的功能，不是下一层的。</p>' },
+  { title: 'D 结点到结点流量控制 ✗',
+    cls: 'bad',
+    body: '<p>"结点到结点"（相邻结点之间）的流量控制属于<b>数据链路层</b>（网络接口层）的功能；端到端的流量控制才属于传输层。一字之差，层就变了。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>传输层的下一层 = 网际层，其代表功能是<b>路由选择</b> → 答案选 <b>B</b>。</p>' },
+  { title: '记忆锚点',
+    cls: 'key',
+    body: '<p>一句话分层：<b>报文段/端到端在传输层</b>，<b>IP 数据报与路由选择在网际层</b>，<b>帧与结点到结点控制在网络接口层</b>；<b>对话管理是 OSI 会话层的</b>，TCP/IP 模型里没有它。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'TCP/IP 模型：传输层相邻的下一层实现的主要功能',
+  subtitle: '考点：体系结构分层与功能归属（2021-33）',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐项辨析四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（路由选择）',
+    html: '记忆锚点：<b>网际层管路由选择</b>；报文段/端到端属于传输层；结点到结点属于网络接口层；对话管理是 OSI 会话层的，TCP/IP 里没有。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

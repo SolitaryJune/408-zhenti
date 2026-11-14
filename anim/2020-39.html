@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-39 甲已发送的应用层数据字节数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类动画：TCP 序号轴，SYN/FIN 各占一个序号
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var boxes, caption;
+
+var SEQ = [
+  { v:'1000', label:'SYN' },
+  { v:'1001', label:'数据首字节' },
+  { v:'1002', label:'数据' },
+  { v:'…',   label:'……' },
+  { v:'4999', label:'数据' },
+  { v:'5000', label:'数据末字节' },
+  { v:'5001', label:'FIN' },
+];
+
+AW.init({
+  title: 'SYN 序号 1000、FIN 序号 5001，发了多少数据？',
+  subtitle: 'TCP 按字节编号 · SYN 和 FIN 各消耗一个序号 · 无任何重传',
+  counterLabel: '数据字节数',
+  ribbonTitle: '关键步骤（✓ 已定位）',
+  intro: '点击「▶ 播放」，把序号轴上的关键点逐个定位。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'padding:6px 2px 2px;';
+
+    var lbl = AW.el('div', 'aw-row-label', '<b>甲 → 乙方向的序号轴</b>（每个字节一个号）');
+    inner.appendChild(lbl);
+
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:5px;width:max-content;';
+    boxes = [];
+    SEQ.forEach(function(s){
+      var col = AW.el('div', '');
+      col.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+      var b = AW.el('div', 'aw-box', s.v);
+      b.style.cssText = 'width:62px;font-size:14px;transition:background .3s,border-color .3s;';
+      var ix = AW.el('div', '', s.label);
+      ix.style.cssText = 'margin-top:5px;font-size:10.5px;color:#94a3b8;white-space:nowrap;';
+      col.appendChild(b); col.appendChild(ix);
+      row.appendChild(col);
+      boxes.push(b);
+    });
+    inner.appendChild(row);
+
+    caption = AW.el('div', '');
+    caption.style.cssText = 'margin-top:14px;font-size:15px;font-weight:700;color:#0f172a;opacity:0;transition:opacity .4s;';
+    caption.innerHTML = '数据字节序号区间：<code>1001 ～ 5000</code>　→　字节数 = 5000 − 1001 + 1 = <b style="color:#16a34a">4000</b>';
+    inner.appendChild(caption);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'序号轴', log:'TCP 对每个字节编号，且 SYN、FIN 各消耗一个序号——先把关键点标到轴上', count:0 },
+    { cls:'shift', tag:'SYN 占 1 号', log:'三次握手第一次的 SYN 段序号 = 1000，占掉 1000 号 → 应用层数据从 1001 号开始', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'FIN 占 1 号', log:'FIN 段序号 = 5001，FIN 也占一个序号 → 数据最后一字节的序号 = 5000', count:0, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'数据区间', log:'应用层数据占据序号 1001 ～ 5000（两端都取到）', count:0, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'数一下', log:'字节数 = 5000 − 1001 + 1 = 4000', count:4000 },
+    { cls:'done',  tag:'完成', log:'无重传时，甲已向乙发送应用层数据 4000 字节 → 选 C', count:4000, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j = 0; j < boxes.length; j++){
+      var b = boxes[j];
+      b.style.background = '#fff'; b.style.borderColor = '#cbd5e1'; b.style.color = '#0f172a';
+      if(j === 0 && i >= 1){ b.style.background = '#fef3c7'; b.style.borderColor = '#d97706'; b.style.color = '#92400e'; }
+      if(j === 6 && i >= 2){ b.style.background = '#fef3c7'; b.style.borderColor = '#d97706'; b.style.color = '#92400e'; }
+      if(j >= 1 && j <= 5 && j !== 3 && i >= 3){ b.style.background = '#dcfce7'; b.style.borderColor = '#16a34a'; b.style.color = '#14532d'; }
+      if(j === 3){ b.style.opacity = .4; }
+      if(j === 0 && i >= 3){ b.style.opacity = .55; }
+      if(j === 6 && i >= 3){ b.style.opacity = .55; }
+    }
+    caption.style.opacity = (i >= 4) ? 1 : 0;
+  },
+
+  result: {
+    big: '4000 字节',
+    html: '<b>SYN 和 FIN 各消耗一个序号</b>：SYN 占 1000 号 → 数据从 1001 开始；FIN 序号 5001 → 数据末字节是 5000。数据共 <code>5000 − 1001 + 1 = 4000</code> 字节，选 <b>C</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

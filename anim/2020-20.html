@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-20 外部中断事件识别</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-20：哪些事件属于外部中断（概念辨析）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：一条判据分内外',
+    cls: 'key',
+    body: '<p>外部中断 = CPU <b>外部设备</b>（定时器、I/O 接口、网卡……）主动发来的请求；内部异常 = 由<b>指令执行</b>引发（缺页、除 0、陷阱等）。看"事件由谁引发"。</p>' },
+  { title: 'I 访存时缺页：内部异常',
+    cls: 'bad',
+    body: '<p>缺页发生在访存时，但根源是<b>当前指令</b>访问的页面不在内存，由指令执行引发 → <b>内部异常（Fault）</b>，不是外部中断。</p>' },
+  { title: 'II 定时器到时：外部中断',
+    cls: 'good',
+    body: '<p>定时器是 CPU <b>外部</b>的部件，到时后主动向 CPU 发中断请求 → <b>外部中断</b> ✓</p>' },
+  { title: 'III 网络数据包到达：外部中断',
+    cls: 'good',
+    body: '<p>网卡是 CPU <b>外部</b>设备，收到数据包后向 CPU 发中断请求 → <b>外部中断</b> ✓</p>' },
+  { title: '易混提醒：缺页也"碰外存"',
+    cls: 'key',
+    body: '<p>缺页处理确实要访问磁盘，但触发者是"执行中的指令"而不是设备请求——事件由谁引发决定类别，别被"访存"二字带偏。</p>' },
+  { title: '结论：II、III → 选 C',
+    cls: 'good',
+    body: '<p>属于外部中断的是<b>定时器到时</b>和<b>网络数据包到达</b> → 答案 <b>C</b>。I（缺页）是内部异常，故 A、B、D 都不对。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2020-20 · 谁是外部中断事件',
+  subtitle: '考点：外部中断与内部异常的划分 · 三个事件逐个判',
+  intro: '点击「▶ 播放」或「下一步」，逐个事件判断内外。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（II、III）',
+    html: '记忆锚点：<b>设备主动发请求</b>（定时器、网卡）= 外部中断；<b>指令执行中引发</b>（缺页）= 内部异常。<br>' +
+      '缺页是 Fault：处理后返回当前指令重新执行。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

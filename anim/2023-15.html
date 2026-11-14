@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-15 30 位地址空间的 RAM/ROM 划分</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.segb{ flex:1; border:2px solid #cbd5e1; border-radius:12px; padding:14px 6px; text-align:center;
+  font-size:13px; background:#fff; color:#94a3b8; line-height:1.7; transition:all .25s; }
+.segb b{ font-size:14.5px; }
+.segb span{ font-family:Menlo,Consolas,monospace; font-size:12.5px; }
+.segb.off{ opacity:.5; }
+.segb.ram.on{ background:#dbeafe; border-color:#2563eb; color:#1e40af; }
+.segb.rom.on{ background:#dcfce7; border-color:#16a34a; color:#14532d; }
+.calcbox{ display:inline-block; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#334155; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var RANGES = ['0000 0000H<br>～0FFF FFFFH', '1000 0000H<br>～1FFF FFFFH', '2000 0000H<br>～2FFF FFFFH', '3000 0000H<br>～3FFF FFFFH'];
+
+function bar(mode){
+  // mode: 'none' 全灰 / 'ram' 点亮前 3 段 / 'rom' 点亮第 4 段 / 'both' 全亮
+  var row = '<div style="display:flex;gap:6px;margin:12px 0">';
+  for (var i = 0; i < 4; i++){
+    var isRom = (i === 3);
+    var on = (mode === 'both') || (mode === 'ram' && !isRom) || (mode === 'rom' && isRom);
+    var cls = 'segb ' + (isRom ? 'rom' : 'ram') + (on ? ' on' : ' off');
+    row += '<div class="' + cls + '"><b>' + (isRom ? 'ROM' : 'RAM') + '</b><br><span>' + RANGES[i] + '</span></div>';
+  }
+  row += '</div>';
+  return row;
+}
+
+function tip(t){
+  return '<div class="calcbox">' + t + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'30 根地址线按字节编址 → 空间 2^30B = 1GB，必须全部占满。',
+    html: tip('<b>30 根地址线</b>按字节编址 → 可寻址 <code>2^30 B = 1GB</code>，地址空间 <code>0000 0000H ～ 3FFF FFFFH</code>。<br>要求：主存芯片<b>占满</b>整个空间，RAM:ROM = <code>3:1</code>。') + bar('none') },
+  { cls:'step', tag:'按比例切', count:1, ribbon:{k:1, ok:true},
+    log:'RAM:ROM = 3:1 → RAM 768MB、ROM 256MB；以 256MB 为段共 4 段。',
+    html: tip('1GB × 3/4 = <b>768MB</b> 给 RAM，1GB × 1/4 = <b>256MB</b> 给 ROM。<br>768 = 256 × 3，正好按 <b>256MB（1000 0000H）</b>为一段切成 <b>4 段</b>：前 3 段 RAM，最后 1 段 ROM。') + bar('none') },
+  { cls:'step', tag:'RAM 区', count:2, ribbon:{k:2, ok:true},
+    log:'RAM 在连续低地址区：0000 0000H ～ 2FFF FFFFH（前 3 段）。',
+    html: tip('<b>RAM 在连续低地址区</b> → 占前 3 段：<code>0000 0000H ～ 2FFF FFFFH</code>（共 3 × 256MB = 768MB）。') + bar('ram') },
+  { cls:'step', tag:'ROM 区', count:3, ribbon:{k:3, ok:true},
+    log:'ROM 在连续高地址区：3000 0000H ～ 3FFF FFFFH（第 4 段）。',
+    html: tip('<b>ROM 在连续高地址区</b> → 占最后一段：<code>3000 0000H ～ 3FFF FFFFH</code>。') + bar('rom') },
+  { cls:'step', tag:'校验', count:4, ribbon:{k:4, ok:true},
+    log:'ROM 大小 = 3FFF FFFFH−3000 0000H+1 = 1000 0000H = 256MB ✓。',
+    html: tip('校验：<code>3FFF FFFFH − 3000 0000H + 1 = 1000 0000H = 256MB</code> ✓<br>起点 <code>3000 0000H = 3 × 1000 0000H</code>，恰是第 4 段起点 ✓') + bar('both') },
+  { cls:'step', tag:'干扰项', count:5,
+    log:'A 是 RAM 第 1 段；B 跨 RAM 第 2~3 段；D 超出 30 位寻址空间。',
+    html: tip('<b>选项辨析：</b><br>' +
+      'A <code>0000 0000H～0FFF FFFFH</code>：只是 RAM 的第 1 段；<br>' +
+      'B <code>1000 0000H～2FFF FFFFH</code>：跨 RAM 第 2、3 段，仍属 RAM 区；<br>' +
+      'C <code>3000 0000H～3FFF FFFFH</code>：<b>ROM 区，正确</b>；<br>' +
+      'D <code>4000 0000H～4FFF FFFFH</code>：30 位地址线最大地址是 <code>3FFF FFFFH</code>，此范围<b>超出寻址空间</b>。') + bar('none') },
+  { cls:'done', tag:'结论', count:6, done:true,
+    log:'ROM = 3000 0000H ～ 3FFF FFFFH → 答案 C。',
+    html: tip('<b>结论</b>：1GB 空间按 3:1 切成 4 段，ROM 占最后 256MB：<code>3000 0000H ～ 3FFF FFFFH</code> → 答案 <b>C</b>。') + bar('rom') },
+];
+
+AW.init({
+  title: '2023-15 · 30 位地址空间的 RAM/ROM 划分',
+  subtitle: '30 根地址线 · 按字节编址 · 占满 2^30B · RAM:ROM = 3:1',
+  counterLabel: '推导步骤',
+  ribbonTitle: '推导环节（✓ 完成）',
+  intro: '点击「▶ 播放」看地址空间如何被切成 4 段。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（3000 0000H～3FFF FFFFH）',
+    html: '2^30B = 1GB，最高地址 <code>3FFF FFFFH</code>。按 3:1 切成 4 个 256MB 段：RAM 占前 3 段（<code>0000 0000H～2FFF FFFFH</code>），ROM 占最后一段（<code>3000 0000H～3FFF FFFFH</code>）。D 的起点 4000 0000H 已超出 30 位空间。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

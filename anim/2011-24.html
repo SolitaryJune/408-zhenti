@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-24 哪个程序运行在用户态</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：怎么判断运行态',
+    cls: 'key',
+    body: '<p>判断标准：<b>是不是内核的组成部分、要不要处理中断/异常、要不要执行特权指令</b>。处理中断、异常和调度的程序都在核心态；面向用户的命令接口程序在用户态。</p>' },
+  { title: 'A 命令解释程序',
+    cls: 'good',
+    body: '<p>如 shell，解释并执行用户命令，属于<b>命令接口</b>程序——不是中断/异常处理程序，不执行特权指令，运行在<b>用户态</b>。需要内核服务时通过系统调用陷入核心态。</p>' },
+  { title: 'B 缺页处理程序',
+    cls: 'bad',
+    body: '<p>处理<b>缺页异常</b>：要查改页表、调页等内核数据结构 → 核心态。名字带"异常处理"的必是内核程序。</p>' },
+  { title: 'C 进程调度程序',
+    cls: 'bad',
+    body: '<p>从就绪队列选进程投入运行并完成<b>进程切换</b> → 内核核心职能，运行在<b>核心态</b>。</p>' },
+  { title: 'D 时钟中断处理程序',
+    cls: 'bad',
+    body: '<p>响应<b>时钟中断</b> → 中断处理程序必然运行在<b>核心态</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆口诀：「中断、异常、调度」一律核心态；命令解释程序（shell）是替用户"敲门"的门面程序，本身在用户态。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-24 下列哪个程序在用户态执行',
+  subtitle: '考点：用户态 / 核心态的划分 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A：命令解释程序',
+    html: '缺页处理程序、进程调度程序、时钟中断处理程序都是<b>内核程序</b>（核心态）；命令解释程序是命令接口的实现，随操作系统提供但运行在<b>用户态</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

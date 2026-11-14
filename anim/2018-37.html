@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2018-37：H1 → H2 跨路由器转发，以太网帧 MAC 地址逐跳更换
+     模板：算法 / 过程演示类（两跳帧封装推演）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function topo(hl){
+  function nb(t1, t2, on){
+    return '<div style="background:' + (on ? '#dbeafe' : '#fff') + ';border:2px solid ' + (on ? '#2563eb' : '#cbd5e1') + ';border-radius:12px;padding:8px 11px;text-align:center;font-weight:700;font-size:13px;color:#334155;line-height:1.5"><div>' + t1 + '</div><div style="font-size:10.5px;font-weight:400;color:#64748b;font-family:Menlo,Consolas,monospace">' + t2 + '</div></div>';
+  }
+  return '<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:8px 0 6px">' +
+    nb('H1', '192.168.3.2<br>…-4d-52', hl === 'h1') +
+    '<div style="font-size:12px;font-weight:700;color:#94a3b8;padding:0 3px">S1</div>' +
+    '<div style="background:#fefce8;border:2px solid #ca8a04;border-radius:14px;padding:6px;display:flex;gap:6px">' +
+      nb('R·接口0', '192.168.3.1<br>…-4d-51', hl === 'r0') +
+      nb('R·接口1', '192.168.4.1<br>…d4-61', hl === 'r1') +
+    '</div>' +
+    '<div style="font-size:12px;font-weight:700;color:#94a3b8;padding:0 3px">S2</div>' +
+    nb('H2', '192.168.4.2<br>…d4-62', hl === 'h2') +
+    '</div>';
+}
+
+function framePill(src, dst, state){
+  var bg = '#f8fafc', bd = '#cbd5e1';
+  if(state === 'go'){ bg = '#fef3c7'; bd = '#d97706'; }
+  if(state === 'ok'){ bg = '#dcfce7'; bd = '#16a34a'; }
+  return '<div style="display:flex;justify-content:center;margin:2px 0 8px"><div style="background:' + bg + ';border:2px solid ' + bd + ';color:#334155;border-radius:999px;padding:8px 18px;font-family:Menlo,Consolas,monospace;font-size:12.5px;font-weight:700">帧　源 ' + src + '　→　目的 ' + dst + '</div></div>';
+}
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'H1(192.168.3.2) 给 H2(192.168.4.2) 发 IP 分组 P；问 H1 发出帧的目的 MAC 与 H2 收到帧的源 MAC',
+    html: topo('') + card(1, 'key', '审题：两个问题',
+      '<p>H1 向 H2 发送 IP 分组 <code>P</code>。问：① H1 发出的封装 P 的以太网帧的<b>目的 MAC 地址</b>；② H2 收到的帧的<b>源 MAC 地址</b>。</p>') },
+  { cls:'step', tag:'判网', count:1, ribbon:{k:1, ok:true},
+    log:'192.168.3.x 与 192.168.4.x 不同网 → 不能直接交付，先交给默认网关 R·接口0',
+    html: topo('r0') + card(2, 'step', '第一步：判断是否同一网络',
+      '<p>H1 在网络 <code>192.168.3.0/24</code>，H2 在网络 <code>192.168.4.0/24</code>——<b>不同网络</b>，不能直接交付 → H1 把分组交给<b>默认网关</b>：路由器 R 在本网段的接口 0（<code>192.168.3.1</code>）。</p>') },
+  { cls:'ok', tag:'第一跳', count:2, ribbon:{k:2, ok:true},
+    log:'H1 封装帧：源 MAC …-4d-52，目的 MAC …-4d-51（网关）→ 第一空 = 00-1a-2b-3c-4d-51',
+    html: topo('r0') + framePill('00-1a-2b-3c-4d-52', '00-1a-2b-3c-4d-51', 'go') + card(3, 'good', '第二步：H1 发出的帧',
+      '<p>H1 封装以太网帧：<b>源 MAC = H1 自己（…-4d-52）</b>，<b>目的 MAC = 默认网关 R·接口0（00-1a-2b-3c-4d-51）</b>。交换机 S1 按 MAC 把帧转给 R。<b>第一空：00-1a-2b-3c-4d-51</b>。</p>') },
+  { cls:'step', tag:'路由器拆装', count:3, ribbon:{k:3, ok:true},
+    log:'R 拆帧取出分组 P（IP 头不变），查路由：目的网 192.168.4.0/24 → 从接口1 转发',
+    html: topo('r1') + card(4, 'step', '第三步：R 查路由表',
+      '<p>R 收到帧后<b>拆除帧头</b>取出 IP 分组 P——<b>分组的源/目的 IP 全程不变</b>；查路由表：目的网 <code>192.168.4.0/24</code> 连在接口 1 → 从接口 1 转发。</p>') },
+  { cls:'ok', tag:'第二跳', count:4, ribbon:{k:4, ok:true},
+    log:'R 重新封装帧：源 MAC …d4-61（接口1），目的 MAC …d4-62（H2）→ 交给 S2',
+    html: topo('r1') + framePill('00-a1-b2-c3-d4-61', '00-a1-b2-c3-d4-62', 'go') + card(5, 'good', '第四步：R 重新封装',
+      '<p>R 封装<b>新帧</b>：<b>源 MAC = R·接口1（00-a1-b2-c3-d4-61）</b>，目的 MAC = H2（00-a1-b2-c3-d4-62），经 S2 发往 H2。</p>') },
+  { cls:'ok', tag:'到达', count:5, ribbon:{k:5, ok:true},
+    log:'H2 收到帧：源 MAC = 00-a1-b2-c3-d4-61 → 第二空确定',
+    html: topo('h2') + framePill('00-a1-b2-c3-d4-61', '00-a1-b2-c3-d4-62', 'ok') + card(6, 'good', '第五步：H2 收到的帧',
+      '<p>H2 收到的帧：<b>源 MAC = 00-a1-b2-c3-d4-61（R·接口1）</b>，目的 MAC 是自己（…d4-62）。<b>第二空：00-a1-b2-c3-d4-61</b>。</p>') },
+  { cls:'step', tag:'排除', count:6, ribbon:{k:6, ok:false},
+    log:'A/B 把 62 当第一空：错，跨网必须先给网关；A/C 把 52 当第二空：错，源 MAC 逐跳更换',
+    html: topo('h2') + card(7, 'bad', '第六步：排除干扰项',
+      '<p><b>A、B</b>：第一空填 00-1a-2b-3c-4d-62（H2 的 MAC）——错，跨网络交付必须先交给网关。<br><b>A、C</b>：第二空填 00-1a-2b-3c-4d-52（H1 的 MAC）——错，帧每过一个路由器就<b>重新封装</b>，源 MAC 换成 R·接口1。</p>') },
+  { cls:'done', tag:'完成', count:7, done:true,
+    log:'答案：00-1a-2b-3c-4d-51 与 00-a1-b2-c3-d4-61 → 选 D',
+    html: framePill('00-1a-2b-3c-4d-52', '00-1a-2b-3c-4d-51', 'ok') + framePill('00-a1-b2-c3-d4-61', '00-a1-b2-c3-d4-62', 'ok') +
+      card(8, 'good', '结论：答案 D',
+        '<p><b>IP 端到端不变，MAC 逐跳更换</b>：H1 发的帧目的 MAC = 网关 00-1a-2b-3c-4d-51；H2 收到的帧源 MAC = R·接口1 00-a1-b2-c3-d4-61。</p>') },
+];
+
+AW.init({
+  title: '2018-37：跨路由器转发时帧的 MAC 地址变化',
+  subtitle: 'H1(192.168.3.2) → R → H2(192.168.4.2) · 两跳帧封装推演',
+  counterLabel: '流程',
+  ribbonTitle: '转发流程（✓ 完成 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」逐跳观察帧的源/目的 MAC 地址。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '第一空 <b>00-1a-2b-3c-4d-51</b>（默认网关 R·接口0）；第二空 <b>00-a1-b2-c3-d4-61</b>（R·接口1）。<br>记忆锚点：<b>IP 地址端到端不变，MAC 地址逐跳更换</b>——帧每过一个路由器就重新封装一次。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

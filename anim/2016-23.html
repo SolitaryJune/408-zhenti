@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-23 批处理系统三命题判断</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>三个命题要逐个判真假：<b>I</b> 批处理允许多用户直接交互？<b>II</b> 分为单道/多道？<b>III</b> 中断使 I/O 与 CPU 并行？考点：<b>批处理系统的特征与中断的作用</b>。</p>' },
+  { title: '命题 I：错', cls: 'bad',
+    body: '<p>「批处理系统允许多个用户与计算机直接交互」——<b>错</b>。批处理追求吞吐率，作业成批提交、系统自动依次处理，用户<b>全程不能干预</b>。能"多用户直接交互"的是<b>分时系统</b>。</p>' },
+  { title: '命题 II：对', cls: 'good',
+    body: '<p>「批处理系统分为单道批处理系统和多道批处理系统」——<b>对</b>。按内存中容纳的作业道数划分：单道一次放一道、顺序执行；多道多道驻留内存并发执行。</p>' },
+  { title: '命题 III：对', cls: 'good',
+    body: '<p>「中断技术使得多道批处理系统的 I/O 设备可与 CPU 并行工作」——<b>对</b>。I/O 完成时发<b>中断请求</b>打断 CPU，CPU 执行中断处理程序收尾并调度下一道作业，单 CPU 下 I/O 与 CPU 借此并行。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>I 错、II 对、III 对 → 正确的是<b>仅 II、III</b>，答案选 <b>A</b>。记忆点：交互性属分时系统；批处理两类单道/多道；I/O 与 CPU 并行靠中断。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '批处理系统：三个命题逐个判',
+  subtitle: '考点：批处理系统特征 · 分时系统对比 · 中断的作用',
+  intro: '点击「▶ 播放」，逐条推演三个命题。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（仅 II、III）',
+    html: '记忆锚点：<b>交互性 = 分时系统</b>，批处理没有（I 错）；批处理分<b>单道/多道</b>（II 对）；单 CPU 下 <b>I/O 与 CPU 并行靠中断技术</b>（III 对）。干扰项 C/D 都是被错误的命题 I 拉下水的。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

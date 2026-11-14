@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-26 I/O 子系统四层结构排序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-26（选择题）I/O 子系统四层的合理组织排列顺序
+     形态：概念辨析 · 逐层揭示 + 逐项排除
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先背标准四层',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>I/O 子系统四层，<b>从用户到硬件</b>依次为：<code>用户级 I/O 软件 → 设备独立（无关）软件 → 设备驱动程序 → 中断处理程序</code>，最底下才是硬件。判断排序对错只看一条主线：<b>越往上越抽象、离用户越近；越往下越贴近硬件</b>。</p>' },
+  { title: '逐层职责回顾',
+    cls: 'key',
+    scls: 'shift',
+    body: '<p><b>用户级 I/O 软件</b>：库函数、系统调用接口；<b>设备无关软件</b>：命名、保护、缓冲、分配等与设备种类无关的工作；<b>设备驱动程序</b>：直接读写设备控制器寄存器，必须贴着硬件；<b>中断处理程序</b>：设备完成时被触发，是<b>最靠近硬件的最底层</b>。</p>' },
+  { title: '排除 B、D：中断处理程序放错位置',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p>B 把中断处理程序夹在设备无关软件与驱动之间，D 把它排在用户级软件之后第二层。中断处理是响应设备硬件信号的<b>最底层</b>，绝不可能位于驱动之上、更不可能紧贴用户层——B、D 排除。</p>' },
+  { title: '排除 C：驱动与设备无关软件颠倒',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p>C 的顺序是「用户级 → 驱动 → 设备无关 → 中断处理」。驱动程序直接操作硬件寄存器，必须位于<b>设备无关软件之下</b>（否则设备无关层就没法对各类设备统一管理了）；C 颠倒了这两层，排除。</p>' },
+  { title: '验证 A：与标准顺序一致',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>A：用户级 I/O 软件 → 设备无关软件 → 设备驱动程序 → 中断处理程序。用户请求逐层抽象下降，中断信号在最底层被响应后逐层上传——与标准四层完全一致，<b>A 正确</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>用户级软件、设备无关、驱动、中断处理，从上到下越来越贴近硬件；中断处理程序在最底层</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2012-26】I/O 子系统四层的排列顺序',
+  subtitle: '考点：I/O 软件层次结构 · 自上而下逐层推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>用户级 I/O 软件 → 设备无关软件 → 设备驱动程序 → 中断处理程序</b>。驱动直接碰硬件、中断处理在最底层——凡是把中断处理放高、或把驱动放设备无关软件之上的选项都可秒杀。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

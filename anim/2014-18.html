@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-18 微程序控制器下地址字段位数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/推理链类（计算推理） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：断定法怎么找下一条', cls: 'key',
+    log: '断定法：下地址字段直接给出下条微指令地址 → 位数由控存单元数决定',
+    body: '<p>断定法（下地址字段法）中，每条微指令的<b>下地址字段</b>直接指明下一条微指令在控存中的地址 → 字段位数 n 必须满足 <code>2^n ≥ 控存微指令总数</code>。</p>' },
+  { title: '公共取指微程序：2 条', cls: '',
+    log: '所有指令共用的取指微程序有 2 条微指令',
+    body: '<p>公共的取指令微程序包含 <b>2 条</b>微指令，控存里也要为它们留单元。</p>' },
+  { title: '各指令微程序：32 × 4 = 128 条', cls: '',
+    log: '32 条指令 × 平均每条 4 个微指令 = 128 条',
+    body: '<p>32 条机器指令，每条对应的微程序平均 <b>4 条</b>微指令 → 32 × 4 = <b>128 条</b>。</p>' },
+  { title: '控存合计 130 条', cls: '',
+    log: '2 + 128 = 130 条微指令 → 控存至少 130 个单元',
+    body: '<p>控存微指令总数 = 2 + 128 = <b>130 条</b>，这就是需要编址的单元数。</p>' },
+  { title: '求最小位数 n', cls: 'good',
+    log: '2^7 = 128 < 130 不够；2^8 = 256 ≥ 130 → 至少 8 位',
+    body: '<p><code>2^7 = 128</code> 差 2 个单元，不够；<code>2^8 = 256</code> ≥ 130 → 下地址字段至少 <b>8 位</b>。</p>' },
+  { title: '逐项排错', cls: 'bad',
+    log: 'A 只数机器指令；B 的 2^6=64 不够；D 不是"至少"',
+    body: '<p>A 5 位（2^5 = 32）：只数了 32 条机器指令；B 6 位（2^6 = 64）：连 130 都编不完；D 9 位（2^9 = 512）：装得下但不是"至少"。</p>' },
+  { title: '结论', cls: 'good',
+    log: '答案 C：下地址字段至少 8 位',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>2^n ≥ 控存微指令总数</b>，本题 130 → n = 8。</p>' },
+];
+
+var COUNTS = [0, 2, 128, 130, 130, 130, 130];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : (s.cls === 'key' ? 'shift' : 'step'))),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: COUNTS[i],
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2014-18 · 微程序下地址字段的位数',
+  subtitle: '32 条指令 × 平均 4 条微指令 + 公共取指微程序 2 条 · 断定法（下地址字段法）',
+  counterLabel: '微指令数',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '8 位（C）',
+    html: '控存微指令总数 = 2 + 32×4 = <b>130 条</b>；断定法要求 <code>2^n ≥ 130</code>：2^7 = 128 不够，<b>2^8 = 256 够</b> → 下地址字段至少 <b>8 位</b>，选 <b>C</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

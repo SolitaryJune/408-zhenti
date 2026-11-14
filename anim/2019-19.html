@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-19 三通道 DDR3-1333 存储器总线带宽计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题：三个条件各就各位', cls: 'key', tag: '审题',
+    body: '<p>3 通道存储器总线并行工作；DDR3-1333：题给存储器总线<b>工作频率 1333 MHz</b>；总线宽度 <b>64 位</b>。<br>公式：<b>总带宽 = 工作频率 × 总线宽度 × 通道数</b>。</p>' },
+  { title: '第一步：总线宽度换算成字节', cls: '', tag: '宽度换算',
+    body: '<p>64 位 ÷ 8 = <b>8 B</b>：每个传输周期从总线上搬 8 个字节。</p>' },
+  { title: '第二步：算单通道带宽', cls: 'key', tag: '单通道',
+    body: '<p>1333M 次/s × 8 B = 10664 MB/s ≈ <b>10.66 GB/s</b>。<br>这正是选项 A——它是"忘乘通道数"的陷阱值。</p>' },
+  { title: '第三步：乘以 3 个通道', cls: 'good', tag: '三通道',
+    body: '<p>总带宽 = 3 × 10.66 GB/s ≈ <b>31.98 ≈ 32 GB/s</b>。</p>' },
+  { title: '排雷其他干扰项', cls: '', tag: '排雷',
+    body: '<p>C（64 GB/s）、D（96 GB/s）需要把宽度或通道数成倍算错才会出现。注意：<b>按题干给定的"工作频率 1333 MHz"直接代入公式</b>即可，不必再做其他倍速换算。</p>' },
+  { title: '结论：答案 B', cls: 'good', tag: '完成',
+    body: '<p>存储器总线总带宽约为 <b>32 GB/s</b>，选 <b>B</b>。记忆锚点：<b>带宽 = 工作频率 ×（宽度 ÷ 8）× 通道数</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  var logCls = s.cls === 'good' ? 'ok' : (s.cls === 'key' ? 'shift' : 'step');
+  return {
+    cls: last ? 'done' : logCls,
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2019·19 三通道存储器总线的总带宽',
+  subtitle: 'DDR3-1333 · 工作频率 <code>1333 MHz</code> · 总线宽度 <code>64 位</code> · <code>3</code> 通道',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐步完成带宽计算。',
+  snaps: snaps,
+  result: {
+    big: '≈ 32 GB/s（答案 B）',
+    html: '单通道：1333 MHz × 8 B ≈ <b>10.66 GB/s</b>；三通道 ×3 ≈ <b>32 GB/s</b>。两个易错：<b>忘乘通道数</b>得 A；对给定频率再做多余换算会跑向 C/D。核心公式：<b>带宽 = 工作频率 ×（总线宽度 ÷ 8）× 通道数</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

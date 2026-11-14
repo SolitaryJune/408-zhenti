@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-21 处理完要重新执行当前指令的事件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { cls: 'key', title: '审题眼："重新执行当前指令"是故障类的标志',
+    body: '<p>异常（内中断）在<b>指令执行过程中</b>检测；中断（外中断）在<b>指令执行后</b>检测。要找"处理程序执行后回到当前指令重新执行"的事件——只有<b>指令本身没执行完</b>的故障（fault）类事件才这样。</p>' },
+  { cls: '', title: '类型与返回位置总表',
+    body: '<table style="border-collapse:collapse;margin:6px auto;font-size:13.5px;font-family:Menlo,monospace">' +
+      '<tr><th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:4px 12px;color:#475569">事件</th>' +
+      '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:4px 12px;color:#475569">类型</th>' +
+      '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:4px 12px;color:#475569">返回位置</th></tr>' +
+      '<tr><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">系统调用</td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">陷入 trap</td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">下一条指令</td></tr>' +
+      '<tr style="background:#dcfce7"><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#14532d"><b>页缺失</b></td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#14532d"><b>故障 fault</b></td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#14532d"><b>当前指令重执行</b></td></tr>' +
+      '<tr><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">DMA 传送结束</td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">中断</td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">下一条指令</td></tr>' +
+      '<tr><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">打印机缺纸</td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">中断</td><td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">下一条指令</td></tr></table>' },
+  { cls: 'bad', title: 'A 系统调用：返回下一条',
+    body: '<p>系统调用由程序里的<b>自陷指令</b>自愿触发，属陷入（trap）：陷入处理完，回到自陷指令的<b>下一条</b>继续执行——指令本身早已完成 → 不选 A。</p>' },
+  { cls: 'good', title: 'B 页缺失：必须重执行当前指令',
+    body: '<p>缺页发生在访存指令执行<b>过程中</b>：目标页不在主存，该指令<b>没有完成</b>。缺页处理程序把页面调入主存后，必须<b>回到产生缺页的当前指令重新执行</b>，这次访存才能真正完成 → <b>选 B</b>。</p>' },
+  { cls: 'bad', title: 'C、DMA 结束 / D、打印机缺纸：外中断，返回下一条',
+    body: '<p>DMA 传送结束、打印机缺纸都是<b>外设请求（外中断）</b>：在当前指令执行<b>后</b>才被检测，指令已执行完，处理完回到<b>下一条</b>指令——与"重执行"无关 → 不选 C、D。</p>' },
+  { cls: 'good', title: '结论',
+    body: '<p>处理完必须回到当前指令重新执行的是：<b>页缺失（B）</b>。</p>' +
+      '<p>记忆锚点：故障（fault）= 指令没做完 → 调页后重执行；陷入（trap）= 指令做完了 → 回下一条；外中断 = 指令执行后才检测 → 回下一条。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : 'step')),
+    tag: last ? '完成' : '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2021-21 · 哪种事件处理后必须重执行当前指令',
+  subtitle: '考点：异常与中断的检测时机、返回位置（trap / fault / 中断）',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐项判定。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（页缺失）',
+    html: '记忆锚点：缺页时那条访存指令<b>还没完成</b>——属故障（fault）类，调页后必须回到<b>当前指令重新执行</b>。<br>' +
+      '系统调用（trap）与 DMA 结束、打印机缺纸（外中断）都回到<b>下一条</b>指令。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

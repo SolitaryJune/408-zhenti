@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-44 补码右移 + 5 段流水线阻塞 · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* ---------- 流水线时空图小工具 ---------- */
+function rowTokens(n, stages, blocks){
+  var t = [], i;
+  for(i = 0; i < n; i++) t.push(null);
+  for(i = 0; i < (blocks || []).length; i++) t[blocks[i] - 1] = '-';
+  for(var c in stages){ t[c - 1] = stages[c]; }
+  return t;
+}
+function pcellBox(v){
+  var box = AW.el('div', 'aw-box', v || '');
+  var base = 'height:36px;';
+  if(v === '—'){ box.style.cssText = base + 'background:#fee2e2;border-color:#dc2626;color:#b91c1c;'; }
+  else if(v){ box.style.cssText = base + 'background:#dbeafe;border-color:#2563eb;color:#1e40af;'; }
+  else { box.className = 'aw-box'; }
+  return box;
+}
+function prow(name, tokens){
+  var row = AW.el('div', 'aw-cells');
+  var label = AW.el('div', '', name);
+  label.style.cssText = 'width:44px;flex:0 0 44px;height:36px;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700;color:#334155;';
+  row.appendChild(label);
+  tokens.forEach(function(t){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(pcellBox(t === '-' ? '—' : t));
+    row.appendChild(col);
+  });
+  return row;
+}
+function grid(rows, n, caption){
+  var wrap = AW.el('div', 'aw-scroll');
+  if(caption){
+    var cap = AW.el('div', 'aw-row-label', caption);
+    wrap.appendChild(cap);
+  }
+  var head = AW.el('div', 'aw-cells');
+  var hl = AW.el('div', '');
+  hl.style.cssText = 'width:44px;flex:0 0 44px;height:20px;';
+  head.appendChild(hl);
+  for(var i = 1; i <= n; i++){
+    var c = AW.el('div', '', String(i));
+    c.style.cssText = 'width:44px;flex:0 0 44px;text-align:center;font-size:11px;color:#94a3b8;font-family:monospace;';
+    head.appendChild(c);
+  }
+  wrap.appendChild(head);
+  rows.forEach(function(r){
+    wrap.appendChild(prow(r.name, rowTokens(n, r.stages, r.blocks)));
+  });
+  return wrap;
+}
+
+/* ---------- 时空图数据 ---------- */
+var I1 = { name:'I1', stages:{1:'IF',2:'ID',3:'EX',4:'M',5:'WB'} };
+var I2 = { name:'I2', stages:{2:'IF',3:'ID',4:'EX',5:'M',6:'WB'} };
+
+var ROWS_Q2 = [
+  I1, I2,
+  { name:'I3', stages:{3:'IF',4:'ID',5:'EX',6:'M',7:'WB'} },
+  { name:'I4', stages:{4:'IF',5:'ID',6:'EX',7:'M',8:'WB'} },
+];
+var ROWS_Q3A = [
+  I1, I2,
+  { name:'I3', stages:{3:'IF',7:'ID',8:'EX',9:'M',10:'WB'}, blocks:[4,5,6] },
+];
+var ROWS_Q3 = [
+  I1, I2,
+  { name:'I3', stages:{3:'IF',7:'ID',8:'EX',9:'M',10:'WB'}, blocks:[4,5,6] },
+  { name:'I4', stages:{7:'IF',11:'ID',12:'EX',13:'M',14:'WB'}, blocks:[4,5,6,8,9,10] },
+];
+var ROWS_Q4 = [
+  I1, I2,
+  { name:'I3', stages:{3:'IF',6:'ID',7:'EX',8:'M',9:'WB'}, blocks:[4,5] },
+  { name:'I4', stages:{6:'IF',10:'ID',11:'EX',12:'M',13:'WB'}, blocks:[4,5,7,8,9] },
+  { name:'I5', stages:{11:'IF',14:'ID',15:'EX',16:'M',17:'WB'}, blocks:[7,8,9,10,12,13] },
+];
+
+/* ---------- 问1 的 16 位补码展示 ---------- */
+function bitRow(bits, hexLabel, hexCls){
+  var wrap = AW.el('div', '');
+  var row = AW.el('div', 'aw-cells');
+  bits.forEach(function(b, i){
+    var col = AW.el('div', 'aw-col');
+    var box = AW.el('div', 'aw-box' + (b[1] ? ' ' + b[1] : ''), b[0]);
+    box.style.cssText = 'width:30px;height:30px;font-size:13px;' +
+      (b[1] === 'key' ? 'background:#fef3c7;border-color:#d97706;color:#92400e;' : '');
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', String(16 - i)));
+    row.appendChild(col);
+  });
+  wrap.appendChild(row);
+  var hex = AW.el('div', 'aw-row-label', hexLabel);
+  if(hexCls){ hex.style.color = '#15803d'; hex.style.fontWeight = '700'; }
+  wrap.appendChild(hex);
+  return wrap;
+}
+var BITS_BEFORE = [
+  ['1','key'],['1',''],['1',''],['1',''], ['1',''],['1',''],['0',''],['1',''],
+  ['1',''],['1',''],['1',''],['1',''], ['1',''],['1',''],['1',''],['1',''],
+];
+var BITS_AFTER = [
+  ['1','key'],['1','key'],['1',''],['1',''], ['1',''],['1',''],['1',''],['0',''],
+  ['1',''],['1',''],['1',''],['1',''], ['1',''],['1',''],['1',''],['1',''],
+];
+
+function instrList(lines){
+  var wrap = AW.el('div', '');
+  lines.forEach(function(l){
+    var p = AW.el('div', 'aw-row-label', l);
+    p.style.fontSize = '14px';
+    p.style.color = '#334155';
+    wrap.appendChild(p);
+  });
+  return wrap;
+}
+
+/* ---------- 各步的场景 ---------- */
+function secOf(sn){
+  var box;
+  switch(sn.sec){
+    case 'intro':
+      box = AW.el('div', '');
+      box.appendChild(instrList([
+        '<b>流水线规则</b>：5 段 = IF 取指 → ID 译码/读寄存器 → EX 执行/算有效地址 → M 访存 → WB 写回',
+        '① 按序发射、按序完成　② <b>无转发技术</b>　③ 同一寄存器的读和写不能在同一时钟周期',
+        '推论：要用某寄存器的指令，其 ID 必须排在写该寄存器指令 WB 的<b>下一个周期</b>',
+      ]));
+      return box;
+    case 'q1a': return bitRow(BITS_BEFORE, 'x = −513 的 16 位补码 = FDFFH（符号位 1，琥珀色标出）');
+    case 'q1b': return bitRow(BITS_AFTER, 'SHR 算术右移 1 位 → 1111 1110 1111 1111 = FEFFH（= −513÷2 向下取整 = −257）', true);
+    case 'q2':  return grid(ROWS_Q2, 8, '问2：4 条指令无阻塞 → 4 + (5 − 1) = 8 个时钟周期');
+    case 'q3a': return grid(ROWS_Q3A, 11, '问3（一）：I3 的 ID 段被阻塞（周期 4～6，红色）——等 I1、I2 写回 R1、R2');
+    case 'q3b': return grid(ROWS_Q3, 14, '问3（二）：I4 的 IF 段也被阻塞（周期 4～6）——按序发射，I3 卡在 ID，I4 不能越过取指');
+    case 'q4list':
+      box = AW.el('div', '');
+      box.appendChild(instrList([
+        '<b>x = x*2 + a</b> 的指令序列（2×x 用移位实现；按指令功能表 ADD Rs,Rd 的结果存入 Rd）:',
+        'I1　LOAD R1, [x]　　(R1 ← x)',
+        'I2　LOAD R2, [a]　　(R2 ← a)',
+        'I3　SHL R1　　　　　(R1 ← 2×R1，或 ADD R1,R1)',
+        'I4　ADD R1, R2　　　(R2 ← R1 + R2)',
+        'I5　STORE R2, [x]　 ([x] ← R2)',
+      ]));
+      return box;
+    case 'q4':
+      box = AW.el('div', '');
+      box.appendChild(grid(ROWS_Q4.slice(0, sn.rows), 17,
+        '问4：I3 等 I1 写回（周期 5）→ ID@6；I4 等 I3 写回（周期 9）→ ID@10；I5 等 I4 写回（周期 13）→ ID@14；各 IF 又被按序发射拖后'));
+      if(sn.rows === 5){
+        var sum = AW.el('div', 'aw-row-label', 'I5 的 WB 在周期 17 → 共 17 个时钟周期');
+        sum.style.cssText += 'font-size:14px;font-weight:700;color:#15803d;';
+        box.appendChild(sum);
+      }
+      return box;
+  }
+  return AW.el('div', '');
+}
+
+AW.init({
+  title: '2012·44 补码右移与流水线阻塞：17 个周期怎么来？',
+  subtitle: '5 段流水 <code>IF→ID→EX→M→WB</code> · 无转发 · 读写不同周期 · 按序发射按序完成',
+  counterLabel: '推进步',
+  ribbonTitle: '四问进度（✓ 已解决）',
+  intro: '点击「▶ 播放」，先移位再排流水线时空图。',
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-scroll', ''));
+    stage.firstChild.id = 'secBox';
+  },
+  render: function(stage, sn){
+    var box = document.getElementById('secBox');
+    box.innerHTML = '';
+    box.appendChild(secOf(sn));
+  },
+  snaps: [
+    { sec:'intro', cls:'shift', tag:'审题', count:0,
+      log:'流水线规则：按序发射按序完成、无转发技术、同一寄存器读写不能同周期 → 使用者的 ID 必须排在写者 WB 的下一周期' },
+    { sec:'q1a', cls:'step', tag:'问1·补码', count:1,
+      log:'问1：x = −513 = −(2^9 + 1)，16 位补码 = 1111 1101 1111 1111（FDFFH）' },
+    { sec:'q1b', cls:'ok', tag:'问1·右移', count:2, ribbon:{k:1, ok:true},
+      log:'SHR 是算术右移：各位右移、高位补符号位 1 → 1111 1110 1111 1111 = FEFFH（−513÷2 向下取整 = −257）' },
+    { sec:'q2', cls:'ok', tag:'问2', count:3, ribbon:{k:2, ok:true},
+      log:'问2：4 条指令无阻塞，5 段流水 → 4 + (5 − 1) = 8 个时钟周期' },
+    { sec:'q3a', cls:'miss', tag:'问3·I3 的 ID', count:4,
+      log:'I3 与 I1、I2 存在数据相关：无转发 + 读写不同周期 → 必须等 I1（周期 5 写回 R1）、I2（周期 6 写回 R2）都写回后才能读寄存器 → I3 的 ID 阻塞到周期 7' },
+    { sec:'q3b', cls:'miss', tag:'问3·I4 的 IF', count:5, ribbon:{k:3, ok:true},
+      log:'I4 的 IF 被阻塞：前一条指令 I3 卡在 ID 段，按序发射使 I4 不能越过它取指 → I4 的 IF 推迟到周期 7（其 ID 还要等 I3 周期 10 写回 R2 → 周期 11）' },
+    { sec:'q4list', cls:'shift', tag:'问4·指令序列', count:6,
+      log:'问4：x = x*2 + a 的指令序列——2×x 用 SHL 实现，加法结果按 ADD Rs,Rd → Rd 存入 R2，再由 I5 存回 [x]' },
+    { sec:'q4', rows:2, cls:'step', tag:'问4·I1、I2', count:7,
+      log:'I1、I2 无阻塞前行：I1 占周期 1～5，I2 占周期 2～6' },
+    { sec:'q4', rows:3, cls:'miss', tag:'问4·I3', count:8,
+      log:'I3 要读 R1：等 I1 在周期 5 写回 → ID 在周期 6（周期 4、5 阻塞），EX7 M8 WB9' },
+    { sec:'q4', rows:4, cls:'miss', tag:'问4·I4', count:9,
+      log:'I4 要读 R1：等 I3 在周期 9 写回 → IF 在周期 6（按序发射），ID 在周期 10（周期 7～9 阻塞），EX11 M12 WB13' },
+    { sec:'q4', rows:5, cls:'ok', tag:'问4·I5', count:10, ribbon:{k:4, ok:true},
+      log:'I5 要读 R2：等 I4 在周期 13 写回 → IF 在周期 11（周期 7～10 阻塞），ID 在周期 14（周期 12、13 阻塞），EX15 M16 WB17 → 共 17 个时钟周期' },
+    { sec:'q4', rows:5, cls:'done', tag:'完成', count:11, done:true,
+      log:'结论：问1 R1 = FEFFH；问2 共 8 个时钟周期；问3 I3 的 ID 等 I1/I2 写回、I4 的 IF 因按序发射被阻塞；问4 共 17 个时钟周期' },
+  ],
+  result: {
+    big: '问4 共 17 个时钟周期',
+    html: '<b>问1 FEFFH</b>（算术右移补符号位）；<b>问2 8 个周期</b>（4 + 4）；<b>问3</b>：I3 的 ID 等 I1、I2 写回后才能读，I4 的 IF 因按序发射被 I3 阻塞；<b>问4 17 个周期</b>——每次写后读都要排在 WB 的下一周期。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

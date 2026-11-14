@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-30 处理机调度的时机（找错误项）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-30（选择题）关于处理机调度的叙述，错误的是
+     形态：概念辨析 · 逐项揭示推理链
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：选「错误」的叙述',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>系统中有多个就绪进程，问哪条叙述<b>错误</b>。判断标准：该时刻内核能否<b>安全地切换进程上下文</b>。常见调度时机：进程结束、进程阻塞、时间片用完、系统调用完成返回用户态、创建新进程等。</p>' },
+  { title: 'A 进程结束时能调度——对',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>进程结束（终止）后 CPU 空出、必然要选下一个进程运行，这是最典型的调度时机。「能进行处理机调度」成立，A 是正确叙述。</p>' },
+  { title: 'B 创建新进程后能调度——对',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>创建新进程后，新进程进入就绪队列；若其优先级更高（或系统采用相应策略），就可能触发调度。「能调度」成立，B 是正确叙述。</p>' },
+  { title: 'D 系统调用完成返回用户态时能调度——对',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>系统调用在核心态执行完毕、即将返回用户态时，内核会检查是否需要切换进程（如时间片用完、有更高优先级进程就绪），这是内核做调度决策的常见时机。D 是正确叙述。</p>' },
+  { title: 'C 处于临界区时不能调度——错！',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p>临界区的规则是<b>互斥进入</b>：不允许两个进程同时处于<b>同一临界资源</b>的临界区。处于临界区的进程仍可能被打断、被调度出去，只要换上的进程<b>不使用同一临界资源</b>（例如调度给毫不相干的进程），互斥就不会被破坏。把「不能调度」绝对化，C 是<b>错误</b>叙述——正是本题要选的。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>临界区 ≠ 禁区：处于临界区可以发生调度，但不能调度进「需要同一临界资源」的进程</b>。A、B、D 都是标准调度时机。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2012-30】处理机调度时机辨析（选错误项）',
+  subtitle: '考点：调度时机与临界区 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（错误项）',
+    html: '记忆锚点：<b>进程结束、创建新进程、系统调用返回用户态都是能调度的时机；临界区的约束是「互斥进入同一临界资源」，不是「禁止调度」</b>——只要换上的进程不用同一临界资源即可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

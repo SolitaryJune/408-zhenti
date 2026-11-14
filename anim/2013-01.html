@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-01 两个升序链表合并为降序链表</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function rowHtml(vals, cls){
+  var h = '<div class="aw-cells">';
+  for (var i = 0; i < vals.length; i++){
+    h += '<div class="aw-col"><div class="aw-ptr"></div>'
+       + '<div class="aw-box' + (cls && cls[i] ? ' ' + cls[i] : '') + '">' + vals[i] + '</div></div>';
+  }
+  return h + '</div>';
+}
+function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
+function emptyRow(){ return '<div class="aw-cells"><div class="aw-box dim" style="width:70px">空</div></div>'; }
+
+// 示例：LA = 1,3,5（m=3），LB = 2,4,6（n=3），演示"较小者头插"
+var ST = [
+  { la:['1','3','5'], lb:['2','4','6'], nw:[] },
+  { la:['3','5'],     lb:['2','4','6'], nw:['1'] },
+  { la:['3','5'],     lb:['4','6'],     nw:['2','1'] },
+  { la:['5'],         lb:['4','6'],     nw:['3','2','1'] },
+  { la:['5'],         lb:['6'],         nw:['4','3','2','1'] },
+  { la:[],            lb:['6'],         nw:['5','4','3','2','1'] },
+  { la:[],            lb:[],            nw:['6','5','4','3','2','1'] },
+  { la:[],            lb:[],            nw:['6','5','4','3','2','1'] }
+];
+// 每步被摘下的结点 / 与之比较的结点（两表值互不相同，可安全标色）
+var ACT = [ null,
+  { pick:'1', cmp:'2' }, { pick:'2', cmp:'3' }, { pick:'3', cmp:'4' },
+  { pick:'4', cmp:'5' }, { pick:'5', cmp:'6' }, { pick:'6', cmp:null }, null ];
+
+function mark(vals, act, which){
+  var r = [];
+  for (var i = 0; i < vals.length; i++){
+    var v = vals[i], c = '';
+    if (act && v === act.pick) c = 'hit';
+    else if (act && act.cmp && v === act.cmp && which !== 'nw') c = 'ok';
+    r.push(c);
+  }
+  return r;
+}
+
+function stage(i){
+  var s = ST[i], act = ACT[i];
+  var h = '';
+  h += rowLabel('升序链表 LA（长度 m）');
+  h += s.la.length ? rowHtml(s.la, mark(s.la, act, 'la')) : emptyRow();
+  h += rowLabel('升序链表 LB（长度 n）');
+  h += s.lb.length ? rowHtml(s.lb, mark(s.lb, act, 'lb')) : emptyRow();
+  h += rowLabel('新链表（头插法 → 自动降序，头部在左）');
+  h += s.nw.length ? rowHtml(s.nw, mark(s.nw, act, 'nw')) : emptyRow();
+  return h;
+}
+
+function introHtml(){
+  return '<div class="aw-stepcard key"><h4><span class="n">?</span>题意与策略</h4>'
+    + '<p>两个<b>升序</b>链表要合并成一个<b>降序</b>链表。策略：同时扫描两表，每次比较两表当前头结点，<b>较小者摘下、头插入新链表</b>——头插把先来的小元素不断推向表尾，最终自然成降序。</p>'
+    + '<p>下面用 m = 3、n = 3 的例子演示，观察「每个结点被处理几次」——这正是时间复杂度的来源。</p></div>';
+}
+
+var LOGS = [
+  '初始：LA = 1,3,5，LB = 2,4,6，新链表为空。规则：每次取两表中较小的头结点头插入新链表',
+  '比较 1 与 2：1 更小 → 摘下 LA 的 1，头插 → 新链表 1（比较 1 次）',
+  '比较 3 与 2：2 更小 → 摘下 LB 的 2，头插 → 新链表 2,1',
+  '比较 3 与 4：3 更小 → 摘下 LA 的 3，头插 → 新链表 3,2,1',
+  '比较 5 与 4：4 更小 → 摘下 LB 的 4，头插 → 新链表 4,3,2,1',
+  '比较 5 与 6：5 更小 → 摘下 LA 的 5，头插 → 新链表 5,4,3,2,1',
+  'LB 已空：LA 剩余结点 6 直接头插，无需再比较 → 新链表 6,5,4,3,2,1',
+  '完成：m+n = 6 个结点各被处理一次，比较 5 次、插链 6 次，每个结点都是常数时间工作'
+];
+var TAGS = ['审题', '头插 1', '头插 2', '头插 3', '头插 4', '头插 5', '收尾头插 6', '完成'];
+var CLS  = ['step', 'ok', 'ok', 'ok', 'ok', 'ok', 'shift', 'done'];
+
+var snaps = [];
+for (var i = 0; i <= 7; i++){
+  var sn = {
+    cls: CLS[i], tag: TAGS[i], log: LOGS[i],
+    count: Math.max(0, Math.min(i, 6)),
+    html: i === 0 ? introHtml() : stage(i)
+  };
+  if (i >= 1 && i <= 6) sn.ribbon = { k: i, ok: true };
+  if (i === 7) sn.done = true;
+  snaps.push(sn);
+}
+
+AW.init({
+  title: '合并升序链表为降序链表 · 复杂度分析（2013-01）',
+  subtitle: 'LA 长 <code>m</code>、LB 长 <code>n</code>，均升序 · 策略：较小者摘下 <code>头插</code> 新链表 → 自动降序',
+  counterLabel: '已处理结点',
+  ribbonTitle: '结点（✓ 恰好处理一次）',
+  intro: '点击「▶ 播放」逐步演示头插归并。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：O(max(m, n))',
+    html: '最坏情况下每个结点都要被比较、摘下、头插一次：比较 ≤ m+n−1 次、插链 m+n 次，总时间 <b>O(m+n)</b>；而 m+n 与 max(m,n) 同阶（m+n ≤ 2·max(m,n)），故选 <b>D</b>。<br>记忆点：<b>归并 = 每个结点只过一遍手</b>——不是 O(mn)，也不可能只遍历其中一个表。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

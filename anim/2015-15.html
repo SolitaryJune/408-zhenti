@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-15 动画 · 直接映射 Cache 总容量计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-15（计算机组成原理·高速缓冲存储器）
+     过程推演：地址划分 → 每行位数 → 总容量
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 每步点亮的元素：addr = 地址三段，row = 行组成四件，cap = 总容量
+var ST = [
+  { addr: [0,0,0], row: [0,0,0,0], cap: 0 },
+  { addr: [0,0,1], row: [0,0,0,0], cap: 0 },
+  { addr: [0,1,1], row: [0,0,0,0], cap: 0 },
+  { addr: [1,1,1], row: [0,0,0,0], cap: 0 },
+  { addr: [1,1,1], row: [1,1,0,0], cap: 0 },
+  { addr: [1,1,1], row: [1,1,1,0], cap: 0 },
+  { addr: [1,1,1], row: [1,1,1,1], cap: 0 },
+  { addr: [1,1,1], row: [1,1,1,1], cap: 1 },
+  { addr: [1,1,1], row: [1,1,1,1], cap: 1 },
+];
+
+var addrBox = null, rowBox = null, capBox = null;
+
+function segHtml(label, bits, on, color){
+  var bd = on ? color : '#cbd5e1', bg = on ? '#f6fef9' : '#fff', fg = on ? '#14532d' : '#94a3b8';
+  return '<div style="width:150px;border:2px solid ' + bd + ';background:' + bg + ';color:' + fg +
+         ';border-radius:10px;padding:9px 6px;text-align:center;font-family:Menlo,monospace;transition:all .3s">' +
+         '<div style="font-size:14px;font-weight:800">' + label + '</div>' +
+         '<div style="font-size:11px;margin-top:2px">' + bits + '</div></div>';
+}
+
+function chipHtml(label, on, extra){
+  var bd = on ? '#16a34a' : '#e2e8f0', bg = on ? '#dcfce7' : '#f8fafc', fg = on ? '#14532d' : '#94a3b8';
+  return '<div style="border:2px solid ' + bd + ';background:' + bg + ';color:' + fg +
+         ';border-radius:9px;padding:5px 9px;font-size:12.5px;font-family:Menlo,monospace;transition:all .3s">' +
+         label + (on && extra ? '<br><b style="color:#15803d">' + extra + '</b>' : '') + '</div>';
+}
+
+AW.init({
+  title: '直接映射 Cache 总容量推演（2015·15）',
+  subtitle: '主存 32 位按字节编址 · 块 4 字×32 位 · Cache 4K 字数据 · <b>回写（Write Back）</b>方式',
+  counterLabel: '关键位数',
+  intro: '点击「▶ 播放」逐步完成：地址划分 → 每行位数 → 总容量。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    addrBox = AW.el('div', '');
+    stage.appendChild(addrBox);
+    rowBox = AW.el('div', '');
+    rowBox.style.marginTop = '12px';
+    stage.appendChild(rowBox);
+    capBox = AW.el('div', '');
+    stage.appendChild(capBox);
+  },
+
+  render: function(stage, sn, i){
+    var st = ST[Math.min(i, ST.length - 1)];
+
+    var h = '<div class="aw-row-label"><b>主存地址 32 位的划分</b>（直接映射：标记 | 行号 | 块内）</div>';
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+         segHtml('标记 tag', '18 位', st.addr[0], '#2563eb') +
+         segHtml('行号', '10 位', st.addr[1], '#d97706') +
+         segHtml('块内地址', '4 位', st.addr[2], '#16a34a') + '</div>';
+    addrBox.innerHTML = h;
+
+    var r = '<div class="aw-row-label"><b>每行（1 行）的组成</b>（绿 = 已计入）</div>';
+    r += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
+         chipHtml('数据 128 位', st.row[0], '16B×8') +
+         chipHtml('标记 tag 18 位', st.row[1], '') +
+         chipHtml('有效位 1 位', st.row[2], '') +
+         chipHtml('脏位 1 位', st.row[3], st.row[3] ? '回写方式专属' : '') + '</div>';
+    var rowBits = (st.row[0] ? 128 : 0) + (st.row[1] ? 18 : 0) + (st.row[2] ? 1 : 0) + (st.row[3] ? 1 : 0);
+    if (rowBits > 0){
+      r += '<div style="margin-top:8px;font-size:14px;font-weight:800;color:#0f172a">每行合计 = ' + rowBits + ' 位</div>';
+    }
+    rowBox.innerHTML = r;
+
+    var c = '';
+    if (st.cap){
+      c = '<div style="margin-top:12px;border:2px solid #16a34a;background:#f6fef9;border-radius:12px;padding:10px 14px;font-size:14.5px;font-weight:700;color:#14532d">' +
+          '总容量 = 1024 行 × 148 位/行 = 151552 位 = <b style="font-size:17px">148K 位</b></div>';
+    }
+    capBox.innerHTML = c;
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '读条件', log: '主存 32 位按字节编址；块 4 字、每字 32 位（4B）；Cache 存 4K 字数据；回写方式 → 先做地址划分', count: 0 },
+    { cls: 'step',  tag: '块内地址', log: '块大小 = 4 字 × 4 B/字 = 16 B → 块内地址 4 位', count: 4 },
+    { cls: 'step',  tag: '行数与行号', log: '行数 = 4K 字 ÷ 4 字/行 = 1024 行（2 的 10 次方）→ 行号 10 位', count: 10 },
+    { cls: 'ok',    tag: '标记位数', log: '标记 tag = 32 - 10 - 4 = 18 位，地址划分定形：18 | 10 | 4', count: 18 },
+    { cls: 'step',  tag: '数据位', log: '每行数据 = 16 B × 8 = 128 位；tag + 数据 = 146 位', count: 146 },
+    { cls: 'ok',    tag: '有效位', log: '每行必须配 1 位有效位 → 147 位', count: 147 },
+    { cls: 'ok',    tag: '脏位', log: '回写（Write Back）方式必须配 1 位脏位 → 每行共 148 位', count: 148 },
+    { cls: 'step',  tag: '总容量', log: '总容量 = 1024 行 × 148 位/行 = 151552 位 = 148K 位', count: 151552 },
+    { cls: 'done',  tag: '完成', log: '结论：至少 148K 位 → 答案选 C。易错：漏脏位会得 147K（B）', count: 151552, done: true },
+  ],
+
+  result: {
+    big: '148K 位（答案 C）',
+    html: '地址划分 <code>tag 18 | 行号 10 | 块内 4</code>；每行 = 数据 128 + tag 18 + 有效 1 + <b>脏位 1（回写方式专属）</b> = 148 位；总容量 = 1024 × 148 = <b>148K 位</b>。漏掉脏位得 147K（干扰项 B）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

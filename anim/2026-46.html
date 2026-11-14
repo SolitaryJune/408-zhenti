@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-46 inode 定位与删除目录的元数据操作</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程演示类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function blockCell(lbl, idx, cls, ptr, style){
+  return '<div class="aw-col"><div class="aw-ptr">' + (ptr || '') + '</div><div class="aw-box' +
+         (cls ? ' ' + cls : '') + '"' + (style ? ' style="' + style + '"' : '') + '>' + lbl +
+         '</div><div class="aw-idx">' + idx + '</div></div>';
+}
+
+// inode 表示意：相对块号 0..31（绝对盘块 100..131），hl = 高亮的相对块号
+function inodeRow(hl){
+  var h = '';
+  for (var i = 0; i < 32; i++){
+    var cls = (i === hl) ? 'hit' : (i === 31 ? 'ok' : '');
+    var ptr = (i === hl) ? '★' : '';
+    h += blockCell(String(i), String(100 + i), cls, ptr);
+  }
+  return '<div class="aw-cells">' + h + '</div>';
+}
+
+// file 数据块示意：逻辑块 0..7；0~4 直接区，5~7 一次间接区
+function dataRow(hl){
+  var h = '';
+  for (var i = 0; i < 8; i++){
+    var cls = '', style = '';
+    if (i === hl){ cls = 'hit'; }
+    else if (i >= 5){ style = 'background:#fef3c7;border-color:#d97706;color:#92400e'; }
+    h += blockCell(String(i), (i < 5 ? '直接' : '间1'), cls, (i === hl ? '访问' : ''), style);
+  }
+  return '<div class="aw-cells">' + h + '</div>';
+}
+
+// 删除操作清单：doneN = 已完成数，cur = 当前步（从 0 起，-1 表示无）
+function opsRow(doneN, cur){
+  var ops = ['盘块位图<br>dir1 占块→0', '盘块位图<br>file 数据块→0', '盘块位图<br>file 间接块→0',
+             'inode 位图<br>201→0', 'inode 位图<br>1000→0', '目录 dir<br>删 dir1 项'];
+  var h = '';
+  for (var i = 0; i < 6; i++){
+    var cls = (i < doneN) ? 'ok' : ((i === cur) ? 'miss' : '');
+    var ptr = (i < doneN) ? '✓' : ((i === cur) ? '进行中' : '');
+    var style = (i < doneN) ? '' : ((i === cur) ? '' : 'opacity:.45');
+    h += blockCell('①②③④⑤⑥'[i], ops[i], cls, ptr, style);
+  }
+  return '<div class="aw-cells">' + h + '</div>';
+}
+
+function wrap(html, note){
+  return '<div class="aw-scroll">' + html + '</div>' +
+         (note ? '<p style="font-size:13px;color:#334155;margin-top:10px;line-height:1.7">' + note + '</p>' : '');
+}
+
+/* 每步日志文案（先声明再使用） */
+var SNAP_LOGS = [
+  '题面：目录树 dir(100)→dir1(201)→file(1000)，file 30KB；盘块 4KB，inode 128B；inode 表从 100 号块起 4096 块。',
+  '第一步：每块容纳 inode 数 = 4096B ÷ 128B = 32 个。',
+  '第二步：inode 1000 在表内字节偏移 = 1000 × 128 = 128000 B（inode 号从 0 编号）。',
+  '第三步：相对块号 = ⌊128000 ÷ 4096⌋ = 31，加表起始块 100 → file 的 inode 在 131 号盘块。',
+  '问 (1)-②：访问偏移 21460 的字节 → 逻辑块号 = ⌊21460 ÷ 4096⌋ = 5，块内偏移 980。',
+  '直接地址项 5 个只覆盖逻辑块 0~4（共 20480 字节）；块 5 落在一次间接地址区。',
+  'inode 已读入内存 → 需读一次间接地址块 + 数据块，最多访问 2 个盘块。',
+  '问 (1)-③：最多文件数 = inode 总数 = 4096 × 32 = 131072 = 128K 个。',
+  '问 (2) 框架：删除 dir1 要处理盘块位图、索引节点位图、目录文件 dir 三类元数据，共 6 步。',
+  '操作①：盘块位图中 dir1 占用的盘块对应位清 0。',
+  '操作②：盘块位图中 file 占用的盘块对应位清 0。',
+  '操作③：盘块位图中 file 一次间接地址指向的盘块（间接地址块）对应位清 0。',
+  '操作④：索引节点位图中 dir1 的 inode（201）对应位清 0。',
+  '操作⑤：索引节点位图中 file 的 inode（1000）对应位清 0。',
+  '操作⑥：删除目录文件 dir 中与 dir1 对应的目录项。',
+  '全部完成：两问答案汇总如结论卡。',
+];
+
+/* 每步的舞台 HTML */
+var S = [];
+
+S.push(wrap(
+  '<table style="border-collapse:collapse;font-size:13px;margin:4px 0 10px">' +
+  '<tr><td style="border:1px solid #e2e8f0;padding:4px 10px;background:#f8fafc">目录树</td><td style="border:1px solid #e2e8f0;padding:4px 10px">dir(inode 100) → dir1(inode 201) → file(inode 1000)，file 大小 30KB</td></tr>' +
+  '<tr><td style="border:1px solid #e2e8f0;padding:4px 10px;background:#f8fafc">盘块</td><td style="border:1px solid #e2e8f0;padding:4px 10px">4 KB / 块，盘块号 4 B</td></tr>' +
+  '<tr><td style="border:1px solid #e2e8f0;padding:4px 10px;background:#f8fafc">索引节点表</td><td style="border:1px solid #e2e8f0;padding:4px 10px">从 <b>100 号盘块</b>起连续 <b>4096</b> 块；每个 inode <b>128 B</b>，含 <b>5 直接</b> + 一次/二次/三次间接地址项各 1 个</td></tr>' +
+  '</table>',
+  'inode 号 = 在表中的序号，从 0 开始编号。下面先解问 (1) 的三个小问。'));
+
+S.push(wrap(inodeRow(-1),
+  '每块容纳 inode 数 = 4096B ÷ 128B = <b>32 个</b>（格内为相对块号，格下为绝对盘块号 100 起）'));
+
+S.push(wrap(inodeRow(-1),
+  'inode 1000 在表内的字节偏移 = 1000 × 128B = <b>128000 B</b>（从 0 编号，偏移按 1000 算）'));
+
+S.push(wrap(inodeRow(31),
+  '表内相对块号 = ⌊128000 ÷ 4096⌋ = <b>31</b> → 绝对盘块号 = 100 + 31 = <b>131</b> 号盘块'));
+
+S.push(wrap(dataRow(5),
+  '问 (1)-②：访问偏移 21460 的字节 → 逻辑块号 = ⌊21460 ÷ 4096⌋ = <b>5</b>（块内偏移 980）'));
+
+S.push(wrap(dataRow(-1),
+  '直接地址项 5 个只覆盖逻辑块 0~4（0~20479 字节，绿格）；块 5 落在<b>一次间接地址区</b>（黄格），须经间接地址块转一道'));
+
+S.push(wrap(dataRow(5),
+  'inode 已在内存 → 最多访盘 <b>2 次</b>：① 读一次间接地址块取数据块号；② 读数据块'));
+
+S.push(wrap(inodeRow(-1),
+  '问 (1)-③：最多文件数 = inode 总数 = 4096 块 × 32 个/块 = <b>131072 = 128K 个</b>（每个文件占一个 inode）'));
+
+S.push(wrap(
+  '<p style="font-size:13.5px;margin:2px 0 10px">问 (2)：删除目录 <b>dir1</b>（连同其中的 file）。需处理三类元数据：<b>盘块位图</b>、<b>索引节点位图</b>、<b>目录文件 dir</b>，共 6 步操作。</p>' + opsRow(0, 0),
+  '要回收的盘块：dir1 目录文件占块、file 数据块（30KB 占 8 块）、file 的一次间接地址块；要回收的 inode：201、1000'));
+
+S.push(wrap(opsRow(1, -1), '操作①：将<b>盘块位图</b>中 dir1 占用的盘块所对应的位修改为 0'));
+S.push(wrap(opsRow(2, -1), '操作②：将<b>盘块位图</b>中 file 占用的盘块所对应的位修改为 0'));
+S.push(wrap(opsRow(3, -1), '操作③：将<b>盘块位图</b>中 file 索引节点中一次间接地址指向的盘块所对应的位修改为 0'));
+S.push(wrap(opsRow(4, -1), '操作④：将<b>索引节点位图</b>中 dir1 的索引节点（201）所对应的位修改为 0'));
+S.push(wrap(opsRow(5, -1), '操作⑤：将<b>索引节点位图</b>中 file 的索引节点（1000）所对应的位修改为 0'));
+S.push(wrap(opsRow(6, -1), '操作⑥：删除<b>目录文件 dir</b> 中与 dir1 对应的目录项'));
+
+S.push(wrap(
+  '<table style="border-collapse:collapse;font-size:13px">' +
+  '<tr><td style="border:1px solid #e2e8f0;padding:4px 10px;background:#f8fafc">问 (1)</td><td style="border:1px solid #e2e8f0;padding:4px 10px">inode 在 <b>131 号盘块</b>；偏移 21460 最多访盘 <b>2 个</b>盘块；最多创建 <b>128K = 131072</b> 个文件</td></tr>' +
+  '<tr><td style="border:1px solid #e2e8f0;padding:4px 10px;background:#f8fafc">问 (2)</td><td style="border:1px solid #e2e8f0;padding:4px 10px">盘块位图 3 处清 0 + 索引节点位图 2 处清 0 + 删除 dir 中 dir1 目录项</td></tr>' +
+  '</table>'));
+
+var snaps = S.map(function(html, i){
+  var last = i === S.length - 1;
+  var o = {
+    cls: last ? 'done' : 'step',
+    tag: last ? '结论' : ('第 ' + (i + 1) + ' 步'),
+    log: last ? '两问全部解完：131 号盘块 / 最多访盘 2 次 / 128K 个文件；删除 dir1 共 6 步元数据操作。'
+              : SNAP_LOGS[i],
+    count: i + 1,
+    html: html,
+    done: last,
+  };
+  if (i >= 9 && i <= 14){ o.ribbon = { k: i - 8, ok: true }; }
+  return o;
+});
+
+AW.init({
+  title: '2026-46 · inode 定位、访盘次数与删除目录',
+  subtitle: '盘块 4KB · inode 128B（5 直接 + 3 级间接）· inode 表从 100 号块起 4096 块 · dir → dir1 → file',
+  counterLabel: '进度',
+  ribbonTitle: '删除操作（✓ = 已完成）',
+  intro: '点击「▶ 播放」，先解问 (1) 的三小问，再逐步完成问 (2) 的 6 步删除操作。',
+  snaps: snaps,
+  result: {
+    big: '131 号盘块 · 访盘 2 次 · 128K 个文件',
+    html: '（1）inode 1000 → 100 + ⌊1000×128÷4096⌋ = <b>131</b> 号盘块；偏移 21460 落在一次间接区 → 最多访盘 <b>2 个</b>盘块；最多文件数 = 4096 × 32 = <b>131072</b>。<br>（2）删除 dir1：<b>盘块位图 3 处清 0</b>（dir1 占块、file 数据块、file 间接块）+ <b>inode 位图 2 处清 0</b>（201、1000）+ <b>删除 dir 中的 dir1 目录项</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

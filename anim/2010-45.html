@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-45 CSCAN 磁盘调度与位图管理</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：问1 位图 → 问2 CSCAN 调度与时间累加 → 问3 Flash 用 FCFS
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+var SCALE_MAX = 140;                 // 磁道轴上限（0~140 号道）
+var TICKS = [0, 30, 50, 90, 100, 120];
+var REQ = [50, 90, 30, 120];         // 请求队列（题目给的是乱序 50,90,30,120）
+function pct(t){ return (t / SCALE_MAX * 100).toFixed(2) + '%'; }
+
+// 请求标记配色
+var MK = {
+  pend: ['待服务', '#dbeafe', '#2563eb', '#1d4ed8'],
+  serv: ['已服务', '#dcfce7', '#16a34a', '#14532d'],
+};
+
+var ALL_SERV = { 50:'serv', 90:'serv', 30:'serv', 120:'serv' };
+
+var SNAPS = [
+  { head:100, st:{}, acc:'尚未开始累计',
+    cls:'shift', tag:'准备', count:0,
+    log:'磁头位于 100 号磁道、沿磁道号增大方向移动；请求队列：50、90、30、120，每个磁道需读取 1 个随机分布的扇区' },
+  { head:100, st:{}, acc:'—',
+    cls:'step', tag:'问1 位图', count:1,
+    log:'问1：16384 个磁盘块每块用 1 位记录空闲状态（1=空闲，0=占用），16384 位 ÷ 8 = 2048B = 2KB，恰好用满给定内存 → 采用位图管理' },
+  { head:100, st:{}, acc:'—',
+    cls:'step', tag:'参数换算', count:2,
+    log:'问2 参数：6000 r/min = 100 转/秒 → 每转 10ms；每道 100 扇区 → 读 1 扇区 = 10ms÷100 = 0.1ms；扇区随机分布 → 平均旋转延迟 = 半圈 = 5ms' },
+  { head:120, st:{120:'serv'}, acc:'寻道 20ms · 旋转 5ms · 传输 0.1ms ｜ 累计 25.1ms',
+    cls:'ok', tag:'服务 120', count:3, ribbon:{k:1, ok:true},
+    log:'CSCAN 单向增大：100→120 移动 20 道耗时 20ms，服务 120 号道；读随机扇区另需平均旋转延迟 5ms + 传输 0.1ms' },
+  { head:30, st:{120:'serv', 30:'serv'}, acc:'寻道 110ms · 旋转 10ms · 传输 0.2ms ｜ 累计 120.2ms',
+    cls:'shift', tag:'折返扫回', count:4, ribbon:{k:2, ok:true},
+    log:'120 之后无更大请求 → 扫过最大号后折回最小端再单向扫：120→30 移动 90 道耗时 90ms，服务 30 号道（再 +5ms +0.1ms）' },
+  { head:50, st:{120:'serv', 30:'serv', 50:'serv'}, acc:'寻道 130ms · 旋转 15ms · 传输 0.3ms ｜ 累计 145.3ms',
+    cls:'ok', tag:'服务 50', count:5, ribbon:{k:3, ok:true},
+    log:'30→50 移动 20 道耗时 20ms，服务 50 号道（再 +5ms +0.1ms）' },
+  { head:90, st:{120:'serv', 30:'serv', 50:'serv', 90:'serv'}, acc:'寻道 170ms · 旋转 20ms · 传输 0.4ms ｜ 累计 190.4ms',
+    cls:'ok', tag:'服务 90', count:6, ribbon:{k:4, ok:true},
+    log:'50→90 移动 40 道耗时 40ms，服务 90 号道（再 +5ms +0.1ms）——四个请求全部服务完毕' },
+  { head:90, st:ALL_SERV, acc:'合计 = 170 + 20 + 0.4 = 190.4ms',
+    cls:'done', tag:'问2 结论', count:7,
+    log:'时间汇总：寻道 20+90+20+40 = 170ms；平均旋转延迟 4×5 = 20ms；传输 4×0.1 = 0.4ms → 读完这 4 个扇区共需 190.4ms' },
+  { head:90, st:ALL_SERV, acc:'合计 190.4ms',
+    cls:'step', tag:'问3 FCFS', count:8,
+    log:'问3：Flash（U 盘、SSD）是随机访问设备，无寻道时间和旋转延迟，CSCAN 的单向扫描失去意义 → 改用 FCFS（先来先服务）最简单高效' },
+  { head:90, st:ALL_SERV, acc:'合计 190.4ms',
+    cls:'done', tag:'完成', count:9, done:true,
+    log:'结论：问1 用位图（2KB 恰好装下）；问2 共需 190.4ms；问3 Flash 无寻道，用 FCFS' },
+];
+
+AW.init({
+  title: '2010·45 CSCAN 磁盘调度：位图 + 190.4ms + FCFS',
+  subtitle: '6000 r/min · 每道 100 扇区 · 相邻磁道移动 1ms · 磁头 100 号道向增大方向 · 请求队列 <code>50, 90, 30, 120</code>',
+  counterLabel: '推进步数',
+  ribbonTitle: '已服务磁道（按 CSCAN 顺序）',
+  intro: '点击「▶ 播放」，按问推演：位图 → CSCAN 时间计算 → Flash 的调度策略。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    // 参数说明
+    var params = AW.el('div', '');
+    params.style.cssText = 'font-size:12.5px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;line-height:1.7;margin-bottom:12px;';
+    params.innerHTML = '参数：6000 r/min = 100 转/秒 → 每转 <b>10ms</b>；每道 100 扇区 → 读 1 扇区 <b>0.1ms</b>；随机分布 → 平均旋转延迟 <b>5ms</b>；相邻磁道移动 <b>1ms</b>';
+    inner.appendChild(params);
+
+    // 磁道轴
+    refs.scale = AW.el('div', '');
+    refs.scale.style.cssText = 'position:relative;height:104px;margin:6px 6px 0;';
+    refs.scale.appendChild(AW.el('div', '', '<div style="font-size:13px;color:#475569;margin-bottom:4px"><b>磁道轴</b>（CSCAN：只沿增大方向服务，扫到大端折回最小端再来一遍）</div>'));
+    var track = AW.el('div', '');
+    track.style.cssText = 'position:relative;height:80px;';
+    // 基线
+    var base = AW.el('div', '');
+    base.style.cssText = 'position:absolute;left:0;right:0;bottom:26px;height:2px;background:#cbd5e1;border-radius:1px;';
+    track.appendChild(base);
+    // 刻度
+    TICKS.forEach(function(t){
+      var d = AW.el('div', '', String(t));
+      d.style.cssText = 'position:absolute;bottom:2px;left:' + pct(t) + ';transform:translateX(-50%);font-size:11px;font-family:Menlo,Consolas,monospace;color:' + (t === 100 ? '#d97706;font-weight:700' : '#94a3b8') + ';';
+      track.appendChild(d);
+    });
+    // 请求标记
+    refs.mk = {};
+    REQ.forEach(function(t){
+      var m = AW.el('div', '');
+      m.style.cssText = 'position:absolute;top:0;left:' + pct(t) + ';transform:translateX(-50%);min-width:38px;text-align:center;padding:4px 7px;border-radius:9px;font-size:12.5px;font-weight:700;font-family:Menlo,Consolas,monospace;background:#dbeafe;border:1.5px solid #2563eb;color:#1d4ed8;';
+      track.appendChild(m);
+      refs.mk[t] = m;
+    });
+    // 磁头
+    refs.head = AW.el('div', '');
+    refs.head.style.cssText = 'position:absolute;top:14px;left:' + pct(100) + ';transform:translateX(-50%);transition:left .7s cubic-bezier(.22,.8,.3,1);width:3px;z-index:2;';
+    refs.head.innerHTML = '<div style="width:3px;height:44px;background:#d97706;border-radius:2px;margin:0 auto"></div><div style="margin-top:2px;font-size:11px;font-weight:700;color:#92400e;white-space:nowrap;transform:translateX(-50%)">磁头</div>';
+    track.appendChild(refs.head);
+    refs.scale.appendChild(track);
+    inner.appendChild(refs.scale);
+
+    // 时间累计
+    refs.acc = AW.el('div', '');
+    refs.acc.style.cssText = 'margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13.5px;color:#334155;font-family:Menlo,Consolas,monospace;';
+    inner.appendChild(refs.acc);
+    inner.appendChild(AW.el('div', 'aw-hint',
+      '蓝色=待服务，绿色=已服务；琥珀色指针为磁头，随每步移动'));
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    refs.head.style.left = pct(sn.head);
+    REQ.forEach(function(t){
+      var s = sn.st[t] || 'pend';
+      var c = MK[s];
+      refs.mk[t].style.background = c[1];
+      refs.mk[t].style.borderColor = c[2];
+      refs.mk[t].style.color = c[3];
+      refs.mk[t].innerHTML = t + '<em style="font-style:normal;font-size:9.5px;display:block;font-weight:400">' + c[0] + '</em>';
+    });
+    refs.acc.innerHTML = sn.acc;
+  },
+
+  result: {
+    big: '190.4ms',
+    html: '问2 答案：寻道 <b>170ms</b>（20+90+20+40）+ 平均旋转延迟 <b>20ms</b>（4×5）+ 传输 <b>0.4ms</b>（4×0.1）= <b>190.4ms</b>。问1：位图 16384 位 ÷ 8 = <b>2KB</b> 恰好装满。问3：Flash 随机访问、无寻道与旋转延迟 → 用 <b>FCFS</b> 更高效。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-16 动画 · 地址空间划分与 SRAM 芯片数量</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：64KB 地址空间划分 + 8K×4 SRAM 芯片数推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function wrap(label, html){
+  return '<div class="aw-row-label">' + label + '</div>' + html;
+}
+
+function card(cls, html){
+  return '<div class="aw-stepcard ' + cls + '"><p>' + html + '</p></div>';
+}
+
+// 64KB 地址空间条：RAM(16KB) + ROM(8KB) + RAM(40KB)；romHl/ramHl 高亮对应段
+function segBar(romHl, ramHl){
+  var s = '<div style="display:flex;width:100%;border-radius:10px;overflow:hidden;font-size:12.5px;text-align:center;line-height:1.4">';
+  function seg(text, grow, base, border, hl){
+    return '<div style="flex:' + grow + ';padding:10px 4px;background:' + base +
+           ';box-shadow:inset 0 0 0 ' + (hl ? '3px #0f172a' : '1px #e2e8f0') + ';color:' + border + ';font-weight:700">' + text + '</div>';
+  }
+  s += seg('RAM 区<br>0000H~3FFFH<br>16KB', 16, ramHl ? '#bfdbfe' : '#dbeafe', '#1d4ed8', ramHl === 1);
+  s += seg('ROM 区<br>4000H~5FFFH<br>8KB', 8, romHl ? '#fde68a' : '#fef3c7', '#92400e', romHl === 1);
+  s += seg('RAM 区<br>6000H~FFFFH<br>40KB', 40, ramHl ? '#bfdbfe' : '#dbeafe', '#1d4ed8', ramHl === 2);
+  return s + '</div>';
+}
+
+// SRAM 芯片组：groups 组 × 每组 2 片（位扩展 4 位→8 位）
+function chips(groups){
+  var s = '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+  var g, i;
+  for(g = 0; g < groups; g++){
+    s += '<div style="border:2px solid #cbd5e1;border-radius:10px;padding:6px 8px;background:#fff">';
+    s += '<div style="font-size:11px;color:#64748b;margin-bottom:4px">组 ' + (g + 1) + '（8KB）</div>';
+    s += '<div style="display:flex;gap:6px">';
+    for(i = 0; i < 2; i++){
+      s += '<div style="width:46px;height:40px;border:2px solid #2563eb;border-radius:8px;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700">8K×4<br>位</div>';
+    }
+    s += '</div></div>';
+  }
+  return s + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'64KB 按字节编址；4000H~5FFFH 为 ROM 区，其余为 RAM 区；用 8K×4 位 SRAM 芯片拼 RAM 区',
+    html: card('key', '总容量 <b>64KB</b>（按字节编址，0000H~FFFFH）；ROM 区 <code>4000H~5FFFH</code>；SRAM 芯片 <code>8K×4 位</code>只用于 RAM 区。先算 ROM 多大，再算 RAM 多大，最后按芯片参数拼。') +
+          wrap('64KB 地址空间全景', segBar(0, 0)) },
+
+  { cls:'step', tag:'ROM 区大小', count:1, ribbon:{k:1, ok:true},
+    log:'ROM = 5FFFH − 4000H + 1 = 2000H = 8KB（相减后必须 +1，含末单元）',
+    html: wrap('高亮 ROM 区 4000H~5FFFH', segBar(1, 0)) +
+          card('key', '5FFFH − 4000H <b>+ 1</b> = 2000H = <b>8KB</b>。直接相减得 1FFFH 会少算一个单元——最常见的笔误。') },
+
+  { cls:'step', tag:'RAM 区大小', count:2, ribbon:{k:2, ok:true},
+    log:'RAM = 64KB − 8KB = 56KB，分两段：0000H~3FFFH（16KB）与 6000H~FFFFH（40KB）',
+    html: wrap('高亮两段 RAM 区', segBar(0, 3)) +
+          card('key', 'RAM 区共 <b>56KB</b> = 16KB + 40KB，中间夹着 8KB ROM。ROM 区用 ROM 芯片实现，不消耗 SRAM 芯片。') },
+
+  { cls:'shift', tag:'位扩展', count:3, ribbon:{k:3, ok:true},
+    log:'1 片 8K×4 位只有 4 位数据线，按字节编址需 8 位 → 2 片一组位扩展成 8K×8 位 = 8KB',
+    html: wrap('1 组 = 2 片位扩展（8K×8 位 = 8KB）', chips(1)) +
+          card('key', '单片 4 位 < 8 位字节 → 先<b>位扩展</b>：2 片并联凑出 8 位。1 组容量 = 8K × 8 位 = <b>8KB</b>。') },
+
+  { cls:'ok', tag:'字扩展', count:4, ribbon:{k:4, ok:true},
+    log:'56KB ÷ 8KB/组 = 7 组字扩展 → 共 7 × 2 = 14 片 SRAM',
+    html: wrap('7 组 × 每组 2 片 = 14 片', chips(7)) +
+          card('good', '<b>字扩展</b>：7 组依次接到地址空间的两段 RAM 上（容量 56KB ÷ 8KB = 7）。总片数 = 7 × 2 = <b>14 片</b>。') },
+
+  { cls:'done', tag:'完成', count:5, ribbon:{k:5, ok:true},
+    log:'SRAM 芯片共 14 片 → 答案 C',
+    done:true,
+    html: wrap('7 组 × 每组 2 片 = 14 片', chips(7)) +
+          card('good', '答案选 <b>C（14 片）</b>。公式：<code>片数 = (RAM 容量 ÷ 单组容量) × (字长 ÷ 单片位宽) = 7 × 2</code>。干扰项：7 = 漏位扩展；16 = 误把 ROM 区也算进 SRAM。') },
+];
+
+AW.init({
+  title: '2016-16 地址空间划分与 SRAM 芯片数量',
+  subtitle: '64KB 按字节编址 · ROM 4000H~5FFFH · SRAM 芯片 8K×4 位 · 考点：位扩展 + 字扩展',
+  counterLabel: '推演步',
+  ribbonTitle: '推演进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步推演芯片数量。',
+  snaps: snaps,
+  result: {
+    big: '14 片',
+    html: '答案选 <b>C</b>。链条：<b>ROM 8KB（+1 别忘）→ RAM 56KB → 位扩展 2 片/组（4 位凑 8 位）→ 字扩展 7 组 → 7×2 = 14 片</b>。<br>干扰项：<b>7</b>（A）漏位扩展；<b>16</b>（D）把 8KB ROM 也按 SRAM 计算。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

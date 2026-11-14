@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-42 循环左移 · 三次逆置动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 示例：n=6, p=2
+var SEG_A = ['x1', 'x0'];              // 逆置 a 后的前段
+var SEG_B1 = ['x2', 'x3', 'x4', 'x5']; // 未动的 b
+var ARR0 = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5'];
+var ARR1 = ['x1', 'x0', 'x2', 'x3', 'x4', 'x5'];
+var ARR2 = ['x1', 'x0', 'x5', 'x4', 'x3', 'x2'];
+var ARR3 = ['x2', 'x3', 'x4', 'x5', 'x0', 'x1'];
+
+function arrRow(arr, segInfo, marks){
+  // segInfo: {aLen: 前段长度} 或 null；marks: {idx: class}
+  var h = '<div style="display:flex;gap:6px;align-items:flex-end">';
+  arr.forEach(function(c, i){
+    var cls = marks && marks[i] ? ' ' + marks[i] : '';
+    var ptr = '';
+    if (segInfo && segInfo.aLen){
+      if (i === 0) ptr = '<div class="aw-ptr" style="color:#d97706">a 段</div>';
+      else if (i === segInfo.aLen) ptr = '<div class="aw-ptr" style="color:#2563eb">b 段</div>';
+    }
+    h += '<div class="aw-col" style="width:52px">' +
+         '<div class="aw-ptr">' + ptr + '</div>' +
+         '<div class="aw-box' + cls + '" style="width:52px;height:44px;font-size:14px">' + c + '</div>' +
+         '<div class="aw-idx">' + i + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+function codeLine(txt, note){
+  return '<div style="display:flex;align-items:baseline;gap:10px;margin:4px 0">' +
+         '<code style="background:#0f172a;color:#e2e8f0;border-radius:8px;padding:5px 10px;font-size:13px;font-family:Menlo,Consolas,monospace">' + txt + '</code>' +
+         '<span style="font-size:13px;color:#64748b">' + note + '</span></div>';
+}
+
+var snaps = [
+  { cls: 'step', tag: '思想', count: 0,
+    log: '把数组拆成 a 段（前 p 个）与 b 段（后 n−p 个），目标 ab → ba，用三次逆置原地完成。',
+    html: '<div style="font-size:14.5px;line-height:2;color:#334155">' +
+          '以 <b>n = 6、p = 2</b> 为例：a 段 = (x0, x1)，b 段 = (x2, x3, x4, x5)。<br>' +
+          '目标：<b>(x0…x5) → (x2, x3, x4, x5, x0, x1)</b>，即 ab 变 ba。<br>' +
+          '三次逆置：<b style="color:#d97706">逆 a</b> → <b style="color:#2563eb">逆 b</b> → <b style="color:#16a34a">整体逆</b>。</div>' +
+          '<div class="aw-row-label" style="margin-top:8px">初始数组</div>' + arrRow(ARR0, { aLen: 2 }) },
+  { cls: 'shift', tag: '第 1 逆：a 段', count: 1, ribbon: { k: 1, ok: true },
+    log: 'Reverse(R, 0, p-1)：逆置前 2 个 → aR b。',
+    html: '<div class="aw-row-label">调用 <b>Reverse(R, 0, p-1)</b> 后</div>' +
+          arrRow(ARR1, { aLen: 2 }, { 0: 'hit', 1: 'hit' }) +
+          '<div style="font-size:13.5px;color:#334155;margin-top:8px">a 段原地翻转：<b>(x0,x1) → (x1,x0)</b>，b 段未动。当前形态 = aR b。</div>' },
+  { cls: 'shift', tag: '第 2 逆：b 段', count: 2, ribbon: { k: 2, ok: true },
+    log: 'Reverse(R, p, n-1)：逆置后 4 个 → aR bR。',
+    html: '<div class="aw-row-label">调用 <b>Reverse(R, p, n-1)</b> 后</div>' +
+          arrRow(ARR2, { aLen: 2 }, { 2: 'hit', 3: 'hit', 4: 'hit', 5: 'hit' }) +
+          '<div style="font-size:13.5px;color:#334155;margin-top:8px">b 段原地翻转：<b>(x2,x3,x4,x5) → (x5,x4,x3,x2)</b>。当前形态 = aR bR。</div>' },
+  { cls: 'ok', tag: '第 3 逆：整体', count: 3, ribbon: { k: 3, ok: true },
+    log: 'Reverse(R, 0, n-1)：整体逆置，aR bR 恰好翻成 b a，目标达成。',
+    html: '<div class="aw-row-label">调用 <b>Reverse(R, 0, n-1)</b> 后</div>' +
+          arrRow(ARR3, null, { 0: 'ok', 1: 'ok', 2: 'ok', 3: 'ok', 4: 'ok', 5: 'ok' }) +
+          '<div style="font-size:14px;color:#334155;margin-top:8px">(aR bR) 的整体逆置 = <b>b a</b> = (x2, x3, x4, x5, x0, x1) —— 正是循环左移 2 位的结果 ✓</div>' },
+  { cls: 'step', tag: '第 2 问·代码', count: 4, ribbon: { k: 4, ok: true },
+    log: 'Reverse 双指针对换；Converse 依次调用三次，各带注释。',
+    html: '<div style="font-size:14px;color:#334155;line-height:1.9">逆置函数与主函数的关键语句（C 语言）：</div>' +
+          codeLine('void Reverse(int R[], int from, int to)', '两端向中间收拢') +
+          codeLine('for (i=0; i&lt;(to-from+1)/2; i++){ 交换 R[from+i] 与 R[to-i] }', '到中点为止') +
+          codeLine('Reverse(R, 0, p-1);  // 逆置前 p 个元素', '第 1 步') +
+          codeLine('Reverse(R, p, n-1);  // 逆置后 n-p 个元素', '第 2 步') +
+          codeLine('Reverse(R, 0, n-1);  // 逆置整个数组', '第 3 步') },
+  { cls: 'step', tag: '第 3 问·复杂度', count: 5, ribbon: { k: 5, ok: true },
+    log: '三次逆置共 2n 次对换 → 时间 O(n)；只用一个 temp → 空间 O(1)。',
+    html: '<div style="font-size:15px;line-height:2.1;color:#334155">' +
+          '对换次数：p + (n−p) + n = <b>2n</b> → 时间复杂度 <b style="color:#16a34a;font-size:17px">O(n)</b>；<br>' +
+          '除一个 <b>temp</b> 辅助变量外不占额外空间 → 空间复杂度 <b style="color:#16a34a;font-size:17px">O(1)</b>。<br>' +
+          '<span style="font-size:13.5px;color:#64748b">对比：借助辅助数组整体搬运要 O(n) 空间，或逐个左移 O(pn) 时间——三次逆置在时间、空间上都最优。</span></div>' },
+  { cls: 'done', tag: '结论', count: 6, done: true, ribbon: { k: 6, ok: true },
+    log: '三问齐答：思想 = 三次逆置；代码 = Reverse + 三次调用；复杂度 = O(n) 时间、O(1) 空间。',
+    html: '<div style="font-size:15px;line-height:2.1;color:#334155">' +
+          '<b>第 1 问</b>：拆 a、b 两段，逆 a → 逆 b → 整体逆，aR bR 翻成 ba；<br>' +
+          '<b>第 2 问</b>：<b>Reverse(R, 0, p-1)、Reverse(R, p, n-1)、Reverse(R, 0, n-1)</b> 三次调用；<br>' +
+          '<b>第 3 问</b>：时间 <b style="color:#16a34a">O(n)</b>，空间 <b style="color:#16a34a">O(1)</b>。<br>' +
+          '易错：逆置顺序必须先局部后整体；边界是 0~p−1 与 p~n−1。</div>' },
+];
+
+AW.init({
+  title: '2010-42 · 三次逆置实现循环左移 p 位',
+  subtitle: '示例 n=6、p=2：<code>(x0…x5) → (x2, x3, x4, x5, x0, x1)</code> · 原地算法',
+  counterLabel: '已完成步骤',
+  ribbonTitle: '步骤（✓ 完成）',
+  intro: '点击「▶ 播放」，看 ab 如何经三次逆置原地翻成 ba。',
+  snaps: snaps,
+  result: {
+    big: 'O(n) 时间 · O(1) 空间',
+    html: '把数组拆成 a（前 p 个）与 b（后 n−p 个），<b>逆 a → 逆 b → 整体逆</b>：(aR bR) 的逆置恰为 ba。三次调用 <b>Reverse(R,0,p-1)、Reverse(R,p,n-1)、Reverse(R,0,n-1)</b>，共 2n 次对换。易错：先局部后整体；边界 0~p−1、p~n−1。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

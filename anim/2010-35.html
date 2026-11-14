@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-35 · RIP 距离矢量中的 16</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/分析类：RIP 距离矢量 &lt;net1, 16&gt; 的含义辨析
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：距离矢量 (net1, 16) 是谁的距离',
+    cls: 'key',
+    body: '<p>RIP 的距离矢量形如 <b>&lt;目的网络, 距离&gt;</b>。邻居 R2 发来 <code>&lt;net1, 16&gt;</code>，含义是：<b>R2 自己到 net1 的距离是 16</b>。方向要认清：这是 R2 通告给 R1 的信息，说的是 R2 的情况。</p>' },
+  { title: 'RIP 的硬规则：16 = 不可达',
+    cls: 'key',
+    body: '<p>RIP 规定最大有效跳数 <b>15</b>，距离为 <b>16 表示不可达</b>（相当于无穷大）。所以这条矢量真正在说：R2 到 net1 根本到不了。</p>' },
+  { title: '逐项分析 A：方向搞反了',
+    cls: 'bad',
+    body: '<p>A "R2 可以经过 R1 到达 net1，跳数 17"：通告说的是 R2 自己的距离，不是 R2 借道 R1——方向反了，17 也无从得出。✗</p>' },
+  { title: '逐项分析 B：把 16 当有效距离',
+    cls: 'bad',
+    body: '<p>B "R2 可以到达 net1，跳数 16"：16 在 RIP 中不是有效距离，而是<b>不可达</b>的标志。✗</p>' },
+  { title: '逐项分析 C：机械套用"距离 + 1"',
+    cls: 'bad',
+    body: '<p>C "R1 可以经过 R2 到达 net1，跳数 17"：RIP 更新时确实常做"邻居距离 + 1"，但 16 已经表示<b>不可达</b>——不可达再加 1 仍然是不可达。✗</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>能得出的结论是：R1 不能经过 R2 到达 net1，答案选 <b>D</b>。记忆锚点：<b>RIP 跳数 15 封顶，16 = 不可达</b>；看到 16 不要再做任何加减。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-35 · RIP 距离矢量中的 16',
+  subtitle: '考点：距离矢量的含义 · RIP 中 16 表示不可达 · 选项逐项推演',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: 'RIP 规定跳数 <b>15 封顶，16 = 不可达</b>。R2 通告 <code>&lt;net1, 16&gt;</code> 说明 R2 到 net1 不可达，因此 R1 也不能经过 R2 到达 net1。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

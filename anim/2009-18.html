@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-18 流水线时钟周期分析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-18：流水线时钟周期由最慢段决定（瓶颈分析）
+     模板：算法/过程类（流水线），只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function stagesRow(hi, cls){
+  var t = [['90','段 1'],['80','段 2'],['70','段 3'],['60','段 4']];
+  var h = '<div class="aw-row-label"><b>四个功能段</b>（流经各段时间，单位 ns）</div><div class="aw-cells">';
+  t.forEach(function(s, i){
+    var c = (hi === i) ? (cls || 'hit') : '';
+    var ptr = (hi === i) ? (cls === 'miss' ? '做不完！' : '瓶颈段') : '';
+    h += '<div class="aw-col"><div class="aw-ptr">' + ptr + '</div>' +
+         '<div class="aw-box ' + c + '">' + s[0] + '</div>' +
+         '<div class="aw-idx">' + s[1] + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'指令流水线 4 个功能段，流经时间 90ns、80ns、70ns、60ns（忽略段间缓存时间），求 CPU 时钟周期至少是多少',
+    html:'<div class="aw-stepcard key"><p>流水线接力工作：所有功能段共用<b>同一个统一的时钟节拍</b>。一个节拍内，每段必须完成本段任务 → 时钟周期 ≥ <b>最慢段</b>的时间。</p></div>' + stagesRow(-1, '') },
+
+  { cls:'step', tag:'统一节拍', count:1, ribbon:{k:1, ok:true},
+    log:'流水线接力：指令在第 1 段做完就交给第 2 段，各段必须同步推进，共用同一时钟',
+    html: stagesRow(-1, '') },
+
+  { cls:'miss', tag:'瓶颈约束', count:2, ribbon:{k:2, ok:false},
+    log:'若时钟周期 < 90ns：段 1（90ns）在一拍内做不完，接力断链，流水线无法正常工作',
+    html: stagesRow(0, 'miss') },
+
+  { cls:'ok', tag:'取最大值', count:3, ribbon:{k:3, ok:true},
+    log:'时钟周期 = max(90, 80, 70, 60) = 90ns——瓶颈段决定时钟周期',
+    html: stagesRow(0, 'hit') },
+
+  { cls:'step', tag:'干扰项', count:4, ribbon:{k:4, ok:false},
+    log:'75ns 是四段平均值、60ns 是最短段——节拍统一时都不能用',
+    html: '<div class="aw-stepcard bad"><p><b>75ns（平均）</b>：小于瓶颈段 90ns，段 1 做不完——错。</p></div>' +
+          '<div class="aw-stepcard bad"><p><b>60ns（最短）</b>：同样小于 90ns——错。</p></div>' +
+          '<div class="aw-stepcard bad"><p><b>300ns（段和）</b>：那是单条指令串行执行总时间，与时钟周期无关。</p></div>' },
+
+  { cls:'done', tag:'完成', count:5, ribbon:{k:5, ok:true},
+    log:'CPU 时钟周期至少 90ns → 答案 A',
+    done:true,
+    html: stagesRow(0, 'hit') },
+];
+
+AW.init({
+  title: '2009-18 流水线的 CPU 时钟周期',
+  subtitle: '四个功能段时间：90 / 80 / 70 / 60 ns（忽略段间缓存时间） · 考点：指令流水线',
+  counterLabel: '分析步',
+  ribbonTitle: '分析进度（✓ / ✗ 陷阱）',
+  intro: '点击「▶ 播放」逐步分析。',
+  snaps: snaps,
+  result: {
+    big: '至少 90ns（答案 A）',
+    html: '流水线各段共用统一节拍 → <b>时钟周期 = 最慢段时间 = max(90, 80, 70, 60) = 90ns</b>。平均值（75ns）、最短段（60ns）都不满足瓶颈段约束。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

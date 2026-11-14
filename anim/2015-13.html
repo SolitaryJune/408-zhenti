@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-13 动画 · 3 个 1、5 个 0 补码的最小整数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-13（计算机组成原理·数制与编码）
+     纯计算推理：位约束下求 8 位补码的最小整数
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 位格图（借用引擎的格子样式）
+function bitGrid(bits, labs){
+  var h = '<div class="aw-cells" style="margin:10px 0 6px">';
+  for (var i = 0; i < bits.length; i++){
+    h += '<div class="aw-col"><div class="aw-box' + (bits[i].c ? ' ' + bits[i].c : '') + '">' + bits[i].ch +
+         '</div><div class="aw-idx">' + labs[i] + '</div></div>';
+  }
+  return h + '</div>';
+}
+
+var FINAL_BITS = [
+  { ch: '1', c: 'hit' }, { ch: '0' }, { ch: '0' }, { ch: '0' },
+  { ch: '0' }, { ch: '0' }, { ch: '1', c: 'ok' }, { ch: '1', c: 'ok' },
+];
+var W = ['-128', '64', '32', '16', '8', '4', '2', '1'];
+var L = ['b7', 'b6', 'b5', 'b4', 'b3', 'b2', 'b1', 'b0'];
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>8 位补码、<b>恰好 3 个 1、5 个 0</b>，求能表示的<b>最小整数</b>。考点：补码按权展开 + 位约束下的极值选择。</p>' },
+  { title: '补码值公式与符号位',
+    cls: 'key',
+    body: '<p>8 位补码的值 = b7 贡献的 <code>-128</code> + 其余各位按正权相加（权依次 64,32,16,8,4,2,1）。若 b7 = 0 则表示 0~127 的正数，不可能最小 → <b>b7 必须取 1</b>（负数）。</p>' },
+  { title: '剩下两个 1 放哪？',
+    cls: 'bad',
+    body: '<p>b7 之外各位的权都是<b>正数</b>：1 放高位（如 b6）值变大（-128+64 = -64）；1 放<b>最低位</b> b1、b0，只加 +2、+1，值最小。结论：两个 1 压到 b1、b0。</p>' },
+  { title: '得到位串 1000 0011',
+    cls: 'good',
+    body: '<p><code>1000 0011</code>：恰好 3 个 1、5 个 0，满足全部约束：</p>' +
+          bitGrid(FINAL_BITS, L) +
+          '<p style="font-size:12.5px;color:#64748b">权从左到右：' + W.join(' / ') + '</p>' },
+  { title: '按权求值',
+    cls: 'good',
+    body: '<p>值 = <code>-128</code> + <code>2</code>（b1）+ <code>1</code>（b0）= <b>-125</b>。</p>' },
+  { title: '核对干扰项',
+    cls: 'bad',
+    body: '<p>A <code>-126</code> = 1000 0010，只有 <b>2 个 1</b>，不符；C <code>-32</code> = 1110 0000，有 <b>4 个 1</b>；D <code>-3</code> = 1111 1101，有 <b>7 个 1</b>。三者都不满足"3 个 1"的约束，全部排除。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>满足约束的最小位串是 <code>1000 0011</code>，最小整数 = <b>-125</b>，答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '3 个 1、5 个 0 组成的 8 位补码，最小是多少？（2015·13）',
+  subtitle: '考点：补码按权展开 <code>-128 + 正权</code> · 位串约束 <code>恰好 3 个 1</code> · 推理链逐项展开',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '最小整数 -125（答案 B）',
+    html: '记忆锚点：<b>符号位固定为 1，其余的 1 全压到最低位</b>：<code>1000 0011</code> = -128+2+1 = <b>-125</b>。易错：A 的 -126（1000 0010）只有 2 个 1，不满足约束。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-02 双向循环链表删除结点 p</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var BOOK = [
+  { k:'前驱.next', v:'p' },
+  { k:'p.next',    v:'后继' },
+  { k:'后继.prev', v:'p' },
+  { k:'p.prev',    v:'前驱' }
+];
+
+function nodePic(){
+  return '<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin:4px 0 16px;font-size:15px">' +
+    '<span style="color:#94a3b8">… ⇄</span>' +
+    '<span style="border:2px solid #2563eb;border-radius:12px;padding:10px 24px;background:#eff6ff;font-weight:700">前驱</span>' +
+    '<span style="color:#64748b">⇄</span>' +
+    '<span style="border:2px solid #d97706;border-radius:12px;padding:10px 24px;background:#fef3c7;font-weight:700">p</span>' +
+    '<span style="color:#64748b">⇄</span>' +
+    '<span style="border:2px solid #2563eb;border-radius:12px;padding:10px 24px;background:#eff6ff;font-weight:700">后继</span>' +
+    '<span style="color:#94a3b8">⇄ …</span></div>';
+}
+
+function book(st){
+  var h = '<div class="aw-scroll" style="width:max-content;margin:0 auto"><table style="border-collapse:collapse;font-size:14px">';
+  BOOK.forEach(function(r, i){
+    var it = st && st[i];
+    var bg = '#ffffff', fc = '#334155', fw = '400', deco = 'none';
+    if(it){
+      if(it.c === 'ok'){ bg = '#dcfce7'; fc = '#14532d'; fw = '700'; }
+      else if(it.c === 'miss'){ bg = '#fee2e2'; fc = '#b91c1c'; fw = '700'; }
+      else if(it.c === 'dim'){ fc = '#94a3b8'; deco = 'line-through'; }
+    }
+    h += '<tr><td style="border:1px solid #cbd5e1;padding:6px 20px;background:#f1f5f9;font-family:Menlo,Consolas,monospace">' + r.k + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:6px 20px;text-align:center;background:' + bg + ';color:' + fc + ';font-weight:' + fw + ';text-decoration:' + deco + '">' + (it && it.v ? it.v : r.v) + '</td></tr>';
+  });
+  h += '</table></div>';
+  return h;
+}
+
+AW.init({
+  title: '2016·双向循环链表：删除指针 p 所指结点的正确语句',
+  subtitle: '删 p = 让 p 的前驱、后继<b>直接牵手</b>，再 free(p) · 逐项排查四个选项',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」：先看正确的删法，再逐个揪出干扰项的断链处。',
+
+  snaps: [
+    { cls:'step', tag:'开始', count:0,
+      log:'双向循环链表，删去 p：目标是让 p 的前驱、后继直接牵手，然后释放 p。下面盯着 p 周围的四条指针。',
+      html: nodePic() + book(null) },
+    { cls:'step', tag:'记现状', count:1,
+      log:'p 周围四条指针：前驱.next = p、p.next = 后继；后继.prev = p、p.prev = 前驱——p 被夹在正中间。',
+      html: nodePic() + book(null) },
+    { cls:'ok', tag:'句①', count:2,
+      log:'正确句①：p->next->prev = p->prev —— 把“p 的后继”的 prev 改成“p 的前驱”：后继.prev = 前驱。',
+      html: nodePic() + book({2:{v:'前驱',c:'ok'}}) },
+    { cls:'ok', tag:'句②', count:3,
+      log:'正确句②：p->prev->next = p->next —— 把“p 的前驱”的 next 改成“p 的后继”：前驱.next = 后继。至此前驱与后继已牵手，p 脱链。',
+      html: nodePic() + book({0:{v:'后继',c:'ok'},2:{v:'前驱',c:'ok'}}) },
+    { cls:'ok', tag:'释放', count:4,
+      log:'此时再 free(p) 释放结点即可——这正是选项 D 的语句序列：两句全对、时机正确。',
+      html: nodePic() + book({0:{v:'后继',c:'ok'},1:{v:'（已释放）',c:'dim'},2:{v:'前驱',c:'ok'},3:{v:'（已释放）',c:'dim'}}) },
+    { cls:'miss', tag:'查A', count:5,
+      log:'选项 A：句①对；但句②写成 p->prev->next = p->prev —— 前驱的 next 指向<b>它自己</b>，后继从此脱链 ✗。',
+      html: nodePic() + book({0:{v:'前驱（自己！）',c:'miss'}}) },
+    { cls:'miss', tag:'查B', count:6,
+      log:'选项 B：句②对；但句①写成 p->next->prev = p->next —— 后继的 prev 指向<b>它自己</b>，向前方向断链 ✗。',
+      html: nodePic() + book({2:{v:'后继（自己！）',c:'miss'}}) },
+    { cls:'miss', tag:'查C', count:7,
+      log:'选项 C：两句全错——后继.prev = 后继、前驱.next = 前驱，两个方向都断 ✗✗。',
+      html: nodePic() + book({0:{v:'前驱（自己！）',c:'miss'},2:{v:'后继（自己！）',c:'miss'}}) },
+    { cls:'done', tag:'结论', count:8, done:true,
+      log:'只有 D 的两句都正确：后继.prev = 前驱、前驱.next = 后继，再 free(p) → 选 D。',
+      html: nodePic() + book({0:{v:'后继',c:'ok'},2:{v:'前驱',c:'ok'}}) },
+  ],
+
+  result: {
+    big: '答案 D',
+    html: '正确语句：<code>p->next->prev = p->prev; p->prev->next = p->next; free(p);</code>。记法：<b>后继认前驱</b>、<b>前驱认后继</b>——两句都在改“别人”的域、用 p 的值；干扰项 A/B/C 都把某一句写成了结点指向自己。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

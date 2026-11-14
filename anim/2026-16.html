@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-16 哪些内容由 ISA 规定 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题目问"<b>不是</b>由 ISA 规定的是"。判别标准：ISA 规定<b>软件编程可见</b>的内容；微架构实现技术编程不可见。</p>' },
+  { title: '逐项分析 A',
+    cls: 'good',
+    body: '<p>A（指令集中是否包含输入/输出指令）：<b>ISA 规定</b>。指令集合的组成直接决定 I/O 的编程方式，编程可见。</p>' },
+  { title: '逐项分析 B',
+    cls: 'good',
+    body: '<p>B（向量中断还是非向量中断）：<b>ISA 规定</b>。它决定中断服务程序入口地址的获取方式，是典型的软硬件界面。</p>' },
+  { title: '逐项分析 C',
+    cls: 'good',
+    body: '<p>C（段式还是页式虚拟存储管理）：<b>ISA 规定</b>。地址转换与保护机制（页表结构等）编程可见。</p>' },
+  { title: '逐项分析 D（本题答案）',
+    cls: 'bad',
+    body: '<p>D（指令流水线是否采用超级流水线技术）：<b>不是</b>。流水线级数、发射宽度、动态调度等都是<b>微架构实现技术</b>，同一 ISA 可以有多种实现，编程不可见。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>不是 ISA 规定的是 <b>D</b>。记忆锚点：编程看得见的归 ISA，看不见的归微架构。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title + '：' + s.body.replace(/<[^>]+>/g, ''),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+// 明确标记：最后一步为 done:true（配合上方 map 生成）
+snaps[snaps.length - 1].done = true;
+
+AW.init({
+  title: '2026·16 ISA 的规定范围',
+  subtitle: '考点：ISA 与微架构的边界 · 四个选项逐项判定',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>超级流水线属于微架构实现技术</b>，ISA 不管"怎么造得快"。有无 I/O 指令、向量中断方式、段页式虚存都改变软件可见行为，必须由 ISA 规定。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

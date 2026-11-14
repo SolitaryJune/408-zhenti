@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-43 数组访问的缺页、局部性与 Cache 命中率</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.calcbox{ display:inline-block; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#334155; }
+.aw-stepcard table{ border-collapse:collapse; margin:6px 0; font-size:13px; }
+.aw-stepcard table td, .aw-stepcard table th{ border:1px solid #e2e8f0; padding:4px 10px; font-family:Menlo,Consolas,monospace; }
+.aw-stepcard table th{ background:#f1f5f9; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '总览：基本参数', cls: 'key',
+    body: '<p>数组 <code>int a[24][64]</code> 占 <code>24×64×4 = 6144B</code>；页 <b>4KB</b>（请求调页）；主存块/Cache 行 <b>32B</b>；数据 Cache <b>8KB、4 路组相联</b>；起始虚拟地址 <code>0042 2000H</code>（页内偏移 0）。总访问 <code>24×64 = 1536</code> 次。</p>' },
+  { title: '问 1：数组分布在哪几个页面', cls: '',
+    body: '<p>6144B &gt; 4096B → 跨 <b>2 个页面</b>：<br>' +
+      '<table><tr><th>页面</th><th>虚拟地址</th><th>装入的元素</th></tr>' +
+      '<tr><td>第 1 页</td><td>0042 2000H～0042 2FFFH</td><td>a[0][0]～a[15][63]（4096B）</td></tr>' +
+      '<tr><td>第 2 页</td><td>0042 3000H～0042 37FFH</td><td>a[16][0]～a[23][63]（2048B）</td></tr></table></p>' },
+  { title: '问 1：缺页次数与页故障地址', cls: 'good',
+    body: '<p>请求调页：每个页面<b>首次访问</b>时缺页一次 → 共 <b>2 次</b>。<br>' +
+      '页故障地址 = 引发缺页的虚拟地址：<br>① 首次访问 a[0][0] → <code>0042 2000H</code>；<br>② a[16][0] = <code>0042 2000H + 16×64×4</code> → <code>0042 3000H</code>。</p>' },
+  { title: '问 2：有无时间局部性', cls: 'good',
+    body: '<p><b>不具有时间局部性</b>：每个元素只被访问（赋值）一次，访问后不再重访。按行连续访问相邻元素体现的是<b>空间局部性</b>，不是时间局部性。</p>' },
+  { title: '问 3：块内地址与组号位段', cls: '',
+    body: '<p>块 32B = <code>2^5</code> B → 块内地址 <b>A4～A0</b>（低 5 位）。<br>组数 = <code>8KB ÷ (4×32B) = 64</code> 组 → 组号 6 位 = <b>A10～A5</b>。<br>（虚页 4KB → 页内偏移 12 位，A11～A0。）</p>' },
+  { title: '问 3：a[1][0] 的虚拟地址与组号', cls: 'good',
+    body: '<p>a[1][0] = <code>0042 2000H + 1×64×4 = 0042 2100H</code>。<br>页内偏移 100H = <code>0001 0000 0000</code>₂，取 A10～A5 = <code>001000</code>₂ = <b>8</b> → 所在主存块映射到 Cache <b>组号 8</b>。</p>' },
+  { title: '问 4：主存块数与行优先命中率', cls: '',
+    body: '<p>块数 = <code>6144 ÷ 32 = 192</code> 块。行优先访问：同一块内 8 个元素连续访问，每块只第一次缺失 → 缺失 192 次。<br>命中率 = <code>(1536−192)/1536 = 87.5%</code>。</p>' },
+  { title: '问 4：调换循环后（列优先）', cls: 'good',
+    body: '<p>列优先：一轮内层访问 a[0][j]～a[23][j]，相邻元素相距 256B、各属不同块；同一行连续 8 列同属一块，会在连续 8 轮外层循环中重访。<br>Cache 容量 = 64 组 × 4 路 = <b>256 块</b>，远大于一轮活跃的 24 块（平均每组 3 块，不冲突）→ 每块仍只缺失 1 次，缺失 192 次 → 命中率仍 <b>87.5%</b>。</p>' },
+  { title: '易错点', cls: '',
+    body: '<p>① 页故障地址要答<b>虚拟地址</b>本身，不是页号；<br>② 组号位数由<b>组数</b>决定（64 组 → 6 位），与路数无关；<br>③ 容量足够且无冲突时，列优先不会让命中率跳水；<br>④ 第 2 页范围是 <code>0042 3000H～0042 37FFH</code>，只占半页。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>① <b>2 个页面、2 次缺页</b>，页故障地址 <code>0042 2000H</code>、<code>0042 3000H</code>；② 无时间局部性；③ 块内 <b>A4～A0</b>、组号 <b>A10～A5</b>，a[1][0] = <code>0042 2100H</code>、组号 <b>8</b>；④ 192 块，两种循环命中率均 <b>87.5%</b>。</p>' },
+];
+
+var META = [
+  { tag: '总览',   ribbon: null },
+  { tag: '问 1',   ribbon: null },
+  { tag: '问 1',   ribbon: { k: 1, ok: true } },
+  { tag: '问 2',   ribbon: { k: 2, ok: true } },
+  { tag: '问 3',   ribbon: null },
+  { tag: '问 3',   ribbon: { k: 3, ok: true } },
+  { tag: '问 4',   ribbon: null },
+  { tag: '问 4',   ribbon: { k: 4, ok: true } },
+  { tag: '易错点', ribbon: null },
+  { tag: '结论',   ribbon: null },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var m = META[i];
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: m.tag,
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (m.ribbon) sn.ribbon = m.ribbon;
+  return sn;
+});
+
+AW.init({
+  title: '2023-43 · 数组访问的缺页、局部性与 Cache 命中率',
+  subtitle: 'int a[24][64] · 页 4KB · 块 32B · Cache 8KB 4 路组相联 · 起始地址 0042 2000H',
+  counterLabel: '解析步骤',
+  ribbonTitle: '问题（✓ 已解）',
+  intro: '点击「▶ 播放」逐问解析。',
+  snaps: snaps,
+  result: {
+    big: '2 页 2 次缺页 · 两种循环命中率 87.5%',
+    html: '① 2 页、2 次缺页，页故障地址 <code>0042 2000H</code>（a[0][0]）与 <code>0042 3000H</code>（a[16][0]）；② 每个元素只访问一次 → 无时间局部性；③ 块内 <code>A4～A0</code>、组号 <code>A10～A5</code>，a[1][0] = <code>0042 2100H</code> → 组号 8；④ 192 块，行优先与列优先命中率均为 <b>87.5%</b>（缺失都只有首次 192 次）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

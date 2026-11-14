@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-45 · 二级分页地址转换与 scanf 状态链</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function bitBox(txt, color){
+  return '<span style="display:inline-block;border:2px solid ' + color + ';background:#fff;border-radius:8px;padding:5px 9px;font-family:Menlo,Consolas,monospace;font-size:12.5px;font-weight:700;margin:2px">' + txt + '</span>';
+}
+
+function addrSplit(){
+  return '<p style="font-family:Menlo,Consolas,monospace;font-size:13px;margin:4px 0"><b>00401020</b> = ' +
+    bitBox('0000 0000 01', '#d97706') + bitBox('00 0000 0001', '#d97706') + bitBox('0000 0010 0000', '#2563eb') + '</p>' +
+    '<p style="font-size:12.5px;color:#64748b">高 10 位 = 页目录号 <b style="color:#92400e">1</b> ｜ 中 10 位 = 页表索引 <b style="color:#92400e">1</b> ｜ 低 12 位 = 页内偏移 020H</p>';
+}
+
+function stateChain(){
+  var s = function(txt, bg, bd, c){
+    return '<span style="display:inline-block;border:2px solid ' + bd + ';background:' + bg + ';border-radius:10px;padding:5px 10px;font-size:12.5px;font-weight:700;color:' + c + ';margin:2px">' + txt + '</span>';
+  };
+  return '<p>' + s('执行态', '#f6fef9', '#16a34a', '#15803d') +
+    s('→ 阻塞态', '#fffbeb', '#d97706', '#92400e') +
+    s('→ 就绪态', '#fff', '#2563eb', '#1d4ed8') +
+    s('→ 运行态', '#f6fef9', '#16a34a', '#15803d') + '</p>';
+}
+
+var STEPS = [
+  { title: '审题眼：虚拟地址格式定页大小',
+    cls: 'key',
+    log: '偏移 12 位 → 页大小 4KB；10|10|12 = 页目录|页表|偏移',
+    body: '<p>虚拟地址 = <b>页目录号 10 位 ｜ 页表索引 10 位 ｜ 页内偏移量 12 位</b>。页内偏移 12 位 → <b>页大小 = 2 的 12 次方 B = 4KB</b>；二级分页下一次地址转换要先查页目录、再查页表（各访存一次）。</p>' },
+  { title: '问(1)：机器代码的地址范围',
+    cls: 'step',
+    log: '题44代码：首指令 00401020（push ebp），末指令 0040107F（ret）',
+    body: '<p>由题 44 的机器级代码：第 1 条指令 <code>push ebp</code> 在 <b>00401020</b>；第 35 条指令 <code>ret</code> 在 <b>0040107F</b>。整段指令代码连续存放，范围 00401020 ～ 0040107F（共 96 字节）。</p>' },
+  { title: '问(1)结论：仅占 1 页',
+    cls: 'good',
+    log: '00401020~0040107F 全落在页 00401000~00401FFF 内 → 1 页',
+    body: '<p>页边界按 4KB（1000H）对齐：00401020 与 0040107F 都在 <b>00401000 ～ 00401FFF</b> 这一页里，没有跨页 → 函数 f1 的机器指令代码<b>仅占 1 页</b>。</p>' },
+  { title: '问(2)：拆解取指地址 00401020',
+    cls: 'step',
+    log: '按 10|10|12 拆位：页目录号 1、页表索引 1、偏移 020H',
+    body: '<p>取第 1 条指令 <code>push ebp</code>，虚拟地址 <b>00401020</b> 按 10｜10｜12 拆分：</p>' + addrSplit() },
+  { title: '问(2)结论：各自的第 1 个表项',
+    cls: 'good',
+    log: '页目录第 1 个表项 + 页表第 1 个表项（编号从 0 开始）',
+    body: '<p>高 10 位 = 1 → 访问<b>页目录第 1 个表项</b>；中 10 位 = 1 → 访问<b>页表第 1 个表项</b>；低 12 位是页内偏移，不参与查表。表项编号从 0 开始，故两级查表分别命中<b>第 1 个表项</b>。</p>' },
+  { title: '问(3)：scanf 的过程',
+    cls: 'step',
+    log: 'scanf 是系统调用，等键盘输入；I/O 采用中断控制方式',
+    body: '<p><code>scanf()</code> 是<b>系统调用</b>：进程 P 陷入内核请求键盘输入，输入未到就<b>等待</b>；M 的 I/O 采用<b>中断控制方式</b>：键入字符后由中断处理程序把数据交给进程并<b>唤醒</b>它。</p>' },
+  { title: '问(3)结论一：状态链',
+    cls: 'good',
+    log: '执行态 → 阻塞态 → 就绪态 → 运行态',
+    body: '<p>' + stateChain() + '</p><p>① 发起 scanf 等输入 → <b>阻塞态</b>；② 键入产生中断，被唤醒 → <b>就绪态</b>；③ 被调度选中 → <b>运行态</b>。</p>' },
+  { title: '问(3)结论二：CPU 会进内核态',
+    cls: 'good',
+    log: '系统调用陷入 + 中断处理都在核心态执行 → 会',
+    body: '<p><b>会进入内核态</b>：执行陷入指令进入系统调用服务程序、以及键入字符后的中断处理程序，都在<b>核心态（内核态）</b>运行。</p>' },
+  { title: '结论：三问汇总',
+    cls: 'good',
+    log: '1 页；页目录/页表各第 1 表项；执行→阻塞→就绪→运行，进内核态',
+    body: '<p><b>(1)</b> 仅占 1 页；<b>(2)</b> 分别访问页目录第 1 个表项、页表第 1 个表项；<b>(3)</b> 状态链为执行态→阻塞态→就绪态→运行态，CPU 会从用户态进入内核态。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'bad' ? 'miss' : s.cls === 'good' ? 'ok' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last
+  };
+});
+
+AW.init({
+  title: '2017-45 · 二级分页地址转换与 scanf 的进程状态',
+  subtitle: '虚拟地址：页目录 10 位 ｜ 页表索引 10 位 ｜ 页内偏移 12 位 · 三问逐步推演',
+  intro: '点击「▶ 播放」按问展开：(1) 占几页 (2) 查哪两个表项 (3) 状态如何变化。',
+  snaps: snaps,
+  result: {
+    big: '1 页 · 各第 1 表项 · 执行→阻塞→就绪→运行',
+    html: '<b>(1)</b> 代码 00401020～0040107F 不跨 4KB 页边界，仅占 <b>1 页</b>；<b>(2)</b> 00401020 拆位得页目录号 1、页表索引 1 → 各查<b>第 1 个表项</b>；<b>(3)</b> 状态链 <b>执行态→阻塞态→就绪态→运行态</b>，陷入系统调用与中断处理都进<b>内核态</b>。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

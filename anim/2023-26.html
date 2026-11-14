@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-26 由内核态转为用户态的时机</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：谁做完之后「内核态 → 用户态」',
+    cls: 'key',
+    body: '<p>用户态→内核态靠「陷入」：<b>系统调用、中断、异常</b>。' +
+          '内核态→用户态则发生在<b>内核工作完成、把 CPU 交还用户程序</b>的时刻。' +
+          '题干问的是「完成时由内核态转为用户态」，逐项验证谁符合。</p>' },
+  { title: 'A. 阻塞进程 —— 做完还在内核态',
+    cls: 'bad',
+    body: '<p>阻塞进程由<b>内核代码</b>完成（系统调用或中断处理程序内）：改进程状态、入阻塞队列。' +
+          '做完后 CPU 仍在内核态，还要继续后续工作。A 不符合。</p>' },
+  { title: 'B. 执行 CPU 调度 —— 调度本身就是内核代码',
+    cls: 'bad',
+    body: '<p>调度程序运行在<b>内核态</b>；选中进程后还要做<b>上下文切换</b>，切换过程也在内核态完成。B 不符合。</p>' },
+  { title: 'C. 唤醒进程 —— 同样是内核的活',
+    cls: 'bad',
+    body: '<p>唤醒（改状态、入就绪队列）由内核完成，做完后 CPU 仍处于内核态。C 不符合。</p>' },
+  { title: 'D. 执行系统调用 —— 完成即返回用户程序',
+    cls: 'good',
+    body: '<p>系统调用<b>执行完成</b>、返回用户程序的那一刻，CPU 正是<b>由内核态转为用户态</b>。D 符合。</p>' },
+  { title: '结论：答案 D',
+    cls: 'good',
+    body: '<p>方向要分清：系统调用「开始」是用户态→内核态，「<b>完成时</b>」是内核态→用户态。' +
+          '<b>答案选 D</b>。A/B/C 都是内核里的管理工作，做完仍在内核态。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪个操作完成时：内核态 → 用户态',
+  subtitle: '考点：操作系统的运行环境 · 用户态/内核态切换时机',
+  intro: '点击「▶ 播放」逐项验证四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>内核态→用户态 = 内核把 CPU 还给用户程序之时</b>（系统调用完成/中断异常返回用户程序）。' +
+          '阻塞、调度、唤醒都是内核管理工作，做完仍在内核态。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

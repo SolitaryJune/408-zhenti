@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-41 判断 EL 路径（欧拉路径）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 示例：4 顶点，边 1-2、2-3、3-4（对称邻接矩阵）
+var M41 = [['0','1','0','0'], ['1','0','1','0'], ['0','1','0','1'], ['0','0','1','0']];
+
+function matHtml(hl, doneRows, info){
+  var h = '<div class="aw-scroll">';
+  for(var i = 0; i < 4; i++){
+    var cls = [];
+    for(var j = 0; j < 4; j++) cls.push(hl === i ? 'hit' : (doneRows.indexOf(i) >= 0 ? 'ok' : ''));
+    h += '<div class="aw-row-label"><b>顶点 ' + (i + 1) + ' 行</b>（degree = 本行之和）</div>' +
+         AW.cellRow(M41[i], cls).outerHTML;
+  }
+  if(info) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:8px">' + info + '</div>';
+  return h + '</div>';
+}
+function noteCard(txt, border){
+  return '<div style="font-size:14.5px;line-height:2;color:#334155;background:#fffbeb;border:1px solid ' + (border || '#d97706') + ';border-radius:12px;padding:12px 16px">' + txt + '</div>';
+}
+
+AW.init({
+  title: '判断无向图是否存在 EL 路径',
+  subtitle: '度数判定：奇度顶点个数为 <code>0 或 2</code> ⇔ 存在 EL 路径 · 邻接矩阵逐行求度',
+  counterLabel: '奇度顶点数',
+  intro: '点击「▶ 播放」逐步演示算法执行流程（示例矩阵仅演示流程用）。',
+
+  snaps: [
+    { cls:'step', tag:'设计思想', log:'第 1 问思想：统计奇度顶点个数 count，count 为 0 或 2 则存在 EL 路径返回 1，否则返回 0', count:0,
+      html: noteCard('EL 路径（欧拉路径）判定：<b>度为奇数的顶点个数为 0 或 2</b> ⇔ 存在包含所有边且长度为 |E| 的路径。<br>算法：逐行累加邻接矩阵求各顶点度数 → 统计奇度个数 count → <code>count==0 || count==2</code> 则返回 1。<br>下面用 4 顶点示例（边 1-2、2-3、3-4）演示执行流程。') },
+
+    { cls:'step', tag:'示例矩阵', log:'示例邻接矩阵（无向图 → 对称矩阵，主对角线为 0）：开始逐行求度', count:0,
+      html: matHtml(-1, [], '边 1-2、2-3、3-4 对应的对称矩阵。') },
+
+    { cls:'shift', tag:'i = 1', log:'i=1：degree = 0+1+0+0 = 1，是奇数 → count=1', count:1,
+      html: matHtml(0, [], '顶点 1 的度 = 1（奇数）→ count 加 1。') },
+
+    { cls:'step', tag:'i = 2', log:'i=2：degree = 1+0+1+0 = 2，偶数 → count 仍为 1', count:1,
+      html: matHtml(1, [0], '顶点 2 的度 = 2（偶数）→ count 不变。') },
+
+    { cls:'step', tag:'i = 3', log:'i=3：degree = 0+1+0+1 = 2，偶数 → count 仍为 1', count:1,
+      html: matHtml(2, [0,1], '顶点 3 的度 = 2（偶数）→ count 不变。') },
+
+    { cls:'shift', tag:'i = 4', log:'i=4：degree = 0+0+1+0 = 1，奇数 → count=2', count:2,
+      html: matHtml(3, [0,1,2], '顶点 4 的度 = 1（奇数）→ count = 2。') },
+
+    { cls:'ok', tag:'判定', log:'count == 2 → return 1，存在 EL 路径（count==0 时也存在欧拉回路，同样返回 1）', count:2,
+      html: matHtml(-1, [0,1,2,3], '最终判定：<code>if (count == 0 || count == 2) return 1; else return 0;</code><br>本例 count=2 → <b>return 1</b>（路径 1-2-3-4 恰含全部 3 条边）。') },
+
+    { cls:'miss', tag:'反例', log:'反例：若 4 个顶点全是奇度（如 K4 每个顶点度都是 3），count=4 ∉ {0,2} → return 0', count:4,
+      html: noteCard('反例：K4（4 个顶点两两相邻）每个顶点度都是 3 → count = 4，不满足 <code>0 或 2</code> → <b>return 0</b>，不存在 EL 路径。', '#dc2626') },
+
+    { cls:'step', tag:'复杂度', log:'第 3 问：双重 for 扫完整邻接矩阵 → 时间 O(n²)；辅助变量仅 degree、count → 空间 O(1)', count:2,
+      html: noteCard('时间复杂度：外层 i 遍历 n 个顶点、内层 j 遍历 n 列 → <b>O(n²)</b>（n = numVertices）。<br>空间复杂度：degree、count、i、j 等常数个辅助变量 → <b>O(1)</b>。') },
+
+    { cls:'done', tag:'完成', log:'三问齐：思想（数奇度点，0 或 2）→ 代码（IsExistEL）→ 复杂度（O(n²) 时间、O(1) 空间）', count:2, done:true,
+      html: noteCard('答题要点：<b>①</b> 思想 = 数奇度顶点，0 或 2 个则返回 1；<b>②</b> 代码 = 逐行求度 + 奇度计数 + 双条件判定；<b>③</b> 复杂度 = O(n²) 时间、O(1) 空间。') },
+  ],
+
+  result: {
+    big: 'O(n²) 时间 · O(1) 空间',
+    html: '判定条件 <b>count==0 || count==2</b>（0 个奇度点 = 有欧拉回路，也算 EL 路径）；度 = 邻接矩阵<b>整行之和</b>——这是本题参考答案的标准口径。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

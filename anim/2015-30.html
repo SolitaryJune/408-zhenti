@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-30 页面分配策略与置换策略不能组合的情形</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个维度、四种组合', cls: 'key',
+    log: '分配策略管"页框数变不变"；置换策略管"淘汰范围在哪"——找自相矛盾的组合',
+    body: '<p><b>固定/可变分配</b>：进程的物理页框数是否不变。<br><b>局部/全局置换</b>：缺页淘汰时只在本进程页框里挑，还是在<b>所有进程</b>页框里挑。</p>' },
+  { title: '固定 + 局部：自洽', cls: 'good',
+    log: '页框数固定，缺页只换出本进程的页 → 可用（D 项）',
+    body: '<p>页框数固定不变，缺页时只在本进程的页框里换出/换入，页框总数不变 → <b>逻辑自洽，可组合</b>。</p>' },
+  { title: '可变 + 局部：自洽', cls: 'good',
+    log: '按缺页率增减本进程页框，置换仍限本进程 → 可用（B 项）',
+    body: '<p>根据缺页频率<b>动态增减本进程页框数</b>（缺页多就加框），但置换仍只在本进程内进行 → <b>可组合</b>。</p>' },
+  { title: '可变 + 全局：自洽', cls: 'good',
+    log: '缺页可换出别的进程的页，各进程页框数随之变化，与"可变"相容 → 可用（A 项）',
+    body: '<p>缺页时可以从<b>其他进程</b>的页框中选页淘汰，本进程页框数随之变化 → 与"可变分配"完全相容，<b>可组合</b>。</p>' },
+  { title: '固定 + 全局：自相矛盾', cls: 'bad',
+    log: '全局置换必然淘汰其他进程的页 → 别的进程页框数被改变 → 违背"固定分配" ✗',
+    body: '<p>全局置换会淘汰<b>其他进程</b>的页，使其他进程占有的页框数发生改变 → 与"固定分配（各进程页框数不变）"直接矛盾 → <b>不能组合</b>。</p>' },
+  { title: '结论', cls: 'good',
+    log: '答案 C：全局置换只能配可变分配，固定分配只能配局部置换',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>全局置换动别人"蛋糕"，页框数必然可变</b>——固定 + 全局自相矛盾；固定分配只能配局部置换。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2015-30】请求分页中不能组合使用的分配与置换策略',
+  subtitle: '考点：页面分配策略（固定/可变）× 页面置换策略（局部/全局）的四种组合',
+  intro: '点击「▶ 播放」逐一检验四种组合是否自洽。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（固定分配 + 全局置换）',
+    html: '<code>固定+局部</code>、<code>可变+局部</code>、<code>可变+全局</code> 都自洽可用；<code>固定+全局</code> 矛盾——全局置换要淘汰<b>其他进程</b>的页，别的进程页框数就变了，违背"固定"。记忆点：<b>全局置换 ⇔ 可变分配</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

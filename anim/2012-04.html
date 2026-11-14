@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-04 平衡因子恒为1的AVL结点数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/计算推理类：N(h)=N(h-1)+N(h-2)+1 逐层递推
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>高度 6，且<b>所有非叶结点平衡因子均为 1</b>。平衡因子 = 左子树高 − 右子树高 ⇒ 每个非叶结点<b>左子树恰比右子树高 1 层</b>，树形被完全确定，结点数唯一。</p>' },
+  { title: '列递推式',
+    cls: 'key',
+    body: '<p>设 N(h) 为该形状、高度 h 的结点数：根 1 个 ＋ 左子树 N(h−1) ＋ 右子树 N(h−2)：</p>' +
+          '<p><code>N(h) = N(h−1) + N(h−2) + 1</code>，其中 N(0)=0（空树）、N(1)=1（单结点）。</p>' },
+  { title: '逐层递推（低层）',
+    cls: '',
+    body: '<p>N(2) = 1 + 0 + 1 = <b>2</b>；　N(3) = 2 + 1 + 1 = <b>4</b>；　N(4) = 4 + 2 + 1 = <b>7</b>；　N(5) = 7 + 4 + 1 = <b>12</b>。</p>' },
+  { title: '得出 N(6)',
+    cls: 'good',
+    body: '<p>N(6) = N(5) + N(4) + 1 = 12 + 7 + 1 = <b>20</b> —— 结点总数 20。</p>' +
+          '<table><tr><th>h</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr>' +
+          '<tr><th>N(h)</th><td>1</td><td>2</td><td>4</td><td>7</td><td>12</td><td><b>20</b></td></tr></table>' },
+  { title: '逐项排除',
+    cls: 'bad',
+    body: '<p>A「10」：递推跳步得到的错误中间值。</p>' +
+          '<p>C「32」：把「平衡因子 1」误解成左右<b>等高</b>、往满树方向算的结果。</p>' +
+          '<p>D「33」：高度约定差一层——错把单结点当高度 0，等于多算一层。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B（20 个结点）</b>。记忆锚点：<code>N(h) = N(h−1) + N(h−2) + 1</code>，序列 1, 2, 4, 7, 12, <b>20</b> ——「斐波那契式」膨胀。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '所有非叶结点平衡因子为 1 的 AVL 树',
+  subtitle: '高度 h = 6 · 递推 <code>N(h) = N(h−1) + N(h−2) + 1</code> · 逐层计算结点数',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B · 20 个结点',
+    html: '每个非叶结点左子树恰比右子树高 1 层 ⇒ N(h) = N(h−1) + N(h−2) + 1，N(0)=0、N(1)=1，逐层得 1, 2, 4, 7, 12, <b>20</b>。<br>干扰项 D（33）来自高度约定差一层，C（32）来自把因子 1 误解为左右等高。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

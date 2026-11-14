@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-45 递归函数 f1 的机器级代码（五问全解）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .ct{ border-collapse: collapse; width: 100%; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; margin: 6px 0 4px; }
+  .ct th, .ct td{ border: 1px solid #e2e8f0; padding: 4px 8px; text-align: left; }
+  .ct th{ background: #f1f5f9; color: #475569; }
+  .ct td.hl{ background: var(--amber-bg); color: #92400e; font-weight: 700; }
+  .mono{ font-family: "SF Mono", Menlo, Consolas, monospace; background: #e2e8f0; padding: 1px 6px; border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var CODE_TABLE =
+  '<table class="ct"><tr><th>行</th><th>虚拟地址</th><th>汇编指令</th></tr>' +
+  '<tr><td>11</td><td>00401018</td><td>cmp dword ptr [ebp+8], 1</td></tr>' +
+  '<tr><td>12</td><td>0040101C</td><td class="hl">jle f1+35h (00401035)</td></tr>' +
+  '<tr><td>16</td><td>00401025</td><td class="hl">call f1 (00401000)</td></tr>' +
+  '<tr><td>19</td><td>00401030</td><td class="hl">imul eax, ecx</td></tr>' +
+  '<tr><td>20</td><td>00401033</td><td class="hl">jmp f1+3Ah (0040103a)</td></tr>' +
+  '<tr><td>30</td><td>0040104A</td><td class="hl">ret</td></tr></table>';
+
+var STEPS = [
+  { title: '题面回顾：f1 的关键代码行', cls: 'key', tag: '审题',
+    body: '<p>递归阶乘 <code>int f1(int n)</code>：n&gt;1 时执行 <code>return n*f1(n-1)</code>，否则 <code>return 1</code>。机器级代码关键行：</p>' + CODE_TABLE +
+      '<p>按字节编址，int 占 32 位。下面按五问逐一解决。</p>' },
+  { title: '问(1)：调用次数与递归调用指令', cls: 'good', tag: '问(1)',
+    body: '<p>调用链：f1(10) → f1(9) → … → f1(1)，n 取 10, 9, …, 1 共 <b>10 次</b>调用（n=1 时走 else return 1，不再递归）。每次递归调用自身都由<b>第 16 行 call 指令</b>完成。</p>' },
+  { title: '问(2)：条件转移与必跳转指令', cls: 'good', tag: '问(2)',
+    body: '<p><b>条件转移指令：第 12 行 jle</b>——要根据比较结果（标志位）决定是否跳转。<br><b>一定跳转的指令</b>：第 16 行 <code>call</code>（函数调用必转移）、第 20 行 <code>jmp</code>（无条件转移）、第 30 行 <code>ret</code>（函数返回必转移）。</p>' },
+  { title: '问(3)①：第 17 行的虚拟地址', cls: '', tag: '问(3)①',
+    body: '<p>第 16 行 call 位于 <code>00401025H</code>，机器码 <code>E8 D6 FF FF FF</code> 共 <b>5 字节</b>（操作码 E8 + 4 字节偏移量）。<br>下一条指令（第 17 行）虚拟地址 = 00401025H + 5 = <b>0040102AH</b>。</p>' },
+  { title: '问(3)②：相对寻址求偏移量', cls: 'key', tag: '问(3)②',
+    body: '<p>相对寻址：<b>转移目标地址 =（下一条指令地址）+ 偏移量</b>。<br>所以偏移量 = 目标 − 下一条指令地址 = <code>00401000H − 0040102AH</code>。</p>' },
+  { title: '问(3)②：计算 FFFFFFD6H', cls: 'key', tag: '计算',
+    body: '<p>0040102AH − 00401000H = 2AH，故偏移量 = −2AH。<br>−2AH 的 32 位补码 = 2<sup>32</sup> − 2AH = <b>FFFF FFD6H</b>。</p>' },
+  { title: '问(3)③：大端还是小端', cls: 'key', tag: '问(3)③',
+    body: '<p>机器码 <code>E8 D6 FF FF FF</code>：偏移量 FFFFFFD6H 的 4 字节按 <b>D6 FF FF FF</b> 存放——最低有效字节 D6 在<b>最低地址</b>，故 M 采用<b>小端方式</b>。</p>' },
+  { title: '问(4)①：为什么不相等——溢出', cls: 'bad', tag: '问(4)①',
+    body: '<p>int 为 32 位补码，表示范围 [−2<sup>31</sup>, 2<sup>31</sup>−1]，最大 2147483647；而 f(13) = <b>6 227 020 800 &gt; 2<sup>31</sup>−1</b>，超出 int 表示范围 → 发生<b>溢出</b>。</p>' },
+  { title: '问(4)②：1932053504 从哪来', cls: 'bad', tag: '问(4)②',
+    body: '<p>溢出后机器保留 64 位乘积的低 32 位（等价于模 2<sup>32</sup>）：<br>6227020800 − 2<sup>32</sup> = 6227020800 − 4294967296 = <b>1932053504</b>，恰为 f1(13) 的返回值。</p>' },
+  { title: '问(4)③：如何修改源程序', cls: 'good', tag: '问(4)③',
+    body: '<p>把 f1 的<b>形参、局部变量和返回值都改为 double</b>（或足够宽的整数类型，如 64 位整数），使中间结果和返回值都在可表示范围内。</p>' },
+  { title: '问(5)：OF=1 的条件', cls: '', tag: '问(5)',
+    body: '<p>imul（带符号整数乘）内部产生 <b>64 位乘积 = 高 32 位 : 低 32 位</b>。<br>当<b>高 32 位不是低 32 位的符号扩展</b>（即乘积超出 32 位补码可表示范围）时，溢出标志 <b>OF=1</b>。</p>' },
+  { title: '问(5)：加什么指令', cls: 'good', tag: '完成',
+    body: '<p>编译器应在 imul 后加一条<b>溢出自陷指令</b>：它检测 OF=1 时触发自陷异常，使 CPU 转入溢出异常处理程序。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  var logCls = s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : (s.cls === 'key' ? 'shift' : 'step'));
+  return {
+    cls: last ? 'done' : logCls,
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2019·45 递归函数的机器级代码（16 分大题逐问拆解）',
+  subtitle: '<code>call 相对寻址 · 大小端 · int 溢出 · OF 标志</code> · 计算机按字节编址，int 32 位',
+  counterLabel: '进度',
+  intro: '点击「▶ 播放」，按 (1)～(5) 问逐步推解。',
+  snaps: snaps,
+  result: {
+    big: '五问要点速记',
+    html: '<b>(1)</b> 调用 10 次，递归在第 16 行 <code>call</code>；<b>(2)</b> 第 12 行 <code>jle</code> 是条件转移，<code>call/jmp/ret</code> 一定跳转；<b>(3)</b> 第 17 行地址 <code>0040102AH</code>，偏移量 = 00401000H − 0040102AH = <code>FFFF FFD6H</code>，按 D6 FF FF FF 存放 → <b>小端</b>；<b>(4)</b> int 32 位放不下 f(13)=6227020800，截取低 32 位得 1932053504，改用 <b>double</b>；<b>(5)</b> 高 32 位 ≠ 低 32 位的符号扩展 → OF=1，imul 后加<b>溢出自陷指令</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

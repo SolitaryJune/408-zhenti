@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-01 单链表插入结点后的链接地址</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var T = [
+  ['1000H','a','1010H'],
+  ['1004H','b','100CH'],
+  ['1008H','c','1000H'],
+  ['100CH','d','NULL'],
+  ['1010H','e','1004H'],
+  ['1014H','f（新）','—']
+];
+var C_OK = '#dcfce7', C_KEY = '#fef3c7', C_GONE = '#f1f5f9';
+
+function tbl(hls, note){
+  var heads = ['地址','元素','链接地址'];
+  var h = '<div style="width:max-content;margin:0 auto"><div class="aw-scroll"><table style="border-collapse:collapse;font-size:14.5px">';
+  h += '<tr>';
+  heads.forEach(function(s){ h += '<th style="border:1px solid #cbd5e1;background:#f1f5f9;color:#334155;padding:7px 24px">' + s + '</th>'; });
+  h += '</tr>';
+  T.forEach(function(row, ri){
+    h += '<tr>';
+    row.forEach(function(c, ci){
+      var bg = '#ffffff', fw = '400', fc = '#334155';
+      (hls || []).forEach(function(x){
+        if(x.r === ri && (x.c === undefined || x.c === ci)){ bg = x.bg; fw = '700'; fc = '#0f172a'; }
+      });
+      h += '<td style="border:1px solid #cbd5e1;padding:7px 24px;text-align:center;background:' + bg + ';font-weight:' + fw + ';color:' + fc + '">' + c + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table></div>';
+  if(note) h += '<p style="margin-top:10px;text-align:center;font-size:13.5px;color:#334155">' + note + '</p>';
+  h += '</div>';
+  return h;
+}
+
+AW.init({
+  title: '2016·单链表：把 f 插到 a 与 e 之间后，a、e、f 的链接地址',
+  subtitle: '表头元素为 c · 链接地址 = 结点 next 指针中存的<b>后继结点地址</b>',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」：先顺链接地址走一遍确定逻辑顺序，再插入 f。',
+
+  snaps: [
+    { cls:'step', tag:'开始', count:0,
+      log:'表中给出 5 个已存放的结点和一个空位 1014H。“链接地址”就是该结点 next 指针里存的后继结点地址，不是结点自己的地址。',
+      html: tbl([], '先记住：链接地址 ≠ 结点自己的存放地址，它指向<b>下一个结点</b>。') },
+    { cls:'step', tag:'走①', count:1,
+      log:'表头元素是 c（存放在 1008H）：它的链接地址是 1000H → 逻辑上第一个后继是 a。',
+      html: tbl([{r:2,bg:C_KEY}], 'c（1008H）→ 链接 1000H → 找到 a') },
+    { cls:'step', tag:'走②', count:2,
+      log:'a 在 1000H，链接地址 1010H → 下一个是 e。',
+      html: tbl([{r:2,bg:C_GONE},{r:0,bg:C_KEY}], 'c → a（1000H）→ 链接 1010H → 找到 e') },
+    { cls:'step', tag:'走③', count:3,
+      log:'e 在 1010H，链接地址 1004H → 下一个是 b。',
+      html: tbl([{r:0,bg:C_GONE},{r:4,bg:C_KEY}], 'c → a → e（1010H）→ 链接 1004H → 找到 b') },
+    { cls:'step', tag:'走④', count:4,
+      log:'b 在 1004H，链接地址 100CH → 下一个是 d。',
+      html: tbl([{r:4,bg:C_GONE},{r:1,bg:C_KEY}], 'c → a → e → b（1004H）→ 链接 100CH → 找到 d') },
+    { cls:'ok', tag:'走完', count:5,
+      log:'d 的链接地址是 NULL，链条到 d 结束。原逻辑顺序：c → a → e → b → d。',
+      html: tbl([{r:1,bg:C_GONE},{r:3,bg:C_KEY}], '原逻辑序：<b>c → a → e → b → d</b>（d 之后 NULL）') },
+    { cls:'shift', tag:'定位', count:6,
+      log:'f 存放于 1014H，要插在逻辑上 a 和 e 之间 → 新逻辑序应为 c → a → f → e → b → d。',
+      html: tbl([{r:0,bg:C_KEY},{r:4,bg:C_KEY},{r:5,bg:C_OK}], '插入位置确定：a 与 e 之间。要动 a 的链接、填 f 的链接，<b>e 不用动</b>') },
+    { cls:'ok', tag:'改a', count:7,
+      log:'第 1 处修改：a 的链接地址由 1010H 改为 1014H（a 指向 f）。',
+      html: tbl([{r:0,c:2,bg:C_OK},{r:5,bg:C_KEY}], 'a 的链接地址：<b>1014H</b>（指向 f）') },
+    { cls:'ok', tag:'填f', count:8,
+      log:'第 2 处修改：f（1014H）的链接地址填 1010H，即原来 a 的后继 e 的地址（f 指向 e）。',
+      html: tbl([{r:5,c:2,bg:C_OK},{r:0,c:2,bg:C_OK}], 'f 的链接地址：<b>1010H</b>（指向 e）') },
+    { cls:'ok', tag:'e不动', count:9,
+      log:'e 的链接地址保持 1004H 不变——e 的后继仍是 b，插入 f 根本轮不到它。',
+      html: tbl([{r:4,c:2,bg:C_KEY},{r:0,c:2,bg:C_OK},{r:5,c:2,bg:C_OK}], 'e 的链接地址：<b>1004H</b>（不变，仍指向 b）') },
+    { cls:'done', tag:'完成', count:10, done:true,
+      log:'新逻辑序 c → a → f → e → b → d。a、e、f 的链接地址依次为 1014H、1004H、1010H → 选 D。',
+      html: tbl([{r:0,c:2,bg:C_OK},{r:4,c:2,bg:C_OK},{r:5,c:2,bg:C_OK}], '答案：<b>D</b>（1014H，1004H，1010H）') },
+  ],
+
+  result: {
+    big: '答案 D：1014H，1004H，1010H',
+    html: '插入只改<b>两条链接</b>：a 改指 f（1014H）、f 指向原后继 e（1010H）；e 的链接（1004H）<b>保持不变</b>。记忆点：链表插入 = “新结点接后继、前驱改接新结点”，后继的指针不用动。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-26 改进型 CLOCK 淘汰次序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var orderHtml = '<table style="border-collapse:collapse;margin:6px 0;font-size:13.5px">' +
+  '<tr><th style="border:1px solid #cbd5e1;padding:4px 10px;background:#f1f5f9">次序</th>' +
+  '<th style="border:1px solid #cbd5e1;padding:4px 10px;background:#f1f5f9">类 (A,M)</th>' +
+  '<th style="border:1px solid #cbd5e1;padding:4px 10px;background:#f1f5f9">含义</th></tr>' +
+  '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px;background:#dcfce7;font-weight:700">1</td><td style="border:1px solid #cbd5e1;padding:4px 10px">(0,0)</td><td style="border:1px solid #cbd5e1;padding:4px 10px">未访问未修改，直接丢弃</td></tr>' +
+  '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px;background:#dcfce7;font-weight:700">2</td><td style="border:1px solid #cbd5e1;padding:4px 10px">(0,1)</td><td style="border:1px solid #cbd5e1;padding:4px 10px">未访问但改过，先写回</td></tr>' +
+  '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px;background:#dcfce7;font-weight:700">3</td><td style="border:1px solid #cbd5e1;padding:4px 10px">(1,0)</td><td style="border:1px solid #cbd5e1;padding:4px 10px">访问过未改，丢弃</td></tr>' +
+  '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px;background:#dcfce7;font-weight:700">4</td><td style="border:1px solid #cbd5e1;padding:4px 10px">(1,1)</td><td style="border:1px solid #cbd5e1;padding:4px 10px">访问过又改过，最不淘汰</td></tr></table>';
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>A = 访问位（最近是否访问过），M = 修改位（是否被改过）。淘汰追求：换出<b>最近没用过</b>的页，且<b>写回磁盘代价越小越好</b>。</p>' },
+  { title: '第一优先 (0,0)', cls: 'good',
+    body: '<p><b>(0,0)</b>：没访问又没修改——最"冷"，淘汰时<b>不用写回</b>，代价最小 → <b>最先淘汰</b>。</p>' + orderHtml },
+  { title: '第二 (0,1)', cls: 'good',
+    body: '<p><b>(0,1)</b>：没访问但<b>修改过</b>——虽然冷，淘汰前必须<b>先写回磁盘</b>，代价次之 → 第二淘汰。注意它排在 (1,0) 之前！</p>' },
+  { title: '第三 (1,0)', cls: 'good',
+    body: '<p><b>(1,0)</b>：访问过但没修改——还算"热"，不过可以<b>不写回直接丢弃</b> → 第三淘汰。</p>' },
+  { title: '第四 (1,1)', cls: 'bad',
+    body: '<p><b>(1,1)</b>：访问过又修改过——最热、还要写回，<b>最不该淘汰</b>，排最后。</p>' },
+  { title: '逐项排除', cls: 'step',
+    body: '<p>B：<code>(0,0),(1,0),(0,1),(1,1)</code>——把 M 放到了 A 之前，错。C：把 (1,1) 排到 (1,0) 前——"访问过又改过"反而先淘汰，错。D：(0,0) 后先 (1,1)，同样错。只有 A 符合"先 A 后 M、各自 0 优先"。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>淘汰次序 <b>(0,0) → (0,1) → (1,0) → (1,1)</b>，答案选 <b>A</b>。口诀：<b>先看 A 再看 M，均按 0 优先</b>。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '改进型 CLOCK：四类页的淘汰优先级',
+  subtitle: 'A 访问位 · M 修改位 · 按 (A,M) 四种取值排序淘汰次序',
+  intro: '点击「▶ 播放」，按淘汰代价从低到高排出次序。',
+  snaps: snaps,
+  result: {
+    big: '(0,0)→(0,1)→(1,0)→(1,1)，选 A',
+    html: '记忆锚点：<b>先看访问位 A，再看修改位 M，均按 0 优先</b>。两个高频误排：B 项把 M 提到 A 前；C/D 项让 (1,1) 抢到 (1,0) 前面——"又热又要写回"的页必须最后淘汰。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

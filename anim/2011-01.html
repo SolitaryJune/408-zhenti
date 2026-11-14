@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-01 x 翻倍循环 · 时间复杂度分析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>代码只有一句改状态：<code>x = 2 * x</code> —— <b>x 每执行一轮就翻一倍</b>。循环条件 <code>x &lt; n/2</code>。考点：<b>循环次数与 n 的对数关系</b>。</p>' },
+  { title: '逐轮跟踪 x 的值', cls: '',
+    body: '<p>初始 x = 2：第 1 轮后 x = 4，第 2 轮后 x = 8……执行 t 轮后 <b>x = 2<sup>t+1</sup></b>。翻倍序列 2, 4, 8, 16, … 增长极快，轮数不会多。</p>' },
+  { title: '写出退出条件', cls: '',
+    body: '<p>循环「能继续」要求 x &lt; n/2；执行完 t 轮后停下，意味着 2<sup>t+1</sup> ≥ n/2。这就是求解执行次数 t 的不等式。</p>' },
+  { title: '解不等式', cls: 'good',
+    body: '<p>两边同乘 2：2<sup>t+2</sup> ≥ n，取对数得 <b>t ≥ log₂n − 2</b>。执行次数与 log₂n 只差常数 2，故时间复杂度为 <b>O(log₂n)</b>。</p>' },
+  { title: '排除 B：不是 O(n)', cls: 'bad',
+    body: '<p>O(n) 需要 x 每轮<b>增加常数</b>（如 <code>x = x + 1</code>），要走 n 量级轮。本题每轮<b>翻倍</b>，只需 log₂n 量级轮，B 错。</p>' },
+  { title: '排除 C、D：没有嵌套循环', cls: 'bad',
+    body: '<p>O(nlog₂n)、O(n²) 通常出现在<b>嵌套循环</b>或双重遍历里。本片段是单层 while，不可能达到这两个量级。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>A（O(log₂n)）</b>。记忆锚点：循环变量每轮<b>翻倍</b> → O(log₂n)；每轮<b>加常数</b> → O(n)。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
+    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-01 · x = 2*x 翻倍循环的时间复杂度',
+  subtitle: '代码 <code>x=2; while(x &lt; n/2) x = 2*x;</code> · 推理链逐步展开',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A · O(log₂n)',
+    html: 'x 每轮翻倍：执行 t 轮后 x = 2<sup>t+1</sup>。由退出条件 2<sup>t+1</sup> ≥ n/2 解得 <b>t ≥ log₂n − 2</b>，执行次数只差常数，时间复杂度 <b>O(log₂n)</b>。干扰项 B 把「翻倍」看成「加常数」，C/D 则凭空引入了嵌套循环。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

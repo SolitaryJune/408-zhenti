@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-24 磁盘分配方式对比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个衡量指标',
+    cls: 'key',
+    body: '<p>题目要求同时满足：<b>① 随机访问</b>——给定逻辑块号直接定位物理块，不必从头遍历；<b>② 文件长度可变</b>——文件能动态增长，不必预留连续空间。四选一，看谁两个都占。</p>' },
+  { title: '逐项分析 A：索引分配',
+    cls: 'good',
+    body: '<p>为每个文件建一个<b>索引块</b>，里面依次放着各逻辑块的物理块号。访问第 i 块 → 查索引表第 i 项即得，<b>支持随机访问</b>；文件增长 → 往索引表追加一项，<b>长度可变</b>。两个指标<b>全部满足</b>。</p>' },
+  { title: '逐项分析 B：链接分配',
+    cls: 'bad',
+    body: '<p>块与块用指针串成链。想访问第 i 块必须从第一块起沿链逐块读盘（显式链接），<b>只能顺序访问</b>，不满足「随机访问」。它虽支持文件变长，但两个条件只占一个，不行。</p>' },
+  { title: '逐项分析 C：连续分配',
+    cls: 'bad',
+    body: '<p>文件占<b>连续</b>盘区，起始块号 + 偏移即可定位，<b>支持随机访问</b>；但文件增长时可能放不下、要整体搬移，<b>不利于长度可变</b>。同样只占一个指标。</p>' },
+  { title: '逐项分析 D：动态分区分配',
+    cls: 'bad',
+    body: '<p>这是<b>内存管理</b>里的连续分配方式（首次适应、最佳适应那一族），根本不属于磁盘文件存储空间的分配方式，与题干不在一个范围，直接排除。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A（索引分配）</b>。记忆口诀：<b>连续＝随机但不可变，链接＝可变但不可随机，索引＝又随机又可变</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪种磁盘分配方式：文件长度可变 ＋ 随机访问',
+  subtitle: '考点：<code>文件系统 · 磁盘存储空间分配</code> · 四种方式对号入座',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '索引分配的索引块就是「块号查询表」：查表定位 → <b>随机访问</b>；追加表项 → <b>文件可变长</b>。干扰项各缺一条腿：B 链接不能随机，C 连续不能变长，D 动态分区是内存管理不是文件分配。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

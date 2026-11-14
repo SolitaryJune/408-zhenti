@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-25 · 可能死锁的最小进程数 K</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：死锁最坏情况推演（答案 C，最小 K = 4）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var NEED = '还差 1 台（最大需求 3 台）';
+var FULL = '凑满 3 台，可完成并释放';
+var DEAD = '等待中：谁也拿不到第 3 台';
+var NA   = '不存在（K = 3 时只有 3 个进程）';
+
+function st(cells, procs, opt){
+  return { cells: cells, procs: procs, opt: opt || '' };
+}
+function pr(h, note, dim){ return { h: h, note: note, dim: !!dim }; }
+
+AW.init({
+  title: '2009-25 · 可能死锁的最小进程数 K',
+  subtitle: '8 台打印机 · 每个进程最多需要 3 台 · 最坏情况推演',
+  counterLabel: '已分配',
+  intro: '点击「▶ 播放」或「下一步」开始最坏情况推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>打印机池</b>（共 8 台）'));
+    var row = AW.el('div', 'aw-cells');
+    this._boxes = [];
+    for(var i = 0; i < 8; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      col.appendChild(AW.el('div', 'aw-box', String(i + 1)));
+      col.appendChild(AW.el('div', 'aw-idx', '第' + (i + 1) + '台'));
+      row.appendChild(col);
+      this._boxes.push(col.children[1]);
+    }
+    inner.appendChild(row);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>进程竞争</b>（每个进程最多需要 3 台，最坏拿法：先各拿 2 台）'));
+    this._rows = [];
+    for(var p = 0; p < 4; p++){
+      var r = AW.el('div', 'aw-row-label', '');
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    this._opt = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._opt);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'设定', count:0,
+      log:'8 台打印机，K 个进程竞争，每个进程最多需要 3 台。先看 K = 4 的最坏拿法：让每个进程都只先拿 2 台。',
+      st: st(['','','','','','','',''], [pr(0,'尚未分配'), pr(0,'尚未分配'), pr(0,'尚未分配'), pr(0,'尚未分配')], '') },
+    { cls:'step', tag:'分配', count:2,
+      log:'P1 拿到 2 台。这是"最多 3 台"之下的最坏拿法——故意不拿满。',
+      st: st(['ok','ok','','','','','',''], [pr(2,NEED), pr(0,'尚未分配'), pr(0,'尚未分配'), pr(0,'尚未分配')], '') },
+    { cls:'step', tag:'分配', count:4,
+      log:'P2 也拿到 2 台，还剩 4 台空闲。',
+      st: st(['ok','ok','ok','ok','','','',''], [pr(2,NEED), pr(2,NEED), pr(0,'尚未分配'), pr(0,'尚未分配')], '') },
+    { cls:'step', tag:'分配', count:6,
+      log:'P3 拿到 2 台，只剩 2 台空闲。',
+      st: st(['ok','ok','ok','ok','ok','ok','',''], [pr(2,NEED), pr(2,NEED), pr(2,NEED), pr(0,'尚未分配')], '') },
+    { cls:'step', tag:'分配', count:8,
+      log:'P4 拿走最后 2 台：8 台全部分完，4 个进程都还差 1 台。',
+      st: st(['ok','ok','ok','ok','ok','ok','ok','ok'], [pr(2,NEED), pr(2,NEED), pr(2,NEED), pr(2,NEED)], '') },
+    { cls:'miss', tag:'死锁', count:8,
+      log:'每个进程都要再等 1 台才能推进，但空闲台数为 0：谁也无法满足，互相等待——K = 4 时可能死锁。',
+      st: st(['miss','miss','miss','miss','miss','miss','miss','miss'], [pr(2,DEAD), pr(2,DEAD), pr(2,DEAD), pr(2,DEAD)], 'K = 4：最坏局面下互相等待 → 死锁') },
+    { cls:'shift', tag:'对比', count:6,
+      log:'换成 K = 3：P1、P2、P3 各拿 2 台共 6 台，还剩 2 台空闲（第 4 个进程不存在）。',
+      st: st(['ok','ok','ok','ok','ok','ok','',''], [pr(2,NEED), pr(2,NEED), pr(2,NEED), pr(2,NA,true)], '') },
+    { cls:'ok', tag:'可推进', count:7,
+      log:'空闲 2 台 ≥ 1 台：P1 可再拿 1 台凑满 3 台 → 运行完毕释放 3 台 → P2、P3 依次完成，系统总能推进，K = 3 不会死锁。',
+      st: st(['ok','ok','hit','ok','ok','ok','ok',''], [pr(3,FULL), pr(2,NEED), pr(2,NEED), pr(2,NA,true)], 'K = 3：总有进程可满足 → 不会死锁') },
+    { cls:'done', tag:'结论', count:8, done:true,
+      log:'不死锁的充分条件：每个进程"最大需求 − 1"台时系统仍有余量，即 K×(3−1)+1 ≤ 8 → K ≤ 3.5。K ≤ 3 必安全；K = 4 起最坏情况可死锁 → 可能死锁的最小 K = 4。',
+      st: st(['miss','miss','miss','miss','miss','miss','miss','miss'], [pr(2,DEAD), pr(2,DEAD), pr(2,DEAD), pr(2,DEAD)], 'K×2 + 1 ≤ 8 → K ≤ 3 安全；最小可能死锁的 K = 4') },
+  ],
+
+  render: function(stage, sn){
+    var stt = sn.st || {};
+    var cells = stt.cells || [];
+    for(var i = 0; i < 8; i++){
+      this._boxes[i].className = 'aw-box' + (cells[i] ? ' ' + cells[i] : '');
+    }
+    var procs = stt.procs || [];
+    for(var p = 0; p < 4; p++){
+      var info = procs[p] || { h: 0, note: '', dim: true };
+      var r = this._rows[p];
+      r.style.opacity = info.dim ? '0.45' : '1';
+      r.innerHTML = '<b>P' + (p + 1) + '</b>：已持有 <b>' + info.h + '</b> 台 ｜ ' + info.note;
+    }
+    this._opt.innerHTML = stt.opt ? '<b>' + stt.opt + '</b>' : '';
+  },
+
+  result: {
+    big: '最小 K = 4（选 C）',
+    html: '判断思路：<b>最坏情况 = 每个进程持有「最大需求 − 1」= 2 台</b>。K 个进程共占 2K 台，只要 2K + 1 ≤ 8（即 K ≤ 3.5）就总有一个进程能凑满 3 台而推进。故 <b>K ≤ 3 必不死锁，K = 4 起可能死锁</b>，最小 K = <b>4</b>，答案选 <b>C</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-14 补码移位与加法 z = 2x + y/2</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 五行机器数：x、2x、y、y/2、z
+var ROWS = {
+  x:    { chars: ['1','1','1','1','0','1','0','0'], label: '[x]补（8 位）' },
+  x2:   { chars: ['1','1','1','0','1','0','0','0'], label: '[2x]补（x 算术左移 1 位，低位补 0）' },
+  y:    { chars: ['1','0','1','1','0','0','0','0'], label: '[y]补（8 位）' },
+  y2:   { chars: ['1','1','0','1','1','0','0','0'], label: '[y/2]补（y 算术右移 1 位，符号位不变）' },
+  z:    { chars: ['1','1','0','0','0','0','0','0'], label: '[z]补 = [2x]补 + [y/2]补（丢最高位进位）' },
+};
+// 每行在哪一步“揭晓”
+var REVEAL_AT = { x: 1, x2: 2, y: 3, y2: 4, z: 5 };
+
+var VALS = { x: '→ x = −12', x2: '→ 2x = −24', y: '→ y = −80', y2: '→ y/2 = −40', z: '→ z = −64' };
+
+var stageRows = null, valEls = {};
+
+function drawRow(box, key, i){
+  var r = ROWS[key];
+  box.innerHTML = '';
+  var revealed = i >= REVEAL_AT[key];
+  var justRevealed = (i === REVEAL_AT[key]);
+  var cls = [];
+  for (var k = 0; k < r.chars.length; k++) cls.push(revealed ? (justRevealed ? 'hit' : 'ok') : 'dim');
+  var chars = revealed ? r.chars : r.chars.map(function(){ return '·'; });
+  box.appendChild(AW.cellRow(chars, cls));
+}
+
+AW.init({
+  title: '2013 真题 · 补码移位与加法',
+  subtitle: '已知 <code>[x]补 = 1 1110100</code>、<code>[y]补 = 1 0110000</code> · 求 <code>z = 2x + y/2</code> 的机器数',
+  counterLabel: '已完成步骤',
+  ribbonTitle: '关键操作（✓ 已完成）',
+  intro: '点击「▶ 播放」逐步演示：翻译真值 → 左移 ×2 → 右移 ÷2 → 补码相加 → 判溢出。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    stageRows = {};
+    ['x', 'x2', 'y', 'y2', 'z'].forEach(function(key){
+      var lb = AW.el('div', 'aw-row-label', '<b>' + ROWS[key].label + '</b>');
+      var vb = AW.el('div', 'aw-row-label');
+      vb.style.color = '#15803d';
+      vb.style.marginTop = '-2px';
+      valEls[key] = vb;
+      var box = AW.el('div', '');
+      stageRows[key] = box;
+      inner.appendChild(lb);
+      inner.appendChild(box);
+      inner.appendChild(vb);
+    });
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var self = this;
+    ['x', 'x2', 'y', 'y2', 'z'].forEach(function(key){
+      drawRow(stageRows[key], key, i);
+      valEls[key].innerHTML = i >= REVEAL_AT[key] ? VALS[key] : '';
+    });
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', log: '题目：8 位机，[x]补 = 1 1110100，[y]补 = 1 0110000，求 z = 2x + y/2 的机器数', count: 0 },
+    { cls: 'step', tag: '翻译 x', log: '[x]补 = 11110100：负数，数值位取反加 1 → x = −12', count: 1 },
+    { cls: 'ok', tag: '左移 ×2', log: 'x 算术左移 1 位（低位补 0）：11110100 → 11101000，即 2x = −24', count: 2, ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '翻译 y', log: '[y]补 = 10110000：负数，数值位取反加 1 → y = −80', count: 3 },
+    { cls: 'ok', tag: '右移 ÷2', log: 'y 算术右移 1 位（高位补符号 1）：10110000 → 11011000，即 y/2 = −40', count: 4, ribbon: { k: 2, ok: true } },
+    { cls: 'shift', tag: '补码相加', log: '11101000 + 11011000 = 1 11000000，最高位进位丢弃 → [z]补 = 11000000', count: 5, ribbon: { k: 3, ok: true } },
+    { cls: 'ok', tag: '判溢出', log: '负 + 负 = 负，且 −64 在 [−128, 127] 内 → 无溢出，结果有效', count: 6, ribbon: { k: 4, ok: true } },
+    { cls: 'done', tag: '完成', log: '答案：A（[z]补 = 1 1000000，即 −64，不溢出）', count: 7, done: true },
+  ],
+
+  result: {
+    big: '[z]补 = 1 1000000',
+    html: '答案 <b>A</b>。真值链：x = −12 → 2x = −24；y = −80 → y/2 = −40；相加得 z = <b>−64</b>，机器数 <code>11000000</code>，<b>无溢出</b>。<br>记忆锚点：算术右移<b>补符号位</b>；乘 2 用左移（丢高位）；双符号一致（负+负=负）即不溢出。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-19 TLB 组号定位与表项判断 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function paintRow(chars, paint, ptrLabels, idxLabels){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptrLabels && ptrLabels[i]) || ''));
+    var box = AW.el('div', 'aw-box', ch);
+    var p = paint && paint[i + 1];
+    if (p === 'amber'){ box.style.background = '#fef3c7'; box.style.borderColor = '#d97706'; box.style.color = '#92400e'; }
+    else if (p === 'green'){ box.style.background = '#dcfce7'; box.style.borderColor = '#16a34a'; box.style.color = '#14532d'; }
+    else if (p === 'red'){ box.style.background = '#fee2e2'; box.style.borderColor = '#dc2626'; box.style.color = '#b91c1c'; }
+    else if (p === 'dim'){ box.style.opacity = '.45'; }
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', (idxLabels && idxLabels[i]) || 'b' + (chars.length - 1 - i)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+// 页号 22 = 0001 0110B（8 位虚页号，b7 在左）
+var BITS22 = ['0','0','0','1','0','1','1','0'];
+var W = ['128','64','32','16','8','4','2','1'];
+var IDX = ['b7','b6','b5','b4','b3','b2','b1','b0'];
+
+var box = null, note = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  wrap.appendChild(AW.el('div', 'aw-row-label',
+    '<b>虚页号 8 位位格</b>（VA 16 位 · 页 256B → 页号 8 位；TLB 16 项 4 路 → <b>4 组</b>，组号 = 页号 mod 4 = 页号低 2 位；琥珀 = 组号位）'));
+  box = AW.el('div', '');
+  note = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(box);
+  wrap.appendChild(note);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  box.innerHTML = '';
+  if (sn.bits){ box.appendChild(paintRow(sn.bits, sn.paint, W, IDX)); }
+  note.innerHTML = sn.note || '';
+}
+
+function dimPaint(){ var p = {}; for (var i = 1; i <= 8; i++) p[i] = 'dim'; return p; }
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0, bits:null, paint:{},
+    log:'结构参数：VA 16 位、页 256 B → 虚页号 8 位；TLB 共 16 项、4 路组相联 → 4 组；表项所在组号 = 虚页号 mod 4。',
+    note:'16 项 ÷ 4 路 = <b>4 组</b>；组号只看虚页号<b>低 2 位</b>。' },
+  { cls:'step', tag:'定位页 22', count:1, bits:BITS22, paint:(function(){ var p = dimPaint(); p[7]='amber'; p[8]='amber'; return p; })(),
+    log:'页号 22 = 0001 0110B，低 2 位 10 = 2 → 页 22 的表项应出现在<b>组 2</b>。',
+    note:'页 22 → 组 <b>2</b>（低 2 位 b1b0 = 10）' },
+  { cls:'miss', tag:'核对 A', count:2, ribbon:{k:1, ok:false}, bits:['0','0','0','0','0','1','0','1'], paint:(function(){ var p = dimPaint(); p[7]='amber'; p[8]='amber'; return p; })(),
+    log:'选项 A：Tag=05H = 0000 0101B，低 2 位 01 = 1 → 属于<b>组 1</b>，绝不可能出现在组 2 ✗。',
+    note:'A：Tag 05H → 组 <b>1</b> ≠ 2 → <b>不可能</b>（这就是答案）' },
+  { cls:'ok', tag:'核对 B', count:3, ribbon:{k:2, ok:true}, bits:['0','0','0','0','0','1','1','0'], paint:(function(){ var p = dimPaint(); p[7]='amber'; p[8]='amber'; return p; })(),
+    log:'选项 B：Tag=06H = 0000 0110B，低 2 位 10 = 2 → 组 2 ✓；V=1、PPN=2AH 是已装入页的合理内容。',
+    note:'B：Tag 06H → 组 2，<b>可能出现</b>（✓）' },
+  { cls:'ok', tag:'核对 C', count:4, ribbon:{k:3, ok:true}, bits:BITS22, paint:(function(){ var p = dimPaint(); p[7]='amber'; p[8]='amber'; return p; })(),
+    log:'选项 C：Tag=16H = 0001 0110B，低 2 位 10 → 组 2 ✓；页表中页 22 的 P=0、PPN=2AH，同步后其表项正是 Tag=16H、V=0、PPN=2AH。',
+    note:'C：页 22 本尊 → 组 2，<b>可能出现</b>（✓，V 与 P 同步为 0）' },
+  { cls:'ok', tag:'核对 D', count:5, ribbon:{k:4, ok:true}, bits:['0','0','0','1','1','0','1','0'], paint:(function(){ var p = dimPaint(); p[7]='amber'; p[8]='amber'; return p; })(),
+    log:'选项 D：Tag=1AH = 0001 1010B，低 2 位 10 = 2 → 组 2 ✓；V=0 时 PPN 字段是残留值，1CH 无妨。',
+    note:'D：Tag 1AH → 组 2，<b>可能出现</b>（✓，V=0 时其余字段无意义）' },
+  { cls:'done', tag:'完成', count:6, done:true, bits:BITS22, paint:(function(){ var p = dimPaint(); p[7]='amber'; p[8]='amber'; return p; })(),
+    log:'组 2 的表项 Tag 必须满足"页号 mod 4 = 2"，05H 对应页 5（组 1）——不可能出现在组 2。',
+    note:'答案：<b>A</b>（Tag=05H 的表项属于组 1）' },
+];
+
+AW.init({
+  title: '2026·19 TLB 组号定位与表项合法性',
+  subtitle: 'VA 16 位 · 页 256B · TLB 16 项 4 路组相联 → 4 组 · 找"不可能出现在组 2"的表项',
+  counterLabel: '步骤',
+  ribbonTitle: '选项核对（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」先定位组号规则，再逐项核对。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '组号 = 虚页号 mod 4（低 2 位）。Tag=05H → 页 5 → 5 mod 4 = <b>1</b>，属于组 1，<b>不可能</b>出现在组 2。<br>其余都能出现：06H（页 6，组 2，V=1）、16H（页 22 本尊，V=0 与 P=0 同步）、1AH（页 26，V=0 时 PPN 是残留值）。<br>记忆锚点：<b>Tag 定位置，V 定有效性，V=0 时其余字段可以是残留值。</b>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

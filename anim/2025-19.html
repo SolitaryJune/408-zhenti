@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-19 数据通路与控制器辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：数据通路与控制器叙述逐项核对 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：部件归属要分清',
+    cls: 'key',
+    body: '<p>关键区分：<b>通用寄存器组</b>按编号供指令读写的运算数据寄存器；<b>PC（程序计数器）</b>是存放下条指令地址的<b>专用寄存器</b>，不在通用寄存器组里。找出错误的叙述。</p>' },
+  { title: '选项 A：通用寄存器组包含 PC —— 错误',
+    cls: 'bad',
+    rb: {k:1, ok:false},
+    body: '<p>PC 是<b>专用寄存器</b>：有自己的取指自增逻辑和转移改写通路，由控制器专门管理；通用寄存器组按指令中的寄存器编号字段访问，<b>不包含 PC</b>。「应该包含」说法错误——这正是要选的答案。</p>' },
+  { title: '选项 B：控制器必有译码电路 —— 正确',
+    cls: 'good',
+    rb: {k:2, ok:true},
+    body: '<p>控制器必须包含指令操作码的译码电路：不先译码，就不知道当前是哪条指令、该产生什么控制信号序列。无论硬连线还是微程序控制器，译码这一步都少不了。</p>' },
+  { title: '选项 C：单周期控制器更简单 —— 正确',
+    cls: 'good',
+    rb: {k:3, ok:true},
+    body: '<p>单周期 CPU 一拍到底，控制信号只由操作码组合逻辑直接产生，<b>没有状态划分</b>；多周期 CPU 要把指令拆成多拍，控制器必须维护「当前在第几拍」的状态机——所以单周期控制器更简单。</p>' },
+  { title: '选项 D：流水线要处理冒险 —— 正确',
+    cls: 'good',
+    rb: {k:4, ok:true},
+    body: '<p>流水线 CPU 中相邻指令重叠执行，<b>数据相关</b>（后条指令要用前条结果）与<b>控制相关</b>（转移指令改变取指方向）等冒险必须解决：转发、气泡、分支预测等。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>B、C、D 都正确；<b>A 错误</b>——PC 是专用寄存器，不属于通用寄存器组。答案选 <b>A</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if(s.rb) sn.ribbon = s.rb;
+  return sn;
+});
+
+AW.init({
+  title: '数据通路与控制器：哪句说错了？',
+  subtitle: '考点：PC 的归属、译码电路、单/多周期控制器、流水线冒险',
+  ribbonTitle: '选项（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '<p><b>PC 是专用寄存器，不在通用寄存器组内</b>——通用寄存器组按指令编号字段访问，PC 有自己的自增与改写通路。记忆锚点：控制器必译码；单周期无状态比多周期简单；流水线必处理冒险。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

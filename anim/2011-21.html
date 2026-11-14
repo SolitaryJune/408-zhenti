@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-21 L₁ 的中断屏蔽字推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：按处理优先级逐位填 L₁ 的屏蔽字 M₄M₃M₂M₁M₀ → 01010 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+var LEVELS = ['L₄', 'L₃', 'L₂', 'L₁', 'L₀'];   // 与 M₄M₃M₂M₁M₀ 对齐
+var HANDLE = ['1', '5', '3', '4', '2'];        // 处理优先级名次（1 最高）
+var RESPOND = ['5', '4', '3', '2', '1'];       // 响应优先级名次（L₀→…→L₄ 从高到低）
+var MASK = ['0', '1', '0', '1', '0'];          // L₁ 的屏蔽字最终答案
+
+var NOTES = [
+  '五级中断 L₄~L₀：响应优先级 L₀＞L₁＞L₂＞L₃＞L₄；处理优先级要求 L₄＞L₀＞L₂＞L₁＞L₃。屏蔽字 M₄M₃M₂M₁M₀，Mᵢ=1 屏蔽 Lᵢ',
+  '规则：L₁ 的处理程序要<b>屏蔽自己以及处理优先级比自己低</b>的级，开放比自己高的。L₁ 处理优先级排第 4 → 比它高：L₄、L₀、L₂；比它低：L₃',
+  'M₄：L₄ 处理优先级第 1，比 L₁ 高 → 开放，M₄ = 0',
+  'M₃：L₃ 处理优先级第 5，比 L₁ 低 → 屏蔽，M₃ = 1',
+  'M₂：L₂ 处理优先级第 3，比 L₁ 高 → 开放，M₂ = 0',
+  'M₁：屏蔽自己，防止重复响应，M₁ = 1',
+  'M₀：L₀ 处理优先级第 2，比 L₁ 高 → 开放，M₀ = 0',
+  '五位拼齐：M₄M₃M₂M₁M₀ = 01010 → 选 D',
+  '验证：L₁ 处理中来了 L₃ 请求 → 被屏蔽；来了 L₄、L₀、L₂ → 都能打断 L₁，与处理优先级 L₄＞L₀＞L₂＞L₁＞L₃ 完全吻合。干扰项 A(11110) 是按"屏蔽比自己高的"方向填的，方向反了',
+];
+
+var SNAPS = NOTES.map(function(note, i){
+  return {
+    n: Math.min(Math.max(i - 1, 0), 5), // 已填的屏蔽位个数（第 1 步为 0，第 2 步起逐位填）
+    cur: i >= 2 && i <= 6 ? i - 2 : -1, // 当前正填的位下标（0..4 对应 M₄..M₀）
+    cls: i === 0 ? 'shift' : (i === 1 ? 'step' : (i >= 2 && i <= 6 ? 'ok' : 'done')),
+    tag: i === 0 ? '审题' : (i === 1 ? '规则' : (i >= 2 && i <= 6 ? '填 ' + 'M₄M₃M₂M₁M₀'.charAt(i - 2) : (i === 7 ? '拼出结果' : '完成'))),
+    log: NOTES[i].replace(/<[^>]+>/g, ''),
+    count: i,
+    ribbon: (i >= 2 && i <= 6) ? { k: i - 1, ok: MASK[i - 2] === '1' } : undefined,
+    done: i === NOTES.length - 1,
+  };
+});
+
+function mkTable(stage){
+  var t = AW.el('table', '');
+  t.style.cssText = 'border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px;';
+  var thead = AW.el('thead', '');
+  var htr = AW.el('tr', '');
+  var th0 = AW.el('th', '', '中断级');
+  th0.style.cssText = 'background:#f1f5f9;color:#334155;padding:9px 6px;border-bottom:2px solid #cbd5e1;font-size:12.5px;text-align:left;';
+  htr.appendChild(th0);
+  refs.heads = [th0];
+  LEVELS.forEach(function(lv){
+    var th = AW.el('th', '', lv);
+    th.style.cssText = 'background:#f1f5f9;color:#334155;padding:9px 6px;border-bottom:2px solid #cbd5e1;font-size:14px;';
+    htr.appendChild(th); refs.heads.push(th);
+  });
+  thead.appendChild(htr); t.appendChild(thead);
+  var tbody = AW.el('tbody', '');
+  refs.rows = {}; refs.cells = {};
+  [['handle', '处理优先级（1 最高）', HANDLE, '#64748b'],
+   ['respond', '响应优先级（1 最高）', RESPOND, '#2563eb'],
+   ['mask', 'L₁ 的屏蔽位 Mᵢ', MASK, '']].forEach(function(cfg){
+    var tr = AW.el('tr', '');
+    var label = AW.el('td', '', cfg[1]);
+    label.style.cssText = 'padding:10px 8px;color:#334155;font-weight:700;font-size:12.5px;border-bottom:1px solid #e2e8f0;white-space:nowrap;';
+    tr.appendChild(label);
+    var cells = [];
+    cfg[2].forEach(function(v){
+      var td = AW.el('td', '');
+      td.style.cssText = 'padding:10px 6px;text-align:center;border-bottom:1px solid #e2e8f0;font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:800;font-size:15px;transition:all .2s;';
+      tr.appendChild(td); cells.push(td);
+    });
+    refs.rows[cfg[0]] = tr; refs.cells[cfg[0]] = cells;
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+  var box = AW.el('div', 'aw-scroll');
+  box.appendChild(t);
+  stage.appendChild(box);
+}
+
+AW.init({
+  title: '2011·21 求中断处理程序 L₁ 的屏蔽字',
+  subtitle: 'M₄M₃M₂M₁M₀，<code>Mᵢ=1 屏蔽 Lᵢ</code> · 响应优先级 L₀→L₁→L₂→L₃→L₄ · 处理优先级 L₄→L₀→L₂→L₁→L₃',
+  counterLabel: '推进步数',
+  ribbonTitle: '屏蔽位 M₄M₃M₂M₁M₀（✓ 屏蔽 / ✗ 开放）',
+  intro: '点击「▶ 播放」，按 M₄→M₃→M₂→M₁→M₀ 逐位推演。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    mkTable(stage);
+    refs.note = AW.el('div', '');
+    refs.note.style.cssText = 'margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#334155;line-height:1.75;';
+    stage.appendChild(refs.note);
+    refs.maskStr = AW.el('div', '');
+    refs.maskStr.style.cssText = 'margin-top:8px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:18px;font-weight:800;min-height:26px;';
+    stage.appendChild(refs.maskStr);
+    var hint = AW.el('div', 'aw-hint', '屏蔽字规则：屏蔽"自己 + 处理优先级比自己低"的级，开放"比自己高"的级——处理优先级正是靠屏蔽字改出来的');
+    stage.appendChild(hint);
+  },
+
+  render: function(stage, sn){
+    ['handle', 'respond'].forEach(function(k){
+      refs.cells[k].forEach(function(td, ci){
+        td.textContent = (k === 'handle' ? HANDLE : RESPOND)[ci];
+        td.style.opacity = '1';
+        td.style.color = k === 'handle' ? '#64748b' : '#2563eb';
+        td.style.background = 'transparent';
+        td.style.borderRadius = '0';
+      });
+    });
+    refs.cells.mask.forEach(function(td, ci){
+      var filled = ci < sn.n;
+      var isCur = (ci === sn.cur);
+      td.textContent = filled ? MASK[ci] : '·';
+      td.style.opacity = filled ? '1' : '.4';
+      if(isCur){
+        td.style.background = MASK[ci] === '1' ? '#fee2e2' : '#dcfce7';
+        td.style.color = MASK[ci] === '1' ? '#b91c1c' : '#15803d';
+        td.style.borderRadius = '8px';
+      } else if(filled){
+        td.style.color = MASK[ci] === '1' ? '#b91c1c' : '#15803d';
+        td.style.background = 'transparent';
+        td.style.borderRadius = '0';
+      } else {
+        td.style.color = '#94a3b8';
+        td.style.background = 'transparent';
+      }
+    });
+    var s = '';
+    for(var i = 0; i < 5; i++){ s += (i < sn.n) ? MASK[i] : '_'; }
+    refs.maskStr.textContent = 'M₄M₃M₂M₁M₀ = ' + s + (sn.n === 5 ? '  →  01010' : '');
+    refs.maskStr.style.color = sn.n === 5 ? '#16a34a' : '#334155';
+    refs.note.innerHTML = NOTES[Math.min(sn.count, NOTES.length - 1)];
+  },
+
+  result: {
+    big: '01010（选 D）',
+    html: '屏蔽"自己 + 处理优先级比自己低"：L₁ 排第 4 → 屏蔽 <b>L₃、L₁</b>，开放 L₄、L₀、L₂ → M₄M₃M₂M₁M₀ = <b>01010</b>。验证：L₁ 处理中只有 L₄、L₀、L₂ 能打断它。记忆锚点：<b>屏蔽字屏蔽的是"低的"，方向别反</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-05 动画：后序序列反推结点层次</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-05 后序序列定位层次（算法/过程类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var SEQ = ['e','a','c','b','d','g','f'];
+var LVL = ['4','3','2','4','3','2','1'];   // 与 SEQ 对齐：e第4层 a第3层 c第2层 b第4层 d第3层 g第2层 f第1层
+var seqRow, lvlRow;
+
+function setBoxes(row, cls, texts){
+  for (var j = 0; j < row.children.length; j++){
+    var col = row.children[j];
+    var box = col.children[1];
+    if (texts && texts[j] != null) box.innerHTML = texts[j];
+    box.className = 'aw-box' + (cls && cls[j] ? ' ' + cls[j] : '');
+  }
+}
+function setPtrs(row, ptr){
+  for (var j = 0; j < row.children.length; j++){
+    row.children[j].children[0].innerHTML = (ptr && ptr[j]) || '';
+  }
+}
+
+/* 每步状态：sc=序列行样式, show=层号是否揭示, lc=层号行样式, pt=指针标注 */
+var ST = [
+ { sc:['','','','','','',''], show:[0,0,0,0,0,0,0], lc:['','','','','','',''], pt:['','','','','','',''] },
+ { sc:['','','','','','','hit'], show:[0,0,0,0,0,0,1], lc:['','','','','','','hit'], pt:['','','','','','','根 · 第 1 层'] },
+ { sc:['ok','ok','ok','ok','ok','ok','hit'], show:[0,0,0,0,0,0,1], lc:['','','','','','','ok'], pt:['左子树','左子树','左子树','右子树','右子树','右子树','根'] },
+ { sc:['ok','ok','hit','ok','ok','hit','hit'], show:[0,0,1,0,0,1,1], lc:['','','ok','','','ok','ok'], pt:['左子树','左子树','左子树根 · 第 2 层','右子树','右子树','右子树根 · 第 2 层','根 · 第 1 层'] },
+ { sc:['hit','hit','hit','ok','ok','hit','hit'], show:[1,1,1,0,0,1,1], lc:['ok','ok','ok','','','ok','ok'], pt:['a 的孩子 · 第 4 层','c 的孩子 · 第 3 层','左子树根 · 第 2 层','右子树','右子树','右子树根 · 第 2 层','根 · 第 1 层'] },
+ { sc:['hit','hit','hit','hit','hit','hit','hit'], show:[1,1,1,1,1,1,1], lc:['ok','ok','ok','ok','ok','ok','ok'], pt:['第 4 层','第 3 层','第 2 层','第 4 层','第 3 层','第 2 层','第 1 层'] },
+ { sc:['ok','hit','ok','ok','hit','ok','ok'], show:[1,1,1,1,1,1,1], lc:['ok','hit','ok','ok','hit','ok','ok'], pt:['第 4 层','第 3 层','第 2 层','第 4 层','第 3 层','第 2 层','第 1 层'] },
+ { sc:['ok','hit','ok','ok','hit','ok','ok'], show:[1,1,1,1,1,1,1], lc:['ok','hit','ok','ok','hit','ok','ok'], pt:['第 4 层','第 3 层','第 2 层','第 4 层','第 3 层','第 2 层','第 1 层'] },
+];
+
+AW.init({
+  title: '2017-05　由后序序列＋树形反推结点层次',
+  subtitle: '后序 <code>e a c b d g f</code> · 树形：根两个孩子，每个孩子单链向下（共 1+2+2+2 = 7 结点）',
+  counterLabel: '已定位结点',
+  ribbonTitle: '后序位次（✓ 已定位层）',
+  intro: '点击「▶ 播放」，从后序最后一位开始逐个定位结点。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>后序序列</b>（从叶到根读出）'));
+    seqRow = AW.cellRow(SEQ, [], null);
+    inner.appendChild(seqRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>层次标注</b>（根为第 1 层）'));
+    lvlRow = AW.cellRow(['·','·','·','·','·','·','·'], [], null);
+    inner.appendChild(lvlRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'后序序列 e a c b d g f，共 7 个结点；树形：根两个孩子，每个孩子单链向下', count:0, si:0 },
+    { cls:'step', tag:'定根', log:'后序 = 左·右·根：最后一位 f 是整棵树的根（第 1 层）', count:1, ribbon:{k:7,ok:true}, si:1 },
+    { cls:'step', tag:'切分', log:'由树形，左子树 3 个结点、右子树 3 个结点 → 前段 e a c 属左子树，后段 b d g 属右子树', count:1, si:2 },
+    { cls:'step', tag:'子树根', log:'每段后序的最后一位是子树根：c（左）、g（右），均为第 2 层', count:3, ribbon:{k:3,ok:true}, si:3 },
+    { cls:'step', tag:'左链', log:'左子树是单链，后序自底向上：c 的孩子 a（第 3 层），a 的孩子 e（第 4 层）', count:5, ribbon:{k:2,ok:true}, si:4 },
+    { cls:'step', tag:'右链', log:'同理右子树：g 的孩子 d（第 3 层），d 的孩子 b（第 4 层）——7 个结点全部定位', count:7, ribbon:{k:4,ok:true}, si:5 },
+    { cls:'ok', tag:'同层', log:'按层归位：第 1 层 f，第 2 层 c/g，第 3 层 a/d，第 4 层 e/b —— a 与 d 同层', count:7, ribbon:{k:5,ok:true}, si:6 },
+    { cls:'done', tag:'完成', log:'a 与 d 同在第 3 层 → 选 B', count:7, ribbon:{k:6,ok:true}, si:7, done:true },
+  ],
+
+  render: function(stage, sn){
+    var st = ST[sn.si];
+    setBoxes(seqRow, st.sc);
+    setPtrs(seqRow, st.pt);
+    var texts = [];
+    for (var j = 0; j < 7; j++) texts.push(st.show[j] ? LVL[j] : '·');
+    setBoxes(lvlRow, st.lc, texts);
+  },
+
+  result: {
+    big: 'a 与 d 同层　选 B',
+    html: '后序 <code>e a c b d g f</code>：末位 <code>f</code> 是根；树形给出左子树 3 个、右子树 3 个 → 左段 <code>e a c</code>、右段 <code>b d g</code>；单链子树的后序恰好自底向上 → 第1层 <code>f</code>，第2层 <code>c、g</code>，第3层 <code>a、d</code>，第4层 <code>e、b</code>。与 a 同层的是 <b>d</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

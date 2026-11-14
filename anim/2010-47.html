@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-47 · CSMA/CD 冲突检测与有效传输速率</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：CSMA/CD 两问推演（冲突检测时序 + 周期分解）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2010-47 · CSMA/CD 冲突检测与有效传输速率',
+  subtitle: '10Mbps · 甲乙相距 2km · 信号速度 200000km/s · 单程传播时延 τ = 0.01ms',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论）',
+  intro: '点击「▶ 播放」演示两问的推演过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    // ---- 第一问：链路信号演示 ----
+    var p1 = AW.el('div', '');
+    p1.appendChild(AW.el('div', 'aw-row-label', '<b>第一问</b>：链路分成 10 段 · 蓝 = 甲的信号 · 琥珀 = 乙的信号 · 红 = 冲突信号'));
+    var cells = AW.el('div', 'aw-cells');
+    cells.style.cssText = 'margin:6px 0;';
+    this._lnk = [];
+    for(var i = 0; i < 11; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var box = AW.el('div', 'aw-box', '');
+      box.style.cssText = 'width:40px;height:40px;font-size:14px;';
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', String(i)));
+      cells.appendChild(col);
+      this._lnk.push(box);
+    }
+    p1.appendChild(cells);
+    p1.appendChild(AW.el('div', 'aw-row-label', '位置 0 = 甲端 · 位置 10 = 乙端（每段 = 0.001ms 传播）'));
+    var det = AW.el('div', '');
+    det.style.cssText = 'display:flex;gap:16px;margin-top:6px;';
+    this._detA = AW.el('div', 'aw-row-label', '<b>甲</b>：未检测到冲突');
+    this._detB = AW.el('div', 'aw-row-label', '<b>乙</b>：未检测到冲突');
+    det.appendChild(this._detA);
+    det.appendChild(this._detB);
+    p1.appendChild(det);
+    // ---- 第二问：周期分量面板 ----
+    var p2 = AW.el('div', '');
+    p2.style.display = 'none';
+    p2.appendChild(AW.el('div', 'aw-row-label', '<b>第二问</b>：一个周期 = 甲发帧 + 往返传播 + 乙发确认帧（逐项点亮）'));
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:10px;margin:8px 0 4px;flex-wrap:wrap;';
+    var defs = ['发1518B帧', '往返传播2τ', '发64B确认', '一个周期', '有效速率'];
+    this._p2boxes = [];
+    for(var d = 0; d < 5; d++){
+      var item = AW.el('div', '');
+      item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;width:118px;';
+      var b = AW.el('div', 'aw-box', '·');
+      b.style.cssText = 'width:118px;height:46px;font-size:14px;';
+      item.appendChild(b);
+      item.appendChild(AW.el('div', '', '<span style="font-size:11px;color:#64748b">' + defs[d] + '</span>'));
+      row.appendChild(item);
+      this._p2boxes.push(b);
+    }
+    p2.appendChild(row);
+    stage.appendChild(p1);
+    stage.appendChild(p2);
+    this._p1 = p1;
+    this._p2 = p2;
+  },
+
+  snaps: [
+    { cls:'shift', tag:'求 τ', count:0,
+      log:'参数：10Mbps、甲乙相距 2km、信号速度 200000km/s。单程传播时延 τ = 2 ÷ 200000 s = 0.01ms（10μs）。' },
+    { cls:'step', tag:'最短·开始', count:1,
+      lnk:['A','','','','','','','','','','B'], detA:false, detB:false,
+      log:'【第一问·最短】甲乙同时开始发送：甲的信号（蓝）从左向右走，乙的信号（琥珀）从右向左走。' },
+    { cls:'miss', tag:'冲突发生', count:2,
+      lnk:['A','A','A','A','A','X','B','B','B','B','B'], detA:false, detB:false,
+      log:'t = 5μs（τ/2）：两个信号在链路正中相遇，发生冲突（红）。此刻双方才各发出一半。' },
+    { cls:'ok', tag:'最短 = τ', count:3,
+      lnk:['X','X','X','X','X','X','X','X','X','X','X'], detA:true, detB:true,
+      log:'t = 10μs（τ）：冲突信号传回两端，甲乙同时检测到 → 最短时间 = τ = 0.01ms。' },
+    { cls:'step', tag:'最长·卡点发送', count:4,
+      lnk:['A','A','A','A','A','A','A','A','A','A','X'], detA:false, detB:true,
+      log:'【第一问·最长】换种倒霉情形：甲先发，乙拖到甲的信号即将到达（t ≈ 10μs）才开口——乙一发声就迎头撞上甲的信号，立即检测到冲突。' },
+    { cls:'miss', tag:'乙已觉甲未觉', count:5,
+      lnk:['A','A','A','A','A','X','X','X','X','X','X'], detA:false, detB:true,
+      log:'乙的冲突信号（红）向甲传播；甲还蒙在鼓里，继续发送。' },
+    { cls:'ok', tag:'最长 = 2τ', count:6,
+      lnk:['X','X','X','X','X','X','X','X','X','X','X'], detA:true, detB:true,
+      log:'t = 20μs（2τ）：冲突信号到达甲，甲终于检测到。"均检测到"以最晚者计 → 最长 = 2τ = 0.02ms。' },
+    { cls:'step', tag:'帧构成', count:7, q2:true, lit:0,
+      log:'【第二问】最长以太网帧 1518B = 1500B 有效数据 + 18B 首部尾部开销（地址、类型、FCS 等；前导码题目说明不计）。' },
+    { cls:'step', tag:'发帧时间', count:8, q2:true, lit:1,
+      log:'甲发送一帧：1518 × 8 ÷ 10Mbps = 1.2144ms。' },
+    { cls:'step', tag:'往返传播', count:9, q2:true, lit:2,
+      log:'乙收完最后一比特后立即回送确认：信号往返传播 2τ = 0.02ms。' },
+    { cls:'step', tag:'确认帧时间', count:10, q2:true, lit:3,
+      log:'乙发送 64B 确认帧：64 × 8 ÷ 10Mbps = 0.0512ms。' },
+    { cls:'ok', tag:'周期合计', count:11, q2:true, lit:4,
+      log:'一个周期 = 1.2144 + 0.02 + 0.0512 = 1.2856ms。' },
+    { cls:'ok', tag:'有效速率', count:12, q2:true, lit:5,
+      log:'有效数据传输速率 = 1500 × 8 ÷ 1.2856ms ≈ 9.33 Mbps（分子只算 1500B 有效数据）。' },
+    { cls:'done', tag:'完成', count:13, q2:true, lit:5, done:true,
+      log:'结论：第一问最短 0.01ms、最长 0.02ms；第二问有效数据传输速率约 9.33 Mbps。' },
+  ],
+
+  render: function(stage, sn){
+    var q2 = sn.q2;
+    this._p1.style.display = q2 ? 'none' : '';
+    this._p2.style.display = q2 ? '' : 'none';
+    if(!q2){
+      var lnk = sn.lnk || [];
+      var colors = { A: ['#dbeafe', '#2563eb'], B: ['#fef3c7', '#d97706'], X: ['#fee2e2', '#dc2626'] };
+      for(var i = 0; i < 11; i++){
+        var v = lnk[i] || '';
+        var box = this._lnk[i];
+        if(v && colors[v]){
+          box.style.background = colors[v][0];
+          box.style.borderColor = colors[v][1];
+          box.innerHTML = (v === 'X') ? '✕' : '';
+        } else {
+          box.style.background = '#fff';
+          box.style.borderColor = '#cbd5e1';
+          box.innerHTML = '';
+        }
+      }
+      this._detA.innerHTML = sn.detA ? '<b>甲</b>：检测到冲突 ✓' : '<b>甲</b>：未检测到冲突';
+      this._detA.style.color = sn.detA ? '#dc2626' : '#64748b';
+      this._detB.innerHTML = sn.detB ? '<b>乙</b>：检测到冲突 ✓' : '<b>乙</b>：未检测到冲突';
+      this._detB.style.color = sn.detB ? '#dc2626' : '#64748b';
+    } else {
+      var lit = sn.lit || 0;
+      var vals = ['1.2144ms', '0.02ms', '0.0512ms', '1.2856ms', '9.33Mbps'];
+      for(var k = 0; k < 5; k++){
+        var b2 = this._p2boxes[k];
+        if(k < lit){
+          b2.innerHTML = vals[k];
+          if(k === 3 || k === 4){
+            b2.style.background = '#dcfce7';
+            b2.style.borderColor = '#16a34a';
+            b2.style.color = '#14532d';
+          } else {
+            b2.style.background = '#f8fafc';
+            b2.style.borderColor = '#2563eb';
+            b2.style.color = '#334155';
+          }
+        } else {
+          b2.innerHTML = '·';
+          b2.style.background = '#fff';
+          b2.style.borderColor = '#cbd5e1';
+          b2.style.color = '#94a3b8';
+        }
+      }
+    }
+  },
+
+  result: {
+    big: '0.01ms / 0.02ms · 约 9.33 Mbps',
+    html: '第一问：同时发送最短 τ = <b>0.01ms</b>；卡点发送最长 2τ = <b>0.02ms</b>。第二问：周期 = 1.2144 + 0.02 + 0.0512 = <b>1.2856ms</b>，有效速率 = 1500 × 8 ÷ 1.2856ms ≈ <b>9.33 Mbps</b>（分子用 1500B 有效数据，分母含发帧、往返传播与确认帧三项）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

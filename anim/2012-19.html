@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-19 同步总线突发传输 · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 5 个周期格子在各步的内容与配色：内容 + 颜色（addr=琥珀地址拍, data=蓝数据拍, both=绿合计, dim） */
+var states = [
+  { tag: '审题', cls: 'shift',
+    log: '同步总线 100MHz → 时钟周期 10ns；总线宽度 32 位；地址/数据线复用；支持突发（猝发）传输。求一次"主存写"事务传 128 位数据的至少耗时',
+    cells: [['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']] },
+  { tag: '地址拍', cls: 'shift',
+    log: '地址/数据线复用 → 写事务先要用 1 个周期发出地址：周期 1 = 地址拍',
+    cells: [['地址','addr'],['·','dim'],['·','dim'],['·','dim'],['·','dim']] },
+  { tag: '数数据拍', cls: 'step',
+    log: '128 位数据 ÷ 32 位/拍 = 4 个数据，突发方式下地址只发一次、数据连续传：周期 2～5 = D1～D4',
+    cells: [['地址','addr'],['D1','data'],['D2','data'],['D3','data'],['D4','data']] },
+  { tag: '合计 5 拍', cls: 'ok',
+    log: '总线事务 = 1 拍地址 + 4 拍数据 = 5 个周期 → 5 × 10ns = 50ns，选 C',
+    cells: [['地址','both'],['D1','both'],['D2','both'],['D3','both'],['D4','both']] },
+  { tag: '辨析干扰项', cls: 'miss',
+    log: 'B 40ns：只算 4 拍数据、漏了地址拍；D 80ns：以为每个数据还要重发地址（8 拍）；A 20ns：周期算成 5ns。突发传输只在开头发一次地址',
+    cells: [['地址','addr'],['D1','data'],['D2','data'],['D3','data'],['D4','data']] },
+  { tag: '完成', cls: 'done',
+    log: '结论：一次"主存写"突发事务传 128 位数据至少需 1 + 4 = 5 个周期 = 50ns → 答案 C',
+    cells: [['地址','both'],['D1','both'],['D2','both'],['D3','both'],['D4','both']] },
+];
+
+var CYC = ['周期1','周期2','周期3','周期4','周期5'];
+
+function cell(cls, ch, label){
+  var col = AW.el('div', 'aw-col');
+  var box = AW.el('div', 'aw-box', ch);
+  if(cls === 'addr'){ box.style.cssText = 'background:#fef3c7;border-color:#d97706;color:#92400e;'; }
+  if(cls === 'data'){ box.style.cssText = 'background:#dbeafe;border-color:#2563eb;color:#1e40af;'; }
+  if(cls === 'both'){ box.style.cssText = 'background:#dcfce7;border-color:#16a34a;color:#14532d;'; }
+  if(cls === 'dim'){ box.className = 'aw-box dim'; }
+  col.appendChild(box);
+  col.appendChild(AW.el('div', 'aw-idx', label || ''));
+  return col;
+}
+
+AW.init({
+  title: '2012·19 突发传输 128 位数据要几个周期？',
+  subtitle: '<code>100MHz</code> · 宽度 32 位 · 地址/数据线复用 · 突发（猝发）方式',
+  counterLabel: '推进步',
+  ribbonTitle: '事务构成（✓ 算对 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」，逐拍排出总线事务。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var l1 = AW.el('div', 'aw-row-label', '<b>总线事务时序</b>（1 拍地址 + 4 拍数据）');
+    var r1 = AW.el('div', '', ''); r1.id = 'tlRow';
+    var l2 = AW.el('div', 'aw-row-label', '时间 = 周期数 × 10ns（100MHz 的时钟周期）');
+    wrap.appendChild(l1); wrap.appendChild(r1); wrap.appendChild(l2);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    var row = document.getElementById('tlRow');
+    row.innerHTML = '';
+    var r = AW.el('div', 'aw-cells');
+    sn.cells.forEach(function(it, i){ r.appendChild(cell(it[1], it[0], CYC[i])); });
+    row.appendChild(r);
+  },
+  snaps: states.map(function(s, i){
+    var sn = { cls: s.cls, tag: s.tag, log: s.log, count: i, cells: s.cells };
+    if(i === states.length - 1) sn.done = true;
+    return sn;
+  }),
+  result: {
+    big: '答案 C（50ns）',
+    html: '突发传输时间 = <b>(1 个地址周期 + 4 个数据周期) × 10ns = 50ns</b>。地址/数据线复用所以必须占 1 拍发地址；突发方式下地址只发一次，128 ÷ 32 = 4 拍连续传数据。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-28 动态分区 Best Fit 分配推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：主存 55MB 在 Best Fit 策略下五次分配/释放的分区演化
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+// 分区段配色：free 空闲 / used 已分配 / nu 新分配 / nf 新空闲 / max 最大空闲
+var SEG = {
+  free: ['#dcfce7', '#14532d', '空闲'],
+  used: ['#f1f5f9', '#475569', '已分配'],
+  nu:   ['#dbeafe', '#1d4ed8', '新分配'],
+  nf:   ['#fef3c7', '#92400e', '新空闲'],
+  max:  ['#bbf7d0', '#14532d', '最大空闲 ✓'],
+};
+
+// 每一步的分区条（地址从低到高）与空闲表
+var SNAPS = [
+  { log:'初始状态：主存 55MB 全部空闲（一个 55MB 的空闲分区）',
+    segs:[{t:'free', w:55}], free:'空闲分区：<b>55MB</b>',
+    cls:'shift', tag:'初始', count:0 },
+  { log:'操作① 分配 15MB：唯一空闲分区 55MB，从中切出 15MB',
+    segs:[{t:'nu', w:15},{t:'free', w:40}], free:'空闲分区：<b>40MB</b>',
+    cls:'ok', tag:'分配 15', count:1, ribbon:{k:1, ok:true} },
+  { log:'操作② 分配 30MB：空闲分区仅 40MB，切出 30MB',
+    segs:[{t:'used', w:15},{t:'nu', w:30},{t:'free', w:10}], free:'空闲分区：<b>10MB</b>',
+    cls:'ok', tag:'分配 30', count:2, ribbon:{k:2, ok:true} },
+  { log:'操作③ 释放 15MB：刚分配的 15MB 归还，成为新的空闲分区',
+    segs:[{t:'nf', w:15},{t:'used', w:30},{t:'free', w:10}], free:'空闲分区：<b>15MB、10MB</b>（两块）',
+    cls:'shift', tag:'释放 15', count:3, ribbon:{k:3, ok:true} },
+  { log:'操作④ 分配 8MB：候选 15MB 与 10MB，Best Fit 选最小可容纳的 10MB，切后剩 2MB 碎片',
+    segs:[{t:'free', w:15},{t:'used', w:30},{t:'nu', w:8},{t:'free', w:2}], free:'空闲分区：<b>15MB、2MB</b>',
+    cls:'ok', tag:'分配 8', count:4, ribbon:{k:4, ok:true} },
+  { log:'操作⑤ 分配 6MB：2MB 装不下，只能切 15MB，切后剩 9MB',
+    segs:[{t:'nu', w:6},{t:'nf', w:9},{t:'used', w:30},{t:'used', w:8},{t:'free', w:2}], free:'空闲分区：<b>9MB、2MB</b>',
+    cls:'ok', tag:'分配 6', count:5, ribbon:{k:5, ok:true} },
+  { log:'完成：空闲分区 9MB 与 2MB，最大空闲分区 = 9MB → 答案 B',
+    segs:[{t:'max', w:9},{t:'used', w:6},{t:'used', w:30},{t:'used', w:8},{t:'free', w:2}], free:'最终空闲分区：<b>9MB</b>（最大）与 2MB',
+    cls:'done', tag:'完成', count:5, done:true },
+];
+
+AW.init({
+  title: '2010·28 动态分区：Best Fit 分配推演',
+  subtitle: '主存 55MB 初始全空闲 · 最佳适配（选"装得下的最小"分区切割）· 序列：分配15 → 分配30 → 释放15 → 分配8 → 分配6',
+  counterLabel: '已完成操作',
+  ribbonTitle: '操作序号（按序点亮）',
+  intro: '点击「▶ 播放」，按题目顺序推演五次分配/释放。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    refs.op = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(refs.op);
+    refs.bar = AW.el('div', '');
+    refs.bar.style.cssText = 'display:flex;height:58px;margin-top:6px;border-radius:10px;overflow:hidden;border:1.5px solid #cbd5e1;';
+    inner.appendChild(refs.bar);
+    refs.free = AW.el('div', '');
+    refs.free.style.cssText = 'margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:13.5px;color:#334155;';
+    inner.appendChild(refs.free);
+    inner.appendChild(AW.el('div', 'aw-hint',
+      '分区条按地址从低到高排布；绿色=空闲，灰色=已分配，蓝/黄=本步刚变化'));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    refs.op.innerHTML = '<b>Best Fit</b>（最佳适配）：' + sn.log;
+    refs.bar.innerHTML = '';
+    sn.segs.forEach(function(sg){
+      var c = SEG[sg.t];
+      var d = AW.el('div', '');
+      d.style.cssText = 'flex:0 0 ' + (sg.w / 55 * 100).toFixed(2) + '%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:' + c[0] + ';border-right:1px dashed rgba(15,23,42,.18);color:' + c[1] + ';overflow:hidden;';
+      d.innerHTML = '<b style="font-size:' + (sg.w >= 8 ? 14 : 10.5) + 'px;font-family:Menlo,Consolas,monospace">' + sg.w + '</b><span style="font-size:9.5px">' + c[2] + '</span>';
+      refs.bar.appendChild(d);
+    });
+    refs.free.innerHTML = sn.free;
+  },
+
+  result: {
+    big: '9MB',
+    html: '最大空闲分区 <b>9MB</b> → 答案 <b>B</b>。关键两步：分配 8MB 时 Best Fit 在 15 与 10 之间挑更贴近的 <b>10</b>（残 2MB）；分配 6MB 时 2MB 装不下，只能切 <b>15</b>（残 9MB）。切剩的小碎片始终计入空闲分区。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

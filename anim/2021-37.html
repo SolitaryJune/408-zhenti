@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-37 距离向量路由算法 · E 的路由更新</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类：距离向量更新表逐行计算（直达 + 邻居向量 → 取最小）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var DIRECT = [8, 10, 12, 6];               // E→A/B/C/D 直达距离
+var NB = ['A', 'B', 'C', 'D'];
+var ROWS = [
+  { net: 'Net1', vec: [1, 23, 20, 22],  via: [9, 33, 32, 28],  min: 9,  win: [0] },
+  { net: 'Net2', vec: [12, 35, 30, 28], via: [20, 45, 42, 34], min: 20, win: [0] },
+  { net: 'Net3', vec: [24, 18, 16, 36], via: [32, 28, 28, 42], min: 28, win: [1, 2] },
+  { net: 'Net4', vec: [36, 30, 8, 24],  via: [44, 40, 20, 30], min: 20, win: [2] },
+];
+var tblWrap, sumEls = [], vecEls = [], minEls = [], rowEls = [];
+
+AW.init({
+  title: '距离向量路由：E 更新后到 Net1~Net4 的距离',
+  subtitle: '更新规则：<code>新距离 = min(直达距离 + 邻居报告距离)</code> · E 直达：A=8，B=10，C=12，D=6',
+  counterLabel: '已更新网络',
+  ribbonTitle: '目的网络（✓ 已更新）',
+  intro: '点击「▶ 播放」，逐行计算四个目的网络的新距离。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var info = AW.el('div', 'aw-row-label',
+      '<b>E 的直达距离</b>：A = 8，B = 10，C = 12，D = 6　·　四个邻居各算一遍「直达 + 向量」，取最小');
+    inner.appendChild(info);
+
+    tblWrap = AW.el('div', '');
+    var t = document.createElement('table');
+    t.style.cssText = 'border-collapse:collapse;font-size:12.5px;font-family:Menlo,monospace;margin-top:6px;';
+    var html = '<thead><tr>' +
+      '<th style="border:1px solid #e2e8f0;padding:6px 8px;background:#f1f5f9;">目的网络</th>';
+    NB.forEach(function(n){
+      html += '<th style="border:1px solid #e2e8f0;padding:6px 8px;background:#f1f5f9;">' + n + ' 的向量</th>';
+    });
+    NB.forEach(function(n){
+      html += '<th style="border:1px solid #e2e8f0;padding:6px 8px;background:#f1f5f9;">经' + n + '：' +
+        (n === 'A' ? 8 : n === 'B' ? 10 : n === 'C' ? 12 : 6) + '+' + n + '</th>';
+    });
+    html += '<th style="border:1px solid #e2e8f0;padding:6px 8px;background:#f1f5f9;">E 更新后</th></tr></thead><tbody>';
+    ROWS.forEach(function(){
+      html += '<tr>' +
+        '<td style="border:1px solid #e2e8f0;padding:6px 8px;background:#f1f5f9;font-weight:700;"></td>' +
+        '<td></td><td></td><td></td><td></td>' +
+        '<td style="border:1px solid #e2e8f0;padding:6px 8px;"></td>' +
+        '<td style="border:1px solid #e2e8f0;padding:6px 8px;"></td>' +
+        '<td style="border:1px solid #e2e8f0;padding:6px 8px;"></td>' +
+        '<td style="border:1px solid #e2e8f0;padding:6px 8px;"></td>' +
+        '<td style="border:1px solid #e2e8f0;padding:6px 8px;font-weight:700;"></td></tr>';
+    });
+    html += '</tbody>';
+    t.innerHTML = html;
+    tblWrap.appendChild(t);
+    inner.appendChild(tblWrap);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+
+    // 收集单元格引用
+    rowEls = []; vecEls = []; sumEls = []; minEls = [];
+    var trs = t.querySelectorAll('tbody tr');
+    for(var r = 0; r < 4; r++){
+      rowEls.push(trs[r]);
+      var tds = trs[r].querySelectorAll('td');
+      tds[0].textContent = ROWS[r].net;
+      vecEls.push([tds[1], tds[2], tds[3], tds[4]]);
+      sumEls.push([tds[5], tds[6], tds[7], tds[8]]);
+      minEls.push(tds[9]);
+    }
+  },
+
+  snaps: [
+    { cls: 'step', tag: '审题', count: 0,
+      log: '规则：E 到某网络的新距离 = min{ 直达(E→X) + X 报告的到该网络距离 }，X ∈ {A,B,C,D}。E 直达：A=8、B=10、C=12、D=6' },
+    { cls: 'ok', tag: 'Net1 → 9', count: 1, ribbon: { k: 1, ok: true },
+      log: 'Net1：经A 8+1=9 ✓；经B 10+23=33；经C 12+20=32；经D 6+22=28 → 最小 9（经 A）' },
+    { cls: 'ok', tag: 'Net2 → 20', count: 2, ribbon: { k: 2, ok: true },
+      log: 'Net2：8+12=20 ✓；10+35=45；12+30=42；6+28=34 → 最小 20（经 A）' },
+    { cls: 'ok', tag: 'Net3 → 28', count: 3, ribbon: { k: 3, ok: true },
+      log: 'Net3：8+24=32；10+18=28 ✓；12+16=28 ✓；6+36=42 → 最小 28（经 B 或 C，距离相同）' },
+    { cls: 'ok', tag: 'Net4 → 20', count: 4, ribbon: { k: 4, ok: true },
+      log: 'Net4：8+36=44；10+30=40；12+8=20 ✓；6+24=30 → 最小 20（经 C）' },
+    { cls: 'done', tag: '完成', count: 4,
+      log: '更新后 E 到 Net1~Net4 的距离 = 9, 20, 28, 20 → 选 D', done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var r = 0; r < 4; r++){
+      var done = i >= r + 1;
+      rowEls[r].style.opacity = done ? 1 : .5;
+      for(var c = 0; c < 4; c++){
+        var win = done && ROWS[r].win.indexOf(c) >= 0;
+        vecEls[r][c].style.border = win ? '2px solid #d97706' : '1px solid #e2e8f0';
+        vecEls[r][c].textContent = done ? ROWS[r].vec[c] : '';
+        sumEls[r][c].textContent = done ? (DIRECT[c] + '+' + ROWS[r].vec[c] + '=' + ROWS[r].via[c]) : '';
+        sumEls[r][c].style.background = win ? '#fef3c7' : '';
+        sumEls[r][c].style.color = done ? (win ? '#92400e' : '#64748b') : '#94a3b8';
+        sumEls[r][c].style.fontWeight = win ? 800 : 400;
+      }
+      var viaTxt = ROWS[r].win.map(function(c){ return NB[c]; }).join('/');
+      minEls[r].textContent = done ? (ROWS[r].min + '（经 ' + viaTxt + '）') : '';
+      minEls[r].style.color = done ? '#16a34a' : '#94a3b8';
+    }
+  },
+
+  result: {
+    big: '9, 20, 28, 20（答案 D）',
+    html: '距离向量更新：<code>新距离 = min(直达距离 + 邻居报告距离)</code>。选项 A 直接抄直达距离（9,10,12,6）；选项 B、C 是漏加/错加直达距离的产物。Net3 经 B 与经 C 都是 28，任取即可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

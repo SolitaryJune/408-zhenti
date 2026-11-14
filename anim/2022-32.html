@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-32 · 驱动程序职责辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找「不正确」的项', cls: 'key',
+    body: '<p>驱动程序是「<b>上层抽象命令 → 设备具体操作</b>」的翻译官。逐项核对 B、C、D 是否为它的职责，再看 A 的说法是否站得住。</p>' },
+  { title: 'B 初始化设备由驱动程序完成 → 对', cls: '',
+    body: '<p>设备的<b>初始化与参数设置</b>由驱动程序控制完成（加载时初始化、运行中重置）→ B 正确，不选。</p>' },
+  { title: 'C 执行驱动程序时可能进入阻塞态 → 对', cls: '',
+    body: '<p>驱动发起 I/O 后若要<b>等待设备完成</b>，调用它的进程会进入<b>阻塞态</b> → C 正确，不选。</p>' },
+  { title: 'D 读/写设备的操作由驱动程序控制完成 → 对', cls: '',
+    body: '<p>把上层的<b>抽象读/写请求</b>转换成设备能执行的<b>具体命令与参数</b>（寻道、启动传输等），正是驱动的核心职责 → D 正确，不选。</p>' },
+  { title: 'A 驱动程序与 I/O 控制方式「无关」→ 不正确', cls: 'bad',
+    body: '<p>I/O 控制方式有<b>程序查询、中断、DMA、通道</b>等，方式不同驱动的组织与实现完全不同：查询要轮询状态、中断要在中断中推进传输、DMA 要设置地址与字数并启动控制器 → 驱动程序与控制方式<b>密切相关</b>，A 不正确，选 A。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>控制方式决定驱动的代码结构与流程</b>——这是驱动设计的根基；初始化、读/写控制由驱动完成，执行驱动时可能阻塞。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '驱动程序职责辨析（2022-32）',
+  subtitle: '考点：驱动的职责清单 · 与 I/O 控制方式的关系',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，逐项核对四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：驱动程序与 I/O 控制方式<b>密切相关</b>（查询/中断/DMA 下驱动实现完全不同）→ A 不正确；初始化设备、控制读/写是驱动的职责，执行驱动时进程可能阻塞。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-38 NAT 转发后的源 IP 地址</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：分组转发 + NAT 地址改写推演 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var NODES = [], R2_ADDR = null, SRC_EL = null, R30_CELLS = [], NOTE_EL = null;
+
+// 节点：0=H, 1=R2(NAT), 2=R1, 3=Internet
+var NODE_DATA = [
+  ['H', '192.168.0.3'],
+  ['R2（NAT）', '内 192.168.0.1 · 外 ?'],
+  ['R1', '接口 195.123.0.34/30'],
+  ['Internet', '公网'],
+];
+
+// /30 四个地址的配色：0=全暗 1=揭示可用性 2=标记归属
+var R30_CLS = [
+  ['dim', 'dim', 'dim', 'dim'],
+  ['dim', '', '', 'dim'],
+  ['dim', 'hit', 'ok', 'dim'],
+];
+
+// 每步状态：pos=分组所在节点(-1 无)，src/srcCls=源 IP 显示，r30=/30 行状态，note=说明
+var STATES = [
+  { pos:-1, src:'—',        sc:'', r30:0,
+    note:'已知：H = 192.168.0.3（私网）；R2 内网接口 = 192.168.0.1；R1–R2 链路 = 195.123.0.34/30（R1 侧接口 .34）。问：出 R2 后源 IP = ？' },
+  { pos:0,  src:'192.168.0.3',  sc:'p', r30:0,
+    note:'H 发出分组：源 IP = 192.168.0.3（私网地址），目的 = Internet 服务器。' },
+  { pos:1,  src:'192.168.0.3',  sc:'p', r30:0,
+    note:'分组到达 R2。R2 是 NAT 路由器：转发前必须把<b>私网源地址改写为自己外网接口的全球地址</b>——外网接口地址是多少？' },
+  { pos:1,  src:'192.168.0.3',  sc:'p', r30:1,
+    note:'/30 主机位 2 bit → 块大小 4：195.123.0.32 ~ .35。其中 .32 是网络地址、.35 是广播地址，可用主机地址只有 <b>.33 和 .34</b>。' },
+  { pos:1,  src:'192.168.0.3',  sc:'p', r30:2,
+    note:'R1 已占用 .34 → R2 的外网接口只能是 <b>195.123.0.33</b>。' },
+  { pos:1,  src:'195.123.0.33', sc:'g', r30:2,
+    note:'R2 改写源地址：192.168.0.3 → <b>195.123.0.33</b>，并在 NAT 表中记录映射。' },
+  { pos:3,  src:'195.123.0.33', sc:'g', r30:2,
+    note:'分组进入 Internet，源 IP = 195.123.0.33 → <b>选 A</b>。' },
+  { pos:-1, src:'195.123.0.33', sc:'g', r30:2,
+    note:'干扰项：B = .35 是 /30 的<b>广播地址</b>不可用；C = 192.168.0.1 是 R2 的<b>内网接口</b>（私网）；D = 192.168.0.3 是 H 的<b>原地址</b>（私网，公网不可路由）。' },
+  { pos:3,  src:'195.123.0.33', sc:'g', r30:2,
+    note:'结论：经过 R2 转发后，源 IP = <b>195.123.0.33</b>，<b>答案 A</b>。' },
+];
+
+AW.init({
+  title: 'H 的分组经过 R2（NAT）后，源 IP 变成什么',
+  subtitle: 'H(192.168.0.3) → R2(NAT) → R1 → Internet · R1–R2 链路 195.123.0.34/30',
+  counterLabel: '步骤',
+  ribbonTitle: '关键步骤（✓ 已完成）',
+  intro: '点击「▶ 播放」，跟着分组走一遍 NAT 改写。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    NODES = []; R30_CELLS = []; R2_ADDR = null; SRC_EL = null; NOTE_EL = null;
+    var wrap = AW.el('div', 'aw-scroll');
+
+    // 拓扑行：4 个节点卡 + 连接线
+    var topo = AW.el('div', '');
+    topo.style.cssText = 'display:flex;align-items:center;gap:0;margin:6px 0 10px';
+    NODE_DATA.forEach(function(nd, i){
+      var card = AW.el('div', '');
+      card.style.cssText = 'flex:0 0 auto;min-width:118px;text-align:center;padding:10px 12px;border:2px solid #cbd5e1;border-radius:12px;background:#fff;transition:all .3s';
+      card.innerHTML = '<b style="font-size:14px;color:#0f172a">' + nd[0] + '</b>' +
+        '<div class="addr" style="font-size:11.5px;color:#64748b;margin-top:4px;font-family:Menlo,monospace;line-height:1.5">' + nd[1] + '</div>';
+      NODES.push(card);
+      topo.appendChild(card);
+      if (i < NODE_DATA.length - 1){
+        var link = AW.el('div', '');
+        link.style.cssText = 'flex:1 1 auto;min-width:26px;height:2px;background:#94a3b8;margin:0 4px';
+        topo.appendChild(link);
+      }
+    });
+    R2_ADDR = NODES[1].querySelector('.addr');
+    wrap.appendChild(topo);
+
+    // 源 IP 显示行
+    SRC_EL = AW.el('div', '');
+    SRC_EL.style.cssText = 'display:inline-block;margin-top:2px;font-size:14px;font-weight:700;padding:7px 14px;border-radius:10px;border:1.5px solid #cbd5e1;background:#f8fafc;color:#334155;transition:all .3s';
+    SRC_EL.innerHTML = '分组源 IP = —';
+    wrap.appendChild(SRC_EL);
+
+    // /30 地址行
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>R1–R2 链路的 /30 地址块</b>（块大小 4：.32 ~ .35）'));
+    var labels = ['.32', '.33', '.34', '.35'];
+    var roles = ['网络地址', '？', 'R1 接口', '广播地址'];
+    var row = AW.el('div', 'aw-cells');
+    for (var i = 0; i < 4; i++){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '64px';
+      col.appendChild(AW.el('div', 'aw-ptr', roles[i]));
+      var box = AW.el('div', 'aw-box dim', labels[i]);
+      box.style.width = '64px';
+      box.style.fontSize = '15px';
+      R30_CELLS.push(box);
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', ''));
+      row.appendChild(col);
+    }
+    wrap.appendChild(row);
+
+    NOTE_EL = AW.el('div', '');
+    NOTE_EL.style.cssText = 'margin-top:12px;font-size:14px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;min-height:56px;line-height:1.7';
+    NOTE_EL.innerHTML = STATES[0].note;
+    wrap.appendChild(NOTE_EL);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var st = STATES[sn.st || 0];
+    for (var i = 0; i < NODES.length; i++){
+      if (i === st.pos) NODES[i].style.borderColor = '#16a34a', NODES[i].style.background = '#f0fdf4';
+      else NODES[i].style.borderColor = '#cbd5e1', NODES[i].style.background = '#fff';
+    }
+    R2_ADDR.innerHTML = (st.r30 === 2) ? '内 192.168.0.1 · 外 <b style="color:#15803d">195.123.0.33</b>' : NODE_DATA[1][1];
+    SRC_EL.innerHTML = '分组源 IP = ' + st.src + (st.sc === 'p' ? '（私网）' : (st.sc === 'g' ? '（全球地址）' : ''));
+    SRC_EL.style.borderColor = st.sc === 'g' ? '#16a34a' : (st.sc === 'p' ? '#dc2626' : '#cbd5e1');
+    SRC_EL.style.background = st.sc === 'g' ? '#f0fdf4' : (st.sc === 'p' ? '#fef2f2' : '#f8fafc');
+    var cls = R30_CLS[st.r30];
+    for (var j = 0; j < R30_CELLS.length; j++) R30_CELLS[j].className = 'aw-box ' + cls[j];
+    NOTE_EL.innerHTML = st.note;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'读题',       log:'拓扑与已知条件；R2 实现 NAT，问出 R2 后的源 IP', count:0, st:0 },
+    { cls:'step',  tag:'H 发出',     log:'H 发出分组：源 IP = 192.168.0.3（私网地址）', count:1, st:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'到 R2',      log:'R2 是 NAT 路由器：转发前把私网源地址改写为外网接口的全球地址', count:2, st:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'/30 分析',   log:'/30 块 195.123.0.32~.35：.32 网络、.35 广播，可用只有 .33、.34', count:3, st:3 },
+    { cls:'ok',    tag:'定外网接口', log:'R1 占用 .34 → R2 外网接口 = 195.123.0.33', count:4, st:4, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'改写源地址', log:'NAT 改写：192.168.0.3 → 195.123.0.33，并记录映射', count:5, st:5, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'进 Internet', log:'分组在公网上携带源 IP 195.123.0.33 → 选 A', count:6, st:6 },
+    { cls:'miss',  tag:'排除干扰',   log:'B=.35 广播地址；C=R2 内网接口；D=H 原地址——都不可能出现在公网上', count:7, st:7 },
+    { cls:'done',  tag:'结论',      log:'经过 R2 转发后源 IP = 195.123.0.33，答案 A', count:8, st:8, done:true },
+  ],
+
+  result: {
+    big: '答案 A · 195.123.0.33',
+    html: 'NAT 转发时源 IP 改写为 <b>R2 外网接口的全球地址</b>。R1–R2 链路是 /30：块 .32~.35，' +
+          '<code>.32 网络 / .35 广播</code>不可用，R1 占 <code>.34</code> → R2 用 <code>.33</code>。<br>' +
+          '私网地址（<code>192.168.0.3</code>、<code>192.168.0.1</code>）出不了公网，B/C/D 全排除。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

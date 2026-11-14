@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-44 虚拟地址 → 物理地址 → Cache / TLB 全链路</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：问1 地址划分 → 问2 Cache 字段 → 问3 001C60H 页表+Cache → 问4 024BACH TLB -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+// 问3 用到的静态数据（与题 44-a / 44-b 图一致）
+var PT001 = { valid: 1, frame: '04H' };      // 页表第 001H 项
+var CACHE3 = { valid: 1, tag: '105H' };      // Cache 第 3 行
+var TLBSET0 = [                              // TLB 第 0 组 4 路（题 44-c 图）
+  { valid: 0, tag: '—',   frame: '—' },
+  { valid: 1, tag: '001H', frame: '15' },
+  { valid: 0, tag: '—',   frame: '—' },
+  { valid: 1, tag: '012H', frame: '1F' },
+];
+
+// 字段条
+function mkBar(parent, title, segs){
+  var box = AW.el('div', '');
+  box.appendChild(AW.el('div', 'aw-row-label', title));
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;width:max-content;min-width:520px;border-radius:10px;overflow:hidden;border:2px solid #cbd5e1;';
+  var parts = [];
+  segs.forEach(function(s){
+    var d = AW.el('div', '');
+    d.style.cssText = 'flex:' + s.bits + ';min-width:' + (s.bits * 26) + 'px;padding:8px 4px;text-align:center;background:#f1f5f9;color:#94a3b8;' +
+      'font-size:12.5px;font-weight:700;border-right:1px solid #e2e8f0;transition:all .25s;';
+    d.innerHTML = '<div style="font-size:12px">' + s.name + '</div><div style="font-size:11px;font-weight:400;opacity:.8">' + s.bits + ' 位' + (s.pos ? ' · ' + s.pos : '') + '</div>';
+    row.appendChild(d); parts.push(d);
+  });
+  box.appendChild(row);
+  parent.appendChild(box);
+  return parts;
+}
+
+// 状态卡（问3 / 问4 的流程行）
+function mkLine(parent, html){
+  var d = AW.el('div', '');
+  d.style.cssText = 'border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:13px;color:#334155;line-height:1.7;transition:all .25s;';
+  d.innerHTML = html;
+  parent.appendChild(d);
+  return d;
+}
+
+var PHASES = ['init','q1a','q1b','q2','q3a','q3b','q3c','q3d','q3e','q4a','q4b','q4c','done'];
+var ORDER = {}; PHASES.forEach(function(p, i){ ORDER[p] = i; });
+
+var SNAPS = [
+  { ph:'init', cls:'shift', tag:'准备', count:0, ribbon:undefined,
+    log:'参数：虚存 16MB、主存 1MB、页 4KB；Cache 直接映射 8 行、块 32B。按 问1→问2→问3→问4 推演' },
+  { ph:'q1a', cls:'ok', tag:'问1 虚地址', count:1, ribbon:undefined,
+    log:'问1：16MB = 2²⁴ → 虚拟地址 24 位；页 4KB = 2¹² → 页内偏移占低 12 位，虚页号 = 高 12 位' },
+  { ph:'q1b', cls:'ok', tag:'问1 物地址', count:2, ribbon:undefined,
+    log:'问1：1MB = 2²⁰ → 物理地址 20 位；页内偏移不变（12 位）→ 页框号 = 高 8 位（20 − 12 = 8）' },
+  { ph:'q2', cls:'ok', tag:'问2 字段', count:3, ribbon:undefined,
+    log:'问2：物理地址低位起分三段——块内地址 5 位（32B = 2⁵，第 4~0 位）、Cache 行号 3 位（8 行 = 2³，第 7~5 位）、主存字块标记 12 位（第 19~8 位）' },
+  { ph:'q3a', cls:'step', tag:'问3 拆地址', count:4, ribbon:undefined,
+    log:'问3：虚拟地址 001C60H → 虚页号 = 高 12 位 = 001H，页内偏移 = C60H' },
+  { ph:'q3b', cls:'ok', tag:'问3 查页表', count:5, ribbon:{k:1, ok:true},
+    log:'查页表：虚页号 001H 的页表项有效位 = 1、页框号 = 04H → 该页面在主存中 ✓' },
+  { ph:'q3c', cls:'step', tag:'问3 拼PA', count:6, ribbon:undefined,
+    log:'物理地址 = 页框号 04H 左移 12 位拼偏移 → 04C60H；再按问2拆字段：标记 = 04CH，行号 = 011（第 3 行），块内 = 00000' },
+  { ph:'q3d', cls:'step', tag:'问3 查Cache', count:7, ribbon:undefined,
+    log:'用行号 3 选中 Cache 第 3 行：有效位 = 1，但行内标记 = 105H，与本次主存标记 04CH 比较 → 不相等' },
+  { ph:'q3e', cls:'miss', tag:'Cache 不命中', count:8, ribbon:{k:2, ok:false},
+    log:'105H ≠ 04CH → Cache 不命中（第 3 行缓存的是别的块），需再访主存取数' },
+  { ph:'q4a', cls:'step', tag:'问4 拆地址', count:9, ribbon:undefined,
+    log:'问4：虚拟地址 024BACH → 虚页号 = 024H，页内偏移 = BACH' },
+  { ph:'q4b', cls:'step', tag:'问4 TLB结构', count:10, ribbon:undefined,
+    log:'TLB：8 项 ÷ 四路组相联 = 2 组；组号 = 虚页号最低 1 位 = 0（024H 末位为 0）；TLB 标记 = 虚页号高 11 位 = 024H 右移 1 位 = 012H' },
+  { ph:'q4c', cls:'ok', tag:'TLB 命中', count:11, ribbon:{k:3, ok:true},
+    log:'查 TLB 第 0 组：第 4 路有效位 = 1 且标记 = 012H，与 TLB 标记 012H 匹配 → TLB 命中，页框号 1FH ✓' },
+  { ph:'done', cls:'done', tag:'完成', count:12, ribbon:undefined, done:true,
+    log:'结论：问1 虚地址 24 位（虚页号高 12 位）、物地址 20 位（页框号高 8 位）；问2 标记 12 位 + 行号 3 位 + 块内 5 位；问3 001C60H 在主存、PA=04C60H、Cache 不命中；问4 024BACH 经 TLB 命中 → 页面在主存' },
+];
+
+AW.init({
+  title: '2011·44 虚拟地址 → 物理地址 → Cache / TLB',
+  subtitle: '虚存 <code>16MB</code> · 主存 <code>1MB</code> · 页 <code>4KB</code> · Cache 直接映射 <code>8 行</code> · 块 <code>32B</code> · TLB 四路组相联 <code>8 项</code>',
+  counterLabel: '查访步数',
+  ribbonTitle: '查找环节（✓ 命中 / ✗ 未命中）',
+  intro: '点击「▶ 播放」：地址划分 → 字段 → 页表 + Cache → TLB，逐问推演。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    // 问1：两条地址划分条
+    refs.vaBar = mkBar(inner, '<b>问1 · 虚拟地址</b>（24 位）', [
+      { name:'虚页号', bits:12, pos:'第 23~12 位' },
+      { name:'页内偏移', bits:12, pos:'第 11~0 位' },
+    ]);
+    refs.paBar = mkBar(inner, '<b>问1 · 物理地址</b>（20 位）', [
+      { name:'页框号', bits:8, pos:'第 19~12 位' },
+      { name:'页内偏移', bits:12, pos:'第 11~0 位' },
+    ]);
+    // 问2：Cache 字段条
+    refs.cfBar = mkBar(inner, '<b>问2 · 物理地址访 Cache 的三字段</b>', [
+      { name:'主存字块标记', bits:12, pos:'第 19~8 位' },
+      { name:'Cache 行号', bits:3, pos:'第 7~5 位' },
+      { name:'块内地址', bits:5, pos:'第 4~0 位' },
+    ]);
+
+    // 问3：查访过程
+    refs.p3 = AW.el('div', '');
+    refs.p3.appendChild(AW.el('div', 'aw-row-label', '<b>问3 · 虚拟地址 001C60H 的查访</b>'));
+    refs.v3 = mkLine(refs.p3, '001C60H = <b>001H</b>（虚页号）｜ <b>C60H</b>（页内偏移）');
+    refs.pt = mkLine(refs.p3, '页表[001H]：有效位 = ？，页框号 = ？');
+    refs.pa3 = mkLine(refs.p3, '物理地址 = ？ → 标记 ？｜ 行号 ？｜ 块内 ？');
+    refs.ca3 = mkLine(refs.p3, 'Cache 第 3 行：有效位 = ？，行内标记 = ？');
+    refs.cm3 = mkLine(refs.p3, '比较：？');
+    inner.appendChild(refs.p3);
+
+    // 问4：TLB
+    refs.p4 = AW.el('div', '');
+    refs.p4.appendChild(AW.el('div', 'aw-row-label', '<b>问4 · 虚拟地址 024BACH 查 TLB</b>'));
+    refs.v4 = mkLine(refs.p4, '024BACH = <b>024H</b>（虚页号）｜ <b>BACH</b>（页内偏移）');
+    refs.tc4 = mkLine(refs.p4, 'TLB：8 项 ÷ 4 路 = 2 组；组号 = 虚页号最低 1 位 = ？；TLB 标记 = 虚页号高 11 位 = ？');
+    var ways = AW.el('div', '');
+    ways.style.cssText = 'display:flex;gap:8px;margin-top:8px;width:max-content;';
+    refs.tw = [];
+    TLBSET0.forEach(function(w, i){
+      var c = AW.el('div', '');
+      c.style.cssText = 'border:2px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:7px 10px;min-width:104px;text-align:center;font-size:12.5px;color:#64748b;transition:all .25s;';
+      c.innerHTML = '<div style="font-size:11px;color:#94a3b8">第 0 组 · 路 ' + (i + 1) + '</div><div class="wv" style="margin-top:3px;font-family:Menlo,monospace;font-weight:700">？</div>';
+      ways.appendChild(c); refs.tw.push(c);
+    });
+    refs.p4.appendChild(ways);
+    refs.cm4 = mkLine(refs.p4, '比较：？');
+    inner.appendChild(refs.p4);
+
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var ph = ORDER[sn.ph];
+    var vis = function(node, show, focus){
+      node.style.display = show ? '' : 'none';
+      if(show && focus){ node.style.borderColor = '#f59e0b'; node.style.background = '#fffbeb'; }
+      else if(show){ node.style.borderColor = '#e2e8f0'; node.style.background = '#f8fafc'; }
+    };
+
+    // 字段条显隐与点亮
+    refs.vaBar.forEach(function(seg, i){ vis(seg, ph >= 1, ph === 1); });
+    refs.paBar.forEach(function(seg, i){ vis(seg, ph >= 2, ph === 2); });
+    refs.cfBar.forEach(function(seg, i){ vis(seg, ph >= 3, ph === 3); });
+
+    // 问3 各行状态
+    var p3show = ph >= 4;
+    refs.p3.style.display = p3show ? '' : 'none';
+    if(p3show){
+      vis(refs.v3, true, ph === 4);
+      vis(refs.pt, ph >= 5, ph === 5);
+      if(ph >= 5){
+        refs.pt.innerHTML = '页表[001H]：有效位 = <b style="color:#15803d">1</b> ✓，页框号 = <b>04H</b> → 页面在主存中';
+      }
+      vis(refs.pa3, ph >= 6, ph === 6);
+      if(ph >= 6){
+        refs.pa3.innerHTML = '物理地址 = <b>04C60H</b> = 标记 <b>04CH</b> ｜ 行号 <b>011</b>（第 3 行）｜ 块内 <b>00000</b>';
+      }
+      vis(refs.ca3, ph >= 7, ph === 7);
+      if(ph >= 7){
+        refs.ca3.innerHTML = 'Cache 第 3 行：有效位 = <b>' + CACHE3.valid + '</b>，行内标记 = <b style="color:#92400e">' + CACHE3.tag + '</b>';
+      }
+      vis(refs.cm3, ph >= 8, ph === 8);
+      if(ph >= 8){
+        refs.cm3.innerHTML = '比较：<b style="color:#b91c1c">105H ≠ 04CH → Cache 不命中</b>（标记不匹配，需访主存）';
+      }
+    }
+
+    // 问4 各行状态
+    var p4show = ph >= 9;
+    refs.p4.style.display = p4show ? '' : 'none';
+    if(p4show){
+      vis(refs.v4, true, ph === 9);
+      vis(refs.tc4, ph >= 10, ph === 10);
+      if(ph >= 10){
+        refs.tc4.innerHTML = 'TLB：8 项 ÷ 4 路 = <b>2 组</b>；组号 = 虚页号最低 1 位 = <b>0</b>（024H 末位 0）；TLB 标记 = 虚页号高 11 位 = <b>012H</b>';
+      }
+      var hit = ph >= 11;
+      refs.tw.forEach(function(c, i){
+        var w = TLBSET0[i];
+        var sel = hit && i === 3;
+        c.style.borderColor = sel ? '#16a34a' : (hit ? '#e2e8f0' : '#e2e8f0');
+        c.style.background = sel ? '#dcfce7' : '#f8fafc';
+        c.querySelector('.wv').innerHTML = w.valid
+          ? '有效 ' + w.valid + ' · 标记 ' + w.tag + '<br>页框 ' + w.frame
+          : '有效 0 · —';
+        c.querySelector('.wv').style.color = sel ? '#15803d' : (w.valid ? '#334155' : '#94a3b8');
+      });
+      vis(refs.cm4, hit, hit);
+      if(hit){
+        refs.cm4.innerHTML = '比较：第 0 组第 4 路 <b style="color:#15803d">有效且标记 012H 匹配 → TLB 命中</b> → 页框号 <b>1FH</b>，页面在主存中 ✓（不必再查内存页表）';
+      }
+    }
+  },
+
+  result: {
+    big: '24 位 / 高12位虚页号 ｜ 20 位 / 高8位页框号 ｜ 04C60H 不命中 Cache ｜ TLB 命中',
+    html: '问1：虚地址 <b>24 位</b>（虚页号高 12 位），物地址 <b>20 位</b>（页框号高 8 位）。问2：标记 <b>12 位</b>（19~8）+ 行号 <b>3 位</b>（7~5）+ 块内 <b>5 位</b>（4~0）。问3：001C60H 有效 → PA=<b>04C60H</b>，行 3 标记 105H ≠ 04CH → <b>Cache 不命中</b>。问4：024BACH 虚页 024H → 组 0、TLB 标记 012H → <b>TLB 命中</b>，页面在主存（页框 1FH）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-21 动画 · 中断 I/O 中 CPU 与端口交换的信息</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-21（计算机组成原理·I/O 接口与 I/O 方式）
+     概念辨析：中断方式下哪些信息可在 CPU 与 I/O 端口间交换
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>前提：<b>中断 I/O 方式</b> + <b>打印控制接口</b>，问 CPU 与接口中 I/O 端口之间交换的信息<b>不可能</b>是什么。切入点：接口里有哪些端口、交换什么。</p>' },
+  { title: '接口的三类端口',
+    cls: 'key',
+    body: '<p>面向 CPU 的端口有三类：<b>数据端口</b>（传打印字符）、<b>状态端口</b>（传忙/闲、出错等设备状态）、<b>控制端口</b>（传启动/停止等控制命令）。CPU 用 I/O 指令逐一访问。</p>' },
+  { title: '选项 A：打印字符',
+    cls: 'good',
+    body: '<p><b>可能</b>（不是答案）。打印字符经<b>数据端口</b>由 CPU 写入接口缓冲，再由打印机取走打印——这是中断方式下的标准数据通路。</p>' },
+  { title: '选项 C / D：设备状态、控制命令',
+    cls: 'good',
+    body: '<p><b>都可能</b>（不是答案）。CPU 读<b>状态端口</b>查设备状态；写<b>控制端口</b>发控制命令。三类端口恰好对应三类信息。</p>' },
+  { title: '选项 B：主存地址',
+    cls: 'bad',
+    body: '<p><b>不可能</b>（答案）。中断方式下数据走"CPU ↔ 数据端口"，CPU 全程参与，<b>接口不需要主存地址</b>。需要主存地址的是 <b>DMA 方式</b>：DMA 控制器接管总线，按主存首地址在主存与设备间直接传送。注意：I/O 指令里的"端口地址"是寻址用的门牌号，不是交换的信息。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>不可能是主存地址 → 答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '中断 I/O 下 CPU 与端口交换的信息（2015·21）',
+  subtitle: '考点：端口三类 = <code>数据 / 状态 / 控制</code> · 主存地址只出现在 <b>DMA</b> 传送中',
+  intro: '点击「▶ 播放」逐项推演 A~D。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（主存地址）',
+    html: '记忆锚点：中断 I/O 交换<b>数据、状态、命令</b>三类信息；<b>主存地址只属于 DMA</b>（DMA 控制器按主存地址直传）。端口地址是寻址门牌号，不算交换的信息。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

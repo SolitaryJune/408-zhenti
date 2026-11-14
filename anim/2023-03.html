@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-03 · 三元组表之外还要保存什么</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三元组表存了什么',
+    cls: 'key',
+    body: '<p>三元组表 = 一串 <code>(行号, 列号, 值)</code>，每个三元组只记录<b>一个非零元素</b>。例如稀疏矩阵 M 存成 <code>(1,2,5)</code>、<code>(3,4,7)</code> 两条记录。</p>' },
+  { title: '还缺什么：矩阵的「形」',
+    cls: 'key',
+    body: '<p>要还原矩阵，得先知道开多大的零矩阵。可是<b>行数、列数写在哪条三元组里？</b>哪条都没有——它们描述的是整体形状，不是某个非零元素。这就是 <b>I（M 的行数）、III（M 的列数）</b>必须额外保存的原因。</p>' },
+  { title: '反证：不存行数列数会怎样',
+    cls: 'bad',
+    body: '<p>同样是 <code>(1,2,5)</code>、<code>(3,4,7)</code> 两条记录，宿主矩阵可能是 3×4，也可能是 5×6——<b>形状信息缺失，矩阵无法唯一还原</b>。</p>' },
+  { title: 'II、IV 为什么不需要',
+    cls: 'good',
+    body: '<p>「包含非零元素的行数 / 列数」只是<b>统计信息</b>：把三元组表扫一遍，数出出现过多少个不同行号、列号即可导出，不必作为存储结构的一部分额外保存。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>还需要保存的是 <b>仅 I、III</b>，答案选 <b>A</b>。记忆锚点：三元组表「<b>存点不存形</b>」——点靠（行，列，值），形靠行数与列数。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2023-03 · 三元组表存储稀疏矩阵，还缺什么？',
+  subtitle: '考点：特殊矩阵的压缩存储 · I 行数 / II 含非零元的行数 / III 列数 / IV 含非零元的列数',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（仅 I、III）',
+    html: '三元组表<b>只存非零元素本身</b>，矩阵的整体形状必须靠<b>行数 I、列数 III</b> 补齐，否则矩阵无法唯一还原；II、IV 是可从表内<b>推导的统计值</b>，无需保存。记忆锚点：<b>存点不存形</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

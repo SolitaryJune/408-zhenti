@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-24 非抢占优先权调度的平均周转时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .tl{ display:flex; gap:3px; margin-top:10px; width:100%; }
+  .tl .seg{ border:2px solid; border-radius:9px; text-align:center; min-height:66px;
+    display:flex; flex-direction:column; justify-content:center; gap:3px; padding:3px 2px; transition:all .3s; }
+  .tl .seg .t{ font-size:10.5px; font-family:Menlo,monospace; white-space:nowrap; }
+  .tl .seg .l{ font-size:12.5px; font-weight:700; white-space:nowrap; }
+  .tl .dim{ background:#f8fafc; border-color:#e2e8f0; color:#cbd5e1; }
+  .tl .sw{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+  .tl .run{ background:#dcfce7; border-color:#16a34a; color:#14532d; }
+  .tl .cur{ box-shadow:0 0 0 3px rgba(37,99,235,.35); }
+  .btable{ border-collapse:collapse; font-size:13px; margin-top:12px; width:100%; }
+  .btable th, .btable td{ border:1px solid #e2e8f0; padding:6px 10px; text-align:center; }
+  .btable th{ background:#f1f5f9; color:#475569; }
+  .btable td.ok{ background:#f6fef9; color:#15803d; font-weight:700; }
+  .btable td.dimc{ color:#cbd5e1; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+/* CPU 时间轴分段：kind = sw(调度+切换) / run(进程运行) */
+var SEGS = [
+  { t:'T→T+1',    l:'调度+切换 1μs', grow:0,  kind:'sw'  },
+  { t:'T+1→T+25', l:'P₂ 运行 24μs',  grow:24, kind:'run' },
+  { t:'T+25→T+26',l:'调度+切换 1μs', grow:0,  kind:'sw'  },
+  { t:'T+26→T+62',l:'P₃ 运行 36μs',  grow:36, kind:'run' },
+  { t:'T+62→T+63',l:'调度+切换 1μs', grow:0,  kind:'sw'  },
+  { t:'T+63→T+75',l:'P₁ 运行 12μs',  grow:12, kind:'run' },
+];
+/* 每一步时间轴推进到的分段数、当前高亮分段 */
+var REVEAL = [0, 0, 1, 2, 3, 4, 5, 6, 6];
+var CURSEG = [-1, -1, 0, 1, 2, 3, 4, 5, -1];
+
+function prow(name, pr, arrived, done, at, ft, tt){
+  return '<tr><th>' + name + '</th><td>' + pr + '</td>' +
+    '<td class="' + (arrived ? 'ok' : 'dimc') + '">' + (arrived ? at : '？') + '</td>' +
+    '<td class="' + (done ? 'ok' : 'dimc') + '">' + (done ? ft : '—') + '</td>' +
+    '<td class="' + (done ? 'ok' : 'dimc') + '">' + (done ? tt : '—') + '</td></tr>';
+}
+
+AW.init({
+  title: '2018·24 非抢占优先权调度：平均周转时间（2 分选择题）',
+  subtitle: '调度+切换开销 <code>1μs/次</code> · 优先权大者优先 · 非抢占 · 周转 = 完成 − 到达',
+  counterLabel: '已完成进程',
+  ribbonTitle: '里程碑（✓ 完成）',
+  intro: '点击「▶ 播放」逐步推演调度时间轴。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.lab = AW.el('div', 'aw-row-label', '<b>CPU 时间轴</b>（琥珀 = 调度+切换 1μs，绿色 = 进程运行）');
+    S.tl = AW.el('div', 'tl');
+    SEGS.forEach(function(sg){
+      var d = AW.el('div', 'seg dim');
+      d.style.flex = sg.grow === 0 ? '0 0 64px' : (sg.grow + ' 1 0%');
+      d.innerHTML = '<div class="t">' + sg.t + '</div><div class="l">' + sg.l + '</div>';
+      S.tl.appendChild(d);
+    });
+    S.sum = AW.el('div', '');
+    inner.appendChild(S.lab);
+    inner.appendChild(S.tl);
+    inner.appendChild(S.sum);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var nodes = S.tl.children;
+    for (var k = 0; k < SEGS.length; k++){
+      nodes[k].className = 'seg ' +
+        (k < REVEAL[i] ? (SEGS[k].kind === 'sw' ? 'sw' : 'run') : 'dim') +
+        (k === CURSEG[i] ? ' cur' : '');
+    }
+    var arrived = i >= 1, p1 = i >= 7, p2 = i >= 3, p3 = i >= 5;
+    var h = '<table class="btable"><tr><th>进程</th><th>优先权</th><th>到达时刻</th><th>完成时刻</th><th>周转时间</th></tr>';
+    h += prow('P₁', 10, arrived, p1, 'T−30', 'T+75', '105μs');
+    h += prow('P₂', 30, arrived, p2, 'T−15', 'T+25', '40μs');
+    h += prow('P₃', 20, arrived, p3, 'T−18', 'T+62', '80μs');
+    h += '</table>';
+    if (i >= 8){
+      h += '<div class="aw-row-label"><b>平均周转时间 = (105 + 40 + 80) / 3 = 225 / 3 = 75μs ✓</b></div>';
+    } else if (i >= 1){
+      h += '<div class="aw-row-label">周转时间 = 完成时刻 − 到达时刻；表格给出的等待时间 30/15/18μs 用来反推到达时刻。</div>';
+    }
+    S.sum.innerHTML = h;
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始',   log:'T 时刻开始调度：非抢占 + 优先权大者优先 → 执行顺序 P₂ → P₃ → P₁', count:0 },
+    { cls:'step',  tag:'反推到达', log:'由等待时间反推进入系统时刻：P₁ 在 T−30、P₂ 在 T−15、P₃ 在 T−18 到达（周转 = 完成 − 到达）', count:0 },
+    { cls:'shift', tag:'调度①',  log:'第 1 次调度+切换开销 1μs（T→T+1），优先权最大的 P₂（30）上 CPU', count:0 },
+    { cls:'ok',    tag:'P₂ 完成', log:'P₂ 运行 24μs 至 T+25 完成；周转 = (T+25) − (T−15) = 40μs', count:1, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'调度②',  log:'第 2 次调度+切换开销 1μs（T+25→T+26），P₃（20）上 CPU', count:1 },
+    { cls:'ok',    tag:'P₃ 完成', log:'P₃ 运行 36μs 至 T+62 完成；周转 = (T+62) − (T−18) = 80μs', count:2, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'调度③',  log:'第 3 次调度+切换开销 1μs（T+62→T+63），P₁（10）上 CPU', count:2 },
+    { cls:'ok',    tag:'P₁ 完成', log:'P₁ 运行 12μs 至 T+75 完成；周转 = (T+75) − (T−30) = 105μs', count:3, ribbon:{k:3, ok:true} },
+    { cls:'done',  tag:'结论',   log:'平均周转时间 = (40 + 80 + 105) / 3 = 225 / 3 = 75μs → 选 D', count:3, ribbon:{k:4, ok:true}, done:true },
+  ],
+
+  result: {
+    big: '平均周转 75μs',
+    html: '周转 = 完成时刻 − 到达时刻：P₁ <b>105μs</b>、P₂ <b>40μs</b>、P₃ <b>80μs</b>，平均 = (105+40+80)/3 = <b>75μs</b> → 选 <b>D</b>。<br>两个陷阱：① 等待时间 30/15/18μs 说明到达时刻是 T−30/T−15/T−18，不能从 T 起算（否则误得 54μs 选 A）；② 每次调度+切换开销 1μs，共 3 次。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

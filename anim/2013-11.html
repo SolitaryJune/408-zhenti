@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-11 基数排序：第 2 趟分配收集后的序列</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function seqRow(seq, clsMap){
+  var h = '<div class="aw-cells" style="justify-content:center">';
+  for (var i = 0; i < seq.length; i++){
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box '
+       + (clsMap && clsMap[i] ? clsMap[i] : '') + '" style="width:52px;font-size:14px">' + seq[i] + '</div></div>';
+  }
+  return h + '</div>';
+}
+function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
+function card(cls, title, body){
+  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
+}
+// 桶展示：buckets = [[桶号, [元素...]], ...]
+function bucketsHtml(buckets, title){
+  var h = rowLabel(title);
+  h += '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">';
+  for (var i = 0; i < buckets.length; i++){
+    var b = buckets[i];
+    h += '<div style="border:2px solid #cbd5e1;border-radius:10px;padding:6px 8px;min-width:64px;text-align:center;background:#fff">'
+       + '<div style="font-size:11px;color:#64748b;font-weight:700">桶 ' + b[0] + '</div>';
+    for (var j = 0; j < b[1].length; j++){
+      h += '<div style="background:#e2e8f0;border-radius:6px;margin-top:4px;padding:2px 4px;font-family:Menlo,monospace;font-size:12.5px">' + b[1][j] + '</div>';
+    }
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+
+var INIT = ['110', '119', '007', '911', '114', '120', '122'];
+var AFTER1 = ['110', '120', '911', '122', '114', '007', '119'];
+var AFTER2 = ['007', '110', '911', '114', '119', '120', '122'];
+var BK1 = [['0', ['110', '120']], ['1', ['911']], ['2', ['122']], ['4', ['114']], ['7', ['007']], ['9', ['119']]];
+var BK2 = [['0', ['007']], ['1', ['110', '911', '114', '119']], ['2', ['120', '122']]];
+
+var LOGS = [
+  '审题：对序列 110, 119, 007, 911, 114, 120, 122 做基数排序。LSD（低位优先）从【个位】开始，第 2 趟按【十位】',
+  '第 1 趟按个位分配：个位 0/1/2/4/7/9 的元素分别落入对应桶（每个桶是队列，先进先出保持相对次序）',
+  '第 1 趟收集：从 0 号桶到 9 号桶依次拼接 → 110, 120, 911, 122, 114, 007, 119',
+  '第 2 趟按十位分配：007→桶0；110、911、114、119 十位都是 1 依次进桶1（次序=第 1 趟收集的先后）；120、122 进桶2',
+  '第 2 趟收集：桶0 + 桶1 + 桶2 → 007, 110, 911, 114, 119, 120, 122',
+  '与选项对照：只有 C 与第 2 趟收集结果完全一致',
+  '（补充）若继续第 3 趟按百位：桶0:007；桶1:110,114,119,120,122；桶9:911 → 整体有序 007,110,114,119,120,122,911。答案选 C'
+];
+var TAGS = ['审题', '第1趟分配（个位）', '第1趟收集', '第2趟分配（十位）', '第2趟收集', '对照选项', '完成'];
+var CLS  = ['step', 'shift', 'ok', 'shift', 'ok', 'step', 'done'];
+
+var snaps = [];
+for (var i = 0; i < 7; i++){
+  var h = '';
+  if (i === 0){
+    h += rowLabel('初始序列（7 个三位数关键字）');
+    h += seqRow(INIT);
+    h += card('key', '题意与方法', '<p>基数排序 LSD：按「个位 → 十位 → 百位」逐趟「分配 + 收集」。每趟分配按当前位数字入桶（0~9 号队列），收集时从 0 号桶到 9 号桶依次拼接。<b>第 2 趟按十位</b>。</p>');
+  } else if (i === 1){
+    h += rowLabel('参与分配的序列（第 1 趟的输入 = 初始序列）');
+    h += seqRow(INIT);
+    h += bucketsHtml(BK1, '按【个位】分配结果（桶内保持输入先后次序）');
+    h += card('key', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 2){
+    h += rowLabel('第 1 趟收集后的序列');
+    h += seqRow(AFTER1, [null, null, 'ok', null, null, null, null]);
+    h += card('', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 3){
+    h += rowLabel('参与分配的序列（第 2 趟的输入 = 第 1 趟收集结果）');
+    h += seqRow(AFTER1, ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok']);
+    h += bucketsHtml(BK2, '按【十位】分配结果（110 先于 911 先于 114 先于 119——次序继承自第 1 趟）');
+    h += card('key', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 4){
+    h += rowLabel('第 2 趟收集后的序列');
+    h += seqRow(AFTER2, ['hit', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok']);
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 5){
+    h += rowLabel('第 2 趟收集后的序列 vs 选项');
+    h += seqRow(AFTER2, ['hit', 'hit', 'hit', 'hit', 'hit', 'hit', 'hit']);
+    h += card('', TAGS[i], '<p>' + LOGS[i] + '</p>'
+      + '<table style="border-collapse:collapse;margin:6px auto;font-size:13px"><tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">选项</th><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">序列开头</th><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">匹配</th></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">A</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">007, 110, 119, 114, …</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">✗</td></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">B</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">007, 110, 119, 114, …</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">✗</td></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;background:#dcfce7"><b>C</b></td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;background:#dcfce7">007, 110, 911, 114, …</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;background:#dcfce7"><b>✓ 完全一致</b></td></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">D</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">110, 120, 911, …</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">✗（这是第 1 趟收集结果）</td></tr></table>');
+  } else {
+    h += rowLabel('第 2 趟收集后的序列');
+    h += seqRow(AFTER2, ['hit', 'hit', 'hit', 'hit', 'hit', 'hit', 'hit']);
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  }
+  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
+  if (i === 2 || i === 4) sn.ribbon = { k: i === 2 ? 1 : 2, ok: true }; // 两趟收集完成
+  if (i === 6) sn.done = true;
+  snaps.push(sn);
+}
+
+AW.init({
+  title: '基数排序：第 2 趟分配收集后的序列（2013-11）',
+  subtitle: 'LSD 低位优先 · 第 1 趟按 <code>个位</code>、第 2 趟按 <code>十位</code> · 每趟「分配 → 收集」',
+  counterLabel: '已趟数',
+  ribbonTitle: '趟数（✓ 完成一趟收集）',
+  intro: '点击「▶ 播放」逐步演示两趟分配与收集。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '第 1 趟按个位收集 → <code>110,120,911,122,114,007,119</code>；第 2 趟按十位收集 → <b>007, 110, 911, 114, 119, 120, 122</b>，与选项 <b>C</b> 一致。<br>记忆点：LSD 从<b>最低位</b>开始（第 2 趟是十位不是百位）；桶是队列、<b>先进先出</b>——911 排在 114 前是第 1 趟收集顺序的延续。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

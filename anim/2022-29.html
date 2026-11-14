@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-29 · 缺页异常处理流程辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：「不一定」= 找条件分支', cls: 'key',
+    body: '<p>题目问缺页异常处理过程中<b>不一定包含</b>的操作：流程主干上的步骤必然执行；只有流程<b>分支点</b>上的步骤才「不一定」。先画主干，再找分支。</p>' },
+  { title: '必然步骤一：调入页 b（C）', cls: '',
+    body: '<p>缺页的原因就是页 b 不在内存，处理过程<b>必须把页 b 从外存读入内存</b>，否则无法重新执行该指令 → C 必然包含。</p>' },
+  { title: '必然步骤二：登记映射 + 置存在位（B、D）', cls: '',
+    body: '<p>页 b 装入某页框后，必须<b>建立页号与页框号的对应关系</b>（B），并<b>修改页表中页 b 的存在位</b>（0 置 1，D）——否则下次访问页 b 仍被判缺页 → B、D 必然包含。</p>' },
+  { title: '分支点：内存还有没有空闲页框', cls: 'key',
+    body: '<p>为页 b 分配页框时分两种情况：<b>① 内存有空闲页框</b> → 直接分配，<b>不需要淘汰任何页</b>；<b>② 内存已满</b> → 才按置换算法选一个页淘汰（脏页写回外存）。</p>' },
+  { title: 'A 淘汰内存中的页：不一定包含', cls: 'bad',
+    body: '<p>只有情况 ② 才淘汰页；情况 ① 下缺页处理照常完成、<b>一步都没淘汰</b> → 「淘汰内存中的页」是条件性操作，<b>不一定包含</b>，选 A。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：缺页处理必做三件事——<b>调入页 b、登记页号与页框号映射、置存在位</b>；淘汰页只在<b>内存满</b>时发生。判别口诀：「不一定」= 条件分支，「必然」= 流程主干。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '缺页异常处理流程辨析（2022-29）',
+  subtitle: '考点：缺页处理主干 vs 条件分支 · 置换只在内存满时发生',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，先理主干再找分支，判断哪个操作不一定包含。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（淘汰内存中的页）',
+    html: '记忆锚点：缺页处理<b>必然</b>包含：将页 b 从外存调入、建立页号与页框号的对应关系、修改存在位；<b>淘汰页</b>只在内存<b>无空闲页框</b>时发生 → 不一定包含。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

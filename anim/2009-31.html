@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-31 · 软链接与硬链接的引用计数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：引用计数推演（答案 B：F2=1，F3=1）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function st(cards, rel, opt){
+  return { cards: cards, rel: rel || '', opt: opt || '' };
+}
+
+AW.init({
+  title: '2009-31 · 软链接与硬链接的引用计数',
+  subtitle: 'F1 引用计数 1 → 建软链接 F2 → 建硬链接 F3 → 删 F1',
+  counterLabel: '事件步',
+  intro: '点击「▶ 播放」按事件顺序推演引用计数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:14px;margin:10px 0 4px;flex-wrap:wrap;';
+    var defs = [
+      { name: 'F1（实体文件）' },
+      { name: 'F2（软链接）' },
+      { name: 'F3（硬链接）' },
+    ];
+    this._cards = [];
+    for(var i = 0; i < 3; i++){
+      var c = AW.el('div', '');
+      c.style.cssText = 'border:2px solid #cbd5e1;border-radius:14px;padding:12px 14px;text-align:center;min-width:180px;';
+      c.appendChild(AW.el('div', 'aw-row-label', '<b>' + defs[i].name + '</b>'));
+      var box = AW.el('div', 'aw-box dim', '—');
+      box.style.cssText = 'width:58px;height:46px;margin:8px auto 4px;';
+      c.appendChild(box);
+      var note = AW.el('div', 'aw-row-label', '');
+      c.appendChild(note);
+      row.appendChild(c);
+      this._cards.push({ card: c, box: box, note: note });
+    }
+    inner.appendChild(row);
+    this._rel = AW.el('div', 'aw-row-label', '');
+    this._opt = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._rel);
+    inner.appendChild(this._opt);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      log:'只有文件 F1（实体文件），当前引用计数为 1：目录里有一个名字指向它的 inode。',
+      st: st(
+        [ {cnt:'1', cls:'ok', note:'引用计数 1'},
+          {cnt:'—', cls:'dim', note:'尚未建立'},
+          {cnt:'—', cls:'dim', note:'尚未建立'} ],
+        'F1 的 inode 引用计数 = 1', '') },
+    { cls:'shift', tag:'建软链接 F2', count:1,
+      log:'建立 F2 作为 F1 的符号链接（软链接）：F2 是一个全新的独立文件（有自己的 inode），内容存的是「F1 的路径」。实体文件的引用计数不变，仍为 1；F2 自己作为文件，引用计数为 1。',
+      st: st(
+        [ {cnt:'1', cls:'ok', note:'软链接不改计数'},
+          {cnt:'1', cls:'hit', note:'新文件，计数 1'},
+          {cnt:'—', cls:'dim', note:'尚未建立'} ],
+        'F1 同 inode（计数 1）；F2 是独立 inode（计数 1）',
+        '软链接：不增加原文件的引用计数') },
+    { cls:'shift', tag:'建硬链接 F3', count:2,
+      log:'建立 F3 作为 F1 的硬链接：F3 与 F1 指向同一个 inode（同一个实体文件），目录里多了一个名字 → inode 引用计数 +1 → 2。',
+      st: st(
+        [ {cnt:'2', cls:'hit', note:'同 inode，计数 +1'},
+          {cnt:'1', cls:'ok', note:'保持 1'},
+          {cnt:'2', cls:'hit', note:'与 F1 同 inode'} ],
+        'F1 与 F3 同 inode，共享引用计数 2；F2 独立（1）',
+        '硬链接：共享 inode，引用计数 +1') },
+    { cls:'miss', tag:'删除 F1', count:3,
+      log:'删除 F1：inode 引用计数 −1 → 1。计数仍大于 0，实体文件不会被真正删除，F3 仍能正常访问它。',
+      st: st(
+        [ {cnt:'✕', cls:'miss', note:'名字已删除'},
+          {cnt:'1', cls:'ok', note:'保持 1'},
+          {cnt:'1', cls:'ok', note:'inode 计数 2−1 = 1'} ],
+        'inode（F1/F3 共享）计数 = 1；F2 计数 = 1',
+        '删除一个硬链接名：计数 −1，文件仍在') },
+    { cls:'step', tag:'检查 F2', count:4,
+      log:'看 F2：软链接是独立文件，从建立起引用计数一直是 1；删除 F1 只是让 F2 里记录的路径失效（悬空链接），不改变 F2 自身的引用计数 → F2 = 1。',
+      st: st(
+        [ {cnt:'✕', cls:'miss', note:'已删除'},
+          {cnt:'1', cls:'hit', note:'仍为 1（悬空）'},
+          {cnt:'1', cls:'ok', note:'inode 计数 1'} ],
+        'F2 = 1；inode（F3 名下）= 1',
+        'F2 引用计数 = 1') },
+    { cls:'step', tag:'检查 F3', count:5,
+      log:'看 F3：F1 与 F3 同 inode，删除 F1 后该 inode 的引用计数 = 2 − 1 = 1，这就是 F3 名下的引用计数 → F3 = 1。',
+      st: st(
+        [ {cnt:'✕', cls:'miss', note:'已删除'},
+          {cnt:'1', cls:'ok', note:'保持 1'},
+          {cnt:'1', cls:'hit', note:'F3 名下计数 1'} ],
+        'F2 = 1；F3 = 1',
+        'F3 引用计数 = 1') },
+    { cls:'done', tag:'结论', count:6, done:true,
+      log:'F2 = 1、F3 = 1 → 答案选 B。',
+      st: st(
+        [ {cnt:'✕', cls:'miss', note:'已删除'},
+          {cnt:'1', cls:'hit', note:'F2 = 1'},
+          {cnt:'1', cls:'hit', note:'F3 = 1'} ],
+        'F2 = 1，F3 = 1 → 选 B',
+        '答案 B：1、1') },
+  ],
+
+  render: function(stage, sn){
+    var stt = sn.st || {};
+    var cards = stt.cards || [];
+    for(var i = 0; i < 3; i++){
+      var info = cards[i] || { cnt:'—', cls:'dim', note:'' };
+      var c = this._cards[i];
+      c.box.innerHTML = info.cnt;
+      c.box.className = 'aw-box' + (info.cls ? ' ' + info.cls : '');
+      c.note.innerHTML = info.note || '';
+      c.card.style.opacity = (info.cls === 'miss') ? '0.55' : '1';
+    }
+    this._rel.innerHTML = stt.rel ? '<b>' + stt.rel + '</b>' : '';
+    this._opt.innerHTML = stt.opt ? '<b>' + stt.opt + '</b>' : '';
+  },
+
+  result: {
+    big: 'F2 = 1，F3 = 1（选 B）',
+    html: '记忆锚点：<b>硬链接与原文件同 inode，建立 +1、删除 −1，减到 0 才真正删除</b>；<b>软链接是存路径的独立文件</b>，不影响原文件计数，原文件删除后它"悬空"但自身计数不变。本题：硬链接后计数 2，删 F1 后 1；F2 从建立起一直是 1。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

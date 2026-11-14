@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-29 抢占式优先级调度演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SCALE = 3;                 // 3 px / ms
+var SEGS = [                   // 甘特图分段
+  { p:'P1', s:0,  e:20  },
+  { p:'P2', s:20, e:30  },
+  { p:'P3', s:30, e:43  },
+  { p:'P2', s:43, e:75  },
+  { p:'P1', s:75, e:115 },
+];
+var COLOR = { P1:'#2563eb', P2:'#16a34a', P3:'#d97706' };
+var PROC = [
+  { name:'P1', arrive:0,  prio:1,   burst:60 },
+  { name:'P2', arrive:20, prio:10,  burst:42 },
+  { name:'P3', arrive:30, prio:100, burst:13 },
+];
+
+var segEls = [];
+var cardEls = {};
+
+function build(stage){
+  stage.innerHTML = '';
+  segEls = []; cardEls = {};
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+
+  // 进程信息卡（含剩余时间）
+  var infoRow = AW.el('div', 'aw-cells');
+  PROC.forEach(function(p){
+    var c = AW.el('div', '');
+    c.style.cssText = 'border:2px solid #cbd5e1;border-radius:12px;padding:8px 14px;min-width:128px;font-size:13px;line-height:1.8;background:#fff;transition:border-color .2s;';
+    c.innerHTML = '<b style="font-size:15px">' + p.name + '</b>　到达 ' + p.arrive + 'ms　优先级 <b>' + p.prio + '</b>' +
+                  '<br>剩余 <span class="rem" style="color:#2563eb;font-weight:700">' + p.burst + '</span> ms';
+    infoRow.appendChild(c);
+    cardEls[p.name] = c;
+  });
+  inner.appendChild(infoRow);
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>CPU 时间线</b>（0–115ms，等比 3px/ms 绘制，色块亮起 = 已模拟时段）'));
+
+  // 甘特图
+  var gantt = AW.el('div', '');
+  gantt.style.cssText = 'position:relative;width:353px;height:46px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;margin-top:2px;overflow:hidden;';
+  SEGS.forEach(function(sg){
+    var d = AW.el('div', '');
+    d.style.cssText = 'position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;opacity:0;transition:opacity .45s;';
+    d.style.left = (sg.s * SCALE + 2) + 'px';
+    d.style.width = ((sg.e - sg.s) * SCALE - 4) + 'px';
+    d.style.background = COLOR[sg.p];
+    d.style.borderRadius = '8px';
+    d.textContent = sg.p;
+    gantt.appendChild(d);
+    segEls.push(d);
+  });
+  inner.appendChild(gantt);
+
+  // 时间刻度
+  var axis = AW.el('div', '');
+  axis.style.cssText = 'position:relative;width:353px;height:20px;';
+  [0, 20, 30, 43, 75, 115].forEach(function(t){
+    var lab = AW.el('div', '');
+    lab.style.cssText = 'position:absolute;font-size:11px;color:#64748b;font-family:monospace;transform:translateX(-50%);';
+    lab.style.left = (t * SCALE + 2) + 'px';
+    lab.textContent = t + 'ms';
+    axis.appendChild(lab);
+  });
+  inner.appendChild(axis);
+
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn, i){
+  var upTo = sn.all ? SEGS.length - 1 : (sn.seg == null ? -1 : sn.seg);
+  segEls.forEach(function(el, j){
+    el.style.opacity = j <= upTo ? '1' : '0';
+  });
+  PROC.forEach(function(p){
+    var el = cardEls[p.name];
+    var isDone = sn.doneArr && sn.doneArr.indexOf(p.name) >= 0;
+    el.style.borderColor = (sn.running === p.name) ? COLOR[p.name] : '#cbd5e1';
+    var remSpan = el.querySelector('.rem');
+    if(isDone){
+      remSpan.textContent = '0（完成 ✓）';
+      remSpan.style.color = '#16a34a';
+    } else {
+      remSpan.textContent = sn.rem ? sn.rem[p.name] : p.burst;
+      remSpan.style.color = '#2563eb';
+    }
+  });
+}
+
+AW.init({
+  title: '抢占式优先级调度：求平均周转时间',
+  subtitle: 'P1(到达0，优先级1，60ms) · P2(到达20，优先级10，42ms) · P3(到达30，优先级100，13ms) · 值越大越优先，可抢占',
+  counterLabel: '当前时刻',
+  ribbonTitle: '进程完成记录（✓ 完成）',
+  intro: '点击「▶ 播放」逐段模拟调度过程。',
+  build: build,
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始',   log:'0ms：初始，就绪队列只有 P1，让 P1 运行', count:0,
+      rem:{ P1:60, P2:42, P3:13 } },
+    { cls:'ok',   tag:'P1 运行', log:'0–20ms：P1 独占 CPU 运行 20ms，剩 40ms 未完成', count:20, seg:0, running:'P1',
+      rem:{ P1:40, P2:42, P3:13 } },
+    { cls:'shift',tag:'P2 抢占', log:'20ms：P2 到达，优先级 10 > 1，抢占 P1；P1 剩 40ms 回就绪队列', count:20, seg:1, running:'P2',
+      rem:{ P1:40, P2:42, P3:13 } },
+    { cls:'ok',   tag:'P2 运行', log:'20–30ms：P2 运行 10ms，剩 32ms', count:30, seg:1, running:'P2',
+      rem:{ P1:40, P2:32, P3:13 } },
+    { cls:'shift',tag:'P3 抢占', log:'30ms：P3 到达，优先级 100 最高，抢占 P2（P2 剩 32ms）', count:30, seg:2, running:'P3',
+      rem:{ P1:40, P2:32, P3:13 } },
+    { cls:'ok',   tag:'P3 完成', log:'30–43ms：P3 运行 13ms 完成；周转时间 = 43 − 30 = 13ms', count:43, seg:2,
+      rem:{ P1:40, P2:32, P3:0 }, doneArr:['P3'], ribbon:{ k:3, ok:true } },
+    { cls:'step', tag:'再调度', log:'43ms：就绪队列中 P1(优先级1)、P2(优先级10)，P2 优先级更高，先运行', count:43, seg:3, running:'P2',
+      rem:{ P1:40, P2:32, P3:0 }, doneArr:['P3'] },
+    { cls:'ok',   tag:'P2 完成', log:'43–75ms：P2 运行剩余 32ms 完成；周转时间 = 75 − 20 = 55ms', count:75, seg:3,
+      rem:{ P1:40, P2:0, P3:0 }, doneArr:['P2','P3'], ribbon:{ k:2, ok:true } },
+    { cls:'ok',   tag:'P1 完成', log:'75–115ms：P1 运行剩余 40ms 完成；周转时间 = 115 − 0 = 115ms', count:115, seg:4,
+      rem:{ P1:0, P2:0, P3:0 }, doneArr:['P1','P2','P3'], ribbon:{ k:1, ok:true } },
+    { cls:'done', tag:'完成',   log:'平均周转时间 = (115 + 55 + 13) ÷ 3 = 183 ÷ 3 = 61ms，选 B', count:115, all:true, done:true },
+  ],
+  result: {
+    big: '61ms，选 B',
+    html: '周转时间 = <b>完成时刻 − 到达时刻</b>：P3 = 43−30 = 13ms，P2 = 75−20 = 55ms，P1 = 115−0 = 115ms。' +
+          '平均 = (115 + 55 + 13) ÷ 3 = <b>61ms</b>，答案选 <b>B</b>。' +
+          '两次抢占点是 <b>20ms（P2 抢 P1）</b>与 <b>30ms（P3 抢 P2）</b>，漏掉任何一个，后面全部算错。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

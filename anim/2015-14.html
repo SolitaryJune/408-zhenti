@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-14 动画 · 浮点加减运算的阶码/尾数溢出判断</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-14（计算机组成原理·浮点数的表示与运算）
+     概念辨析：I~IV 四条叙述逐条判定
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：浮点加减五步流程',
+    cls: 'key',
+    body: '<p>对阶 → 尾数加减 → 规格化（左规/右规）→ 舍入 → 判溢出。四条叙述分别挂在<b>对阶、右规+舍入、左规、尾数溢出</b>上，逐条对照即可。</p>' },
+  { title: 'I：对阶不引起阶码上溢或下溢',
+    cls: 'good',
+    body: '<p><b>对</b>。对阶是<b>小阶向大阶看齐</b>：小阶的阶码不断 +1，最大加到等于大阶为止；大阶本来就是合法值，封顶安全，全程阶码不减 → 既不上溢也不下溢。</p>' },
+  { title: 'II：右规和尾数舍入都可能引起阶码上溢',
+    cls: 'good',
+    body: '<p><b>对</b>。尾数加减后溢出需右规：尾数右移 1 位、<b>阶码 +1</b>；舍入若产生进位还要再右规。阶码一路加下去就可能超出最大阶码 → 上溢。</p>' },
+  { title: 'III：左规可能引起阶码下溢',
+    cls: 'good',
+    body: '<p><b>对</b>。尾数每左移一位，<b>阶码 -1</b>；若结果太小需要多次左规，阶码可能减到比最小阶码还小 → 下溢。</p>' },
+  { title: 'IV：尾数溢出时结果不一定溢出',
+    cls: 'good',
+    body: '<p><b>对</b>。尾数"溢出"只是中间状态：<b>右规一次</b>即可把尾数拉回规格化范围，只要阶码没上溢，结果就正确。真正判溢出只看<b>阶码是否上溢</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>I、II、III、IV 全部正确 → 答案选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '浮点加减运算四条溢出叙述的判断（2015·14）',
+  subtitle: '考点：<code>对阶 → 尾数加减 → 规格化 → 舍入 → 判溢出</code> · 溢出判据：阶码是否上溢',
+  intro: '点击「▶ 播放」逐条判定 I~IV。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（全对）',
+    html: '记忆锚点：<b>对阶安全、右规/舍入可能上溢、左规可能下溢、尾数溢出可右规挽救</b>。判溢出只看阶码：阶码上溢才是真溢出。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

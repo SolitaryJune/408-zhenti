@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-36 动画 · GBN 序号比特数推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .aw-seg{ height:34px; border:2px solid #cbd5e1; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:#64748b; background:#fff; transition:all .25s; white-space:nowrap; }
+  .aw-seg.lit{ background:var(--amber-bg); border-color:var(--amber); color:#92400e; }
+  .aw-tl{ display:flex; gap:3px; width:max-content; }
+  .aw-tl-cap{ font-size:11px; color:#94a3b8; margin-top:4px; font-family:Menlo,monospace; width:max-content; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var segEls = [], winEls = [], fxEl = null;
+
+// 时间轴 4 段：Tf | Tp | Ta | Tp（宽约 0.45px/ms）
+var SEGS = [
+  { name: 'Tf 64ms', w: 30 },
+  { name: 'Tp 270ms', w: 120 },
+  { name: 'Ta 64ms', w: 30 },
+  { name: 'Tp 270ms', w: 120 },
+];
+var LITMAP = [0, 0, 1, 2, 3, 3, 3, 3, 3];   // 第 i 步已点亮的时间轴段
+var WINLIT = [0, 0, 0, 0, 0, 11, 11, 11, 11]; // 第 i 步已点亮的窗口帧数
+var FX = [
+  '点击播放，逐步推演：最短帧 → 时间轴 → 需要的窗口 → 序号比特数。',
+  '按<b>最短帧 128 B</b> 算最坏情况：Tf = 128×8 ÷ 16000 = <b>64 ms</b>（512 B 长帧是 256 ms，需要的窗口更小）',
+  '帧发完（64 ms）后经 270 ms 传播到达接收方',
+  '接收方立即回<b>等长确认帧</b>：ACK 的发送时延也是 64 ms（这个条件必须计入）',
+  'ACK 再经 270 ms 回到发送方：64+270+64+270 = <b>668 ms</b>，第 1 帧的确认才到手',
+  '要不空转：W×Tf ≥ 668 → W ≥ 10.44 → <b>W ≥ 11 帧</b>',
+  'GBN 发送窗口受序号限制：W ≤ 2^n − 1 → 2^n ≥ 12',
+  'n = 3：2^3 − 1 = 7 &lt; 11，填不满管道，信道会空转 ✗',
+  'n = 4：2^4 − 1 = 15 ≥ 11 ✓ → 帧序号至少 <b>4 比特，选 B</b>',
+];
+
+AW.init({
+  title: 'GBN 发送窗口与序号比特数推演（2012·36）',
+  subtitle: 'R = 16 kbps · 单向传播 270 ms · 帧长 128~512 B · ACK 与数据帧等长',
+  counterLabel: '已推演',
+  ribbonTitle: '候选比特数（✓ 可行 / ✗ 不够）',
+  intro: '点击「▶ 播放」逐步推演：最短帧 → 时间轴 → 需要的窗口 → 序号比特数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>已知</b>：16 kbps · Tp = 270 ms · 帧长 128~512 B · ACK 与数据帧等长'));
+
+    // 时间轴：第 1 帧从发出到确认回来
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>时间轴</b>：第 1 帧发出 → 确认回到发送方（各段宽度按时间等比）'));
+    var tl = AW.el('div', 'aw-tl');
+    SEGS.forEach(function(s){
+      var d = AW.el('div', 'aw-seg', s.name);
+      d.style.width = s.w + 'px';
+      tl.appendChild(d);
+      segEls.push(d);
+    });
+    inner.appendChild(tl);
+    inner.appendChild(AW.el('div', 'aw-tl-cap', '0 —— 64 —— 334 —— 398 —— 668 (ms)'));
+
+    // 发送窗口：11 个帧格子
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>发送窗口 W</b>：668 ms 内必须能连发的帧数（点亮 = 必须能发）'));
+    var cells = AW.el('div', 'aw-cells');
+    for (var i = 1; i <= 11; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-box dim', String(i)));
+      col.appendChild(AW.el('div', 'aw-idx', '帧' + i));
+      cells.appendChild(col);
+      winEls.push(col.firstChild);
+    }
+    inner.appendChild(cells);
+
+    fxEl = AW.el('div', 'aw-row-label', FX[0]);
+    fxEl.style.marginTop = '12px';
+    inner.appendChild(fxEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '参数',     log: '16 kbps、Tp=270ms、帧长 128~512 B、ACK 与数据帧等长', count: 0 },
+    { cls: 'shift', tag: '最短帧',   log: '按最短帧 128 B 算最坏情况：Tf = 128×8 ÷ 16000 = 64 ms（帧越短，填满管道需要的帧越多）', count: 1 },
+    { cls: 'step',  tag: '去程',     log: '第 1 帧发完（64 ms）后，经 270 ms 传播到达接收方', count: 2 },
+    { cls: 'step',  tag: '回程 ACK', log: '接收方立即回等长确认帧，ACK 的发送时延同样是 64 ms', count: 3 },
+    { cls: 'shift', tag: '一个周期', log: '确认再经 270 ms 回到发送方：64+270+64+270 = 668 ms，第 1 帧的确认才到手', count: 4 },
+    { cls: 'ok',    tag: '填满管道', log: '要不空转：W×Tf ≥ 668 → W ≥ 10.44 → 至少 11 帧的发送窗口', count: 5 },
+    { cls: 'step',  tag: 'GBN 约束', log: 'GBN 发送窗口 W ≤ 2^n − 1 → 2^n − 1 ≥ 11 → 2^n ≥ 12', count: 6 },
+    { cls: 'miss',  tag: 'n=3 不够', log: 'n = 3：2^3 − 1 = 7 < 11，填不满管道，信道会空转 ✗', count: 7, ribbon: { k: 3, ok: false } },
+    { cls: 'done',  tag: 'n=4 可行', log: 'n = 4：2^4 − 1 = 15 ≥ 11 ✓ → 帧序号至少 4 比特，选 B', count: 8, ribbon: { k: 4, ok: true }, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    var lit = LITMAP[i] || 0;
+    for (var k = 0; k < segEls.length; k++){
+      segEls[k].className = 'aw-seg' + (i >= 1 && k <= lit ? ' lit' : '');
+    }
+    var framesLit = WINLIT[i] || 0;
+    for (var m = 0; m < winEls.length; m++){
+      winEls[m].className = 'aw-box' + (m < framesLit ? ' ok' : ' dim');
+    }
+    fxEl.innerHTML = FX[i] || FX[0];
+  },
+
+  result: {
+    big: '至少 4 比特（选 B）',
+    html: '最短帧 128 B → Tf = 64 ms；「发帧→确认」一个周期 668 ms 内要连发 ≥ <b>11 帧</b>；GBN 窗口 ≤ 2^n − 1 → n ≥ 4。若按 512 B 长帧算 n = 3 就够，但帧长可以短到 128 B，要保证<b>任何帧长下</b>利用率都能最高，必须按最坏情况设计。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

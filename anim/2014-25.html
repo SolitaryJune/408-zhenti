@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-25 不能在用户态执行的指令</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：特权指令的判断标准',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>用户态只能执行<b>非特权指令</b>。凡影响系统全局状态的"机器开关"类指令（关中断、置时钟、清内存、改页表基址、启动 I/O…）都是特权指令，只能由内核在核心态执行。</p>' },
+  { title: 'A trap 指令：用户态可执行',
+    cls: 'good',
+    tag: '选项 A',
+    body: '<p>trap（访管/陷入指令）是用户程序<b>主动请求内核服务</b>的入口。执行 trap 这条指令本身发生在用户态，由它触发用户态 → 核心态的切换。它是系统调用的载体，用户态当然能执行。</p>' },
+  { title: 'B 跳转指令 / C 压栈指令：用户态可执行',
+    cls: 'good',
+    tag: '选项 B / C',
+    body: '<p>跳转是普通程序控制流指令，压栈是普通数据操作指令，都只影响<b>本进程自己</b>的执行，不触及系统状态 → 均为非特权指令。</p>' },
+  { title: 'D 关中断指令：特权指令，用户态不能执行',
+    cls: 'bad',
+    tag: '选项 D',
+    body: '<p>关中断决定 CPU <b>是否响应中断</b>，是系统级开关。若用户进程能关中断，就可能长期屏蔽中断、独占处理机，破坏调度与保护机制。它属于<b>特权指令</b>，只能在核心态执行。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>trap 是"敲门砖"（用户态执行、内核态处理）；关中断是"总闸"，只许内核动</b>。常见特权指令口诀：关中断、置时钟、清内存、启动 I/O。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-25】不能在用户态执行的指令',
+  subtitle: '考点：特权指令辨析 · trap / 跳转 / 压栈 / 关中断',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '关中断是<b>特权指令</b>，只能在核心态执行。trap 虽会引起用户态 → 核心态切换，但执行它本身就在用户态（系统调用入口）；跳转、压栈是普通指令。记忆点：<b>凡动"系统总开关"的指令都是特权指令</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

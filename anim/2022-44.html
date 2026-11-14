@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-44 磁盘访问时间与DMA</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.aw-box.blue{ background:#dbeafe; border-color:#2563eb; color:#1e40af; }
+.aw-box.amber{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+.tl-seg{ height:34px; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:#fff; border-radius:6px 0 0 6px; }
+.tl-seg.g{ background:#16a34a; }
+.tl-seg.a{ background:#d97706; }
+.tl-seg.b{ background:#2563eb; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 三个地址字段的格子
+function fieldRow(stage_k){
+  // stage_k: 0 全灰；1 柱面号；2 +磁头号；3 +扇区号
+  function box(title, bits, why, lit){
+    var st = lit ? 'background:#fff;border:2px solid #16a34a' : 'background:#f8fafc;border:2px dashed #cbd5e1';
+    return '<div style="' + st + ';border-radius:10px;padding:8px 14px;width:180px;text-align:center">' +
+           '<div style="font-size:14px;font-weight:700;color:' + (lit ? '#14532d' : '#94a3b8') + '">' + title + '</div>' +
+           '<div style="font-size:20px;font-weight:800;color:' + (lit ? '#16a34a' : '#cbd5e1') + '">' + (lit ? bits + ' 位' : '?') + '</div>' +
+           '<div style="font-size:11px;color:#64748b;margin-top:2px">' + (lit ? why : '&nbsp;') + '</div></div>';
+  }
+  return '<div style="display:flex;gap:10px;justify-content:flex-start">' +
+    box('柱面号（磁道号）', '15', '2^15 = 32768 ≥ 20000', stage_k >= 1) +
+    box('磁头号（盘面号）', '3', '2^3 = 8 = 盘面数', stage_k >= 2) +
+    box('扇区号', '9', '2^9 = 512 ≥ 500', stage_k >= 3) +
+    '</div>';
+}
+
+// 访问时间时间轴（宽度按显示比例，不严格按数值比例）
+function timeline(stage_k, sum){
+  // stage_k: 1 寻道 2 +旋转 3 +传输
+  function seg(w, txt, cls, lit){
+    var st = lit ? '' : 'background:#f1f5f9;color:#cbd5e1;border:1.5px dashed #e2e8f0;';
+    return '<div class="tl-seg ' + (lit ? cls : '') + '" style="' + st + 'width:' + w + 'px">' + (lit ? txt : '') + '</div>';
+  }
+  return '<div style="display:flex;gap:2px;align-items:center;width:max-content">' +
+    seg(220, '寻道 5 ms', 'g', stage_k >= 1) +
+    seg(180, '旋转延迟 4.167 ms', 'a', stage_k >= 2) +
+    seg(60, '传输 0.017', 'b', stage_k >= 3) +
+    (sum ? '<div style="margin-left:10px;font-size:14px;font-weight:800;color:#16a34a">≈ 9.18 ms</div>' : '') +
+    '</div>';
+}
+
+function note(t){
+  return '<div class="aw-row-label" style="margin-top:8px">' + t + '</div>';
+}
+
+function calc(t){
+  return '<div style="display:inline-block;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 12px;font-size:14px;line-height:1.8;color:#334155">' + t + '</div>';
+}
+
+function stage(inner){
+  return '<div class="aw-scroll"><div style="width:max-content;min-width:100%">' + inner + '</div></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'4 个双面盘片、每面 20000 磁道、每道 500 扇区、每扇区 512 B、7200 RPM、寻道 5 ms。',
+    html: stage(calc('<b>已知</b>：4 个<b>双面</b>盘片 · 每盘面 20000 磁道 · 每磁道 500 扇区 · 每扇区 512 B · 转速 7200 RPM · 平均寻道 5 ms。三问：地址字段 / 平均访问时间 / DMA 请求次数。') +
+      note('问 1：扇区地址的 3 个字段') + fieldRow(0)),
+    ribbon:{k:1, ok:true} },
+  { cls:'step', tag:'问1·三字段', count:1,
+    log:'扇区地址 = 柱面号（磁道号）+ 磁头号（盘面号）+ 扇区号。',
+    html: stage(calc('<b>定位一个扇区</b>需要三个字段：<b>柱面号（磁道号）</b>——选哪个磁道；<b>磁头号（盘面号）</b>——选哪个盘面；<b>扇区号</b>——选道内哪个扇区。') +
+      note('问 1：扇区地址的 3 个字段') + fieldRow(0)),
+    ribbon:{k:2, ok:true} },
+  { cls:'ok', tag:'问1·位数', count:2,
+    log:'柱面号 15 位、磁头号 3 位、扇区号 9 位（全部向上取幂）。',
+    html: stage(calc('<b>最少位数</b>：柱面号要区分 20000 个磁道，<code>2^14 = 16384 不够、2^15 = 32768 够</code> → <b>15 位</b>；盘面数 = 4 × 2 = 8 → <b>3 位</b>；扇区号 500 个，<code>2^8 = 256 不够、2^9 = 512 够</code> → <b>9 位</b>。') +
+      note('问 1：扇区地址的 3 个字段与位数') + fieldRow(3)),
+    ribbon:{k:3, ok:true} },
+  { cls:'step', tag:'问2·转一圈', count:3,
+    log:'7200 RPM → 一转 = 60000/7200 ≈ 8.333 ms。',
+    html: stage(calc('<b>先算转一圈的时间</b>：7200 转/分 → <code>60 × 10^3 ÷ 7200 ≈ 8.333 ms/转</code>。它是后面两项的公共基数。') +
+      note('问 2：访问一个扇区的时间轴') + timeline(1)),
+    ribbon:{k:4, ok:true} },
+  { cls:'step', tag:'问2·平均旋转延迟', count:4,
+    log:'平均旋转延迟 = 半转 ≈ 4.167 ms。',
+    html: stage(calc('<b>平均旋转延迟</b>：目标扇区平均再过半圈才到磁头下 → <code>8.333 ÷ 2 ≈ 4.167 ms</code>。注意是<b>半转</b>，不是一转。') +
+      note('问 2：访问一个扇区的时间轴') + timeline(2)),
+    ribbon:{k:5, ok:true} },
+  { cls:'shift', tag:'问2·传输与合计', count:5,
+    log:'传输 = 8.333/500 ≈ 0.017 ms；合计 5 + 4.167 + 0.017 ≈ 9.18 ms。',
+    html: stage(calc('<b>传输一个扇区</b>：一转扫过 500 个扇区 → <code>8.333 ÷ 500 ≈ 0.017 ms</code>。<br><b>平均访问时间 ≈ 5 + 4.167 + 0.017 ≈ 9.18 ms</b>。') +
+      note('问 2：访问一个扇区的时间轴') + timeline(3, true)),
+    ribbon:{k:6, ok:true} },
+  { cls:'ok', tag:'问3·总线请求次数', count:6,
+    log:'每扇区 512 B ÷ 缓冲区 8 B = 64 次总线请求。',
+    html: stage(calc('<b>DMA 总线请求次数</b>：控制器缓冲区 64 位 = <b>8 B</b>，每次挪用一个存储周期传走 8 B → <code>512 ÷ 8 = 64</code> 次。') +
+      note('问 2：访问一个扇区的时间轴') + timeline(3, true)),
+    ribbon:{k:7, ok:true} },
+  { cls:'step', tag:'问3·优先权', count:7,
+    log:'周期挪用下 CPU 与 DMA 同时请求主存时，DMA 优先，防止磁盘数据丢失。',
+    html: stage(calc('<b>优先权</b>：<b>可以</b>获得总线使用权。周期挪用方式下，CPU 与 DMA 同时请求主存时 <b>DMA 优先</b>——磁盘按转速连续吐数据，若总线被 CPU 占用，缓冲区来不及腾空，后续数据会被覆盖/丢失；CPU 只延迟一个存储周期，影响极小。') +
+      note('问 2：访问一个扇区的时间轴') + timeline(3, true)) },
+  { cls:'done', tag:'结论', count:8, done:true,
+    log:'地址 15+3+9 位；平均访问 ≈ 9.18 ms；64 次总线请求、DMA 优先。',
+    html: stage(calc('<b>答案汇总</b>：①柱面号 15 位、磁头号 3 位、扇区号 9 位；②平均访问时间 ≈ <b>9.18 ms</b>；③每扇区 <b>64 次</b>总线请求，同时请求时 <b>DMA 优先</b>（周期挪用）。') +
+      note('问 2：访问一个扇区的时间轴') + timeline(3, true)) },
+];
+
+AW.init({
+  title: '2022-44 · 磁盘扇区地址、平均访问时间与周期挪用 DMA',
+  subtitle: '4 双面盘片 · 20000 磁道/面 · 500 扇区/道 · 512 B/扇区 · 7200 RPM · 寻道 5 ms',
+  counterLabel: '解答环节',
+  ribbonTitle: '环节（✓ 完成）',
+  intro: '点击「▶ 播放」逐问解答。',
+  snaps: snaps,
+  result: {
+    big: '9.18 ms · 64 次 · DMA 优先',
+    html: '① 地址字段：<b>柱面号 15 位 + 磁头号 3 位 + 扇区号 9 位</b>（全部向上取幂）；② 平均访问时间 = 5 + 4.167 + 0.017 ≈ <b>9.18 ms</b>（旋转延迟取半转）；③ <code>512 B ÷ 8 B = 64</code> 次总线请求；周期挪用下 CPU 与 DMA 同时请求时 <b>DMA 优先</b>，否则磁盘连续数据会丢失。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

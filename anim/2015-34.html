@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-34 编码判别动画：NRZ 与曼彻斯特</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var BITS = [0, 1, 1, 0, 0, 1, 1, 1];
+var BW = 56, PADL = 16, HIGH = 28, LOW = 104, WH = 132;
+var G1 = null, G2 = null, BITBOX = null;
+
+function seg(x1, y1, x2, y2){
+  return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
+}
+
+// 生成一条波形：type='nrz' 编码1；type='man' 编码2（0=中间低→高，1=中间高→低）
+function svgWave(type){
+  var total = PADL * 2 + 8 * BW;
+  var s = '<svg width="' + total + '" height="' + WH + '" viewBox="0 0 ' + total + ' ' + WH + '" style="display:block;max-width:100%">';
+  for (var b = 0; b <= 8; b++){
+    var gx = PADL + b * BW;
+    s += '<line x1="' + gx + '" y1="10" x2="' + gx + '" y2="' + (WH - 4) + '" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 4"/>';
+  }
+  var prev = null;
+  for (var i = 0; i < 8; i++){
+    var x0 = PADL + i * BW, xm = x0 + BW / 2, x1 = x0 + BW;
+    var g = '<g class="wseg">';
+    if (type === 'nrz'){
+      var y = BITS[i] ? HIGH : LOW;
+      if (prev !== null && prev !== y) g += seg(x0, prev, x0, y);
+      g += seg(x0, y, x1, y);
+      prev = y;
+    } else {
+      var a = BITS[i] ? HIGH : LOW;
+      var c = BITS[i] ? LOW : HIGH;
+      if (prev !== null && prev !== a) g += seg(x0, prev, x0, a);
+      g += seg(x0, a, xm, a);
+      g += seg(xm, a, xm, c);
+      g += seg(xm, c, x1, c);
+      prev = c;
+    }
+    g += '</g>';
+    s += g;
+  }
+  return s + '</svg>';
+}
+
+function paint(groups, curIdx, green){
+  for (var k = 0; k < groups.length; k++){
+    var g = groups[k];
+    var col = '#64748b';
+    if (green) col = '#16a34a';
+    else if (curIdx === k) col = '#d97706';
+    g.setAttribute('stroke', col);
+    g.setAttribute('stroke-width', (curIdx === k && !green) ? 4 : 3);
+  }
+}
+
+function bitRow(curIdx){
+  var classes = [], ptr = {};
+  for (var k = 0; k < 8; k++){
+    if (curIdx === null){ classes.push(''); }
+    else if (k === curIdx){ classes.push('hit'); ptr[k + 1] = '第' + (k + 1) + '位'; }
+    else if (k > curIdx){ classes.push('dim'); }
+    else { classes.push(''); }
+  }
+  return AW.cellRow(BITS, classes, ptr);
+}
+
+AW.init({
+  title: '2015-34 编码判别：编码 1 / 编码 2 是什么？',
+  subtitle: '比特流 <code>01100111</code> · 候选：NRZ / NRZI / 曼彻斯特 / 差分曼彻斯特',
+  counterLabel: '已判定比特',
+  ribbonTitle: '比特序号（✓ 已判定）',
+  intro: '点击「▶ 播放」逐位读图，再归纳两种编码的规律。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>比特流</b>（8 位，逐位读图）'));
+    BITBOX = AW.el('div', '');
+    wrap.appendChild(BITBOX);
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>编码 1</b>：每个比特整段保持一个电平'));
+    var w1 = AW.el('div', '');
+    w1.innerHTML = svgWave('nrz');
+    G1 = w1.querySelectorAll('g.wseg');
+    wrap.appendChild(w1);
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>编码 2</b>：每个比特中间出现跳变'));
+    var w2 = AW.el('div', '');
+    w2.innerHTML = svgWave('man');
+    G2 = w2.querySelectorAll('g.wseg');
+    wrap.appendChild(w2);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'题目', log:'比特流 01100111（8 位）。先逐位对照两条波形读图，再归纳各自的规律。', count:0 },
+    { cls:'step', tag:'第 1 位', log:'第 1 位 = 0：编码1 整段取<b>低电平</b>；编码2 前半低、后半高（中间低→高跳变）。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'第 2 位', log:'第 2 位 = 1：编码1 整段取<b>高电平</b>；编码2 前半高、后半低（中间高→低跳变）。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'第 3 位', log:'第 3 位 = 1：编码1 保持高电平；编码2 又是中间高→低跳变，与第 2 位规律一致。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'第 4 位', log:'第 4 位 = 0：编码1 回到低电平；编码2 中间低→高跳变。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'step', tag:'第 5 位', log:'第 5 位 = 0：编码1 <b>保持低电平</b>——连续两个 0，电平没有翻转；编码2 仍是中间低→高。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'step', tag:'第 6 位', log:'第 6 位 = 1：编码1 升为高电平；编码2 中间高→低跳变。', count:6, ribbon:{k:6, ok:true} },
+    { cls:'step', tag:'第 7 位', log:'第 7 位 = 1：编码1 保持高电平；编码2 中间高→低跳变。', count:7, ribbon:{k:7, ok:true} },
+    { cls:'step', tag:'第 8 位', log:'第 8 位 = 1：编码1 保持高电平；编码2 中间高→低跳变。逐位读图完毕。', count:8, ribbon:{k:8, ok:true} },
+    { cls:'ok', tag:'编码1 = NRZ', log:'归纳：编码1 每位整段只有一个电平，0→低、1→高，与 <b>NRZ</b> 一致。若是 NRZI，连续 0（第 4、5 位间）或连续 1（第 2、3 位间）必有一处翻转——图中两处都没翻 → 排除 NRZI。', count:8 },
+    { cls:'ok', tag:'编码2 = 曼彻斯特', log:'归纳：编码2 每个比特<b>中间必有一次跳变</b>（0=中间低→高，1=中间高→低）→ 曼彻斯特。反证差分曼彻斯特：它看比特开始处有无跳变，但同为 1 的第 2 位开始处有跳变、第 3 位开始处无跳变，规律自相矛盾 → 排除。', count:8 },
+    { cls:'done', tag:'完成', log:'结论：编码1 = NRZ，编码2 = 曼彻斯特编码 → 选 <b>A</b>。', count:8, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var curIdx = (i >= 1 && i <= 8) ? i - 1 : null;
+    BITBOX.innerHTML = '';
+    BITBOX.appendChild(bitRow(curIdx));
+    paint(G1, curIdx, i >= 10);
+    paint(G2, curIdx, i >= 10);
+  },
+
+  result: {
+    big: '答案 A：NRZ ＋ 曼彻斯特',
+    html: '<b>编码 1 = NRZ</b>：一位一个电平，0→低、1→高；连续同值比特不翻转，排除 NRZI。<br><b>编码 2 = 曼彻斯特</b>：每位中间必有跳变，0 = 中间低→高、1 = 中间高→低；差分曼彻斯特要求「同值比特开始处规律一致」，图中矛盾，排除。<br>记忆锚点：一位一电平 = NRZ；一位一跳变（中间）= 曼彻斯特。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2018-38：4 条 /21 路由的 CIDR 聚合（找公共前缀 → /19）
+     模板：算法 / 过程演示类（二进制前缀对齐）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var ROUTES = [
+  { ip: '35.230.32.0/21', byte: 32, bits: [0,0,1,0,0,0,0,0] },
+  { ip: '35.230.40.0/21', byte: 40, bits: [0,0,1,0,1,0,0,0] },
+  { ip: '35.230.48.0/21', byte: 48, bits: [0,0,1,1,0,0,0,0] },
+  { ip: '35.230.56.0/21', byte: 56, bits: [0,0,1,1,1,0,0,0] }
+];
+
+AW.init({
+  title: '2018-38：四条 /21 路由聚合成一条',
+  subtitle: '35.230.32/40/48/56.0 各 /21 · 对齐二进制找公共前缀 → CIDR 聚合',
+  counterLabel: '步骤',
+  ribbonTitle: '聚合流程（✓ 完成 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」逐步对齐二进制、找公共前缀。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    this._rows = [];
+    var self = this;
+    ROUTES.forEach(function(r){
+      wrap.appendChild(AW.el('div', 'aw-row-label', '<b>' + r.ip + '</b>　第三字节 = ' + r.byte));
+      var row = AW.cellRow(r.bits, [], null, 1);
+      wrap.appendChild(row);
+      self._rows.push(row);
+    });
+    var note = AW.el('div', '');
+    note.style.cssText = 'margin-top:12px;font-size:14px;line-height:1.85;color:#334155';
+    wrap.appendChild(note);
+    this._note = note;
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var cl = sn.cellCls || [];
+    this._rows.forEach(function(row){
+      Array.prototype.forEach.call(row.children, function(col, i){
+        col.children[1].className = 'aw-box' + (cl[i] ? ' ' + cl[i] : '');
+      });
+    });
+    this._note.innerHTML = sn.note || '';
+  },
+
+  snaps: [
+    { cls:'step', tag:'对齐', count:0, cellCls: [], note: '',
+      log:'四条路由前缀都是 /21，差别全在第三字节 → 把第三字节写成二进制对齐' },
+    { cls:'ok', tag:'/21 网络位', count:1, ribbon:{k:1, ok:true}, cellCls: ['ok','ok','ok','ok','ok','','',''], note: '',
+      log:'/21 = 前 16 位 + 第三字节前 5 位是网络位（每行前 5 位点亮）' },
+    { cls:'shift', tag:'找公共前缀', count:2, ribbon:{k:2, ok:true}, cellCls: ['hit','hit','hit','dim','dim','dim','dim','dim'], note: '',
+      log:'四块前 5 位 = 00100 / 00101 / 00110 / 00111 → 公共前缀只有前 3 位 001' },
+    { cls:'ok', tag:'聚合成 /19', count:3, ribbon:{k:3, ok:true}, cellCls: ['hit','hit','hit','dim','dim','dim','dim','dim'],
+      note: '聚合前缀 = <b>16 + 3 = /19</b>；网络地址第三字节 = 001 00000 = <b>32</b> → <b>35.230.32.0/19</b>，覆盖 32～63，恰好完整包住四条路由',
+      log:'聚合前缀 = 16 + 3 = /19；第三字节 001|00000 = 32 → 35.230.32.0/19' },
+    { cls:'step', tag:'排除干扰项', count:4, ribbon:{k:4, ok:false}, cellCls: ['hit','hit','hit','dim','dim','dim','dim','dim'],
+      note: '<span style="color:#b91c1c;font-weight:700">A 35.230.0.0/19 ✗</span>　第三字节前缀 000，覆盖 0～31，碰不到 32～63<br><span style="color:#b91c1c;font-weight:700">B 35.230.0.0/20 ✗</span>　覆盖 0～15，同样碰不到<br><span style="color:#b91c1c;font-weight:700">D 35.230.32.0/20 ✗</span>　只覆盖 0010xxxx = 32～47，漏掉 48～63 两条路由',
+      log:'A/B 的第三字节前缀是 000（覆盖不到 32～63）；D 的 /20 只盖 32～47，漏 48～63' },
+    { cls:'done', tag:'完成', count:5, done:true, cellCls: ['hit','hit','hit','dim','dim','dim','dim','dim'],
+      note: '<b>答案：C　35.230.32.0/19</b>（公共前缀 001，16 + 3 = 19 位）',
+      log:'答案：35.230.32.0/19，选 C' },
+  ],
+
+  result: {
+    big: '答案 C：35.230.32.0/19',
+    html: '记忆锚点：<b>聚合 = 找公共前缀</b>——第三字节 32/40/48/56 的公共前缀只有 <code>001</code>，16 + 3 = <b>/19</b>；网络地址取公共前缀、其余置 0，得 <code>35.230.32.0/19</code>，恰好覆盖 32～63。<br>干扰项：A/B 前缀 000 覆盖不到 32～63；D 的 /20 只盖一半（32～47）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

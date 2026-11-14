@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-44 sum+=a[i] 指令序列执行动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：指令序列 → 地址计算 → 分页 → 小端读数 → 编码 全过程演示 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'sum += a[i]：指令序列与地址、页、小端读数',
+  subtitle: 'i=5 · R[r1]=0000 1332H · R[r3]=0013 DFF0H · 页 4 KB · 小端',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」按问逐步演示。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    // 指令序列
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>指令序列 S</b>（题干给出）'));
+    this._ins = [];
+    var insTexts = [
+      'slli r4, r2, 2&nbsp;&nbsp;// R[r4] ← R[r2] &lt;&lt; 2',
+      'add&nbsp; r4, r3, r4&nbsp;&nbsp;// R[r4] ← R[r3] + R[r4]',
+      'lw&nbsp;&nbsp; r5, 0(r4)&nbsp;&nbsp;&nbsp;// R[r5] ← M[R[r4] + 0]',
+      'add&nbsp; r1, r1, r5&nbsp;&nbsp;// R[r1] ← R[r1] + R[r5]',
+    ];
+    var insBox = AW.el('div', '');
+    insBox.style.marginBottom = '6px';
+    var self = this;
+    insTexts.forEach(function(t){
+      var line = AW.el('div', 'aw-log-line step', t);
+      line.style.marginBottom = '3px';
+      insBox.appendChild(line);
+      self._ins.push(line);
+    });
+    inner.appendChild(insBox);
+
+    // 内存表
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>存储单元内容</b>（题 44 图，每行 8 字节）'));
+    var memData = [
+      ['0013 DFF0', ['FF','FF','FF','7C','70','FE','FF','FF']],
+      ['0013 DFF8', ['00','00','00','0C','3C','02','01','FF']],
+      ['0013 E000', ['F0','F1','00','00','DC','EC','FF','FF']],
+      ['0013 E008', ['FF','FF','01','02','00','00','01','02']],
+    ];
+    this._rowLab = [];
+    this._memCells = [];
+    memData.forEach(function(rd){
+      var row = AW.el('div', 'aw-cells');
+      row.style.marginBottom = '3px';
+      var lab = AW.el('div', 'aw-idx', rd[0]);
+      lab.style.width = '74px';
+      lab.style.height = '34px';
+      lab.style.textAlign = 'left';
+      lab.style.fontSize = '12px';
+      row.appendChild(lab);
+      var cells = [];
+      rd[1].forEach(function(b){
+        var c = AW.el('div', 'aw-box dim', b);
+        c.style.width = '34px';
+        c.style.height = '34px';
+        c.style.fontSize = '13px';
+        row.appendChild(c);
+        cells.push(c);
+      });
+      inner.appendChild(row);
+      self._rowLab.push(lab);
+      self._memCells.push(cells);
+    });
+    // 列号 0..7
+    var headRow = AW.el('div', 'aw-cells');
+    headRow.style.marginBottom = '2px';
+    var hgap = AW.el('div', '');
+    hgap.style.width = '74px';
+    headRow.appendChild(hgap);
+    for (var c = 0; c < 8; c++){
+      var h = AW.el('div', 'aw-idx', String(c));
+      h.style.width = '34px';
+      h.style.textAlign = 'center';
+      headRow.appendChild(h);
+    }
+    inner.appendChild(headRow);
+
+    this._note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'第（1）问', log:'slli r4,r2,2：R[r4] = R[r2]×4——int 占 4 字节，"下标×4"是字节偏移 → r2 存变量 i。', count:0, note:'r2 ← i（下标乘 4 变字节偏移）' },
+    { cls:'step',  tag:'第（1）问', log:'add r4,r3,r4：R[r4] = R[r3] + i×4——加上首地址才得到元素地址 → r3 存数组 a 的首地址。', count:1, note:'r3 ← 数组 a 的首地址', ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'第（1）问', log:'lw r5,0(r4)：R[r5] = M[R[r4]]，取出 a[i]；add r1,r1,r5：R[r1] = R[r1] + a[i]——累加进 sum → r1 存 sum。', count:2, note:'（1）答：首地址→r3，i→r2，sum→r1', ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'第（2）问', log:'a[i] 的地址 = R[r3] + 5×4 = 0013DFF0H + 14H = 0013E004H。', count:3, note:'（2）① a[i] 地址 = 0013E004H', ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'分页',     log:'页大小 4 KB = 1000H，页号取地址高 20 位：0013DFF0H 在页 0013DH，0013E004H 在页 0013EH。', count:4, note:'首地址在页 0013DH，a[i] 在页 0013EH', ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'跨页',     log:'数组从 0013DFF0H 起连续存放：页 0013DH 只剩 16 B（FF0H~FFFH），恰放 a[0]~a[3]；a[4] 起进入页 0013EH → 数组 a 至少存放在 2 页中。', count:5, note:'⑤ 数组 a 至少跨 2 页（0013DH 与 0013EH）', ribbon:{k:5, ok:true} },
+    { cls:'miss',  tag:'小端读数', log:'小端方式：低位字节在低地址。0013E004H 起 4 字节为 DC EC FF FF（地址从低到高）→ 倒序拼成机器数 FFFFECDCH。', count:6, note:'② a[i] 机器数 = FFFFECDCH', ribbon:{k:6, ok:true} },
+    { cls:'miss',  tag:'判数值',   log:'FFFFECDCH 符号位为 1，是负数：−(100000000H − FFFFECDCH) = −1324H = −4900。', count:7, note:'a[i] 的值 = −4900（补码解释）' },
+    { cls:'ok',    tag:'算 sum',  log:'sum = R[r1] + a[i] = 00001332H + (−4900)：00001332H = 4914 → 4914 − 4900 = 14 → sum 的机器数 0000000EH。', count:8, note:'③ sum = 0000000EH', ribbon:{k:7, ok:true} },
+    { cls:'shift', tag:'第（3）问', log:'拼机器码：0000000|00010(shamt=2)|00010(rs1=r2)|010|00100(rd=r4)|0010011 → 00212213H。', count:9, note:'（3）机器码 = 00212213H', ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',     log:'若 a 改为 short 型（2 字节/元素），字节偏移是 i×2 = i&lt;&lt;1 → slli 的移位量改为 1，汇编形式 slli r4, r2, 1。', count:10, done:true, note:'short 版：slli r4, r2, 1' },
+  ],
+
+  render: function(stage, sn, i){
+    var setCls = function(b, cls){ b.className = 'aw-box' + (cls ? ' ' + cls : ''); };
+    var self = this;
+    // 指令高亮
+    this._ins.forEach(function(line, k){
+      line.className = 'aw-log-line ' + (i >= k && i <= 2 && i === k ? 'ok' : 'step');
+      line.style.background = (i === k ? '#f6fef9' : '');
+    });
+    // 内存格全部熄灭
+    this._memCells.forEach(function(cells){
+      cells.forEach(function(c){ setCls(c, 'dim'); });
+    });
+    // 行标签恢复
+    this._rowLab.forEach(function(lab){ lab.style.color = ''; lab.style.fontWeight = ''; });
+    if (i >= 3){
+      // 0013E004H = 第 3 行(0013E000)第 4 列：点亮地址格提示
+      setCls(self._memCells[2][4], 'shift');
+    }
+    if (i >= 4){
+      // 分页：前两行标签 → 页 0013DH（琥珀），后两行 → 页 0013EH（绿）
+      self._rowLab[0].style.color = '#92400e'; self._rowLab[0].style.fontWeight = '700';
+      self._rowLab[1].style.color = '#92400e'; self._rowLab[1].style.fontWeight = '700';
+      self._rowLab[2].style.color = '#15803d'; self._rowLab[2].style.fontWeight = '700';
+      self._rowLab[3].style.color = '#15803d'; self._rowLab[3].style.fontWeight = '700';
+    }
+    if (i >= 6){
+      // 小端读数：0013E004H 起 4 字节 = 第 3 行列 4~7
+      setCls(self._memCells[2][4], 'miss');
+      setCls(self._memCells[2][5], 'miss');
+      setCls(self._memCells[2][6], 'miss');
+      setCls(self._memCells[2][7], 'miss');
+    }
+    this._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '三问答案全齐',
+    html: '<p>（1）a 的首地址→<b>r3</b>、i→<b>r2</b>、sum→<b>r1</b>；（2）a[i] 地址 <b>0013E004H</b>、机器数 <b>FFFFECDCH</b>（小端倒拼）、sum=<b>0000000EH</b>、页号 <b>0013EH</b>、数组至少 <b>2 页</b>；（3）机器码 <b>00212213H</b>，short 版为 <b>slli r4, r2, 1</b>。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

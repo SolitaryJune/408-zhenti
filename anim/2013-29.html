@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-29 操作系统最终被加载到哪里</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：区分“引导程序”与“系统本体”',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>题目问的是操作系统<b>最终</b>被加载到哪，不是“引导程序存在哪”。要把“固件里的引导代码”和“OS 内核本体”分开看。</p>' },
+  { title: '引导链条：从开机到装内核',
+    cls: 'key',
+    scls: 'step', tag: '引导链',
+    body: '<p>开机 → CPU 执行固化在 <b>ROM</b> 里的 <b>BIOS</b> 程序（硬件自检 + 引导）→ 从磁盘读入引导记录 → 定位操作系统内核并<b>装入内存</b>执行。</p>' },
+  { title: 'A BIOS / B ROM / C EPROM：只放引导程序',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p>BIOS 固化在 ROM（或 EPROM）中，只包含<b>自检与引导代码</b>，作用是把操作系统从磁盘“请进来”。操作系统这个大型可执行程序本体并不存放在 BIOS/ROM/EPROM 里。排除 A、B、C。</p>' },
+  { title: 'D RAM：程序运行必须装入内存',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>引导的最后一步就是把 OS 内核从磁盘装入<b>内存 RAM</b> 中执行——内存才是程序运行的地方，而且 OS 运行需要可读写的空间。<b>正确。</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>ROM/BIOS 存引导代码，操作系统本体最终装入 RAM</b>——别把“引导程序的家”当成“操作系统的家”。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2013-29】操作系统最终被加载到哪里',
+  subtitle: '考点：操作系统引导流程 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（RAM）',
+    html: 'BIOS/ROM/EPROM 里固化的只是<b>自检与引导程序</b>；开机后操作系统内核被从磁盘装入 <b>RAM</b> 中运行。记忆点：<b>引导程序的家在 ROM，操作系统的家在 RAM</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

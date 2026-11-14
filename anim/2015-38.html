@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-38 路由表最长前缀匹配动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var ROWS = [
+  { net: '169.96.40.0/23', hop: '176.1.1.1', ifc: 'S1', plen: 23 },
+  { net: '169.96.40.0/25', hop: '176.2.2.2', ifc: 'S2', plen: 25 },
+  { net: '169.96.40.0/27', hop: '176.3.3.3', ifc: 'E3', plen: 27 },
+  { net: '0.0.0.0/0',      hop: '176.4.4.4', ifc: 'E4', plen: 0 },
+];
+var ROWTR = null, FXT = null;
+
+var FXS = [
+  '目的地址 <b>169.96.40.5</b> = 10101001 01100000 00101000 00000101，开始逐条匹配。',
+  '/23 覆盖第 3 字节前 7 位：40 = 0010100|0 → 网络块 169.96.40.0 ~ 169.96.41.255，目标在其中 → <b>匹配 ✓</b>（先记下，继续找更长前缀）',
+  '/25 覆盖第 4 字节最高 1 位：5 = 0|0000101 → 网络块 169.96.40.0 ~ 169.96.40.127，目标在其中 → <b>匹配 ✓</b>（比 /23 更长）',
+  '/27 覆盖第 4 字节前 3 位：5 = 000|00101 → 网络块 169.96.40.0 ~ 169.96.40.7，5 在其中 → <b>匹配 ✓</b>（目前最长）',
+  '0.0.0.0/0：前缀长度 0，任何地址都匹配 → <b>匹配 ✓</b>（兜底，但前缀最短）',
+  '四条都匹配 → 取前缀<b>最长</b>者：27 &gt; 25 &gt; 23 &gt; 0 → 选 <b>169.96.40.0/27</b> → 接口 <b>E3</b>',
+  '结论：从接口 E3 转发（下一跳 176.3.3.3），选 <b>C</b>',
+];
+
+AW.init({
+  title: '2015-38 路由表查找：最长前缀匹配',
+  subtitle: '目的地址 <code>169.96.40.5</code> · 四条候选路由逐条核对',
+  counterLabel: '已查条目',
+  ribbonTitle: '路由条目（✓ 匹配）',
+  intro: '点击「▶ 播放」逐条匹配路由表，再看最长前缀规则如何裁决。',
+
+  build: function(stage){
+    if (!document.getElementById('rt38-style')){
+      var st = document.createElement('style');
+      st.id = 'rt38-style';
+      st.textContent = '.rt38{border-collapse:collapse;font-size:13.5px;font-family:Menlo,Consolas,monospace}' +
+        '.rt38 th{background:#f1f5f9;color:#475569;font-weight:600}' +
+        '.rt38 th,.rt38 td{border:1px solid #e2e8f0;padding:7px 14px;text-align:center}' +
+        '.rt38 tr.rt-row{transition:background .25s}' +
+        '.rt38 tr.rt-row.match{background:#f6fef9}' +
+        '.rt38 tr.rt-row.cur{background:#fef3c7}' +
+        '.rt38 tr.rt-row.pick{background:#dcfce7;font-weight:700}';
+      document.head.appendChild(st);
+    }
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var tb = AW.el('div', '');
+    var h = '<table class="rt38"><tr><th>目的网络</th><th>下一跳</th><th>接口</th><th>前缀长度</th></tr>';
+    ROWS.forEach(function(r){
+      h += '<tr class="rt-row"><td>' + r.net + '</td><td>' + r.hop + '</td><td>' + r.ifc + '</td><td>/' + r.plen + '</td></tr>';
+    });
+    h += '</table>';
+    tb.innerHTML = h;
+    ROWTR = tb.querySelectorAll('tr.rt-row');
+    wrap.appendChild(tb);
+    FXT = AW.el('div', '');
+    FXT.style.cssText = 'margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:13.5px;color:#334155;line-height:1.8';
+    wrap.appendChild(FXT);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题', log:'收到目的地址 <b>169.96.40.5</b> 的分组：先与路由表逐条匹配，再取前缀最长者。', count:0 },
+    { cls:'step', tag:'查 /23', log:'<b>169.96.40.0/23</b>：第 3 字节 40 = 00101000，前 7 位与网络位一致，覆盖 169.96.40.0 ~ 169.96.41.255 → 匹配 ✓（先记下，继续找更长前缀）。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'查 /25', log:'<b>169.96.40.0/25</b>：第 4 字节 5 = 00000101，最高位 0 与网络位一致，覆盖 0 ~ 127 → 匹配 ✓（比 /23 更长）。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'查 /27', log:'<b>169.96.40.0/27</b>：第 4 字节前 3 位 000 与网络位一致，覆盖 0 ~ 7，5 在其中 → 匹配 ✓（目前最长前缀）。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'查默认路由', log:'<b>0.0.0.0/0</b>：前缀长度 0，任何地址都匹配 → 匹配 ✓（永远兜底）。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'最长前缀匹配', log:'四条都匹配 → 取前缀<b>最长</b>者：27 &gt; 25 &gt; 23 &gt; 0 → 选 <b>169.96.40.0/27</b> → 接口 <b>E3</b>。', count:4 },
+    { cls:'done', tag:'完成', log:'结论：分组从接口 <b>E3</b> 转发（下一跳 176.3.3.3），选 <b>C</b>。', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for (var k = 0; k < ROWTR.length; k++){
+      var cls = 'rt-row';
+      if (i >= 1 && i <= 4){
+        if (k < i - 1) cls += ' match';
+        else if (k === i - 1) cls += ' cur match';
+      } else if (i >= 5){
+        cls += ' match';
+        if (k === 2) cls += ' pick';
+      }
+      ROWTR[k].className = cls;
+    }
+    FXT.innerHTML = FXS[i] || '';
+  },
+
+  result: {
+    big: '答案 C：接口 E3',
+    html: '四条路由都匹配 169.96.40.5，按<b>最长前缀匹配</b>规则取 <code>169.96.40.0/27</code>（27 &gt; 25 &gt; 23 &gt; 0），从 <b>E3</b> 转发。<br>记忆锚点：路由查找只认<b>前缀最长</b>的条目，与表中书写顺序无关；默认路由 0.0.0.0/0 永远匹配但永远排最后。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-37 NAT 对 UDP 首部字段的修改动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类：NAT 改什么 → UDP 四字段逐个判 → 结论
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：NAT 在转发时改了什么',
+    cls: 'key',
+    body: '<p>内网主机 H = <code>192.168.1.5/24</code>（私有地址）向 Internet 发 UDP 报文段。NAT 路由器转发时把 IP 首部的<b>源 IP</b> 换成公网地址，并按映射表改<b>源端口号</b>；凡依赖这些字段的内容必须联动重算。逐个判 UDP 首部四字段。</p>' },
+  { title: 'I. 源端口号 —— 改',
+    cls: 'good',
+    body: '<p>内网主机私自选的端口在公网可能撞车，NAT 按（内网 IP:端口）→（公网 IP:新端口）映射，把 UDP 首部的源端口号替换为映射端口。</p>',
+    ribbon: {k:1, ok:true} },
+  { title: 'II. 目的端口号 —— 不改',
+    cls: '',
+    body: '<p>目的端口标识服务器一侧的应用进程，方向是「目的地」，NAT 不需要也不应该动它。</p>',
+    ribbon: {k:2, ok:false} },
+  { title: 'III. 总长度 —— 不改',
+    cls: '',
+    body: '<p>UDP 总长度 = 首部 8 B + 数据长度，由报文本身决定；NAT 只替换字段值，不增删任何字节 → 长度不变。</p>',
+    ribbon: {k:3, ok:false} },
+  { title: 'IV. 校验和 —— 改',
+    cls: 'good',
+    body: '<p>UDP 校验和把<b>伪首部（含源 IP）</b>连同 UDP 首部（含源端口）、数据一起取材计算；源 IP 与源端口都被 NAT 改了 → 路由器必须重算校验和，否则对端校验失败直接丢弃。</p>',
+    ribbon: {k:4, ok:true} },
+  { title: '汇总：改 I、IV',
+    cls: 'key',
+    body: '<p>四个字段里被 NAT 修改的是 <b>I 源端口号</b> 与 <b>IV 校验和</b>；II、III 原样保留。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>（仅 I、IV）。记忆锚点：NAT 动「源」——源 IP、源端口；凡把源信息纳入计算的字段（校验和）都要跟着重算。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'NAT 会修改 UDP 首部的哪些字段？',
+  subtitle: '内网 H = 192.168.1.5/24 出公网 · 字段 I~IV 逐个判（✓ 修改 / ✗ 不修改）',
+  counterLabel: '推理步',
+  ribbonTitle: '四个字段（✓ 被修改 / ✗ 未修改）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：仅 I、IV',
+    html: '<p>NAT 改 IP 首部源 IP + UDP 源端口，并因伪首部含源 IP 而<b>重算 UDP 校验和</b>；目的端口与总长度不动。干扰项来源：只想到改端口漏了校验和（A 项），或以为目的端口/总长度也要改（C、D 项）。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

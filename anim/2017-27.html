@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-27 · 时间片轮转调度辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    log: '题眼：选「错误」的叙述，考点是时间片轮转的状态转换',
+    body: '<p>题眼：选<b>错误</b>的叙述。考点是时间片轮转中的<b>进程状态转换</b>与<b>时间片设定</b>。关键事件：「当前进程的时间片用完」。</p>' },
+  { title: 'A：切换开销与时间片长短',
+    cls: 'good',
+    log: 'A 叙述正确：时间片越短切换越多、开销越大',
+    ribbon: { k:1, ok:true },
+    body: '<p>时间片越短 → 单个进程更频繁被剥夺 CPU → <b>切换次数增多</b>；每次切换要保存/恢复现场，开销累积增大。叙述<b>正确</b>，不选。</p>' },
+  { title: 'B：时间片用完，状态变什么？',
+    cls: 'bad',
+    log: 'B 叙述错误：时间片用完应转就绪态，不是阻塞态（答案）',
+    ribbon: { k:2, ok:false },
+    body: '<p>时间片用完，进程并没有在等待任何事件，只是让出 CPU——应转为<b>就绪态</b>，重新排队等调度。选项说变<b>阻塞态</b>，<b>错误</b>，正是答案。</p>' },
+  { title: 'C：时钟中断做什么',
+    cls: 'good',
+    log: 'C 叙述正确：时钟中断里修改剩余时间片',
+    ribbon: { k:3, ok:true },
+    body: '<p>每次时钟中断，中断处理程序把当前进程<b>剩余时间片减 1</b>（修改剩余时间），减到 0 才触发切换。叙述<b>正确</b>，不选。</p>' },
+  { title: 'D：时间片多大合适',
+    cls: 'good',
+    log: 'D 叙述正确：时间片大小权衡响应时间、开销、进程数',
+    ribbon: { k:4, ok:true },
+    body: '<p>时间片大小的设定要权衡<b>响应时间</b>、<b>系统开销（切换次数）</b>、<b>就绪进程数</b>等因素。叙述<b>正确</b>，不选。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '答案 B：时间片用完 = 被剥夺 CPU → 就绪态',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>时间片用完 = 被剥夺 CPU = 执行态 → 就绪态</b>；只有"主动等待事件（如 I/O）"才是执行态 → 阻塞态。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'bad' ? 'miss' : s.cls === 'good' ? 'ok' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last
+  };
+});
+
+AW.init({
+  title: '2017-27 · 时间片轮转调度：找出错误叙述',
+  subtitle: '考点：进程状态转换 · 选项逐项判定',
+  ribbonTitle: '叙述判定（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>时间片用完 → 就绪态</b>（万事俱备，只差 CPU）；<b>等 I/O 等事件 → 阻塞态</b>。A/C/D 都是时间片机制的准确描述，只有 B 混淆了"让出 CPU"与"等待事件"。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

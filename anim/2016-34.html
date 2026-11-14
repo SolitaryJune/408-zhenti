@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-34 动画 · 香农公式求链路实际速率</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/计算推理类：dB 换算 → 香农极限 → 乘 50%
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：三个条件',
+    cls: 'key',
+    body: '<p>题干给 R2—R3 链路：<b>频率带宽 W = 8kHz</b>、<b>信噪比 30dB</b>、<b>实际速率 = 理论最大速率 × 50%</b>。有噪声信道的极限速率用<b>香农公式</b>：C = W·log2(1 + S/N)。</p>' },
+  { title: '第一步：分贝换算成倍数',
+    cls: 'step',
+    body: '<p>dB 与倍数是对数关系：<code>30 = 10·lg(S/N)</code>，所以 <code>S/N = 10^(30/10) = 1000</code>。<b>注意是 1000 倍，不是 30 倍</b>。</p>' },
+  { title: '第二步：代入香农公式',
+    cls: 'step',
+    body: '<p><code>C = 8000 × log2(1 + 1000) = 8000 × log2(1001)</code>。因为 <code>2^10 = 1024</code> 与 1001 很接近，取 <code>log2(1001) ≈ 10</code>（精确约 9.97）。</p>' },
+  { title: '第三步：理论最大速率',
+    cls: 'good',
+    body: '<p><code>C ≈ 8000 × 10 = 80000 bit/s = 80kbps</code>。这就是该链路的理论极限。</p>' },
+  { title: '第四步：乘 50% 得实际速率',
+    cls: 'good',
+    body: '<p>实际速率 ≈ <code>80kbps × 50% = 40kbps</code>。</p>' },
+  { title: '对照四个选项',
+    cls: 'step',
+    body: '<p>A（8kbps）：把带宽当速率 ✗；B（20kbps）：换算或计算错误 ✗；<b>C（40kbps）✓</b>；D（80kbps）：算出极限却忘了乘 50% ✗。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（40kbps）</b>。记忆锚点：<code>dB = 10·lg(S/N)</code>，<code>C = W·log2(1+S/N)</code>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'R2—R3 链路的实际数据传输速率约是多少？',
+  subtitle: '考点：通信基础 · 香农公式 <code>C = W·log2(1+S/N)</code> · 信噪比 dB 换算（2016-34）',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 正确 / ✗ 易错点）',
+  intro: '点击「▶ 播放」逐步完成换算与计算。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（40kbps）',
+    html: '计算链：<b>30dB → S/N = 1000 → C = 8000 × log2(1001) ≈ 80kbps → 实际 = 80 × 50% ≈ 40kbps</b>。干扰项 D 是忘乘 50% 的香农极限，A 是把带宽 8kHz 直接当成速率。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

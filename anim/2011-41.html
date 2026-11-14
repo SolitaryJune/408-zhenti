@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-41 上三角压缩还原 + 关键路径 · 求解动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var RAW = ['4','6','∞','∞','∞','5','∞','∞','∞','4','3','∞','∞','3','3'];
+// 每行 [起点下标, 个数, 对应的 A[r][c] 列起点]
+var SEG = [
+  { r:0, lo:0, n:5, cols:'A[0][1..5]', got:['0→1 = 4','0→2 = 6'] },
+  { r:1, lo:5, n:4, cols:'A[1][2..5]', got:['1→2 = 5'] },
+  { r:2, lo:9, n:3, cols:'A[2][3..5]', got:['2→3 = 4','2→4 = 3'] },
+  { r:3, lo:12, n:2, cols:'A[3][4..5]', got:['3→5 = 3'] },
+  { r:4, lo:14, n:1, cols:'A[4][5]',   got:['4→5 = 3'] },
+];
+
+function arrRow(lo, hi){
+  var cls = RAW.map(function(_, i){
+    if (lo == null) return 'dim';
+    if (i < lo) return 'ok';
+    if (i <= hi) return 'hit';
+    return 'dim';
+  });
+  return '<div class="aw-scroll">' + AW.cellRow(RAW, cls, null, 0) + '</div>';
+}
+
+function segTable(upto){
+  var h = '<table style="border-collapse:collapse;font-size:12.5px;margin-top:6px"><tr>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">矩阵行 r</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">元素个数 5−r</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">一维数组下标</th></tr>';
+  SEG.forEach(function(s, i){
+    var bg = i <= upto ? '#eff6ff' : '#fff';
+    h += '<tr style="background:' + bg + '"><td style="border:1px solid #cbd5e1;padding:3px 8px">第 ' + s.r + ' 行</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px">' + (5 - s.r) + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px">' + s.lo + ' ~ ' + (s.lo + s.n - 1) + '</td></tr>';
+  });
+  return h + '</table>';
+}
+
+function edgeChips(n, hl){
+  var edges = ['0→1(4)','0→2(6)','1→2(5)','2→3(4)','2→4(3)','3→5(3)','4→5(3)'];
+  var crit = [true,false,true,true,false,true,false];
+  var h = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">';
+  edges.forEach(function(e, i){
+    if (i >= n){ return; }
+    var style = 'border-radius:8px;padding:3px 9px;font-size:13px;font-weight:700;border:1.5px solid ';
+    if (hl && i === hl){ style += '#d97706;background:#fef3c7;color:#92400e'; }
+    else if (crit[i]){ style += '#16a34a;background:#f6fef9;color:#15803d'; }
+    else { style += '#94a3b8;background:#f8fafc;color:#475569'; }
+    h += '<span style="' + style + '">' + e + '</span>';
+  });
+  return h + '</div>';
+}
+
+function matrixTable(){
+  var M = [
+    ['0','4','6','∞','∞','∞'],
+    ['∞','0','5','∞','∞','∞'],
+    ['∞','∞','0','4','3','∞'],
+    ['∞','∞','∞','0','∞','3'],
+    ['∞','∞','∞','∞','0','3'],
+    ['∞','∞','∞','∞','∞','0'],
+  ];
+  var h = '<table style="border-collapse:collapse;font-size:13px"><tr>' +
+          '<td style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9"><b>A</b></td>';
+  for (var c = 0; c < 6; c++) h += '<td style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9"><b>' + c + '</b></td>';
+  h += '</tr>';
+  for (var r = 0; r < 6; r++){
+    h += '<tr><td style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9"><b>' + r + '</b></td>';
+    for (var c2 = 0; c2 < 6; c2++){
+      var v = M[r][c2];
+      var extra = (v === '∞' ? 'color:#cbd5e1' : (v === '0' ? 'color:#94a3b8' : 'color:#15803d;font-weight:800'));
+      h += '<td style="border:1px solid #cbd5e1;padding:3px 8px;' + extra + '">' + v + '</td>';
+    }
+    h += '</tr>';
+  }
+  return h + '</table>';
+}
+
+// 有向带权图（SVG 自绘）
+function graphSvg(mode){
+  var nodes = [[60,95],[165,40],[270,95],[375,40],[375,150],[480,95]];
+  var edges = [[0,1,4],[0,2,6],[1,2,5],[2,3,4],[2,4,3],[3,5,3],[4,5,3]];
+  var crit = [true,false,true,true,false,true,false];
+  function shorten(x1,y1,x2,y2,d){
+    var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy);
+    return [x1+dx/len*d, y1+dy/len*d, x2-dx/len*d, y2-dy/len*d];
+  }
+  var h = '<svg width="540" height="195" style="max-width:100%">';
+  h += '<defs><marker id="arw" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">' +
+       '<path d="M0,0 L8,4 L0,8 Z" fill="context-stroke"/></marker></defs>';
+  edges.forEach(function(e, i){
+    var s = shorten(nodes[e[0]][0], nodes[e[0]][1], nodes[e[1]][0], nodes[e[1]][1], 18);
+    var isCrit = crit[i];
+    var col = (mode === 'critical') ? (isCrit ? '#16a34a' : '#cbd5e1') : '#64748b';
+    var w = (mode === 'critical' && isCrit) ? 3 : 1.8;
+    h += '<line x1="' + s[0] + '" y1="' + s[1] + '" x2="' + s[2] + '" y2="' + s[3] + '" stroke="' + col +
+         '" stroke-width="' + w + '" marker-end="url(#arw)"/>';
+    var mx = (s[0]+s[2])/2, my = (s[1]+s[3])/2;
+    var off = (e[0] === 0 && e[1] === 2) || (e[0] === 2 && e[1] === 4) ? 12 : -10;
+    var lc = (mode === 'critical') ? (isCrit ? '#15803d' : '#cbd5e1') : '#334155';
+    h += '<text x="' + mx + '" y="' + (my + off) + '" font-size="13" font-weight="700" fill="' + lc +
+         '" text-anchor="middle">' + e[2] + '</text>';
+  });
+  nodes.forEach(function(p, i){
+    var fill = (mode === 'critical') ? '#f6fef9' : '#fff';
+    var stroke = (mode === 'critical') ? '#16a34a' : '#475569';
+    h += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="17" fill="' + fill + '" stroke="' + stroke +
+         '" stroke-width="2"/><text x="' + p[0] + '" y="' + (p[1] + 5) + '" font-size="14" font-weight="800" fill="#0f172a" text-anchor="middle">' + i + '</text>';
+  });
+  h += '</svg>';
+  return h;
+}
+
+function veVlTable(ve, vl, hi){
+  function rowOf(label, arr){
+    var h = '<tr><td style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9"><b>' + label + '</b></td>';
+    for (var i = 0; i < 6; i++){
+      var v = arr[i];
+      var extra = '';
+      if (v == null){ v = '?'; extra = 'color:#cbd5e1'; }
+      else if (hi && hi.row === label && hi.k === i){ extra = 'background:#fef9c3;font-weight:900'; }
+      h += '<td style="border:1px solid #cbd5e1;padding:3px 8px;' + extra + '">' + v + '</td>';
+    }
+    return h + '</tr>';
+  }
+  var h = '<table style="border-collapse:collapse;font-size:13px"><tr>' +
+          '<td style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">顶点</td>';
+  for (var c = 0; c < 6; c++) h += '<td style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9"><b>' + c + '</b></td>';
+  h += '</tr>';
+  if (ve) h += rowOf('ve（最早）', ve);
+  if (vl) h += rowOf('vl（最迟）', vl);
+  return h + '</table>';
+}
+
+function actTable(hl){
+  var acts = [
+    ['0→1', 4, 0, 0, true],
+    ['0→2', 6, 0, 3, false],
+    ['1→2', 5, 4, 4, true],
+    ['2→3', 4, 9, 9, true],
+    ['2→4', 3, 9, 10, false],
+    ['3→5', 3, 13, 13, true],
+    ['4→5', 3, 12, 13, false],
+  ];
+  var h = '<table style="border-collapse:collapse;font-size:12.5px"><tr>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">活动</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">权</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">e</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">l</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">l−e</th>' +
+          '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">关键?</th></tr>';
+  acts.forEach(function(a, i){
+    var bg = (hl != null && i === hl) ? '#fef9c3' : (a[4] ? '#f6fef9' : '#fff');
+    h += '<tr style="background:' + bg + '">' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px">' + a[0] + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px">' + a[1] + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px">' + a[2] + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px">' + a[3] + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px;font-weight:800">' + (a[3] - a[2]) + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px;color:' + (a[4] ? '#15803d' : '#94a3b8') + '">' + (a[4] ? '✓' : '否') + '</td></tr>';
+  });
+  return h + '</table>';
+}
+
+var snaps = [
+  { cls:'step', tag:'题面', count:0,
+    html:'<div class="aw-row-label">压缩存储的一维数组（上三角，行优先，15 个元素）</div>' +
+         arrRow(null, -1) +
+         '<div style="font-size:13.5px;color:#64748b;margin-top:6px">6 个顶点（0~5）的有向带权图 G，A[r][c] 表示弧 r→c 的权值；下三角与对角线不存（对角线权 0）。</div>',
+    log:'题面：上三角邻接矩阵按行优先压成一维数组，共 15 个元素。' },
+
+  { cls:'shift', tag:'分段规律', count:1,
+    html:'<div style="font-size:14.5px;line-height:2;color:#334155">' +
+         '上三角按<b>行优先</b>压缩：第 r 行只存 <code>A[r][r+1..5]</code>，共 <b>5−r</b> 个元素。</div>' +
+         segTable(4) +
+         '<div style="font-size:13px;color:#64748b;margin-top:6px">上一行的终点 + 1 就是下一行的起点，逐段切开即可还原。</div>',
+    log:'分段规律：第 r 行 5−r 个元素，行 0~4 的下标段为 0~4、5~8、9~11、12~13、14。' },
+
+  { cls:'ok', tag:'还原第 0 行', count:2,
+    html: arrRow(0, 4) +
+          '<div style="font-size:14px;line-height:1.9;color:#334155;margin-top:8px">' +
+          '下标 0~4 = 第 0 行的 <code>A[0][1..5]</code> = <b>4, 6, ∞, ∞, ∞</b> ⇒ 得到弧 <b>0→1(4)、0→2(6)</b>。</div>' +
+          edgeChips(2, null),
+    log:'第 0 行：4,6,∞,∞,∞ → 弧 0→1(4)、0→2(6)。' },
+
+  { cls:'ok', tag:'还原第 1、2 行', count:3,
+    html: arrRow(0, 11) +
+          '<div style="font-size:14px;line-height:1.9;color:#334155;margin-top:8px">' +
+          '下标 5~8 = 第 1 行 = <b>5, ∞, ∞, ∞</b> ⇒ 弧 <b>1→2(5)</b>；<br>' +
+          '下标 9~11 = 第 2 行 = <b>4, 3, ∞</b> ⇒ 弧 <b>2→3(4)、2→4(3)</b>。</div>' +
+          edgeChips(5, null),
+    log:'第 1 行：5 → 1→2(5)；第 2 行：4,3 → 2→3(4)、2→4(3)。' },
+
+  { cls:'ok', tag:'还原第 3、4 行', count:4,
+    html: arrRow(0, 14) +
+          '<div style="font-size:14px;line-height:1.9;color:#334155;margin-top:8px">' +
+          '下标 12~13 = 第 3 行 = <b>∞, 3</b> ⇒ 弧 <b>3→5(3)</b>；<br>' +
+          '下标 14 = 第 4 行 = <b>3</b> ⇒ 弧 <b>4→5(3)</b>。共 7 条弧。</div>' +
+          edgeChips(7, null),
+    log:'第 3 行：∞,3 → 3→5(3)；第 4 行：3 → 4→5(3)。全部 7 条弧到手。' },
+
+  { cls:'ok', tag:'第 2 问：矩阵与图 G', count:5,
+    html:'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">' +
+         '<div>' + matrixTable() + '</div>' +
+         '<div><div class="aw-row-label" style="margin-top:0">有向带权图 G（箭头指向大编号）</div>' +
+         graphSvg('plain') + '</div></div>',
+    log:'第 1、2 问答案：邻接矩阵如左；图 G 如右，0 为源点、5 为汇点。' },
+
+  { cls:'step', tag:'ve：顺拓扑取最大', count:6,
+    html: veVlTable([0,4,9,13,12,16], null, {row:'ve（最早）', k:5}) +
+          '<div style="font-size:13.5px;line-height:2;color:#334155;margin-top:8px">' +
+          've(0)=0；ve(1)=0+4=<b>4</b>；ve(2)=max(0+6, 4+5)=max(6,9)=<b>9</b>（等所有入弧）；<br>' +
+          've(3)=9+4=<b>13</b>；ve(4)=9+3=<b>12</b>；ve(5)=max(13+3, 12+3)=<b>16</b> ⇒ 工期 16。</div>',
+    log:'ve 顺拓扑推：ve(2)=max(6,9)=9，ve(5)=max(16,15)=16。' },
+
+  { cls:'step', tag:'vl：逆拓扑取最小', count:7,
+    html: veVlTable([0,4,9,13,12,16], [0,4,9,13,13,16], {row:'vl（最迟）', k:4}) +
+          '<div style="font-size:13.5px;line-height:2;color:#334155;margin-top:8px">' +
+          'vl(5)=16；vl(4)=16−3=<b>13</b>；vl(3)=16−3=<b>13</b>；<br>' +
+          'vl(2)=min(13−4, 13−3)=min(9,10)=<b>9</b>；vl(1)=9−5=<b>4</b>；vl(0)=min(4−4, 9−6)=min(0,3)=<b>0</b>。</div>',
+    log:'vl 逆拓扑推：vl(2)=min(9,10)=9，vl(0)=0。' },
+
+  { cls:'ok', tag:'余量 0 → 关键活动', count:8,
+    html: actTable(null) +
+          '<div style="font-size:13.5px;color:#64748b;margin-top:8px">e = ve(i)，l = vl(j) − 权值；l−e = 0 的活动没有一点 slack，必须天天赶工 —— 即<b>关键活动</b>（绿）。</div>',
+    log:'余量 l−e=0 的活动：0→1、1→2、2→3、3→5，其余余量 3/1/1。' },
+
+  { cls:'done', tag:'结论', count:9, done:true,
+    html:'<div><div class="aw-row-label" style="margin-top:0">关键路径（绿粗线）</div>' +
+         graphSvg('critical') + '</div>' +
+         '<div style="font-size:15px;line-height:2;color:#334155;margin-top:6px">' +
+         '关键路径：<b style="color:#15803d;font-size:17px">0 → 1 → 2 → 3 → 5</b>，<br>' +
+         '长度 = 4 + 5 + 4 + 3 = <b style="color:#dc2626;font-size:18px">16</b>。（0→1→2→4→5 长 15，非关键）</div>',
+    log:'结论：关键路径 0→1→2→3→5，长度 16。' },
+];
+
+AW.init({
+  title: '2011-41 · 上三角压缩还原 + 关键路径',
+  subtitle: '一维数组 <code>[4,6,∞,∞,∞,5,∞,∞,∞,4,3,∞,∞,3,3]</code> · 还原 → 建图 → AOE 关键路径',
+  counterLabel: '推进步数',
+  intro: '点击「▶ 播放」：先解压还原矩阵与图，再求关键路径。',
+  snaps: snaps,
+  result: {
+    big: '关键路径 0→1→2→3→5，长度 16',
+    html: '第 1 问：按「第 r 行 5−r 个元素」分段还原出上三角矩阵；第 2 问：7 条弧 0→1(4)、0→2(6)、1→2(5)、2→3(4)、2→4(3)、3→5(3)、4→5(3)；第 3 问：ve 顺拓扑取最大（ve(2)=9、ve(5)=16），vl 逆拓扑取最小（vl(2)=9），余量 l−e=0 的关键活动连成 <b>0→1→2→3→5</b>，长度 4+5+4+3 = <b>16</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

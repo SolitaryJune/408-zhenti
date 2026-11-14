@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-17 DRAM 行列结构与刷新开销</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个约束，两层筛选',
+    cls: 'key',
+    body: '<p>2K×1 位 DRAM，r × c = 2048。约束一：<b>地址引脚数最少</b>；约束二：<b>刷新开销尽量小</b>。先把所有行列拆分摆上桌：2048×1、64×32、32×64、1×2048。</p>' },
+  { title: '约束一：地址引脚 = max(log2 r, log2 c)',
+    cls: 'step',
+    body: '<p>DRAM 把地址拆成行、列两部分<b>分时复用</b>同一组引脚，引脚数取决于较大的一维。log2 r + log2 c = 11 恒成立（2^11 = 2048），要 max 最小，行列必须尽量接近。</p>' },
+  { title: '逐个算引脚数',
+    cls: 'step',
+    body: '<p><code>2048×1</code> → max(11, 0) = <b>11 根</b>；<code>64×32</code> → max(6, 5) = <b>6 根</b>；<code>32×64</code> → max(5, 6) = <b>6 根</b>；<code>1×2048</code> → max(0, 11) = <b>11 根</b>。最少 6 根，B、C 并列进入下一轮。</p>' },
+  { title: '约束二：刷新按行，行数越少越好',
+    cls: 'good',
+    body: '<p>DRAM 按<b>行</b>刷新，刷新一遍全部单元的开销正比于行数 r：<code>64×32</code> 要刷 64 行，<code>32×64</code> 只刷 32 行 → 选行数少的 <b>r = 32、c = 64</b>。</p>' },
+  { title: '排除干扰项',
+    cls: 'bad',
+    body: '<p>A（2048、1）和 D（1、2048）：要 11 根地址引脚，第一轮就出局；B（64、32）：引脚同样省，但刷新行数是 C 的两倍，输在约束二。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>：r = 32、c = 64。记忆锚点：先"行列接近"压引脚，再"行数少"省刷新。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'DRAM 行列拆分：引脚数与刷新开销的权衡',
+  subtitle: '2K×1 位 · r × c = 2048 · 引脚 = max(log2 r, log2 c) · 刷新按行',
+  counterLabel: '推理步',
+  ribbonTitle: '推理进度（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步推演。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（32、64）',
+    html: '地址引脚数 = <b>max(log2 r, log2 c)</b>，行列越接近引脚越少；刷新开销正比于<b>行数 r</b>。两筛之后只剩 <b>r = 32、c = 64</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-25 虚拟存储器的实现基础与容量限制</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-25（选择题）关于虚拟存储器的叙述中，正确的是
+     形态：概念辨析 · 逐步揭示推理链
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个考点',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>四个选项对应两个考点：<b>实现基础</b>（连续分配还是非连续分配）和<b>容量限制</b>（受什么约束）。先把虚拟存储的本质摆出来：基于局部性原理，程序分块「部分装入、按需调页/调段、不够再换出」。</p>' },
+  { title: '实现基础：只能是非连续分配（B 对，A 错）',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>「部分装入」要求作业离散地分散存放，所以虚拟存储只能建立在<b>离散（非连续）分配</b>上——请求分页、请求分段都以分页/分段这类非连续分配为基础。<b>连续分配</b>（单一连续分配、固定分区）要求作业一次性装入连续区域，无法支持部分装入。故 <b>A 错、B 对</b>。</p>' },
+  { title: 'C 只受外存限制？错',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p>虚拟存储的「驻留部分」必须装在<b>内存</b>里，换出的页面放在<b>外存</b>。若只看外存容量，内存装不下驻留部分照样不行——外存不是唯一限制，C 错。</p>' },
+  { title: 'D 只受内存限制？错',
+    cls: 'bad',
+    scls: 'step',
+    body: '<p>同理，被换出的页面要存放在<b>外存</b>，外存太小也装不下——内存也不是唯一限制，D 错。</p>' },
+  { title: '容量公式：两因素共同决定',
+    cls: 'key',
+    scls: 'shift',
+    body: '<p>标准结论：虚拟存储容量 = min（<b>机器地址结构位数</b>决定的寻址空间，<b>内存容量 + 外存交换区容量</b>之和）。任何「只受单一因素限制」的说法都与公式矛盾——C、D 双双排除。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>虚拟存储 = 局部性原理 + 离散分配（非连续）；容量由「内存+外存之和」与机器地址位数共同决定</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2012-25】虚拟存储器的正确叙述',
+  subtitle: '考点：虚拟存储实现基础与容量限制 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>虚拟存储只能基于非连续分配技术</b>（请求分页/请求分段）；连续分配要求一次性装入，不支持虚拟性。容量 = min（地址位数，内存+外存之和）——「只受外存/内存限制」的单一说法都是错的。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

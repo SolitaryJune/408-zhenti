@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-41 动画 · TCP 慢启动、窗口与连接释放全程推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：TCP 大题四问——握手 → 慢启动逐 RTT 推演 →
+     窗口归零与序号/速率 → 连接释放时序
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var tblEl = null;
+var topEl = null;
+
+/* 慢启动逐 RTT 推演表的 7 行（key=第(2)问答案行，zero=rwnd 归零行） */
+var ROWS = [
+  { t:'t=0',        ev:'发送段1（seq=101）',  cwnd:'1KB',  rwnd:'20KB', act:'发送窗口 = min(1,20) = 1' },
+  { t:'1RTT',       ev:'收到第 1 个确认',     cwnd:'2KB',  rwnd:'19KB', act:'发送第 2、3 段（累计 3）' },
+  { t:'2RTT',       ev:'收到第 2、3 个确认',  cwnd:'4KB',  rwnd:'17KB', act:'发送第 4～7 段（累计 7）' },
+  { t:'3RTT',       ev:'收到第 4～7 个确认',  cwnd:'8KB',  rwnd:'13KB', act:'发送第 8～15 段（累计 15）' },
+  { t:'4RTT·第8个确认', ev:'收到第 8 个确认', cwnd:'9KB',  rwnd:'12KB', act:'发送窗口 = min(9,12) = 9 ← 第(2)问', cls:'key' },
+  { t:'4RTT·批量到齐',  ev:'收到第 9～15 个确认', cwnd:'16KB', rwnd:'5KB', act:'发送窗口 = min(16,5) = 5 → 发送第 16～20 段（累计 20）' },
+  { t:'5RTT',       ev:'收到第 16～20 个确认', cwnd:'21KB', rwnd:'0',   act:'发送窗口 = min(21,0) = 0', cls:'zero' }
+];
+
+/* 每步顶部显示的时序/结论卡片 */
+function chip(text, kind){
+  var c = { k:['#fef3c7','#d97706','#92400e'], g:['#dcfce7','#16a34a','#14532d'],
+            b:['#fee2e2','#dc2626','#b91c1c'], p:['#f8fafc','#cbd5e1','#334155'] }[kind || 'p'];
+  return '<div style="background:' + c[0] + ';border:1px solid ' + c[1] + ';color:' + c[2] +
+         ';border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;">' + text + '</div>';
+}
+
+var TOP = [
+  chip('H3 → SYN，seq = 100（第一次握手；SYN 段消耗一个序号）', 'k'),
+  chip('H3 → SYN seq=100', 'p') + chip('S → SYN = 1，ACK = 1，确认序号 = 100 + 1 = 101（第二次握手）→ 第(1)问', 'g'),
+  chip('cwnd = 1KB', 'p') + chip('ssthresh = 32KB', 'p') + chip('rwnd = 20KB（只存不取）', 'p') + chip('发送窗口 = min(cwnd, rwnd)', 'k'),
+  chip('慢启动：每收到 1 个确认 cwnd + 1 个 MSS；缓存只存不取 → rwnd = 20 − 已收到段数', 'p'),
+  chip('慢启动：每收到 1 个确认 cwnd + 1 个 MSS；缓存只存不取 → rwnd = 20 − 已收到段数', 'p'),
+  chip('慢启动：每收到 1 个确认 cwnd + 1 个 MSS；缓存只存不取 → rwnd = 20 − 已收到段数', 'p'),
+  chip('慢启动：每收到 1 个确认 cwnd + 1 个 MSS；缓存只存不取 → rwnd = 20 − 已收到段数', 'p'),
+  chip('第 8 个确认到达：rwnd = 20 − 8 = 12KB；cwnd = 1 + 8 = 9KB；发送窗口 = min(9, 12) = 9KB → 第(2)问答案', 'g'),
+  chip('第 8～15 个确认全部到齐：cwnd = 16KB、rwnd = 5KB → 发送窗口 = min(16, 5) = 5KB，只能再发 5 段', 'p'),
+  chip('rwnd = 20 − 20 = 0 → 发送窗口 = min(21, 0) = 0（cwnd 仍在慢启动增长，卡在 rwnd 上）', 'b'),
+  chip('已发满 20 段；SYN 占 1 个序号，数据从 101 编号 → 下一个待发送序号 = 101 + 20 × 1024 = 20581 → 第(3)问', 'g'),
+  chip('从 t=0（发第 1 段）到 t = 5RTT = 1s（窗口归零）共发出 20KB → 平均速率 = 20KB ÷ 1s = 20KB/s = 163.84kbps → 第(3)问', 'g'),
+  chip('t：H3 → FIN（请求断开；S 只收不发数据）', 'k'),
+  chip('t + 100ms：S 收到 FIN → 立即回 ACK 并捎带自己的 FIN（无数据可发，ACK 与 FIN 可合并为一段）', 'p'),
+  chip('t + 200ms：H3 收到 S 的 FIN → 回 ACK；t + 300ms：S 收到该 ACK → 释放连接。最短时间 = 3 × RTT/2 = 300ms → 第(4)问', 'g'),
+  chip('第(1)问：SYN=1、ACK=1、确认序号 101', 'g') + chip('第(2)问：12KB / 9KB / 9KB', 'g') +
+  chip('第(3)问：20581 · 20KB/s', 'g') + chip('第(4)问：300ms', 'g')
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.cssText = 'width:740px;';
+
+  topEl = AW.el('div', '');
+  topEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px;min-height:38px;';
+  inner.appendChild(topEl);
+
+  var lbl = AW.el('div', 'aw-row-label', '<b>慢启动逐 RTT 推演表</b>（MSS = 1KB，RTT = 200ms，接收缓存 20KB 只存不取）');
+  inner.appendChild(lbl);
+
+  tblEl = AW.el('div', '');
+  inner.appendChild(tblEl);
+
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function td(text, opt){
+  var pad = 'padding:6px 9px;border:1px solid #e2e8f0;font-size:12.5px;color:#334155;';
+  if(opt && opt.bold){ pad += 'font-weight:800;color:#0f172a;'; }
+  return '<td style="' + pad + '">' + text + '</td>';
+}
+
+function render(stage, sn, i){
+  topEl.innerHTML = TOP[i] || '';
+
+  if(i < 3){ tblEl.innerHTML = '<div style="font-size:12.5px;color:#94a3b8;padding:6px 2px;">（连接建立后开始逐 RTT 推演…）</div>'; return; }
+
+  var rows = ROWS.slice(0, Math.min(i - 2, ROWS.length));
+  var h = '<div style="overflow-x:auto;"><table style="border-collapse:collapse;width:100%;">';
+  h += '<tr>' +
+    '<th style="padding:6px 9px;border:1px solid #e2e8f0;background:#f1f5f9;font-size:12px;color:#334155;text-align:left;">时刻</th>' +
+    '<th style="padding:6px 9px;border:1px solid #e2e8f0;background:#f1f5f9;font-size:12px;color:#334155;text-align:left;">触发事件</th>' +
+    '<th style="padding:6px 9px;border:1px solid #e2e8f0;background:#f1f5f9;font-size:12px;color:#334155;text-align:left;">拥塞窗口 cwnd</th>' +
+    '<th style="padding:6px 9px;border:1px solid #e2e8f0;background:#f1f5f9;font-size:12px;color:#334155;text-align:left;">接收窗口 rwnd</th>' +
+    '<th style="padding:6px 9px;border:1px solid #e2e8f0;background:#f1f5f9;font-size:12px;color:#334155;text-align:left;">动作 / 发送窗口</th>' +
+    '</tr>';
+  rows.forEach(function(r){
+    var bg = '#ffffff';
+    if(r.cls === 'key'){ bg = '#fefce8'; }
+    if(r.cls === 'zero'){ bg = '#fff7f7'; }
+    h += '<tr style="background:' + bg + ';">' + td(r.t) + td(r.ev) + td(r.cwnd, {bold:true}) +
+         td(r.rwnd, {bold:true}) + td(r.act) + '</tr>';
+  });
+  h += '</table></div>';
+  tblEl.innerHTML = h;
+}
+
+var snaps = [
+  { cls:'step', tag:'第(1)问', count:0,
+    log:'H3 发出第一次握手 SYN 段：初始序号 seq = 100。注意 SYN 段要消耗一个序号。' },
+  { cls:'ok', tag:'握手完成', count:0, ribbon:{ k:1, ok:true },
+    log:'S 回第二次握手：SYN = 1、ACK = 1、确认序号 = 100 + 1 = 101 → 第(1)问答案。' },
+  { cls:'step', tag:'准备', count:0,
+    log:'慢启动起点：cwnd = 1KB，ssthresh = 32KB，rwnd = 20KB（缓存只存不取）；发送窗口 = min(cwnd, rwnd)。' },
+  { cls:'step', tag:'t=0', count:1,
+    log:'发送第 1 个数据段（seq = 101）；cwnd = 1KB 只允许发 1 段。' },
+  { cls:'ok', tag:'1RTT', count:3,
+    log:'收到第 1 个确认 → cwnd = 2KB，rwnd = 19KB → 发送第 2、3 段（累计 3 段）。' },
+  { cls:'ok', tag:'2RTT', count:7,
+    log:'收到第 2、3 个确认 → cwnd = 4KB，rwnd = 17KB → 发送第 4～7 段（累计 7 段）。' },
+  { cls:'ok', tag:'3RTT', count:15,
+    log:'收到第 4～7 个确认 → cwnd = 8KB，rwnd = 13KB → 发送第 8～15 段（累计 15 段）。' },
+  { cls:'key', tag:'第(2)问', count:15, ribbon:{ k:2, ok:true },
+    log:'4RTT 批次中第 8 个确认到达：rwnd = 20 − 8 = 12KB，cwnd = 1 + 8 = 9KB，发送窗口 = min(9, 12) = 9KB → 第(2)问答案。' },
+  { cls:'step', tag:'4RTT', count:20,
+    log:'第 8～15 个确认全部到齐：cwnd = 16KB，rwnd = 5KB → 发送窗口 = min(16, 5) = 5KB，只能再发第 16～20 段（累计 20 段）。' },
+  { cls:'miss', tag:'5RTT', count:20,
+    log:'收到第 16～20 个确认 → cwnd = 21KB，rwnd = 20 − 20 = 0 → 发送窗口 = min(21, 0) = 0。' },
+  { cls:'ok', tag:'第(3)问·序号', count:20,
+    log:'发送窗口 = 0 时已发满 20 段；SYN 占一个序号，数据从 101 编号 → 下一个待发送序号 = 101 + 20 × 1024 = 20581。' },
+  { cls:'ok', tag:'第(3)问·速率', count:20, ribbon:{ k:3, ok:true },
+    log:'从发送第 1 段（t=0）到窗口归零（t = 5RTT = 1s）共发出 20KB → 平均速率 = 20KB/s = 163.84kbps → 第(3)问答案。' },
+  { cls:'step', tag:'第(4)问', count:20,
+    log:'t 时刻 H3 发 FIN 请求断开连接（S 只收不发数据）。' },
+  { cls:'step', tag:'+100ms', count:20,
+    log:'S 收到 FIN，立即回 ACK 并捎带自己的 FIN（无数据可发，ACK 与 FIN 可合并为一段）。' },
+  { cls:'ok', tag:'+300ms', count:20, ribbon:{ k:4, ok:true },
+    log:'t + 200ms H3 收到 S 的 FIN 回 ACK；t + 300ms S 收到该 ACK → 释放连接。最短时间 = 3 × RTT/2 = 300ms → 第(4)问答案。' },
+  { cls:'done', tag:'完成', count:20, done:true,
+    log:'四问答案：(1) SYN=1、ACK=1、确认序号 101；(2) 接收窗口 12KB、拥塞窗口 9KB、发送窗口 9KB；(3) 序号 20581、平均速率 20KB/s（163.84kbps）；(4) 最短 300ms。' },
+];
+
+AW.init({
+  title: 'TCP 慢启动、窗口协商与连接释放全程推演',
+  subtitle: '考点：TCP 连接管理 · 慢启动 · 发送窗口 = min(cwnd, rwnd)（2016-41 · 9 分大题）',
+  counterLabel: '已发送段数',
+  ribbonTitle: '四个问题（✓ 已解决）',
+  intro: '点击「▶ 播放」按问推演：(1) 握手 → (2) 第 8 个确认 → (3) 序号与速率 → (4) 释放时序。',
+  snaps: snaps,
+  build: build,
+  render: render,
+  result: {
+    big: '(1)101 · (2)12/9/9KB · (3)20581 · 20KB/s · (4)300ms',
+    html: '四个关键点：<b>(1)</b> SYN 消耗一个序号 → 确认序号 101；<b>(2)</b> 每收 1 个确认 cwnd + 1KB、缓存只存不取 → 第 8 个确认时 rwnd=12KB、cwnd=9KB、发送窗口=9KB；<b>(3)</b> 5RTT=1s 时 rwnd 归零，下一段序号 = 101 + 20×1024 = 20581，平均速率 20KB/s；<b>(4)</b> FIN→ACK+FIN→ACK 三个单程 = 300ms。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

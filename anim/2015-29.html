@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-29 索引结点：1234 与 307400 处需访问的磁盘块数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .pathbox{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; min-height:46px;
+    border:2px solid #cbd5e1; border-radius:10px; background:#fff; color:#0f172a;
+    font-weight:700; font-size:13.5px; transition:all .2s; vertical-align:middle; }
+  .pathbox.dim{ opacity:.4; }
+  .pathbox.ok{ background:#dcfce7; border-color:#16a34a; color:#14532d; }
+  .pathbox.hit{ background:#16a34a; border-color:#16a34a; color:#fff; }
+  .arrow{ font-size:18px; color:#94a3b8; margin:0 8px; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var S = { rows: {} };
+
+function buildRow(label, names, key){
+  var lab = AW.el('div', 'aw-row-label', label);
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px';
+  var boxes = [];
+  names.forEach(function(nm, idx){
+    if (idx > 0){
+      var ar = AW.el('div', 'arrow', '→');
+      row.appendChild(ar);
+    }
+    var b = AW.el('div', 'pathbox dim', nm);
+    row.appendChild(b);
+    boxes.push(b);
+  });
+  S.rows[key] = { lab: lab, boxes: boxes };
+  return [lab, row];
+}
+
+function setRow(key, states){
+  S.rows[key].boxes.forEach(function(b, i){
+    var st = states[i] === undefined ? 'dim' : states[i];
+    b.className = 'pathbox' + (st ? ' ' + st : '');
+  });
+}
+
+var NOTES = [
+  '参数：磁盘块 1KB，指针 4B → 一个索引块装 1024 ÷ 4 = <b>256 个指针</b>。索引结点已在内存，查结点不访盘。',
+  '覆盖范围：直接 = 逻辑块 <b>0–9</b>；一级 = 256 块 → <b>10–265</b>；二级 = 256×256 = 65536 块 → <b>266–65801</b>。',
+  '偏移 1234：<code>1234 ÷ 1024 = 1 余 210</code> → 逻辑块号 <b>1</b>（0 起）。',
+  '块 1 &lt; 10 → 直接块；直接地址就在内存的索引结点里 → 只读数据块，访盘 <b>1</b> 块。',
+  '偏移 307400：<code>307400 ÷ 1024 = 300 余 200</code> → 逻辑块号 <b>300</b>。',
+  '300 ≥ 266 → 落在二级索引区（区内第 300 − 266 = <b>34</b> 块）。',
+  '第 1 次访盘：读二级指针指向的<b>第一层索引块</b>。',
+  '第 2 次访盘：按第一层第 34 项读<b>第二层索引块</b>。',
+  '第 3 次访盘：按第二层相应项读<b>数据块</b> → 307400 共访盘 <b>3</b> 块。',
+  '结论：1234 → 1 块；307400 → 3 块 → 需访问磁盘块数 <b>(1, 3)</b>，选 B。'
+];
+
+AW.init({
+  title: '【2015-29】读偏移 1234 和 307400 处各需访问几个磁盘块',
+  subtitle: '块大小 <code>1KB</code> · 指针 <code>4B</code> · 直接指针 <code>10 个</code> + 一级 / 二级各 <code>1 个</code> · 索引结点已在内存',
+  counterLabel: '累计访盘',
+  ribbonTitle: '关键节点（✓ 已完成）',
+  intro: '点击「▶ 播放」：先定参数与区间，再分别定位两个偏移并数访盘次数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>索引结点结构</b>（绿色 = 本次读取经过的路径）'));
+    buildRow('直接索引（逻辑块 0–9）', ['直接地址（在结点内，不访盘）', '数据块'], 'direct').forEach(function(e){ inner.appendChild(e); });
+    buildRow('一级索引（逻辑块 10–265）', ['一级索引块', '数据块'], 'l1').forEach(function(e){ inner.appendChild(e); });
+    buildRow('二级索引（逻辑块 266 起）', ['第一层索引块', '第二层索引块', '数据块'], 'l2').forEach(function(e){ inner.appendChild(e); });
+    S.note = AW.el('div', 'aw-row-label', '');
+    S.note.style.cssText = 'margin-top:12px;font-size:14px;color:#334155;line-height:1.7';
+    inner.appendChild(S.note);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    setRow('direct', ['dim','dim']);
+    setRow('l1', ['dim','dim']);
+    setRow('l2', ['dim','dim','dim']);
+    if (i === 3){ setRow('direct', ['ok','hit']); }
+    else if (i === 6){ setRow('l2', ['hit','','']); }
+    else if (i === 7){ setRow('l2', ['ok','hit','']); }
+    else if (i === 8){ setRow('l2', ['ok','ok','hit']); }
+    else if (i === 9){ setRow('direct', ['ok','hit']); setRow('l2', ['ok','ok','hit']); }
+    S.note.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'算参数', log:'块 1KB、指针 4B → 每个索引块装 256 个指针', count:0 },
+    { cls:'step',  tag:'定区间', log:'覆盖范围：直接 0–9、一级 10–265、二级 266–65801', count:0 },
+    { cls:'step',  tag:'定位 1234', log:'1234 ÷ 1024 = 1 余 210 → 逻辑块号 1（0 起）', count:0 },
+    { cls:'ok',    tag:'直接块', log:'块 1 在直接区 → 只读数据块，访盘 1 块 ✓', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'定位 307400', log:'307400 ÷ 1024 = 300 余 200 → 逻辑块号 300', count:1 },
+    { cls:'shift', tag:'二级区', log:'300 ≥ 266 → 二级索引区，区内第 34 块', count:1 },
+    { cls:'shift', tag:'访盘 1', log:'读第一层索引块（第 1 次访盘）', count:2 },
+    { cls:'shift', tag:'访盘 2', log:'读第二层索引块（第 2 次访盘）', count:3 },
+    { cls:'ok',    tag:'访盘 3', log:'读数据块（第 3 次访盘）→ 307400 共 3 块 ✓', count:4, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成', log:'结论：需访问的磁盘块个数 = 1、3 → 选 B', count:4, done:true },
+  ],
+
+  result: {
+    big: '(1, 3) → 选 B',
+    html: '每块 256 个指针（1KB ÷ 4B）。偏移 <code>1234</code> → 逻辑块 1 → 直接块，只读数据块 <b>1</b> 块；偏移 <code>307400</code> → 逻辑块 300 ≥ 266 → 二级索引区：读<code>第一层索引块 + 第二层索引块 + 数据块</code>共 <b>3</b> 块。记忆锚点：结点在内存时，直接 / 一级 / 二级分别访盘 <b>1 / 2 / 3</b> 次。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

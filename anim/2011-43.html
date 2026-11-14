@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-43 8 位机的无符号/带符号加减运算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：装入 x/y → 补码重解释 m/n → 无符号 z1/z2（模 256）→ 带符号 k1/k2（判溢出）→ 同一加法器结论 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+// 8 个寄存器：[寄存器, 变量, 8 位内容(分组), 16进制, 按无符号解释, 按补码解释]
+var REG = [
+  ['R1', 'x',           '1000 0110', '86H', '134', '−122'],
+  ['R2', 'y',           '1111 0110', 'F6H', '246', '−10'],
+  ['R3', 'm = x',       '1000 0110', '86H', '134', '−122'],
+  ['R4', 'n = y',       '1111 0110', 'F6H', '246', '−10'],
+  ['R5', 'z1 = x − y',  '1001 0000', '90H', '144', '−112'],
+  ['R6', 'z2 = x + y',  '0111 1100', '7CH', '124', '124'],
+  ['R7', 'k1 = m − n',  '1001 0000', '90H', '144', '−112'],
+  ['R8', 'k2 = m + n',  '0111 1100', '7CH', '124', '124'],
+];
+
+var FORMULAS = [
+  '题目：unsigned x=134, y=246；带符号整数用补码表示；寄存器 8 位',
+  'x = 134 = 1000 0110B = 86H → R1（无符号 134；若按补码则是 −122）',
+  'y = 246 = 1111 0110B = F6H → R2（无符号 246；按补码是 −10）',
+  'int m=x, n=y：位模式原样搬入 R3、R4，只换一种解释 → m = −122，n = −10',
+  'z1 = x − y：无符号减法 = 模 256 加法。134 − 246 = −112 ≡ +144 (mod 256) = 1001 0000B = 90H（借位 CF=1）→ R5',
+  'z2 = x + y：134 + 246 = 380，380 − 256 = 124 = 0111 1100B = 7CH（进位 CF=1，自动丢弃）→ R6',
+  'k1 = m − n = −122 −(−10)：机器算 m + [−n]补 = 1000 0110 + 0000 1010 = 1001 0000（90H）→ 补码 −112，与真值 −112 一致，不溢出（操作数 −122 与 +10 符号相异）→ R7',
+  'k2 = m + n = −122 + (−10)：1000 0110 + 1111 0110 = 1 0111 1100 → 7CH，补码解释成 +124，而真值是 −132 → 溢出！（负 + 负得"正"，且最高位进位 1 ≠ 次高位进位 0）→ R8',
+  '问(3)：能。无符号与补码加减都可化归为同一个模 2⁸ 加法器（减法 = 加补数），区别只在结果的解释方式与溢出判断口径（无符号看 CF，带符号看符号/双进位）',
+  '问(4)：判溢出——两操作数符号相同而结果符号不同（或次高位进位 ≠ 最高位进位）即溢出。本题带符号运算中只有 k2 = m + n 溢出；k1 = m − n 不溢出',
+  '全部完成：(1) R1=86H、R5=90H、R6=7CH；(2) m=−122、k1=−112；(3) 能用同一加法器；(4) k2 = m + n 溢出',
+];
+
+var SNAPS = FORMULAS.map(function(f, i){
+  return {
+    filled: Math.min(i, 8),           // 已算出的寄存器行数（第 0 步为 0）
+    cur: (i >= 1 && i <= 8) ? i - 1 : -1,
+    bad: (i === 8),                    // k2 溢出，红色
+    cls: i === 0 ? 'shift' : (i === 8 ? 'miss' : (i >= 9 ? 'done' : 'ok')),
+    tag: i === 0 ? '审题' : (i <= 4 ? '装入 R' + i : (i <= 8 ? '算 ' + ['z1','z2','k1','k2'][i - 5] : (i === 9 ? '问(3)' : '完成'))),
+    log: f,
+    count: i,
+    ribbon: (i >= 5 && i <= 8) ? { k: i - 4, ok: i !== 8 } : undefined,
+    done: i === FORMULAS.length - 1,
+  };
+});
+
+function mkTable(stage){
+  var t = AW.el('table', '');
+  t.style.cssText = 'border-collapse:separate;border-spacing:0;width:100%;font-size:13px;';
+  var thead = AW.el('thead', '');
+  var htr = AW.el('tr', '');
+  ['寄存器', '变量', '8 位内容', '十六进制', '按无符号', '按补码'].forEach(function(c, ci){
+    var th = AW.el('th', '', c);
+    th.style.cssText = 'background:#f1f5f9;color:#334155;padding:8px 6px;border-bottom:2px solid #cbd5e1;font-size:12px;' + (ci >= 2 ? 'font-family:Menlo,monospace;' : '');
+    htr.appendChild(th);
+  });
+  thead.appendChild(htr); t.appendChild(thead);
+  var tbody = AW.el('tbody', '');
+  refs.rows = []; refs.grid = [];
+  REG.forEach(function(row){
+    var tr = AW.el('tr', '');
+    var cells = [];
+    row.forEach(function(_, ci){
+      var td = AW.el('td', '');
+      td.style.cssText = 'padding:8px 6px;text-align:center;border-bottom:1px solid #eef2f7;font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:700;transition:all .2s;';
+      tr.appendChild(td); cells.push(td);
+    });
+    refs.rows.push(tr); refs.grid.push(cells); tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+  var box = AW.el('div', 'aw-scroll');
+  box.appendChild(t);
+  stage.appendChild(box);
+}
+
+AW.init({
+  title: '2011·43 8 位机：无符号与带符号加减全推演',
+  subtitle: '8 位字长 · <code>unsigned x=134, y=246</code> · 补码解释带符号 · z1/z2 无符号、k1/k2 带符号',
+  counterLabel: '推演步数',
+  ribbonTitle: '四个运算结果（✓ 正常 / ✗ 溢出）',
+  intro: '点击「▶ 播放」：装 x/y → 补码重解释 → 无符号模 256 → 带符号判溢出。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    mkTable(stage);
+    refs.formula = AW.el('div', '');
+    refs.formula.style.cssText = 'margin-top:12px;background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#334155;line-height:1.75;';
+    stage.appendChild(refs.formula);
+    var hint = AW.el('div', 'aw-hint', '同一套 8 位位模式：按无符号解释与按补码解释值不同——这就是 z1/k1 相同位模式却属两种运算的原因');
+    stage.appendChild(hint);
+  },
+
+  render: function(stage, sn){
+    for(var i = 0; i < 8; i++){
+      var filled = i < sn.filled;
+      var hot = (i === sn.cur);
+      refs.rows[i].style.background = hot ? (sn.bad ? '#fff8f8' : '#f0fdf4') : 'transparent';
+      refs.grid[i].forEach(function(td, ci){
+        td.textContent = filled ? REG[i][ci] : '·';
+        td.style.opacity = filled ? '1' : '.35';
+        if(!filled){ td.style.color = '#94a3b8'; td.style.fontWeight = '400'; return; }
+        td.style.color = '#334155';
+        td.style.fontWeight = ci >= 2 ? '700' : '600';
+        if(ci === 0){ td.style.color = hot ? (sn.bad ? '#b91c1c' : '#15803d') : '#0f172a'; }
+        if(ci === 5 && i === 7){ td.style.color = '#b91c1c'; }
+      });
+    }
+    refs.formula.innerHTML = FORMULAS[Math.min(sn.count, FORMULAS.length - 1)];
+  },
+
+  result: {
+    big: 'R1=86H · R5=90H · R6=7CH ｜ m=−122 · k1=−112',
+    html: '问(1) R1=86H、R5=90H、R6=7CH；问(2) m=−122、k1=−112；问(3) <b>能</b>——四种运算都化归补码加法（减法加补数），共用同一加法器；问(4) 判溢出：同号相加得异号或双进位不同即溢出，本题只有 <b>k2 = m + n</b> 溢出（7CH ≠ 真值 −132）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

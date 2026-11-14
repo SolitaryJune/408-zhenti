@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-44 TLB 2 路组相联与 LRU 替换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var SEQ = ['10','12','16','7','26','4','12','20'];
+var GNUM = [2,4,0,7,2,4,4,4];
+
+function paramBar(){
+  var bar = AW.el('div', '');
+  bar.style.cssText = 'display:flex;gap:8px;width:max-content;margin-bottom:8px;flex-wrap:wrap;';
+  [['虚拟地址 30 位', '#dbeafe', '#1d4ed8'], ['页 4KB（偏移 12 位）', '#dcfce7', '#14532d'],
+   ['TLB 8 组 × 2 路', '#fef3c7', '#92400e'], ['LRU 替换', '#ede9fe', '#6d28d9']].forEach(function(p){
+    var d = AW.el('div', '', p[0]);
+    d.style.cssText = 'font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 12px;background:' + p[1] + ';color:' + p[2] + ';';
+    bar.appendChild(d);
+  });
+  return bar;
+}
+
+// 地址切分条：kind = 'v1' | 'v2' | 'v4'
+function splitBar(kind){
+  function seg(w, txt, bg, colr){
+    var d = AW.el('div', '', txt);
+    d.style.cssText = 'width:' + w + 'px;height:30px;display:flex;align-items:center;justify-content:center;' +
+      'font-size:12px;font-weight:700;border-radius:8px;border:2px solid ' + colr + ';background:' + bg + ';';
+    return d;
+  }
+  var bar = AW.el('div', '');
+  bar.style.cssText = 'display:flex;gap:4px;width:max-content;margin:2px 0 6px;align-items:center;';
+  if (kind === 'v1'){
+    bar.appendChild(seg(216, '虚页号 18 位（b29～b12）', '#dbeafe', '#2563eb'));
+    bar.appendChild(seg(144, '页内地址 12 位（b11～b0）', '#dcfce7', '#16a34a'));
+  } else if (kind === 'v2'){
+    bar.appendChild(seg(180, 'TLB 标记 15 位（b29～b15）', '#fef3c7', '#d97706'));
+    bar.appendChild(seg(36, '组号 3 位', '#fde68a', '#92400e'));
+    bar.appendChild(seg(144, '页内地址 12 位', '#dcfce7', '#16a34a'));
+  } else {
+    bar.appendChild(seg(204, 'TLB 标记 17 位（b31～b15）', '#fef3c7', '#d97706'));
+    bar.appendChild(seg(36, '组号 3 位', '#fde68a', '#92400e'));
+    bar.appendChild(seg(144, '页内地址 12 位', '#dcfce7', '#16a34a'));
+  }
+  return bar;
+}
+
+function seqRow(accIdx, hitIdx){
+  var cls = [], i;
+  for (i = 0; i < 8; i++){
+    if (i < accIdx - 1) cls.push('ok');
+    else if (accIdx > 0 && i === accIdx - 1) cls.push(i === hitIdx ? 'hit' : 'miss');
+    else cls.push('');
+  }
+  return AW.cellRow(SEQ, cls, null, 1);
+}
+
+function groupNumRow(accIdx){
+  var cls = [], i;
+  for (i = 0; i < 8; i++){
+    if (i < accIdx - 1) cls.push('ok');
+    else if (accIdx > 0 && i === accIdx - 1) cls.push('hit');
+    else cls.push('');
+  }
+  return AW.cellRow([String(GNUM[0]),String(GNUM[1]),String(GNUM[2]),String(GNUM[3]),
+                     String(GNUM[4]),String(GNUM[5]),String(GNUM[6]),String(GNUM[7])], cls, null, 1);
+}
+
+// TLB 组表：8 组 × 2 路（路 0 = LRU 位，路 1 = 新行位）
+function groupTable(groups, curGroup, newVPN){
+  var row = AW.el('div', 'aw-cells');
+  for (var g = 0; g < 8; g++){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '52px';
+    var hd = AW.el('div', '', '组' + g);
+    hd.style.cssText = 'height:20px;width:44px;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;' +
+      'color:' + (g === curGroup ? '#92400e' : '#64748b') + ';' +
+      (g === curGroup ? 'background:#fef3c7;border:1px solid #d97706;border-bottom:none;border-radius:6px 6px 0 0;' : '');
+    col.appendChild(hd);
+    for (var w = 0; w < 2; w++){
+      var vpn = groups[g] ? groups[g][w] : null;
+      var box;
+      if (vpn == null){
+        box = AW.el('div', 'aw-box dim', '—');
+        box.style.cssText = 'width:44px;height:36px;font-size:13px;';
+      } else {
+        var isNew = (g === curGroup && vpn === newVPN);
+        box = AW.el('div', 'aw-box ' + (isNew ? 'hit' : 'ok'), String(vpn));
+        box.style.cssText = 'width:44px;height:36px;font-size:13px;' + (isNew ? 'animation:aw-pop .45s ease;' : '');
+      }
+      col.appendChild(box);
+    }
+    var tag = AW.el('div', 'aw-idx', '');
+    if (g === curGroup) tag.innerHTML = '目标组';
+    col.appendChild(tag);
+    row.appendChild(col);
+  }
+  return row;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '560px';
+  inner.appendChild(paramBar());
+  if (sn.split) inner.appendChild(splitBar(sn.split));
+  if (sn.showSeq){
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>访问序列</b>（虚页号依次为）'));
+    inner.appendChild(seqRow(sn.accIdx, sn.hitIdx));
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>组号 = 虚页号 mod 8</b>（虚页号低 3 位）'));
+    inner.appendChild(groupNumRow(sn.accIdx));
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>TLB</b>（8 组 × 2 路，每组上格 = LRU 位，虚页号随命中上提）'));
+    inner.appendChild(groupTable(sn.groups, sn.curGroup, sn.newVPN));
+  }
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+var EMPTY = [[],[],[],[],[],[],[],[]];
+function state(groups){
+  return groups.map(function(g){ return g.slice(); });
+}
+
+AW.init({
+  title: '2021-44 · TLB 2 路组相联的地址划分与替换',
+  subtitle: '虚拟地址 30 位 · 页 4KB · TLB 8 组 × 2 路 · LRU · 序列 10,12,16,7,26,4,12,20',
+  counterLabel: '已访问',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 未命中）',
+  intro: '点击「▶ 播放」：先切地址，再逐次访问找被替换的表项。',
+  render: render,
+  snaps: [
+    { cls: 'step', tag: '开始', count: 0, accIdx: 0, groups: EMPTY,
+      log: '机器 M：主存地址 24 位、按字节编址；虚拟地址 30 位，页大小 4KB；TLB 为 2 路组相联、共 8 组、LRU 替换。共四问。',
+      note: 'TLB 容量 = 8 组 × 2 路 = 16 个表项。' },
+    { cls: 'step', tag: '问 1·切地址', count: 0, split: 'v1', accIdx: 0, groups: EMPTY,
+      log: '问 1：页 4KB = 2 的 12 次方 → 页内地址 12 位；虚拟地址 30 位 → 虚页号 = 30 − 12 = 18 位。',
+      note: '虚页号 = <b>高 18 位</b>（位 29～12）；页内地址 = <b>低 12 位</b>（位 11～0）。' },
+    { cls: 'shift', tag: '问 2·切虚页号', count: 0, split: 'v2', accIdx: 0, groups: EMPTY,
+      log: '问 2：TLB 共 8 组 → 组号 3 位，取虚页号低 3 位（位 14～12）；剩下高位作标记 → 标记 15 位（位 29～15）。',
+      note: 'TLB 标记 = <b>15 位</b>，TLB 组号 = <b>3 位</b>（虚页号低位）。' },
+    { cls: 'step', tag: '问 3·开场', count: 0, showSeq: true, accIdx: 0, groups: EMPTY,
+      log: '问 3：依次访问虚页号 10,12,16,7,26,4,12,20。组号 = 虚页号 mod 8：2,4,0,7,2,4,4,4。TLB 初始为空，逐次模拟。',
+      note: '组号只看低 3 位；每组 2 路，满了才替换。' },
+    { cls: 'miss', tag: '未命中', count: 1, showSeq: true, accIdx: 1, groups: state([[],
+      [10],[],[],[],[],[],[]]), curGroup: 2, newVPN: 10,
+      log: '访问 10：组号 10 mod 8 = 2，组 2 为空 → 未命中，调入组 2。',
+      note: '10 → 组 2 调入。', ribbon: { k: 1, ok: false } },
+    { cls: 'miss', tag: '未命中', count: 2, showSeq: true, accIdx: 2, groups: state([[],
+      [10],[],[],[12],[],[],[]]), curGroup: 4, newVPN: 12,
+      log: '访问 12：组号 12 mod 8 = 4，组 4 为空 → 未命中，调入组 4。',
+      note: '12 → 组 4 调入。', ribbon: { k: 2, ok: false } },
+    { cls: 'miss', tag: '未命中', count: 3, showSeq: true, accIdx: 3, groups: state([[16],
+      [10],[],[],[12],[],[],[]]), curGroup: 0, newVPN: 16,
+      log: '访问 16：组号 16 mod 8 = 0，组 0 为空 → 未命中，调入组 0。',
+      note: '16 → 组 0 调入。', ribbon: { k: 3, ok: false } },
+    { cls: 'miss', tag: '未命中', count: 4, showSeq: true, accIdx: 4, groups: state([[16],
+      [10],[],[],[12],[],[],[7]]), curGroup: 7, newVPN: 7,
+      log: '访问 7：组号 7 mod 8 = 7，组 7 为空 → 未命中，调入组 7。',
+      note: '7 → 组 7 调入。', ribbon: { k: 4, ok: false } },
+    { cls: 'miss', tag: '未命中', count: 5, showSeq: true, accIdx: 5, groups: state([[16],
+      [10,26],[],[],[12],[],[],[7]]), curGroup: 2, newVPN: 26,
+      log: '访问 26：组号 26 mod 8 = 2，组 2 有 10、还空 1 路 → 未命中，26 调入第 2 路。',
+      note: '26 → 组 2 第 2 路调入（10 成为 LRU）。', ribbon: { k: 5, ok: false } },
+    { cls: 'miss', tag: '未命中', count: 6, showSeq: true, accIdx: 6, groups: state([[16],
+      [10,26],[],[],[12,4],[],[],[7]]), curGroup: 4, newVPN: 4,
+      log: '访问 4：组号 4 mod 8 = 4，组 4 有 12、还空 1 路 → 未命中，4 调入第 2 路。',
+      note: '4 → 组 4 第 2 路调入（12 成为 LRU）。', ribbon: { k: 6, ok: false } },
+    { cls: 'ok', tag: '命中！', count: 7, showSeq: true, accIdx: 7, hitIdx: 6,
+      groups: state([[16],[10,26],[],[],[4,12],[],[],[7]]), curGroup: 4, newVPN: 12,
+      log: '访问 12：组 4 里正好有 12 → 命中！LRU 更新：12 上提，组 4 变为 [4, 12]，4 成为最久未用。',
+      note: '12 命中 → 组 4 内顺序变为 <b>[4, 12]</b>。', noteCls: 'good', ribbon: { k: 7, ok: true } },
+    { cls: 'miss', tag: '替换发生', count: 8, showSeq: true, accIdx: 8, hitIdx: 6,
+      groups: state([[16],[10,26],[],[],[12,20],[],[],[7]]), curGroup: 4, newVPN: 20,
+      log: '访问 20：组号 20 mod 8 = 4，组 4 已满 {12, 4}；12 刚命中过，LRU 是 4 → 替换 4 的表项，20 占其位置。',
+      note: '20 → 组 4 已满，按 LRU <b>换出虚页号 4</b>。', noteCls: 'bad', ribbon: { k: 8, ok: false } },
+    { cls: 'step', tag: '问 3·结论', count: 8, showSeq: true, accIdx: 8, hitIdx: 6,
+      groups: state([[16],[10,26],[],[],[12,20],[],[],[7]]), curGroup: 4,
+      log: '序列结束：全程只有第 7 次（虚页 12）命中；唯一一次替换发生在第 8 次 → 被替换的是虚页号 4 的表项。',
+      note: '<b>虚页号 4 对应的 TLB 表项被替换</b>——组 4 已满且 4 是 LRU。', noteCls: 'bad' },
+    { cls: 'ok', tag: '问 4·加长地址', count: 8, split: 'v4',
+      log: '问 4：虚拟地址增至 32 位 → 虚页号 20 位；组号仍 3 位 → 标记 17 位，比原 15 位多 2 位；物理页号等其余字段不变。',
+      note: 'TLB 表项位数<b>增加 2 位</b>（标记 15 → 17）。' },
+    { cls: 'done', tag: '完成', count: 8, split: 'v4',
+      log: '四问答毕：虚页号 18 位 / 页内 12 位；标记 15 位 / 组号 3 位；虚页号 4 的表项被替换；表项位数增加 2 位。',
+      note: '全部答案见结论卡。', noteCls: 'good', done: true },
+  ],
+  result: {
+    big: '被替换的表项：虚页号 4',
+    html: '<b>问1</b>：虚页号 = 高 <b>18 位</b>（位 29～12），页内地址 = 低 <b>12 位</b>。<br>' +
+      '<b>问2</b>：TLB 标记 = 高 <b>15 位</b>（位 29～15），组号 = 虚页号低 <b>3 位</b>（位 14～12）。<br>' +
+      '<b>问3</b>：第 8 次访问 20（组 4）时组已满 {12, 4}，12 刚命中 → LRU 是 4 → <b>虚页号 4 的表项被替换</b>。<br>' +
+      '<b>问4</b>：虚拟地址 32 位 → 标记 17 位 → 表项位数<b>增加 2 位</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

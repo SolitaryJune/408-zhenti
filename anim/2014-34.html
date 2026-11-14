@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-34 动画 · 交换机自学习与转发</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 三台主机与端口：a1→1, b1→2, c1→3；初始转发表只有 b1
+var HOSTS = [
+  { mac: 'a1', full: '00-e1-d5-00-23-a1', port: 1 },
+  { mac: 'b1', full: '00-e1-d5-00-23-b1', port: 2 },
+  { mac: 'c1', full: '00-e1-d5-00-23-c1', port: 3 },
+];
+
+var tableBox = null, portBox = null, outBox = null, infoEl = null;
+
+// 每一步的转发表状态与输出端口集合
+// learn: 本步新学的表项；out: {ports:[...], mode:'flood'|'direct'}
+function stateAt(i){
+  var learned = { a1: null, b1: 2, c1: null };      // 表中内容
+  var fresh = null;                                  // 本步刚学到的
+  var out = null;
+  if (i >= 2){ learned.a1 = 1; }
+  if (i === 2){ fresh = 'a1'; }
+  if (i === 3){ out = { ports: [2, 3], mode: 'flood' }; }
+  if (i >= 5){ learned.c1 = 3; }
+  if (i === 5){ fresh = 'c1'; }
+  if (i === 6){ out = { ports: [1], mode: 'direct' }; }
+  return { learned: learned, fresh: fresh, out: out };
+}
+
+function entryHtml(e, st){
+  var port = st.learned[e.mac];
+  var known = port != null;
+  var cls = '';
+  if (known && st.fresh === e.mac){ cls = 'hit'; }        // 本步刚学习
+  else if (known){ cls = 'ok'; }
+  return '<div class="aw-box ' + cls + '" style="width:150px;height:auto;padding:8px 6px;font-size:12px;line-height:1.5">' +
+         e.mac + '（端口 ' + e.port + '）<br><b>' + (known ? '→ 转发端口 ' + port : '不在表中') + '</b></div>';
+}
+
+var INFO = [
+  '初始：转发表里只有 b1 → 2，a1 与 c1 都需要靠"自学习"现学。',
+  '帧① a1 → c1 从端口 1 到达：交换机先看源地址。',
+  '自学习：把"源 MAC a1 → 端口 1"写进转发表。',
+  '再查目的地址 c1：查不到 → 洪泛，向端口 2、3 各发一份（端口 1 不发）。',
+  'b1 收到帧①没有反应；c1 回送确认帧 c1 → a1，从端口 3 到达。',
+  '自学习：把"源 MAC c1 → 端口 3"写进转发表。',
+  '查目的地址 a1：命中 a1 → 1 → 定向转发，只从端口 1 发出。',
+  '完成：帧① → {2, 3}，帧② → {1}，答案 B。',
+];
+
+AW.init({
+  title: '以太网交换机 · 自学习 + 查表转发（2014·34）',
+  subtitle: '帧① <code>a1 → c1</code>，帧②（确认）<code>c1 → a1</code> · 初始表只有 <code>b1 → 2</code>',
+  counterLabel: '已处理动作',
+  ribbonTitle: '两个帧（✓ 定向转发 / ✗ 洪泛泛洪）',
+  intro: '点击「▶ 播放」逐步演示：帧到达 → 源 MAC 自学习 → 目的 MAC 查表 → 决定转发端口。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>转发表</b>（初始只有 b1 → 2；"不在表中"即查表失败）'));
+    tableBox = AW.el('div', 'aw-cells');
+    tableBox.style.gap = '12px';
+    inner.appendChild(tableBox);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>交换机的三个端口</b>（a1 接 1，b1 接 2，c1 接 3）'));
+    portBox = AW.el('div', '');
+    inner.appendChild(portBox);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>本步转发输出端口</b>'));
+    outBox = AW.el('div', '');
+    inner.appendChild(outBox);
+
+    infoEl = AW.el('div', 'aw-row-label');
+    infoEl.style.marginTop = '10px';
+    infoEl.style.fontSize = '13.5px';
+    infoEl.style.color = '#334155';
+    inner.appendChild(infoEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var st = stateAt(i);
+
+    // 转发表
+    tableBox.innerHTML = '';
+    HOSTS.forEach(function(e){ tableBox.insertAdjacentHTML('beforeend', entryHtml(e, st)); });
+
+    // 端口示意（入口/出口高亮）
+    var portsHtml = '<div class="aw-cells" style="gap:10px">';
+    var inPort = (i >= 1 && i <= 3) ? 1 : (i >= 4 && i <= 6 ? 3 : 0);
+    var outPorts = st.out ? st.out.ports : [];
+    for (var p = 1; p <= 3; p++){
+      var bg = '#fff', bd = '#cbd5e1', fg = '#0f172a', extra = '';
+      if (p === inPort){ bg = '#dbeafe'; bd = '#2563eb'; fg = '#1d4ed8'; extra = '（入口）'; }
+      var oi = outPorts.indexOf(p);
+      if (oi >= 0){
+        if (st.out.mode === 'flood'){ bg = '#fef3c7'; bd = '#d97706'; fg = '#92400e'; extra = '（洪泛出口）'; }
+        else { bg = '#dcfce7'; bd = '#16a34a'; fg = '#14532d'; extra = '（定向出口）'; }
+      }
+      portsHtml += '<div style="width:110px;border:2px solid ' + bd + ';background:' + bg + ';color:' + fg +
+                   ';border-radius:10px;padding:8px 4px;text-align:center;font-size:12.5px;line-height:1.5">' +
+                   '<b>端口 ' + p + '</b><br>' + extra + '</div>';
+    }
+    portBox.innerHTML = portsHtml + '</div>';
+
+    // 输出端口集合大字
+    if (st.out){
+      var set = '{' + st.out.ports.join(', ') + '}';
+      outBox.innerHTML = '<div style="font-size:26px;font-weight:800;color:' +
+        (st.out.mode === 'flood' ? '#d97706' : '#16a34a') + '">' + set +
+        ' <span style="font-size:13px;font-weight:600;color:#64748b">' +
+        (st.out.mode === 'flood' ? '（查表失败 → 洪泛）' : '（查表命中 → 定向转发）') + '</span></div>';
+    } else {
+      outBox.innerHTML = '<div style="font-size:14px;color:#94a3b8">（本步不是转发决策）</div>';
+    }
+
+    infoEl.innerHTML = INFO[Math.min(i, INFO.length - 1)];
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '初始', log: '初始转发表只有 b1 → 端口 2；a1、c1 还不在表中', count: 0 },
+    { cls: 'step',  tag: '帧①到达', log: '帧① a1 → c1 从端口 1 进入交换机', count: 1 },
+    { cls: 'ok',    tag: '自学习', log: '自学习：源 a1 来自端口 1 → 表中新增 a1 → 1', count: 2 },
+    { cls: 'miss',  tag: '洪泛', log: '查目的 c1：表中没有 → 向除入口 1 外的所有端口洪泛 → {2, 3}', count: 3, ribbon: { k: 1, ok: false } },
+    { cls: 'step',  tag: '帧②到达', log: '帧②（确认帧）c1 → a1 从端口 3 进入交换机', count: 4 },
+    { cls: 'ok',    tag: '自学习', log: '自学习：源 c1 来自端口 3 → 表中新增 c1 → 3', count: 5 },
+    { cls: 'ok',    tag: '定向', log: '查目的 a1：表中已有 a1 → 1（帧①学的）→ 只从端口 1 发出 → {1}', count: 6, ribbon: { k: 2, ok: true } },
+    { cls: 'done',  tag: '完成', log: '两个帧分别转发到 {2, 3} 和 {1} → 答案 B', count: 7, done: true },
+  ],
+
+  result: {
+    big: '答案 B：{2, 3} 和 {1}',
+    html: '口诀：<b>源地址学表、目的地址查表；查不到就洪泛（除入口外全发），查到就走单口</b>。帧①把 a1 → 1 学进表，正是确认帧能被定向转发到端口 1 的原因——误选 C（{1, 2}）就是忘了这条自学习。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-15 按字编址的 RAM 芯片数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 容量账本：每行 { label, val, cls }，逐行点亮
+function ledgerRow(r, hot){
+  var row = AW.el('div', 'aw-stepcard ' + (hot ? 'key' : (r.cls || '')));
+  row.style.cssText = 'padding:9px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;' +
+    (hot ? '' : 'opacity:.92;');
+  row.innerHTML = '<span style="font-size:13.5px;color:#334155">' + r.label + '</span>' +
+    '<b style="font-size:14.5px;color:#0f172a;font-family:Menlo,monospace">' + r.val + '</b>';
+  return row;
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.maxWidth = '560px';
+  inner.appendChild(AW.el('div', 'aw-row-label',
+    '<b>已知</b>：地址线 20 位 · 数据线 32 位 · 按字编址 · 字长 32 位 = 4B · RAM 区 <code>00 0000H ～ 3F FFFFH</code>'));
+  var shown = sn.ledger;
+  for (var i = 0; i < shown.length; i++){
+    inner.appendChild(ledgerRow(shown[i], i === shown.length - 1 && sn.hot));
+  }
+  if (sn.note) inner.appendChild(AW.el('div', 'aw-stepcard ' + (sn.noteCls || 'key'), '<p>' + sn.note + '</p>'));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+var L0 = [{ label: 'RAM 区', val: '00 0000H ～ 3F FFFFH' }];
+var L1 = L0.concat([{ label: '地址个数 = 3FFFFFH + 1 = 400000H', val: '4M 个地址' }]);
+var L2 = L1.concat([{ label: '编址单位（按字编址）', val: '1 字 = 4 B' }]);
+var L3 = L2.concat([{ label: 'RAM 总容量 = 4M × 4B', val: '16 MB' }]);
+var L4 = L3.concat([{ label: '单片容量 512K × 8 位', val: '512 KB' }]);
+var L5 = L4.concat([
+  { label: '字方向：4M 字 ÷ 512K 字/片', val: '8 组', cls: 'ok' },
+  { label: '位方向：32 位 ÷ 8 位/片', val: '4 片/组', cls: 'ok' },
+  { label: '芯片总数 = 8 × 4', val: '32 片 → C', cls: 'ok' },
+]);
+
+AW.init({
+  title: '2021-15 · 512K×8 位芯片配满 RAM 区要几片',
+  subtitle: '地址线 20 位 · 数据线 32 位 · <b>按字编址</b>（字长 32 位 = 4B） · RAM 区 00 0000H～3F FFFFH',
+  counterLabel: '推演步',
+  ribbonTitle: '选项核对（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」：先算地址个数，再算容量，最后配芯片。',
+  render: render,
+  snaps: [
+    { cls: 'step', tag: '开始', count: 0, ledger: L0,
+      log: 'RAM 区从 00 0000H 到 3F FFFFH，用 512K×8 位的芯片配满它。关键陷阱：题目是按字编址。',
+      note: '第一步永远是：这个地址区间里有多少个"编址单位"。' },
+    { cls: 'shift', tag: '数地址', count: 1, ledger: L1,
+      log: '地址个数 = 3FFFFFH − 000000H + 1 = 400000H = 4M 个地址。',
+      note: '400000H = 4 × 16<sup>5</sup> = 4M 个地址。' },
+    { cls: 'shift', tag: '乘字长', count: 2, ledger: L2.concat(L3.slice(-1)),
+      log: '按字编址：一个地址 = 一个字 = 32 位 = 4B → RAM 总容量 = 4M 字 × 4B = 16MB。',
+      note: '陷阱在这里：<b>4M 个地址 ≠ 4MB</b>，每个地址对应 4 个字节。' },
+    { cls: 'step', tag: '单片容量', count: 3, ledger: L4,
+      log: '每片 512K × 8 位 = 512KB；它一次只能读出 8 位。',
+      note: '512K 个单元 × 8 位 = 512KB/片。' },
+    { cls: 'ok', tag: '两个方向', count: 4, ledger: L5,
+      log: '字方向扩容量：4M 字 ÷ 512K = 8 组；位方向凑位宽：32 位 ÷ 8 位 = 4 片并联 → 总数 8 × 4 = 32 片，选 C。',
+      note: '总数 = <b>8 × 4 = 32 片</b> → 选项 C ✓', noteCls: 'good', ribbon: { k: 1, ok: true } },
+    { cls: 'miss', tag: '排除 A', count: 5, ledger: L5,
+      log: '选 8 片的算法：4M 个地址当 4MB ÷ 512KB = 8 —— 漏乘了"每字 4B"，错。',
+      note: '8 片只有 4MB，装不满 16MB 的 RAM 区。', ribbon: { k: 2, ok: false } },
+    { cls: 'miss', tag: '排除 B、D', count: 6, ledger: L5,
+      log: '16 片、64 片来自字长口径混乱：把字长当 16 位去算位向（2 片）或容量（4M×2B），两处口径不一致必错。',
+      note: '整题只有一条口径：<b>字长 32 位 = 4B</b>。', ribbon: { k: 3, ok: false } },
+    { cls: 'done', tag: '完成', count: 7, ledger: L5,
+      log: '账本走完：4M 地址 → ×4B = 16MB → 512KB/片 → 字向 8 × 位向 4 = 32 片。',
+      note: '结论：需要 <b>32 片</b> 512K×8 位 RAM 芯片，选 C。', noteCls: 'good', done: true },
+  ],
+  result: {
+    big: '答案 C（32 片）',
+    html: '容量账：<code>400000H = 4M 个地址</code> → 按字编址 ×<b>4B/字</b> = <b>16MB</b> ÷ 512KB/片 = <b>32 片</b>（字向 8 × 位向 4）。<br>' +
+      '最大陷阱：按字编址时 4M 个地址 ≠ 4MB——A（8 片）就是漏乘字长。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

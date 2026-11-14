@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-01 时间复杂度 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：数循环次数', cls: 'key',
+    body: '<p>关键代码：<code>while (n >= (x+1)*(x+1)) x = x+1;</code>。x 从 0 开始，每轮判断条件成立才执行 <code>x=x+1</code>，循环体里没有别的动作。考点：<b>循环体执行多少次</b>，它随 n 增长的阶就是时间复杂度。</p>' },
+  { title: '循环次数 = x 的终值', cls: '',
+    body: '<p>x 每轮<b>加 1</b>（不是翻倍），涨到终值就退出，所以<b>执行次数 = x 的终值</b>。只要求出 x 最终停在哪即可。</p>' },
+  { title: '解出 x 的终值 ≈ √n', cls: 'good',
+    body: '<p>循环继续的条件是 <code>(x+1)² ≤ n</code>；退出时 <code>(x+1)² > n</code>，即 <code>x+1 > √n</code>。所以 x 的终值约为 <b>√n</b>，循环体执行 <code>⌊√n⌋</code> 次。</p>' },
+  { title: '代入 n = 100 验证', cls: '',
+    body: '<p>x=0：判断 100 ≥ 1² ✓ 继续……x=9：判断 <code>100 ≥ 10²=100</code> ✓ 仍执行；x=10：判断 <code>100 ≥ 11²=121</code> ✗ 退出。共执行 <b>10 次</b>，恰为 √100。判断语句多跑 1 次，但与循环体同阶，不影响结论。</p>' },
+  { title: '常见陷阱对照', cls: 'bad',
+    body: '<p><b>A（O(logn)）</b>：把 <code>x=x+1</code> 看成 <code>x*=2</code>——翻倍才产生对数。<b>C（O(n)）/ D（O(n²)）</b>：见到 while 就乱猜阶，或被条件里的平方吓到。正确做法：先解循环变量终值。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>T(n) = O(√n) = <b>O(n<sup>1/2</sup>)</b>，答案选 <b>B</b>。记忆锚点：<b>循环变量终值是多少，循环就跑多少次</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019-01 · 循环终止条件与时间复杂度',
+  subtitle: '程序段 <code>x=0; while (n >= (x+1)*(x+1)) x=x+1;</code> · 逐步推理',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（O(n^1/2)）',
+    html: '循环体执行 <b>⌊√n⌋</b> 次 → T(n) = <b>O(n<sup>1/2</sup>)</b>。误区提醒：<code>x=x+1</code> 是线性加 1 不是翻倍，别选 O(logn)；判断比循环体多跑一次但同阶。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

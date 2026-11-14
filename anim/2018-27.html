@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-27 引起进程阻塞的事件辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：阻塞与就绪的分界',
+    cls: 'key',
+    body: '<p>进程<b>阻塞</b> = 因等待“CPU 以外”的事件（资源、I/O、消息）而主动让出 CPU，进入等待队列；<b>就绪</b> = 万事俱备、只欠 CPU。逐条判断 Ⅰ 申请临界资源、Ⅱ 从磁盘读数据、Ⅲ CPU 被分给高优先权进程。</p>' },
+  { title: 'Ⅰ：申请临界资源 —— 会阻塞',
+    cls: 'good',
+    body: '<p>临界资源同一时刻只允许一个进程使用。P 申请时若正被别的进程占用，只能<b>阻塞等待</b>（如 P 操作失败被挂入该资源的等待队列）。<b>Ⅰ 会导致阻塞 ✓</b></p>' },
+  { title: 'Ⅱ：从磁盘读数据 —— 会阻塞',
+    cls: 'good',
+    body: '<p>发出 I/O 请求后，磁盘速度远慢于 CPU，P 要<b>等待 I/O 完成</b>，进入阻塞队列，直到中断通知数据就绪。<b>Ⅱ 会导致阻塞 ✓</b></p>' },
+  { title: 'Ⅲ：CPU 被分配给高优先权进程 —— 只是就绪',
+    cls: 'bad',
+    body: '<p>P 是被<b>剥夺（抢占）</b>了 CPU。除了 CPU 它什么都不缺，随时可以再运行 → 回到<b>就绪队列</b>，而不是阻塞队列。<b>Ⅲ 不会导致阻塞 ✗</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>仅 Ⅰ、Ⅱ 会导致进程 P 阻塞 → 选 <b>C</b>。记忆锚点：<b>缺资源 / 等 I/O → 阻塞；被抢占 CPU → 就绪</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·27 哪些事件会使进程 P 阻塞（2 分选择题）',
+  subtitle: 'Ⅰ 申请临界资源 · Ⅱ 从磁盘读数据 · Ⅲ CPU 分给高优先权进程 —— 阻塞 vs 就绪',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '<b>Ⅰ ✓</b> 等临界资源 → 阻塞；<b>Ⅱ ✓</b> 等 I/O 完成 → 阻塞；<b>Ⅲ ✗</b> 被抢占的只是 CPU，除 CPU 外不缺任何东西 → 回<b>就绪态</b>而非阻塞态。记忆锚点：<b>等的不是 CPU 才叫阻塞</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

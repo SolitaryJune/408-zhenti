@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-38 动画 · 直通交换的最小转发延迟</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CELLS = ['D1','D2','D3','D4','D5','D6','S1','S2','S3','S4','S5','S6','类型','数据','FCS'];
+
+AW.init({
+  title: '100Mbps 交换机：直通交换的最小转发延迟（2013·38）',
+  subtitle: '帧结构（不含前导码）：<code>目的地址 6B ｜ 源地址 6B ｜ 类型 2B ｜ 数据 46~1500B ｜ FCS 4B</code>',
+  counterLabel: '已收字节',
+  ribbonTitle: '推演进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步推演直通交换。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>以太网帧</b>（D1~D6 = 目的地址 6 字节；S1~S6 = 源地址；后面还有类型、数据、FCS，直通交换不必等它们到齐）'));
+    var row = AW.cellRow(CELLS, CELLS.map(function(){ return 'dim'; }), null, 1);
+    inner.appendChild(row);
+    this._ptrs = [];
+    var ptrEls = row.querySelectorAll('.aw-ptr');
+    for (var p = 0; p < ptrEls.length; p++){ this._ptrs.push(ptrEls[p]); }
+
+    var fwd = AW.el('div', 'aw-row-label', '');
+    fwd.style.fontWeight = '700';
+    fwd.style.color = '#15803d';
+    inner.appendChild(fwd);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._boxes = [];
+    var boxes = row.querySelectorAll('.aw-box');
+    for (var k = 0; k < boxes.length; k++){ this._boxes.push(boxes[k]); }
+    this._fwd = fwd;
+  },
+
+  // recv：已收入的目的地址字节数（0~6）；fwd：是否已开始转发
+  snaps: [
+    { cls:'shift', tag:'帧到达',     recv:0, fwd:false, count:0,
+      log:'一个以太网帧到达交换机输入端口，开始逐字节接收（不含前导码）' },
+    { cls:'step',  tag:'直通规则',   recv:0, fwd:false, count:0,
+      log:'直通交换（cut-through）：不必收完整帧——收满帧头的<b>目的地址 6 字节</b>即可查转发表转发' },
+    { cls:'step',  tag:'字节节奏',   recv:0, fwd:false, count:0,
+      log:'100Mbps 下每字节发送时间 = 8 bit ÷ 100Mbps = 0.08μs，即每 0.08μs 到达 1 个字节' },
+    { cls:'ok',    tag:'收满 6 字节', recv:6, fwd:false, count:6,
+      log:'收满目的地址 6 字节耗时：6 × 0.08μs = 48 bit ÷ 100Mbps = 0.48μs' },
+    { cls:'ok',    tag:'查表转发',   recv:6, fwd:true, count:6,
+      log:'输出端口无排队：查表命中后立即向输出端口转发，不再等源地址/数据/FCS 到齐' },
+    { cls:'done',  tag:'结论',      recv:6, fwd:true, count:6, done:true,
+      log:'直通交换引入的转发延迟至少 = 0.48μs → 选 B（对照：存储转发收最小帧 5.12μs、收最大帧 121.44μs）' },
+  ],
+
+  render: function(stage, sn, i){
+    var recv = sn.recv || 0;
+    for (var j = 0; j < CELLS.length; j++){
+      var b = this._boxes[j];
+      if (j < recv){ b.className = 'aw-box ok'; }
+      else if (j === recv && recv < 6){ b.className = 'aw-box hit'; }
+      else { b.className = 'aw-box dim'; }
+    }
+    for (var p = 0; p < this._ptrs.length; p++){
+      var t = '';
+      if (recv > 0 && recv < 6 && p === recv - 1){ t = '接收中'; }
+      if (recv >= 6 && p === 5){ t = '已收满'; }
+      this._ptrs[p].textContent = t;
+    }
+    this._fwd.textContent = sn.fwd ? '→ 已查表命中输出端口，开始转发（仅用了 0.48μs）' : '';
+  },
+
+  result: {
+    big: '0.48μs（选 B）',
+    html: '直通交换的门槛是<b>目的地址 6 字节 = 48 bit</b>：48 ÷ 100Mbps = <b>0.48μs</b>。干扰项来源——<b>0μs</b>（忽略收目的地址）、<b>5.12μs</b>（存储转发收 512bit 最小帧）、<b>121.44μs</b>（存储转发收 1518B 最大帧）。看清「直通 vs 存储转发」口径即可秒选。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

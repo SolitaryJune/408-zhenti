@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     模板：算法 / 过程演示类题目动画（页替换、调度、建树、排序、
+     传输流程、地址映射、图遍历、流水线、协议交互……）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+     参考成品：anim/2019-09.html（KMP，gold standard）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '【例】页置换演示（写题时替换为真实标题）',
+  subtitle: '访问序列 <code>7 0 1 2 0 3 …</code> · 算法：FIFO · 物理块 3 个',
+  counterLabel: '已访问',                       // 计数 chip 文案
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺页）',    // 右侧圆点带标题
+  intro: '点击「▶ 播放」逐步演示每一次访问。',
+
+  /* 可选：建立持久 DOM（推荐，可享受 CSS 过渡）。stage 是舞台容器 */
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var row = AW.el('div', 'aw-row-label', '<b>物理块</b>（3 块）');
+    // 3 个块 × 访问序列列 = 自己画，例如用 aw-cells / aw-box 组合
+    inner.appendChild(row);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._inner = inner;   // 存到 AW.init 对象上供 render 用
+  },
+
+  /* 每个 snap 描述一步：cls/tag/log/count/ribbon/done 见引擎注释 */
+  snaps: [
+    { cls:'shift', tag:'开始', log:'初始：3 个物理块为空', count:0 },
+    { cls:'miss',  tag:'缺页', log:'访问 7：块全空，调入 → 缺页', count:1, ribbon:{k:1, ok:false} },
+    { cls:'ok',    tag:'命中', log:'访问 0：… → 命中', count:2, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成', log:'序列结束：缺页 9 次，命中率 …', count:12, done:true },
+  ],
+
+  /* 可选：每步更新持久 DOM。i=当前步，dir=是否动画过渡 */
+  render: function(stage, sn, i){
+    // 依据 i 重画/高亮块内容；简单场景也可以不给 render，
+    // 而是给每个 snap 配 html 字符串（引擎会整体替换舞台内容）。
+    // AW.cellRow(chars, classes, ptrMap) / AW.shiftTo(el, idx, pitch) 可直接用。
+  },
+
+  /* 末步弹出的结论卡 */
+  result: {
+    big: '缺页 9 次',
+    html: 'FIFO 在该序列下缺页率 <b>75%</b>。注意 Belady 异常…',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

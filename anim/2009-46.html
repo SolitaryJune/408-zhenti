@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-46 · 请求分页：访问耗时与缺页置换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：请求分页地址转换 + LRU 缺页置换（7 分→8 分大题）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function st(o){
+  var base = {
+    addr:'', pg:'—', off:'—', pgCls:'', offCls:'',
+    tlb:[null, null], tlbHi:-1,
+    pt:[
+      {t:'101H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'ok'},
+      {t:'—<br><span style="font-size:11px;font-weight:400">有效位 0</span>', c:''},
+      {t:'254H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'ok'}
+    ],
+    fr:[{t:'页 0', c:''}, {t:'页 2', c:''}],
+    calc:''
+  };
+  for(var k in o){ base[k] = o[k]; }
+  return base;
+}
+
+AW.init({
+  title: '2009-46 · 请求分页：访问耗时与缺页置换',
+  subtitle: '页大小 4KB · TLB 访问 10ns · 访存 100ns · 缺页处理 10 的 8 次方 ns · LRU · 驻留集固定 2 页',
+  counterLabel: '累计耗时(ns)',
+  intro: '点击「▶ 播放」逐个虚地址推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._addr = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._addr);
+    var bar = AW.el('div', '');
+    bar.style.cssText = 'display:flex;gap:8px;align-items:stretch;margin:8px 0 2px;';
+    var pg = AW.el('div', 'aw-box', '页号<br><span style="font-size:14px;font-weight:700">—</span>');
+    pg.style.cssText = 'width:96px;height:60px;flex:0 0 auto;font-size:14px;';
+    var off = AW.el('div', 'aw-box', '页内位移<br><span style="font-size:14px;font-weight:700">—</span>');
+    off.style.cssText = 'width:150px;height:60px;flex:0 0 auto;font-size:14px;';
+    bar.appendChild(pg);
+    bar.appendChild(off);
+    this._pg = pg;
+    this._off = off;
+    inner.appendChild(bar);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>快表 TLB</b>（初始为空，2 个槽位）'));
+    var trow = AW.el('div', '');
+    trow.style.cssText = 'display:flex;gap:10px;margin:6px 0;';
+    this._tlb = [];
+    for(var i = 0; i < 2; i++){
+      var s = AW.el('div', 'aw-box dim', '空');
+      s.style.cssText = 'width:130px;height:42px;font-size:13px;';
+      trow.appendChild(s);
+      this._tlb.push(s);
+    }
+    inner.appendChild(trow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>页表</b>（页框号 · 有效位）'));
+    var prow = AW.el('div', 'aw-cells');
+    this._pt = [];
+    for(var p = 0; p < 3; p++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var box = AW.el('div', 'aw-box', '');
+      box.style.cssText = 'width:88px;height:54px;font-size:15px;';
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', '页' + p));
+      prow.appendChild(col);
+      this._pt.push(box);
+    }
+    inner.appendChild(prow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>内存驻留集</b>（固定 2 页）'));
+    var frow = AW.el('div', 'aw-cells');
+    this._fr = [];
+    var frames = ['页框 101H', '页框 254H'];
+    for(var f = 0; f < 2; f++){
+      var fcol = AW.el('div', 'aw-col');
+      fcol.appendChild(AW.el('div', 'aw-ptr', ''));
+      var fbox = AW.el('div', 'aw-box', '');
+      fbox.style.cssText = 'width:100px;height:44px;font-size:15px;';
+      fcol.appendChild(fbox);
+      fcol.appendChild(AW.el('div', 'aw-idx', frames[f]));
+      frow.appendChild(fcol);
+      this._fr.push(fbox);
+    }
+    inner.appendChild(frow);
+    this._calc = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._calc);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      log:'页表：页 0 → 101H（有效）、页 1 → 无效、页 2 → 254H（有效）；驻留集固定 2 页；TLB 初始为空。页面大小 4KB = 2 的 12 次方 B：虚地址低 3 位十六进制是页内位移，其余是页号。',
+      st: st({ addr:'待访问序列：2362H → 1565H → 25A5H' }) },
+    { cls:'step', tag:'访问 ①', count:0,
+      log:'第 1 次访问 2362H：低 3 位 362H 是页内位移，最高位的 2 是页号。',
+      st: st({ addr:'① 虚地址 2362H', pg:'2', off:'362H', pgCls:'hit', offCls:'hit', calc:'' }) },
+    { cls:'ok', tag:'完成 ①', count:210,
+      log:'TLB 空 → 未命中（10ns）；查页表：页 2 有效 → 页框 254H（100ns），把页 2 装入 TLB（更新时间忽略）；访存（100ns）。本次合计 10+100+100 = 210ns。',
+      st: st({ addr:'① 2362H 完成', pg:'2', off:'362H', pgCls:'ok', offCls:'ok',
+               tlb:['页 2 → 254H', null], tlbHi:0,
+               pt:[
+                 {t:'101H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'ok'},
+                 {t:'—<br><span style="font-size:11px;font-weight:400">有效位 0</span>', c:''},
+                 {t:'254H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'hit'}
+               ],
+               calc:'① = 10 + 100 + 100 = 210ns' }) },
+    { cls:'step', tag:'访问 ②', count:210,
+      log:'第 2 次访问 1565H：页号 1，页内位移 565H。',
+      st: st({ addr:'② 虚地址 1565H', pg:'1', off:'565H', pgCls:'hit', offCls:'hit',
+               tlb:['页 2 → 254H', null], tlbHi:-1, calc:'① = 210ns' }) },
+    { cls:'miss', tag:'缺页', count:320,
+      log:'TLB 未命中（TLB 中只有页 2，10ns）；查页表：页 1 有效位 = 0（100ns）→ 产生缺页中断！',
+      st: st({ addr:'② 1565H 缺页', pg:'1', off:'565H', pgCls:'ok', offCls:'ok',
+               tlb:['页 2 → 254H', null],
+               pt:[
+                 {t:'101H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'ok'},
+                 {t:'✕<br><span style="font-size:11px;font-weight:400">有效位 0</span>', c:'miss'},
+                 {t:'254H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'ok'}
+               ],
+               calc:'② 已耗 10 + 100 = 110ns，缺页处理再耗 10 的 8 次方 ns' }) },
+    { cls:'shift', tag:'LRU 淘汰', count:100000320,
+      log:'缺页处理（10 的 8 次方 ns，已含更新页表与 TLB）：驻留集固定 2 页，LRU 局部淘汰——页 2 刚被 2362H 访问过，最久未用的是页 0 → 淘汰页 0，把页 1 装入页框 101H；更新页表与 TLB。',
+      st: st({ addr:'② 缺页处理：LRU 淘汰页 0', pg:'1', off:'565H',
+               tlb:['页 1 → 101H', '页 2 → 254H'], tlbHi:0,
+               pt:[
+                 {t:'✕<br><span style="font-size:11px;font-weight:400">有效位 0</span>', c:''},
+                 {t:'101H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'hit'},
+                 {t:'254H<br><span style="font-size:11px;font-weight:400">有效位 1</span>', c:'ok'}
+               ],
+               fr:[{t:'页 1', c:'hit'}, {t:'页 2', c:''}],
+               calc:'② 累计 10 + 100 + 10 的 8 次方 ns' }) },
+    { cls:'ok', tag:'完成 ②', count:100000430,
+      log:'缺页返回后重新执行该指令：TLB 命中页 1（10ns）→ 访存（100ns）。②合计 10+100+10 的 8 次方+10+100 = 100000220ns。物理地址 = 页框 101H 拼接位移 565H = 101565H。',
+      st: st({ addr:'② 1565H → 物理地址 101565H', pg:'1', off:'565H',
+               tlb:['页 1 → 101H', '页 2 → 254H'], tlbHi:0,
+               fr:[{t:'页 1', c:'hit'}, {t:'页 2', c:''}],
+               calc:'② = 100000220ns；物理地址 101H ∥ 565H = 101565H' }) },
+    { cls:'ok', tag:'访问 ③', count:100000540,
+      log:'第 3 次访问 25A5H：页号 2，位移 5A5H；TLB 命中（页 2 仍在 TLB，10ns）→ 访存（100ns），本次合计 110ns。',
+      st: st({ addr:'③ 虚地址 25A5H', pg:'2', off:'5A5H', pgCls:'hit', offCls:'hit',
+               tlb:['页 1 → 101H', '页 2 → 254H'], tlbHi:1,
+               fr:[{t:'页 1', c:''}, {t:'页 2', c:'hit'}],
+               calc:'③ = 10 + 100 = 110ns' }) },
+    { cls:'done', tag:'结论', count:100000540, done:true,
+      log:'三次访问耗时：210ns、100000220ns、110ns；虚地址 1565H 的物理地址 = 101565H。',
+      st: st({ addr:'① 210ns ｜ ② 100000220ns ｜ ③ 110ns ｜ 1565H → 101565H',
+               calc:'1565H 物理地址 = 101H ∥ 565H = 101565H' }) },
+  ],
+
+  render: function(stage, sn){
+    var stt = sn.st || {};
+    this._addr.innerHTML = '<b>' + (stt.addr || '') + '</b>';
+    this._pg.innerHTML = '页号<br><span style="font-size:15px;font-weight:700">' + (stt.pg || '—') + '</span>';
+    this._off.innerHTML = '页内位移<br><span style="font-size:15px;font-weight:700">' + (stt.off || '—') + '</span>';
+    this._pg.className = 'aw-box' + (stt.pgCls ? ' ' + stt.pgCls : '');
+    this._off.className = 'aw-box' + (stt.offCls ? ' ' + stt.offCls : '');
+    var tlb = stt.tlb || [];
+    for(var i = 0; i < 2; i++){
+      var s = this._tlb[i];
+      s.innerHTML = tlb[i] || '空';
+      s.className = 'aw-box' + (tlb[i] ? (stt.tlbHi === i ? ' hit' : ' ok') : ' dim');
+    }
+    var pt = stt.pt || [];
+    for(var p = 0; p < 3; p++){
+      var e = pt[p] || { t:'', c:'' };
+      this._pt[p].innerHTML = e.t;
+      this._pt[p].className = 'aw-box' + (e.c ? ' ' + e.c : '');
+    }
+    var fr = stt.fr || [];
+    for(var f = 0; f < 2; f++){
+      var x = fr[f] || { t:'', c:'' };
+      this._fr[f].innerHTML = x.t;
+      this._fr[f].className = 'aw-box' + (x.c ? ' ' + x.c : '');
+    }
+    this._calc.innerHTML = stt.calc ? '<b>' + stt.calc + '</b>' : '';
+  },
+
+  result: {
+    big: '210 / 100000220 / 110 ns；1565H → 101565H',
+    html: '第 1 问：<b>① TLB 未命中走三步（10+100+100 = 210ns）</b>；② 缺页一次代价 10<sup>8</sup> ns，加上重新执行的 TLB 命中 10ns 与访存 100ns，共 100000220ns；③ TLB 命中两步（10+100 = 110ns）。第 2 问：<b>LRU 淘汰最久未用的页 0</b>（页 2 刚被 2362H 访问过），页 1 装入页框 101H，物理地址 = 101H ∥ 565H = <b>101565H</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-10 快速排序宜采用的存储方式 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 顺序表上双游标相向扫描示意
+function scanDemo(){
+  var cells = ['49','38','65','97','76','13','27'];
+  var cls = ['hit','','','','','','hit'];
+  var h = AW.cellRow(cells, cls, {1:'low', 7:'high'}, 1);
+  return '<div style="font-size:12.5px;color:#64748b;margin-top:4px">一趟划分：low、high 按下标<b>直接跳位</b>、相向扫描、原地交换</div>' +
+         '<div style="margin-top:4px">' + h + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：快排都要做什么', cls: 'key',
+    body: '<p>一趟划分：low、high <b>两个游标从两端相向扫描</b>，随机取任意下标元素与枢轴比较、必要时交换，枢轴落位后对左右子区间<b>递归</b>。共同底座：<b>按下标随机访问必须 O(1)</b>。</p>' },
+  { title: '顺序存储正合需要', cls: 'good',
+    body: '<p>' + scanDemo() + ' 数组 <code>a[low]</code>、<code>a[high]</code> 直接寻址 O(1)，游标双向移动、原地交换毫无障碍——顺序存储（顺序表）正是快排的标配，<b>A 对</b>。</p>' },
+  { title: '链式存储力不从心', cls: 'bad',
+    body: '<p>链表只能<b>顺链游走</b>：访问第 i 个元素要 O(n)，low/high 相向移动每一步都得从头数，一趟划分退化到 O(n²)，快排的效率优势荡然无存，C 错。</p>' },
+  { title: '散列、索引存储答非所问', cls: 'bad',
+    body: '<p><b>散列存储</b>：元素位置由散列函数决定，序关系被打乱，无从「两端向中间划分」；<b>索引存储</b>：索引表服务于按关键字查找，不提供划分所需的随机重排。B、D 都是面向<b>查找</b>的结构，与排序过程的存取需求不匹配。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>A（顺序存储）</b>。记忆锚点：<b>快排、堆排、希尔排序、折半查找</b>都要求顺序存储——随机访问 O(1) 是硬门槛。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
+    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-10 · 快速排序宜采用哪种存储方式？',
+  subtitle: '核心需求 <code>随机访问 O(1) + 双游标相向扫描 + 原地交换</code> · 四个选项对照',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A · 顺序存储',
+    html: '快排划分靠 low/high 两个游标按下标随机跳位、相向扫描、原地交换——只有<b>顺序存储</b>能 O(1) 支撑。链式存储顺链游走访问 O(n)，散列/索引是面向查找的结构，与划分需求不匹配。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

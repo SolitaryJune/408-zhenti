@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-23 · 单处理机中可并行的组合</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析类：单处理机系统中可并行的组合（答案 D）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题眼：<code>单处理机</code> = 只有 <b>一个 CPU</b>。并行 = 同一时刻同时执行。判定口诀：<b>要抢同一个 CPU 的组合，就不能并行</b>。</p>' },
+  { title: 'I. 进程与进程 —— 不能',
+    cls: 'bad',
+    body: '<p>进程要运行必须占用 CPU。同一时刻 CPU 只能执行一个进程，其余进程只能等待——进程与进程只能<b>并发</b>（宏观同时推进、微观交替），<b>不能并行</b>。</p>' },
+  { title: 'II. 处理机与设备 —— 能',
+    cls: 'good',
+    body: '<p>CPU 执行计算的同时，设备由控制器/通道驱动进行 I/O，计算与传输<b>重叠</b>进行 → <b>可并行</b>。</p>' },
+  { title: 'III. 处理机与通道 —— 能',
+    cls: 'good',
+    body: '<p>通道是<b>独立于 CPU 的专用 I/O 处理机</b>，能执行自己的通道程序；CPU 启动通道后二者各自工作 → <b>可并行</b>。</p>' },
+  { title: 'IV. 设备与设备 —— 能',
+    cls: 'good',
+    body: '<p>不同设备相互独立：打印机在打印时，磁盘照样可以读盘 → <b>可并行</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>可并行的是 <b>II、III、IV</b>，I 不可 → 答案选 <b>D</b>。干扰项 A、B、C 都包含 I，一并排除。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-23 · 单处理机中可并行的组合',
+  subtitle: '考点：并行与并发 · 谁要占用唯一的 CPU',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：单处理机中<b>唯一不能并行的是"进程与进程"</b>——它们争抢唯一的 CPU；处理机↔设备、处理机↔通道、设备↔设备互不抢 CPU，均可并行。A、B、C 均含 I，直接排除。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-10 由结果反推希尔增量</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 序列行：chars 长度 11，classes 用 ok/hit/miss/dim/''
+function seqRow(chars, cls, ptr){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptr && ptr[i]) || ''));
+    col.appendChild(AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), String(ch)));
+    col.appendChild(AW.el('div', 'aw-idx', String(i + 1)));
+    row.appendChild(col);
+  });
+  return row.outerHTML;
+}
+
+function groupTable(groups, sorted){
+  var h = '<table style="border-collapse:collapse;margin:8px auto;font-size:13px">';
+  h += '<tr><th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">组（位置）</th>' +
+       '<th style="border:1px solid #cbd5e1;padding:3px 8px;background:#f1f5f9">' + (sorted ? '组内排序后' : '组内元素') + '</th></tr>';
+  groups.forEach(function(g){
+    h += '<tr><td style="border:1px solid #cbd5e1;padding:3px 8px">' + g[0] + '</td>' +
+         '<td style="border:1px solid #cbd5e1;padding:3px 8px"><b>' + g[1] + '</b></td></tr>';
+  });
+  h += '</table>';
+  return h;
+}
+
+function note(text){
+  return '<div style="text-align:center;font-size:13.5px;color:#334155;margin-top:6px">' + text + '</div>';
+}
+
+var INIT = ['8','3','9','11','2','1','4','7','5','10','6'];
+var P1   = ['1','3','7','5','2','6','4','9','11','10','8'];
+var P2   = ['1','2','6','4','3','7','5','8','11','10','9'];
+
+AW.init({
+  title: '2018·数据结构（十） 由两趟结果反推希尔增量',
+  subtitle: '初始序列 <code>8,3,9,11,2,1,4,7,5,10,6</code> · 一趟希尔 = 按 d 分组、组内插入排序',
+  counterLabel: '已验证增量',
+  intro: '点击「▶ 播放」，把候选增量逐一代入模拟，与题给两趟结果比对。',
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'初始序列 8,3,9,11,2,1,4,7,5,10,6（共 11 个元素）', count:0,
+      html: seqRow(INIT) + note('候选增量需逐个代入模拟：先验第一趟，再验第二趟') },
+    { cls:'miss', tag:'排除 d1=3', log:'若 d=3：位置 1,4,7,10 的组为 8,11,4,10，排序后位置 1 = 4 ≠ 1 → 排除 A、B', count:1,
+      html: seqRow(INIT, ['miss','dim','','dim','','','dim','','dim','']) + groupTable([['1,4,7,10','4,8,10,11 排序后 → 位置1=4']]) +
+            note('结果首元素应为 1，d=3 矛盾 → 第一趟增量不是 3') },
+    { cls:'shift', tag:'试 d1=5', log:'取 d=5：分成 5 组，同组位置相差 5', count:1,
+      html: seqRow(INIT, ['hit','dim','dim','dim','dim','hit','dim','dim','dim','dim','hit']) +
+            groupTable([['1,6,11','8,1,6'],['2,7','3,4'],['3,8','9,7'],['4,9','11,5'],['5,10','2,10']]) +
+            note('各组内分别插入排序') },
+    { cls:'ok', tag:'d=5 组内排序', log:'各组排序：8,1,6→1,6,8；9,7→7,9；11,5→5,11；2,10→2,10；3,4→3,4', count:1,
+      html: seqRow(P1) + groupTable([['1,6,11','1,6,8'],['2,7','3,4'],['3,8','7,9'],['4,9','5,11'],['5,10','2,10']], true) +
+            note('组内有序后回填原位置') },
+    { cls:'ok', tag:'第一趟吻合', log:'回填得 (1,3,7,5,2,6,4,9,11,10,8)，与题给第一趟完全一致 → d1 = 5', count:2,
+      html: seqRow(P1, ['ok','ok','ok','ok','ok','ok','ok','ok','ok','ok','ok']) +
+            note('第一趟增量 d1 = 5 ✓（A、B 已排除）') },
+    { cls:'miss', tag:'排除 d2=2', log:'在第一趟结果上试 d=2：组 1,7,2,4,11,8 排序后位置 3 = 2 ≠ 6 → 排除 C', count:3,
+      html: seqRow(P1, ['dim','','miss','dim','','dim','dim','','dim','dim','dim']) + groupTable([['1,3,5,7,9,11','1,2,4,7,8,11 排序后 → 位置3=2']]) +
+            note('结果第 3 位应为 6，d=2 矛盾') },
+    { cls:'shift', tag:'试 d2=3', log:'取 d=3：分成 3 组', count:3,
+      html: seqRow(P1, ['hit','dim','dim','hit','dim','dim','hit','dim','dim','hit','dim']) +
+            groupTable([['1,4,7,10','1,5,4,10'],['2,5,8,11','3,2,9,8'],['3,6,9','7,6,11']]) +
+            note('各组内分别插入排序') },
+    { cls:'ok', tag:'第二趟吻合', log:'组内排序后得 (1,2,6,4,3,7,5,8,11,10,9)，与题给第二趟完全一致 → d2 = 3', count:4,
+      html: seqRow(P2, ['ok','ok','ok','ok','ok','ok','ok','ok','ok','ok','ok']) +
+            groupTable([['1,4,7,10','1,4,5,10'],['2,5,8,11','2,3,8,9'],['3,6,9','6,7,11']], true) +
+            note('第二趟增量 d2 = 3 ✓（C 已排除）') },
+    { cls:'done', tag:'完成', log:'两趟增量依次 5、3 → 答案 D', count:4, done:true,
+      html: seqRow(P2, ['hit','hit','hit','hit','hit','hit','hit','hit','hit','hit','hit']) +
+            note('d1 = 5、d2 = 3 → 答案 D') },
+  ],
+
+  result: {
+    big: '5，3',
+    html: 'd=3 首元素即矛盾（4≠1）排除 A、B；<b>d1=5</b> 的五组 8,1,6｜3,4｜9,7｜11,5｜2,10 组内排序后与第一趟结果完全一致；<b>d2=3</b> 的三组 1,5,4,10｜3,2,9,8｜7,6,11 排序后与第二趟一致。答案 <b>D</b>。记忆锚点：<b>一趟希尔只保证组内有序</b>，验证要整趟模拟。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

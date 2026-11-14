@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-33 分组交换存储转发的总时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：存储转发流水线时序推演 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS_EL = [];
+
+AW.init({
+  title: '分组交换：1 MB 文件何时全部到达 H2',
+  subtitle: 'H1 → 路由器 → H2 · 每段链路 100 Mbps · 时延带宽积 1000 bit · 分组长 1000 B · M=10<sup>6</sup>',
+  counterLabel: '累计时刻（μs）',
+  ribbonTitle: '时间项（✓ 已计入）',
+  intro: '点击「▶ 播放」，让最后一个分组带你走完全程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS_EL = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>总时间 = 四个时间项之和</b>（盯住最后一个分组）'));
+    var ROWS = [
+      ['① 求分组数', '1 MB = 10<sup>6</sup> B = 8×10<sup>6</sup> bit；每组 1000 B = 8000 bit → <b>恰好 1000 个分组</b>'],
+      ['② 求两个单程时延', '发送时延 = 8000 bit ÷ 100 Mbps = <b>80 μs</b>；传播时延 = 时延带宽积 ÷ 带宽 = 1000 bit ÷ 100 Mbps = <b>10 μs</b>'],
+      ['③ 流水线铺满', '前 999 组先走、与末组并行铺满两段链路；末组在 999×80 μs = <b>79.92 ms</b> 才轮到从 H1 发出'],
+      ['④ 末组从 H1 发完', '花发送时延 80 μs → 累计 <b>80.00 ms</b>'],
+      ['⑤ 链路1 传播', '+ 10 μs → 累计 <b>80.01 ms</b>，末组到达路由器'],
+      ['⑥ 路由器存储转发', '整组收齐后重发一次，花 80 μs → 累计 <b>80.09 ms</b>'],
+      ['⑦ 链路2 传播', '+ 10 μs → 累计 <b>80.10 ms</b>，末组到达 H2，文件接收完毕'],
+    ];
+    ROWS.forEach(function(r){
+      var row = AW.el('div', '');
+      row.style.cssText = 'display:flex;align-items:baseline;gap:10px;margin:7px 0;padding:7px 12px;border-left:3px solid #e2e8f0;border-radius:8px;opacity:.3;transition:all .35s';
+      row.innerHTML = '<b style="min-width:140px;font-size:13.5px;color:#334155;flex:0 0 auto">' + r[0] +
+        '</b><span style="font-size:13.5px;color:#334155;line-height:1.65">' + r[1] + '</span>';
+      ROWS_EL.push(row);
+      wrap.appendChild(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var upto = sn.rows || 0;
+    for (var i = 0; i < ROWS_EL.length; i++){
+      var el = ROWS_EL[i];
+      if (upto > 0 && i === upto - 1){
+        el.style.opacity = '1'; el.style.borderLeftColor = '#d97706'; el.style.background = '#fffbeb';
+      } else if (i < upto - 1){
+        el.style.opacity = '1'; el.style.borderLeftColor = '#16a34a'; el.style.background = 'transparent';
+      } else {
+        el.style.opacity = '.3'; el.style.borderLeftColor = '#e2e8f0'; el.style.background = 'transparent';
+      }
+    }
+  },
+
+  snaps: [
+    { cls:'step',  tag:'读题',       log:'2 段链路各 100 Mbps、时延带宽积各 1000 bit；文件 1 MB（M=10<sup>6</sup>），分组 1000 B', count:0,     rows:0 },
+    { cls:'step',  tag:'分组数',     log:'1 MB = 8×10<sup>6</sup> bit ÷ 8000 bit/组 = 恰好 1000 个分组',                  count:0,     rows:1 },
+    { cls:'step',  tag:'单程时延',   log:'每组发送时延 80 μs；传播时延 = 1000 bit ÷ 100 Mbps = 10 μs（两段相同）',            count:0,     rows:2 },
+    { cls:'shift', tag:'铺管道',     log:'前 999 组流水线先走，末组在 999×80 μs = 79.92 ms 才开始从 H1 发出',                count:79920, rows:3 },
+    { cls:'step',  tag:'发完末组',   log:'末组发送 80 μs → 累计 80.00 ms（文件发送总时间 1000×80 μs = 80 ms 计满）',          count:80000, rows:4, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'链路1 传播', log:'+ 10 μs → 累计 80.01 ms，末组到达路由器',                                    count:80010, rows:5, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'存储转发',   log:'路由器整组收齐后重发：+ 80 μs → 80.09 ms 发完（存储转发多花的这一跳别漏）',              count:80090, rows:6, ribbon:{k:3, ok:true} },
+    { cls:'done',  tag:'到达 H2',    log:'+ 10 μs → 80.10 ms 末组到达 H2，全部数据接收完毕 → 选 D',                    count:80100, rows:7, ribbon:{k:4, ok:true}, done:true },
+  ],
+
+  result: {
+    big: '80.10 ms',
+    html: '总时间 = 文件发送 80 ms + 路由器存储转发 80 μs + 两段传播 2×10 μs = <b>80 100 μs = 80.10 ms</b>，选 <b>D</b>。<br>' +
+          '公式：<code>(n + m − 1) × 发送时延 + m × 传播时延</code>（n=1000 个分组、m=2 段链路）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

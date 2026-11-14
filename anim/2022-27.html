@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-27 · CPU 模式与指令类型辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：态 × 指令类型的 2×2 组合', cls: 'key',
+    body: '<p>指令分两类：<b>特权指令</b>与<b>非特权指令</b>；CPU 分两态：<b>用户态</b>与<b>内核态</b>。把 2×2 组合填满就能判断四个选项。</p>' },
+  { title: '两类指令各是什么', cls: '',
+    body: '<p><b>特权指令</b>：I/O 指令、开/关中断、修改页表基址寄存器、置时钟等——只允许内核态执行，防止用户程序直接破坏系统。<b>非特权指令</b>：普通运算、访存等——两种状态都可执行。</p>' },
+  { title: '用户态：只能执行非特权指令 → C 对', cls: 'good',
+    body: '<p>用户态没有特权指令的执行权限，硬件直接拒绝（非法操作陷入内核）→ <b>C 正确</b>；A 说「只能执行特权指令」恰好说反了 → A 错。</p>' },
+  { title: '内核态：特权、非特权都能执行 → B/D 错', cls: 'bad',
+    body: '<p>内核态是<b>用户态的超集</b>：特权指令可以执行，普通指令照常执行。B「只能执行特权指令」、D「只能执行非特权指令」都被「只能」二字害死 → B、D 均错。</p>' },
+  { title: '记忆方式：不存在只许特权的态', cls: '',
+    body: '<p>凡说某状态「只能执行特权指令」必错——没有这样的 CPU 状态；判别时先盯住「只能」这个词，再看方向是否说反。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>用户态仅非特权；内核态全部可执行</b>。用户态执行特权指令会被硬件拒绝并转内核处理。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'CPU 模式与指令类型辨析（2022-27）',
+  subtitle: '考点：特权指令 / 非特权指令 × 用户态 / 内核态 的 2×2 组合',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>用户态只能执行非特权指令</b>；内核态是用户态的超集，特权与非特权指令都能执行。凡「只能执行特权指令」的说法必错。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

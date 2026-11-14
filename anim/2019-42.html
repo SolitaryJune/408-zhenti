@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-42 只增不减的 O(1) 队列 · 设计演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+// 节点格：{v:内容, c:类('ok'=存元素, 'dim'=空闲, 'hit'=本步新挂), p:指针, n:结点名}
+function nodeCol(nd){
+  return '<div class="aw-col"><div class="aw-ptr">' + (nd.p || '') + '</div>' +
+         '<div class="aw-box' + (nd.c ? ' ' + nd.c : '') + '" style="width:52px;height:52px;font-size:14px">' +
+         nd.v + '</div><div class="aw-idx">' + nd.n + '</div></div>';
+}
+function queueRow(nodes, cap, foot){
+  var h = '';
+  if (cap) h += '<div class="aw-row-label">' + cap + '</div>';
+  h += '<div class="aw-cells">';
+  nodes.forEach(function(nd, i){
+    if (i > 0){
+      h += '<div style="width:24px;text-align:center;color:#94a3b8;font-weight:700;line-height:52px;margin-top:22px">→</div>';
+    }
+    h += nodeCol(nd);
+  });
+  h += '<div style="width:34px;text-align:center;color:#2563eb;font-weight:700;font-size:12.5px;line-height:52px;margin-top:22px">↩<br>回绕 n0</div>';
+  h += '</div>';
+  if (foot) h += '<div class="aw-row-label" style="margin-top:10px">' + foot + '</div>';
+  return h;
+}
+function NN(v, c, p, n){ return { v:v, c:c, p:p, n:n }; }
+
+var CAP0 = '<b>队列结构</b>：单向循环链表（结点只增不减）';
+
+var snaps = [
+  { cls:'step', tag:'初始：队空', count:0,
+    html: queueRow([ NN('空','dim','front=rear','n0') ], CAP0,
+      '初始只建立<b>一个空闲结点</b> n0，front = rear = n0。'),
+    log:'初始状态：只有一个空闲结点 n0，front 与 rear 都指向它 → front == rear，<b>队空</b>。' },
+  { cls:'step', tag:'两条判定条件', count:1,
+    html: queueRow([ NN('空','dim','front=rear','n0') ], CAP0,
+      '<b>队空</b>：<code>front == rear</code>　·　<b>队满</b>：<code>front == rear-&gt;next</code>（rear 的下一个绕回 front = 环上已无多余空闲结点）'),
+    log:'判定条件：队空 front == rear；队满 front == rear->next。此刻 rear->next 绕回自身，front == rear->next 也成立——处于"满"状态，入队会先扩容。' },
+  { cls:'shift', tag:'入队 x1 ① 判满扩容', count:2,
+    html: queueRow([ NN('空','dim','front','n0'), NN('空','hit','','n1') ], CAP0,
+      '入队 x1：<code>front(n0) == rear-&gt;next(n0)</code> 成立 → 判满 → 先在 rear 后<b>插入新空闲结点 n1</b>（空间 +1）'),
+    log:'入队 x1 第①步：队满判定成立（环上没有多余空闲结点）→ 先在 rear 后挂一个新空闲结点 n1，占用空间只增。' },
+  { cls:'ok', tag:'入队 x1 ② 写入后移', count:3,
+    html: queueRow([ NN('x1','ok','front','n0'), NN('空','dim','rear','n1') ], CAP0,
+      '<code>rear-&gt;data = x1; rear = rear-&gt;next;</code> → n0 存 x1，rear 移到空闲结点 n1'),
+    log:'第②③步：把 x1 写入 rear 所指结点 n0，rear = rear->next 移到 n1。第一个元素入队完成（对应第 3 问）。' },
+  { cls:'shift', tag:'入队 x2 ① 判满扩容', count:4,
+    html: queueRow([ NN('x1','ok','front','n0'), NN('空','dim','','n1'), NN('空','hit','','n2') ], CAP0,
+      '入队 x2：<code>front(n0) == rear-&gt;next(n1-&gt;next = n0)</code> 成立 → 挂新空闲结点 n2'),
+    log:'入队 x2：队满判定又成立 → 挂新空闲结点 n2。rear 现指向 n2。' },
+  { cls:'ok', tag:'入队 x2 ② 写入后移', count:5,
+    html: queueRow([ NN('x1','ok','front','n0'), NN('x2','ok','','n1'), NN('空','dim','rear','n2') ], CAP0,
+      '写入 n1 = x2，rear 移到 n2'),
+    log:'写入 x2 到 n1，rear 后移到 n2。' },
+  { cls:'step', tag:'入队 x3、x4', count:6,
+    html: queueRow([ NN('x1','ok','front','n0'), NN('x2','ok'), NN('x3','ok'), NN('x4','ok'), NN('空','hit','rear','n4') ], CAP0,
+      '继续入队 x3、x4：每次都「判满 → 挂一个新空闲结点 → 写入 → rear 后移」'),
+    log:'连续入队 x3、x4：空间随入队逐步增长，每次恰好补一个空闲结点，保持 rear 后面总有空位。' },
+  { cls:'ok', tag:'出队 x1', count:7,
+    html: queueRow([ NN('空','dim','','n0'), NN('x2','ok','front','n1'), NN('x3','ok'), NN('x4','ok'), NN('空','dim','rear','n4') ], CAP0,
+      'front≠rear 非空：<code>e = front-&gt;data = x1; front = front-&gt;next;</code> → n0 变空闲但<b>不释放</b>'),
+    log:'出队：e = front->data = x1，front 前移到 n1。n0 变空闲但保留在环中——空间只增不减，等待复用。' },
+  { cls:'step', tag:'入队 x5 ① 判满不扩', count:8,
+    html: queueRow([ NN('空','dim','↖rear-&gt;next','n0'), NN('x2','ok','front','n1'), NN('x3','ok'), NN('x4','ok'), NN('空','dim','rear','n4') ], CAP0,
+      '入队 x5 判满：<code>front(n1) == rear-&gt;next(n4-&gt;next = n0)</code>？n1 ≠ n0 → <b>不满</b> → 不扩容'),
+    log:'入队 x5 判满：front(n1) ≠ rear->next(n0) → 不满，无需扩容，直接写 rear 所指结点。' },
+  { cls:'ok', tag:'入队 x5 ② 复用空闲结点', count:9,
+    html: queueRow([ NN('空','dim','rear','n0'), NN('x2','ok','front','n1'), NN('x3','ok'), NN('x4','ok'), NN('x5','hit','','n4') ], CAP0,
+      '写入 n4 = x5，<code>rear = n4-&gt;next = n0</code>（绕回）——空闲结点被复用，本次<b>未新增结点</b>'),
+    log:'写入 x5 到 n4，rear = n4->next = n0 绕回——出队留下的空闲结点被复用，本次没有新增任何结点。' },
+  { cls:'shift', tag:'入队 x6 ① 判满扩容', count:10,
+    html: queueRow([ NN('空','dim','','n0'), NN('x2','ok','front','n1'), NN('x3','ok'), NN('x4','ok'), NN('x5','ok'), NN('空','hit','rear','n5') ], CAP0,
+      '入队 x6 判满：<code>front(n1) == rear-&gt;next(n0-&gt;next = n1)</code> 成立（空闲结点用完）→ 挂新结点 n5'),
+    log:'入队 x6 判满：环上空闲结点用完（front == rear->next 成立）→ 再挂新空闲结点 n5。' },
+  { cls:'ok', tag:'入队 x6 ② 写入后移', count:11,
+    html: queueRow([ NN('x6','ok','','n0'), NN('x2','ok','front','n1'), NN('x3','ok'), NN('x4','ok'), NN('x5','ok'), NN('空','dim','rear','n5') ], CAP0,
+      '写入 n0 = x6，rear 移到 n5。队内元素（front→rear−1）：x2,x3,x4,x5,x6'),
+    log:'写入 x6 到复用的结点 n0，rear 移到 n5。观察：空间只增不减，进出队都只动常数个指针。' },
+  { cls:'done', tag:'设计完成', count:12, done:true,
+    html: queueRow([ NN('x6','ok','','n0'), NN('x2','ok','front','n1'), NN('x3','ok'), NN('x4','ok'), NN('x5','ok'), NN('空','dim','rear','n5') ], CAP0,
+      '<b>①</b> 链式（单向循环链表 + front/rear）　<b>②</b> 队空 front==rear · 队满 front==rear->next　<b>③④</b> 判满扩容→写入→后移 / 判空→取值→前移，均 O(1)'),
+    log:'设计完成：链式存储 + 单向循环链表；队空 front==rear、队满 front==rear->next；入队出队均为 O(1)，空间只增不减、循环复用。' },
+];
+
+AW.init({
+  title: '2019-42 · "空间只增不减"的 O(1) 队列设计',
+  subtitle: '单向循环链表 · <code>front</code> / <code>rear</code> · 队空 <code>front==rear</code> · 队满 <code>front==rear-&gt;next</code>',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」演示初始状态、首元素入队、出队复用与扩容时机。',
+  snaps: snaps,
+  result: {
+    big: '链式存储 · O(1)',
+    html: '（1）选<b>链式存储</b>：单向循环链表 + front/rear。（2）初始仅一个空闲结点，front=rear；<b>队空 front==rear，队满 front==rear->next</b>。（3）首元素入队：判满挂新结点 → 写 rear->data → rear 后移。（4）入队出队均为常数次指针操作 <b>O(1)</b>；出队结点不释放、循环复用，空间只增不减。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

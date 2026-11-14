@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-29 多道批处理：两作业完成时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-29（选择题）P1/P2 计算与 I/O 交替，求最少完成时间
+     形态：算法/过程演示（甘特图逐步揭示，每步一个快照 html）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SCALE = 3;            // 3px / ms
+var END = 260;
+var W = END * SCALE;      // 轴总宽 780px
+
+// 时间线段（按题干顺序推导）
+var CPU = [
+  { id: 'c1', t0: 0,   t1: 60,  who: 'P1', lane: 'cpu' },   // P1 计算①
+  { id: 'c2', t0: 60,  t1: 180, who: 'P2', lane: 'cpu' },   // P2 计算①
+  { id: 'c3', t0: 180, t1: 200, who: 'P1', lane: 'cpu' },   // P1 计算②
+  { id: 'c4', t0: 200, t1: 220, who: 'idle', lane: 'cpu' },  // CPU 空闲
+  { id: 'c5', t0: 220, t1: 260, who: 'P2', lane: 'cpu' },   // P2 计算②
+];
+var IO = [
+  { id: 'i1', t0: 60,  t1: 140, who: 'P1', lane: 'io' },
+  { id: 'i2', t0: 180, t1: 220, who: 'P2', lane: 'io' },
+];
+
+function segBlock(s, cur){
+  var idle = s.who === 'idle';
+  var bg = idle ? 'repeating-linear-gradient(45deg,#e2e8f0 0 6px,#f1f5f9 6px 12px)'
+                : (s.who === 'P1' ? '#3b82f6' : '#f59e0b');
+  var fg = idle ? '#94a3b8' : '#fff';
+  var label = idle ? '空闲' : (s.who + (s.lane === 'io' ? '·I/O' : '·计算'));
+  var shadow = cur ? ';box-shadow:0 0 0 3px #fbbf24;z-index:2' : '';
+  return '<div style="position:absolute;left:' + (s.t0 * SCALE) + 'px;top:0;width:' +
+    ((s.t1 - s.t0) * SCALE) + 'px;height:30px;line-height:30px;text-align:center;font-size:11.5px;' +
+    'font-weight:700;color:' + fg + ';background:' + bg + ';border-radius:6px;overflow:hidden' +
+    shadow + '">' + label + '</div>';
+}
+
+function laneRow(label, segs, curId){
+  var h = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+  h += '<div style="width:86px;font-size:13px;font-weight:700;color:#334155;flex:none">' + label + '</div>';
+  h += '<div style="position:relative;width:' + W + 'px;height:30px;background:#f8fafc;' +
+       'border:1px solid #e2e8f0;border-radius:8px;flex:none">';
+  segs.forEach(function(s){ h += segBlock(s, s.id === curId); });
+  h += '</div></div>';
+  return h;
+}
+
+function axisHtml(){
+  var h = '<div style="display:flex;gap:10px"><div style="width:86px;flex:none"></div>' +
+          '<div style="position:relative;width:' + W + 'px;height:26px;flex:none">';
+  for (var t = 0; t <= END; t += 20){
+    h += '<div style="position:absolute;left:' + (t * SCALE) + 'px;bottom:0;width:1px;height:7px;background:#cbd5e1"></div>';
+    h += '<div style="position:absolute;left:' + (t * SCALE) + 'px;bottom:8px;transform:translateX(-50%);' +
+         'font-size:10.5px;color:#94a3b8;font-family:Menlo,monospace">' + t + '</div>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function legendHtml(){
+  return '<div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:#64748b">' +
+    '<span><span style="display:inline-block;width:10px;height:10px;background:#3b82f6;border-radius:3px;margin-right:4px"></span>P1</span>' +
+    '<span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:3px;margin-right:4px"></span>P2</span>' +
+    '<span><span style="display:inline-block;width:10px;height:10px;background:repeating-linear-gradient(45deg,#e2e8f0 0 3px,#f1f5f9 3px 6px);border:1px solid #e2e8f0;border-radius:3px;margin-right:4px"></span>CPU 空闲</span></div>';
+}
+
+function gantt(cpuSegs, ioSegs, curId){
+  var h = '<div style="min-width:' + (W + 96) + 'px">';
+  h += laneRow('处理机 CPU', cpuSegs, curId);
+  h += laneRow('I/O 设备', ioSegs, curId);
+  h += axisHtml();
+  h += legendHtml();
+  h += '</div>';
+  return h;
+}
+
+function pick(ids){
+  var out = [];
+  ids.forEach(function(id){
+    var all = CPU.concat(IO);
+    for (var i = 0; i < all.length; i++){ if (all[i].id === id){ out.push(all[i]); break; } }
+  });
+  return out;
+}
+
+var SNAPS = [
+  { cls: 'shift', tag: '初始', count: 0, cur: null,
+    cpu: [], io: [],
+    log: 'P1 在 t=0 到达，P2 晚 5ms（t=5）到达；单处理机上计算不能并行，但计算与 I/O 可以并行。' },
+  { cls: 'ok', tag: 'P1 上CPU', count: 0, cur: 'c1',
+    cpu: ['c1'], io: [],
+    log: 't=0：P1 到达且 CPU 空闲 → P1 立即开始第一段计算（0–60ms）。' },
+  { cls: 'step', tag: 'P2 到达', count: 5, cur: 'c1',
+    cpu: ['c1'], io: [],
+    log: 't=5：P2 到达，但 CPU 正被 P1 占用 → P2 只能进入就绪队列等待。' },
+  { cls: 'ok', tag: '并行', count: 60, cur: 'c2',
+    cpu: ['c1', 'c2'], io: ['i1'],
+    log: 't=60：P1 计算完 60ms，转入 I/O（60–140）；CPU 让给等待中的 P2（60–180）。计算与 I/O 并行推进。' },
+  { cls: 'step', tag: 'P1 等待', count: 140, cur: 'c2',
+    cpu: ['c1', 'c2'], io: ['i1'],
+    log: 't=140：P1 的 I/O 完成，还要做最后 20ms 计算，但 CPU 被 P2 占着（要到 180）→ P1 就绪等待。' },
+  { cls: 'shift', tag: '再切换', count: 180, cur: 'c3',
+    cpu: ['c1', 'c2', 'c3'], io: ['i1', 'i2'],
+    log: 't=180：P2 第一段计算（120ms）完成，转入 I/O（180–220）；P1 上 CPU 做收尾计算（180–200）。' },
+  { cls: 'ok', tag: 'P1 完成', count: 200, cur: 'c3', ribbon: {k:1, ok:true},
+    cpu: ['c1', 'c2', 'c3'], io: ['i1', 'i2'],
+    log: 't=200：P1 的 20ms 收尾计算完成 → P1 于 200ms 完成 ✓（计算 80ms + I/O 80ms）。' },
+  { cls: 'step', tag: '最后一段', count: 220, cur: 'c5',
+    cpu: ['c1', 'c2', 'c3', 'c4', 'c5'], io: ['i1', 'i2'],
+    log: 't=220：P2 的 I/O（40ms）完成，最后 40ms 计算上 CPU（220–260）。注意 200–220 这段 CPU 空闲——P2 还没从 I/O 回来。' },
+  { cls: 'done', tag: '全部完成', count: 260, cur: 'c5', ribbon: {k:2, ok:true},
+    cpu: ['c1', 'c2', 'c3', 'c4', 'c5'], io: ['i1', 'i2'],
+    log: 't=260：P2 完成最后 40ms 计算 → P2 于 260ms 完成。两个作业全部完成需要 260ms。', done: true },
+];
+
+var snaps = SNAPS.map(function(s){
+  var sn = {
+    cls: s.cls, tag: s.tag, count: s.count,
+    log: s.log,
+    html: gantt(pick(s.cpu), pick(s.io), s.cur),
+    done: !!s.done,
+  };
+  if (s.ribbon){ sn.ribbon = s.ribbon; }
+  return sn;
+});
+
+AW.init({
+  title: '【2012-29】两道作业的最少完成时间',
+  subtitle: 'P1：<code>计算60 → I/O 80 → 计算20</code> · P2（晚 5ms 到）：<code>计算120 → I/O 40 → 计算40</code> · 不计调度/切换开销',
+  counterLabel: '当前时刻',
+  ribbonTitle: '完成里程碑（✓）',
+  intro: '点击「▶ 播放」按时间轴推进甘特图。',
+  snaps: snaps,
+  result: {
+    big: '260 ms',
+    html: 'P1：0–60 计算 → 60–140 I/O → 180–200 计算，<b>200ms 完成</b>；P2：60–180 计算 → 180–220 I/O → 220–260 计算，<b>260ms 完成</b>。I/O 与计算并行、单 CPU 依次服务 → 最少 <b>260ms</b>，选 <b>B</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

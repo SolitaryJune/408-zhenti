@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-16 减法指令的 OF 与 CF 判定</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：OF 与 CF 各管什么', cls: 'key',
+    body: '<p>做减法时：<b>OF</b>（溢出标志）服务<b>带符号数</b>——结果超出 int 范围才置 1；<b>CF</b>（借位标志）服务<b>无符号数</b>——无符号下 <code>x &lt; y</code> 不够减就置 1。<br>题干先给了 <code>x=100, y=200</code> 时的结果（OF=0, CF=1），正好用来<b>校准规则</b>。</p>' },
+  { title: '用 100−200 校准规则', cls: 'good',
+    body: '<p><code>100 − 200 = −100</code>：带符号结果在 int 范围内 → OF=0 ✓；无符号下 <code>100 &lt; 200</code> 需借位 → CF=1 ✓。与题给完全吻合，规则成立。</p>' },
+  { title: '新数据判 OF', cls: 'good',
+    body: '<p>x=10，y=−20：<code>10 − (−20) = 30</code>。带符号结果 30 远未超出 int 范围 → <b>OF = 0</b>。</p>' },
+  { title: '新数据判 CF', cls: '',
+    body: '<p>CF 只比无符号大小，<b>与操作数正负无关</b>。y=−20 的机器数按无符号解读是 <code>2^32 − 20 = 4294967276</code>（约 42.9 亿），远大于 10，不够减 → <b>CF = 1</b>。</p>' },
+  { title: '逐项核对', cls: '',
+    body: '<p>A（OF=0, CF=0）：CF 错；<br>B（OF=0, CF=1）：<b>两项都对</b>；<br>C（OF=1, CF=0）：OF、CF 都错；<br>D（OF=1, CF=1）：OF 错。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>OF 管带符号溢出，CF 管无符号借位</b>——CF 完全不看符号位，只看无符号大小关系。</p>' },
+];
+
+var RIBBONS = { 1: { k: 1, ok: true }, 2: { k: 2, ok: true }, 3: { k: 3, ok: true }, 4: { k: 4, ok: true } };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBONS[i]) sn.ribbon = RIBBONS[i];
+  return sn;
+});
+
+AW.init({
+  title: '2023-16 · 减法指令的 OF 与 CF 判定',
+  subtitle: '<code>x=10, y=−20</code> · 减法指令 · OF 看带符号溢出 / CF 看无符号借位',
+  counterLabel: '推理步骤',
+  ribbonTitle: '推理环节（✓ 完成）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（OF=0, CF=1）',
+    html: '<code>10 − (−20) = 30</code> 带符号不溢出 → OF=0；CF 只看无符号大小：<code>10 &lt; 2^32−20</code> 需借位 → CF=1。易错：以为减负数不会借位——CF 与符号无关。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

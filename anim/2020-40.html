@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-40 从点击链接到收到页面的最短/最长时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类动画：DNS 查询链（0~3 RTT）+ HTTP 固定 2 RTT 逐段点亮
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var dnsRow, httpRow, accLine;
+
+function chipRow(label){
+  var wrap = AW.el('div', '');
+  wrap.style.cssText = 'margin-bottom:14px;';
+  var lb = AW.el('div', 'aw-row-label', '<b>' + label + '</b>');
+  wrap.appendChild(lb);
+  var flex = AW.el('div', '');
+  flex.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;';
+  wrap.appendChild(flex);
+  return { wrap: wrap, flex: flex };
+}
+function mkChip(t1, t2){
+  var c = AW.el('div', '');
+  c.style.cssText = 'border:2px solid #cbd5e1;border-radius:12px;padding:8px 10px;background:#fff;text-align:center;' +
+    'transition:all .4s;opacity:.25;min-width:118px;';
+  c.innerHTML = '<div style="font-size:12.5px;font-weight:700;color:#0f172a;white-space:nowrap;">' + t1 + '</div>' +
+    '<div style="font-size:11px;color:#64748b;white-space:nowrap;">' + t2 + '</div>';
+  return c;
+}
+
+AW.init({
+  title: '从点击超链接到收到页面：最快与最慢',
+  subtitle: '本地域名服务器只递归 · 其他服务器只迭代 · 每个 RTT = 10ms · 只计访问 Internet 服务器的往返',
+  counterLabel: '累计 RTT',
+  ribbonTitle: '关键步骤（✓ 已计）',
+  intro: '点击「▶ 播放」：先固定 HTTP 的 2 个 RTT，再看 DNS 从 0 到 3 个 RTT。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'padding:6px 2px 2px;';
+
+    dnsRow = chipRow('DNS 解析 www.abc.com（最好 0 RTT，最坏 3 RTT）');
+    dnsRow.cache = mkChip('H / 本地缓存命中', '0 RTT（最好情形）');
+    dnsRow.cache.style.borderStyle = 'dashed';
+    dnsRow.q1 = mkChip('问根域名服务器', '1 RTT');
+    dnsRow.q2 = mkChip('问 com 顶级域名服务器', '1 RTT');
+    dnsRow.q3 = mkChip('问 abc.com 权限域名服务器', '1 RTT');
+    [dnsRow.cache, dnsRow.q1, dnsRow.q2, dnsRow.q3].forEach(function(c){ dnsRow.flex.appendChild(c); });
+
+    httpRow = chipRow('HTTP 取页面（固定 2 RTT：纯文本页无其他对象）');
+    httpRow.c1 = mkChip('TCP 建立连接', '1 RTT');
+    httpRow.c2 = mkChip('HTTP 请求 + 返回页面', '1 RTT（第三次握手捎带请求）');
+    [httpRow.c1, httpRow.c2].forEach(function(c){ httpRow.flex.appendChild(c); });
+
+    accLine = AW.el('div', '');
+    accLine.style.cssText = 'margin-top:6px;font-size:15px;font-weight:700;color:#0f172a;';
+    accLine.innerHTML = '累计 = <code>0 RTT = 0 ms</code>';
+
+    inner.appendChild(dnsRow.wrap);
+    inner.appendChild(httpRow.wrap);
+    inner.appendChild(accLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'拆解', log:'总时间 = DNS 解析 + HTTP 取页面；每个 RTT = 10ms，只计访问 Internet 服务器的往返', count:0 },
+    { cls:'ok',    tag:'固定开销', log:'HTTP 基于 TCP：建连 1 RTT；第三次握手捎带 HTTP 请求、返回页面再 1 RTT → 固定 2 RTT = 20ms', count:2, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'最短情形', log:'H 或本地域名服务器的缓存中已有 www.abc.com 的 IP：DNS 只花 0 RTT → 合计 2 RTT = 20ms（最短）', count:2, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'最坏·第 1 站', log:'无缓存时，本地域名服务器迭代询问根域名服务器：+1 RTT', count:3 },
+    { cls:'shift', tag:'最坏·第 2 站', log:'根给出 com 顶级域名服务器的地址，再问：+1 RTT', count:4 },
+    { cls:'shift', tag:'最坏·第 3 站', log:'com 顶级给出 abc.com 权限域名服务器的地址，再问：+1 RTT，DNS 共 3 RTT', count:5 },
+    { cls:'done',  tag:'完成', log:'最短 = 0 + 2 = 2 RTT = 20ms；最长 = 3 + 2 = 5 RTT = 50ms → 选 D', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    function on(c, hot){
+      c.style.opacity = 1;
+      c.style.borderColor = hot ? '#d97706' : '#16a34a';
+      c.style.background = hot ? '#fef3c7' : '#f0fdf4';
+    }
+    function off(c){ c.style.opacity = .25; c.style.borderColor = '#cbd5e1'; c.style.background = '#fff'; }
+
+    if(i >= 2 && i < 3){ on(dnsRow.cache); } else { off(dnsRow.cache); }
+    if(i >= 3){ on(dnsRow.q1, i === 3); } else { off(dnsRow.q1); }
+    if(i >= 4){ on(dnsRow.q2, i === 4); } else { off(dnsRow.q2); }
+    if(i >= 5){ on(dnsRow.q3, i === 5); } else { off(dnsRow.q3); }
+    if(i >= 1){ on(httpRow.c1, false); on(httpRow.c2, false); } else { off(httpRow.c1); off(httpRow.c2); }
+
+    var rtt = (i >= 5) ? 5 : (i >= 4 ? 4 : (i >= 3 ? 3 : (i >= 1 ? 2 : 0)));
+    var tag = '';
+    if(i === 2){ tag = '　<b style="color:#16a34a">← 最短 20ms</b>'; }
+    if(i >= 5){ tag = '　<b style="color:#d97706">← 最长 50ms</b>'; }
+    accLine.innerHTML = '累计 = <code>' + rtt + ' RTT = ' + (rtt * 10) + ' ms</code>' + tag;
+  },
+
+  result: {
+    big: '最短 20ms · 最长 50ms',
+    html: 'DNS 最好 <b>0 RTT</b>（H 或本地域名服务器缓存命中）、最坏 <b>3 RTT</b>（根 → com 顶级 → abc.com 权限）；HTTP 固定 <b>2 RTT</b>（建连 + 请求响应）。最短 = 2 RTT = <b>20ms</b>，最长 = 5 RTT = <b>50ms</b> → 选 <b>D</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

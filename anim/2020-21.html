@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-21 外部中断的响应条件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-21：NMI 与可屏蔽中断（找错误项）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：响应中断的三道门',
+    cls: 'key',
+    body: '<p>① 时机——每条指令<b>执行结束</b>时才查询请求；② 允许——可屏蔽中断需开中断且未被屏蔽字屏蔽；③ 优先级——更紧急的先处理。NMI 是"特殊通道"。</p>' },
+  { title: 'A：关中断也能响应 NMI —— 正确',
+    cls: 'good',
+    body: '<p>NMI 不受中断允许标志（IF）约束，专为掉电等紧急事件保留；CPU 关中断时照样响应 → A 叙述正确。</p>' },
+  { title: 'B：请求一有效就立即响应 —— 错误！',
+    cls: 'bad',
+    body: '<p>可屏蔽中断请求有效后，CPU 必须等<b>当前指令执行结束</b>，且开中断、未被屏蔽才响应，绝不会中途插队 → <b>此叙述错误，选 B</b>。</p>' },
+  { title: 'C：NMI 优先级高于可屏蔽中断 —— 正确',
+    cls: 'good',
+    body: '<p>不可屏蔽中断更紧急，优先级比可屏蔽中断<b>高</b> → C 叙述正确。</p>' },
+  { title: 'D：屏蔽字可改变处理优先级 —— 正确',
+    cls: 'good',
+    body: '<p>通过设置<b>中断屏蔽字</b>可以动态调整可屏蔽中断的处理次序（处理优先级）→ D 叙述正确。</p>' },
+  { title: '结论：选 B',
+    cls: 'good',
+    body: '<p>错误叙述是 <b>B</b>。记忆锚点：请求有效 ≠ 立即响应，响应点固定在"每条指令执行结束"；关中断挡不住 NMI。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2020-21 · 外部中断响应条件逐项辨析',
+  subtitle: '考点：中断响应时机 · NMI 与可屏蔽中断 · 中断屏蔽字',
+  intro: '点击「▶ 播放」或「下一步」，逐项核对四个叙述。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：响应可屏蔽中断要过三道门——<b>指令执行结束、开中断、未被屏蔽</b>。<br>' +
+      'NMI 只受"时机"约束，不受关中断影响；屏蔽字能动态调整可屏蔽中断的处理优先级。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

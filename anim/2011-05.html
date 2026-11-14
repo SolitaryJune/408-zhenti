@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-05 前序+后序下不可能的中序 · 逐项还原动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 四层小斜链：labels 逐层结点值，positions 为每层在第几列（0..8），能画出左斜/右斜
+function chainTree(labels, positions){
+  var h = '<div style="display:inline-block;vertical-align:middle;margin:0 10px">';
+  for (var i = 0; i < 4; i++){
+    h += '<div style="display:flex;justify-content:center">';
+    for (var s = 0; s < 9; s++){
+      h += (s === positions[i])
+        ? '<div class="aw-box" style="width:34px;height:30px;font-size:13px;margin:0 1px">' + labels[i] + '</div>'
+        : '<div style="width:34px;margin:0 1px"></div>';
+    }
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个序列给出什么', cls: 'key',
+    body: '<p>前序 <code>1,2,3,4</code>，后序 <code>4,3,2,1</code>。前序首 = 后序尾 ⇒ <b>根是 1</b>。剩余结点 {2,3,4} 在前序里紧跟根、在后序里紧贴根，但这两序<b>分不出左右子树</b>——划分要靠中序，这正是中序不唯一、本题有解的原因。</p>' },
+  { title: '检验方法', cls: '',
+    body: '<p>对每个候选中序：先用中序把 {2,3,4} 按 1 的左右分堆，再用「<b>前序定根、中序分左右、后序验形</b>」逐层还原；哪一步与给定的前序/后序对不上，该中序就不可能。</p>' },
+  { title: 'A：1,2,3,4 —— 可能', cls: 'good',
+    body: '<p>1 无左子树，右子树 {2,3,4}：根 2，中序拆出左空、右 {3,4} —— 右斜链 ' + chainTree(['1','2','3','4'], [4,5,6,7]) + '。中序 1,2,3,4 ✓，后序恰为 4,3,2 ✓。</p>' },
+  { title: 'B：2,3,4,1 —— 可能', cls: 'good',
+    body: '<p>{2,3,4} 全在 1 的<b>左</b>子树，其根为 2；中序拆出左空、右 {3,4} —— ' + chainTree(['1','2','3','4'], [4,3,4,5]) + '（1 的左孩子 2，再向右下斜）。中序 2,3,4,1 ✓，后序 4,3,2 ✓。</p>' },
+  { title: 'C：3,2,4,1 —— 矛盾！', cls: 'bad',
+    body: '<p>左子树 {2,3,4} 根为 2，中序 <code>3,2,4</code> 拆出<b>左 {3}、右 {4}</b>；这样一来该子树的后序必须是 <code>3,4,2</code>（左子树后序、右子树后序、根）。但题目给的后序是 <code>4,3,2</code> —— <b>对不上，不可能</b>。</p>' },
+  { title: 'D：4,3,2,1 —— 可能', cls: 'good',
+    body: '<p>{2,3,4} 全在左：2 的左子树 {3,4}、3 的左孩子 4 —— 左斜链 ' + chainTree(['1','2','3','4'], [4,3,2,1]) + '。中序恰为 4,3,2,1 ✓。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>A、B、D 都能还原出与两序吻合的二叉树；只有 <b>C</b> 的后序验形失败。答案选 <b>C</b>。记忆锚点：前序定根、中序分左右、<b>后序验形</b>——三序齐全才下结论。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
+    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-05 · 前序 1,2,3,4 / 后序 4,3,2,1：哪个中序不可能？',
+  subtitle: '方法 <code>前序定根 · 中序分左右 · 后序验形</code> · 四个选项逐项还原',
+  intro: '点击「▶ 播放」逐个选项还原验证。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（3,2,4,1 不可能）',
+    html: 'C 把左子树拆成左 {3}、右 {4}，其后序必须是 3,4,2，与给定后序 4,3,2 矛盾。A/B/D 分别对应右斜链、左挂右斜链、左斜链，都能吻合。前序+后序<b>不能唯一确定</b>有度 1 结点的二叉树，所以中序有多个可能——题目只要求挑出「不可能」的那个。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

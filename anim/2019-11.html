@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-11 最佳归并树补虚段 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：最佳归并树要"凑满 k 叉"', cls: 'key',
+    body: '<p>120 个初始归并段做 <b>12 路</b>归并，要按哈夫曼思想构造<b>最佳归并树</b>（越短的段越早归并），问需补几个<b>虚段</b>（长度为 0 的空段）。</p>' },
+  { title: '原理：满 k 叉树的叶子数限制', cls: '',
+    body: '<p>若归并树是"满"的 k 叉树（每个分支结点恰有 k 个孩子），叶子数满足 <code>n0 = (k−1) × 内结点数 + 1</code>。因此要求 <b>(n−1) 能被 (k−1) 整除</b>，否则最后一次归并凑不齐、树上会留"残枝"，归并次数变多。</p>' },
+  { title: '判断：119 mod 11 = 9 ≠ 0', cls: '',
+    body: '<p>这里 n = 120、k = 12：<code>(120−1) mod (12−1) = 119 mod 11 = 9 ≠ 0</code> → 不能构成满 12 叉树，<b>需要补虚段</b>。注意判别式是 (n−1) mod (k−1)，不是 120 mod 12。</p>' },
+  { title: '套公式：u = 11 − 9 = 2', cls: 'good',
+    body: '<p>补虚段个数 <code>u = (k−1) − ((n−1) mod (k−1)) = 11 − 9 = <b>2</b></code>。余数 9 本身不是答案，用 (k−1) 减它才是。</p>' },
+  { title: '验证：122 段恰好成满树', cls: '',
+    body: '<p>补 2 个虚段后共 122 段：<code>(122−1) mod 11 = 121 mod 11 = 0</code> ✓。第一次归并取 12 段（2 个虚段 + 10 个最短的实段），此后每次都是整齐的 12 路归并，I/O 次数最少。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>B（补 2 个虚段）</b>。陷阱复盘：用 <code>120 mod 12 = 0</code> 判断会误以为不用补（错选 A）；把余数 9 当虚段数也不对——<code>11 − 9 = 2</code> 才是。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019-11 · 最佳归并树的虚段个数',
+  subtitle: '120 个初始归并段 · 12 路归并 · 公式 <code>u = (k−1) − ((n−1) mod (k−1))</code>',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（补 2 个虚段）',
+    html: '判别式 <b>(n−1) mod (k−1) = 119 mod 11 = 9 ≠ 0</b> → 补 <b>11 − 9 = 2</b> 个虚段；补后 (122−1) mod 11 = 0，恰好构成满 12 叉哈夫曼归并树。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

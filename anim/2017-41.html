@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-41 动画：表达式树转中缀表达式</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-41 表达式树中序遍历加括号（算法/过程类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var NODES = [
+  { id:'mul',  lab:'*', cx:168, ty:16 },
+  { id:'add',  lab:'+', cx:80,  ty:106 },
+  { id:'mulr', lab:'*', cx:255, ty:106 },
+  { id:'a',    lab:'a', cx:30,  ty:196 },
+  { id:'b',    lab:'b', cx:130, ty:196 },
+  { id:'c',    lab:'c', cx:230, ty:196 },
+  { id:'sub',  lab:'−', cx:280, ty:196 },
+  { id:'d',    lab:'d', cx:330, ty:286 },
+];
+var EDGES = [
+  ['mul','add'], ['mul','mulr'], ['add','a'], ['add','b'],
+  ['mulr','c'], ['mulr','sub'], ['sub','d'],
+];
+var OUT = ['(','a','+','b',')','*','(','c','*','(','-','d',')',')'];
+/* 每步已输出的字符数（0..14） */
+var OUTN = [0,0,1,2,3,4,5,6,7,8,9,13,14,14];
+/* 每步结点状态：'hit'=当前处理, 'ok'=已处理, ''=未处理 */
+var NST = [
+  { mul:'',    add:'',    mulr:'',    a:'',    b:'',    c:'',    sub:'',    d:''    },
+  { mul:'hit', add:'',    mulr:'',    a:'',    b:'',    c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'hit', mulr:'',    a:'',    b:'',    c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'ok',  mulr:'',    a:'hit', b:'',    c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'hit', mulr:'',    a:'ok',  b:'',    c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'ok',  mulr:'',    a:'ok',  b:'hit', c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'hit', mulr:'',    a:'ok',  b:'ok',  c:'',    sub:'',    d:''    },
+  { mul:'hit', add:'ok',  mulr:'',    a:'ok',  b:'ok',  c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'ok',  mulr:'hit', a:'ok',  b:'ok',  c:'',    sub:'',    d:''    },
+  { mul:'ok',  add:'ok',  mulr:'ok',  a:'ok',  b:'ok',  c:'hit', sub:'',    d:''    },
+  { mul:'ok',  add:'ok',  mulr:'hit', a:'ok',  b:'ok',  c:'ok',  sub:'',    d:''    },
+  { mul:'ok',  add:'ok',  mulr:'ok',  a:'ok',  b:'ok',  c:'ok',  sub:'hit', d:'hit' },
+  { mul:'ok',  add:'ok',  mulr:'hit', a:'ok',  b:'ok',  c:'ok',  sub:'ok',  d:'ok'  },
+  { mul:'ok',  add:'ok',  mulr:'ok',  a:'ok',  b:'ok',  c:'ok',  sub:'ok',  d:'ok'  },
+];
+var nodeEls = {};
+var outRow;
+
+function setBoxes(row, cls, texts){
+  for (var j = 0; j < row.children.length; j++){
+    var col = row.children[j];
+    var box = col.children[1];
+    if (texts && texts[j] != null) box.innerHTML = texts[j];
+    box.className = 'aw-box' + (cls && cls[j] ? ' ' + cls[j] : '');
+  }
+}
+
+AW.init({
+  title: '2017-41　表达式树 → 中缀表达式（中序遍历＋动态加括号）',
+  subtitle: '演示题给树1（输出 <code>(a+b)*(c*(-d))</code>）：叶和根不加括号，深度 &gt;1 的非叶结点前后各补一层括号',
+  counterLabel: '已输出字符',
+  ribbonTitle: '输出字符（✓ 第 k 个字符已输出）',
+  intro: '点击「▶ 播放」，跟随中序递归逐字符输出。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var treeBox = AW.el('div', '');
+    treeBox.style.position = 'relative';
+    treeBox.style.width = '400px';
+    treeBox.style.height = '336px';
+    treeBox.style.margin = '0 auto';
+    var byId = {};
+    NODES.forEach(function(nd){ byId[nd.id] = nd; });
+    EDGES.forEach(function(e){
+      var p = byId[e[0]], q = byId[e[1]];
+      var x1 = p.cx, y1 = p.ty + 44, x2 = q.cx, y2 = q.ty;
+      var dx = x2 - x1, dy = y2 - y1;
+      var ln = AW.el('div', '');
+      ln.style.position = 'absolute';
+      ln.style.left = x1 + 'px';
+      ln.style.top = y1 + 'px';
+      ln.style.width = Math.sqrt(dx * dx + dy * dy) + 'px';
+      ln.style.height = '2px';
+      ln.style.background = '#cbd5e1';
+      ln.style.transformOrigin = '0 50%';
+      ln.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+      treeBox.appendChild(ln);
+    });
+    NODES.forEach(function(nd){
+      var b = AW.el('div', 'aw-box', nd.lab);
+      b.style.position = 'absolute';
+      b.style.left = (nd.cx - 22) + 'px';
+      b.style.top = nd.ty + 'px';
+      b.style.zIndex = 2;
+      treeBox.appendChild(b);
+      nodeEls[nd.id] = b;
+    });
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>表达式树 1</b>（根 * 左 +(a,b)，右 *(c, −(d))）'));
+    inner.appendChild(treeBox);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>输出串</b>（中序遍历＋括号）'));
+    outRow = AW.cellRow(OUT, [], null);
+    inner.appendChild(outRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'规则', log:'中序遍历 = 中缀表达式：叶（操作数）直接输出，非叶（操作符）按中序输出，深度 &gt;1 的非叶结点前后补括号（根 deep=1 不加）', count:0, si:0 },
+    { cls:'step', tag:'进入根 *', log:'根 * 的深度 deep=1：非叶但 deep=1 → 不加括号，先递归左子树', count:0, si:1 },
+    { cls:'ok', tag:'加左括号', log:'进入 + 子表达式（deep=2）：deep&gt;1 → 先输出左括号 (', count:1, ribbon:{k:1,ok:true}, si:2 },
+    { cls:'ok', tag:'输出 a', log:'a 是叶结点（操作数）→ 直接输出 a', count:2, ribbon:{k:2,ok:true}, si:3 },
+    { cls:'ok', tag:'输出 +', log:'回到 + 的中序位置 → 输出操作符 +', count:3, ribbon:{k:3,ok:true}, si:4 },
+    { cls:'ok', tag:'输出 b', log:'递归 + 的右孩子 b（叶）→ 输出 b', count:4, ribbon:{k:4,ok:true}, si:5 },
+    { cls:'ok', tag:'加右括号', log:'+ 子树递归完毕（deep=2）→ 补右括号 )，子表达式 (a+b) 完成', count:5, ribbon:{k:5,ok:true}, si:6 },
+    { cls:'ok', tag:'输出 *', log:'回到根 * 的中序位置 → 输出 *', count:6, ribbon:{k:6,ok:true}, si:7 },
+    { cls:'ok', tag:'加左括号', log:'进入右子树 *（deep=2）→ 输出 (', count:7, ribbon:{k:7,ok:true}, si:8 },
+    { cls:'ok', tag:'输出 c', log:'c 是叶 → 输出 c', count:8, ribbon:{k:8,ok:true}, si:9 },
+    { cls:'ok', tag:'输出 *', log:'回到该 * 的中序位置 → 输出 *', count:9, ribbon:{k:9,ok:true}, si:10 },
+    { cls:'ok', tag:'单目减 −', log:'进入 −（deep=3）：左孩子为空直接越过；deep&gt;1 输出 (；输出 −；递归右孩子 d 输出 d；补 ) → 输出 (-d)', count:13, ribbon:{k:13,ok:true}, si:11 },
+    { cls:'ok', tag:'加右括号', log:'右子树 * 递归完毕 → 补 )；整棵树输出完成（根 deep=1 无外层括号）', count:14, ribbon:{k:14,ok:true}, si:12 },
+    { cls:'done', tag:'完成', log:'树1 输出 (a+b)*(c*(-d))，与题面一致；同理树2 输出 (a*b)+(-(c-d))', count:14, si:13, done:true },
+  ],
+
+  render: function(stage, sn){
+    var st = NST[sn.si];
+    NODES.forEach(function(nd){
+      nodeEls[nd.id].className = 'aw-box' + (st[nd.id] ? ' ' + st[nd.id] : '');
+    });
+    var n = OUTN[sn.si];
+    var cls = [], texts = [];
+    for (var j = 0; j < OUT.length; j++){
+      if (j < n - 1) cls.push('ok');
+      else if (j === n - 1) cls.push(sn.done ? 'ok' : 'hit');
+      else cls.push('');
+      texts.push(j < n ? OUT[j] : '·');
+    }
+    setBoxes(outRow, cls, texts);
+  },
+
+  result: {
+    big: '(a+b)*(c*(-d))',
+    html: '中序遍历＋动态括号：<b>叶和根不加括号，深度 &gt;1 的非叶结点各包一层</b>（括号层数 = 深度 − 1）。树2 同理输出 <code>(a*b)+(-(c-d))</code>。记忆锚点：单目减只有右孩子，左孩子为空自然跳过，输出 <code>-d</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

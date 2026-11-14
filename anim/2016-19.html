@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-19 动画 · 无转发五段流水线的数据冒险定位</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：五段流水线时空图上逐对指令检查数据冒险
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 无冒险时的理想排布：指令 → 周期 → 段
+var SCHED = [
+  ['I1', {1:'IF', 2:'ID', 3:'EX', 4:'MEM', 5:'WB'}],
+  ['I2', {2:'IF', 3:'ID', 4:'EX', 5:'MEM', 6:'WB'}],
+  ['I3', {3:'IF', 4:'ID', 5:'EX', 6:'MEM', 7:'WB'}],
+  ['I4', {4:'IF', 5:'ID', 6:'EX', 7:'MEM', 8:'WB'}],
+];
+var INSTR_TXT = {
+  I1: 'add R1,R2,R3 · 写R1',
+  I2: 'add R5,R2,R4 · 读R2,R4 写R5',
+  I3: 'add R4,R5,R3 · 读R5,R3 写R4',
+  I4: 'add R5,R2,R6 · 读R2,R6 写R5',
+};
+
+// hl: {'行号(1~4),周期(1~8)': 'r'|'g'|'a'}  r红=读旧值 g绿=写入新值 a琥珀=关注
+function grid(hl){
+  var s = '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12.5px;margin-top:4px">';
+  s += '<tr><th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:5px 8px;color:#334155">指令</th>';
+  var c;
+  for(c = 1; c <= 8; c++){
+    s += '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:5px 8px;color:#334155;min-width:52px">周期' + c + '</th>';
+  }
+  s += '</tr>';
+  SCHED.forEach(function(row, ri){
+    var name = row[0];
+    s += '<tr><td style="border:1px solid #e2e8f0;padding:5px 8px;background:#f8fafc;color:#0f172a;font-weight:700;white-space:nowrap">' +
+         name + '<br><span style="font-weight:400;font-size:11px;color:#64748b">' + INSTR_TXT[name] + '</span></td>';
+    for(c = 1; c <= 8; c++){
+      var st = row[1][c];
+      var key = (ri + 1) + ',' + c;
+      var bg = '#ffffff', fg = '#334155', wt = '400', ol = '1px solid #e2e8f0';
+      if(st){
+        bg = '#eff6ff'; fg = '#1d4ed8'; wt = '700';
+        if(hl && hl[key] === 'r'){ bg = '#fee2e2'; fg = '#b91c1c'; ol = '3px solid #dc2626'; }
+        else if(hl && hl[key] === 'g'){ bg = '#dcfce7'; fg = '#15803d'; ol = '3px solid #16a34a'; }
+        else if(hl && hl[key] === 'a'){ bg = '#fef3c7'; fg = '#92400e'; ol = '3px solid #d97706'; }
+      }
+      s += '<td style="border:' + ol + ';background:' + bg + ';padding:5px 8px;text-align:center;color:' + fg +
+           ';font-weight:' + wt + ';font-family:Menlo,Consolas,monospace">' + (st || '—') + '</td>';
+    }
+    s += '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+function card(cls, html){
+  return '<div class="aw-stepcard ' + cls + '"><p>' + html + '</p></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'五段流水线（取指 IF / 译码读寄存器 ID / 运算 EX / 访存 MEM / 写回 WB），无转发；找出有数据冒险的指令对',
+    html: card('key', '数据冒险（RAW）：<b>后条指令要读的寄存器 = 前条指令要写的寄存器</b>。无转发机制意味着后条指令只能等前条<b>写回后</b>才能读到新值。下面在时空图上逐对检查。') +
+          grid({}) },
+
+  { cls:'step', tag:'理想排布', count:1, ribbon:{k:1, ok:true},
+    log:'按序流动的理想排布：I2 的写回 WB 在周期 6，I3 的译码读寄存器 ID 在周期 4 —— 先记住这两个时刻',
+    html: card('key', '看点：I3 在<b>周期 4</b> 的 ID 段读 R5；I2 要到<b>周期 6</b> 的 WB 段才写入 R5。<br>时间上 I3 读在前、I2 写在后 → 无转发时 I3 读到的是<b>旧值</b>。') +
+          grid({}) },
+
+  { cls:'ok', tag:'检查 I1/I2', count:2, ribbon:{k:2, ok:true},
+    log:'I1 只写 R1；I2 读 R2、R4，写 R5 —— 读写集合无交集 → 无数据冒险',
+    html: card('good', 'I1 写 <code>R1</code>，I2 读 <code>R2,R4</code>、写 <code>R5</code>：无交集 → <b>无冒险</b>。（两条指令都读 R2，但 R2 在整个序列中从未被写，同名不代表冒险。）') +
+          grid({}) },
+
+  { cls:'miss', tag:'检查 I2/I3 ★', count:3, ribbon:{k:3, ok:false},
+    log:'I3 在周期 4 的 ID 段读 R5（红），I2 到周期 6 的 WB 段才写 R5（绿）→ 无转发时读到旧值 → 数据冒险！',
+    html: card('bad', 'I3 读 <b>R5</b>（周期 4，红），I2 写 <b>R5</b>（周期 6，绿）：先写后读（RAW）被时序倒挂 → <b>I2 和 I3 存在数据冒险</b>，I3 必须暂停等 I2 写回。') +
+          grid({'3,4':'r', '2,6':'g'}) },
+
+  { cls:'ok', tag:'检查 I2/I4', count:4, ribbon:{k:4, ok:true},
+    log:'I2、I4 都"写" R5 —— 这是写-写相关（WAW），顺序流水按序写回不会出错，不属于本题的数据冒险',
+    html: card('good', 'I2 写 R5（周期 6）、I4 写 R5（周期 8，琥珀）：<b>WAW 相关</b>。按序流动、按序写回，寄存器最终值正确，且不是"先写后读"型 → <b>不是答案</b>。') +
+          grid({'2,6':'a', '4,8':'a'}) },
+
+  { cls:'ok', tag:'检查 I3/I4', count:5, ribbon:{k:5, ok:true},
+    log:'I4 写 R5 在周期 8，I3 读 R5 在周期 4 —— 程序顺序上先读后写，不冲突',
+    html: card('good', 'I3 读 R5（周期 4）在 I4 写 R5（周期 8）<b>之前</b>：先读后写不产生错误数据 → <b>无冒险</b>。') +
+          grid({'3,4':'g', '4,8':'g'}) },
+
+  { cls:'done', tag:'完成', count:6, ribbon:{k:6, ok:true},
+    log:'唯一的数据冒险对是 I2 和 I3 → 答案 B',
+    done:true,
+    html: card('good', '答案选 <b>B（I2 和 I3）</b>：I3 译码段读 R5，I2 写回段才写 R5，无转发时需暂停等待。') +
+          grid({'3,4':'r', '2,6':'g'}) },
+];
+
+AW.init({
+  title: '2016-19 无转发五段流水线的数据冒险定位',
+  subtitle: '取指 IF → 译码/读寄存器 ID → 运算 EX → 访存 MEM → 写回 WB · 考点：数据冒险（RAW）识别',
+  counterLabel: '检查步',
+  ribbonTitle: '检查进度（✓ 无冒险 / ✗ 有冒险）',
+  intro: '点击「▶ 播放」在时空图上逐对检查。',
+  snaps: snaps,
+  result: {
+    big: 'I2 和 I3（答案 B）',
+    html: '记忆锚点：<b>RAW = 后读的寄存器是前条指令的目的寄存器</b>。本题 I2 写 R5 → I3 读 R5，且 I3 的 ID（周期 4）早于 I2 的 WB（周期 6），无转发时 I3 读到旧值必须暂停。<br>易混：<b>I2/I4 都写 R5 是 WAW</b>，按序流水按序写回不构成数据冒险。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

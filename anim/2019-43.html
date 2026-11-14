@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-43 哲学家就餐（碗+筷子）PV 时序动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（信号量 PV 时序） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 演示用具体化：n = 5 位哲学家、m = 2 个碗（题目为一般情形 n>=3、m>=1）
+// bowl 初值 = min(m, n-1) = min(2, 4) = 2；信号量下标 0 = bowl，1~5 = 筷0~筷4
+var SEM_NAMES = ['bowl（碗）', '筷0', '筷1', '筷2', '筷3', '筷4'];
+
+var CODE = [
+  'while (true) {',
+  '    think;                    // 思考',
+  '    P(bowl);                  // 取碗（限额 min(m, n-1)）',
+  '    P(chopstick[i]);          // 取左筷',
+  '    P(chopstick[(i+1) % n]);  // 取右筷',
+  '    eat;                      // 进餐',
+  '    V(chopstick[i]);          // 还左筷',
+  '    V(chopstick[(i+1) % n]);  // 还右筷',
+  '    V(bowl);                  // 最后还碗',
+  '}',
+];
+
+// 每步数据：sem = [bowl, 筷0..筷4]（负值 = 有进程在该信号量上等待）；chg = 本步变化的信号量下标；
+// bad = 因 P 而阻塞的信号量下标；phil = P0..P4 状态；act = 高亮的哲学家下标；hl = 高亮的代码行下标
+// 语义：Pi 取 chopstick[i] 与 chopstick[(i+1)%n]，即 P0:筷0筷1 / P1:筷1筷2 / P2:筷2筷3 / P3:筷3筷4 / P4:筷4筷0
+var D = [
+  { sem:[2,1,1,1,1,1],   chg:[],      bad:[],   phil:['思考','思考','思考','思考','思考'],   act:[],      hl:[] },
+  { sem:[1,0,0,1,1,1],   chg:[0,1,2], bad:[],   phil:['进餐','思考','思考','思考','思考'],   act:[0],     hl:[2,3,4,5] },
+  { sem:[0,0,-1,1,1,1],  chg:[0,2],   bad:[2],  phil:['进餐','等筷1','思考','思考','思考'],  act:[1],     hl:[2,3] },
+  { sem:[-1,0,-1,1,1,1], chg:[0],     bad:[0],  phil:['进餐','等筷1','等碗','思考','思考'],  act:[2],     hl:[2] },
+  { sem:[-3,0,-1,1,1,1], chg:[0],     bad:[0],  phil:['进餐','等筷1','等碗','等碗','等碗'],  act:[2,3,4], hl:[2] },
+  { sem:[-2,1,0,1,1,1],  chg:[0,1,2], bad:[],   phil:['思考','被唤醒','被唤醒','等碗','等碗'], act:[0,1,2], hl:[6,7,8] },
+  { sem:[-2,1,0,0,1,1],  chg:[3],     bad:[],   phil:['思考','进餐','被唤醒','等碗','等碗'],  act:[1],     hl:[3,4,5] },
+  { sem:[-2,1,0,-1,1,1], chg:[3],     bad:[3],  phil:['思考','进餐','等筷2','等碗','等碗'],  act:[2],     hl:[3] },
+  { sem:[-1,1,1,0,1,1],  chg:[0,2,3], bad:[],   phil:['思考','思考','被唤醒','被唤醒','等碗'], act:[1,2,3], hl:[6,7,8] },
+  { sem:[-1,1,1,0,-1,1], chg:[4],     bad:[4],  phil:['思考','思考','进餐','等筷3','等碗'],  act:[2,3],   hl:[3,4,5] },
+  { sem:[-1,1,1,0,-1,1], chg:[],      bad:[],   phil:['思考','思考','进餐','等筷3','等碗'],  act:[],      hl:[] },
+];
+
+var PHCOL = {
+  '思考':  { bg:'#f1f5f9', bd:'#e2e8f0', tx:'#64748b' },
+  '进餐':  { bg:'#dcfce7', bd:'#16a34a', tx:'#15803d' },
+  '被唤醒': { bg:'#fef3c7', bd:'#d97706', tx:'#92400e' },
+};
+
+function philCol(st){
+  if (PHCOL[st]) return PHCOL[st];
+  return { bg:'#fee2e2', bd:'#dc2626', tx:'#b91c1c' }; // 等碗 / 等筷X
+}
+
+AW.init({
+  title: '2019-43 · 哲学家就餐（碗 + 筷子）的 PV 时序',
+  subtitle: '信号量 <code>chopstick[n]</code> 初值全 1 · <code>bowl</code> 初值 = min(m, n−1) · 以 n=5、m=2 为例（bowl=2）演示',
+  counterLabel: '演示步',
+  intro: '点击「▶ 播放」，观察信号量值与哲学家状态如何变化。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'display:flex;gap:20px;min-width:780px';
+
+    // 左：信号量 + 哲学家
+    var left = AW.el('div', '');
+    left.style.cssText = 'flex:1.2';
+    var l1 = AW.el('div', 'aw-row-label', '<b>信号量当前值</b>（绿框 = 本步发生变化，红框 = 在此阻塞）');
+    var semRow = AW.el('div', '');
+    semRow.style.cssText = 'display:flex;gap:8px;margin-bottom:16px';
+    var semCols = [];
+    for (var s = 0; s < 6; s++){
+      var col = AW.el('div', '');
+      col.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:3px';
+      var top = AW.el('div', '');
+      top.style.cssText = 'height:18px;font-size:11px;color:#94a3b8';
+      var box = AW.el('div', 'aw-box', String(D[0].sem[s]));
+      box.style.cssText = 'width:48px;height:44px;font-size:17px';
+      var lab = AW.el('div', '', SEM_NAMES[s]);
+      lab.style.cssText = 'font-size:10.5px;color:#94a3b8;white-space:nowrap';
+      col.appendChild(top); col.appendChild(box); col.appendChild(lab);
+      semCols.push(box);
+      semRow.appendChild(col);
+    }
+    var l2 = AW.el('div', 'aw-row-label', '<b>哲学家状态</b>（蓝圈 = 本步主角）');
+    var philRow = AW.el('div', '');
+    philRow.style.cssText = 'display:flex;gap:8px';
+    var philEls = [];
+    for (var p = 0; p < 5; p++){
+      var chip = AW.el('div', '');
+      chip.style.cssText = 'width:88px;padding:7px 4px;border-radius:10px;text-align:center;border:2px solid #e2e8f0;background:#f1f5f9;transition:all .25s';
+      chip.innerHTML = '<div style="font-weight:800;font-size:13px">P' + p + '</div><div class="pst" style="font-size:11px;margin-top:2px">思考</div>';
+      philEls.push(chip);
+      philRow.appendChild(chip);
+    }
+    left.appendChild(l1); left.appendChild(semRow); left.appendChild(l2); left.appendChild(philRow);
+
+    // 右：代码面板
+    var right = AW.el('div', '');
+    right.style.cssText = 'flex:1';
+    var l3 = AW.el('div', 'aw-row-label', '<b>Pi 的代码</b>（琥珀底 = 本步执行到的语句）');
+    var codeBox = AW.el('div', '');
+    codeBox.style.cssText = 'background:#0f172a;border-radius:12px;padding:12px 14px';
+    var lineEls = [];
+    CODE.forEach(function(ln, idx){
+      var d = AW.el('div', '', ln);
+      d.style.cssText = 'font-family:"SF Mono",Menlo,monospace;font-size:12px;line-height:1.9;color:#cbd5e1;white-space:pre;border-left:3px solid transparent;padding-left:8px;transition:all .2s';
+      lineEls.push(d);
+      codeBox.appendChild(d);
+    });
+    right.appendChild(l3); right.appendChild(codeBox);
+
+    inner.appendChild(left); inner.appendChild(right);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+
+    this._semCols = semCols; this._philEls = philEls; this._lineEls = lineEls;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'初始',        log:'初始：bowl = min(m, n−1) = min(2, 4) = 2；5 根筷子初值均为 1；P0~P4 都在思考。（题设 n≥3、m≥1，此处取 n=5、m=2 演示）' },
+    { cls:'ok',    tag:'P0 进餐',     log:'P0：P(bowl) 2→1 → P(筷0) 1→0 → P(筷1) 1→0 → P0 开始进餐。' },
+    { cls:'miss',  tag:'P1 等左筷',   log:'P1：P(bowl) 1→0 后执行 P(筷1)：筷1 已被 P0 持有 → 筷1=−1，P1 阻塞在左筷上。' },
+    { cls:'miss',  tag:'P2 等碗',     log:'P2：P(bowl) 0→−1 → 阻塞。限额 min(m, n−1) 把同时进餐人数限制在 2 —— 这正是防死锁的关键。' },
+    { cls:'miss',  tag:'P3/P4 等碗',  log:'P3：P(bowl) −1→−2、P4：P(bowl) −2→−3，均阻塞等待碗。3 人在排队。' },
+    { cls:'shift', tag:'P0 完毕',     log:'P0 进餐完毕：V(筷0) 0→1、V(筷1) −1→0 唤醒 P1，最后 V(bowl) −3→−2 唤醒 P2。' },
+    { cls:'ok',    tag:'P1 进餐',     log:'P1 被唤醒后继续：已握筷1，再 P(筷2) 1→0 → P1 开始进餐。' },
+    { cls:'shift', tag:'P2 等筷2',    log:'P2 从 P(bowl) 返回执行 P(筷2)：筷2 已被 P1 持有 → 筷2=−1，P2 阻塞（它已占用一个碗位，对应代码里 V(bowl) 放在最后）。' },
+    { cls:'shift', tag:'P1 完毕',     log:'P1 进餐完毕：V(筷1) 0→1、V(筷2) −1→0 唤醒 P2，V(bowl) −2→−1 唤醒 P3。' },
+    { cls:'step',  tag:'循环继续',    log:'P2 继续：P(筷3) 1→0 → P2 进餐；P3 随后 P(筷3) 0→−1 → 阻塞；P4 仍在等碗。循环往复，任意时刻至多 2 人同时竞争筷子。' },
+    { cls:'done',  tag:'结论',        log:'结论：至多 min(m, n−1) 人同时拿筷 → 必有人能拿到两根筷子，不死锁；碗又尽量用满，就餐人数尽可能多。', done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var d = D[i];
+    var semCols = this._semCols;
+    for (var s = 0; s < 6; s++){
+      semCols[s].textContent = String(d.sem[s]);
+      var cls = '';
+      if (d.chg.indexOf(s) >= 0) cls = (d.bad.indexOf(s) >= 0) ? 'miss' : 'ok';
+      semCols[s].className = 'aw-box' + (cls ? ' ' + cls : '');
+    }
+    var philEls = this._philEls;
+    for (var p = 0; p < 5; p++){
+      var st = d.phil[p];
+      var c = philCol(st);
+      philEls[p].style.background = c.bg;
+      philEls[p].style.borderColor = c.bd;
+      philEls[p].querySelector('.pst').style.color = c.tx;
+      philEls[p].querySelector('.pst').textContent = st;
+      philEls[p].style.outline = (d.act.indexOf(p) >= 0) ? '3px solid #2563eb' : 'none';
+    }
+    var lineEls = this._lineEls;
+    for (var L = 0; L < CODE.length; L++){
+      var on = d.hl.indexOf(L) >= 0;
+      lineEls[L].style.background = on ? 'rgba(217,119,6,.28)' : 'transparent';
+      lineEls[L].style.borderLeftColor = on ? '#fbbf24' : 'transparent';
+      lineEls[L].style.color = on ? '#fde68a' : '#cbd5e1';
+    }
+  },
+
+  result: {
+    big: 'bowl 初值 = min(m, n−1)',
+    html: '每位哲学家：<code>P(bowl) → P(chopstick[i]) → P(chopstick[(i+1)%n]) → eat → V(chopstick[i]) → V(chopstick[(i+1)%n]) → V(bowl)</code>。<br><b>防死锁</b>：至多 n−1 人同时竞争 n 根筷子，必有人拿到两根；<b>尽可能多就餐</b>：m &lt; n−1 时碗是瓶颈，bowl 初值取 m 也不浪费。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

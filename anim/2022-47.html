@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-47 综合题动画：设备/距离/DHCP/802.11</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2022-47（9 分综合题）：四问逐问展开——设备选型、冲突域距离、
+     DHCP 广播帧、802.11 帧地址。形态：逐步揭示推理链卡片。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：两条"域"线索',
+    cls: 'key',
+    body: '<p>候选设备：路由器、100BaseT 以太网交换机、100BaseT 集线器（Hub）。线索一：H1 与 H2 <b>同广播域、不同冲突域</b>。线索二：H2 与 H3 <b>同冲突域</b>。设备特性：路由器隔离广播域；交换机隔离冲突域、不隔离广播域；Hub 什么都不隔离。</p>' },
+  { title: '第 1 问：设备 1 = 以太网交换机',
+    cls: 'good',
+    body: '<p>H1、H2 同广播域但不同冲突域 → 设备 1 必须能<b>隔离冲突域、不隔离广播域</b>：路由器（隔广播域）不符，Hub（不隔冲突域）不符，只有 <b>100BaseT 以太网交换机</b>符合（每端口一个冲突域，整体一个广播域）。</p>' },
+  { title: '第 1 问：设备 2 = 集线器（Hub）',
+    cls: 'good',
+    body: '<p>H2、H3 属于<b>同一个冲突域</b> → 设备 2 不隔离冲突域 → <b>100BaseT 集线器</b>。若用交换机，H2、H3 就分属不同冲突域了。</p>' },
+  { title: '第 2 问：争用期 5.12 μs',
+    cls: 'key',
+    body: '<p>H2、H3 同冲突域 → 半双工 CSMA/CD，速率 100 Mbps（100BaseT）。争用期 = 最小帧长 ÷ 速率 = <code>64×8 bit ÷ 100 Mbps = 5.12 μs</code>（这是<b>往返</b>时延上限）。</p>' },
+  { title: '第 2 问：扣 Hub 延迟，得 210 m',
+    cls: 'good',
+    body: '<p>单程上限 τ = 5.12 ÷ 2 = 2.56 μs，其中含信号过设备 2 的额外 <code>1.51 μs</code> → 线路传播上限 = 2.56 − 1.51 = <b>1.05 μs</b>。最远距离 d = 1.05 μs × 2×10^8 m/s = <b>210 m</b>。</p>' },
+  { title: '第 3 问：M 是 DHCP DISCOVER',
+    cls: 'good',
+    body: '<p>H4 动态获取 IP 的第一步：发送 <b>DHCP DISCOVER（发现）报文</b>，且以<b>广播帧</b>封装（目的 MAC 全 1）。</p>' },
+  { title: '第 3 问：E0 能收到，目的 MAC 全 1',
+    cls: 'good',
+    body: '<p>H4、H5、AP、DHCP 服务器、S、路由器 E0 同在 192.168.0.0/25 一个广播域 → 广播帧被交换机泛洪到除入端口外的所有端口，<b>E0 接口能收到</b>。S 转发给 DHCP 服务器的帧目的 MAC = <code>FF-FF-FF-FF-FF-FF</code>（广播地址不变）。</p>' },
+  { title: '第 4 问：判断帧方向——来自 AP',
+    cls: 'key',
+    body: '<p>H4 → H5 的分组由 AP 转发到 H5：H5 收到的帧是<b>"来自 AP"</b>的帧（去往 AP = 0、来自 AP = 1）。查地址表：地址 1 = 目的地址，地址 2 = AP 地址，地址 3 = 源地址。</p>' },
+  { title: '第 4 问：三个地址',
+    cls: 'good',
+    body: '<p>地址 1 = 目的 = H5 的 <code>00-11-11-11-11-E1</code>；地址 2 = AP 的 <code>00-11-11-11-11-C1</code>；地址 3 = 源 = H4 的 <code>00-11-11-11-11-D1</code>。</p>' },
+  { title: '四问答案汇总',
+    cls: 'good',
+    body: '<p>1）设备 1 = 100BaseT 以太网交换机，设备 2 = 100BaseT 集线器；2）最远距离 <b>210 m</b>；3）M = DHCP DISCOVER，E0 <b>能收到</b>，目的 MAC = <code>FF-FF-FF-FF-FF-FF</code>；4）地址 1 = H5（E1）、地址 2 = AP（C1）、地址 3 = H4（D1）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2022-47（9 分）：局域网设备选型 · 冲突域距离 · DHCP · 802.11 帧地址',
+  subtitle: '拓扑：R(E0: 192.168.0.1/25) — S — AP — H4/H5，S — DHCP 服务器(192.168.0.2/25)，设备1下挂 H1、设备2 下挂 H2/H3',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐问展开答题框架与推导。',
+  snaps: snaps,
+  result: {
+    big: '210 m · DISCOVER · 全 1 广播 · 地址1/2/3 = E1/C1/D1',
+    html: '1）设备 1 = <b>100BaseT 交换机</b>、设备 2 = <b>100BaseT 集线器</b>；2）争用期 5.12 μs，扣 Hub 的 1.51 μs 后单程 1.05 μs → <b>210 m</b>；3）M = <b>DHCP DISCOVER</b>，E0 能收到，目的 MAC = <code>FF-FF-FF-FF-FF-FF</code>；4）"来自 AP"的帧：地址 1 = H5（<code>…E1</code>）、地址 2 = AP（<code>…C1</code>）、地址 3 = H4（<code>…D1</code>）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

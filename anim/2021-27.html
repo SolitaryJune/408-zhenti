@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-27 · 可能引起进程调度的事件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：什么时机会让 CPU"换人"', cls: 'key',
+    body: '<p>进程调度程序被触发的共同点：<b>CPU 的占用关系发生了变化</b>——要么 CPU 空出来了，要么当前进程该让位了。题目问的是"可能引起"，只要存在这种可能即算。</p>' },
+  { title: 'Ⅰ. 中断处理结束：可能 ✓', cls: 'good',
+    body: '<p>时钟中断处理完发现<b>时间片用完</b>，或 I/O 中断处理完<b>唤醒了优先级更高的进程</b>，都会让调度程序重新权衡谁上 CPU——可能引起。</p>' },
+  { title: 'Ⅱ. 进程阻塞：可能 ✓', cls: 'good',
+    body: '<p>进程因等待 I/O 等事件<b>主动放弃 CPU</b>，CPU 空出来了，必须由调度程序另选进程——可能引起。</p>' },
+  { title: 'Ⅲ. 进程执行结束：可能 ✓', cls: 'good',
+    body: '<p>进程正常终止并<b>释放 CPU</b>，同样需要调度程序安排新进程上 CPU——可能引起。</p>' },
+  { title: 'Ⅳ. 时间片用完：可能 ✓', cls: 'good',
+    body: '<p>时间片轮转系统中时间片一到，当前进程被<b>剥夺 CPU</b> 送回就绪队列尾，触发调度——可能引起。</p>' },
+  { title: '结论：答案 D', cls: 'good',
+    body: '<p>四件事共同点：CPU 空了（阻塞、结束）或该换人了（时间片完、中断结束后权衡），四项都可能 → 答案选 <b>D</b>。易错：漏选 Ⅰ——时钟中断正是时间片机制的来源，I/O 中断还会唤醒进程改变调度决策。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '可能引起进程调度程序执行的事件（2021-27）',
+  subtitle: '考点：进程调度的触发时机 · Ⅰ 中断处理结束 / Ⅱ 进程阻塞 / Ⅲ 进程执行结束 / Ⅳ 时间片用完',
+  counterLabel: '已核对',
+  ribbonTitle: '事件（✓ 可能引起）',
+  intro: '点击「▶ 播放」，逐个事件判断是否会触发进程调度。',
+  snaps: [{ cls: 'shift', tag: '开始', log: '', html: '' }].concat(snaps),
+  result: {
+    big: '答案 D（全部可能）',
+    html: '<b>中断处理结束</b>（时钟中断→时间片到；I/O 中断→唤醒高优进程）、<b>进程阻塞</b>、<b>进程执行结束</b>、<b>时间片用完</b>——四者都改变了 CPU 的占用关系，都可能引发调度。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

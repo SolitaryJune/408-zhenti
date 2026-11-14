@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-11 识别排序算法 · 验证动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function rowOf(str, marks, label){
+  var chars = str.split(',');
+  var cls = chars.map(function(c, i){ return marks && marks[i] ? marks[i] : ''; });
+  return (label ? '<div style="font-size:12.5px;color:#64748b;margin:6px 0 2px">' + label + '</div>' : '') +
+         '<div style="display:flex;gap:6px">' + chars.map(function(c, i){
+           return '<div class="aw-box' + (cls[i] ? ' ' + cls[i] : '') + '" style="width:46px;height:34px;font-size:13.5px">' + c + '</div>';
+         }).join('') + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：一趟一指纹', cls: 'key',
+    body: '<p>初始序列与三趟结果：</p>' +
+          rowOf('2,12,16,88,5,10', null, '初始') +
+          rowOf('2,12,16,5,10,88', { 5: 'hit' }, '第 1 趟：88 到了末尾') +
+          rowOf('2,12,5,10,16,88', { 4: 'hit' }, '第 2 趟：16 到了第 5 位') +
+          rowOf('2,5,10,12,16,88', { 3: 'hit' }, '第 3 趟：12 到了第 4 位') +
+          '<p>每趟把未排序部分的<b>最大值沉到末尾</b>——先验证冒泡，再排除其余。</p>' },
+  { title: '验证冒泡：逐趟吻合 ✓', cls: 'good',
+    body: '<p>冒泡每趟从左到右相邻比较、大数右沉：</p>' +
+          '<ul><li>第 1 趟（6 个）：88 沉底 → 2, 12, 16, 5, 10, <b>88</b> ✓</li>' +
+          '<li>第 2 趟（前 5 个）：16 沉到第 5 位 → 2, 12, 5, 10, <b>16</b> ✓</li>' +
+          '<li>第 3 趟（前 4 个）：12 沉到第 4 位 → 2, 5, 10, <b>12</b> ✓</li></ul>' +
+          '<p>三趟逐位吻合，候选成立。</p>' },
+  { title: '排除希尔 ✗', cls: 'bad',
+    body: '<p>希尔排序第 1 趟按增量 3 分组（6 个元素首增量常取 3）：(2, 88)、(12, 5)、(16, 10)，各组组内排序后应得：</p>' +
+          rowOf('2,5,10,88,12,16', { 1: 'miss', 3: 'miss' }, '希尔第 1 趟（与题给不符）') +
+          '<p>与 2, 12, 16, 5, 10, 88 对不上，排除 B。</p>' },
+  { title: '排除归并、基数 ✗', cls: 'bad',
+    body: '<p><b>归并</b>第 1 趟两两归并 (2,12)、(16,88)、(5,10)：各组本就有序，结果<b>原地不动</b>，对不上。<br>' +
+          '<b>基数</b>第 1 趟按个位分配收集（10→0、2 与 12→2、5→5、16→6、88→8）应得：</p>' +
+          rowOf('10,2,12,5,16,88', { 0: 'miss' }, '基数第 1 趟（与题给不符）') +
+          '<p>排除 C、D。（顺带：直接插入、简单选择的第 1 趟都不会动——12 已就位、2 已在首位。）</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>只有<b>冒泡排序</b>能给出题中的三趟结果，答案选 <b style="font-size:16px">A</b>。记忆锚点：<b>一趟后最大值沉到末尾 = 冒泡</b>；一趟后前缀有序增长 = 插入/选择；一趟按增量分组 = 希尔。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-11 · 由前三趟结果反推排序算法',
+  subtitle: '初始 <code>2, 12, 16, 88, 5, 10</code> · 逐项验证四个候选',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐个候选对照三趟结果。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（冒泡排序）',
+    html: '三趟依次把 <b>88 → 16 → 12</b> 沉到未排序部分末尾，正是冒泡指纹；希尔第 1 趟应得 2,5,10,88,12,16，归并第 1 趟原地不动，基数第 1 趟应得 10,2,12,5,16,88，均不符。记忆锚点：最大值沉底 = 冒泡；前缀有序 = 插入/选择；按增量分组 = 希尔。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

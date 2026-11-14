@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-10 快排递归次数 · 辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：递归次数从哪来', cls: 'key',
+    body: '<p>递归快排：划分出左右两个分区 → 对<b>每个非空分区</b>各递归一次。所以「递归总次数 = 全部产生的分区个数」，只取决于<b>每次划分的结果</b>（初始排列 + 枢轴选择）。问题：处理顺序影响它吗？</p>' },
+  { title: 'A：与初始排列无关？✗', cls: 'bad',
+    body: '<p>最好情形：每次划分接近对半，递归层数约 <b>log2n</b>；最坏情形：序列基本有序且枢轴取端点，每次只分出 1 个元素 + 空分区，递归退化到约 <b>n</b> 层。<br>同样 n 个数，次数天差地别 → <b>递归次数与初始排列有关</b>，A 错。</p>' },
+  { title: 'B、C：先长后短 / 先短后长？✗', cls: 'bad',
+    body: '<p>划分完成后，待处理的分区集合已经定死。不管先处理长的还是短的，<b>每个分区都要被调用一次</b>，调用集合一模一样，总次数不变。<br>「先处理较短分区」优化的是<b>递归栈的最大深度</b>（先短后长让栈先变浅，省空间），<b>不是递归次数</b>。B、C 都错。</p>' },
+  { title: 'D：与处理顺序无关 ✓', cls: 'good',
+    body: '<p>设一次划分得到分区 P1、P2。处理顺序只有两种：P1→P2 或 P2→P1，产生的调用都是 {Con(P1), Con(P2)}，<b>集合相同、个数相同</b>。递归次数与每次划分后分区的处理顺序无关，D 对。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b style="font-size:16px">D</b>。记忆锚点：<b>递归次数看「分了什么」，不看「谁先分」</b>；与顺序有关的是栈深度。顺带记牢：递归次数与初始数据排列<b>有关</b>（A 的说法恰好说反）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-10 · 快排递归次数的决定因素',
+  subtitle: '考点：递归调用次数 vs 递归栈深度 · 逐项辨析 A/B/C/D',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐项判断四个说法。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（与处理顺序无关）',
+    html: '递归总次数 = 全部产生的分区个数，划分一完成就已确定，先处理长、短分区只是调用顺序不同，<b>调用集合相同</b>。注意区分：先短后长优化的是<b>栈深度</b>；递归次数与<b>初始排列有关</b>（对半 ≈ log2n 层，基本有序取端点枢轴 ≈ n 层）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

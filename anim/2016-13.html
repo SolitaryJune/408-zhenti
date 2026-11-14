@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-13 动画 · si = -32767 赋给 unsigned short 的位级演算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：-32767 的 16 位补码求取 → 无符号重解释
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 16 位二进制格（上方指针、下方位号 15~0）
+function bitRow(chars, cls, ptrMap){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (ptrMap && ptrMap[i]) || ''));
+    col.appendChild(AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), String(ch)));
+    col.appendChild(AW.el('div', 'aw-idx', String(15 - i)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+// 4 位十六进制格（8 0 0 1）
+function hexRow(vals, cls, labels){
+  var row = AW.el('div', 'aw-cells');
+  vals.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    col.appendChild(AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), String(ch)));
+    col.appendChild(AW.el('div', 'aw-idx', labels && labels[i] ? labels[i] : ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function wrap(label, nodeHtml){
+  return '<div class="aw-row-label">' + label + '</div><div class="aw-scroll">' + nodeHtml + '</div>';
+}
+
+function bits(s, hi){        // s: 16 位字符串；hi: 高亮下标集合
+  var a = [], i;
+  for(i = 0; i < 16; i++){ a.push(hi && hi.indexOf(i) >= 0 ? 'hit' : 'ok'); }
+  return bitRow(s.split(''), a).outerHTML;
+}
+
+var HEXLBL = ['×16<sup>3</sup>', '×16<sup>2</sup>', '×16<sup>1</sup>', '×16<sup>0</sup>'];
+
+var B7FFF = '0111111111111111';
+var B8000 = '1000000000000000';
+var B8001 = '1000000000000001';
+
+function hex8001(cls){
+  return hexRow(['8','0','0','1'], cls || ['hit','hit','hit','hit'], HEXLBL).outerHTML;
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'short si = -32767; unsigned short usi = si; 求 usi 的值（16 位补码 → 无符号重解释）',
+    html:'<div class="aw-stepcard key"><p><code>short</code> 用 <b>16 位补码</b>存储；赋给 <code>unsigned short</code> 时<b>机器数原样复制、只改变解释方式</b>。步骤：先求 −32767 的 16 位补码，再按无符号读出。</p></div>' },
+
+  { cls:'step', tag:'32767 的二进制', count:1, ribbon:{k:1, ok:true},
+    log:'|−32767| = 32767 = 7FFFH：符号位 0（正数），其余 15 位全 1 → 0111 1111 1111 1111',
+    html: wrap('|−32767| = 32767 的 16 位二进制（0x7FFF）', bits(B7FFF, [0])) },
+
+  { cls:'shift', tag:'取反', count:2, ribbon:{k:2, ok:true},
+    log:'按位取反：0111…1111 → 1000 0000 0000 0000（8000H）',
+    html: wrap('按位取反 → 8000H', bits(B8000, [0])) },
+
+  { cls:'ok', tag:'加 1 得补码', count:3, ribbon:{k:3, ok:true},
+    log:'再加 1：最低位 0→1，得 1000 0000 0000 0001 = 8001H，这就是 si 的机器数',
+    html: wrap('+1 → −32767 的 16 位补码 = 8001H', bits(B8001, [15])) + wrap('十六进制', hex8001()) },
+
+  { cls:'step', tag:'原样复制', count:4, ribbon:{k:4, ok:true},
+    log:'usi = si：这 16 位原样复制过去，内存内容不变，仍是 8001H',
+    html: wrap('usi 的 16 位机器数（与 si 完全相同）', bits(B8001, [15])) + wrap('十六进制', hex8001()) },
+
+  { cls:'ok', tag:'无符号重解释', count:5, ribbon:{k:5, ok:true},
+    log:'按无符号解释 8001H：最高位不再是符号位 → 2^15 + 1 = 32768 + 1 = 32769',
+    html: wrap('按 unsigned 解释：8001H = 1×2<sup>15</sup> + 1', bits(B8001, [0, 15])) +
+          '<div class="aw-stepcard good"><p>8001H = 32768 + 1 = <b>32769</b>（unsigned short 范围 0 ~ 65535）。</p></div>' },
+
+  { cls:'done', tag:'完成', count:6, ribbon:{k:6, ok:true},
+    log:'usi = 32769 → 答案 D',
+    done:true,
+    html: wrap('usi 的 16 位机器数 = si 的机器数', bits(B8001, [15])) + wrap('十六进制', hex8001()) +
+          '<div class="aw-stepcard good"><p>有符号 → 无符号赋值：<b>机器数不变，解释方式改变</b>。−32767 的 16 位补码 <code>8001H</code> 按无符号读出 = <b>32769</b>，选 <b>D</b>。</p></div>' },
+];
+
+AW.init({
+  title: '2016-13 si = -32767 赋给 unsigned short 的位级演算',
+  subtitle: '考点：数的机器级表示 · 16 位补码「取反加一」 · 有符号/无符号机器数重解释',
+  counterLabel: '演算步',
+  ribbonTitle: '演算进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步演算 usi 的值。',
+  snaps: snaps,
+  result: {
+    big: 'usi = 32769',
+    html: '答案选 <b>D</b>。链条：<b>32767 = 7FFFH → 取反 8000H → 加一 8001H → 原样复制给 usi → 按无符号解释 2<sup>15</sup>+1 = 32769</b>。<br>干扰项：32767（B）是"取绝对值"的错法；32768（C）是 si = −32768（机器数 8000H）才会得到的结果。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

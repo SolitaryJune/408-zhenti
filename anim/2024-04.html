@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-04 邻接多重表：数出 b 和 d 的度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 顶点号 0~4 对应 a~e；从题图的 7 个边结点读出 (ivex, jvex) */
+var EDGES = [
+  { no: 1, pair: '0-1', ab: 'a-b', ends: [0, 1] },
+  { no: 2, pair: '1-3', ab: 'b-d', ends: [1, 3] },
+  { no: 3, pair: '2-0', ab: 'c-a', ends: [2, 0] },
+  { no: 4, pair: '3-2', ab: 'd-c', ends: [3, 2] },
+  { no: 5, pair: '4-2', ab: 'e-c', ends: [4, 2] },
+  { no: 6, pair: '0-3', ab: 'a-d', ends: [0, 3] },
+  { no: 7, pair: '4-3', ab: 'e-d', ends: [4, 3] }
+];
+
+var degB = 0, degD = 0;
+var eRow, boxB, boxD;
+
+function statCls(v) {
+  return v > 0 ? ' ok' : '';
+}
+
+function paint(i) {
+  var j, b;
+  /* 前 i 个边结点已处理完（i 从 0 开始计，第 i 步正处理第 i 个，i=0 为初始） */
+  var degB2 = 0, degD2 = 0;
+  for (j = 0; j < EDGES.length; j++) {
+    b = eRow.children[j].children[1];
+    var involves = EDGES[j].ends.indexOf(1) >= 0 || EDGES[j].ends.indexOf(3) >= 0;
+    if (j < i && involves) {
+      if (EDGES[j].ends.indexOf(1) >= 0) degB2++;
+      if (EDGES[j].ends.indexOf(3) >= 0) degD2++;
+    }
+    if (j < i) {
+      b.className = 'aw-box' + (involves ? ' ok' : ' dim');
+    } else if (j === i) {
+      b.className = 'aw-box hit';
+    } else {
+      b.className = 'aw-box';
+    }
+  }
+  boxB.textContent = degB2;
+  boxB.className = 'aw-box' + statCls(degB2);
+  boxD.textContent = degD2;
+  boxD.className = 'aw-box' + statCls(degD2);
+}
+
+AW.init({
+  title: '邻接多重表：逐个边结点数出顶点 b、d 的度（2024-04）',
+  subtitle: '顶点号 0~4 对应 a~e · 邻接多重表中<b>每条边只有一个边结点</b> · 度 = 与该顶点相邻的边数',
+  counterLabel: '已检查边结点',
+  ribbonTitle: '边结点（✓ 与 b 或 d 相邻 / ✗ 无关）',
+  intro: '点击「▶ 播放」：逐个看边结点的两个端点，碰到 b 或 d 就计数。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>7 个边结点</b>（上排 a-b 等为边，下排为图中 (ivex, jvex)）'));
+    eRow = AW.cellRow(
+      EDGES.map(function (e) { return e.ab; }),
+      ['', '', '', '', '', '', ''],
+      null, 1);
+    inner.appendChild(eRow);
+    var idxRow = AW.el('div', 'aw-cells');
+    EDGES.forEach(function (e) {
+      var c = AW.el('div', 'aw-idx', e.pair);
+      c.style.width = '44px';
+      c.style.textAlign = 'center';
+      idxRow.appendChild(c);
+    });
+    inner.appendChild(idxRow);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>计数器</b>（左边数 b 的度，右边数 d 的度）'));
+    var cnt = AW.el('div', 'aw-cells');
+    var c1 = AW.el('div', 'aw-col');
+    c1.appendChild(AW.el('div', 'aw-ptr', ''));
+    boxB = AW.el('div', 'aw-box', '0');
+    c1.appendChild(boxB);
+    c1.appendChild(AW.el('div', 'aw-idx', 'deg(b)'));
+    var c2 = AW.el('div', 'aw-col');
+    c2.appendChild(AW.el('div', 'aw-ptr', ''));
+    boxD = AW.el('div', 'aw-box', '0');
+    c2.appendChild(boxD);
+    c2.appendChild(AW.el('div', 'aw-idx', 'deg(d)'));
+    cnt.appendChild(c1);
+    cnt.appendChild(c2);
+    inner.appendChild(cnt);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'shift', tag: '开始', log: '邻接多重表：每条边用一个边结点表示，结点中标出这条边的两个端点。先从题图读出 7 个边结点：0-1、1-3、2-0、3-2、4-2、0-3、4-3（0~4 即 a~e）', count: 0 },
+    { cls: 'ok', tag: '边 0-1', log: '边结点 (0,1) 即边 a-b：端点含 b → deg(b)=1', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'ok', tag: '边 1-3', log: '边结点 (1,3) 即边 b-d：同时含 b 和 d → deg(b)=2、deg(d)=1', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '边 2-0', log: '边结点 (2,0) 即边 c-a：不含 b 也不含 d，跳过', count: 2, ribbon: { k: 3, ok: false } },
+    { cls: 'ok', tag: '边 3-2', log: '边结点 (3,2) 即边 d-c：含 d → deg(d)=2', count: 3, ribbon: { k: 4, ok: true } },
+    { cls: 'step', tag: '边 4-2', log: '边结点 (4,2) 即边 e-c：无关，跳过', count: 3, ribbon: { k: 5, ok: false } },
+    { cls: 'ok', tag: '边 0-3', log: '边结点 (0,3) 即边 a-d：含 d → deg(d)=3', count: 4, ribbon: { k: 6, ok: true } },
+    { cls: 'ok', tag: '边 4-3', log: '边结点 (4,3) 即边 e-d：含 d → deg(d)=4', count: 5, ribbon: { k: 7, ok: true } },
+    { cls: 'done', tag: '完成', log: '7 个边结点检查完毕：deg(b)=2（边 a-b、b-d），deg(d)=4（边 b-d、d-c、a-d、e-d）', count: 7, done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: 'deg(b)=2，deg(d)=4',
+    html: '邻接多重表中<b>每条边只存一个边结点</b>，数某顶点的度 = 数与它相邻的边结点个数。b 的邻边：a-b、b-d，共 <b>2</b> 条；d 的邻边：b-d、d-c、a-d、e-d，共 <b>4</b> 条 → 选 <b>B</b>。校验：5 个顶点度数 3+2+3+4+2=14=2×边数 7。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

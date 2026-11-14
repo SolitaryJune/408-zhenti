@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-35 冲突域与广播域的个数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类动画：按"先广播域、后冲突域"逐步点亮拓扑图计数
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var bdA, bdB, bdLabels, hubCards;
+
+function mkBD(label){
+  var d = AW.el('div', '');
+  d.style.cssText = 'border:2px dashed #94a3b8;border-radius:14px;padding:10px 12px 12px;background:#fff;transition:all .35s;';
+  var t = AW.el('div', 'bdlabel', label);
+  t.style.cssText = 'font-size:12px;font-weight:700;color:#64748b;margin-bottom:8px;transition:color .3s;';
+  d.appendChild(t);
+  return d;
+}
+function mkDev(text, sub){
+  var d = AW.el('div', '');
+  d.style.cssText = 'border:2px solid #334155;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;background:#e2e8f0;color:#0f172a;text-align:center;white-space:nowrap;';
+  d.innerHTML = text + (sub ? '<div style="font-size:10.5px;font-weight:400;color:#475569">' + sub + '</div>' : '');
+  return d;
+}
+function mkLink(){
+  var d = AW.el('div', '');
+  d.style.cssText = 'width:26px;height:5px;background:#475569;border-radius:3px;flex:0 0 auto;';
+  return d;
+}
+function mkHub(name){
+  var card = AW.el('div', '');
+  card.style.cssText = 'border:2px solid #cbd5e1;border-radius:12px;padding:8px 10px;background:#fff;transition:all .35s;';
+  var t = AW.el('div', '', name);
+  t.style.cssText = 'font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;white-space:nowrap;';
+  card.appendChild(t);
+  var hr = AW.el('div', '');
+  hr.style.cssText = 'display:flex;gap:6px;justify-content:center;';
+  ['主机', '主机'].forEach(function(h){
+    var host = AW.el('div', '', h);
+    host.style.cssText = 'border:1.5px solid #94a3b8;border-radius:8px;padding:5px 7px;font-size:11px;background:#f8fafc;color:#334155;white-space:nowrap;';
+    hr.appendChild(host);
+  });
+  card.appendChild(hr);
+  return card;
+}
+
+AW.init({
+  title: '数一数：冲突域几个？广播域几个？',
+  subtitle: '2 台以太网交换机 + 1 台路由器 + 4 台集线器（100BaseT）+ 8 台主机 · 规则：集线器全透明，交换机切冲突域，路由器全切',
+  counterLabel: '已数冲突域',
+  ribbonTitle: '冲突域编号（✓ 已计入）',
+  intro: '点击「▶ 播放」，按「先广播域、后冲突域」的顺序数一遍。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.cssText = 'padding:6px 2px 2px;';
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;width:max-content;';
+
+    bdA = mkBD('广播域 ？');
+    var s1 = mkDev('以太网交换机');
+    var hubRowA = AW.el('div', '');
+    hubRowA.style.cssText = 'display:flex;gap:8px;margin-top:10px;';
+    var h1 = mkHub('集线器 Hub1'), h2 = mkHub('集线器 Hub2');
+    hubRowA.appendChild(h1); hubRowA.appendChild(h2);
+    bdA.appendChild(s1); bdA.appendChild(hubRowA);
+
+    var r = mkDev('路由器', '隔离广播域');
+
+    bdB = mkBD('广播域 ？');
+    var s2 = mkDev('以太网交换机');
+    var hubRowB = AW.el('div', '');
+    hubRowB.style.cssText = 'display:flex;gap:8px;margin-top:10px;';
+    var h3 = mkHub('集线器 Hub3'), h4 = mkHub('集线器 Hub4');
+    hubRowB.appendChild(h3); hubRowB.appendChild(h4);
+    bdB.appendChild(s2); bdB.appendChild(hubRowB);
+
+    row.appendChild(bdA); row.appendChild(mkLink()); row.appendChild(r);
+    row.appendChild(mkLink()); row.appendChild(bdB);
+    inner.appendChild(row);
+    var legend = AW.el('div', 'aw-row-label', '绿框 = 广播域（路由器两侧各一个） · 红框 = 冲突域（每个集线器网段一个）');
+    inner.appendChild(legend);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    bdLabels = [bdA.querySelector('.bdlabel'), bdB.querySelector('.bdlabel')];
+    hubCards = [h1, h2, h3, h4];
+  },
+
+  snaps: [
+    { cls:'step',  tag:'看图',   log:'图中设备：2 台以太网交换机、1 台路由器、4 台集线器（100BaseT），每个集线器接 2 台主机', count:0 },
+    { cls:'shift', tag:'规则',   log:'集线器（物理层）两个域都不隔离；交换机（链路层）只隔离冲突域；路由器（网络层）两个域都隔离', count:0 },
+    { cls:'ok',    tag:'广播域', log:'路由器是广播的「墙」：左半边 1 个 + 右半边 1 个 = 2 个广播域', count:0 },
+    { cls:'ok',    tag:'冲突域①', log:'Hub1 及其 2 台主机共享信道（集线器不隔离）→ 冲突域 ①', count:1, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'冲突域②', log:'Hub2 段构成冲突域 ②——交换机的端口把它与 Hub1 段分开', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'冲突域③', log:'右侧同理：Hub3 段构成冲突域 ③', count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'冲突域④', log:'Hub4 段构成冲突域 ④，冲突域共 4 个', count:4, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'完成',   log:'冲突域 4 个 + 广播域 2 个 → 选 C', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var j;
+    bdA.style.borderColor = bdB.style.borderColor = (i >= 2 ? '#16a34a' : '#94a3b8');
+    bdA.style.borderStyle = bdB.style.borderStyle = (i >= 2 ? 'solid' : 'dashed');
+    bdA.style.background = bdB.style.background = (i >= 2 ? '#f0fdf4' : '#fff');
+    bdLabels[0].innerHTML = (i >= 2 ? '广播域 ①' : '广播域 ？');
+    bdLabels[1].innerHTML = (i >= 2 ? '广播域 ②' : '广播域 ？');
+    bdLabels[0].style.color = bdLabels[1].style.color = (i >= 2 ? '#15803d' : '#64748b');
+    for(j = 0; j < 4; j++){
+      var on = (i >= 3 + j);
+      hubCards[j].style.borderColor = on ? '#dc2626' : '#cbd5e1';
+      hubCards[j].style.background = on ? '#fee2e2' : '#fff';
+      hubCards[j].style.boxShadow = on ? '0 0 0 3px rgba(220,38,38,.12)' : 'none';
+    }
+  },
+
+  result: {
+    big: '4 个冲突域，2 个广播域',
+    html: '记忆锚点：<b>集线器全透明、交换机切冲突域、路由器全切</b>。每个集线器连同其 2 台主机构成 1 个冲突域（共 4 个）；路由器两侧各 1 个广播域（共 2 个）→ 选 <b>C</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

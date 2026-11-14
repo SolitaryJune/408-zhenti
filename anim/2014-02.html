@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-02 中缀转后缀动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：中缀 a/b+(c*d-e*f)/g 扫描到 f 时的运算符栈 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var TOKENS = ['a','/','b','+','(','c','*','d','-','e','*','f','/','g'];
+var PREC = {'+':1,'-':1,'*':2,'/':2};
+
+// 逐 token 模拟，生成快照（只演示到"扫描到 f"这一刻，共 12 个 token）
+var out = [];            // 已输出到后缀表达式的 token
+var stk = [];            // 运算符栈，stk[0] 为栈底
+var snaps = [{
+  cls:'step', tag:'初始', log:'栈空、输出为空，从中缀表达式第一个 token 开始扫描', count:0
+}];
+
+for (var t = 0; t < 12; t++){
+  var ch = TOKENS[t];
+  if (ch === 'f'){
+    // 「扫描到 f」这一刻：f 尚未处理（操作数只送输出缓冲、不进栈，栈内容不受影响）
+    snaps.push({
+      cls: 'done', tag: '扫描到 f',
+      log: '扫描到 f：这一刻 f 尚未输出（作为操作数它下一步才送输出缓冲，不影响栈）→ 此时栈（底→顶）= + ( - *',
+      count: t + 1,
+      out: out.slice(),
+      stk: stk.slice(),
+      cur: t,
+      done: true
+    });
+    continue;
+  }
+  var action = '';
+  if (/[a-z]/.test(ch)){
+    out.push(ch); action = '操作数 ' + ch + ' 直接送输出缓冲';
+  } else if (ch === '('){
+    stk.push(ch); action = '左括号进栈';
+  } else { // 运算符
+    var pops = [];
+    while (stk.length && stk[stk.length-1] !== '(' && PREC[stk[stk.length-1]] >= PREC[ch]){
+      pops.push(stk.pop());
+    }
+    pops.forEach(function(p){ out.push(p); });
+    stk.push(ch);
+    action = pops.length ? '栈顶 ' + pops.join('、') + ' 优先级不低于 ' + ch + ' → 先弹出，' + ch + ' 进栈'
+                         : '栈顶优先级低于 ' + ch + ' → ' + ch + ' 直接进栈';
+  }
+  snaps.push({
+    cls: /[a-z(]/.test(ch) ? 'ok' : 'shift',
+    tag: '扫描 ' + ch,
+    log: action,
+    count: t + 1,
+    out: out.slice(),
+    stk: stk.slice(),
+    cur: t,
+    done: false
+  });
+}
+
+AW.init({
+  title: '2014-02　中缀转后缀：扫描到 f 时的栈',
+  subtitle: '中缀式 <code>a/b+(c*d-e*f)/g</code> · 优先级 * / 高于 + - · 栈底在左、栈顶在右',
+  counterLabel: '已扫描',
+  intro: '点击「▶ 播放」逐个 token 演示。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var lbl1 = AW.el('div', 'aw-row-label', '<b>中缀输入</b>（绿框=正在扫描，灰=未扫描到）');
+    var inHolder = AW.el('div', '');
+    inHolder.id = 'inRow';
+    var lbl2 = AW.el('div', 'aw-row-label', '<b>输出缓冲</b>（后缀表达式，绿框=刚输出）');
+    var outHolder = AW.el('div', '');
+    outHolder.id = 'outRow';
+    var lbl3 = AW.el('div', 'aw-row-label', '<b>运算符栈</b>（左端=栈底，右端=栈顶，绿底=当前栈顶）');
+    var stkHolder = AW.el('div', '');
+    stkHolder.id = 'stkRow';
+    inner.appendChild(lbl1); inner.appendChild(inHolder);
+    inner.appendChild(lbl2); inner.appendChild(outHolder);
+    inner.appendChild(lbl3); inner.appendChild(stkHolder);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    if (i === 0){
+      var h0 = document.getElementById('inRow');
+      h0.innerHTML = '';
+      h0.appendChild(AW.cellRow(TOKENS.map(function(){ return '·'; }), TOKENS.map(function(){ return 'dim'; })));
+      document.getElementById('outRow').innerHTML = '';
+      document.getElementById('stkRow').innerHTML = '';
+      return;
+    }
+    // 输入行
+    var inCls = TOKENS.map(function(_, k){
+      if (k < sn.cur) return 'ok';
+      if (k === sn.cur) return 'hit';
+      return 'dim';
+    });
+    var inRow = document.getElementById('inRow');
+    inRow.innerHTML = '';
+    inRow.appendChild(AW.cellRow(TOKENS, inCls, null));
+    // 输出行
+    var outRow = document.getElementById('outRow');
+    outRow.innerHTML = '';
+    if (sn.out.length){
+      var oCls = sn.out.map(function(_, k){ return k === sn.out.length - 1 ? 'hit' : 'ok'; });
+      outRow.appendChild(AW.cellRow(sn.out, oCls, null));
+    }
+    // 栈行
+    var stkRow = document.getElementById('stkRow');
+    stkRow.innerHTML = '';
+    if (sn.stk.length){
+      var ptr = {};
+      ptr[1] = '栈底';
+      ptr[sn.stk.length] = '栈顶';
+      var sCls = sn.stk.map(function(_, k){ return k === sn.stk.length - 1 ? 'hit' : ''; });
+      stkRow.appendChild(AW.cellRow(sn.stk, sCls, ptr));
+    }
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B：+(-*',
+    html: '扫描到 <code>f</code>（尚未处理 f）时，运算符栈从<b>栈底到栈顶</b>为 <code>+ ( - *</code>。<br>关键两步：扫描 <code>-</code> 时先弹出 <code>*</code> 再进栈；扫描第二个 <code>*</code> 时因优先级高于栈顶 <code>-</code> 而直接压栈。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

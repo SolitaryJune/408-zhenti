@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-10 4阶B树插入与分裂动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-10 依次插入 5,6,9,13,8,2,12,15 建立空 4 阶 B 树，看根结点关键字
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var rootRowEl, kidsRowEl, noteLine;
+
+function nodeGroup(keys, marks){
+  // marks = {key: cls}，如 {5:'hit'} 高亮刚插入/上移的关键字
+  var g = AW.el('div', 'aw-cells');
+  g.style.gap = '3px';
+  keys.forEach(function(k){
+    var cls = marks && marks[k] ? marks[k] : 'ok';
+    g.appendChild(AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), String(k)));
+  });
+  return g;
+}
+
+function drawTree(root, kids, rootMarks, kidMarks, kidNames){
+  rootRowEl.innerHTML = '';
+  if(root.length){
+    rootRowEl.appendChild(nodeGroup(root, rootMarks));
+  } else {
+    rootRowEl.appendChild(AW.el('div', 'aw-row-label', '（空）'));
+  }
+  kidsRowEl.innerHTML = '';
+  if(kids.length){
+    kids.forEach(function(node, idx){
+      var cell = AW.el('div', '');
+      cell.style.textAlign = 'center';
+      cell.appendChild(nodeGroup(node, kidMarks && kidMarks[idx] ? kidMarks[idx] : {}));
+      cell.appendChild(AW.el('div', 'aw-idx', kidNames ? kidNames[idx] : '孩子' + (idx + 1)));
+      kidsRowEl.appendChild(cell);
+    });
+  } else {
+    kidsRowEl.appendChild(AW.el('div', 'aw-row-label', '（根本身就是叶，无孩子）'));
+  }
+}
+
+AW.init({
+  title: '4 阶 B 树的插入与分裂：根结点里最后剩哪些关键字？',
+  subtitle: '4 阶 B 树：每结点<b>至多 3 个关键字</b> · 新关键字先插叶结点 · 满 4 个就分裂：第 <b>⌈4/2⌉ = 2</b> 个上移父结点',
+  counterLabel: '已插入',
+  ribbonTitle: '插入序号（✓ 完成）',
+  intro: '点击「▶ 播放」逐个插入 5, 6, 9, 13, 8, 2, 12, 15。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>根结点</b>'));
+    rootRowEl = AW.el('div', 'aw-cells');
+    rootRowEl.style.minHeight = '52px';
+    inner.appendChild(rootRowEl);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>孩子结点</b>（分裂后产生）'));
+    kidsRowEl = AW.el('div', '');
+    kidsRowEl.style.display = 'flex';
+    kidsRowEl.style.gap = '22px';
+    kidsRowEl.style.marginTop = '6px';
+    inner.appendChild(kidsRowEl);
+    noteLine = AW.el('div', 'aw-row-label', '');
+    noteLine.style.marginTop = '12px';
+    inner.appendChild(noteLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'规则',     log:'空 4 阶 B 树。每结点至多 3 个关键字；插入先落叶（此时尚无孩子，根就是叶）。', count:0 },
+    { cls:'ok',    tag:'插 5',     log:'插入 5 → 根 [5]。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'插 6',     log:'插入 6 → 根 [5, 6]。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'插 9',     log:'插入 9 → 根 [5, 6, 9]（3 个关键字 = 上限，仍合法）。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'miss',  tag:'插 13',    log:'插入 13 → 根 [5, 6, 9, 13]：达到 4 个关键字，溢出，必须分裂。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'分裂①',    log:'分裂：取第 2 个关键字 6 上移作根；左结点 [5]，右结点 [9, 13]。', count:4 },
+    { cls:'ok',    tag:'插 8',     log:'插入 8：8>6 → 落入右叶 [9, 13] → [8, 9, 13]。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'插 2',     log:'插入 2：2<6 → 落入左叶 [5] → [2, 5]。', count:6, ribbon:{k:6, ok:true} },
+    { cls:'miss',  tag:'插 12',    log:'插入 12：落入右叶 → [8, 9, 12, 13]，又达 4 个关键字，溢出。', count:7, ribbon:{k:7, ok:true} },
+    { cls:'shift', tag:'分裂②',    log:'分裂：第 2 个关键字 9 上移 → 根 [6, 9]；孩子变为 [2, 5]、[8]、[12, 13]。', count:7 },
+    { cls:'ok',    tag:'插 15',    log:'插入 15：15>9 → 落入最右叶 [12, 13] → [12, 13, 15]。', count:8, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',     log:'8 个关键字插完：根结点包含 6 和 9 → 选 B。', count:8, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var root = [], kids = [], rootMarks = {}, kidMarks = null, kidNames = null;
+    if(i === 0){ root = []; }
+    if(i === 1){ root = [5]; rootMarks = {5:'hit'}; }
+    if(i === 2){ root = [5, 6]; rootMarks = {6:'hit'}; }
+    if(i === 3){ root = [5, 6, 9]; rootMarks = {9:'hit'}; }
+    if(i === 4){ root = [5, 6, 9, 13]; rootMarks = {13:'miss'}; }
+    if(i === 5){ root = [6]; rootMarks = {6:'hit'}; kids = [[5], [9, 13]]; kidNames = ['左', '右']; }
+    if(i === 6){ root = [6]; kids = [[5], [8, 9, 13]]; kidMarks = [{}, {8:'hit'}]; kidNames = ['左', '右']; }
+    if(i === 7){ root = [6]; kids = [[2, 5], [8, 9, 13]]; kidMarks = [{2:'hit'}, {}]; kidNames = ['左', '右']; }
+    if(i === 8){ root = [6]; kids = [[2, 5], [8, 9, 12, 13]]; kidMarks = [{}, {12:'miss'}]; kidNames = ['左', '中', '右']; }
+    if(i === 9){
+      root = [6, 9]; rootMarks = {9:'hit'};
+      kids = [[2, 5], [8], [12, 13]]; kidNames = ['左', '中', '右'];
+    }
+    if(i >= 10){
+      root = [6, 9];
+      kids = [[2, 5], [8], [12, 13, 15]];
+      kidMarks = [{}, {}, (i === 10 ? {15:'hit'} : {})];
+      kidNames = ['左', '中', '右'];
+    }
+    drawTree(root, kids, rootMarks, kidMarks, kidNames);
+
+    if(i === 0){ noteLine.innerHTML = '4 阶 = 最多 4 棵子树 = 最多 <b>3 个关键字</b>。'; }
+    else if(i === 4){ noteLine.innerHTML = '[5, 6, 9, 13] 有 4 个关键字 &gt; 3 → 违反 B 树定义，触发分裂。'; }
+    else if(i === 5){ noteLine.innerHTML = '分裂口诀：第 ⌈4/2⌉ = 2 个关键字上移，左 1 个、右 2 个。'; }
+    else if(i === 8){ noteLine.innerHTML = '又是 4 个关键字 → 再次分裂。'; }
+    else if(i === 9){ noteLine.innerHTML = '根从 [6] 长成 [6, <b>9</b>]。'; }
+    else if(i >= 11){ noteLine.innerHTML = '<b>答案：根 = [6, 9]，选 B。</b> 干扰项 A(8)、C(8,13)、D(9,12) 都是分裂点取错或忘记分裂的结果。'; }
+    else { noteLine.innerHTML = '…'; }
+  },
+
+  result: {
+    big: '根 = [6, 9]',
+    html: '<b>答案选 B。</b>两次分裂决定一切：插 13 使根 [5,6,9,13] 溢出 → <b>6</b> 上移；插 12 使 [8,9,12,13] 溢出 → <b>9</b> 上移。最终根 [6, 9]，孩子 [2,5]、[8]、[12,13,15]。记忆锚点：<b>m 阶 B 树结点至多 m−1 个关键字，分裂取第 ⌈m/2⌉ 个上移</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2018-47（大题 7 分）：/24 均分子网 + 广播地址 + 剩余主机数 + IP 分片
+     模板：算法 / 过程演示类（逐问推演）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function subBar(split){
+  if(!split){
+    return '<div style="display:flex;gap:6px;margin:4px 0 10px"><div style="flex:1;background:#e2e8f0;border:2px solid #94a3b8;border-radius:10px;padding:9px;text-align:center;font-weight:700;color:#334155">192.168.1.0 / 24（256 个地址，未划分）</div></div>';
+  }
+  return '<div style="display:flex;gap:6px;margin:4px 0 10px">' +
+    '<div style="flex:1;background:#dcfce7;border:2px solid #16a34a;border-radius:10px;padding:8px;text-align:center;color:#14532d"><b>销售部：192.168.1.0/25</b><br><span style="font-size:12px">地址 0～127 · MTU = 1500B</span></div>' +
+    '<div style="flex:1;background:#dbeafe;border:2px solid #2563eb;border-radius:10px;padding:8px;text-align:center;color:#1e3a8a"><b>技术部：192.168.1.128/25</b><br><span style="font-size:12px">地址 128～255 · MTU = 800B</span></div></div>';
+}
+
+function fragTbl(hl){
+  var TH = 'border:1px solid #cbd5e1;padding:5px 9px;background:#f1f5f9;font-size:12.5px';
+  var rows = [
+    ['第 1 片', '776B', '796B', '0', '1'],
+    ['第 2 片', '704B', '724B', '97', '0']
+  ];
+  var h = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;margin:4px 0 8px">';
+  h += '<tr><th style="' + TH + '">分片</th><th style="' + TH + '">数据长度</th><th style="' + TH + '">总长度（含 20B 头）</th><th style="' + TH + '">片偏移（单位 8B）</th><th style="' + TH + '">MF</th></tr>';
+  rows.forEach(function(r, i){
+    var bg = (i === hl) ? 'background:#fef9c3' : '';
+    h += '<tr>';
+    r.forEach(function(x, j){
+      h += '<td style="border:1px solid #cbd5e1;padding:5px 9px;font-size:12.5px;font-family:Menlo,Consolas,monospace;' + bg + '">' + x + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table></div>';
+  return h;
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'/24 均分给两个部门；销售部已分配 192.168.1.1～20（F0 = 192.168.1.126，MTU 1500B）；技术部已分配 192.168.1.129～208（F1 = 192.168.1.254，MTU 800B）',
+    html: card(1, 'key', '审题：题面条件',
+      '<p>地址空间 <code>192.168.1.0/24</code> <b>均分</b>给销售部、技术部。销售部已分配 <code>192.168.1.1～192.168.1.20</code>，路由器接口 F0 = <code>192.168.1.126</code>，MTU = 1500B；技术部已分配 <code>192.168.1.129～192.168.1.208</code>，接口 F1 = <code>192.168.1.254</code>，MTU = 800B。</p>') + subBar(false) },
+  { cls:'ok', tag:'第1问 · 均分', count:1,
+    log:'/24 对半分：销售部 192.168.1.0/25（0～127）、技术部 192.168.1.128/25（128～255），掩码 255.255.255.128',
+    html: card(2, 'good', '第1问：均分 → 两个 /25 子网',
+      '<p>借 1 位主机位做子网位，掩码 <code>/25 = 255.255.255.128</code>：销售部 <code>192.168.1.0/25</code>（地址 0～127），技术部 <code>192.168.1.128/25</code>（地址 128～255）。</p>') + subBar(true) },
+  { cls:'ok', tag:'第1问 · 广播地址', count:2, ribbon:{k:1, ok:true},
+    log:'销售部广播地址 = 主机位全 1 = 192.168.1.127',
+    html: card(3, 'good', '第1问：销售部子网的广播地址',
+      '<p>子网 192.168.1.0/25 的主机位 7 位，<b>主机位全 1</b> 即 01111111 → 广播地址 <b>192.168.1.127</b>（也是该子网的最后一个地址）。</p>') + subBar(true) },
+  { cls:'ok', tag:'第1问 · 子网地址', count:3, ribbon:{k:2, ok:true},
+    log:'技术部子网地址 = 主机位全 0 = 192.168.1.128',
+    html: card(4, 'good', '第1问：技术部子网的子网地址',
+      '<p>技术部子网 <code>192.168.1.128/25</code>：<b>主机位全 0</b> → 子网地址（网络地址）<b>192.168.1.128</b>，该地址不能分配给主机。</p>') + subBar(true) },
+  { cls:'shift', tag:'第1问 · 剩余主机', count:4, ribbon:{k:3, ok:true},
+    log:'技术部可用主机地址 126 个；已占 80（主机 129～208）+ 1（F1 = 254）→ 还可连接 45 台',
+    html: card(5, 'key', '第1问：技术部还可连接多少台主机',
+      '<p>主机位 7 位 → 可用主机地址 = 2 的 7 次方 − 2 = <b>126</b> 个（去掉子网地址与广播地址）。已占用：主机 <code>192.168.1.129～208</code> 共 <b>80</b> 个 + 接口 F1（<code>192.168.1.254</code>）<b>1</b> 个 → 还可连接 <b>126 − 81 = 45 台</b>。</p>') },
+  { cls:'step', tag:'第2问 · 审题', count:5,
+    log:'192.168.1.1 → 192.168.1.208 跨子网经路由器，出口 F1 的 MTU = 800B；分组总长 1500B、头 20B → 数据 1480B',
+    html: card(6, 'key', '第2问：审题',
+      '<p>源 <code>192.168.1.1</code>（销售部）→ 目的 <code>192.168.1.208</code>（技术部），跨子网必须经路由器转发，<b>出口接口 F1 所在网络 MTU = 800B</b>。IP 分组总长 <b>1500B</b>、头长 <b>20B</b> → 数据部分 = 1500 − 20 = <b>1480B</b>。</p>') },
+  { cls:'shift', tag:'第2问 · 最大片', count:6, ribbon:{k:4, ok:true},
+    log:'每片总长 ≤ 800 → 数据 ≤ 780；数据长度须为 8 的倍数（片偏移以 8B 计）→ 最大片数据 = 776B',
+    html: card(7, 'key', '第2问：一个最大分片封装多少数据',
+      '<p>MTU 限制<b>含头的总长度</b> ≤ 800B → 每片数据 ≤ 780B；但<b>片偏移以 8B 为单位</b>，除最后一片外数据长度必须是 8 的整数倍 → 780 向下取到 8 的倍数 = <b>776B</b>（分片总长 = 776 + 20 = 796B ≤ 800B，可行）。</p>') },
+  { cls:'step', tag:'第2问 · 片数', count:7, ribbon:{k:5, ok:true},
+    log:'1480 = 776 + 704 → 至少 2 个分片',
+    html: card(8, 'good', '第2问：至少分几个分片',
+      '<p>原数据 1480B：第 1 片装 <b>776B</b>，剩 1480 − 776 = <b>704B</b>（≤ 776B，第 2 片装得下）→ 至少 <b>2 个分片</b>。</p>') },
+  { cls:'ok', tag:'第2问 · 片偏移', count:8, ribbon:{k:6, ok:true},
+    log:'第 1 片偏移 = 0；第 2 片从数据第 776B 处开始 → 776 ÷ 8 = 97',
+    html: card(9, 'good', '第2问：每个分片的片偏移量',
+      '<p>片偏移以 8B 为单位、相对<b>原分组的数据部分</b>：第 1 片从数据开头装 → 偏移 <b>0</b>；第 2 片从第 776B 处装 → 偏移 <b>776 ÷ 8 = 97</b>。</p>') + fragTbl(-1) },
+  { cls:'step', tag:'第2问 · MF 位', count:9,
+    log:'第 1 片后面还有分片 → MF = 1；第 2 片是最后一片 → MF = 0',
+    html: card(10, 'step', '补充：MF 标志位',
+      '<p><b>MF（More Fragments）= 1</b> 表示后面还有分片：第 1 片 MF = 1；第 2 片是最后一片，MF = 0。两片各自都带 20B 的 IP 头。</p>') + fragTbl(-1) },
+  { cls:'done', tag:'完成', count:10, done:true,
+    log:'答案汇总：广播地址 192.168.1.127；技术部子网地址 192.168.1.128；还可接 45 台；最大片数据 776B；至少 2 片；偏移 0 与 97',
+    html: card(11, 'good', '总结（对照参考答案）',
+      '<p><b>第（1）问</b>：销售部广播地址 <b>192.168.1.127</b>；技术部子网地址 <b>192.168.1.128</b>；还可连接 <b>45 台</b>主机（126 − 80 − 1）。<br><b>第（2）问</b>：最大分片封装数据 <b>776B</b>；至少 <b>2 个分片</b>；片偏移分别为 <b>0</b> 和 <b>97</b>。</p>') + fragTbl(-1) },
+];
+
+AW.init({
+  title: '2018-47（7 分）：子网均分与 IP 分片',
+  subtitle: '192.168.1.0/24 对半分 → 两个 /25 · MTU 800B 触发分片 · 逐问推演',
+  counterLabel: '进度',
+  ribbonTitle: '答题要点（✓ 已得出）',
+  intro: '点击「▶ 播放」按问逐步推演。',
+  snaps: snaps,
+  result: {
+    big: '7 分拿下',
+    html: '对照参考答案——第（1）问：均分得 <code>192.168.1.0/25</code> 与 <code>192.168.1.128/25</code> → 销售部广播地址 <b>192.168.1.127</b>，技术部子网地址 <b>192.168.1.128</b>，技术部还可接 <b>126 − 80 − 1 = 45 台</b>主机。<br>第（2）问：出口 MTU = 800B → 最大片数据 780 取 8 的倍数 = <b>776B</b>；1480 = 776 + 704 → <b>2 片</b>；片偏移 <b>0</b> 与 <b>97</b>（776 ÷ 8）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

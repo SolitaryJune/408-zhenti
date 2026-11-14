@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-18 有利于指令流水线的系统特点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类动画（复制 tools/anim_concept_template.html，只改 AW.init 区域） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：流水线怕什么',
+    cls: 'key',
+    body: '<p>流水线要求<b>各段时间尽量相等、推进有规律</b>。凡能让取指、译码、执行、访存各段"整齐划一"的特点，都有利于流水线。逐条检验 Ⅰ、Ⅱ、Ⅲ。</p>' },
+  { title: 'Ⅰ 指令格式规整且长度一致：有利',
+    cls: 'good',
+    body: '<p>指令长度一致 → 取指段<b>一次访存必取到一条完整指令</b>；字段位置固定 → 译码简单统一。各段耗时稳定，是流水线的基本前提（RISC 特征）。</p>' },
+  { title: 'Ⅱ 指令和数据按边界对齐存放：有利',
+    cls: 'good',
+    body: '<p>不对齐的数据/指令可能跨两个存储字，需要<b>两次访存再拼接</b>，段耗时变得不确定；按边界对齐后一次访存即可拿到完整内容，节拍不被打乱。</p>' },
+  { title: 'Ⅲ 只有 Load/Store 指令访存：有利',
+    cls: 'good',
+    body: '<p>其余指令只在寄存器间操作，<b>执行段不占用存储器</b>，避免"取指访存"与"数据访存"在同一拍争用主存。这也是 RISC 的标志性设计，正是为流水线而生。</p>' },
+  { title: '结论：Ⅰ、Ⅱ、Ⅲ 全部有利',
+    cls: 'good',
+    body: '<p>三条分别解决了"取指译码整齐""一次访存取整""执行不抢访存"三个问题，全部服务于流水线 → 选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011·18 哪些指令系统特点有利于流水线',
+  subtitle: '考点：指令系统与流水线（RISC 特征） · 逐条检验 Ⅰ Ⅱ Ⅲ',
+  counterLabel: '推进步数',
+  intro: '点击「▶ 播放」逐条检验三个特点。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（Ⅰ、Ⅱ、Ⅲ 全部）',
+    html: 'Ⅰ 定长规整 → 取指译码整齐；Ⅱ 边界对齐 → 一次访存取整；Ⅲ 仅 Load/Store 访存 → 执行段不抢访存。三者都是 <b>RISC 特征</b>，共同保证流水线各段等长推进。记忆锚点：流水线最怕<b>各段时间不均匀</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

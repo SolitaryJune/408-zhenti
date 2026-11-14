@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-31 关闭文件时文件系统要做什么</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：open 与 close 是一对反向操作',
+    cls: 'key',
+    body: '<p><code>open</code> 把文件的<b>目录项、索引节点从外存复制进内存</b>（内存索引节点），并在打开文件表登记。' +
+          '<code>close</code> 做反向清理。前提：文件 F <b>仅被进程 P 打开</b>——引用计数 = 1，P 一关闭就归零。</p>' },
+  { title: 'A. 删除目录中 F 的目录项 —— 不做',
+    cls: 'bad',
+    body: '<p>close 不是删除文件。F 还存在，<b>目录项原样保留</b>。删除目录项属于删除文件（如 unlink）的操作。</p>' },
+  { title: 'B. 释放 F 的索引节点所占的内存空间 —— 必做 ✓',
+    cls: 'good',
+    body: '<p>P 关闭后，内存索引节点的<b>引用计数由 1 减到 0</b>，这份<b>内存 inode 副本</b>不再被任何进程需要，' +
+          '文件系统把它<b>释放</b>（连同 P 的打开文件表项）。</p>' },
+  { title: 'C. 释放 F 的索引节点所占的外存空间 —— 不做',
+    cls: 'bad',
+    body: '<p><b>外存（磁盘）索引节点</b>是文件本身的元数据，文件没删就永远保留。close 不动外存。</p>' },
+  { title: 'D. 磁盘索引节点的链接计数减 1 —— 不做',
+    cls: 'bad',
+    body: '<p>链接计数统计的是<b>指向该文件的目录项（硬链接）个数</b>，只有在<b>删除目录项</b>时才减 1。close 与它无关。</p>' },
+  { title: '结论：答案 B',
+    cls: 'good',
+    body: '<p>close 只做<b>内存侧清理</b>：释放打开文件表项、引用计数归零时释放<b>内存索引节点</b>。' +
+          '<b>答案选 B</b>。口诀：关闭清内存，删除动磁盘。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '进程 P 关闭文件 F 时，文件系统需要完成什么',
+  subtitle: '考点：文件系统基础 · open/close 的对称职责 · 内存索引节点 vs 磁盘索引节点',
+  intro: '点击「▶ 播放」逐项推演四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>close 只清内存侧</b>——释放打开文件表项，内存索引节点引用计数减到 0 时释放；' +
+          '<b>外存目录项、磁盘索引节点、链接计数全都不动</b>（那是删除文件才做的事）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

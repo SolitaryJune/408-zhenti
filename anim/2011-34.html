@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-34 · 比特率与波特率的换算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/分析类：比特率 = 波特率 × log2(M) 的换算推理链
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个"率"要分清',
+    cls: 'key',
+    body: '<p>已知<b>数据传输速率（比特率）2400 bps</b>，采用<b>四相位调制</b>，求<b>波特率</b>。换算公式：<code>比特率 = 波特率 × log2(M)</code>，M 为每个码元的状态数。</p>' },
+  { title: '四相位 = 每码元 2 bit',
+    cls: '',
+    body: '<p>四相位 → 每个码元有 <b>M = 4</b> 种状态，携带信息 <b>log2(4) = 2 bit</b>。注意：4 是"状态数"，开对数后才是"比特数"。</p>' },
+  { title: '代入公式计算',
+    cls: 'good',
+    body: '<p>波特率 = 比特率 ÷ 每码元比特数 = 2400 ÷ 2 = <b>1200 波特</b>。</p>' },
+  { title: '排除 A：错把状态数当比特数',
+    cls: 'bad',
+    body: '<p>A（600 波特）= 2400 ÷ 4：把"四相位"当成每码元携带 4 bit。状态数要先开 log2：log2(4) = 2，不是 4。✗</p>' },
+  { title: '排除 C、D：公式方向用反',
+    cls: 'bad',
+    body: '<p>C（4800 波特）= 2400 × 2：方向反了——波特率数的是"码元个数"，每码元携带 ≥1 bit 时必然 ≤ 比特率；D（9600）错得更远。✗</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B（1200 波特）</b>。记忆锚点：<b>比特率 = 波特率 × log2(状态数)</b>；"四相位/四电平" → 每码元 2 bit → 波特率是比特率的一半。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011-34 · 比特率与波特率的换算',
+  subtitle: '考点：调制与码元 · 2400 bps · 四相位调制 · 求波特率',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 支撑 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开换算推理链。',
+  snaps: snaps,
+  result: {
+    big: '1200 波特（选 B）',
+    html: '每码元携带 log2(4) = <b>2 bit</b>，波特率 = 2400 ÷ 2 = <b>1200 波特</b>。记住：<b>比特率 = 波特率 × log2(M)</b>，状态数 M 要开对数，别当比特数用。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

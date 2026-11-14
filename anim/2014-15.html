@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-15 DRAM 地址引脚复用</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（DRAM 行列地址分时复用） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 每步可见元素：addrRow(22位地址) / dataCard / muxRow / totalCard / sramCard
+var ST = [
+  { addr:false, data:false, mux:false, total:false, sram:false, dim:false },
+  { addr:true,  data:false, mux:false, total:false, sram:false, dim:false },
+  { addr:true,  data:true,  mux:false, total:false, sram:false, dim:false },
+  { addr:true,  data:true,  mux:true,  total:false, sram:false, dim:true  },
+  { addr:true,  data:true,  mux:true,  total:true,  sram:false, dim:true  },
+  { addr:true,  data:true,  mux:true,  total:true,  sram:true,  dim:true  },
+  { addr:true,  data:true,  mux:true,  total:true,  sram:true,  dim:true  },
+];
+
+AW.init({
+  title: '2014-15 · DRAM 芯片的地址/数据引脚总数',
+  subtitle: '容量 256MB 的存储器由若干 <code>4M × 8 位</code> DRAM 芯片构成 · 求单芯片引脚数',
+  counterLabel: '已定引脚数',
+  ribbonTitle: '结论（✓）',
+  intro: '点击「▶ 播放」：先算 22 位地址，再看 DRAM 行列地址如何复用。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.setProperty('--cell', '30px');
+    inner.style.setProperty('--gap', '2px');
+    inner.style.minWidth = '640px';
+
+    // 22 位地址（按不复用的情形先摆出来）
+    var lb1 = AW.el('div', 'aw-row-label', '若不复用：4M = 2<sup>22</sup> → 需要 <b>22 位地址</b>（A0 ~ A21）');
+    var bits = [];
+    for (var i = 0; i < 22; i++) bits.push('A' + i);
+    var addrRow = AW.cellRow(bits, bits.map(function(){ return ''; }), null, 1);
+
+    // 数据引脚卡
+    var dataCard = AW.el('div', '');
+    dataCard.style.cssText = 'display:none;font-size:14px;color:#334155;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;margin:10px 0';
+    dataCard.innerHTML = '每个单元 <b>8 位</b> → 数据引脚 <b style="color:#2563eb">8 根</b>（D0 ~ D7）。';
+
+    // 复用演示：22 位拆成 11 行 + 11 列，共用 11 根引脚
+    var lb2 = AW.el('div', 'aw-row-label', 'DRAM <b>行列地址复用</b>：先送 11 位行地址（RAS），再送 11 位列地址（CAS）');
+    var pins = [];
+    for (var j = 0; j < 11; j++) pins.push('A' + j);
+    var muxRow = AW.cellRow(pins, pins.map(function(){ return 'hit'; }), null, 1);
+    var muxCard = AW.el('div', '');
+    muxCard.style.cssText = 'font-size:13.5px;color:#334155;background:#fffbeb;border:1.5px solid #d97706;border-radius:10px;padding:8px 12px;margin:10px 0';
+    muxCard.innerHTML = '两组地址<b>分时共用同一组 11 根引脚</b>：地址引脚 = 22 ÷ 2 = <b style="color:#d97706">11 根</b>（芯片内部锁存后仍拼出 22 位地址）。';
+
+    // 合计卡
+    var totalCard = AW.el('div', '');
+    totalCard.style.cssText = 'display:none;font-size:14px;line-height:1.8;color:#14532d;background:#dcfce7;border:2px solid #16a34a;border-radius:12px;padding:10px 14px;margin:10px 0';
+    totalCard.innerHTML = '地址 11 根 + 数据 8 根 = <b style="color:#15803d">19 根</b> → 选 <b style="color:#15803d">A</b>。';
+
+    // SRAM 对比卡
+    var sramCard = AW.el('div', '');
+    sramCard.style.cssText = 'display:none;font-size:13.5px;color:#334155;background:#fff8f8;border:1.5px solid #dc2626;border-radius:10px;padding:8px 12px;margin:10px 0';
+    sramCard.innerHTML = '对比干扰项：SRAM 不复用 → 22 + 8 = <b>30</b>（选项 C 的口径，DRAM 必须复用）；B 的 22 则漏掉了复用或数据引脚。';
+
+    inner.appendChild(lb1); inner.appendChild(addrRow);
+    inner.appendChild(dataCard);
+    inner.appendChild(lb2); inner.appendChild(muxRow); inner.appendChild(muxCard);
+    inner.appendChild(totalCard); inner.appendChild(sramCard);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+
+    this._lb1 = lb1; this._addrRow = addrRow;
+    this._dataCard = dataCard;
+    this._lb2 = lb2; this._muxRow = muxRow; this._muxCard = muxCard;
+    this._totalCard = totalCard; this._sramCard = sramCard;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'题面',       log:'某 256MB 存储器由若干 4M×8 位 DRAM 芯片构成，问单片 DRAM 的地址引脚 + 数据引脚总数。', count:0 },
+    { cls:'shift', tag:'22 位地址',  log:'4M = 2^22 个存储单元 → 需要 22 位地址（先按不复用的情形摆出 A0~A21）。', count:0 },
+    { cls:'step',  tag:'数据引脚',   log:'每个单元 8 位 → 数据引脚 8 根（D0~D7）。', count:8 },
+    { cls:'shift', tag:'行列复用',   log:'DRAM 行列地址复用：先送 11 位行地址（RAS），再送 11 位列地址（CAS）→ 地址引脚 = 22 ÷ 2 = 11 根。', count:11 },
+    { cls:'ok',    tag:'合计 19 根', log:'地址 11 根 + 数据 8 根 = 19 根 → 选 A。', count:19, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'干扰项',     log:'C 的 30 = 22+8 是 SRAM 口径（不复用）；B 的 22 漏了复用或数据引脚；DRAM 的关键词是"行列地址分时复用"。', count:19 },
+    { cls:'done',  tag:'结论',       log:'答案 A：地址引脚 11 + 数据引脚 8 = 19 根。', count:19, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = ST[i];
+    this._lb1.style.display = st.addr ? 'block' : 'none';
+    this._addrRow.style.display = st.addr ? 'flex' : 'none';
+    this._addrRow.style.opacity = st.dim ? '.45' : '1';
+    this._dataCard.style.display = st.data ? 'block' : 'none';
+    this._lb2.style.display = st.mux ? 'block' : 'none';
+    this._muxRow.style.display = st.mux ? 'flex' : 'none';
+    this._muxCard.style.display = st.mux ? 'block' : 'none';
+    this._totalCard.style.display = st.total ? 'block' : 'none';
+    this._sramCard.style.display = st.sram ? 'block' : 'none';
+  },
+
+  result: {
+    big: '19 根（A）',
+    html: '4M = 2^22 → 22 位地址；DRAM <b>行列地址复用</b> → 地址引脚 22÷2 = <b>11 根</b>；数据引脚 <b>8 根</b>；合计 <b>19 根</b>，选 <b>A</b>。30 是 SRAM 不复用的口径。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

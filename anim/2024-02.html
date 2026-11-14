@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-02 中缀转后缀：x+y*(z-u)/v</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body) {
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+    '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  {
+    title: '审题眼：优先级与结合性',
+    cls: 'key',
+    body: '<p>中缀式 <code>x+y*(z-u)/v</code>：括号最优先，<code>*</code> <code>/</code> 高于 <code>+</code>；<code>*</code> 与 <code>/</code> 同级、<b>从左到右</b>结合。后缀式 = 运算符紧跟在它的两个操作数之后。思路：由最内层括号向外逐层「剥」。</p>'
+  },
+  {
+    title: '第 1 层：最内层括号 (z-u)',
+    cls: '',
+    body: '<p>先处理括号 <code>(z-u)</code>：减号写在两个操作数之后 → 后缀 <code>zu-</code>。原式等价于 <code>x + y*(zu-) / v</code>。</p>'
+  },
+  {
+    title: '第 2 层：乘法 y*(z-u)',
+    cls: '',
+    body: '<p><code>*</code> 的左操作数是 <code>y</code>，右操作数是 <code>zu-</code>，把 <code>*</code> 放最后 → <code>yzu-*</code>。原式变为 <code>x + (yzu-*) / v</code>。</p>'
+  },
+  {
+    title: '第 3 层：除法同级左结合',
+    cls: '',
+    body: '<p><code>*</code> 与 <code>/</code> 同级且左结合，所以先算 <code>y*(z-u)</code> 再除以 <code>v</code>：即 <code>(yzu-*)/v</code> → 后缀 <code>yzu-*v/</code>。这一步是本题题眼：除号跟在整个 <code>yzu-*</code> 之后，<b>不是</b>先算 <code>(z-u)/v</code>。</p>'
+  },
+  {
+    title: '第 4 层：最后的加法',
+    cls: 'good',
+    body: '<p><code>x</code> 加上刚才的整体 → <code>x (yzu-*v/) +</code>，连写为 <code>xyzu-*v/+</code>。这就是与原式完全等价的后缀表达式。</p>'
+  },
+  {
+    title: '逐项排除干扰项',
+    cls: 'bad',
+    body: '<p><b>B</b> <code>xyzu-v/*+</code>：它先算 <code>(z-u)/v</code> 再去乘 <code>y</code>，乘除次序与左结合规则不符，表示的是另一棵运算树。<b>C</b> <code>+x/*y-zuv</code>、<b>D</b> <code>+x*y/-zuv</code>：运算符在操作数<b>前面</b>，是前缀（波兰）式，不是后缀式。</p>'
+  },
+  {
+    title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>（<code>xyzu-*v/+</code>）。验证：从左到右扫后缀式，遇 <code>zu-</code> 得 z-u，遇 <code>*</code> 得 y*(z-u)，遇 <code>/</code> 得 y*(z-u)/v，遇 <code>+</code> 得 x+y*(z-u)/v，与原式一致。</p>'
+  }
+];
+
+var snaps = STEPS.map(function (s, i) {
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function (x, j) {
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '中缀转后缀：逐层剥括号（2024-02）',
+  subtitle: '表达式 <code>x+y*(z-u)/v</code> · 优先级：括号 &gt; * / &gt; + · 同级左结合',
+  intro: '点击「▶ 播放」，从最内层括号向外逐层转成后缀。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>从最内层括号往外剥，同级先左后右</b>，运算符永远紧跟在它的第二个操作数之后。干扰项 B 悄悄改变了乘除的运算次序，C/D 干脆是前缀式。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

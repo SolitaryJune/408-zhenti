@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-05 哈夫曼树求最小 WPL</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function pool(vals, hi, extra){
+  var h = '<div class="aw-scroll"><div class="aw-row-label"><b>森林中现存权值</b></div>' +
+          AW.cellRow(vals, hi).outerHTML;
+  if(extra) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>';
+  return h + '</div>';
+}
+
+AW.init({
+  title: '哈夫曼树：5 个叶结点的最小 WPL',
+  subtitle: '权值 <code>10, 12, 16, 21, 30</code> · 每次取最小两个合并',
+  counterLabel: '累计 WPL',
+  ribbonTitle: '合并轮次（✓ 完成）',
+  intro: '点击「▶ 播放」逐步执行哈夫曼合并。',
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'哈夫曼算法：每次从森林取权值最小的两个合并，新值放回，直到只剩一棵树；WPL = 各次合并值之和', count:0,
+      html: pool(['10','12','16','21','30'], [], '初始森林：5 个叶结点权值。') },
+
+    { cls:'shift', tag:'合并①', log:'取最小的 10、12 合并 → 22 放回；WPL 累计 22', count:22, ribbon:{k:1, ok:true},
+      html: pool(['16','21','22','30'], ['','','ok',''], '取出 10+12=22（绿色为新合并结点）。累计 WPL = <b>22</b>。') },
+
+    { cls:'shift', tag:'合并②', log:'取 16、21 合并 → 37；WPL 累计 59', count:59, ribbon:{k:2, ok:true},
+      html: pool(['22','30','37'], ['','','ok'], '取出 16+21=37。累计 WPL = 22+37 = <b>59</b>。') },
+
+    { cls:'shift', tag:'合并③', log:'取 22、30 合并 → 52；WPL 累计 111', count:111, ribbon:{k:3, ok:true},
+      html: pool(['37','52'], ['','ok'], '取出 22+30=52。累计 WPL = 22+37+52 = <b>111</b>。') },
+
+    { cls:'ok', tag:'合并④', log:'取 37、52 合并 → 89，只剩一棵树；WPL 累计 200', count:200, ribbon:{k:4, ok:true},
+      html: pool(['89'], ['ok'], '取出 37+52=89——树根。累计 WPL = 22+37+52+89 = <b>200</b>。') },
+
+    { cls:'done', tag:'完成', log:'WPL = 22+37+52+89 = 200 → 答案 B', count:200, done:true,
+      html: pool(['89'], ['hit'], '<b>WPL = 22 + 37 + 52 + 89 = 200</b>（全部非叶结点权值之和）。') },
+  ],
+
+  result: {
+    big: 'WPL = 200（答案 B）',
+    html: 'WPL = 哈夫曼树<b>全部非叶结点权值之和</b> = 22+37+52+89 = 200。<b>89 只是树根</b>（最后一次合并值），别当成 WPL（干扰 A）；每次不取最小两个会偏大（干扰 C、D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

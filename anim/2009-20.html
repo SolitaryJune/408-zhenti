@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-20 总线带宽计算推理链</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-20：总线带宽 = 每周期字节数 ÷ 总线周期（推理链）
+     模板：概念/推理链类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三个已知量',
+    cls: 'key',
+    body: '<p><b>①</b> 一个总线周期并行传输 <code>4B</code>；<b>②</b> 一个总线周期占 <code>2 个时钟周期</code>；<b>③</b> 总线时钟频率 <code>10MHz</code>。总线带宽的定义：<b>单位时间内总线传输的字节数</b>。</p>' },
+  { title: '第 1 步：时钟周期',
+    cls: '',
+    ribbon: {k:1, ok:true},
+    body: '<p>时钟周期 = 1 ÷ 频率 = 1 ÷ 10MHz = <code>0.1μs</code>。</p>' },
+  { title: '第 2 步：总线周期',
+    cls: '',
+    ribbon: {k:2, ok:true},
+    body: '<p>总线周期 = 2 个时钟周期 = 2 × 0.1μs = <code>0.2μs</code>。注意别把时钟周期直接当总线周期用。</p>' },
+  { title: '第 3 步：带宽计算',
+    cls: 'good',
+    ribbon: {k:3, ok:true},
+    body: '<p>带宽 = 4B ÷ 0.2μs = 20B/μs = <b>20MB/s</b>。等价写法：每秒总线周期数 = 10MHz ÷ 2 = 5M 个 → 4B × 5M = 20MB/s。</p>' },
+  { title: '干扰项对照',
+    cls: 'bad',
+    body: '<p><b>C（40MB/s）</b>：4B ÷ 0.1μs，用时钟周期当总线周期——忘了除以 2。<b>A（10MB/s）</b>：每秒 5M 个周期又按 2B 算——传输量搞错。<b>D（80MB/s）</b>：两处错叠加。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B：20MB/s</b>。记忆锚点：<b>带宽 = 每总线周期字节数 ÷ 总线周期时长</b>，总线周期 ≠ 时钟周期。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || null,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-20 总线带宽的计算',
+  subtitle: '一个总线周期传 4B · 占 2 个时钟周期 · 时钟频率 10MHz · 考点：总线性能指标',
+  counterLabel: '推理步',
+  ribbonTitle: '计算进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '20MB/s（答案 B）',
+    html: '链条：<b>时钟周期 0.1μs → 总线周期 0.2μs → 带宽 = 4B ÷ 0.2μs = 20MB/s</b>。<br>最大陷阱是 C（40MB/s）：拿时钟周期当总线周期，忘了除以 2。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

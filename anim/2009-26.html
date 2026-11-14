@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-26 · 分区分配的保护措施</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析类：分区分配内存保护措施（答案 A）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题眼：<code>分区分配</code> = 连续分配方式，进程装入一段<b>连续分区</b>。保护的目标：防止进程<b>越界访问</b>其他分区（操作系统或其他用户程序）。</p>' },
+  { title: 'A. 界地址保护 —— 对',
+    cls: 'good',
+    body: '<p>系统为进程设置一对<b>界地址寄存器</b>（上界/下界，或基址 + 限长）：访存地址必须落在本分区范围内，越界即触发<b>越界中断</b> → 这正是分区分配的主要保护措施。</p>' },
+  { title: 'B. 程序代码保护 —— 错',
+    cls: 'bad',
+    body: '<p>「程序代码保护」不是内存管理中的保护机制，分区分配不靠它来隔离进程 → 排除。</p>' },
+  { title: 'C. 数据保护 —— 错',
+    cls: 'bad',
+    body: '<p>「数据保护」属于程序/文件层面的概念，与"分区隔离"没有对应关系 → 排除。</p>' },
+  { title: 'D. 栈保护 —— 错',
+    cls: 'bad',
+    body: '<p>「栈保护」是编译层面防栈溢出的技术，与操作系统的分区分配无关 → 排除。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>A</b>。记忆锚点：<b>连续分区 → 界地址保护（上下界 / 基址限长寄存器）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-26 · 分区分配的主要保护措施',
+  subtitle: '考点：连续分配的内存保护 · 界地址寄存器',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：分区分配靠<b>界地址保护</b>——用上界/下界（或基址/限长）寄存器把访存地址限制在本分区内，越界产生中断。B/C/D 都不是内存分区保护的机制。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

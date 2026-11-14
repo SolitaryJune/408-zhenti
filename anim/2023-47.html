@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-47 FTP 上传文件：序号、拥塞窗口与总时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：TCP 拥塞窗口 + 时间线推演 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var CHIPS = [], MARKS = [], ROUND_ROWS = [], TIME_EL = null;
+
+var ROUNDS = [
+  ['第1轮 t=10→20ms', '发段1（101~1100）', 'ack = 1101', 'cwnd 1 → 2'],
+  ['第2轮 t=20→30ms', '发段2~3（1101~3100）', 'ack = 2101、3101', 'cwnd 2 → 3 → 4（达 ssthresh）'],
+  ['第3轮 t=30→40ms', '发段4~7（3101~7100）', 'ack = 4101~7101', 'cwnd 4 → 5'],
+  ['第4轮 t=40→50ms', '发段8~12（7101~12100）', 'ack = 8101~12101', 'cwnd 5 → 6'],
+  ['第5轮 t=50→60ms', '发段13~18（12101~18100）', 'ack = 13101~18101', '18 段全部确认 → 完成'],
+];
+
+AW.init({
+  title: 'H 上传 18000 B：拥塞窗口与时间线推演',
+  subtitle: 'ISN=100 · MSS=1000B · ssthresh=4MSS · RTT=10ms · 忽略段传输时延 · 无差错丢包',
+  counterLabel: '累计时刻（ms）',
+  ribbonTitle: '小问（✓ 已解决）',
+  intro: '点击「▶ 播放」，从握手开始逐轮推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    CHIPS = []; MARKS = []; ROUND_ROWS = []; TIME_EL = null;
+    var wrap = AW.el('div', 'aw-scroll');
+
+    // 拥塞窗口带
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>拥塞窗口 cwnd</b>（单位 MSS）· 黄标处为阈值 ssthresh = 4 MSS'));
+    var chipRow = AW.el('div', '');
+    chipRow.style.cssText = 'display:flex;gap:8px;width:max-content';
+    for (var v = 1; v <= 6; v++){
+      var c = AW.el('div', '');
+      c.style.cssText = 'width:74px;height:40px;border:2px solid #cbd5e1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;background:#fff;color:#64748b;transition:all .3s';
+      c.innerHTML = v + ' MSS';
+      CHIPS.push(c);
+      chipRow.appendChild(c);
+    }
+    wrap.appendChild(chipRow);
+    var markRow = AW.el('div', '');
+    markRow.style.cssText = 'display:flex;gap:8px;width:max-content;margin-top:4px';
+    for (var m = 1; m <= 6; m++){
+      var mk = AW.el('div', '');
+      mk.style.cssText = 'width:74px;text-align:center;font-size:11px;font-weight:700;color:#92400e';
+      mk.innerHTML = (m === 4) ? '▲ ssthresh' : '';
+      MARKS.push(mk);
+      markRow.appendChild(mk);
+    }
+    wrap.appendChild(markRow);
+
+    // 五轮时间线
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>五轮数据发送</b>（每轮一个 RTT = 10 ms）'));
+    ROUNDS.forEach(function(r){
+      var row = AW.el('div', '');
+      row.style.cssText = 'display:flex;align-items:baseline;gap:8px;margin:6px 0;padding:6px 10px;border-left:3px solid #e2e8f0;border-radius:8px;opacity:.3;transition:all .35s;font-size:12.5px;color:#334155;line-height:1.6';
+      row.innerHTML = '<b style="min-width:118px;flex:0 0 auto">' + r[0] + '</b>' +
+        '<span style="min-width:150px;flex:0 0 auto;font-family:Menlo,monospace">' + r[1] + '</span>' +
+        '<span style="min-width:128px;flex:0 0 auto;font-family:Menlo,monospace">' + r[2] + '</span>' +
+        '<span>' + r[3] + '</span>';
+      ROUND_ROWS.push(row);
+      wrap.appendChild(row);
+    });
+
+    TIME_EL = AW.el('div', '');
+    TIME_EL.style.cssText = 'margin-top:10px;font-size:14.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;width:max-content';
+    TIME_EL.innerHTML = 't = 0 ms';
+    wrap.appendChild(TIME_EL);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var cw = sn.cw || 0;
+    for (var i = 0; i < CHIPS.length; i++){
+      if (cw > 0 && i === cw - 1){ CHIPS[i].style.borderColor = '#16a34a'; CHIPS[i].style.background = '#16a34a'; CHIPS[i].style.color = '#fff'; }
+      else if (i < cw){ CHIPS[i].style.borderColor = '#86efac'; CHIPS[i].style.background = '#f0fdf4'; CHIPS[i].style.color = '#15803d'; }
+      else { CHIPS[i].style.borderColor = '#cbd5e1'; CHIPS[i].style.background = '#fff'; CHIPS[i].style.color = '#64748b'; }
+    }
+    var upto = sn.rows || 0;
+    for (var j = 0; j < ROUND_ROWS.length; j++){
+      var el = ROUND_ROWS[j];
+      if (upto > 0 && j === upto - 1){ el.style.opacity = '1'; el.style.borderLeftColor = '#d97706'; el.style.background = '#fffbeb'; }
+      else if (j < upto - 1){ el.style.opacity = '1'; el.style.borderLeftColor = '#16a34a'; el.style.background = 'transparent'; }
+      else { el.style.opacity = '.3'; el.style.borderLeftColor = '#e2e8f0'; el.style.background = 'transparent'; }
+    }
+    if (sn.t != null) TIME_EL.innerHTML = 't = ' + sn.t + ' ms';
+  },
+
+  snaps: [
+    { cls:'step',  tag:'读题',        log:'ISN=100、MSS=1000B、ssthresh=4MSS、RTT=10ms；F=18000B → 18 个 MSS 段；忽略段传输时延', count:0, cw:0, rows:0, t:0 },
+    { cls:'step',  tag:'第 1 问',     log:'FTP：控制连接<b>持久</b>、数据连接<b>非持久</b>；登录时建立的是<b>控制连接</b>', count:0, cw:0, rows:0, t:0 },
+    { cls:'ok',    tag:'第 2 问·序号', log:'SYN 占 1 个序号 → F 第 1 字节序号 = 100+1 = <b>101</b>（数据占 101~18100）', count:0, cw:0, rows:0, t:0 },
+    { cls:'step',  tag:'握手',        log:'t=0 发 SYN；t=10ms 收 SYN+ACK，握手完成，H 立即发第 1 段（cwnd=1 MSS）', count:10, cw:1, rows:0, t:10 },
+    { cls:'step',  tag:'第 1 轮',     log:'t=10~20ms：发段1；收 ack=1101 → 慢启动 cwnd=2 MSS', count:20, cw:2, rows:1, t:20 },
+    { cls:'ok',    tag:'第 2 轮',     log:'t=20~30ms：发段2~3；收 ack=2101 → cwnd=<b>3 MSS</b>（第 3 问①）', count:30, cw:3, rows:2, t:30 },
+    { cls:'shift', tag:'达阈值',      log:'再收 ack=3101 → cwnd=4 MSS = ssthresh，转入<b>拥塞避免</b>（此后每轮 +1 MSS）', count:30, cw:4, rows:2, t:30 },
+    { cls:'step',  tag:'第 3 轮',     log:'t=30~40ms：发段4~7（4 段，3101~7100）', count:40, cw:4, rows:3, t:40 },
+    { cls:'ok',    tag:'第 3 问②',    log:'收齐 ack=4101~7101 → 拥塞避免一轮结束 → cwnd=<b>5 MSS</b>（含 ack=7101 时刻）', count:40, cw:5, rows:3, t:40 },
+    { cls:'step',  tag:'第 4 轮',     log:'t=40~50ms：发段8~12（5 段）；收齐确认 → cwnd=6 MSS', count:50, cw:6, rows:4, t:50 },
+    { cls:'step',  tag:'第 5 轮',     log:'t=50~60ms：发段13~18（6 段）——18000B 共 18 段全部发出', count:50, cw:6, rows:5, t:50 },
+    { cls:'ok',    tag:'第 4 问·时间', log:'t=55ms 服务器收齐 F；t=60ms H 收到 ack=18101 → 确认全部接收，至少 <b>60 ms</b>', count:60, cw:6, rows:5, t:60 },
+    { cls:'ok',    tag:'第 2 问·挥手', log:'断连：H 发 FIN（seq=18101，占 1 号）→ 服务器第二次挥手 ACK 确认号 = <b>18102</b>', count:60, cw:6, rows:5, t:60 },
+    { cls:'done',  tag:'第 4 问·速率', log:'平均速率 = 18000B ÷ 60ms = 3×10<sup>5</sup> B/s = 0.3 MB/s = 2.4 Mb/s', count:60, cw:6, rows:5, t:60, done:true },
+  ],
+
+  result: {
+    big: '60 ms · 3×10⁵ B/s',
+    html: '要点：①控制连接<b>持久</b>、数据连接<b>非持久</b>、登录建<b>控制连接</b>；' +
+          '②首字节序号 <b>101</b>（SYN 占 1 号）、第二次挥手确认号 <b>18102</b>（FIN 占 1 号）；' +
+          '③cwnd：ack=2101 → <b>3 MSS</b>、ack=7101 → <b>5 MSS</b>（cwnd 路径 1→2→3→4→5→6）；' +
+          '④总时间 <b>60 ms</b>，平均速率 <b>3×10<sup>5</sup> B/s（0.3 MB/s，2.4 Mb/s）</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

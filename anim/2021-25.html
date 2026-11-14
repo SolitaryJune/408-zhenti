@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-25 · 时间片轮转调度所需的内核构件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：还原 RR 的一次周转', cls: 'key',
+    body: '<p>时间片轮转（RR）的机制：进程上 CPU 运行 → 时间片用完产生中断 → 当前进程送到就绪队列尾 → 调度下一个进程。判断每个构件"<b>RR 机制本身是否依赖它</b>"。</p>' },
+  { title: 'Ⅰ. 进程控制块 PCB：需要 ✓', cls: 'good',
+    body: '<p>调度的对象是进程，进程的一切信息（状态、队列指针等）都记在 <b>PCB</b> 里，调度与切换都围绕 PCB 进行——<b>需要</b>。</p>' },
+  { title: 'Ⅱ. 时钟中断处理程序：需要 ✓', cls: 'good',
+    body: '<p>"时间片用完"这个事件由硬件时钟发出<b>时钟中断</b>，由时钟中断处理程序暂停当前进程、送回就绪队列尾并触发调度。没有它，RR 退化成"运行到结束"——<b>需要</b>。</p>' },
+  { title: 'Ⅲ. 进程就绪队列：需要 ✓', cls: 'good',
+    body: '<p>RR 的"轮转"就是进程在<b>就绪队列</b>里排队：调度程序取队头进程上 CPU，时间片到了把它排回队尾——<b>需要</b>。</p>' },
+  { title: 'Ⅳ. 进程阻塞队列：不需要 ✗', cls: 'bad',
+    body: '<p>阻塞队列用于进程等待事件（I/O、信号量等）时挂起、事件发生后唤醒回就绪队列，服务的是"<b>阻塞与唤醒</b>"机制。即使改用先来先服务调度，阻塞队列照样存在——它与 RR 的实现无关，<b>不需要</b>。看到"也是队列"就选上，正中选项 D 的陷阱。</p>' },
+  { title: '结论：答案 C', cls: 'good',
+    body: '<p>需要 Ⅰ、Ⅱ、Ⅲ，不需要 Ⅳ → 仅Ⅰ、Ⅱ、Ⅲ，答案选 <b>C</b>。记忆锚点：RR = PCB 记状态 + 时钟中断掐表 + 就绪队列排队轮转。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '时间片轮转调度所需的内核构件（2021-25）',
+  subtitle: '考点：RR 调度的实现 · Ⅰ PCB / Ⅱ 时钟中断处理程序 / Ⅲ 就绪队列 / Ⅳ 阻塞队列',
+  counterLabel: '已核对',
+  ribbonTitle: '构件（✓ 需要 / ✗ 不需要）',
+  intro: '点击「▶ 播放」，逐个构件判断 RR 是否依赖它。',
+  snaps: [{ cls: 'shift', tag: '开始', log: '', html: '' }].concat(snaps),
+  result: {
+    big: '答案 C（仅Ⅰ、Ⅱ、Ⅲ）',
+    html: 'RR 依赖 <b>PCB</b>（记状态）、<b>时钟中断处理程序</b>（时间片到的来源）、<b>就绪队列</b>（轮转的队伍）；<b>阻塞队列</b>服务"阻塞/唤醒"，与调度策略无关。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

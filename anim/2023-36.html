@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-36 二进制指数退避的最长等待</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：退避范围逐次翻倍推演 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var CELLS = [];
+var WAIT_EL = null;
+
+AW.init({
+  title: '连续 4 次冲突后，最长要等多久才重发',
+  subtitle: '10BaseT · 争用期（时间片）= 51.2 μs · 截断二进制指数退避',
+  counterLabel: '冲突次数',
+  ribbonTitle: '冲突档位（✓ 已推演）',
+  intro: '点击「▶ 播放」，看退避范围如何逐次翻倍。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    CELLS = []; WAIT_EL = null;
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>退避参数 k 的取值范围</b>：第 i 次冲突后 k ∈ {0, …, 2<sup>i</sup>−1}，共 2<sup>i</sup> 个值；等待 k 个争用期'));
+    var chars = [];
+    for (var k = 0; k <= 15; k++) chars.push(String(k));
+    var row = AW.cellRow(chars, [], null, 0);
+    var boxes = row.querySelectorAll('.aw-box');
+    for (var j = 0; j < boxes.length; j++) CELLS.push(boxes[j]);
+    wrap.appendChild(row);
+    WAIT_EL = AW.el('div', '');
+    WAIT_EL.style.cssText = 'margin-top:12px;font-size:14.5px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;min-height:44px';
+    WAIT_EL.innerHTML = '连续冲突 4 次 → 退避范围逐次翻倍';
+    wrap.appendChild(WAIT_EL);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var hi = sn.hi || 0;
+    var focus = (sn.focus == null ? -1 : sn.focus);
+    for (var i = 0; i < CELLS.length; i++){
+      var b = CELLS[i];
+      if (i === focus) b.className = 'aw-box hit';
+      else if (i < hi) b.className = 'aw-box ok';
+      else b.className = 'aw-box dim';
+    }
+    if (sn.wait != null) WAIT_EL.innerHTML = sn.wait;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'规则',        log:'冲突后退避：随机选 k，等 k 个争用期（51.2 μs）再重发；第 i 次冲突后 k ∈ {0, …, 2<sup>i</sup>−1}', count:0, hi:0,    wait:'连续冲突 4 次 → 范围逐次翻倍' },
+    { cls:'step',  tag:'第 1 次冲突', log:'k ∈ {0, 1}（2<sup>1</sup> 个值），最长 1 × 51.2 μs',      count:1, hi:2,  wait:'最长 = 1 × 51.2 μs = <b>51.2 μs</b>',  ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'第 2 次冲突', log:'k ∈ {0, …, 3}（2<sup>2</sup> 个值），最长 3 × 51.2 μs',   count:2, hi:4,  wait:'最长 = 3 × 51.2 μs = <b>153.6 μs</b>', ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'第 3 次冲突', log:'k ∈ {0, …, 7}（2<sup>3</sup> 个值），最长 7 × 51.2 μs',   count:3, hi:8,  wait:'最长 = 7 × 51.2 μs = <b>358.4 μs</b>', ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'第 4 次冲突', log:'k ∈ {0, …, 15}（2<sup>4</sup> 个值）——最大 k = 15，不是 16', count:4, hi:16, wait:'k 最大取 <b>15</b>（2<sup>4</sup> − 1，从 0 数起）', ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'算最长',     log:'最长等待 = 15 × 51.2 μs = 768 μs',                      count:4, hi:16, focus:15, wait:'最长等待 = <b>15 × 51.2 μs = 768 μs</b>' },
+    { cls:'done',  tag:'完成',       log:'答案：768 μs，选 C（易错：16 × 51.2 = 819.2 μs 是多算一档）',   count:4, hi:16, focus:15, wait:'答案：<b>768 μs，选 C</b>', done:true },
+  ],
+
+  result: {
+    big: '768 μs',
+    html: '第 i 次冲突后 k 从 <code>{0, …, 2<sup>i</sup>−1}</code> 中随机选；连续 4 次 → k 最大 = <b>2⁴ − 1 = 15</b>，最长等待 = 15 × 51.2 μs = <b>768 μs</b>，选 <b>C</b>。<br>' +
+          '易混：B（204.8 μs）误把冲突次数当 k；D（819.2 μs）误把最大 k 当 2⁴ = 16；A（51.2 μs）只算了第 1 次冲突。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

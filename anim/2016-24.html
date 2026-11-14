@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-24 三作业流水式调度最少时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+/* 单 CPU + 1 台输入设备 + 1 台输出设备；每作业：输入 2ms → 计算 3ms → 输出 4ms */
+
+var ROWS = ['输入设备', 'CPU（计算）', '输出设备'];
+var PLAN = [
+  { row:0, from:0,  to:2,  job:'J1', log:'J1 先输入：0–2ms 独占输入设备' },
+  { row:1, from:2,  to:5,  job:'J1', log:'J1 输入完立即上单 CPU 计算 2–5ms' },
+  { row:0, from:2,  to:4,  job:'J2', log:'输入设备空出 → J2 输入 2–4ms，与 J1 的计算并行' },
+  { row:0, from:4,  to:6,  job:'J3', log:'J2 输入完 → J3 输入 4–6ms，输入与计算两路并行' },
+  { row:2, from:5,  to:9,  job:'J1', log:'J1 算完 → 输出 5–9ms；CPU 同时转给 J2 计算' },
+  { row:1, from:5,  to:8,  job:'J2', log:'J2 计算 5–8ms（CPU 在 J1 算完的 5ms 处接上）' },
+  { row:1, from:8,  to:11, job:'J3', log:'J2 算完 → J3 计算 8–11ms；输出设备还在忙 J1' },
+  { row:2, from:9,  to:13, job:'J2', log:'J1 输出完 → J2 输出 9–13ms' },
+  { row:2, from:13, to:17, job:'J3', log:'J2 输出完 → J3 输出 13–17ms，3 个作业全部完成' }
+];
+var COLORS = {
+  J1: 'background:#dcfce7;border-color:#16a34a;color:#14532d',
+  J2: 'background:#fef3c7;border-color:#d97706;color:#92400e',
+  J3: 'background:#dbeafe;border-color:#2563eb;color:#1e40af'
+};
+
+function ganttHtml(done){
+  var h = '';
+  for(var r = 0; r < 3; r++){
+    h += '<div class="aw-row-label"><b>' + ROWS[r] + '</b></div><div class="aw-cells">';
+    for(var t = 0; t < 17; t++){
+      var txt = '', st = '', cur = false;
+      for(var k = 0; k < done; k++){
+        var p = PLAN[k];
+        if(p.row === r && t >= p.from && t < p.to){
+          txt = p.job; st = COLORS[p.job]; cur = (k === done - 1);
+        }
+      }
+      if(!txt){
+        h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box dim">&nbsp;</div><div class="aw-idx">' + t + '</div></div>';
+      } else {
+        h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box' + (cur ? ' hit' : '') + '" style="' + st + '">' + txt + '</div><div class="aw-idx">' + t + '</div></div>';
+      }
+    }
+    h += '</div>';
+  }
+  h += '<div class="aw-row-label">横轴：时间（ms），每格 1ms（第 t 格表示 t 至 t+1）；格中字母 = 该时段占用设备的作业</div>';
+  return h;
+}
+
+var snaps = [{ cls:'step', tag:'初始', log:'单 CPU、1 台输入设备、1 台输出设备；J1/J2/J3 都要依次「输入 2ms → 计算 3ms → 输出 4ms」，三台设备可同时工作', count:0, html:ganttHtml(0) }];
+PLAN.forEach(function(p, i){
+  snaps.push({ cls:'shift', tag:'落位 ' + (i+1), log:p.log, count:i+1, html:ganttHtml(i+1), ribbon:{ k:i+1, ok:true } });
+});
+snaps.push({ cls:'done', tag:'完成', log:'9 个时段全部排定：总完工 17ms。下界 = 最早输出时刻 5ms（输入 2 + 计算 3）+ 输出设备连做 3×4=12ms = 17ms，本方案恰好达到', count:9, done:true, html:ganttHtml(9) });
+
+AW.init({
+  title: '三作业最少完工时间：流水式调度甘特图',
+  subtitle: '单 CPU · 1 台输入设备、1 台输出设备 · 每作业 输入 2ms → 计算 3ms → 输出 4ms',
+  counterLabel: '已排定时段',
+  ribbonTitle: '调度时段（✓ 已落位）',
+  intro: '点击「▶ 播放」，看 9 个设备时段如何接力落满 0–17ms。',
+  snaps: snaps,
+  result: {
+    big: '17ms（选 B）',
+    html: '下界推理：任何作业最早要<b>输入 2ms + 计算 3ms = 5ms</b> 后才能开始输出，输出设备须不重叠地做完 <b>3×4 = 12ms</b>，故总时间 ≥ 5 + 12 = <b>17ms</b>；上面的甘特图恰好无冲突地达到 17ms。干扰项：27ms = 完全串行（D），22ms = 只做了部分重叠（C）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

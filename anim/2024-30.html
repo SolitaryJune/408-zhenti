@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-30 · 时间片轮转下 P 的周转时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程推演动画：RR 调度（时间片 5ms）队尾进程 P 的周转（答案 C：250ms）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+AW.init({
+  title: '时间片轮转：队尾进程 P 的周转时间',
+  subtitle: '时间片 <code>5 ms</code> · 10 个进程就绪，P 在队尾需 <code>25 ms</code>（5 个时间片）· 不考虑系统开销',
+  counterLabel: '当前时刻',
+  ribbonTitle: '轮次（✓ 该轮结束）',
+  intro: '点击「▶ 播放」逐轮推演 P 的执行与等待。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var legend = AW.el('div', 'aw-row-label',
+      '<b>读图</b>：「他」= 其余 9 个进程各执行 1 个完整时间片（合计 45 ms）；「P」= 进程 P 的一个时间片（5 ms）。每行一轮，共 5 行。');
+    stage.appendChild(legend);
+    this._info = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._info);
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._rows = [];
+    for(var r = 0; r < 5; r++){
+      var lab = AW.el('div', 'aw-row-label', '<b>第 ' + (r + 1) + ' 轮</b>（其余 9 进程 × 5 ms → P × 5 ms）');
+      var row = AW.el('div', 'aw-cells');
+      var cols = [];
+      for(var c = 0; c < 10; c++){
+        var col = AW.el('div', 'aw-col');
+        var ptr = AW.el('div', 'aw-ptr', '');
+        var box = AW.el('div', 'aw-box', c < 9 ? '他' : 'P');
+        var idx = AW.el('div', 'aw-idx', String(c + 1));
+        col.appendChild(ptr); col.appendChild(box); col.appendChild(idx);
+        row.appendChild(col);
+        cols.push({ ptr: ptr, box: box });
+      }
+      inner.appendChild(lab);
+      inner.appendChild(row);
+      this._rows.push(cols);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'初始',     log:'初始：10 个进程都在就绪队列，P 在队尾；P 需 25 ms = 5 个时间片', count:0, slot:0 },
+    { cls:'shift', tag:'关键推理', log:'P 所需时间最短（25 ms），其余 9 个进程需时 ≥ 25 ms > 5 ms：P 完成前它们都用满整片，不会提前退出', count:0, slot:0 },
+    { cls:'ok',    tag:'第1轮·其余', log:'第 1 轮：其余 9 个进程各执行 1 个时间片，共 45 ms（P 排在队尾等待）', count:45, slot:9,  cur:[0,8], ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'P 第1片',  log:'P 执行第 1 个时间片 [45, 50 ms)，完成 5 ms，回到队尾', count:50, slot:10, cur:[0,9] },
+    { cls:'ok',    tag:'第2轮·其余', log:'第 2 轮：其余 9 个进程各 5 ms，共 45 ms', count:95, slot:19, cur:[1,8], ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'P 第2片',  log:'P 执行第 2 个时间片 [95, 100 ms)，累计完成 10 ms', count:100, slot:20, cur:[1,9] },
+    { cls:'ok',    tag:'第3轮·其余', log:'第 3 轮：其余 9 个进程共 45 ms', count:145, slot:29, cur:[2,8], ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'P 第3片',  log:'P 执行第 3 个时间片 [145, 150 ms)，累计完成 15 ms', count:150, slot:30, cur:[2,9] },
+    { cls:'ok',    tag:'第4轮·其余', log:'第 4 轮：其余 9 个进程共 45 ms', count:195, slot:39, cur:[3,8], ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'P 第4片',  log:'P 执行第 4 个时间片 [195, 200 ms)，累计完成 20 ms', count:200, slot:40, cur:[3,9] },
+    { cls:'ok',    tag:'第5轮·其余', log:'第 5 轮：其余 9 个进程共 45 ms（每个进程此时最多才执行 25 ms，仍未结束）', count:245, slot:49, cur:[4,8], ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'P 第5片',  log:'P 执行第 5 个时间片 [245, 250 ms)，25 ms 用完，P 完成：完成时刻 = 250 ms', count:250, slot:50, cur:[4,9] },
+    { cls:'done',  tag:'结论',     log:'周转时间 = 完成时间 − 到达时间 = 250 − 0 = 250 ms，选 C', count:250, slot:50, cur:[4,9], done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows || [];
+    var slot = sn.slot || 0;
+    for(var r = 0; r < rows.length; r++){
+      var cols = rows[r];
+      for(var c = 0; c < cols.length; c++){
+        var gi = r * 10 + c;
+        var isP = (c === 9);
+        var cls = 'aw-box';
+        if(gi < slot) cls += isP ? ' hit' : ' ok';
+        cols[c].box.className = cls;
+        cols[c].ptr.textContent = '';
+      }
+    }
+    if(sn.cur && rows[sn.cur[0]] && rows[sn.cur[0]][sn.cur[1]]){
+      rows[sn.cur[0]][sn.cur[1]].ptr.textContent = '▶';
+    }
+    var pDone = 0;
+    for(var r2 = 0; r2 < 5; r2++){
+      if(r2 * 10 + 9 < slot) pDone++;
+    }
+    this._info.innerHTML = '当前时刻 t = <b>' + sn.count + ' ms</b>　·　P 已完成 <b>' + pDone + ' / 5</b> 个时间片';
+  },
+
+  result: {
+    big: '250 ms',
+    html: 'P 的周转时间 = <b>250 ms</b>（选 <b>C</b>）。每轮 50 ms（其余 9 进程 45 ms + P 5 ms），P 每轮垫底，第 5 个时间片在 250 ms 末完成。<br>关键：P 需时最短（25 ms），其余进程到 250 ms 时最多才执行 25 ms，都不会提前退出队列。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

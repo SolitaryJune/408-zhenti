@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-47 · 持续非流水线方式要多少 RTT</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：2011-47 第（3）问 HTTP/1.1 持续非流水线 RTT 时间线
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function keyCard(html){
+  return '<div style="border:1px solid #d97706;background:#fffbeb;border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:13.5px;line-height:1.75">' + html + '</div>';
+}
+function sumCard(html){
+  return '<div style="border:2px solid #16a34a;background:#f0fdf4;border-radius:12px;padding:10px 14px;margin-top:8px;font-size:13.5px;line-height:1.75">' + html + '</div>';
+}
+function rowReq(obj){
+  return '<div style="margin:5px 0;padding:7px 12px;border-left:4px solid #2563eb;background:#eff6ff;border-radius:8px;font-size:13.5px;line-height:1.6">→ 主机发出请求：<b>' + obj + '</b></div>';
+}
+function rowResp(obj, n){
+  return '<div style="margin:5px 0;padding:7px 12px;border-left:4px solid #16a34a;background:#f0fdf4;border-radius:8px;font-size:13.5px;line-height:1.6">← 收到 <b>' + obj + '</b> 的响应：用掉 1 个 RTT，<b>累计 ' + n + ' 个 RTT</b></div>';
+}
+
+var COND = keyCard('<b>条件</b>：HTTP/1.1 持续连接、<b>非流水线</b>方式；页面 <code>rfc.html</code> 引用 5 个 JPEG 小图；计时从<b>发出 Web 请求</b>开始（TCP 已建立，不另计建连 RTT）。');
+var RULE = keyCard('<b>非流水线的代价</b>：收到上一个对象的响应后才能发下一个请求 → <b>每个对象独占 1 个 RTT</b>，不能批量索要。');
+
+var NAMES = ['rfc.html', 'JPEG 图1', 'JPEG 图2', 'JPEG 图3', 'JPEG 图4', 'JPEG 图5'];
+var EVENTS = [];
+NAMES.forEach(function(n){
+  EVENTS.push({ type:'req', obj:n });
+  EVENTS.push({ type:'resp', obj:n });
+});
+
+function rowsUpTo(k){
+  var out = '', n = 0;
+  for(var i = 0; i <= k; i++){
+    var e = EVENTS[i];
+    if(e.type === 'req'){ out += rowReq(e.obj); }
+    else { n += 1; out += rowResp(e.obj, n); }
+  }
+  return out;
+}
+
+var snaps = [];
+// 步 0：条件
+snaps.push({
+  cls:'shift', tag:'条件', count:0,
+  html: COND,
+  log:'条件盘点：HTTP/1.1 持续连接 + 非流水线；rfc.html 引用 5 个 JPEG；从发出 Web 请求开始计时，TCP 建连不另计。'
+});
+// 步 1：规则
+snaps.push({
+  cls:'step', tag:'规则', count:0,
+  html: COND + RULE,
+  log:'非流水线 = 收到前一个响应才能发下一个请求，每个对象独占 1 个 RTT。'
+});
+// 步 2~13：6 个对象的请求/响应
+EVENTS.forEach(function(e, k){
+  var n = 0;
+  for(var i = 0; i <= k; i++){ if(EVENTS[i].type === 'resp') n += 1; }
+  var html = COND + RULE + rowsUpTo(k);
+  if(e.type === 'req'){
+    snaps.push({
+      cls:'step', tag:'请求', count:n,
+      html: html,
+      log:'发出对 ' + e.obj + ' 的请求（非流水线：必须等前一个响应收完才能发）。'
+    });
+  } else {
+    snaps.push({
+      cls:'ok', tag:'响应', count:n, ribbon:{k:n, ok:true},
+      html: html,
+      log:'收到 ' + e.obj + ' 的响应：用掉 1 个 RTT，累计 ' + n + ' 个 RTT。'
+    });
+  }
+});
+// 末步：结论
+snaps.push({
+  cls:'done', tag:'完成', count:6, done:true,
+  html: COND + RULE + rowsUpTo(EVENTS.length - 1) +
+        sumCard('<b>结论</b>：rfc.html 占 1 个 RTT + 5 张 JPEG 各占 1 个 RTT = <b>6 个 RTT</b>。'),
+  log:'全部内容到手：1 个 RTT（rfc.html）+ 5 个 RTT（5 张 JPEG 逐个请求-响应）= 6 个 RTT。'
+});
+
+AW.init({
+  title: '2011-47 · 持续非流水线方式要多少 RTT',
+  subtitle: '第（3）问 · HTTP/1.1 持续非流水线 · <code>rfc.html</code> + 5 个 JPEG 小图 · 从发出 Web 请求开始计时',
+  counterLabel: '已用 RTT',
+  ribbonTitle: '已收到对象（✓）',
+  intro: '点击「▶ 播放」沿时间线逐个对象推演。',
+  snaps: snaps,
+  result: {
+    big: '6 个 RTT',
+    html: '持续<b>非流水线</b>方式下，每个对象独占 1 个 RTT：<b>1（rfc.html）+ 5（JPEG 逐个请求-响应）= 6 个 RTT</b>。计时起点是发出 Web 请求，TCP 建连不另计；若从建连起算才需再加 1 个 RTT。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

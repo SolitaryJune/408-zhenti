@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-22 外部中断与内部异常辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：四个事件逐一判断是否外部中断请求 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：外部中断 vs 内部异常',
+    cls: 'key',
+    body: '<p><b>外部中断请求</b>：来自 <b>CPU 之外</b>的部件/设备，经中断请求线（INTR、NMI）送入，与当前执行的程序无关，是异步事件。<b>内部异常</b>：由正在执行的指令本身引发（除 0、溢出、缺页、陷入/断点指令）。</p>' },
+  { title: '选项 A：DMA 传送结束 —— 是外部中断',
+    cls: 'good',
+    rb: {k:1, ok:true},
+    body: '<p>DMA 控制器是 <b>CPU 外部</b>的部件：整块数据传完后，它主动向 CPU 发出中断请求，请 CPU 做后处理——教科书级的「外部中断请求」例子。</p>' },
+  { title: '选项 B：总线事务结束 —— 不是',
+    cls: 'bad',
+    rb: {k:2, ok:false},
+    body: '<p>总线事务结束是总线操作的<b>常规时序事件</b>，由总线握手协议自己完成，不会向 CPU 发中断请求。</p>' },
+  { title: '选项 C：页故障处理结束 —— 不是',
+    cls: 'bad',
+    rb: {k:3, ok:false},
+    body: '<p>页故障本身是<b>内部异常</b>（访存指令引发）；它的「处理结束」只是异常处理程序执行完<b>返回断点</b>继续执行，并非新的中断请求。</p>' },
+  { title: '选项 D：执行断点指令 —— 不是',
+    cls: 'bad',
+    rb: {k:4, ok:false},
+    body: '<p>断点指令是程序<b>自己执行</b>的陷入（trap）指令，由指令执行本身引发事件，属于<b>内部异常</b>，不是 CPU 外部送来的请求。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>只有 <b>A「DMA 传送结束」</b>是 CPU 外部部件送来的中断请求，答案选 <b>A</b>。记忆锚点：DMA 结束中断 = 外设请 CPU 收尾；断点/自陷、缺页、除 0 都是指令自己惹的事。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if(s.rb) sn.ribbon = s.rb;
+  return sn;
+});
+
+AW.init({
+  title: '哪个事件会触发外部中断请求？',
+  subtitle: '考点：外部中断与内部异常的区分 · 选项逐项推演',
+  ribbonTitle: '选项（✓ 外部中断 / ✗ 不是）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '<p><b>DMA 传送结束</b>由 CPU 外部的 DMA 控制器发中断请求，是外部中断；总线事务结束（B）是常规时序事件；页故障（C）及其处理结束属内部异常范畴；断点指令（D）是程序自陷的内部异常。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

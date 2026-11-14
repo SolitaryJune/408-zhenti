@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-11 大根堆插入 18 · 上浮调整动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 堆树（位置 1..7），vals 下标 1..7；hl = 需要高亮的对象 {hit:pos, miss:pos}
+function heapTree(vals, hl){
+  hl = hl || {};
+  function slot(pos){
+    var v = vals[pos];
+    var inner;
+    if (v == null){
+      inner = '<div style="width:50px;height:40px"></div>';
+    } else {
+      var cls = 'aw-box';
+      if (hl.hit === pos) cls += ' hit';
+      if (hl.miss === pos) cls += ' miss';
+      inner = '<div class="' + cls + '" style="width:50px;height:40px;line-height:38px;font-size:16px">' + v + '</div>';
+    }
+    var idx = v == null ? '' : '<div style="font-size:11px;color:#94a3b8">' + pos + '号</div>';
+    return '<div style="width:54px">' + inner + idx + '</div>';
+  }
+  function row(items, gap){
+    return '<div style="display:flex;justify-content:center;' + (gap ? 'gap:' + gap + 'px;' : '') + 'margin-top:12px">' +
+           items.map(slot).join('') + '</div>';
+  }
+  var h = '<div style="display:inline-block;text-align:center">';
+  h += row([1]);                    // 25
+  h += row([2, 3], 68);             // 13, 10（对准各自孩子）
+  h += row([4, 5, 6, 7], 8);        // 12, 9, 18, 空
+  return h + '<div style="font-size:11.5px;color:#94a3b8;margin-top:6px">格内为元素值，下方为按层编号；i 号的父结点是 ⌊i/2⌋ 号</div></div>';
+}
+
+function arrRowOf(vals, hl){
+  var arr = [], cls = [];
+  for (var i = 1; i <= 5; i++){
+    arr.push(vals[i]);
+    cls.push(hl === i ? 'hit' : (hl === 'all' ? 'ok' : ''));
+  }
+  return AW.cellRow(arr, cls, null, 1);
+}
+
+// 初始堆
+var V0 = {1:25, 2:13, 3:10, 4:12, 5:9};
+// 第 1 次比较前（18 已放入 6 号）
+var V1 = {1:25, 2:13, 3:10, 4:12, 5:9, 6:18};
+// 交换后（18 上浮到 3 号）
+var V2 = {1:25, 2:13, 3:18, 4:12, 5:9};
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    html:'<div class="aw-row-label"><b>初始大根堆</b>（序列 25,13,10,12,9，按层编号 1~5）</div>' +
+         '<div style="text-align:center">' + heapTree(V0, {hit:'all'}) + '</div>',
+    log:'初始序列 25,13,10,12,9 已是大根堆；父结点编号 = ⌊子编号/2⌋。' },
+
+  { cls:'shift', tag:'思路', count:0,
+    html:'<div style="font-size:14.5px;line-height:2.1;color:#334155">' +
+         '尾部插入新元素只可能破坏「<b>它到根</b>」这一条路径上的堆性。<br>' +
+         '调整方法：把 18 放到 <b>6 号</b>位置（堆尾），然后<b style="color:#d97706">与父结点比较：更大就交换上浮，直到不大于父结点或到达根</b>。<br>' +
+         '18 的父结点：⌊6/2⌋ = 3 号（值 10）。</div>',
+    log:'思路：放堆尾 → 与父结点比较上浮；18 的父结点是 3 号（10）。' },
+
+  { cls:'shift', tag:'放入 18', count:0,
+    html:'<div style="text-align:center">' + heapTree(V1, {hit:6}) + '</div>' +
+         '<div style="font-size:13.5px;color:#64748b;margin-top:8px">18 先放进堆尾（6 号），作为 3 号（10）的右孩子，准备上浮。</div>',
+    log:'18 放入 6 号（堆尾），父结点是 3 号的 10。' },
+
+  { cls:'miss', tag:'第 1 次比较', count:1,
+    html:'<div style="text-align:center">' + heapTree(V1, {hit:6, miss:3}) + '</div>' +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:8px">' +
+         '<b>第 1 次：18 vs 父结点 10（3 号）→ 18 &gt; 10，违反大根堆 → 交换</b>，18 上浮到 3 号。</div>',
+    log:'第 1 次比较：18 > 10，交换，18 上浮到 3 号。（比较 1 次）' },
+
+  { cls:'shift', tag:'交换后', count:1,
+    html:'<div style="text-align:center">' + heapTree(V2, {hit:3}) + '</div>' +
+         '<div style="font-size:13.5px;color:#64748b;margin-top:8px">18 现在在 3 号，它的父结点是 ⌊3/2⌋ = 1 号（值 25）——路径还没走完，继续比。</div>',
+    log:'交换完成，18 在 3 号；下一个比较对象是 1 号的 25。' },
+
+  { cls:'ok', tag:'第 2 次比较', count:2,
+    html:'<div style="text-align:center">' + heapTree(V2, {hit:3, miss:1}) + '</div>' +
+         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:8px">' +
+         '<b>第 2 次：18 vs 父结点 25（1 号）→ 18 &lt; 25，堆性满足 → 停止调整</b>。</div>',
+    log:'第 2 次比较：18 < 25，满足堆性，调整结束。（比较 2 次）' },
+
+  { cls:'done', tag:'结论', count:2, done:true,
+    html:'<div class="aw-row-label">调整后的堆（数组 1~5 号）</div>' +
+         '<div style="text-align:center">' + arrRowOf(V2, 'all') + '</div>' +
+         '<div style="font-size:15px;line-height:2.1;color:#334155;margin-top:10px">' +
+         '18 越过一个更小的父结点（10）、被 25 拦住：共<b>比较 2 次</b>、交换 1 次。<br>' +
+         '答案选 <b style="color:#dc2626;font-size:18px">B</b>。</div>',
+    log:'结论：比较 2 次，调整后 25,13,18,12,9 仍是大根堆，答案 B。' },
+];
+
+AW.init({
+  title: '2011-11 · 大根堆插入 18：要比较几次？',
+  subtitle: '初始堆 <code>25,13,10,12,9</code> · 尾部插入 18 · 上浮调整',
+  counterLabel: '已比较',
+  intro: '点击「▶ 播放」看 18 如何逐层上浮。',
+  snaps: snaps,
+  result: {
+    big: '答案 B · 比较 2 次',
+    html: '18 放入 6 号，与父结点 3 号（10）比较：18 &gt; 10，<b>交换上浮</b>（第 1 次）；再与父结点 1 号（25）比较：18 &lt; 25，<b>停止</b>（第 2 次）。共比较 2 次、交换 1 次——别把交换次数 1 当成答案 A，两次比较都要数。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

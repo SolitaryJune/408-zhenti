@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-18 动画 · PC 与 IR 的最少位数推理链</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理类：主存容量 → 字节地址 → 对齐 → PC/IR 位数
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：PC 与 IR 各存什么',
+    cls: 'key',
+    body: '<p><b>PC（程序计数器）存"下一条指令的地址"</b>；<b>IR（指令寄存器）存"当前指令本身"</b>。已知：主存 4GB、按字节编址、指令字长 32 位且<b>按字边界对齐</b>存放。</p>' },
+  { title: '主存 4GB → 字节地址 32 位',
+    cls: 'key',
+    body: '<p>4GB = 2<sup>32</sup>B，按字节编址 → 每个字节一个地址，地址范围 0 ~ 2<sup>32</sup>−1，<b>按字节看需要 32 位</b>。这是 PC 位数上限的参照，但还要看"对齐"这个条件。</p>' },
+  { title: '对齐 → 指令地址低 2 位恒 0',
+    cls: 'key',
+    body: '<p>指令字长 32 位 = 4B，按字边界对齐 → 指令地址只能是 0、4、8、…，都是 4 的倍数，<b>地址末 2 位恒为 0</b>。PC 里不必存这两位。</p>' },
+  { title: 'PC = 30 位',
+    cls: 'good',
+    body: '<p>按 4B 一格编号：4GB ÷ 4B = 2<sup>30</sup> 个指令位置 → PC <b>至少 30 位</b>即可区分所有指令位置。✓</p>' },
+  { title: 'IR = 32 位',
+    cls: 'good',
+    body: '<p>IR 存放<b>当前整条指令</b>：指令字长 32 位 → IR <b>至少 32 位</b>。✓（"指令本身"与"指令地址"位数不同，别混）</p>' },
+  { title: '排除干扰项',
+    cls: 'bad',
+    body: '<p><b>D（32、32）</b>：把 PC 当普通字节地址，漏用对齐条件。✗<br><b>A（30、30）</b>：把 IR 也当 30 位。✗<br><b>C（32、30）</b>：两个角色记反。✗</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B（PC 30 位、IR 32 位）</b>。记忆锚点：<b>对齐省 2 位，PC = 地址位数 − log2(字节数)；IR = 指令字长</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016-18 PC 与 IR 的最少位数推理链',
+  subtitle: '主存 4GB · 按字节编址 · 指令字长 32 位按字对齐 · 考点：CPU 基本结构中寄存器的位数',
+  counterLabel: '推理进度',
+  ribbonTitle: '推理步骤（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: 'PC 30 位、IR 32 位（答案 B）',
+    html: '记忆锚点：<b>指令按 4B 对齐 → 地址低 2 位恒 0 → PC 只需 30 位（4GB÷4B = 2<sup>30</sup>）；IR 存指令本身 → 32 位</b>。<br>干扰项 32、32（D）没利用对齐；30、30（A）混淆了"指令地址"与"指令本身"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

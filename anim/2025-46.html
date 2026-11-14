@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-46 虚拟地址空间布局：各成分落位</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var REGIONS = [
+  '操作系统内核区',
+  '只读代码区（代码段）',
+  '可读写数据区（数据段）',
+  '运行时堆（向上增长）',
+  '未占用（阴影）',
+  '用户栈（向下增长）'
+];
+var TARGET = [true, true, true, true, false, true];
+/* 每步落位：{c:成分, r:区域下标}；null＝该步只讲解不落位 */
+var PLACES = [
+  null,
+  { c: 'PCB', r: 0 },
+  null,
+  { c: 'main() 代码', r: 1 },
+  null,
+  { c: 'ptr（全局变量）', r: 2 },
+  { c: 'length（局部变量）', r: 5 },
+  { c: 'malloc 的字符串', r: 3 }
+];
+
+var rowEls = [], chipEls = [];
+
+function paint(i) {
+  var r, t;
+  for (r = 0; r < 6; r++) {
+    chipEls[r].innerHTML = '';
+    if (TARGET[r]) {
+      rowEls[r].style.borderColor = '#e2e8f0';
+      rowEls[r].style.background = '#fff';
+    }
+  }
+  for (t = 1; t <= i; t++) {
+    var p = PLACES[t];
+    if (!p) continue;
+    var chip = AW.el('span', '', p.c);
+    chip.style.cssText = 'display:inline-block;padding:4px 10px;border-radius:8px;font-size:12.5px;font-weight:600;' +
+      (t === i ? 'background:#dcfce7;border:1.5px solid #16a34a;color:#14532d;'
+               : 'background:#dbeafe;border:1px solid #93c5fd;color:#1e3a8a;');
+    chipEls[p.r].appendChild(chip);
+  }
+  if (i >= 1 && PLACES[i]) {
+    rowEls[PLACES[i].r].style.borderColor = '#d97706';
+    rowEls[PLACES[i].r].style.background = '#fffbeb';
+  }
+}
+
+AW.init({
+  title: '进程虚拟地址空间：PCB、代码、变量各在哪个区域（2025-46）',
+  subtitle: '三问逐个落位 · 内核区／只读代码区／读写数据区／堆／栈 · C 程序：malloc、scanf、strlen、printf、free',
+  counterLabel: '演示步',
+  intro: '点击「▶ 播放」，把每个成分放进正确的区域。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', '');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>进程虚拟地址空间</b>（自上而下；琥珀框＝当前讨论的区域，蓝＝已落位，绿＝本步落位）'));
+    for (var r = 0; r < 6; r++) {
+      var row = AW.el('div', '');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;border:2px solid #e2e8f0;' +
+        'border-radius:10px;padding:8px 12px;margin-bottom:8px;min-height:44px;';
+      if (!TARGET[r]) {
+        row.style.cssText += 'background:#f1f5f9;border-style:dashed;min-height:28px;';
+      } else {
+        row.style.cssText += 'background:#fff;';
+      }
+      var label = AW.el('span', '', REGIONS[r]);
+      label.style.cssText = 'flex:0 0 170px;font-weight:700;font-size:13.5px;' +
+        (TARGET[r] ? 'color:#334155;' : 'color:#94a3b8;font-weight:400;');
+      var chips = AW.el('div', '', '');
+      chips.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;';
+      row.appendChild(label);
+      row.appendChild(chips);
+      inner.appendChild(row);
+      rowEls.push(row); chipEls.push(chips);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'step', tag: '布局总览', log: '进程虚拟地址空间（自上而下）：内核区 → 只读代码区 → 可读写数据区 → 运行时堆（向上增长）→ 未占用阴影 → 用户栈（向下增长）。下面逐问落位' },
+    { cls: 'ok', tag: '问(1) PCB', log: '问(1)：PCB 由内核创建、只允许内核访问，位于<b>操作系统内核区</b>——用户地址空间里根本没有它' },
+    { cls: 'ok', tag: '问(1) 状态', log: '问(1)：执行 scanf() 等待键盘输入，I/O 事件未到，进程无法继续推进 → 主动放弃 CPU，处于<b>阻塞态</b>' },
+    { cls: 'ok', tag: '问(2) main', log: '问(2)：main() 函数的机器代码位于<b>只读代码区</b>（代码段，只读不可写）' },
+    { cls: 'shift', tag: '问(2) 驱动', log: '问(2)：main 直接调用 malloc、scanf、strlen、printf、free——需要通过执行<b>驱动程序</b>实现功能的只有做设备 I/O 的 <b>scanf()（键盘/终端输入驱动）</b>和 <b>printf()（显示器/终端输出驱动）</b>；malloc/free 只管内存、strlen 纯计算，都不需要驱动' },
+    { cls: 'ok', tag: '问(3) ptr', log: '问(3)：ptr 是函数外定义的全局变量，位于<b>可读写数据段</b>' },
+    { cls: 'ok', tag: '问(3) length', log: '问(3)：length 是 main 内的局部变量，若未分配在寄存器中，则随栈帧位于<b>用户栈</b>' },
+    { cls: 'ok', tag: '问(3) 字符串', log: '问(3)：ptr 指向的字符串由 malloc 动态分配，位于<b>运行时堆</b>' },
+    { cls: 'done', tag: '汇总', log: '汇总：PCB→内核区；scanf 时阻塞态；main→只读代码区；需驱动的是 scanf 与 printf；ptr→读写数据段；length→用户栈；字符串→运行时堆', done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: '三问全解',
+    html: '(1) PCB 位于<b>操作系统内核区</b>；scanf() 等待键盘输入时进程处于<b>阻塞态</b>。(2) main() 代码位于<b>只读代码区</b>；需驱动程序实现功能的是 <b>scanf()（键盘/终端输入驱动）</b>与 <b>printf()（显示器/终端输出驱动）</b>。(3) ptr→<b>可读写数据段</b>（全局变量）；length→<b>用户栈</b>（局部变量）；ptr 指向的字符串→<b>运行时堆</b>（malloc 分配）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

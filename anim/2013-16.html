@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-16 TLB 虚实地址变换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 虚拟地址 03FFF180H：8 个十六进制位，前 5 位页号，后 3 位偏移
+var VA = ['0', '3', 'F', 'F', 'F', '1', '8', '0'];
+var PA = ['0', '1', '5', '3', '1', '8', '0'];   // 0153180H（28 位）
+
+// TLB 四个表项：有效位 / 标记 / 页框号
+var TLB = [
+  { v: '0', tag: 'FF180H',  frame: '0002H' },
+  { v: '1', tag: '3FFF1H',  frame: '0035H' },
+  { v: '0', tag: '02FF3H',  frame: '0351H' },
+  { v: '1', tag: '03FFFH',  frame: '0153H' },
+];
+// 各表项在第几步被检查：表项 1→2, 2→3, 3→4, 4→5
+var CHECK_AT = [2, 3, 4, 5];
+var HIT_IDX = 3;
+
+var vaBox = null, paBox = null, tlbBox = null, infoEl = null;
+
+var INFO = [
+  '虚拟地址 03FFF180H，页面大小 4KB → 低 12 位为页内偏移',
+  '切分：虚页号 = <b>03FFFH</b>（高 20 位），页内偏移 = <b>180H</b>（低 12 位）',
+  '查表项 1：有效位 = 0 → 无效，跳过',
+  '查表项 2：有效位 1，但标记 3FFF1H ≠ 03FFFH → 不命中',
+  '查表项 3：有效位 = 0 → 无效，跳过',
+  '查表项 4：有效位 1 且标记 = 03FFFH → <b>TLB 命中！</b>页框号 = 0153H',
+  '拼接：页框号 0153H ‖ 偏移 180H → 物理地址 <b>015 3180H</b>',
+  '完成：TLB 命中（不是缺失、也不是缺页），物理地址 015 3180H → 答案 A',
+];
+
+function vaClasses(i){
+  var c = [];
+  for (var k = 0; k < 8; k++){
+    if (i === 0) c.push('');
+    else if (i === 1) c.push(k < 5 ? 'ok' : 'hit');
+    else c.push(k < 5 ? 'ok' : 'hit');
+  }
+  return c;
+}
+
+function tlbHtml(i){
+  var h = '<div class="aw-cells" style="gap:10px">';
+  TLB.forEach(function(e, idx){
+    var cls = '';
+    if (i >= CHECK_AT[idx]){
+      cls = (idx === HIT_IDX) ? 'ok' : 'miss';
+    }
+    h += '<div style="border:2px solid ' + (cls === 'ok' ? '#16a34a' : cls === 'miss' ? '#dc2626' : '#cbd5e1') +
+         ';border-radius:10px;padding:6px 10px;font-family:Menlo,monospace;font-size:12.5px;line-height:1.7;' +
+         (cls === '' ? 'opacity:.55;' : 'background:' + (cls === 'ok' ? '#dcfce7' : '#fee2e2') + ';') + '">' +
+         '表项 ' + (idx + 1) + '<br>有效位 <b>' + e.v + '</b><br>标记 <b>' + e.tag + '</b><br>页框号 <b>' + e.frame + '</b></div>';
+  });
+  return h + '</div>';
+}
+
+AW.init({
+  title: '2013 真题 · TLB 虚实地址变换',
+  subtitle: '虚拟地址 <code>03FFF180H</code> · 页 4KB · 主存 256MB · TLB 全相联 4 项',
+  counterLabel: '已完成步骤',
+  ribbonTitle: 'TLB 查找（✓ 命中 / ✗ 不命中或无效）',
+  intro: '点击「▶ 播放」逐步演示：切分虚拟地址 → 逐项查 TLB → 拼接物理地址。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>虚拟地址 03FFF180H</b>（前 5 位虚页号 / 后 3 位页内偏移）'));
+    vaBox = AW.el('div', '');
+    inner.appendChild(vaBox);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>TLB（全相联，标记 = 虚页号）</b>'));
+    tlbBox = AW.el('div', '');
+    inner.appendChild(tlbBox);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>物理地址</b>（16 位页框号 ‖ 12 位偏移，共 28 位）'));
+    paBox = AW.el('div', '');
+    inner.appendChild(paBox);
+
+    infoEl = AW.el('div', 'aw-row-label');
+    infoEl.style.marginTop = '12px';
+    infoEl.style.fontSize = '14px';
+    infoEl.style.color = '#334155';
+    inner.appendChild(infoEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    vaBox.innerHTML = '';
+    vaBox.appendChild(AW.cellRow(VA, vaClasses(i)));
+    tlbBox.innerHTML = tlbHtml(i);
+    paBox.innerHTML = '';
+    var pc = [];
+    for (var k = 0; k < 7; k++) pc.push(i >= 6 ? 'hit' : 'dim');
+    var pchars = PA.map(function(ch, k2){ return i >= 6 ? ch : '·'; });
+    paBox.appendChild(AW.cellRow(pchars, pc));
+    infoEl.innerHTML = INFO[Math.min(i, INFO.length - 1)];
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', log: '虚拟地址 03FFF180H，页面 4KB → 低 12 位是页内偏移', count: 0 },
+    { cls: 'shift', tag: '切分地址', log: '虚页号 = 03FFFH，页内偏移 = 180H', count: 1 },
+    { cls: 'miss', tag: '表项 1 ✗', log: '表项 1：有效位 0，无效，跳过', count: 2, ribbon: { k: 1, ok: false } },
+    { cls: 'miss', tag: '表项 2 ✗', log: '表项 2：有效位 1，但标记 3FFF1H ≠ 03FFFH，不命中', count: 3, ribbon: { k: 2, ok: false } },
+    { cls: 'miss', tag: '表项 3 ✗', log: '表项 3：有效位 0，无效，跳过', count: 4, ribbon: { k: 3, ok: false } },
+    { cls: 'ok', tag: '表项 4 命中！', log: '表项 4：有效位 1 且标记 = 03FFFH → 命中，页框号 0153H', count: 5, ribbon: { k: 4, ok: true } },
+    { cls: 'ok', tag: '拼接', log: '物理地址 = 0153H ‖ 180H = 0153180H，写作 015 3180H', count: 6, ribbon: { k: 5, ok: true } },
+    { cls: 'done', tag: '完成', log: '答案：A（015 3180H），TLB 命中，非缺失也非缺页', count: 7, done: true },
+  ],
+
+  result: {
+    big: '015 3180H',
+    html: '答案 <b>A</b>。变换三步：<code>4KB 页 → 低 12 位偏移 180H</code>、<code>虚页号 03FFFH 查 TLB 命中第 4 项</code>、<code>页框号 0153H ‖ 180H</code>。<br>记忆锚点：TLB 标记就是<b>虚页号</b>本身；有效位为 0 的表项即使标记相符也不能用；页框号与偏移是<b>拼接</b>不是相加。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-29 首次打开文件时操作系统做的事</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：open 的本质是"建立通路"',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>"首次打开"文件 ≠ 读文件内容。open 要做的是：按路径<b>检索目录</b> → 找到该文件的目录项，把 <b>FCB（文件控制块）从磁盘复制到内存</b>的打开文件表 → 给用户进程返回<b>表项索引（描述符）</b>。</p>' },
+  { title: 'A 将文件内容读到内存：✗',
+    cls: 'bad',
+    tag: '选项 A',
+    body: '<p>那是 <b>read</b> 的职责。open 只调入文件的<b>元数据</b>（FCB），数据内容等真正读写时才进内存。</p>' },
+  { title: 'B 将文件控制块读到内存中：✓ 正确',
+    cls: 'good',
+    tag: '选项 B',
+    body: '<p>把 FCB 复制进内存打开文件表，正是首次 open 的<b>核心动作</b>：之后每次读写凭描述符查内存表即可，不用反复检索磁盘目录。</p>' },
+  { title: 'C 修改 FCB 中的读写权限：✗',
+    cls: 'bad',
+    tag: '选项 C',
+    body: '<p>读写权限在文件<b>创建/授权</b>时设定。open 只按权限做<b>合法性检查</b>（比如没有写权限就拒绝），并不修改权限。</p>' },
+  { title: 'D 返回数据缓冲区首指针：✗',
+    cls: 'bad',
+    tag: '选项 D',
+    body: '<p>open 返回的是<b>打开文件表项的索引（文件描述符）</b>——一个编号；数据缓冲区由操作系统内部管理，对用户进程透明，不会把缓冲区指针交给用户。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>open 调的是"档案"（FCB），不是"货物"（内容）；给的是"凭证"（描述符），不是"仓库钥匙"（缓冲区指针）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-29】文件首次打开时操作系统的动作',
+  subtitle: '考点：open 系统调用 · FCB / 打开文件表 / 文件描述符',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '首次 open：<b>检索目录 → 把文件的 FCB 复制到内存打开文件表 → 返回描述符</b>。<br>干扰项：A 把 open 当 read；C 把"检查权限"当"修改权限"；D 把描述符当缓冲区指针。记忆点：<b>open 只搬档案（FCB），不搬货物（内容）</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

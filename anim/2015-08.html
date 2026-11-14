@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-08 动画 · KMP 首次失配后 i、j 的取值</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 主串 S = "abaabaabacacaabaabcc"（展示前 10 位足够），模式串 t = "abaabc"，下标从 0 开始
+var S10 = 'abaabaabac';
+var T = 'abaabc';
+var PITCH = 48;
+var mainBox = null, patShifter = null, patBox = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '540px';
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>主串 S</b>（下标从 0 开始，指针 i 永不回退）'));
+  mainBox = AW.el('div', '');
+  inner.appendChild(mainBox);
+
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>模式串 t</b>（失配时按"最长相等前后缀"右移，指针 j 回退）'));
+  patShifter = AW.el('div', 'aw-shifter');
+  patBox = AW.el('div', '');
+  patShifter.appendChild(patBox);
+  inner.appendChild(patShifter);
+
+  inner.appendChild(AW.el('div', 'aw-row-label',
+    '绿色 = 已匹配 / 红色 = 失配 / 琥珀 = 前后缀对齐；格下数字为下标'));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  mainBox.innerHTML = '';
+  mainBox.appendChild(AW.cellRow(S10.split(''), sn.mCls || [], sn.mPtr || null, 0));
+  patBox.innerHTML = '';
+  patBox.appendChild(AW.cellRow(T.split(''), sn.pCls || [], sn.pPtr || null, 0));
+  AW.shiftTo(patShifter, sn.align || 1, PITCH);
+}
+
+AW.init({
+  title: '2015-08 · KMP 首次失配后 i、j 的取值',
+  subtitle: '主串 <code>S = abaabaabacacaabaabcc</code> · 模式串 <code>t = abaabc</code> · 下标从 0 开始',
+  counterLabel: '已比较',
+  ribbonTitle: '关键处理（✓ 结论）',
+  intro: '点击「▶ 播放」观察 KMP 失配时 i 不动、j 回退的过程。',
+
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'step', tag:'初始',
+      log:'i 指向 S[0]、j 指向 t[0]，从左端开始逐位比较',
+      count:0, align:1,
+      mCls:['','','','','','','','','',''], mPtr:{1:'i=0'},
+      pCls:['dim','dim','dim','dim','dim','dim'], pPtr:{1:'j=0'} },
+    { cls:'ok', tag:'前 5 位全匹配',
+      log:'S[0..4] = abaab 与 t[0..4] = abaab 逐位相等（5 次比较 ✓），i、j 同步推进到 5',
+      count:5, align:1,
+      mCls:['ok','ok','ok','ok','ok','','','','',''], mPtr:{6:'i=5'},
+      pCls:['ok','ok','ok','ok','ok',''], pPtr:{6:'j=5'} },
+    { cls:'miss', tag:'首次失配',
+      log:'第 6 次比较：S[5]=a vs t[5]=c，S[i]≠t[j]，首次失配发生在 i = j = 5',
+      count:6, ribbon:{k:1, ok:false}, align:1,
+      mCls:['ok','ok','ok','ok','ok','miss','','','',''], mPtr:{6:'i=5'},
+      pCls:['ok','ok','ok','ok','ok','miss'], pPtr:{6:'j=5'} },
+    { cls:'shift', tag:'找最长相等前后缀',
+      log:'KMP 规则：i 不回退。已匹配的 t[0..4] = abaab 的最长相等前后缀是 ab（长度 2）→ j 回退为 2',
+      count:6, align:1,
+      mCls:['ok','ok','ok','shift','shift','miss','','','',''], mPtr:{6:'i=5'},
+      pCls:['shift','shift','dim','shift','shift','dim'], pPtr:{6:'j=5'} },
+    { cls:'shift', tag:'模式串右移对齐',
+      log:'模式串右移 3 格：t[0..1]=ab 自动对齐 S[3..4]（这两位不必重比），下次从 S[5] 与 t[2] 开始比较',
+      count:6, align:4,
+      mCls:['ok','ok','ok','ok','ok','miss','','','',''], mPtr:{6:'i=5'},
+      pCls:['ok','ok','dim','dim','dim','dim'], pPtr:{3:'j=2'} },
+    { cls:'done', tag:'结论',
+      log:'下次开始匹配时：i = 5 不变，j = 2 → 选 C',
+      count:6, align:4, done:true,
+      mCls:['ok','ok','ok','ok','ok','miss','','','',''], mPtr:{6:'i=5'},
+      pCls:['ok','ok','dim','dim','dim','dim'], pPtr:{3:'j=2'} },
+  ],
+
+  result: {
+    big: 'C · i=5, j=2',
+    html: 'KMP 失配口诀：<b>i 不回退，j 回退为已匹配串的最长相等前后缀长度</b>。' +
+          '已匹配 <code>abaab</code> 的最长相等前后缀 <code>ab</code> 长度为 2 → j=2。' +
+          '选 A（i=1,j=0）是朴素 BF 的做法；选 B 漏用了前后缀信息；选 D 误让 i 前进。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

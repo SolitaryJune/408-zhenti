@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-36 · 隐藏站按 CTS 设置的 NAV</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程推演动画：B 听到 AP 的 CTS 后按 SIFS+数据帧+SIFS+ACK 设置 NAV（答案 B：354 μs）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SEGS = [
+  { t: 'SIFS', v: 28, w: 84 },
+  { t: '数据帧', v: 296, w: 260 },
+  { t: 'SIFS', v: 28, w: 84 },
+  { t: 'ACK', v: 2, w: 60 },
+];
+
+AW.init({
+  title: 'CSMA/CA：隐藏站 B 收到 CTS 后设置的 NAV',
+  subtitle: 'DIFS=128 μs · SIFS=28 μs · RTS/CTS/ACK 传输时延 3/2/2 μs · 数据帧 1998 B @ 54 Mb/s · 忽略传播时延',
+  counterLabel: 'NAV 累计',
+  ribbonTitle: '时段（✓ 已计入 NAV）',
+  intro: '点击「▶ 播放」，从 CTS 结束时刻起逐段累计 NAV。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var legend = AW.el('div', 'aw-row-label',
+      '<b>读图</b>：B 收到 AP 发来的 CTS，NAV 从 <b>CTS 结束</b>时刻起算；绿色段 = 已计入 NAV 的信道占用（宽度为示意，数值以格下标注为准）。');
+    stage.appendChild(legend);
+    var self = this;
+    this._info = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._info);
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    // 起点：CTS 结束时刻
+    var lab0 = AW.el('div', 'aw-row-label', '<b>时刻 0：CTS 传输结束</b>（RTS、DIFS 都发生在 CTS 之前，与 NAV 无关）');
+    inner.appendChild(lab0);
+    var row0 = AW.el('div', 'aw-cells');
+    var col0 = AW.el('div', 'aw-col');
+    col0.style.width = '64px';
+    col0.appendChild(AW.el('div', 'aw-ptr', ''));
+    var box0 = AW.el('div', 'aw-box dim', 'CTS');
+    box0.style.width = '60px';
+    box0.style.fontSize = '14px';
+    col0.appendChild(box0);
+    col0.appendChild(AW.el('div', 'aw-idx', '已结束'));
+    row0.appendChild(col0);
+    inner.appendChild(row0);
+    // NAV 覆盖的各时段
+    var lab1 = AW.el('div', 'aw-row-label', '<b>NAV 覆盖的信道占用</b>（数据帧传输时延 = 1998×8 bit ÷ 54 Mb/s = 296 μs）');
+    inner.appendChild(lab1);
+    var row = AW.el('div', 'aw-cells');
+    this._cols = [];
+    SEGS.forEach(function(s){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = s.w + 'px';
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', s.t);
+      box.style.width = (s.w - 8) + 'px';
+      box.style.fontSize = s.v < 10 ? '12px' : '14px';
+      var idx = AW.el('div', 'aw-idx', s.v + ' μs');
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(idx);
+      row.appendChild(col);
+      self._cols.push({ ptr: ptr, box: box });
+    });
+    inner.appendChild(row);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',
+      log:'隐藏站 B 收不到 A 的 RTS，但能收到 AP 广播的 CTS：按 CTS 中的持续时间字段设置 NAV，从 CTS 结束时刻起、信道仍被占用的总时长', count:'0 μs' },
+    { cls:'ok', tag:'第 1 段 SIFS',
+      log:'数据帧前有 1 个 SIFS = 28 μs，计入 NAV', count:'28 μs', seg:1, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'数据帧传输',
+      log:'1998 B × 8 = 15984 bit，÷ 54 Mb/s = 296 μs，计入 NAV', count:'324 μs', seg:2, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'第 2 段 SIFS',
+      log:'ACK 前还有 1 个 SIFS = 28 μs，计入 NAV', count:'352 μs', seg:3, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'ACK 传输',
+      log:'ACK 传输时延 2 μs，计入 NAV：至此 AP 发完 ACK，信道才回到空闲', count:'354 μs', seg:4, ribbon:{k:4, ok:true} },
+    { cls:'done', tag:'结论',
+      log:'NAV = 28 + 296 + 28 + 2 = 354 μs，选 B；DIFS=128 μs 与 RTS=3 μs 是干扰条件', count:'354 μs', seg:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var cols = this._cols || [];
+    for(var c = 0; c < cols.length; c++){
+      var o = cols[c];
+      o.ptr.textContent = '';
+      o.box.className = 'aw-box' + (c < (sn.seg || 0) ? ' ok' : '');
+    }
+    if(sn.seg && cols[sn.seg - 1]){
+      cols[sn.seg - 1].ptr.textContent = '累计 ' + sn.count;
+    }
+    if(this._info){
+      this._info.innerHTML = sn.seg
+        ? 'NAV = 28 + 296 + 28 + 2 中的前 <b>' + sn.seg + '</b> 段已累计：<b>' + sn.count + '</b>'
+        : 'NAV 从 CTS 结束时刻起算，先看清楚要累加哪些时段。';
+    }
+  },
+
+  result: {
+    big: '354 μs',
+    html: 'NAV = <b>28 + 296 + 28 + 2 = 354 μs</b>，选 <b>B</b>。记忆锚点：B 只听得见 AP 的 CTS，NAV 从 <b>CTS 结束</b>起算 = <code>SIFS + 数据帧 + SIFS + ACK</code>。干扰项：326 μs 漏了一个 SIFS；385/513 μs 把 RTS、DIFS 这些与 B 无关的时段也加了进去。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

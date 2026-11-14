@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>概念/分析类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2018-33：TCP/IP 应用层协议中可使用传输层无连接服务的是
+     模板：概念 / 分析推理类（逐步揭示推理链卡片）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：无连接服务 = UDP',
+    cls: 'key',
+    body: '<p>传输层无连接服务就是 <b>UDP</b>（无连接、尽最大努力交付）。题目实际在问：<b>哪个应用层协议可以建立在 UDP 之上</b>。</p>' },
+  { title: '面向连接 vs 无连接',
+    cls: '',
+    body: '<p><b>TCP</b>：面向连接、可靠、按序交付——对正确性有硬要求的应用离不开它。<br><b>UDP</b>：无连接、开销小、时延低——报文短小、能容忍偶发丢失的应用首选它。</p>' },
+  { title: '逐项排除 A（FTP）',
+    cls: 'bad',
+    body: '<p>FTP 传的是<b>文件</b>，丢一个字节文件就损坏，必须可靠交付 → 基于 TCP（控制连接 21、数据连接 20）。错。</p>' },
+  { title: '逐项排除 C（SMTP）、D（HTTP）',
+    cls: 'bad',
+    body: '<p>SMTP 传送<b>邮件报文</b>不能丢、不能乱序（TCP 25）；HTTP 传送<b>网页</b>要求可靠有序（TCP 80）。两者都离不开 TCP 的可靠交付，均不是答案。</p>' },
+  { title: 'B（DNS）：短查询天生适合 UDP',
+    cls: 'good',
+    body: '<p>DNS 的<b>查询/响应报文短小、一问一答</b>：用 UDP 免去建立连接的开销，时延低；万一丢失，应用层重新查询即可 → 通常基于 UDP 53。<b>可以使用无连接服务，对。</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>"要可靠"走 TCP（FTP/SMTP/HTTP），"要快省事"走 UDP（DNS、DHCP、SNMP）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018-33：可使用传输层无连接服务的应用层协议',
+  subtitle: '考点：传输层服务 · TCP vs UDP · 选项逐项推演',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：DNS',
+    html: '记忆锚点：<b>FTP/SMTP/HTTP 都"要可靠"→ TCP；DNS 查询报文短小、一问一答"要快省事"→ UDP（无连接服务）</b>。<br>注意：DNS 只有区域传送才用 TCP，主流的域名查询/响应用 UDP 53。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-30 死锁四句判断</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：四个说法、四种手段',
+    cls: 'key',
+    body: '<p>四句话分别关于：死锁<b>解除</b>（I）、死锁<b>预防</b>（II）、银行家算法（III）、死锁时的进程状态（IV）。先分清预防 / 避免 / 检测 / 解除四条防线，再逐句判断。</p>' },
+  { title: '叙述 I：可以通过剥夺进程资源解除死锁',
+    cls: 'good',
+    ribbon: { k: 1, ok: true },
+    body: '<p>死锁解除的典型方法：<b>资源剥夺</b>、撤销进程、进程回退。从死锁进程手中抢走资源分给其他进程，打破循环等待。<b>√ 正确</b></p>' },
+  { title: '叙述 II：死锁的预防方法能确保系统不发生死锁',
+    cls: 'good',
+    ribbon: { k: 2, ok: true },
+    body: '<p>预防通过<b>破坏四个必要条件之一</b>（互斥、占有且等待、不可抢占、循环等待），从根源上确保系统<b>不可能</b>发生死锁，代价是资源利用率低。<b>√ 正确</b></p>' },
+  { title: '叙述 III：银行家算法可以判断系统是否处于死锁状态',
+    cls: 'bad',
+    ribbon: { k: 3, ok: false },
+    body: '<p>银行家算法属于死锁<b>避免</b>：它判断的是系统是否处于<b>安全状态</b>。不安全状态只是<b>可能</b>死锁，并未真的死锁；判断"是否已死锁"要靠<b>死锁检测</b>（资源分配图化简）。<b>× 错误</b></p>' },
+  { title: '叙述 IV：死锁时必然有两个及以上进程处于阻塞态',
+    cls: 'good',
+    ribbon: { k: 4, ok: true },
+    body: '<p>死锁 = 一组进程<b>互相等待</b>对方持有的资源、都无法推进 → 这些进程必然全部处于<b>阻塞态</b>，且至少两个（一个进程构不成循环等待）。<b>√ 正确</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>正确的是 <b>I、II、IV</b> → 答案选 <b>B</b>。记忆锚点：<b>银行家管"安全"不管"死锁"</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var o = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (s.ribbon) o.ribbon = s.ribbon;
+  return o;
+});
+
+AW.init({
+  title: '2019-30 · 死锁：解除、预防、银行家算法、阻塞态',
+  subtitle: '考点：死锁的处理策略 · 四句叙述逐项判断',
+  counterLabel: '推理步',
+  ribbonTitle: '叙述判断（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '正确组合 <b>I、II、IV</b>：资源剥夺可解除死锁；预防破坏必要条件、确保不死锁；死锁进程必然<b>至少两个</b>且都阻塞。<b>III 错</b>：银行家算法判断<b>安全状态</b>（属于避免），不安全 ≠ 死锁；判断是否死锁要用死锁检测算法。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

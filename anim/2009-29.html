@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-29 · SCAN 电梯调度演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：SCAN 磁盘调度（答案 A）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var TRACKS = [12, 35, 45, 68, 110, 170, 180, 195];
+var START = 105;
+
+function pct(t){ return ((t - 12) / (195 - 12)) * 90 + 5; }
+
+AW.init({
+  title: '2009-29 · SCAN（电梯）调度',
+  subtitle: '磁头在 105 道 · 向磁道号增大方向移动 · 请求：35, 45, 12, 68, 110, 170, 180, 195',
+  counterLabel: '已服务',
+  ribbonTitle: '按服务顺序点亮（磁道号）',
+  intro: '点击「▶ 播放」观察磁头扫描过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>磁道轴</b>（空心圆 = 待访问磁道，绿 = 已服务）'));
+    var rail = AW.el('div', '');
+    rail.style.cssText = 'position:relative;height:128px;margin:6px 2px 0;';
+    var line = AW.el('div', '');
+    line.style.cssText = 'position:absolute;left:1%;right:1%;top:54px;height:3px;background:#cbd5e1;border-radius:2px;';
+    rail.appendChild(line);
+    this._dots = {};
+    for(var i = 0; i < TRACKS.length; i++){
+      var t = TRACKS[i];
+      var x = pct(t);
+      var d = AW.el('div', '');
+      d.style.cssText = 'position:absolute;top:47px;width:18px;height:18px;margin-left:-9px;border-radius:50%;' +
+        'background:#fff;border:2.5px solid #94a3b8;box-sizing:border-box;transition:background .25s,border-color .25s;';
+      d.style.left = x + '%';
+      var lb = AW.el('div', '', String(t));
+      lb.style.cssText = 'position:absolute;top:74px;width:60px;margin-left:-30px;text-align:center;font-size:12px;color:#64748b;';
+      lb.style.left = x + '%';
+      rail.appendChild(d);
+      rail.appendChild(lb);
+      this._dots[t] = d;
+    }
+    var sd = AW.el('div', '');
+    sd.style.cssText = 'position:absolute;top:47px;width:18px;height:18px;margin-left:-9px;border-radius:50%;' +
+      'border:2.5px dashed #94a3b8;box-sizing:border-box;opacity:.75;';
+    sd.style.left = pct(START) + '%';
+    var sl = AW.el('div', '', '起点 105');
+    sl.style.cssText = 'position:absolute;top:98px;width:70px;margin-left:-35px;text-align:center;font-size:11px;color:#94a3b8;';
+    sl.style.left = pct(START) + '%';
+    rail.appendChild(sd);
+    rail.appendChild(sl);
+    var head = AW.el('div', '', '▲ 磁头');
+    head.style.cssText = 'position:absolute;top:22px;width:64px;margin-left:-32px;text-align:center;' +
+      'font-size:12.5px;font-weight:700;color:#2563eb;transition:left .5s cubic-bezier(.22,.8,.3,1);';
+    head.style.left = pct(START) + '%';
+    rail.appendChild(head);
+    this._head = head;
+    this._dir = AW.el('div', 'aw-row-label', '');
+    this._order = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(rail);
+    inner.appendChild(this._dir);
+    inner.appendChild(this._order);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      log:'磁头在 105 道，正向磁道号增大方向移动。SCAN（电梯调度）：沿当前方向依次服务，扫到尽头后折返。',
+      st:{ head:105, dir:'+', cur:null, done:[] } },
+    { cls:'ok', tag:'服务 110', count:1, ribbon:{k:110, ok:true},
+      log:'向右移动，途经 110 → 服务。访问序列：110。',
+      st:{ head:110, dir:'+', cur:110, done:[110] } },
+    { cls:'ok', tag:'服务 170', count:2, ribbon:{k:170, ok:true},
+      log:'继续向右：170 → 服务。访问序列：110 → 170。',
+      st:{ head:170, dir:'+', cur:170, done:[110,170] } },
+    { cls:'ok', tag:'服务 180', count:3, ribbon:{k:180, ok:true},
+      log:'继续向右：180 → 服务。访问序列：110 → 170 → 180。',
+      st:{ head:180, dir:'+', cur:180, done:[110,170,180] } },
+    { cls:'ok', tag:'服务 195', count:4, ribbon:{k:195, ok:true},
+      log:'195 → 服务。向右方向的请求全部处理完毕。',
+      st:{ head:195, dir:'+', cur:195, done:[110,170,180,195] } },
+    { cls:'shift', tag:'折返', count:4,
+      log:'右侧已无请求：按 SCAN，磁头到该方向尽头后折返，向磁道号减小方向移动（左侧还剩 68, 45, 35, 12）。',
+      st:{ head:195, dir:'-', cur:null, done:[110,170,180,195] } },
+    { cls:'ok', tag:'服务 68', count:5, ribbon:{k:68, ok:true},
+      log:'向左扫，第一个请求是 68 → 服务。访问序列：110, 170, 180, 195, 68。',
+      st:{ head:68, dir:'-', cur:68, done:[110,170,180,195,68] } },
+    { cls:'ok', tag:'服务 45', count:6, ribbon:{k:45, ok:true},
+      log:'继续向左：45 → 服务。',
+      st:{ head:45, dir:'-', cur:45, done:[110,170,180,195,68,45] } },
+    { cls:'ok', tag:'服务 35', count:7, ribbon:{k:35, ok:true},
+      log:'继续向左：35 → 服务。',
+      st:{ head:35, dir:'-', cur:35, done:[110,170,180,195,68,45,35] } },
+    { cls:'ok', tag:'服务 12', count:8, ribbon:{k:12, ok:true},
+      log:'最后 12 → 服务：所有请求完成。',
+      st:{ head:12, dir:'-', cur:12, done:[110,170,180,195,68,45,35,12] } },
+    { cls:'done', tag:'结论', count:8, done:true,
+      log:'SCAN 访问序列：110, 170, 180, 195, 68, 45, 35, 12 → 对应选项 A。',
+      st:{ head:12, dir:'-', cur:null, done:[110,170,180,195,68,45,35,12] } },
+  ],
+
+  render: function(stage, sn){
+    var stt = sn.st || {};
+    var done = stt.done || [];
+    for(var i = 0; i < TRACKS.length; i++){
+      var t = TRACKS[i];
+      var d = this._dots[t];
+      if(stt.cur === t){
+        d.style.background = '#16a34a';
+        d.style.borderColor = '#16a34a';
+      } else if(done.indexOf(t) >= 0){
+        d.style.background = '#dcfce7';
+        d.style.borderColor = '#16a34a';
+      } else {
+        d.style.background = '#fff';
+        d.style.borderColor = '#94a3b8';
+      }
+    }
+    this._head.style.left = pct(stt.head != null ? stt.head : START) + '%';
+    this._dir.innerHTML = stt.dir === '-'
+      ? '<b>方向：磁道号减小 ←（已折返）</b>'
+      : '<b>方向：磁道号增大 →</b>';
+    this._order.innerHTML = '访问序列：' + (done.length ? '<b>' + done.join(' → ') + '</b>' : '（尚无）');
+  },
+
+  result: {
+    big: '110, 170, 180, 195, 68, 45, 35, 12',
+    html: '答案 <b>A</b>。记忆锚点：<b>SCAN（电梯调度）沿当前方向一路服务，扫到头再折返</b>，不做"就近挑选"。干扰项：B 是最短寻道时间优先 SSTF（从 105 先去最近的 110，再就近跳 68）；C 是循环扫描 C-SCAN（到 195 后回到最小端重新向右扫）；D 完全忽略磁头的当前移动方向。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

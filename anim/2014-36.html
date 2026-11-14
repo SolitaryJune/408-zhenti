@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-36 动画 · GBN 窗口 1000 帧的最大平均速率</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 时间轴量程取 120ms：80ms 发送窗口占 66.7%，100.08ms 占 83.4%
+var SEND_W = '66.7%';
+var ACK_POS = '83.4%';
+
+var trackOuter = null, sendSeg = null, idleSeg = null, ackMark = null,
+    tickBox = null, formulaEl = null, bigEl = null;
+
+var FORMULAS = [
+  '已知：帧长 1000 字节 = 8000 bit；带宽 100Mbps；单向传播时延 50ms；窗口 W = 1000 帧。',
+  '单帧发送时延 <b>Tt = 8000 bit ÷ 100Mbps = 80μs</b>。',
+  '窗口发完的时间 = <b>W·Tt = 1000 × 80μs = 80ms</b>（时间轴琥珀段）。',
+  'RTT = 2 × 50ms = 100ms；第一个 ACK 最早到达时刻 = <b>Tt + RTT = 0.08 + 100 = 100.08ms</b>（蓝色刻度线）。',
+  '比较：<b>80ms &lt; 100.08ms</b> → 窗口提前发完，之后干等 ACK，发送出现空窗（灰色段）。',
+  '一个周期内发出的数据量 = 1000 帧 × 8000 bit = <b>8×10⁶ bit</b>。',
+  '平均速率 = 8×10⁶ bit ÷ 0.10008 s ≈ <b>79.9Mbps ≈ 80Mbps</b>（也可：利用率 80 ÷ 100.08 ≈ 80%，100Mbps × 80%）。',
+  '结论：最大平均数据传输速率约 80Mbps → 答案 C。',
+];
+
+function bigText(i){
+  return ['1000 帧', '80μs', '80ms', '100.08ms', '有空窗', '8×10⁶ bit', '≈80Mbps', '答案 C'][Math.min(i, 7)];
+}
+
+AW.init({
+  title: 'GBN 协议 · 窗口 1000 帧的最大平均速率（2014·36）',
+  subtitle: '帧长 <code>1000B</code> · 带宽 <code>100Mbps</code> · 单向传播 <code>50ms</code> · 窗口 <code>1000</code>',
+  counterLabel: '已完成步骤',
+  intro: '点击「▶ 播放」逐步演示：算 Tt → 算窗口时间 → 算 ACK 到达 → 比较 → 求平均速率。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>时间轴</b>（一个"发窗口—等确认"周期，量程 120ms）'));
+
+    trackOuter = AW.el('div', '');
+    trackOuter.style.cssText = 'position:relative;height:52px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;';
+
+    sendSeg = AW.el('div', '');
+    sendSeg.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:0;background:#fef3c7;border-right:2px solid #d97706;transition:width .5s;';
+
+    idleSeg = AW.el('div', '');
+    idleSeg.style.cssText = 'position:absolute;left:66.7%;top:0;bottom:0;width:0;background:#e2e8f0;transition:width .5s;';
+
+    ackMark = AW.el('div', '');
+    ackMark.style.cssText = 'position:absolute;left:83.4%;top:0;bottom:0;width:0;border-left:3px dashed #2563eb;opacity:0;transition:opacity .4s;';
+
+    var sendLbl = AW.el('div', '');
+    sendLbl.style.cssText = 'position:absolute;left:8px;top:6px;font-size:12px;font-weight:700;color:#92400e;opacity:0;transition:opacity .4s;';
+    sendLbl.innerHTML = '发送窗口 1000 帧';
+
+    var idleLbl = AW.el('div', '');
+    idleLbl.style.cssText = 'position:absolute;left:68%;top:6px;font-size:12px;font-weight:700;color:#475569;opacity:0;transition:opacity .4s;';
+    idleLbl.innerHTML = '等待 ACK';
+
+    trackOuter.appendChild(sendSeg);
+    trackOuter.appendChild(idleSeg);
+    trackOuter.appendChild(ackMark);
+    trackOuter.appendChild(sendLbl);
+    trackOuter.appendChild(idleLbl);
+    inner.appendChild(trackOuter);
+
+    tickBox = AW.el('div', 'aw-cells');
+    tickBox.style.gap = '0';
+    tickBox.style.width = '100%';
+    tickBox.style.justifyContent = 'space-between';
+    tickBox.style.marginTop = '4px';
+    inner.appendChild(tickBox);
+
+    bigEl = AW.el('div', '');
+    bigEl.style.cssText = 'margin:12px 0 4px;font-size:30px;font-weight:800;color:#0f172a;';
+    bigEl.innerHTML = '—';
+    inner.appendChild(bigEl);
+
+    formulaEl = AW.el('div', 'aw-row-label');
+    formulaEl.style.cssText = 'font-size:14px;color:#334155;line-height:1.8;';
+    inner.appendChild(formulaEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._tickBox = tickBox;
+  },
+
+  render: function(stage, sn, i){
+    // 刻度：0 / 80ms / 100.08ms / 120ms
+    tickBox.innerHTML = '';
+    [['0', '0%'], ['80ms', '66.7%'], ['100.08ms', '83.4%'], ['120ms', '100%']].forEach(function(t){
+      var s = AW.el('span', '');
+      s.style.cssText = 'font-family:Menlo,monospace;font-size:11px;color:#64748b;transform:translateX(' +
+        (t[1] === '0%' ? '0' : t[1] === '100%' ? '-100%' : '-50%') + ');';
+      s.textContent = t[0];
+      tickBox.appendChild(s);
+    });
+
+    // 分段渐进显示
+    sendSeg.style.width = (i >= 2) ? SEND_W : '0%';
+    idleSeg.style.width = (i >= 4) ? '16.7%' : '0%';
+    ackMark.style.opacity = (i >= 3) ? '1' : '0';
+    trackOuter.children[3].style.opacity = (i >= 2) ? '1' : '0';
+    trackOuter.children[4].style.opacity = (i >= 4) ? '1' : '0';
+
+    bigEl.textContent = bigText(i);
+    formulaEl.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '已知', log: '帧长 1000B=8000bit，带宽 100Mbps，单向传播 50ms，窗口 1000 帧', count: 0 },
+    { cls: 'step',  tag: '算 Tt', log: '单帧发送时延 Tt = 8000bit ÷ 100Mbps = 80μs', count: 1 },
+    { cls: 'shift', tag: '窗口时间', log: '窗口发完 = 1000 × 80μs = 80ms（琥珀段）', count: 2 },
+    { cls: 'step',  tag: 'ACK 时刻', log: 'RTT = 100ms；第一个 ACK 到达需 Tt + RTT = 100.08ms（蓝线）', count: 3 },
+    { cls: 'shift', tag: '比较', log: '80ms < 100.08ms：窗口提前发完，发送出现约 20ms 空窗', count: 4 },
+    { cls: 'step',  tag: '数据量', log: '一个周期（100.08ms）内发出 1000 帧 = 8×10⁶ bit', count: 5 },
+    { cls: 'ok',    tag: '求速率', log: '平均速率 = 8×10⁶ bit ÷ 0.10008s ≈ 79.9 ≈ 80Mbps', count: 6 },
+    { cls: 'done',  tag: '完成', log: '最大平均数据传输速率约 80Mbps → 答案 C', count: 7, done: true },
+  ],
+
+  result: {
+    big: '≈ 80Mbps（答案 C）',
+    html: '固定套路：<code>窗口发完时间 W·Tt = 80ms</code> vs <code>第一个 ACK 到达 Tt+RTT = 100.08ms</code>，取大者为周期。80ms &lt; 100.08ms → 利用率 = 80 ÷ 100.08 ≈ 80% → 100Mbps × 80% ≈ <b>80Mbps</b>。误选 D 就是忘了比较窗口时间和往返时间。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

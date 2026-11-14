@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-14 float 最大正整数 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：最大正整数 = float 的最大数', cls: 'key',
+    body: '<p>float 能表示的最大数本身就是一个整数，比它更大的整数都无法精确表示。所以<b>最大正整数 = 最大规格化正数</b>。</p>' },
+  { title: '回忆格式：1 + 8 + 23', cls: 'key',
+    body: '<p>IEEE 754 单精度 = 1 位符号 + 8 位<b>阶码</b>（偏置 127）+ 23 位<b>尾数</b>（隐含最高位"1."）。</p>' },
+  { title: '阶码取多大？E = 254', cls: 'good',
+    body: '<p>阶码全 1（E = 255）被保留表示 <b>±∞ 和 NaN</b>，不能表示数。取最大可用阶码 <b>E = 254</b>，真指数 = 254 − 127 = <b>127</b>。</p>' },
+  { title: '尾数取多大？M 全 1', cls: 'good',
+    body: '<p>尾数 M 全 1，加上隐含的"1."：1.M = 1.111…1 = <b>2 − 2^-23</b>（不是 1 − 2^-23）。</p>' },
+  { title: '拼出最大值并展开', cls: 'good',
+    body: '<p>最大值 = (2 − 2^-23) × 2^127 = 2 × 2^127 − 2^-23 × 2^127 = <b>2^128 − 2^104</b>。</p>' },
+  { title: '排除干扰项', cls: 'bad',
+    body: '<p><b>A、C</b>：把隐含位当成 0.M 或阶码算错，指数落到 126/103；<b>B</b>：把 E = 255 当数值用（2^127 − 2^104）——E 全 1 是保留编码，错。</p>' },
+  { title: '结论：答案 D', cls: 'good',
+    body: '<p>答案选 <b>D（2^128 − 2^104）</b>。记忆锚点：<b>float 最大值 = (2 − 2^-23) × 2^127</b>，阶码全 1 不可用。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[2].ribbon = { k: 1, ok: true };
+snaps[3].ribbon = { k: 2, ok: true };
+snaps[5].ribbon = { k: 3, ok: false };
+
+AW.init({
+  title: '2012·14 float 能表示的最大正整数是多大？',
+  subtitle: 'IEEE 754 单精度：1 位符号 + 8 位阶码 + 23 位尾数 · 偏置 127',
+  counterLabel: '推理步',
+  ribbonTitle: '关键部件（✓ 取值正确 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」，逐步构造 float 的最大正数。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（2^128 − 2^104）',
+    html: '构造最大规格化数：S=0、<b>E=254</b>（E 全 1 是 ∞/NaN 保留码）、<b>M 全 1</b> → 值 = (2 − 2^-23) × 2^127 = <b>2^128 − 2^104</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

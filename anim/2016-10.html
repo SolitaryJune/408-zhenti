@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-10 B+树不同于 B 树的特点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找“独有”',
+    cls: 'key',
+    body: '<p>题干问的是 <b>B+树不同于 B 树</b>的特点——四个选项里要挑出“B+树有、B 树没有”的那一项。</p>' },
+  { title: '先想 B+树的独门结构',
+    cls: 'good',
+    body: '<p>B+树把<b>全部关键字放在最下层叶结点</b>，并把叶结点按关键字从小到大<b>链成有序链表</b>；非叶结点只放索引。B 树的关键字则分散在各层结点中。</p>' },
+  { title: 'A：能支持顺序查找 ✓',
+    cls: 'good',
+    body: '<p>沿叶结点链表从头扫到尾即可顺序遍历、做范围查询——B 树没有叶结点链表，做不到。<b>这是 B+树独有的差异。</b></p>' },
+  { title: 'B：结点中含有关键字 ✗',
+    cls: 'bad',
+    body: '<p>B 树的每个结点本来就是“关键字 + 子树指针”的组合，两种树都有——<b>共性，不是差异</b>。</p>' },
+  { title: 'C、D：也都是共性 ✗',
+    cls: 'bad',
+    body: '<p><b>C 根结点至少两个分支</b>：根不是叶时至少两棵子树，B 树、B+树都如此。<b>D 所有叶结点都在同一层</b>：B 树的叶结点（失败结点）全对齐在最下层，B+树的叶结点也全在同一层——都是共性。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>A（能支持顺序查找）</b>。记忆锚点：B+树 = “索引在上、数据在下、叶子拉链”——顺序查找是它的招牌能力；B、C、D 是两种树的共同性质。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016·B+树与 B 树：哪一条是 B+树独有的？',
+  subtitle: '考点：B 树与 B+树的结构差异 · 逐项排查',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A：能支持顺序查找',
+    html: 'B+树叶结点串成<b>有序链表</b>且装着全部关键字 → 可顺链顺序/范围查找。B 树叶结点也在同一层、结点也含关键字、根也至少两分支——这三条是共性，别被拉去当“差异”。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

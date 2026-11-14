@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-42 动画 · 双指针找倒数第 k 个结点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：p 先行 k 步 → p、q 同步 → p 到表尾时 q 即答案
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var K = 3;
+var VALS = ['1','2','3','4','5','6','7','8','∅'];
+var listBox = null, infoLine = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl = AW.el('div', 'aw-row-label', '<b>链表</b>（带头结点，list 指向头结点；本例 8 个结点，k = ' + K + '，末格 ∅ 代表 NULL）');
+  listBox = AW.el('div', '');
+  infoLine = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(lbl);
+  wrap.appendChild(listBox);
+  wrap.appendChild(infoLine);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var i, classes = [], ptr = {};
+  for(i = 0; i < 9; i++){
+    if(i === 8){ classes.push('dim'); continue; }
+    var cls = '';
+    if(sn.q === i + 1) cls = 'hit';
+    else if(sn.p && i + 1 <= sn.p) cls = 'ok';
+    classes.push(cls);
+  }
+  if(sn.p){ ptr[sn.p] = (ptr[sn.p] ? ptr[sn.p] + '·' : '') + 'p'; }
+  if(sn.q){ ptr[sn.q] = (ptr[sn.q] ? ptr[sn.q] + '·' : '') + 'q'; }
+  listBox.innerHTML = '';
+  listBox.appendChild(AW.cellRow(VALS, classes, ptr, 1));
+  infoLine.innerHTML = 'count = <b>' + sn.count + '</b>　·　p 与 q 之间需保持的间距 k = ' + K +
+    '　·　q 距表尾 = ' + (sn.q ? (8 - sn.q + 1) : '—') + '　·　' + sn.ph;
+}
+
+AW.init({
+  title: '双指针查找倒数第 k 个结点',
+  subtitle: 'p 先走 <code>k</code> 步 → p、q 同步后移 → p 为 NULL 时 q 即倒数第 k 个 · 时间 O(n)、空间 O(1)（2009-42）',
+  counterLabel: 'count',
+  ribbonTitle: 'p 扫过的位置（✓ 已经过）',
+  intro: '点击「▶ 播放」，看 p、q 如何保持间距 k 前进。',
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'初始化', log:'p = q = list→link（第 1 个结点），count = 0，两个指针从同一起点出发。', count:0, p:1, q:1, ph:'阶段一：p 先行（count < k）' },
+    { cls:'step', tag:'p 先行', log:'count(0) < k(3)：p = p→link → p 到第 2 个结点，count = 1。', count:1, p:2, q:1, ph:'阶段一：p 先行（count < k）', ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'p 先行', log:'count(1) < k(3)：p → 第 3 个结点，count = 2。', count:2, p:3, q:1, ph:'阶段一：p 先行（count < k）', ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'p 领先 k 步', log:'count(2) < k(3)：p → 第 4 个结点，count = 3 = k。此后 p、q 同步移动，间距始终保持 k。', count:3, p:4, q:1, ph:'阶段二：p、q 同步前进', ribbon:{k:4, ok:true} },
+    { cls:'step', tag:'同步', log:'同步移动：p → 5，q → 2。', count:3, p:5, q:2, ph:'阶段二：p、q 同步前进', ribbon:{k:5, ok:true} },
+    { cls:'step', tag:'同步', log:'同步移动：p → 6，q → 3。', count:3, p:6, q:3, ph:'阶段二：p、q 同步前进', ribbon:{k:6, ok:true} },
+    { cls:'step', tag:'同步', log:'同步移动：p → 7，q → 4。', count:3, p:7, q:4, ph:'阶段二：p、q 同步前进', ribbon:{k:7, ok:true} },
+    { cls:'step', tag:'同步', log:'同步移动：p → 8，q → 5。', count:3, p:8, q:5, ph:'阶段二：p、q 同步前进', ribbon:{k:8, ok:true} },
+    { cls:'step', tag:'p 到表尾', log:'再来一次同步：p = p→link 后 p 为 NULL（指向末格 ∅），q → 6 —— while(p != NULL) 循环结束。', count:3, p:9, q:6, ph:'循环结束' },
+    { cls:'shift', tag:'边界情形', log:'若 k 超过表长：p 会在 count < k 时就走到 NULL，循环结束后 count < k → 返回 0，查找失败。', count:3, p:9, q:6, ph:'边界：k > 表长时返回 0' },
+    { cls:'done', tag:'查找成功', log:'count = 3 = k → q 指向倒数第 3 个结点（第 6 个结点），输出 q→data = 6，返回 1。', count:3, p:9, q:6, ph:'成功：输出 q→data，返回 1', done:true },
+  ],
+
+  result: {
+    big: '输出 6，返回 1',
+    html: '双指针保持 <b>k = 3</b> 的间距一次遍历：p 到达表尾（NULL）时 q 恰好停在倒数第 k 个结点。时间 <b>O(n)</b>、空间 <b>O(1)</b>；若循环结束时 <b>count &lt; k</b>，说明 k 超过表长，返回 <b>0</b>。起点是 <code>list→link</code>（第一个结点），不是头结点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

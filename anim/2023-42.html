@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-42 · 置换-选择排序生成初始归并段（m=4）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var INPUT = [51,94,37,92,14,63,15,99,48,56,23,60,31,17,43,8,90,166,100];
+
+function W(v, c){ return { v: v, c: c }; }
+
+/* 每步状态：read=已读入个数；work=工作区4格{v,c}；tail=当前段末尾(null=无段)；
+   s1/s2/s3=各段数组；hitN=本步新输出的尾部长度（高亮 hit） */
+var STATES = [
+  { read:4, work:[W(51,''),W(94,''),W(37,''),W(92,'')], tail:null, s1:[], s2:[], s3:[], hitN:0,
+    note:'初始：先把前 4 个记录 51, 94, 37, 92 读入工作区（m = 4），当前无归并段。' },
+  { read:5, work:[W(51,'ok'),W(94,'ok'),W(92,'ok'),W(14,'miss')], tail:37, s1:[37], s2:[], s3:[], hitN:1,
+    note:'段 1 开始：选工作区最小 37 输出；补读 14（14 ＜ 37，只能留给后面的段）。' },
+  { read:6, work:[W(94,'ok'),W(92,'ok'),W(14,'miss'),W(63,'ok')], tail:51, s1:[37,51], s2:[], s3:[], hitN:1,
+    note:'选 ≥37 的最小者 51 输出；补读 63。' },
+  { read:7, work:[W(94,'ok'),W(92,'ok'),W(14,'miss'),W(15,'miss')], tail:63, s1:[37,51,63], s2:[], s3:[], hitN:1,
+    note:'选 ≥51 的最小者 63 输出；补读 15。' },
+  { read:8, work:[W(94,'ok'),W(14,'miss'),W(15,'miss'),W(99,'ok')], tail:92, s1:[37,51,63,92], s2:[], s3:[], hitN:1,
+    note:'选 ≥63 的最小者 92 输出；补读 99。' },
+  { read:9, work:[W(14,'miss'),W(15,'miss'),W(99,'ok'),W(48,'miss')], tail:94, s1:[37,51,63,92,94], s2:[], s3:[], hitN:1,
+    note:'选 ≥92 的最小者 94 输出；补读 48。' },
+  { read:10, work:[W(14,'miss'),W(15,'miss'),W(48,'miss'),W(56,'miss')], tail:99, s1:[37,51,63,92,94,99], s2:[], s3:[], hitN:1,
+    note:'选 ≥94 的最小者 99 输出；补读 56 后，工作区全部 ＜ 99 → 段 1 结束（长度 6）。' },
+  { read:11, work:[W(15,'ok'),W(48,'ok'),W(56,'ok'),W(23,'ok')], tail:14, s1:[], s2:[14], s3:[], hitN:1,
+    note:'段 2 开始：取工作区最小 14 输出（新段无下限）；补读 23。' },
+  { read:12, work:[W(48,'ok'),W(56,'ok'),W(23,'ok'),W(60,'ok')], tail:15, s1:[], s2:[14,15], s3:[], hitN:1,
+    note:'选 ≥14 的最小者 15 输出；补读 60。' },
+  { read:13, work:[W(48,'ok'),W(56,'ok'),W(60,'ok'),W(31,'ok')], tail:23, s1:[], s2:[14,15,23], s3:[], hitN:1,
+    note:'选 ≥15 的最小者 23 输出；补读 31。' },
+  { read:14, work:[W(48,'ok'),W(56,'ok'),W(60,'ok'),W(17,'miss')], tail:31, s1:[], s2:[14,15,23,31], s3:[], hitN:1,
+    note:'选 ≥23 的最小者 31 输出；补读 17（17 ＜ 31，留下）。' },
+  { read:15, work:[W(56,'ok'),W(60,'ok'),W(17,'miss'),W(43,'miss')], tail:48, s1:[], s2:[14,15,23,31,48], s3:[], hitN:1,
+    note:'选 ≥31 的最小者 48 输出；补读 43。' },
+  { read:16, work:[W(60,'ok'),W(17,'miss'),W(43,'miss'),W(8,'miss')], tail:56, s1:[], s2:[14,15,23,31,48,56], s3:[], hitN:1,
+    note:'选 ≥48 的最小者 56 输出（43、17 都不够格）；补读 8。' },
+  { read:17, work:[W(17,'miss'),W(43,'miss'),W(8,'miss'),W(90,'ok')], tail:60, s1:[], s2:[14,15,23,31,48,56,60], s3:[], hitN:1,
+    note:'选 ≥56 的最小者 60 输出；补读 90。' },
+  { read:18, work:[W(17,'miss'),W(43,'miss'),W(8,'miss'),W(166,'ok')], tail:90, s1:[], s2:[14,15,23,31,48,56,60,90], s3:[], hitN:1,
+    note:'选 ≥60 的最小者 90 输出；补读 166。' },
+  { read:19, work:[W(17,'miss'),W(43,'miss'),W(8,'miss'),W(100,'miss')], tail:166, s1:[], s2:[14,15,23,31,48,56,60,90,166], s3:[], hitN:1,
+    note:'选 ≥90 的最小者 166 输出；补读 100 后，工作区全部 ＜ 166 → 段 2 结束（长度 9）。' },
+  { read:19, work:[W('—','dim'),W('—','dim'),W('—','dim'),W('—','dim')], tail:null, s1:[], s2:[], s3:[8,17,43,100], hitN:4,
+    note:'输入读完：工作区剩余 8, 17, 43, 100 全部属于当前段，从小到大输出 → 段 3 结束（长度 4）。' },
+  { read:19, work:[W('—','dim'),W('—','dim'),W('—','dim'),W('—','dim')], tail:null, s1:[37,51,63,92,94,99], s2:[14,15,23,31,48,56,60,90,166], s3:[8,17,43,100], hitN:0,
+    note:'汇总：段 1（6 个）＋ 段 2（9 个）＋ 段 3（4 个）= 19 ✓。第 2 问：第一段最长 n（全程递增不断流），最短 m（初始 m 个一过即断）。' },
+];
+
+function inputRow(read){
+  var h = '<div class="aw-row-label"><b>输入文件</b>（19 个记录；绿=已读入工作区，灰=未读）</div><div class="aw-scroll"><div class="aw-cells">';
+  for (var i = 0; i < INPUT.length; i++){
+    var ptr = '';
+    if (i === read && read < INPUT.length){ ptr = '下一个'; }
+    h += '<div class="aw-col"><div class="aw-ptr">' + ptr + '</div>' +
+         '<div class="aw-box' + (i < read ? ' ok' : ' dim') + '">' + INPUT[i] + '</div>' +
+         '<div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  return h + '</div></div>';
+}
+function workRow(st){
+  var label = st.tail != null
+    ? '<b>工作区</b>（当前段末尾 = ' + st.tail + '；绿 = ≥ 末尾可选，红 = ＜ 末尾留给下一段）'
+    : (st.work[0].v === '—' ? '<b>工作区</b>（已空）' : '<b>工作区</b>（m = 4）');
+  var h = '<div class="aw-row-label">' + label + '</div><div class="aw-cells">';
+  for (var i = 0; i < 4; i++){
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box ' + st.work[i].c + '">' + st.work[i].v + '</div><div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  return h + '</div>';
+}
+function segRow(label, arr, hitN){
+  var h = '<div class="aw-row-label">' + label + '</div>';
+  if (arr.length === 0){ return h + '<div style="font-size:12.5px;color:#94a3b8;padding:2px 0">（尚未生成）</div>'; }
+  h += '<div class="aw-scroll"><div class="aw-cells">';
+  for (var i = 0; i < arr.length; i++){
+    var cls = (hitN > 0 && i >= arr.length - hitN) ? ' hit' : ' ok';
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box' + cls + '">' + arr[i] + '</div><div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  return h + '</div></div>';
+}
+function stageHTML(st){
+  var h = inputRow(st.read);
+  h += workRow(st);
+  h += segRow('<b>归并段 1</b>', st.s1, st.hitN);
+  h += segRow('<b>归并段 2</b>', st.s2, st.hitN);
+  h += segRow('<b>归并段 3</b>', st.s3, st.hitN);
+  h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.note + '</div>';
+  return h;
+}
+
+var snaps = STATES.map(function(st, i){
+  var last = i === STATES.length - 1;
+  var cntArr = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,19,19];
+  var clsArr = ['shift','ok','ok','ok','ok','ok','shift','ok','ok','ok','ok','ok','ok','ok','ok','shift','ok','done'];
+  var tagArr = ['初始','段1·出37','段1·出51','段1·出63','段1·出92','段1·出94','段1完成','段2·出14','段2·出15','段2·出23','段2·出31','段2·出48','段2·出56','段2·出60','段2·出90','段2完成','段3完成','结论'];
+  var logArr = [
+    '前 4 个记录进工作区：51, 94, 37, 92（m=4）',
+    '段1：选最小 37 输出，读入 14',
+    '段1：≥37 最小 51 输出，读入 63',
+    '段1：≥51 最小 63 输出，读入 15',
+    '段1：≥63 最小 92 输出，读入 99',
+    '段1：≥92 最小 94 输出，读入 48',
+    '段1：≥94 最小 99 输出；候选空 → 段1 = 37,51,63,92,94,99',
+    '段2：取工作区最小 14 起步，读入 23',
+    '段2：≥14 最小 15 输出，读入 60',
+    '段2：≥15 最小 23 输出，读入 31',
+    '段2：≥23 最小 31 输出，读入 17',
+    '段2：≥31 最小 48 输出，读入 43',
+    '段2：≥48 最小 56 输出（43、17 不够格），读入 8',
+    '段2：≥56 最小 60 输出，读入 90',
+    '段2：≥60 最小 90 输出，读入 166',
+    '段2：≥90 最小 166 输出；候选空 → 段2 = 14,15,23,31,48,56,60,90,166',
+    '输入读完：剩余 8,17,43,100 全入段3',
+    '共 3 段：6+9+4=19；第一段最长 n、最短 m → 见结论'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: cntArr[i],
+    html: stageHTML(st), done: last,
+  };
+  if (i === 6){ sn.ribbon = { k: 1, ok: true }; }
+  if (i === 15){ sn.ribbon = { k: 2, ok: true }; }
+  if (i === 16){ sn.ribbon = { k: 3, ok: true }; }
+  return sn;
+});
+
+AW.init({
+  title: '2023-42 · 置换-选择排序：生成初始归并段（m = 4）',
+  subtitle: '19 个记录 · 工作区 m = 4 · 每步选「≥ 段末尾的最小记录」输出，补读一个；全小于末尾则断段',
+  counterLabel: '已输出记录',
+  ribbonTitle: '归并段（✓ 已生成）',
+  intro: '点击「▶ 播放」逐步模拟置换-选择排序。',
+  snaps: snaps,
+  result: {
+    big: '3 个归并段：6 + 9 + 4 = 19',
+    html: '<b>段 1：37, 51, 63, 92, 94, 99</b>（长 6）；<b>段 2：14, 15, 23, 31, 48, 56, 60, 90, 166</b>（长 9）；<b>段 3：8, 17, 43, 100</b>（长 4）。第 2 问：第一段最长 <b>n</b>（输入一路递增时永不断流），最短 <b>m</b>（初始 m 个记录一过即断，段末工作区的 m 个必是后来读入的）。易错：候选必须 ≥ 段末尾；输入耗尽后工作区剩余全并入当前段；2m 只是平均长度。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

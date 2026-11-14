@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-17 理想 CPI 为 1 的处理器</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-17：四种处理器的理想 CPI（概念辨析）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：CPI 与"理想情况"',
+    cls: 'key',
+    body: '<p>CPI = 执行一条指令所需的<b>平均时钟周期数</b>。"理想情况" = 不算流水线冒险、访存停顿等损失，只看结构本身一拍能消化几条指令。</p>' },
+  { title: 'I 单周期 CPU：CPI = 1',
+    cls: 'good',
+    body: '<p>一条指令在一个时钟周期内一气呵成 → 每条指令恰好 1 拍，<b>CPI = 1</b> ✓</p>' },
+  { title: 'II 多周期 CPU：CPI 大于 1',
+    cls: 'bad',
+    body: '<p>取指、译码、执行……各占一拍，一条指令要好几拍 → <b>CPI 大于 1</b>，不符合"为 1"。</p>' },
+  { title: 'III 基本流水线 CPU：CPI = 1',
+    cls: 'good',
+    body: '<p>流水线装满后<b>每个时钟周期流出一条指令</b> → 理想 <b>CPI = 1</b> ✓</p>' },
+  { title: 'IV 超标量流水线 CPU：CPI 小于 1',
+    cls: 'bad',
+    body: '<p>一个周期<b>发射多条</b>指令 → 理想 CPI <b>小于 1</b>（比 1 还快），不是"为 1"，不符合。</p>' },
+  { title: '结论：I、III → 选 B',
+    cls: 'good',
+    body: '<p>理想 CPI 恰为 1 的是<b>单周期</b>和<b>基本流水线</b> → 答案 <b>B</b>。<br>记忆：单周期"一拍执行完一条"，基本流水线"一拍流出一条"；多周期多拍一条，超标量一拍多条。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2020-17 · 谁的理想 CPI 是 1',
+  subtitle: '考点：CPI 定义 · 单周期 / 多周期 / 基本流水线 / 超标量',
+  intro: '点击「▶ 播放」或「下一步」，逐个处理器核对 CPI。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：单周期与基本流水线的理想 CPI = <b>1</b>；<br>' +
+      '多周期 CPI <b>大于 1</b>（一条指令多拍），超标量 CPI <b>小于 1</b>（一拍多条）——"小于 1"是"优于 1"，不是"等于 1"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

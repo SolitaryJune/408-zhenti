@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-16 存储器层次结构对比动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：Cache-主存 vs 主存-外存 逐项对比 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两级层次、四个属性',
+    cls: 'key',
+    body: '<p>页式虚拟存储下有两级：<b>Cache-主存</b>（弥合速度差）与 <b>主存-外存</b>（弥合容量差）。逐项对比交换单位、替换实现、写策略、映射方式，找<b>错误</b>项。</p>' },
+  { title: 'A：交换单位 块 / 页 —— 正确',
+    cls: '',
+    body: '<p>Cache-主存以<b>主存块</b>为单位交换；主存-外存以<b>页</b>为单位交换（题干限定页式虚拟存储）。叙述正确。</p>' },
+  { title: 'B：替换实现 硬件 / 软件 —— 正确',
+    cls: '',
+    body: '<p>Cache 访问在纳秒级，替换决策必须由<b>硬件</b>完成；缺页要启动磁盘 I/O 并保存进程上下文，替换由操作系统<b>软件</b>完成。叙述正确。</p>' },
+  { title: 'C：写策略 回写法 —— 正确',
+    cls: '',
+    body: '<p>两层都可采用<b>回写法</b>：Cache 用脏位标记被修改的块，换出时写回主存；虚拟存储用脏页标志，页面淘汰时写回磁盘。叙述正确。</p>' },
+  { title: 'D：映射方式 直接映射 —— 错误！',
+    cls: 'bad',
+    body: '<p>Cache-主存可用直接映射、组相联、全相联；但主存-外存层次中，任何一个虚拟页可调入<b>任意</b>一个空闲物理页框，是<b>全相联映射</b>（对应关系由页表给出）。"通常采用直接映射"不成立 → 选 <b>D</b>。</p>' },
+  { title: '结论：为什么页必须全相联',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。直接映射要求"每个页只能放唯一固定页框"，毫无放置灵活性、激烈冲突；全相联 + 页表换取任意放置的灵活性，正是虚拟存储按需调页的设计基础。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'Cache-主存 与 主存-外存：哪句对比错了？',
+  subtitle: '交换单位 / 替换实现 / 写策略 / 映射方式 · 逐项对比',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '<p>交换单位（块/页）、替换实现（硬件/软件）、写策略（回写）两层次说法都成立；<b>映射方式不同</b>：页式主存-外存是<b>全相联映射</b>（任一页可放入任意页框），不是直接映射。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

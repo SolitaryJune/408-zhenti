@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-47 · GBN 双向捎带传输推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法 / 过程演示类题目动画（外壳与控件由 assets/anim-engine.js 提供） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* --- 小工具：帧序列行 / 序号带行 / 说明行 --- */
+function laneHTML(frames, label){
+  var h = '<div class="aw-row-label"><b>' + (label || '甲方发送的帧（图 a）') +
+          '</b>（格内：发送序号,确认序号；绿 = 已确认，红 = 未确认，亮绿 = 待重传）</div><div class="aw-cells">';
+  for (var i = 0; i < frames.length; i++){
+    h += '<div class="aw-col"><div class="aw-ptr">' + (frames[i].p || '') + '</div>' +
+         '<div class="aw-box ' + frames[i].c + '">' + frames[i].t + '</div>' +
+         '<div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  return h + '</div>';
+}
+function seqHTML(cls, ptr, caption){
+  var h = '<div class="aw-row-label"><b>发送序号带 0~7</b>' + (caption || '') + '</div><div class="aw-cells">';
+  for (var i = 0; i < 8; i++){
+    h += '<div class="aw-col"><div class="aw-ptr">' + (ptr[i] || '') + '</div>' +
+         '<div class="aw-box ' + (cls[i] || '') + '">' + i + '</div>' +
+         '<div class="aw-idx">' + i + '</div></div>';
+  }
+  return h + '</div>';
+}
+function noteHTML(label, txt){
+  return '<div class="aw-row-label"><b>' + label + '</b>　' + txt + '</div>';
+}
+
+/* --- 图(a) 甲方帧的各状态 --- */
+var A1 = [ {t:'0,0',c:''}, {t:'1,0',c:''}, {t:'2,0',c:''}, {t:'3,0',c:''}, {t:'·',c:'dim'} ];
+var A2 = [ {t:'0,0',c:'ok'}, {t:'1,0',c:''}, {t:'2,0',c:''}, {t:'3,0',c:''}, {t:'·',c:'dim'} ];
+var A3 = [ {t:'0,0',c:'ok'}, {t:'1,0',c:''}, {t:'2,0',c:''}, {t:'3,0',c:''}, {t:'4,1',c:''} ];
+var A4 = [ {t:'0,0',c:'ok'}, {t:'1,0',c:'ok'}, {t:'2,0',c:'ok'}, {t:'3,0',c:''}, {t:'4,1',c:''} ];
+var A5 = [ {t:'0,0',c:'ok'}, {t:'1,0',c:'ok'}, {t:'2,0',c:'ok'}, {t:'3,0',c:'miss'}, {t:'4,1',c:'miss'} ];
+/* --- 图(b) 甲方帧的各状态 --- */
+var B1 = [ {t:'0,0',c:'ok'}, {t:'1,0',c:'ok'}, {t:'2,0',c:'miss'}, {t:'3,2',c:'miss'}, {t:'4,2',c:'miss'} ];
+var B2 = [ {t:'0,0',c:'ok'}, {t:'1,0',c:'ok'}, {t:'2,0',c:'hit'}, {t:'3,2',c:'hit'}, {t:'4,2',c:'hit'} ];
+
+/* --- 序号带状态 --- */
+var SA  = ['hit','hit','ok','miss','miss','hit','hit','hit']; /* (a) 窗口 = 序号 3~9（模 8） */
+var SB1 = ['ok','ok','miss','miss','miss','','',''];          /* (b) 超时前 */
+var SB2 = ['ok','ok','hit','hit','hit','','',''];             /* (b) 超时重传 */
+
+var STEPS = [
+  { cls:'step', tag:'基本常数',
+    log:'3 位序号 → GBN 发送窗口最大 7；帧长 1000B、100Mbps → 发一帧 0.08ms；RTT = 0.96ms；确认号 = 期望收到的下一帧序号（累计确认）',
+    html: noteHTML('基本常数','序号 3 比特 → 窗口 ≤ 7；发一帧 0.08ms；RTT = 0.96ms；确认号 y 表示"y 之前的帧都已正确收到"') },
+  { cls:'step', tag:'图(a) 连发',
+    log:'t0 时刻甲连发 4 个数据帧：S_{0,0}、S_{1,0}、S_{2,0}、S_{3,0}',
+    html: laneHTML(A1) },
+  { cls:'ok', tag:'R0,1',
+    log:'收到 R_{0,1}：乙的确认号 1 → 甲的 0 号帧已被乙正确接收',
+    html: laneHTML(A2) },
+  { cls:'step', tag:'捎带回应',
+    log:'甲发 S_{4,1}：发送序号 4、确认号 1（甲已正确收到乙的 0 号帧）',
+    html: laneHTML(A3) },
+  { cls:'ok', tag:'R1,3',
+    log:'收到 R_{1,3}：乙的确认号 3 → 甲的 0、1、2 号帧都已正确接收（累计确认）',
+    html: laneHTML(A4) },
+  { cls:'step', tag:'R3,3',
+    log:'收到 R_{3,3}：确认号仍是 3 → 无新信息；且它是乙的 3 号帧，甲期待的是乙的 2 号帧，乱序帧被 GBN 接收方丢弃',
+    html: laneHTML(A4) + noteHTML('注意','R_{3,3} 对甲是乱序帧：直接丢弃，其确认号 3 也不带来新确认') },
+  { cls:'ok', tag:'问(1) 答', ribbon:{k:1, ok:true},
+    log:'第（1）问：甲可断定乙已正确接收 3 个帧：S_{0,0}、S_{1,0}、S_{2,0}',
+    html: laneHTML(A5) + noteHTML('结论（1）','乙已正确接收 3 帧：S_{0,0}、S_{1,0}、S_{2,0}；甲的 3、4 号帧尚未确认') },
+  { cls:'step', tag:'窗口状态',
+    log:'t1 状态：已发 0~4 号共 5 帧，累计确认号 = 3 → 窗口基值 = 3、下一待发序号 = 5，已发未确认：3、4 号',
+    html: laneHTML(A5) + seqHTML(SA, {3:'base'}, '（窗口 = 序号 3~9，模 8：3,4,5,6,7,0,1）') },
+  { cls:'step', tag:'问(2) 答', ribbon:{k:2, ok:true},
+    log:'第（2）问：还能再发 5 帧（亮绿）：5、6、7、0、1；确认号填 2（甲期待乙的 2 号帧）；第一个 S_{5,2}、最后一个 S_{1,2}',
+    html: seqHTML(SA, {3:'base'}, '（绿 = 已确认，红 = 已发未确认，亮绿 = 还可发送）') +
+          noteHTML('结论（2）','最多再发 5 帧：S_{5,2}、S_{6,2}、S_{7,2}、S_{0,2}、S_{1,2}——第一个 S_{5,2}，最后一个 S_{1,2}') },
+  { cls:'miss', tag:'图(b) 超时',
+    log:'图(b)：乙的确认号始终停在 2 → 甲的 2 号帧没到乙（已丢失）；t1 时刻 S_{2,0} 超时',
+    html: laneHTML(B1, '甲方发送的帧（图 b）') + seqHTML(SB1, {2:'base'}, '（甲的 2、3、4 号帧未确认）') },
+  { cls:'shift', tag:'GBN 重传',
+    log:'GBN 规则：超时就重发所有已发送且未确认的帧 → 2、3、4 号，共 3 帧',
+    html: laneHTML(B2, '甲方发送的帧（图 b）') + seqHTML(SB2, {2:'base'}, '（亮绿 = 待重传）') },
+  { cls:'step', tag:'问(3) 答', ribbon:{k:3, ok:true},
+    log:'第（3）问：需重发 3 帧；确认号 = 3（甲已按序收到乙的 0、1、2 号帧）；重发的第一个帧是 S_{2,3}',
+    html: laneHTML(B2, '甲方发送的帧（图 b）') + noteHTML('结论（3）','重发 3 帧：S_{2,3}、S_{3,3}、S_{4,3}——第一个是 S_{2,3}') },
+  { cls:'step', tag:'问(4) 参数',
+    log:'T_D = 1000×8 ÷ 100Mbps = 0.08ms；捎带确认帧同为 1000B 数据帧 → T_A = 0.08ms；RTT = 0.96ms；窗口最大 7',
+    html: noteHTML('第（4）问','一个周期 = 发送第 1 帧到收完对它的确认：T_D + RTT + T_A = 0.08 + 0.96 + 0.08 = 1.12ms') },
+  { cls:'step', tag:'问(4) 答', ribbon:{k:4, ok:true},
+    log:'第（4）问：利用率 = 7×0.08 ÷ 1.12 = 0.56 ÷ 1.12 = 50%',
+    html: noteHTML('结论（4）','周期内最多连发 7 帧 = 0.56ms；信道利用率 = 0.56 ÷ 1.12 = 50%') },
+  { cls:'done', tag:'总结', done:true,
+    log:'（1）3 帧：S_{0,0}、S_{1,0}、S_{2,0}；（2）5 帧：S_{5,2} → S_{1,2}；（3）3 帧：S_{2,3} 起；（4）50%',
+    html: noteHTML('全部答案','（1）3 帧：S_{0,0}、S_{1,0}、S_{2,0}；（2）5 帧：S_{5,2}~S_{1,2}；（3）3 帧：S_{2,3} 起；（4）50%') },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: s.cls, tag: s.tag, log: s.log, html: s.html,
+    ribbon: s.ribbon, done: s.done,
+  };
+});
+
+AW.init({
+  title: '2017-47 · GBN 双向捎带传输：确认、窗口、超时与信道利用率',
+  subtitle: '3 位序号（窗口 ≤ 7）· 帧长 1000B @ 100Mbps（0.08ms/帧）· RTT = 0.96ms · 捎带确认',
+  counterLabel: '步骤',
+  ribbonTitle: '四个小问（✓ 已解决）',
+  intro: '点击「▶ 播放」按四个小问逐步推演。',
+  snaps: snaps,
+  result: {
+    big: '（1）3 帧 ·（2）5 帧 ·（3）3 帧 ·（4）50%',
+    html: '（1）乙已正确接收 <b>S_{0,0}、S_{1,0}、S_{2,0}</b>（R_{3,3} 是乱序帧被丢弃）；（2）窗口 7、基值 3，最多再发 <b>5</b> 帧：第一个 <code>S_{5,2}</code>、最后一个 <code>S_{1,2}</code>；（3）S_{2,0} 超时 → 重发所有未确认帧共 <b>3</b> 帧，第一个 <code>S_{2,3}</code>；（4）利用率 = 7×0.08 ÷ (0.08+0.96+0.08) = <b>50%</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-03 火车调度：最少轨道数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var SEQ = [8, 4, 2, 5, 3, 9, 1, 6, 7];
+var S = {};   // 持久 DOM 句柄
+
+AW.init({
+  title: '2016·火车调度：让 8,4,2,5,3,9,1,6,7 以 1~9 驶出，最少几条轨道？',
+  subtitle: '每条轨道 = 先入先出缓冲（车只能向右开）→ 轨道内车号必须<b>递增</b> · 新车接在“车尾最大且小于它”的轨道后',
+  counterLabel: '已驶入',
+  ribbonTitle: '各车落轨（✓ 已安放）',
+  intro: '点击「▶ 播放」逐辆安排 9 列火车。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var lab = AW.el('div', 'aw-row-label', '<b>驶入序列</b>（最右侧的最先驶入）');
+    S.inRow = AW.el('div', '');
+    inner.appendChild(lab);
+    inner.appendChild(S.inRow);
+    S.tracks = [];
+    for(var t = 0; t < 4; t++){
+      var tl = AW.el('div', 'aw-row-label', '<b>轨道 ' + (t + 1) + '</b>');
+      var tr = AW.el('div', '');
+      inner.appendChild(tl);
+      inner.appendChild(tr);
+      S.tracks.push(tr);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始', count:0, arrived:-1, lastTrack:-1,
+      tracks:[[],[],[],[]],
+      log:'规则：车从左向右开，一条轨道里先进入的车先驶出 → 每条轨道内的车号必须递增。出口要求 1~9，所以新车要接在“车尾号码最大且小于它”的轨道后面，接不上才新开轨道。' },
+    { cls:'ok', tag:'8号', count:1, arrived:0, lastTrack:0,
+      tracks:[[8],[],[],[]], ribbon:{k:8, ok:true},
+      log:'8 号驶入：4 条轨道全空 → 进轨道 1。' },
+    { cls:'ok', tag:'4号', count:2, arrived:1, lastTrack:1,
+      tracks:[[8],[4],[],[]], ribbon:{k:4, ok:true},
+      log:'4 号驶入：轨道 1 车尾是 8，8 > 4 接不上 → 新开轨道 2。' },
+    { cls:'ok', tag:'2号', count:3, arrived:2, lastTrack:2,
+      tracks:[[8],[4],[2],[]], ribbon:{k:2, ok:true},
+      log:'2 号驶入：8、4 都比它大，接不上 → 新开轨道 3。' },
+    { cls:'ok', tag:'5号', count:4, arrived:3, lastTrack:1,
+      tracks:[[8],[4,5],[2],[]], ribbon:{k:5, ok:true},
+      log:'5 号驶入：可接轨道中车尾最大的是 4（轨道 2）→ 接上，轨道 2 变为 4,5。' },
+    { cls:'ok', tag:'3号', count:5, arrived:4, lastTrack:2,
+      tracks:[[8],[4,5],[2,3],[]], ribbon:{k:3, ok:true},
+      log:'3 号驶入：车尾比 3 小的最大的是 2（轨道 3）→ 接上，轨道 3 变为 2,3。' },
+    { cls:'ok', tag:'9号', count:6, arrived:5, lastTrack:0,
+      tracks:[[8,9],[4,5],[2,3],[]], ribbon:{k:9, ok:true},
+      log:'9 号驶入：最大可接车尾是 8（轨道 1）→ 接上，轨道 1 变为 8,9。' },
+    { cls:'ok', tag:'1号', count:7, arrived:6, lastTrack:3,
+      tracks:[[8,9],[4,5],[2,3],[1]], ribbon:{k:1, ok:true},
+      log:'1 号驶入：9、5、3 都大于 1，谁也接不了 → 新开轨道 4。' },
+    { cls:'ok', tag:'6号', count:8, arrived:7, lastTrack:1,
+      tracks:[[8,9],[4,5,6],[2,3],[1]], ribbon:{k:6, ok:true},
+      log:'6 号驶入：最大可接车尾是 5（轨道 2）→ 轨道 2 变为 4,5,6。' },
+    { cls:'ok', tag:'7号', count:9, arrived:8, lastTrack:1,
+      tracks:[[8,9],[4,5,6,7],[2,3],[1]], ribbon:{k:7, ok:true},
+      log:'7 号驶入：接在 6 后面 → 轨道 2 变为 4,5,6,7。9 列车全部进完，只用了 4 条轨道。' },
+    { cls:'shift', tag:'放行', count:10, arrived:9, lastTrack:-1,
+      tracks:[[8,9],[4,5,6,7],[2,3],[1]],
+      log:'依次放行：1（轨4）→ 2、3（轨3）→ 4、5、6、7（轨2）→ 8、9（轨1），出口恰好是 1~9 ✓' },
+    { cls:'miss', tag:'下界', count:11, arrived:9, lastTrack:-1,
+      tracks:[[8,9],[4,5,6,7],[2,3],[1]],
+      log:'为什么 3 条不够？8、4、2、1 四辆车依次驶入且号码递减：同一轨道先入先出，号码大的一定先驶出，与要求的 1~9 冲突 → 这四辆两两不能同轨 → 至少 4 条。' },
+    { cls:'done', tag:'结论', count:12, done:true, arrived:9, lastTrack:-1,
+      tracks:[[8,9],[4,5,6,7],[2,3],[1]],
+      log:'4 条轨道够用、3 条不够 → n 至少是 4，选 C。' },
+  ],
+
+  render: function(stage, sn){
+    var cls = [];
+    SEQ.forEach(function(v, i){
+      if(sn.arrived == null){ cls.push(''); }
+      else if(i < sn.arrived){ cls.push('dim'); }
+      else if(i === sn.arrived){ cls.push('hit'); }
+      else { cls.push(''); }
+    });
+    S.inRow.innerHTML = '';
+    S.inRow.appendChild(AW.cellRow(SEQ, cls, null));
+    S.tracks.forEach(function(tr, t){
+      tr.innerHTML = '';
+      var data = sn.tracks[t] || [];
+      if(data.length === 0){
+        tr.appendChild(AW.el('div', 'aw-row-label', '（空）'));
+      } else {
+        var tcls = data.map(function(v, i){
+          return (i === data.length - 1 && sn.lastTrack === t) ? 'hit' : '';
+        });
+        tr.appendChild(AW.cellRow(data, tcls, null));
+      }
+    });
+  },
+
+  result: {
+    big: 'n 至少 = 4（选 C）',
+    html: '轨道是 FIFO 缓冲：最少轨道数 = 驶入序列中<b>最长递减子序列</b>的长度（此处 8→4→2→1，长 4）。记忆点：序列每“降一次”就得另开一条轨道。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

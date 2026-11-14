@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-36 IP 数据报分片 · 第 2 片的总长度与 MF</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类：IP 分片逐片生成（数据量约束 → 三张分片卡）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var FRAGS = [
+  { name: '第 1 片', data: 776, total: 796, mf: 1, off: 0 },
+  { name: '第 2 片', data: 776, total: 796, mf: 1, off: 97 },
+  { name: '第 3 片', data: 8,   total: 28,  mf: 0, off: 194 },
+];
+var fragEls = [], verdict;
+
+function fragHtml(f){
+  return '<div style="font-weight:800;font-size:14px;margin-bottom:6px;color:#0f172a;">' + f.name + '</div>' +
+    '<div style="font-size:13px;line-height:1.95;font-family:Menlo,monospace;color:#334155;">' +
+    '数据 ' + f.data + ' B<br>总长度 <b>' + f.total + '</b> B<br>MF = <b>' + f.mf + '</b><br>片偏移 = ' + f.off + '</div>';
+}
+
+AW.init({
+  title: 'IP 数据报分片：第 2 个分片的「总长度」与「MF」',
+  subtitle: '总长度 <code>1580 B</code>（首部 20 B） · 链路 <code>MTU = 800 B</code> · 每个分片尽可能大',
+  counterLabel: '已装数据(B)',
+  ribbonTitle: '分片（✓ 已生成）',
+  intro: '点击「▶ 播放」，逐片把 1560 B 数据装进 MTU=800B 的分片里。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var l1 = AW.el('div', 'aw-row-label',
+      '<b>原始数据报</b>：总长度 1580 B = 首部 20 B + 数据 1560 B　→　<b>MTU = 800 B</b>：每片总长度 ≤ 800 B');
+    inner.appendChild(l1);
+
+    var l2 = AW.el('div', 'aw-row-label',
+      '<b>约束</b>：除最后一个分片外，每片<b>数据长度必须是 8 B 的整数倍</b>（片偏移以 8 B 为单位）');
+    inner.appendChild(l2);
+
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;max-width:760px;margin-top:8px;';
+    fragEls = [];
+    FRAGS.forEach(function(){
+      var d = AW.el('div', '');
+      d.style.cssText = 'flex:1;margin:4px;padding:12px 14px;border:2px solid #cbd5e1;border-radius:12px;' +
+        'background:#fff;opacity:.4;transition:all .35s;';
+      d.innerHTML = '<div style="font-size:13px;color:#94a3b8;">（待生成）</div>';
+      row.appendChild(d);
+      fragEls.push(d);
+    });
+    inner.appendChild(row);
+
+    verdict = AW.el('div', '');
+    verdict.style.cssText = 'margin-top:12px;font-size:14.5px;font-weight:700;color:#0f172a;';
+    inner.appendChild(verdict);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '审题', count: 0,
+      log: '总长度 1580 B、首部 20 B → 数据部分 = 1580 − 20 = 1560 B；MTU = 800 B 限制每片总长度' },
+    { cls: 'shift', tag: '定片长', count: 0,
+      log: '每片数据上限 = 800 − 20 = 780 B；但除最后一片外必须是 8 的倍数：780 ÷ 8 = 97.5 → 取 97 × 8 = 776 B' },
+    { cls: 'ok', tag: '第 1 片', count: 776, ribbon: { k: 1, ok: true },
+      log: '第 1 片：数据 776 B，总长度 20 + 776 = 796 B；后面还有数据 → MF = 1，片偏移 = 0' },
+    { cls: 'ok', tag: '第 2 片', count: 1552, ribbon: { k: 2, ok: true },
+      log: '剩余 1560 − 776 = 784 B 仍超过 776 → 第 2 片再装 776 B：总长度 796 B；后面还有第 3 片 → MF = 1；片偏移 = 776 ÷ 8 = 97' },
+    { cls: 'ok', tag: '第 3 片', count: 1560, ribbon: { k: 3, ok: true },
+      log: '最后剩 784 − 776 = 8 B → 第 3 片总长度 20 + 8 = 28 B，MF = 0；片偏移 = 1552 ÷ 8 = 194' },
+    { cls: 'done', tag: '完成', count: 1560, done: true,
+      log: '题目问第 2 个分片：总长度字段 = 796，MF = 1 → 选 B',
+      res: '第 2 片：总长度 = 796，MF = 1 → 选 B' },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j = 0; j < 3; j++){
+      var d = fragEls[j];
+      if(i >= 2 + j){
+        d.innerHTML = fragHtml(FRAGS[j]);
+        d.style.opacity = 1;
+        d.style.borderColor = (i >= 5 && j === 1) ? '#16a34a' : '#cbd5e1';
+        d.style.background = (i >= 5 && j === 1) ? '#f6fef9' : '#fff';
+      } else {
+        d.innerHTML = '<div style="font-size:13px;color:#94a3b8;">（待生成）</div>';
+        d.style.opacity = .4;
+        d.style.borderColor = '#cbd5e1';
+        d.style.background = '#fff';
+      }
+    }
+    verdict.innerHTML = sn.res || '';
+  },
+
+  result: {
+    big: '第 2 片：796, 1（答案 B）',
+    html: '总长度字段 = 首部 + 数据 = <code>20 + 776 = 796</code>，不是 800（MTU 里还要留 20 B 给首部）；第 2 片后面还有第 3 片，所以 <b>MF = 1</b>。干扰项：A 的 MF=0 忘了还有第 3 片；C/D 的 800 忘了扣首部。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

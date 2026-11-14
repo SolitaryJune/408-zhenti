@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-40 Cookie 的典型用途 · 推理链动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：HTTP 无状态，Cookie 管"状态"',
+    cls: 'key',
+    body: '<p>HTTP 本身<b>无状态</b>，服务器靠 Cookie 识别"这是谁、处于什么会话"。所以判断标准一句话：<b>凡是"记住用户/会话信息"的都是 Cookie 的典型用途；跟"提速"无关的不是</b>。要选的是<b>不属于</b>的一项。</p>' },
+  { title: 'Cookie 工作机制 30 秒回顾',
+    cls: 'key',
+    body: '<p>服务器响应带 <code>Set-Cookie</code> 首部 → 浏览器保存 → 之后每个请求自动带 <code>Cookie</code> 首部 → 服务器查后台数据关联用户状态。Cookie 是"服务器生成、客户端保存、请求时携带"的一小段文本。</p>' },
+  { title: '逐项分析 A：用户跟踪',
+    cls: 'good',
+    body: '<p>A（用户跟踪）：<b>属于</b>。网站靠 Cookie 记录浏览、点击流等行为，用于用户分析与广告投放（第三方跟踪 Cookie 正因此有隐私争议，但确是典型用途）。</p>' },
+  { title: '逐项分析 B：个性化推荐',
+    cls: 'good',
+    body: '<p>B（个性化推荐）：<b>属于</b>。Cookie 里存着用户偏好、语言、历史记录，服务器据此提供定制化内容。</p>' },
+  { title: '逐项分析 C：构建虚拟购物车',
+    cls: 'good',
+    body: '<p>C（构建虚拟购物车）：<b>属于</b>。用户未登录时，购物车里的商品就用 Cookie（会话）维持——教材里 Cookie 用途的经典例子。</p>' },
+  { title: '逐项分析 D：缩短 Web 对象响应时间',
+    cls: 'bad',
+    body: '<p>D（缩短响应时间）：<b>不属于</b>。缩短响应时间靠的是 <b>Web 缓存</b>（代理服务器/CDN 把对象放在离用户更近处，命中就不回源）；Cookie 不但不提速，每个请求还要多带一段头部，反而略微增加开销。<b>"管状态"是 Cookie，"省时间"是缓存</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：Cookie 的典型用途 = <b>会话管理（购物车）+ 个性化 + 用户跟踪</b>；缩短响应时间是 Web 缓存（代理/CDN）的功劳。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    ribbon: i > 1 && i < 6 ? { k: i - 1, ok: i !== 5 } : null,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2026-40 · Cookie 的典型用途辨析',
+  subtitle: '考点：<code>Cookie 与无状态 HTTP · Web 缓存</code> · 选项逐项推演',
+  counterLabel: '已分析',
+  ribbonTitle: '选项（✓ 属于 / ✗ 不属于）',
+  intro: '点击「▶ 播放」：先立判断标准，再逐项过 A/B/C/D。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: 'Cookie 在无状态 HTTP 上<b>维持状态</b>：用户跟踪（A）、个性化推荐（B）、虚拟购物车（C）都是典型用途。<b>缩短响应时间是 Web 缓存（代理/CDN）的职责</b>，Cookie 还会让请求头变大略增开销。记忆锚点：<b>Cookie 管"状态"，缓存管"时间"</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

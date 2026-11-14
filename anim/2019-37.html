@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-37 /20 地址块划分 5 个子网</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var segs = [], info = null;
+
+// 5 个子块：前缀、地址数、占比、颜色
+var SEGS = [
+  { p: '/21', n: '2048', pct: 50,    bg: '#3b82f6', label: '第 1 块' },
+  { p: '/22', n: '1024', pct: 25,    bg: '#6366f1', label: '第 2 块' },
+  { p: '/23', n: '512',  pct: 12.5,  bg: '#8b5cf6', label: '第 3 块' },
+  { p: '/24', n: '256',  pct: 6.25,  bg: '#a855f7', label: '第 4 块' },
+  { p: '/24', n: '256',  pct: 6.25,  bg: '#16a34a', label: '第 5 块 ★最小' },
+];
+
+// 每步可见段数与底部信息（下标对应 snaps）
+var LOOK = [
+  { vis: 0, info: '101.200.16.0/20：主机位 12 位 → 共 2¹² = 4096 个地址（灰条为整块）', c: '#334155' },
+  { vis: 0, info: '划分 5 个子网 = 切 5 块：每块大小是 2 的幂、按前缀边界对齐；要使某个子网最小，其余 4 块就要尽量大', c: '#334155' },
+  { vis: 1, info: '第 1 块 /21 → 2048 个地址（50%）', c: '#334155' },
+  { vis: 2, info: '第 2 块 /22 → 1024 个地址（25%）', c: '#334155' },
+  { vis: 3, info: '第 3 块 /23 → 512 个地址（12.5%）', c: '#334155' },
+  { vis: 4, info: '第 4 块 /24 → 256 个地址（6.25%）', c: '#334155' },
+  { vis: 5, info: '第 5 块 /24 → 256 个地址（6.25%）：2048+1024+512+256+256 = 4096，恰好切完 → 最小子网是 /24', c: '#15803d' },
+  { vis: 5, info: '验证：若最小取 /25（128 个地址），其余 4 块须凑出 3968 = 2048+1024+512+256+128，至少要 5 个 2 的幂 → 4 块凑不出，/25 不可能', c: '#b91c1c' },
+  { vis: 5, info: '最小子网 /24 → 可分配 IP = 256 − 2（网络地址+广播地址）= 254，选 B', c: '#15803d' },
+];
+
+AW.init({
+  title: '2019·37 将 101.200.16.0/20 划分为 5 个子网，最小子网可分配多少 IP？',
+  subtitle: '允许变长划分（VLSM）· 要最小子网尽量小 → 其余子网尽量大',
+  counterLabel: '已切子块',
+  intro: '点击「▶ 播放」，把 4096 个地址的整块逐步切成 5 个子块。',
+
+  build: function(stage){
+    segs = [];
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var bar = AW.el('div', '');
+    bar.style.cssText = 'display:flex;gap:2px;height:74px;border-radius:10px;background:#e2e8f0;' +
+      'border:1px solid #cbd5e1;padding:2px;margin-bottom:12px;';
+    SEGS.forEach(function(s){
+      var d = AW.el('div', '');
+      d.style.cssText = 'border-radius:8px;background:' + s.bg + ';color:#fff;display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;font-weight:700;line-height:1.35;transition:opacity .45s, transform .45s;' +
+        'opacity:0;transform:scale(.85);flex:0 0 ' + s.pct + '%;';
+      d.innerHTML = '<span style="font-size:13px">' + s.p + '</span>' +
+        '<span style="font-size:11px;font-weight:400;opacity:.92">' + s.n + ' 个</span>';
+      d.title = s.label + '：' + s.p + '，' + s.n + ' 个地址';
+      segs.push(d);
+      bar.appendChild(d);
+    });
+    inner.appendChild(bar);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '整条 = 101.200.16.0/20（4096 个地址）· 段宽按地址数等比例'));
+
+    info = AW.el('div', '');
+    info.style.cssText = 'margin-top:6px;padding:10px 14px;border-radius:10px;background:#f8fafc;' +
+      'border:1px solid #e2e8f0;font-size:13.5px;line-height:1.7;color:#334155;';
+    inner.appendChild(info);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'总地址', log:'101.200.16.0/20：主机位 12 位 → 共 2¹² = 4096 个地址', count:0 },
+    { cls:'step',  tag:'策略', log:'划分 5 个子网：每块大小是 2 的幂、按前缀边界对齐，5 块覆盖整块；要使某个子网最小，其余 4 块就要尽量大', count:0 },
+    { cls:'step',  tag:'切第 1 块', log:'/21 → 2048 个地址（50%）', count:1 },
+    { cls:'step',  tag:'切第 2 块', log:'/22 → 1024 个地址（25%）', count:2 },
+    { cls:'step',  tag:'切第 3 块', log:'/23 → 512 个地址（12.5%）', count:3 },
+    { cls:'step',  tag:'切第 4 块', log:'/24 → 256 个地址（6.25%）', count:4 },
+    { cls:'ok',    tag:'切第 5 块', log:'/24 → 256 个地址（6.25%）：2048+1024+512+256+256 = 4096，恰好切完 → 最小子网是 /24', count:5 },
+    { cls:'miss',  tag:'验证 /25', log:'若最小取 /25（128 个地址）：其余 4 块须凑出 3968 = 2048+1024+512+256+128，至少要 5 个 2 的幂才能拼出 → 4 块凑不出，/25 不可能', count:5 },
+    { cls:'done',  tag:'完成', log:'最小子网 /24：可分配 IP = 256 − 2 = 254，选 B', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = LOOK[i] || LOOK[0];
+    segs.forEach(function(d, k){
+      d.style.opacity = (k < st.vis) ? '1' : '0';
+      d.style.transform = (k < st.vis) ? 'scale(1)' : 'scale(.85)';
+    });
+    info.style.color = st.c;
+    info.innerHTML = st.info;
+  },
+
+  result: {
+    big: '最小子网可分配 254 个',
+    html: '5 个 2 的幂拼满 4096：<b>2048 + 1024 + 512 + 256 + 256</b> → 最小子网 /24，256 − 2（网络地址 + 广播地址）= <b>254</b>，选 <b>B</b>。误选 C（510）来自"等分成 8 个 /23"的思路——那不是"可能的最小子网"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

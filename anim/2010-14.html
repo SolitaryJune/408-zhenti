@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-14 类型转换精度 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三套精度规则', cls: 'key',
+    body: '<p>i=785（int，补码）、f=1.5678e3=1567.8（float）、d=1.5e100（double）。工具：<b>float 有 24 位有效位（整数 ≤ 2^24 可精确表示）；float→int 截断小数；float→double 无损；double 大数会"吃掉"远小于其末位间隔的小数</b>。</p>' },
+  { title: 'I：i==(int)(float)i → 真', cls: 'good',
+    body: '<p>785 &lt; 2^24 = 16 777 216，float 能<b>精确表示</b>这个整数：(float)i = 785.0，转回 (int) 仍是 785 → <b>真</b>。</p>' },
+  { title: 'II：f==(float)(int)f → 假', cls: 'bad',
+    body: '<p>f = 1567.8 带小数。(int)f <b>截断</b>为 1567，再变回 (float)1567 = 1567.0，比原值少了 0.8 → <b>假</b>。取整方向的损耗无法恢复。</p>' },
+  { title: 'III：f==(float)(double)f → 真', cls: 'good',
+    body: '<p>float 的可表示数是 double 的<b>子集</b>：float→double 精确，double→float 按最近舍入回到原来的那一个数 → <b>真</b>。升精度再降回来，无往返损耗。</p>' },
+  { title: 'IV：(d+f)−d==f → 假', cls: 'bad',
+    body: '<p>d = 1.5×10^100 ≈ 2^332，double 只有 53 位有效位，其相邻可表示数的间隔比 1567.8 大得多——<b>f 完全落不到 d 的末位格子里</b>，d+f 舍入后仍等于 d，(d+f)−d = 0 ≠ f → <b>假</b>。</p>' },
+  { title: '结论：真的是 I 和 III，选 B', cls: 'good',
+    body: '<p>I 真（小整数往返无损）、III 真（浮点升级往返无损）；II 假（取整截尾）、IV 假（大数吃小数）→ 答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[1].ribbon = { k: 1, ok: true };
+snaps[2].ribbon = { k: 2, ok: false };
+snaps[3].ribbon = { k: 3, ok: true };
+snaps[4].ribbon = { k: 4, ok: false };
+
+AW.init({
+  title: '2010-14 · 四个类型转换表达式谁为真',
+  subtitle: '<code>i=785 · f=1.5678e3 · d=1.5e100</code> · int / float / double 精度推演',
+  counterLabel: '判定项',
+  ribbonTitle: '四个表达式（✓ 真 / ✗ 假）',
+  intro: '点击「▶ 播放」逐式判定。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 I 和 III）',
+    html: '整数 ≤ 2^24 时 int↔float 往返<b>无损</b>（I 真）；float→double→float 往返<b>无损</b>（III 真）；(int)f 截断丢小数（II 假）；巨大 double 加小 float 被<b>完全吸收</b>，(d+f)−d = 0（IV 假）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

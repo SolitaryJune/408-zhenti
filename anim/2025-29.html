@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-29 新建文件 F：文件系统会做什么、不会做什么</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var nameRow, inoRow, nodeBox = [], nodeIdx = [];
+
+function paint(i) {
+  var j;
+  /* 目录文件两行：文件名 / 索引节点号（第 3 槽留给新文件 F） */
+  var names = ['A', 'B', '', ''];
+  var inos = ['3', '5', '', ''];
+  var nameCls = ['', '', '', ''];
+  var inoCls = ['', '', '', ''];
+  if (i >= 2) { names[2] = 'F'; inos[2] = '7'; nameCls[2] = (i === 2) ? 'hit' : 'ok'; inoCls[2] = 'hit'; }
+  if (i >= 3) { inoCls[2] = (i === 3) ? 'hit' : 'ok'; nameCls[2] = 'ok'; }
+  var namePtr = ['', '', '', ''];
+  var inoPtr = ['', '', '', ''];
+  if (i === 2) namePtr[2] = '新增目录项';
+  if (i === 3) inoPtr[2] = '写入节点号 7';
+  if (i >= 4) inoPtr[2] = '权限不在目录里！';
+  for (j = 0; j < 4; j++) {
+    nameRow.children[j].children[0].textContent = namePtr[j];
+    nameRow.children[j].children[1].textContent = names[j];
+    nameRow.children[j].children[1].className = 'aw-box' + (nameCls[j] ? ' ' + nameCls[j] : '');
+    inoRow.children[j].children[0].textContent = inoPtr[j];
+    inoRow.children[j].children[1].textContent = inos[j];
+    inoRow.children[j].children[1].className = 'aw-box' + (inoCls[j] ? ' ' + inoCls[j] : '');
+  }
+  /* 索引节点区：3、5 已用；7 号在本题中被分配并初始化 */
+  var stat = ['已用', '已用', '空闲', '空闲'];
+  var ncls = ['', '', 'dim', ''];
+  if (i >= 1) { stat[3] = '已初始化(含权限)'; ncls[3] = (i === 1) ? 'hit' : 'ok'; }
+  for (j = 0; j < 4; j++) {
+    nodeBox[j].className = 'aw-box' + (ncls[j] ? ' ' + ncls[j] : '');
+    nodeIdx[j].textContent = stat[j];
+  }
+}
+
+AW.init({
+  title: '新建文件 F：文件系统会做哪几件事（2025-29）',
+  subtitle: '索引节点方式 · <b>目录项 ＝ 文件名 ＋ 索引节点号</b> · 其余属性（类型/权限/时间…）全在索引节点（FCB）里',
+  counterLabel: '已完成动作',
+  intro: '点击「▶ 播放」，逐步执行新建文件 F 的动作，对照四个选项。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>目录文件</b> · 每条目录项的文件名'));
+    nameRow = AW.cellRow(['A', 'B', '', ''], ['', '', '', ''], null, 1);
+    inner.appendChild(nameRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>目录文件</b> · 每条目录项的索引节点号（与上行对齐）'));
+    inoRow = AW.cellRow(['3', '5', '', ''], ['', '', '', ''], null, 1);
+    inner.appendChild(inoRow);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>索引节点区</b>（FCB：类型、存取权限、时间、链接计数、盘块地址…）'));
+    var nrow = AW.el('div', 'aw-cells');
+    var nums = ['3', '5', '6', '7'];
+    for (var j = 0; j < 4; j++) {
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', nums[j]);
+      var ix = AW.el('div', 'aw-idx', j < 2 ? '已用' : '空闲');
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(ix);
+      nrow.appendChild(col);
+      nodeBox.push(box); nodeIdx.push(ix);
+    }
+    inner.appendChild(nrow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'step', tag: '初始', log: '目录文件已有两条目录项：A→3、B→5；索引节点区 3、5 号已占用，6、7 号空闲。用户请求新建文件 F', count: 0 },
+    { cls: 'ok', tag: '动作①', log: '分配一个空闲索引节点（7 号），并初始化其内容：文件类型、存取权限、时间、链接计数、盘块地址等 → 选项 A「初始化文件 F 的索引节点」会做', count: 1 },
+    { cls: 'ok', tag: '动作②', log: '在目录文件中增加一条 F 对应的目录项（占第 3 槽）→ 选项 D「增加一条文件 F 对应的目录项」会做', count: 2 },
+    { cls: 'ok', tag: '动作③', log: '向新目录项写入「文件名 F ＋ 索引节点号 7」→ 选项 B「在目录文件中写入 F 的索引节点号」会做。注意：目录项只有这两样内容', count: 3 },
+    { cls: 'shift', tag: '对照 C', log: 'F 的访问权限是 FCB（索引节点）的内容，已写在 7 号节点里；目录项中不含权限等属性 → 选项 C「在目录文件中写入 F 的访问权限信息」不会做', count: 3 },
+    { cls: 'done', tag: '完成', log: '结论：目录项 ＝ 文件名 ＋ 索引节点号，权限放在索引节点中——这正是索引节点结构缩小目录、加快按名检索的设计。答案选 C', count: 3, done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: '不会做的是 C',
+    html: '新建文件三步：<b>分配并初始化索引节点 → 目录中增加目录项 → 写入「文件名 ＋ 索引节点号」</b>（对应 A、D、B）。访问权限属于索引节点（FCB）的内容，目录项里只有文件名和节点号——选 <b>C</b>。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

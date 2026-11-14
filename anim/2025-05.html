@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-05 哈夫曼编码长度动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+// 每步的森林状态：vals 为显示值，pair 高亮本步被合并的两个
+var FORESTS = [
+  { vals:['2','3','4','6','8','10','11'], pair:null },
+  { vals:['4','5','6','8','10','11'], pair:[1,2], note:'合并 2+3 → 5' },
+  { vals:['6','8','9','10','11'], pair:[2,3], note:'合并 4+5 → 9' },
+  { vals:['9','10','11','14'], pair:[0,1], note:'合并 6+8 → 14' },
+  { vals:['11','14','19'], pair:[0,1], note:'合并 9+10 → 19' },
+  { vals:['19','25'], pair:[0,1], note:'合并 11+14 → 25' },
+  { vals:['44'], pair:[0], note:'合并 19+25 → 44（根）' },
+];
+
+AW.init({
+  title: '哈夫曼树构建：编码长度 ≥ 3 的字符有几个？',
+  subtitle: '7 个字符频次 <code>2, 3, 4, 6, 8, 10, 11</code> · 每步合并当前最小的两个 · 编码长度 = 叶子深度',
+  counterLabel: '合并轮次',
+  ribbonTitle: '构建进度（✓ 已完成一步）',
+  intro: '点击「▶ 播放」逐步合并，最后读出每个字符的深度。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._forestLabel = AW.el('div', 'aw-row-label', '');
+    this._forestWrap = AW.el('div', '');
+    this._treeWrap = AW.el('div', '');
+    this._depthWrap = AW.el('div', '');
+    inner.appendChild(this._forestLabel);
+    inner.appendChild(this._forestWrap);
+    inner.appendChild(this._treeWrap);
+    inner.appendChild(this._depthWrap);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'初始森林：2,3,4,6,8,10,11。规则：每步取最小的两个合并，和值放回森林', count:0 },
+    { cls:'step', tag:'合并 2+3', log:'最小两个 2、3 → 新结点 5。森林变为 4,5,6,8,10,11', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'合并 4+5', log:'最小两个 4、5（含上步新结点）→ 9。森林：6,8,9,10,11', count:2, ribbon:{k:2, ok:true} },
+    { cls:'step', tag:'合并 6+8', log:'最小两个 6、8 → 14。森林：9,10,11,14', count:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'合并 9+10', log:'最小两个 9、10 → 19。森林：11,14,19', count:4, ribbon:{k:4, ok:true} },
+    { cls:'step', tag:'合并 11+14', log:'最小两个 11、14 → 25。森林：19,25', count:5, ribbon:{k:5, ok:true} },
+    { cls:'step', tag:'合并 19+25', log:'最后两个 19、25 → 44，即哈夫曼树的根，构建完成', count:6, ribbon:{k:6, ok:true} },
+    { cls:'ok', tag:'读深度', log:'树建成：10、11 深度 2；4、6、8 深度 3；2、3 深度 4（编码长度=叶子深度）', count:7 },
+    { cls:'done', tag:'完成', log:'长度 ≥ 3 的字符：2、3、4、6、8，共 5 个 → 答案 D', count:8, done:true },
+  ],
+
+  // 每步的森林状态见顶部 FORESTS 常量
+
+  render: function(stage, sn, i){
+    this._depthWrap.innerHTML = '';
+    this._treeWrap.innerHTML = '';
+    if (i <= 6){
+      var f = FORESTS[i];
+      this._forestLabel.innerHTML = '<b>当前森林</b>（绿 = 本步合并的两个最小值）' +
+        (f.note ? ' · ' + f.note : ' · 尚未开始合并');
+      var cls = [];
+      for (var c = 0; c < f.vals.length; c++){
+        cls.push(f.pair && f.pair.indexOf(c) >= 0 ? 'hit' : '');
+      }
+      this._forestWrap.innerHTML = '';
+      this._forestWrap.appendChild(AW.cellRow(f.vals, cls, null, 1));
+    } else if (i === 7){
+      this._forestLabel.innerHTML = '<b>建成的哈夫曼树</b>（绿叶子 = 编码长度 ≥ 3；灰叶子 = 长度 2）';
+      // 层次行：根 → 第 1 层 → … → 第 4 层
+      var LEVELS = [
+        { vals:['44'], cls:[''] },
+        { vals:['19','25'], cls:['',''] },
+        { vals:['9','10','11','14'], cls:['','dim','',''] },
+        { vals:['4','5','6','8'], cls:['hit','hit','hit','hit'] },
+        { vals:['2','3'], cls:['hit','hit'] },
+      ];
+      var tree = AW.el('div', '');
+      tree.style.display = 'flex';
+      tree.style.flexDirection = 'column';
+      tree.style.alignItems = 'center';
+      tree.style.gap = '8px';
+      tree.style.marginTop = '6px';
+      for (var L = 0; L < LEVELS.length; L++){
+        var row = AW.el('div', 'aw-cells');
+        row.style.justifyContent = 'center';
+        row.appendChild(AW.cellRow(LEVELS[L].vals, LEVELS[L].cls, null, 1));
+        tree.appendChild(row);
+      }
+      this._treeWrap.appendChild(tree);
+      this._forestWrap.innerHTML = '';
+    } else {
+      this._forestLabel.innerHTML = '<b>编码长度统计</b>（绿 = 长度 ≥ 3）';
+      var FREQ = ['2','3','4','6','8','10','11'];
+      var LEN  = ['4','4','3','3','3','2','2'];
+      var lcls = ['hit','hit','hit','hit','hit','ok','ok'];
+      var t1 = AW.el('div', 'aw-row-label', '字符频次');
+      var r1 = AW.el('div', '');
+      r1.appendChild(AW.cellRow(FREQ, ['','','','','','',''], null, 1));
+      var t2 = AW.el('div', 'aw-row-label', '编码长度（叶子深度）');
+      var r2 = AW.el('div', '');
+      r2.appendChild(AW.cellRow(LEN, lcls, null, 1));
+      this._depthWrap.appendChild(t1); this._depthWrap.appendChild(r1);
+      this._depthWrap.appendChild(t2); this._depthWrap.appendChild(r2);
+      this._forestWrap.innerHTML = '';
+    }
+  },
+
+  result: {
+    big: '5 个',
+    html: '编码长度 = 字符在哈夫曼树中的深度：<code>10、11</code> 深度 2；<code>4、6、8</code> 深度 3；<code>2、3</code> 深度 4。<br>长度 ≥ 3 的字符 = 2、3、4、6、8，共 <b>5 个</b>，选 <b>D</b>。<br>记忆锚点：<b>小权值在深处</b>——每步合并当前最小的两个。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-01 对称矩阵压缩存储下标计算动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-01 对称矩阵上三角按列优先存储：求 m[7,2] 在数组 N 中的下标
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var blocksRow, nRow, noteLine;
+
+function mkBox(txt, cls, w){
+  var b = AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), txt);
+  if(w){ b.style.width = w + 'px'; }
+  return b;
+}
+
+function drawBlocks(hiCols){
+  // 第 j 列存上三角第 j 列的 j 个元素：j = 1..10
+  blocksRow.innerHTML = '';
+  for(var j = 1; j <= 10; j++){
+    var col = AW.el('div', 'aw-col');
+    var cls = '';
+    if(hiCols === 'first6'){ cls = j <= 6 ? 'ok' : ''; }
+    else if(hiCols === 'col7'){ cls = j === 7 ? 'hit' : (j <= 6 ? 'ok' : ''); }
+    col.appendChild(mkBox(j + '个', cls));
+    col.appendChild(AW.el('div', 'aw-idx', '第' + j + '列'));
+    blocksRow.appendChild(col);
+  }
+}
+
+function drawN(fill, marks){
+  // 一维数组 N[0..24]：fill = 前 fill 个位置已被占用(绿)，marks = {idx: cls}
+  nRow.innerHTML = '';
+  for(var t = 0; t <= 24; t++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (marks && marks.ptr === t) ? 'm₂,₇' : ''));
+    var cls = '';
+    if(marks && marks[t]){ cls = marks[t]; }
+    else if(t < fill){ cls = 'ok'; }
+    col.appendChild(mkBox(t < fill ? String(t + 1) : '', cls));
+    col.appendChild(AW.el('div', 'aw-idx', 'N[' + t + ']'));
+    nRow.appendChild(col);
+  }
+}
+
+AW.init({
+  title: '对称矩阵压缩存储：m₇,₂ 存到了 N 的哪个下标？',
+  subtitle: '10×10 对称矩阵 · 上三角 m[i,j]（1≤i≤j≤10）<b>按列优先</b>存入 C 语言一维数组 N（下标从 0 开始）',
+  counterLabel: '推导步',
+  ribbonTitle: '推导步骤（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，逐步推导 m₇,₂ 的数组下标。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>上三角按列分块</b>：第 j 列存 m[1,j]…m[j,j]，共 j 个元素'));
+    blocksRow = AW.el('div', 'aw-cells');
+    inner.appendChild(blocksRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>一维数组 N</b>（C 语言，下标从 0 开始）· 格内数字 = 存储位次'));
+    nRow = AW.el('div', 'aw-cells');
+    inner.appendChild(nRow);
+    noteLine = AW.el('div', 'aw-row-label', '');
+    noteLine.style.marginTop = '12px';
+    inner.appendChild(noteLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',     log:'10×10 对称矩阵，上三角元素（i≤j）按列优先存入 N，问 m₇,₂ 的下标。', count:0 },
+    { cls:'shift', tag:'对称换位', log:'m₇,₂ 中 7>2，是下三角元素、不在存储范围；用对称性 m₇,₂ = m₂,₇ → 改为定位上三角中的 m₂,₇。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'分列计数', log:'第 j 列存 j 个元素：第 1 列 1 个、第 2 列 2 个……第 6 列 6 个。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'列累加',   log:'前 6 列共 1+2+3+4+5+6 = 21 个元素 → 占满 N[0..20]。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'列内定位', log:'第 7 列依次存 m₁,₇、m₂,₇…：m₂,₇ 是该列第 2 个 → 存储位次 = 21 + 2 = 23。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'换算下标', log:'C 语言数组下标从 0 开始：第 23 个元素的下标 = 23 − 1 = 22。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'done',  tag:'完成',     log:'m₇,₂ 存放在 N[22] → 答案选 C。', count:6, ribbon:{k:6, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var hiCols = null, fill = 0, marks = {};
+    if(i >= 2 && i <= 3){ hiCols = 'first6'; }
+    if(i >= 4){ hiCols = 'col7'; }
+    if(i >= 3 && i <= 4){ fill = 21; }
+    if(i === 4){ marks[21] = 'shift'; marks.ptr = 21; }
+    if(i >= 5){
+      fill = 23;
+      marks[21] = 'ok';
+      marks[22] = (i === 5 ? 'shift' : 'hit');
+      marks.ptr = 22;
+    }
+    drawBlocks(hiCols);
+    drawN(fill, marks);
+    if(i === 0){ noteLine.innerHTML = '提示：m₇,₂ 的两个下标是 i=7、j=2，先判断它是否真的被存放。'; }
+    else if(i === 1){ noteLine.innerHTML = '对称转换：<b>m₇,₂ = m₂,₇</b>（i=2、j=7，满足 i≤j）。'; }
+    else if(i === 2){ noteLine.innerHTML = '第 7 列前有多少个元素？1+2+3+4+5+6 = ?'; }
+    else if(i === 3){ noteLine.innerHTML = '第 7 列将从 N[<b>21</b>] 开始存放。'; }
+    else if(i === 4){ noteLine.innerHTML = 'm₁,₇ → 位次 22（N[21]），m₂,₇ → 位次 23（N[22]）。'; }
+    else if(i === 5){ noteLine.innerHTML = '位次 23 − 1 = 下标 <b>22</b>。'; }
+    else { noteLine.innerHTML = '<b>答案：N[22]，选 C。</b> 干扰项：忘减 1 得 23（D）；忘对称换位易算出 15/16（A、B）。'; }
+  },
+
+  result: {
+    big: 'N[22]',
+    html: '<b>答案选 C。</b>推导链：① m₇,₂ 是下三角元素，用对称性换成 <code>m₂,₇</code>；② 前 6 列共 <code>1+2+…+6=21</code> 个，m₂,₇ 是第 7 列第 2 个 → 位次 <code>23</code>；③ C 语言下标从 0 起 → <code>23−1 = 22</code>。记忆锚点：<b>下三角换位 → 列累加 → 列内定位 → 统一减 1</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

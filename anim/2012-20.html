@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-20 USB 总线特性辨析 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：挑"错误"的那一项', cls: 'key',
+    body: '<p>四个选项都在描述 USB 总线的特性。名字里就藏着答案：<b>U-S-B = Universal Serial Bus</b>，"Serial" = 串行。</p>' },
+  { title: 'A：即插即用 + 热插拔 → 正确', cls: 'good',
+    body: '<p>USB 外设可在开机状态下插入拔出，系统自动识别配置 → <b>✔ 正确</b>，这是 USB 的招牌特性。</p>' },
+  { title: 'B：级联连接多台外设 → 正确', cls: 'good',
+    body: '<p>通过集线器（Hub）<b>树形级联</b>，一台主机理论上可接 127 个外设 → <b>✔ 正确</b>。</p>' },
+  { title: 'C：通信总线、连接不同外设 → 正确', cls: 'good',
+    body: '<p>USB 属于通信（外设）总线，鼠标、键盘、打印机、U 盘都靠它连接主机 → <b>✔ 正确</b>。</p>' },
+  { title: 'D：同时可传输 2 位数据 → 错误', cls: 'bad',
+    body: '<p>USB 是<b>串行总线</b>，数据<b>一位接一位</b>地传，"同时传 2 位"直接矛盾 → <b>✘ 错误</b>，本题选 D。（"数据传输率高"半句没错：USB 2.0 达 480Mbps、3.0 达 5Gbps，靠高频率而不是多位并行。）</p>' },
+  { title: '结论：答案 D', cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>USB = 串行（一次 1 位）+ 即插即用 + 热插拔 + 集线器级联</b>；PCIe、SATA 同为串行。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[1].ribbon = { k: 1, ok: true };
+snaps[2].ribbon = { k: 2, ok: true };
+snaps[3].ribbon = { k: 3, ok: true };
+snaps[4].ribbon = { k: 4, ok: false };
+
+AW.init({
+  title: '2012·20 关于 USB 总线，哪句话是错的？',
+  subtitle: '即插即用 · 级联 · 通信总线 · "同时传 2 位" —— 逐条判定',
+  counterLabel: '判定项',
+  ribbonTitle: '四个选项（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐条判定四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（USB 是串行总线）',
+    html: '<b>串行总线一次只传 1 位</b>，"同时可传输 2 位数据"错误。串行不等于慢——USB 的高速率靠高传输频率实现。A/B/C 均为 USB 的正确特性。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

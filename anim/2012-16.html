@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-16 闪存特性辨析 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：挑"错误"的那一项', cls: 'key',
+    body: '<p>四个选项都在描述闪存（Flash Memory）的特性，要找<b>说错</b>的那个。逐条问：读写速度？存储元？易失性？访问方式？</p>' },
+  { title: 'A：读、写速度一样快 → 错误', cls: 'bad',
+    body: '<p>闪存写入前必须<b>先整块擦除</b>（清掉浮栅电荷），再写入，耗时远大于一次读取 → <b>读快写慢</b>。A 错，本题选它。</p>' },
+  { title: 'B：MOS 管组成、半导体存储器 → 正确', cls: 'good',
+    body: '<p>闪存存储元是<b>浮栅 MOS 管</b>，靠浮栅俘获电荷保存信息，是半导体存储器 → <b>✔ 正确</b>。</p>' },
+  { title: 'C：掉电不丢失、非易失 → 正确', cls: 'good',
+    body: '<p>浮栅上的电荷掉电后仍保持，信息不丢 → <b>非易失性存储器</b> ✔（与 SRAM、DRAM 截然不同）。</p>' },
+  { title: 'D：随机访问、可作外存 → 正确', cls: 'good',
+    body: '<p>闪存可按地址随机访问，U 盘、固态硬盘（SSD）都以它作<b>外部存储器</b> → <b>✔ 正确</b>。</p>' },
+  { title: '结论：答案 A', cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>闪存 = MOS 浮栅管 + 非易失 + 可随机访问，但读快写慢（写前先整块擦除）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[1].ribbon = { k: 1, ok: false };
+snaps[2].ribbon = { k: 2, ok: true };
+snaps[3].ribbon = { k: 3, ok: true };
+snaps[4].ribbon = { k: 4, ok: true };
+
+AW.init({
+  title: '2012·16 关于闪存，哪句话是错的？',
+  subtitle: '读写速度 · 存储元材料 · 易失性 · 访问方式 —— 四选项逐条判定',
+  counterLabel: '判定项',
+  ribbonTitle: '四个选项（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐条判定四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（读写速度不一样快）',
+    html: '<b>闪存读快写慢</b>——写之前必须先整块擦除浮栅电荷，所以 A 错。B（MOS 管、半导体）、C（非易失）、D（随机访问、可作外存）都是闪存的正确特性。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

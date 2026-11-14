@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-22 多重中断系统响应中断的叙述辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { cls: 'key', title: '审题眼：响应中断的真正条件',
+    body: '<p>四条叙述都在说"CPU 怎样才能响应中断"。真正的条件是：<b>有请求信号 + 未被屏蔽 + CPU 开中断</b>——每条指令执行末统一检测，与用户态/内核态无关。找说法与之矛盾的一项。</p>' },
+  { cls: 'bad', title: 'A 错："仅在用户态下才响应"',
+    body: '<p>"仅在用户态（执行用户程序）下，CPU 才能检测和响应中断"——与事实相反！CPU 执行<b>内核程序</b>（内核代码、中断处理程序本身）时，只要<b>开中断</b>且请求未被屏蔽，同样能响应更高优先级请求。响应条件里根本没有"用户态"这一条 → A 说法<b>错误</b>，本题答案。</p>' },
+  { cls: 'good', title: 'B 对：检测到请求才进响应周期',
+    body: '<p>CPU 在指令执行末检测请求：<b>检测到中断请求信号</b>后，才发中断隐指令、进入<b>中断响应周期</b> → B 说法正确。</p>' },
+  { cls: 'good', title: 'C 对：进入响应周期必已开中断',
+    body: '<p>中断允许（开中断）是响应的前提：关中断期间的请求被搁置，只有处于<b>开中断状态</b>，检测到请求才会进入中断响应周期 → C 说法正确。</p>' },
+  { cls: 'good', title: 'D 对：检测到请求必有未被屏蔽的请求源',
+    body: '<p>被屏蔽的中断源，其请求信号会被中断屏蔽逻辑挡住，<b>传不到 CPU</b>；所以 CPU 能检测到的请求，必来自<b>未被屏蔽的中断源</b> → D 说法正确。</p>' },
+  { cls: 'good', title: '结论',
+    body: '<p>错误叙述是 <b>A</b>：响应中断与用户态/内核态无关。</p>' +
+      '<p>记忆锚点：响应三条件——<b>有请求、未被屏蔽、开中断</b>；多重中断系统里，中断处理程序内开中断后（内核态）也能响应更高优先级请求。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : 'step')),
+    tag: last ? '完成' : '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2021-22 · 多重中断系统：哪句响应中断的叙述错了',
+  subtitle: '考点：中断响应条件（请求 + 未屏蔽 + 开中断）与特权级无关',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐项核对。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（其说法错误）',
+    html: '记忆锚点：CPU 检测/响应中断的条件是<b>有请求 + 未被屏蔽 + 开中断</b>，每条指令执行末检测，<b>与用户态/内核态无关</b>——内核态下开中断同样能响应。<br>' +
+      'B（检测到才进响应周期）、C（必已开中断）、D（必有未屏蔽请求源）都正确。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

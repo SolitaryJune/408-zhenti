@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-25 优先权就绪队列：插入与选出的时间复杂度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 每个快照：链表结点序列（最多 6 格）、配色、指针标签、比较计数 */
+var SNAP = [
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['', '', '', '', '', ''],
+    ptr: ['队头', '', '', '', '', ''], cnt: 0 },
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['amber', '', '', '', '', ''],
+    ptr: ['队头 · 最高优先级，直接摘走', '', '', '', '', ''], cnt: 0 },
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['', '', '', '', '', ''],
+    ptr: ['队头 · P(4) 从头开始比', '', '', '', '', ''], cnt: 0 },
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['ok', 'hit', '', '', '', ''],
+    ptr: ['', 'P(4) vs 9', '', '', '', ''], cnt: 1 },
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['ok', 'ok', 'hit', '', '', ''],
+    ptr: ['', '', 'P(4) vs 7', '', '', ''], cnt: 2 },
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['ok', 'ok', 'ok', 'hit', '', ''],
+    ptr: ['', '', '', 'P(4) vs 5', '', ''], cnt: 3 },
+  { vals: ['9', '7', '5', '3', '1', ''], cls: ['ok', 'ok', 'ok', 'amber', '', ''],
+    ptr: ['', '', '', 'P(4) vs 3 → 4 大于 3，停', '', ''], cnt: 4 },
+  { vals: ['9', '7', '5', '4', '3', '1'], cls: ['ok', 'ok', 'ok', 'hit', '', ''],
+    ptr: ['', '', '', '新结点 P(4)', '', ''], cnt: 4 },
+  { vals: ['9', '7', '5', '4', '3', '1'], cls: ['', '', '', 'ok', '', ''],
+    ptr: ['队头', '', '', '', '', ''], cnt: 4 }
+];
+
+var hRow;
+var AMBER = 'border-color:#d97706;background:#fef3c7';
+
+function paint(i) {
+  var s = SNAP[i];
+  for (var j = 0; j < 6; j++) {
+    var col = hRow.children[j];
+    var box = col.children[1];
+    var ptr = col.children[0];
+    var ix = col.children[2];
+    var v = s.vals[j];
+    if (v) {
+      box.style.visibility = 'visible';
+      ix.style.visibility = 'visible';
+      box.textContent = v;
+      ix.textContent = String(j + 1);
+      if (s.cls[j] === 'amber') {
+        box.className = 'aw-box';
+        box.setAttribute('style', AMBER);
+      } else {
+        box.className = 'aw-box' + (s.cls[j] ? ' ' + s.cls[j] : '');
+        box.setAttribute('style', '');
+      }
+    } else {
+      box.className = 'aw-box';
+      box.setAttribute('style', '');
+      box.textContent = '';
+      ix.textContent = '';
+      box.style.visibility = 'hidden';
+      ix.style.visibility = 'hidden';
+    }
+    ptr.textContent = s.ptr[j] || '';
+  }
+}
+
+AW.init({
+  title: '优先权调度：有序单链表就绪队列的插入与选出（2025-25）',
+  subtitle: '就绪队列长度 n · 单链表保存 · <b>高优先级在队头</b> · 新进程 P 优先级 4',
+  counterLabel: '优先级比较',
+  intro: '点击「▶ 播放」：先看选出，再看插入 P(4) 要比几次。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>就绪队列</b>（单链表，按优先级从高到低：9 → 7 → 5 → 3 → 1）'));
+    hRow = AW.cellRow(['', '', '', '', '', ''], ['', '', '', '', '', ''], null, 1);
+    inner.appendChild(hRow);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '绿＝已比较（P 优先级更低，继续后移）　琥珀＝当前关键结点　蓝字＝指针位置'));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'step', tag: '初始', log: '就绪队列按优先级从高到低排列：9→7→5→3→1，队头即最高优先级进程（n=5）', count: 0 },
+    { cls: 'ok', tag: '选出 O(1)', log: '选出进程：队头就是最高优先级，直接摘下队头结点即可，一次比较都不需要 → 时间复杂度 O(1)', count: 0 },
+    { cls: 'step', tag: '插入开始', log: '插入新进程 P（优先级 4）：为维持"高优先级在队头"，P 必须插在第一个优先级比 4 小的结点之前；链表只能沿链从队头开始逐个比较', count: 0 },
+    { cls: 'ok', tag: '比较①', log: '第 1 次比较：4 小于 9 → P 应排在 9 后面，继续后移', count: 1 },
+    { cls: 'ok', tag: '比较②', log: '第 2 次比较：4 小于 7 → 继续后移', count: 2 },
+    { cls: 'ok', tag: '比较③', log: '第 3 次比较：4 小于 5 → 继续后移', count: 3 },
+    { cls: 'shift', tag: '比较④', log: '第 4 次比较：4 大于 3 → 找到插入位置！P 插在 3 之前（共 4 次比较）', count: 4 },
+    { cls: 'ok', tag: '插入完成', log: '插入完成：队列变为 9→7→5→4→3→1，仍按优先级有序。最坏情况：新进程优先级最低，要比到队尾（n 个结点比 n 次）→ O(n)', count: 4 },
+    { cls: 'done', tag: '完成', log: '结论：插入 O(n)（沿链找位），选出 O(1)（摘队头）→ 答案选 C', count: 4, done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: '插入 O(n)，选出 O(1)（选 C）',
+    html: '按优先级排序的单链表就绪队列：<b>插入</b>要沿链顺序找位（最坏比到队尾，n 个结点比 n 次）；<b>选出</b>只摘队头、无需比较。易错：若队列不排序直接尾插，则插入 O(1)、选出 O(n)——与题干"高优先级在队头"不符。另注意链表不能折半查找。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

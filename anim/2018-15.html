@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-15 小端方式的指令机器代码</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'int i = -64 的机器代码（小端方式）',
+  subtitle: '样例 <code>C7 45 FC 00 00 00 00</code> · 前 3 字节不变 · 末 4 字节 = 32 位立即数的补码（小端存放）',
+  counterLabel: '已确定字节',
+  ribbonTitle: '推演进度（✓ 已完成）',
+  intro: '点击「▶ 播放」逐字节推出 −64 的机器代码。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>int i = 0</b>（题给样例：C7 45 FC 为操作码等字段，后 4 字节是立即数）'));
+    this._rowA = AW.el('div', '');
+    inner.appendChild(this._rowA);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>int i = -64</b>（目标指令，逐字节确定）'));
+    this._rowB = AW.el('div', '');
+    inner.appendChild(this._rowB);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var charsA = ['C7','45','FC','00','00','00','00'];
+    var clsA   = ['ok','ok','ok','dim','dim','dim','dim'];
+    if(i >= 2){ clsA = ['ok','ok','ok','hit','hit','hit','hit']; }
+    var charsB = ['C7','45','FC','?','?','?','?'];
+    var clsB   = ['ok','ok','ok','dim','dim','dim','dim'];
+    var ptr = null;
+    if(i >= 4){
+      charsB = ['C7','45','FC','C0','FF','FF','FF'];
+      clsB = ['ok','ok','ok','ok','ok','ok','ok'];
+      ptr = { 4: '低位字节' };
+    }
+    if(i >= 5){ clsB = ['ok','ok','ok','hit','hit','hit','hit']; }
+    this._rowA.innerHTML = '';
+    this._rowA.appendChild(AW.cellRow(charsA, clsA, null, 1));
+    this._rowB.innerHTML = '';
+    this._rowB.appendChild(AW.cellRow(charsB, clsB, ptr, 1));
+  },
+
+  snaps: [
+    { cls:'shift', tag:'拆结构', log:'样例指令 7 字节：C7 45 FC 是操作码/寻址方式/位移量字段，与 i 的值无关，两条指令这部分相同', count:3, ribbon:{k:1, ok:true} },
+    { cls:'step', tag:'认立即数', log:'末 4 字节 00 00 00 00 就是 32 位立即数 i 的补码，按字节从低地址到高地址排——小端方式的暗示', count:4, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'求补码', log:'−64 的补码：64 = 00000040H → 取反 FFFFFFBFH → 末位加一 FFFFFFC0H', count:4, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'小端排队', log:'小端 = 低位字节放低地址：FFFFFFC0H 从低位到高位拆字节，依次是 C0、FF、FF、FF', count:7, ribbon:{k:4, ok:true} },
+    { cls:'ok', tag:'拼装', log:'C7 45 FC + C0 FF FF FF = C7 45 FC C0 FF FF FF，与选项 A 一致', count:7, ribbon:{k:5, ok:true} },
+    { cls:'step', tag:'辨干扰', log:'C、D 把字节序弄反（FF FF FF C0 / FF FF FF 0C）；B 把 C0 误写成 0C（半字节颠倒，0C = 0000 1100）', count:7, ribbon:{k:6, ok:true} },
+    { cls:'done', tag:'完成', log:'答案 A：C7 45 FC C0 FF FF FF', count:7, done:true },
+  ],
+
+  result: {
+    big: 'C7 45 FC C0 FF FF FF（答案 A）',
+    html: '两步关键：<code>−64 → FFFFFFC0H</code>（取反加一）；小端存放<b>低位字节 C0 放低地址</b>。口诀：<b>小端 = 低位在前</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-47 多生产者多消费者：连续取 10 件的信号量设计</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var TH = ' style="border:1px solid #cbd5e1;padding:5px 10px;background:#f1f5f9;font-size:13px;color:#334155"';
+var TD = ' style="border:1px solid #cbd5e1;padding:5px 10px;font-size:13px;font-family:Menlo,Consolas,monospace"';
+var TDHL = ' style="border:1px solid #cbd5e1;padding:5px 10px;font-size:13px;font-family:Menlo,Consolas,monospace;background:#fef9c3"';
+
+function semTable(hlIdx){
+  var rows = [
+    ['mutex1', '一个消费者连续取 10 件期间的互斥', '1'],
+    ['mutex2', '各进程单次互斥访问缓冲区', '1'],
+    ['empty', '缓冲区空位数（同步）', '1000'],
+    ['full', '缓冲区产品数（同步）', '0'],
+  ];
+  var h = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;margin:4px 0">';
+  h += '<tr><th' + TH + '>信号量</th><th' + TH + '>含义</th><th' + TH + '>初值</th></tr>';
+  rows.forEach(function(r, idx){
+    var a = (idx === hlIdx) ? TDHL : TD;
+    h += '<tr><td' + a + '>' + r[0] + '</td><td' + a + '>' + r[1] + '</td><td' + a + '>' + r[2] + '</td></tr>';
+  });
+  h += '</table></div>';
+  return h;
+}
+
+// 伪代码块：lines = [ [文本, 是否高亮], ... ]
+function code(lines){
+  var h = '<div style="font-family:Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7;background:#f8fafc;' +
+    'border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;margin:6px 0 2px;overflow-x:auto">';
+  lines.forEach(function(l){
+    if(l[1]){
+      h += '<div style="background:#fef3c7;border-radius:4px;padding:0 4px;color:#92400e;font-weight:700">' + l[0] + '</div>';
+    } else {
+      h += '<div>' + l[0] + '</div>';
+    }
+  });
+  h += '</div>';
+  return h;
+}
+
+var STEPS = [
+  { title: '审题眼：三个约束条件',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>多个生产者 + 多个消费者共享 <b>1000 件</b>的环形缓冲区（初始为空）。要求：① 缓冲区满不能放、空不能取（<b>同步</b>）；② 多进程访问缓冲区要<b>互斥</b>；③ 一个消费者必须<b>连续取出 10 件</b>后，其他消费者才能取——这是本题最特殊的约束。</p>' },
+  { title: '信号量设计与含义',
+    cls: 'good',
+    tag: '第 1 问',
+    body: semTable(-1) + '<p>要两把锁：<b>mutex2</b> 管单次进出缓冲区；<b>mutex1</b> 管消费者"连续 10 件"这个整体。empty/full 分别是空位、产品计数。</p>' },
+  { title: '生产者进程（第 2 问）',
+    cls: 'good',
+    tag: '第 2 问',
+    body: '<p><b>同步 P 在互斥 P 之前</b>，否则可能死锁：</p>' +
+      code([
+        ['producer() {', 0],
+        ['&nbsp;&nbsp;while (1) {', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;生产一个产品;', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;P(empty);&nbsp;&nbsp;&nbsp;// 等空位（同步）', 1],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;P(mutex2);&nbsp;&nbsp;// 互斥访问缓冲区', 1],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;把产品放入缓冲区;', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;V(mutex2);', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;V(full);&nbsp;&nbsp;&nbsp;&nbsp;// 产品数加 1', 0],
+        ['&nbsp;&nbsp;}', 0],
+        ['}', 0],
+      ]) },
+  { title: '消费者进程：外层 mutex1 锁住"连续 10 件"',
+    cls: 'key',
+    tag: '第 3 问 · 核心',
+    body: '<p><b>P(mutex1) 要包住整个 10 次循环</b>：期间其他消费者全部阻塞在 mutex1 上，取满 10 件后才 V(mutex1) 放行——"连续取 10 件"由此得到保证。</p>' +
+      code([
+        ['consumer() {', 0],
+        ['&nbsp;&nbsp;while (1) {', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;P(mutex1);&nbsp;&nbsp;&nbsp;// 独占"连续取 10 件"的权利', 1],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;for (i = 0; i &lt; 10; i++) {', 1],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P(full);&nbsp;&nbsp;&nbsp;&nbsp;// 等产品', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P(mutex2);&nbsp;&nbsp;// 互斥访问缓冲区', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从缓冲区取出一件产品;', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V(mutex2);', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V(empty);&nbsp;&nbsp;&nbsp;// 空位数加 1', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;消费这件产品;', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;}', 0],
+        ['&nbsp;&nbsp;&nbsp;&nbsp;V(mutex1);&nbsp;&nbsp;&nbsp;// 10 件取完才放行', 1],
+        ['&nbsp;&nbsp;}', 0],
+        ['}', 0],
+      ]) },
+  { title: '易错点 1：P(empty)/P(full) 必须在 P(mutex2) 之前',
+    cls: 'bad',
+    tag: '易错点',
+    body: '<p>若先 <code>P(mutex2)</code> 再 <code>P(empty)</code>：缓冲区满时生产者抱着缓冲区的锁去等空位，而消费者要拿锁才能腾空位 → <b>互相等待，死锁</b>。口诀：<b>先同步、后互斥</b>。</p>' },
+  { title: '易错点 2：没有 mutex1 会怎样',
+    cls: 'bad',
+    tag: '易错点',
+    body: '<p>只靠 mutex2，消费者每取一件就放锁，别的消费者立刻可插进来取——"连续 10 件"被破坏。所以必须用 <b>mutex1 把 10 次取件打包成一个临界区</b>；且 mutex1 只出现在<b>消费者</b>里，生产者不碰它。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    body: semTable(-1) + '<p>四件套：<b>empty=1000、full=0 管数量同步；mutex2=1 管单次互斥；mutex1=1 把"连续取 10 件"整体锁起来</b>。答题时写清含义与初值，再给两段伪代码即可拿满分。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-47】生产者-消费者：连续取 10 件的信号量实现',
+  subtitle: '1000 件环形缓冲区 · mutex1 / mutex2 / empty / full · 逐问搭建伪代码',
+  intro: '点击「▶ 播放」，按"信号量 → 生产者 → 消费者 → 易错点"展开。',
+  snaps: snaps,
+  result: {
+    big: '4 个信号量 + 2 段伪代码',
+    html: '<b>empty=1000 / full=0</b> 管数量同步，<b>mutex2=1</b> 管单次互斥，<b>mutex1=1</b> 把"连续取 10 件"整体锁住（消费者专用）。<br>' +
+      '两个铁律：<b>① 同步 P 在互斥 P 之前（先 P(empty)/P(full) 后 P(mutex2)）；② mutex1 必须包住整个 10 次循环</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

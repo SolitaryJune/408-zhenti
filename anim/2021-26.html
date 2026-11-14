@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-26 · SSTF 磁盘调度演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 题面数据：磁道 0~199，磁头起点 184，请求（按题目给出顺序） */
+var REQ = ['184', '187', '176', '182', '199'];
+
+/* SSTF 服务计划：ri = 该磁道在请求序列中的序号（0 起） */
+var PLAN = [
+  { ri: 0, track: '184', dist: 0  },
+  { ri: 3, track: '182', dist: 2  },
+  { ri: 1, track: '187', dist: 5  },
+  { ri: 2, track: '176', dist: 11 },
+  { ri: 4, track: '199', dist: 23 },
+];
+
+var reqRow, trajRow;
+
+function colBox(row, i){ return row.children[i].children[1]; }
+function colIdx(row, i){ return row.children[i].children[2]; }
+function colPtr(row, i){ return row.children[i].children[0]; }
+
+/* snap 序号 i：0=初始；1~5=服务 PLAN[i-1]；6=完成 */
+function reqState(r, i){
+  var served = (i >= 6) ? 5 : Math.max(0, i - 1);   // 本步之前已完成的个数
+  for (var j = 0; j < served; j++){
+    if (PLAN[j].ri === r) return 'ok';
+  }
+  if (i >= 1 && i <= 5 && PLAN[i - 1].ri === r) return 'hit';
+  return '';
+}
+
+function paint(i){
+  var r;
+  for (r = 0; r < 5; r++){
+    var st = reqState(r, i);
+    colBox(reqRow, r).className = 'aw-box' + (st ? ' ' + st : '');
+  }
+  var filled = (i >= 6) ? 5 : Math.max(0, i);
+  for (var j2 = 0; j2 < 5; j2++){
+    var b = colBox(trajRow, j2), x = colIdx(trajRow, j2), p = colPtr(trajRow, j2);
+    p.textContent = '';
+    x.textContent = '';
+    if (i === 0 && j2 === 0){
+      b.textContent = '184';
+      b.className = 'aw-box';
+      p.textContent = '▲磁头起点';
+    } else if (j2 < filled){
+      b.textContent = PLAN[j2].track;
+      b.className = 'aw-box ' + (i <= 5 && j2 === i - 1 ? 'hit' : 'ok');
+      x.textContent = '+' + PLAN[j2].dist;
+      if (i <= 5 && j2 === i - 1) p.textContent = '▲磁头';
+    } else {
+      b.textContent = '';
+      b.className = 'aw-box';
+    }
+  }
+}
+
+AW.init({
+  title: 'SSTF 最短寻道时间优先调度（2021-26）',
+  subtitle: '磁道 0～199 · 磁头起点 <code>184</code> · 请求序列 <code>184 187 176 182 199</code>',
+  counterLabel: '累计移动',
+  ribbonTitle: '请求序号（✓ 已服务）',
+  intro: '点击「▶ 播放」，逐步演示 SSTF 每次选最近磁道的过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>请求磁道</b>（按题目给出的顺序）'));
+    reqRow = AW.cellRow(REQ, ['', '', '', '', ''], null, 1);
+    inner.appendChild(reqRow);
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>SSTF 服务轨迹</b>（上方 ▲ 为磁头当前位置，下方 +数字 为本次移动道数）'));
+    trajRow = AW.cellRow(['', '', '', '', ''], ['', '', '', '', ''], null, 1);
+    inner.appendChild(trajRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始',
+      log: '磁头当前停在 184 号磁道，待处理请求：184、187、176、182、199', count: 0 },
+    { cls: 'ok', tag: '距离 0',
+      log: '请求 184 与磁头同道：距离 0，立即服务（不移动）', count: 0, ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '选最近',
+      log: '从 184 出发比较：182 距 2、187 距 3、176 距 8、199 距 15 → 最近是 182，移动 2 道', count: 2, ribbon: { k: 4, ok: true } },
+    { cls: 'step', tag: '选最近',
+      log: '从 182 出发：187 距 5、176 距 6 → 选 187，移动 5 道', count: 7, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '选最近',
+      log: '从 187 出发：176 距 11、199 距 12 → 选 176，移动 11 道', count: 18, ribbon: { k: 3, ok: true } },
+    { cls: 'step', tag: '仅剩一个',
+      log: '只剩 199：从 176 移动 23 道到达', count: 41, ribbon: { k: 5, ok: true } },
+    { cls: 'done', tag: '完成',
+      log: '服务顺序 184→182→187→176→199，总移动 0+2+5+11+23 = 41 磁道', count: 41, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    paint(i);
+  },
+
+  result: {
+    big: '41 个磁道（答案 C）',
+    html: 'SSTF 每次选择离<b>当前磁头位置</b>最近的请求：184（距 0）→ 182（2）→ 187（5）→ 176（11）→ 199（23），合计 <b>0+2+5+11+23 = 41</b>。记忆点：SSTF 不沿单一方向扫到底，磁头会就近来回摆动；与磁头同道的请求距离为 0、最先被服务。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

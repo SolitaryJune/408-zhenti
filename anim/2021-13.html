@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-13 无符号与补码两种读法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 小表格：headers = ['机器数','无符号','补码真值'] 之类的行数据
+function vtable(colHeaders, rows, hlRow){
+  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:13.5px;font-family:Menlo,monospace">';
+  h += '<tr>';
+  colHeaders.forEach(function(c){
+    h += '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:4px 12px;color:#475569">' + c + '</th>';
+  });
+  h += '</tr>';
+  rows.forEach(function(r, i){
+    h += '<tr' + (hlRow === i ? ' style="background:#fef3c7"' : '') + '>';
+    r.forEach(function(c){
+      h += '<td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">' + c + '</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</table>';
+}
+
+var STEPS = [
+  { cls: 'key', title: '审题眼：同一位串，两种读法',
+    body: '<p>三个 16 位机器数：<code>x = FFFDH</code>、<code>y = FFDFH</code>、<code>z = 7FFCH</code>。同一串二进制，按<b>无符号</b>与按<b>补码（带符号）</b>解释会得到不同数值、不同大小顺序——要分别解出再对照选项。</p>' },
+  { cls: '', title: '无符号读法：直接按位权加',
+    body: '<p>无符号数就是十六进制数的十进制值：</p>' +
+      vtable(['机器数', '十六进制', '无符号值'],
+        [['x', 'FFFDH', '65533'], ['y', 'FFDFH', '65503'], ['z', '7FFCH', '32764']]) +
+      '<p>大小顺序：<b>z(32764) &lt; y(65503) &lt; x(65533)</b>。</p>' },
+  { cls: 'bad', title: '无符号下 A、B 都不成立',
+    body: '<p>选项 A 说 <code>z &lt; x &lt; y</code>：需要 x &lt; y，但无符号时 x(65533) &gt; y(65503)——<b>错</b>。<br>选项 B 说 <code>x &lt; y &lt; z</code>：三对关系全不满足——<b>错</b>。<br>→ 若是无符号整数，四个选项里没有正确答案，说明考点在带符号读法。</p>' },
+  { cls: '', title: '补码读法：先看最高位',
+    body: '<p>最高位 0 → 正数，原样；最高位 1 → 负数，真值 = 机器数 − 10000H（即 2 的 16 次方）：</p>' +
+      vtable(['机器数', '最高位', '真值'],
+        [['x = FFFDH', '1（负）', 'FFFDH − 10000H = <b>−3</b>'],
+         ['y = FFDFH', '1（负）', 'FFDFH − 10000H = <b>−33</b>'],
+         ['z = 7FFCH', '0（正）', '<b>32764</b>']]) },
+  { cls: 'good', title: '带符号排序 → D',
+    body: '<p>带符号顺序：<b>y(−33) &lt; x(−3) &lt; z(32764)</b>，正是选项 <b>D</b>。<br>选项 C 说 <code>x &lt; y &lt; z</code>：−3 &lt; −33 不成立——错。</p>' },
+  { cls: 'good', title: '结论',
+    body: '<p>无符号：z &lt; y &lt; x（A、B 都不对）；带符号：y &lt; x &lt; z → 选 <b>D</b>。</p>' +
+      '<p>记忆锚点：最高位 0，两种读法同值；最高位 1，补码真值 = 机器数 − 2 的 16 次方。x 与 y 只差 1EH（30），别把无符号的大小关系记反。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : 'step')),
+    tag: last ? '完成' : '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2021-13 · FFFDH / FFDFH / 7FFCH 的大小比较',
+  subtitle: '考点：无符号数与补码的解释差异 · 逐项推演',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（y &lt; x &lt; z）',
+    html: '记忆锚点：最高位 0 → 两种读法同值（z = 32764）；最高位 1 → 补码真值 = 机器数 − 2<sup>16</sup>：<br>' +
+      '<code>x = FFFDH = −3</code>，<code>y = FFDFH = −33</code> → 带符号顺序 y &lt; x &lt; z。<br>' +
+      '无符号顺序是 z &lt; y &lt; x，A、B 两个顺序都不吻合。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

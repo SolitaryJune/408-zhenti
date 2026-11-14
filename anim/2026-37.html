@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-37 链路断开重算路由 + 充分聚合 · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 拓扑速记：R1—R2=2（t1 断开）· R1—R3=6 · R1—R4=3 · R3—R4=4 · R2—R3=5
+   R1 接口：S0→Internet · S1→R2 · S2→R3 · S3→R4 · S4→服务器(199.10.21.125/32) */
+
+var tblBox, noteBox;
+
+function drawTable(rows){
+  var s = '<table style="border-collapse:collapse;font-size:13.5px;width:100%">' +
+          '<tr><th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:6px 10px;text-align:left">目的网络</th>' +
+          '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:6px 10px;text-align:left">接口</th>' +
+          '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:6px 10px;text-align:left">说明</th></tr>';
+  rows.forEach(function(r){
+    var bg = '#fff', fg = '#334155';
+    if (r.cls === 'ok'){ bg = '#f6fef9'; fg = '#14532d'; }
+    if (r.cls === 'miss'){ bg = '#fff8f8'; fg = '#b91c1c'; }
+    s += '<tr style="background:' + bg + ';color:' + fg + '">' +
+         '<td style="border:1px solid #e2e8f0;padding:6px 10px;font-family:Menlo,monospace"><b>' + r.net + '</b></td>' +
+         '<td style="border:1px solid #e2e8f0;padding:6px 10px"><b>' + r.iface + '</b></td>' +
+         '<td style="border:1px solid #e2e8f0;padding:6px 10px;font-size:12.5px">' + r.note + '</td></tr>';
+  });
+  return s + '</table>';
+}
+
+var R_OK = 'ok', R_MISS = 'miss', R_PLAIN = '';
+
+var snaps = [
+  { cls:'step', tag:'t0 初始表', count:6,
+    log:'t0 时刻 R1 的路由表共 <b>6 项</b>：去 199.10.20.0/27 走 S1（经 R2，费用 2），其余如图。S0→Internet、S4→服务器为直连。',
+    rows:[
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连默认路由', cls:R_PLAIN },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连', cls:R_PLAIN },
+      { net:'199.10.20.0/27', iface:'S1', note:'经 R2，费用 2', cls:R_PLAIN },
+      { net:'199.10.20.32/27', iface:'S2', note:'经 R3，费用 6', cls:R_PLAIN },
+      { net:'199.10.20.64/26', iface:'S3', note:'经 R4，费用 3', cls:R_PLAIN },
+      { net:'199.10.20.128/25', iface:'S3', note:'经 R4，费用 3', cls:R_PLAIN },
+    ] },
+  { cls:'miss', tag:'t1 链路断开', count:6,
+    log:'t1 时刻 R1 检测到 <b>R1—R2 链路断开</b>（费用 2 → ∞）：S1 不再可用，去 0/27 的原表项失效，需要以 R1 为根重跑一遍最短路（链路状态算法）。',
+    rows:[
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连，不受影响', cls:R_PLAIN },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连，不受影响', cls:R_PLAIN },
+      { net:'199.10.20.0/27', iface:'S1', note:'S1 侧断开（费用 2→∞），失效待重算', cls:R_MISS },
+      { net:'199.10.20.32/27', iface:'S2', note:'经 R3，费用 6，不受影响', cls:R_PLAIN },
+      { net:'199.10.20.64/26', iface:'S3', note:'经 R4，费用 3，不受影响', cls:R_PLAIN },
+      { net:'199.10.20.128/25', iface:'S3', note:'经 R4，费用 3，不受影响', cls:R_PLAIN },
+    ] },
+  { cls:'ok', tag:'重算 0/27', count:6,
+    log:'重算 0/27：绕道 R3 → R1→R3→R2 = 6 + 5 = <b>11</b>（另一路 R1→R4→R3→R2 = 3+4+5 = 12 更贵）→ <b>改走 S2</b>。',
+    rows:[
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连', cls:R_PLAIN },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连', cls:R_PLAIN },
+      { net:'199.10.20.0/27', iface:'S2', note:'改道：R1→R3→R2 = 6+5 = 11', cls:R_OK },
+      { net:'199.10.20.32/27', iface:'S2', note:'经 R3，费用 6', cls:R_PLAIN },
+      { net:'199.10.20.64/26', iface:'S3', note:'经 R4，费用 3', cls:R_PLAIN },
+      { net:'199.10.20.128/25', iface:'S3', note:'经 R4，费用 3', cls:R_PLAIN },
+    ] },
+  { cls:'ok', tag:'重算完毕：仍 6 项', count:6,
+    log:'重算完成：0/27 与 32/27 都走 S2（费用 11、6），64/26 与 128/25 都走 S3（费用 3），/32 与 0/0 直连不变。表仍 <b>6 项</b>，下面开始充分路由聚合。',
+    rows:[
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连', cls:R_OK },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连', cls:R_OK },
+      { net:'199.10.20.0/27', iface:'S2', note:'R1→R3→R2 = 11', cls:R_OK },
+      { net:'199.10.20.32/27', iface:'S2', note:'R1→R3 = 6', cls:R_OK },
+      { net:'199.10.20.64/26', iface:'S3', note:'R1→R4 = 3', cls:R_OK },
+      { net:'199.10.20.128/25', iface:'S3', note:'R1→R4 = 3', cls:R_OK },
+    ] },
+  { cls:'shift', tag:'聚合①：两个 /27 → /26', count:5, ribbon:{k:1, ok:true},
+    log:'聚合①：0/27 与 32/27 <b>同走 S2</b>，且二进制前 <b>26 位相同</b> → 合并为 <b>199.10.20.0/26 → S2</b>（费用取大者 11）。剩 5 项。',
+    rows:[
+      { net:'199.10.20.0/26（← 0/27 + 32/27）', iface:'S2', note:'同接口同前 26 位；费用取大 = 11', cls:R_OK },
+      { net:'199.10.20.64/26', iface:'S3', note:'经 R4，费用 3', cls:R_PLAIN },
+      { net:'199.10.20.128/25', iface:'S3', note:'经 R4，费用 3', cls:R_PLAIN },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连', cls:R_PLAIN },
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连', cls:R_PLAIN },
+    ] },
+  { cls:'shift', tag:'聚合②：64/26 + 128/25 → 超网 /24', count:4, ribbon:{k:2, ok:true},
+    log:'聚合②：64/26 与 128/25 <b>同走 S3</b> → 聚合为超网 <b>199.10.20.0/24 → S3</b>。它多覆盖的 0~63 段不会被转错——表里留着更长的 /26 项，按<b>最长前缀匹配</b>去 0~63 的分组仍走 S2。剩 <b>4 项</b>。',
+    rows:[
+      { net:'199.10.20.0/26', iface:'S2', note:'更长前缀，覆盖 0~63 段，保护转发正确', cls:R_OK },
+      { net:'199.10.20.0/24（← 64/26 + 128/25）', iface:'S3', note:'超网聚合，覆盖 64~255；费用 3', cls:R_OK },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连', cls:R_PLAIN },
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连', cls:R_PLAIN },
+    ] },
+  { cls:'step', tag:'核对最终表', count:4, ribbon:{k:3, ok:true},
+    log:'核对：直连的服务器 /32（S4）与默认路由 0.0.0.0/0（S0）一直存在，也要计入最终表。',
+    rows:[
+      { net:'199.10.20.0/26', iface:'S2', note:'聚合自 0/27 + 32/27', cls:R_OK },
+      { net:'199.10.20.0/24', iface:'S3', note:'聚合自 64/26 + 128/25', cls:R_OK },
+      { net:'199.10.21.125/32（服务器）', iface:'S4', note:'直连', cls:R_OK },
+      { net:'0.0.0.0/0（Internet）', iface:'S0', note:'直连', cls:R_OK },
+    ] },
+  { cls:'done', tag:'结论', count:4, ribbon:{k:4, ok:true},
+    log:'充分路由聚合后 R1 的路由表共 <b>4 项</b> → 选 B。要点：断链后 0/27 改走 S2 是聚合能发生的前提；聚合允许"超网多覆盖"，只要最长前缀匹配下转发不出错。',
+    rows:[
+      { net:'199.10.20.0/26', iface:'S2', note:'两个 /27 同走 S2 才能合', cls:R_OK },
+      { net:'199.10.20.0/24', iface:'S3', note:'超网，最长前缀匹配保转发', cls:R_OK },
+      { net:'199.10.21.125/32', iface:'S4', note:'直连服务器', cls:R_OK },
+      { net:'0.0.0.0/0', iface:'S0', note:'直连 Internet', cls:R_OK },
+    ] },
+];
+
+snaps.forEach(function(sn, i){ sn.done = i === snaps.length - 1; });
+
+AW.init({
+  title: '2026-37 · 链路断开 → 重算路由 → 充分聚合',
+  subtitle: '拓扑：<code>R1—R2=2(断) · R1—R3=6 · R1—R4=3 · R3—R4=4 · R2—R3=5</code> · S0/S4 直连',
+  counterLabel: '路由项数',
+  ribbonTitle: '最终路由项（✓ 已落表）',
+  intro: '点击「▶ 播放」：断链重算 → 两次聚合 → 数最终路由项。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    tblBox = AW.el('div', '');
+    noteBox = AW.el('div', 'aw-row-label', '拓扑速记：S0→Internet · S1→R2 · S2→R3 · S3→R4 · S4→服务器(199.10.21.125/32)');
+    wrap.appendChild(tblBox);
+    wrap.appendChild(noteBox);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    tblBox.innerHTML = drawTable(sn.rows);
+    noteBox.innerHTML = '拓扑速记：S0→Internet · S1→R2（t1 断开）· S2→R3 · S3→R4 · S4→服务器(199.10.21.125/32)';
+  },
+  snaps: snaps,
+  result: {
+    big: '4 项（选 B）',
+    html: '断链后 0/27 改走 S2（R1→R3→R2=11）；0/27+32/27 同走 S2 且前 26 位相同 → <b>199.10.20.0/26</b>；64/26+128/25 同走 S3 → 超网 <b>199.10.20.0/24</b>（多覆盖的 0~63 段由更长前缀 /26 按<b>最长前缀匹配</b>接管，转发不出错）；再加直连的 <b>/32 → S4</b> 与 <b>0.0.0.0/0 → S0</b>，共 <b>4 项</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-27 位示图法存放位图所需簇数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var TH = ' style="border:1px solid #cbd5e1;padding:5px 9px;background:#f1f5f9;font-size:13px;color:#334155"';
+var TD = ' style="border:1px solid #cbd5e1;padding:5px 9px;font-size:13px;font-family:Menlo,Consolas,monospace"';
+var TDHL = ' style="border:1px solid #cbd5e1;padding:5px 9px;font-size:13px;font-family:Menlo,Consolas,monospace;background:#fef9c3;font-weight:700"';
+
+function table(rows, hlIdx){
+  var h = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;margin:4px 0">';
+  h += '<tr><th' + TH + '>步骤</th><th' + TH + '>计算</th><th' + TH + '>结果</th></tr>';
+  rows.forEach(function(r, idx){
+    var a = (idx === hlIdx) ? TDHL : TD;
+    h += '<tr><td' + TD + '>' + r[0] + '</td><td' + a + '>' + r[1] + '</td><td' + a + '>' + r[2] + '</td></tr>';
+  });
+  h += '</table></div>';
+  return h;
+}
+
+var ROWS = [
+  ['① 总簇数',   '10 GB ÷ 4 KB = 10485760 KB ÷ 4 KB', '2560K 簇（2621440 个）'],
+  ['② 位图位数', '1 bit/簇 × 2560K 簇',                '2560K bit'],
+  ['③ 转 KB',    '2560K bit ÷ 8 = 327680 B',           '320 KB'],
+  ['④ 位图占簇', '320 KB ÷ 4 KB',                      '80 簇'],
+];
+
+var STEPS = [
+  { title: '审题眼：位示图 = 1 bit 管 1 簇',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>10 GB 分区按 <b>4 KB 簇</b>分配；位示图用 <b>1 bit</b> 标识一个簇是否被占用。问：位图自己也要存进磁盘，需要占<b>多少个簇</b>？四步连除即可。</p>' },
+  { title: '第一步：求总簇数',
+    cls: 'good',
+    tag: '第 1 步',
+    body: '<p>10 GB = 10 × 1024 × 1024 KB = 10485760 KB；10485760 ÷ 4 = <b>2621440 个簇（2560K 簇）</b>。</p>' },
+  { title: '第二步：求位图总位数',
+    cls: 'good',
+    tag: '第 2 步',
+    body: '<p>每个簇对应 1 个 bit：位图 = <b>2560K bit</b>。这是"位数 = 簇数"的直接换算。</p>' },
+  { title: '第三步：bit 换成 KB',
+    cls: 'key',
+    tag: '第 3 步',
+    body: '<p>2560K bit ÷ 8 = 327680 B = <b>320 KB</b>。<b>最容易漏的就是这个 ÷8</b>（8 bit = 1 字节）。</p>' },
+  { title: '第四步：位图占多少簇',
+    cls: 'good',
+    tag: '第 4 步',
+    body: '<p>位图也要按簇存放：320 KB ÷ 4 KB/簇 = <b>80 个簇</b>。</p>' },
+  { title: '对照选项与结论',
+    cls: 'good',
+    tag: '结论',
+    body: table(ROWS, 3) +
+      '<p>答案选 <b>A（80）</b>。B 的 320 是停在"位图 320 KB"没再除簇大小；C/D 的 80K、320K 是 ÷8 出错后的量级。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-27】位示图法管理 10GB 分区：位图占多少簇',
+  subtitle: '簇 4 KB · 1 bit 标识 1 簇 · 连除：容量 → 簇数 → bit → KB → 簇',
+  intro: '点击「▶ 播放」逐步展开计算链。',
+  snaps: snaps,
+  result: {
+    big: '80 个簇（选 A）',
+    html: '计算链：<b>10 GB ÷ 4 KB = 2560K 簇</b> → 位图 <b>2560K bit</b> → <b>÷8 = 320 KB</b> → <b>÷4 KB = 80 簇</b>。<br>记忆点：两处"必除"——bit 变字节要 <b>÷8</b>，字节变簇要 <b>÷簇大小</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

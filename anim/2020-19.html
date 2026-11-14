@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-19 QPI 总线带宽计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-19：QPI 总线带宽计算（推理链）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：带宽公式的三个因子',
+    cls: 'key',
+    body: '<p>题目已给口径：带宽 = 每秒传送次数 × 2B × 2。三个因子各有来历，<b>少乘一个 ×2 就会掉进干扰项</b>。</p>' },
+  { title: '因子一：2B —— 有效数据量',
+    cls: 'step',
+    body: '<p>每个方向每次传送 20 位 = <b>16 位数据 + 4 位校验</b>；计入带宽的有效数据是 16 位 = <code>2B</code>（校验位不算数据）。</p>' },
+  { title: '因子二：每秒传送次数',
+    cls: 'step',
+    body: '<p>时钟 2.4GHz，<b>每个时钟周期传送 2 次</b> → 每秒传送 2.4G × 2 = <code>4.8G</code> 次。</p>' },
+  { title: '因子三：×2 —— 全工两方向',
+    cls: 'step',
+    body: '<p>点对点<b>全工</b>总线，收发同时进行，两个方向各算一份带宽。</p>' },
+  { title: '代入计算',
+    cls: 'good',
+    body: '<p>单方向：4.8G × 2B = <code>9.6GB/s</code>；全工两方向：9.6 × 2 = <b>19.2GB/s</b> → 选项 <b>C</b>。</p>' },
+  { title: '干扰项是怎么来的',
+    cls: 'bad',
+    body: '<p>A 4.8GBps = 两个 ×2 都漏掉（只算 2.4G × 2B）；B 9.6GBps = 只漏一个 ×2（"每周期 2 次"或"全工两方向"）；D 38.4GBps = 多乘了一个 2。</p>' },
+  { title: '结论：选 C',
+    cls: 'good',
+    body: '<p>QPI 带宽 = 2.4G × 2 次 × 2B × 2 方向 = <b>19.2GBps</b>，答案 <b>C</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2020-19 · QPI 总线带宽推演',
+  subtitle: '考点：总线带宽计算 · 每秒传送次数 × 每次数据量 × 全工方向数',
+  intro: '点击「▶ 播放」或「下一步」，逐因子推带宽。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（19.2GBps）',
+    html: '记忆锚点：带宽 = <code>2.4G × 2 次 × 2B × 2 方向</code>。<br>' +
+      '三个必查项：有效数据位数（16 位，校验不算）、每周期传送次数（2 次）、全工方向数（2）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

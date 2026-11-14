@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-03 哈夫曼树结点总数 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：n 个符号 = n 个叶子', cls: 'key',
+    body: '<p>对 n 个互不相同的符号做哈夫曼编码，每个符号对应哈夫曼树的一个<b>叶子结点</b>。已知树共 <code>115</code> 个结点，求叶子数 n。考点：哈夫曼树的结点构成。</p>' },
+  { title: '性质一：没有度为 1 的结点', cls: '',
+    body: '<p>建树时每次取出<b>两棵</b>最小的子树合并，新结点必有两个孩子；所以哈夫曼树里只有度 0（叶子）和度 2（分支）两类结点，<b>不存在度为 1 的结点</b>。</p>' },
+  { title: '性质二：n0 = n2 + 1', cls: '',
+    body: '<p>对任何二叉树都有：叶子数 = 二分支结点数 + 1。设叶子 n0 = n，则分支结点 n2 = n − 1。</p>' },
+  { title: '联立方程求解', cls: 'good',
+    body: '<p>总结点数 <code>n0 + n2 = 115</code>，代入 n2 = n − 1：<code>n + (n−1) = 115 → 2n − 1 = 115 → n = 58</code>。也可直接用公式：<b>哈夫曼树总结点数 = 2n − 1</b>（n 为叶子数），115 + 1 再 ÷2 得 58。</p>' },
+  { title: '验算', cls: '',
+    body: '<p>n = 58：叶子 58 个 + 分支结点 57 个 = 115 ✓。58 个叶子两两合并成 1 棵树需 57 次合并，每次合并新增 1 个分支结点，正好 57 个。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>C（58）</b>。记忆锚点：哈夫曼树结点总数 = <b>2 × 叶子数 − 1</b>；选项 D（60）可用 2×60−1=119 ≠ 115 直接排除。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019-03 · 哈夫曼树的结点总数',
+  subtitle: 'n 个符号哈夫曼编码 · 树共 115 个结点 · 求 n',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（n = 58）',
+    html: '哈夫曼树只有度 0 与度 2 结点 → 总结点数 = 2n − 1 = 115 → <b>n = 58</b>。两条性质：<b>没有度为 1 的结点</b>、<b>n0 = n2 + 1</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

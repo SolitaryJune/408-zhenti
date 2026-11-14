@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-07 邻接表上拓扑排序的时间复杂度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>n 个顶点、e 条弧的<b>有向图</b>，采用<b>邻接表</b>存储，问拓扑排序的时间复杂度。拓扑排序用入度法：求入度 → 0 入度顶点进栈 → 弹出并松弛出边。</p>' },
+  { title: '第一步：求入度',
+    cls: 'good',
+    body: '<p>把邻接表完整扫一遍：n 个顶点表头结点各看一次 + e 条弧各看一次 → <code>O(n+e)</code>。</p>' },
+  { title: '第二步：建 0 入度栈',
+    cls: 'good',
+    body: '<p>检查 n 个顶点的入度值，把入度为 0 的压入栈（队列）→ <code>O(n)</code>。</p>' },
+  { title: '第三步：主循环',
+    cls: 'good',
+    body: '<p>每个顶点出栈恰好一次；每条弧只会在它<b>起点出栈时</b>被处理一次（终点入度减 1）→ 顶点侧 <code>O(n)</code>、弧侧 <code>O(e)</code>，合计 <code>O(n+e)</code>。</p>' },
+  { title: '三步合计',
+    cls: 'good',
+    body: '<p><code>O(n+e) + O(n) + O(n+e)</code> = <b>O(n+e)</b> → 选 <b>B</b>。</p>' },
+  { title: '干扰项从哪来',
+    cls: 'bad',
+    body: '<p><b>A（O(n)）</b>：只数顶点进出栈，漏了“每条弧都要被检查一次”；<b>C（O(n^2)）</b>：那是<b>邻接矩阵</b>存储的代价（找某顶点的出边要扫整行）；<b>D（O(ne)）</b>：算法中不存在双重嵌套扫描。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>B（O(n+e)）</b>。记忆锚点：邻接表下“顶点各一次、弧各一次”= O(n+e)；换成邻接矩阵才退化为 O(n^2)。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016·拓扑排序：邻接表存储下的时间复杂度',
+  subtitle: '有向图 n 个顶点 e 条弧 · 邻接表存储 · 入度法拓扑排序',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: 'O(n+e)（选 B）',
+    html: '邻接表让“找某顶点的所有出边”只花该顶点出边数的时间 → 求入度、主循环各 O(n+e)，总复杂度 <b>O(n+e)</b>。邻接矩阵存储时同样的算法要 O(n^2)。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-38 TCP 快速重传时机</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var msgsBox = null, dupChip = null;
+
+// 事件行：文字、底色、左边框、加粗
+function ev(dir, meta, bg, bd, bold, time){
+  return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 12px;' +
+    'border-radius:10px;background:' + bg + ';border-left:4px solid ' + bd + ';' +
+    (bold ? 'font-weight:700;' : '') + 'font-size:13.5px;line-height:1.55;">' +
+    '<span style="background:#e2e8f0;border-radius:6px;padding:1px 8px;font-family:Menlo,monospace;font-weight:700;font-size:12px;color:#334155;flex:0 0 auto">' + time + '</span>' +
+    '<span style="font-family:Menlo,monospace;white-space:nowrap;color:#0f172a">' + dir + '</span>' +
+    (meta ? '<span style="font-size:12.5px;color:#475569">' + meta + '</span>' : '') +
+    '</div>';
+}
+
+var GREEN = ['#f0fdf4', '#16a34a'], RED = ['#fef2f2', '#dc2626'],
+    BLUE = ['#eff6ff', '#2563eb'], AMBER = ['#fffbeb', '#d97706'], GRAY = ['#f8fafc', '#cbd5e1'];
+
+// 10 条事件（snap i 显示前 i 条）
+var ROWS = [
+  ev('服务器 ──ack_seq=100──▶ 客户', '客户在 t0 第一次收到：期望下一字节序号 = 100（首次确认，不算"重复"）', GREEN[0], GREEN[1], false, 't0'),
+  ev('客户 ──seq=100──▶ 服务器', '该段在途中<b>丢失</b>，服务器始终没收到它', RED[0], RED[1], true, 't0 后'),
+  ev('客户 ──seq=200──▶ 服务器', '服务器缺 100 无法上交 → 回一个 ack_seq=100（重复确认① 发出）', BLUE[0], BLUE[1], false, '随后'),
+  ev('客户 ──seq=300──▶ 服务器', '仍缺 100 → 再回一个 ack_seq=100（重复确认② 发出）', BLUE[0], BLUE[1], false, '随后'),
+  ev('客户 ──seq=400──▶ 服务器', '还缺 100 → 第三个 ack_seq=100（重复确认③ 发出）', BLUE[0], BLUE[1], false, '随后'),
+  ev('服务器 ──ack_seq=100──▶ 客户', '<b>第 1 个重复确认</b>到达客户', AMBER[0], AMBER[1], false, 't1'),
+  ev('服务器 ──ack_seq=100──▶ 客户', '<b>第 2 个重复确认</b>到达客户', AMBER[0], AMBER[1], false, 't2'),
+  ev('服务器 ──ack_seq=100──▶ 客户', '<b>第 3 个重复确认</b>到达客户 —— 恰好凑满 3 个', AMBER[0], AMBER[1], true, 't3'),
+  ev('客户 ──seq=100（重传）──▶ 服务器', '快速重传触发：<b>收到 3 个重复确认立即重传</b>，就在 t3，不等超时', GREEN[0], GREEN[1], true, 't3'),
+  ev('超时时刻', '若没有快速重传，才需要等到超时计时器到期（t4）才重传——本题用不上', GRAY[0], GRAY[1], false, 't4'),
+];
+
+AW.init({
+  title: '2019·38 快速重传：客户何时重发 seq=100 段？',
+  subtitle: 't0 收到 ack_seq=100 后发送 seq=100 段并丢失 · 规则：<code>3 个重复确认 → 立即重传</code>',
+  counterLabel: '重复确认已收',
+  ribbonTitle: '重复确认（✓ 已到达客户）',
+  intro: '点击「▶ 播放」，沿 t0→t4 时间线逐条推演报文事件。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var head = AW.el('div', '');
+    head.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:10px;';
+    var mk = function(t){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:8px 16px;border:2px solid #94a3b8;border-radius:12px;background:#fff;font-weight:700;font-size:14px;color:#334155;';
+      d.innerHTML = t;
+      return d;
+    };
+    head.appendChild(mk('客户'));
+    var arrow = AW.el('div', '');
+    arrow.style.cssText = 'flex:1;text-align:center;font-size:12.5px;color:#94a3b8;';
+    arrow.innerHTML = '—— TCP 连接 ——';
+    head.appendChild(arrow);
+    head.appendChild(mk('服务器'));
+    inner.appendChild(head);
+
+    dupChip = AW.el('div', '');
+    dupChip.style.cssText = 'display:inline-block;margin-bottom:10px;padding:6px 14px;border-radius:999px;' +
+      'background:#fffbeb;border:2px solid #d97706;color:#92400e;font-weight:700;font-size:13px;';
+    dupChip.innerHTML = '重复确认计数：0 / 3';
+    inner.appendChild(dupChip);
+
+    msgsBox = AW.el('div', '');
+    inner.appendChild(msgsBox);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'题面', log:'客户在 t0 第一次收到 ack_seq=100 的段，随后发送 seq=100 的段，但该段丢失。若 TCP 支持快速重传，何时重发？', count:0 },
+    { cls:'ok',    tag:'t0 首次确认', log:'t0：客户收到 ack_seq=100——这是第一次确认（期望下一字节 = 100），不计入"重复确认"', count:0 },
+    { cls:'miss',  tag:'seq=100 丢失', log:'客户发送 seq=100 的段，在途中丢失，服务器始终没收到它', count:0 },
+    { cls:'step',  tag:'乱序①', log:'客户继续发送 seq=200：服务器缺 100 无法上交，回一个 ack_seq=100（重复确认① 发出）', count:0 },
+    { cls:'step',  tag:'乱序②', log:'发送 seq=300：服务器再回一个 ack_seq=100（重复确认② 发出）', count:0 },
+    { cls:'step',  tag:'乱序③', log:'发送 seq=400：服务器第三次回 ack_seq=100（重复确认③ 发出）——3 个重复确认都在路上', count:0 },
+    { cls:'step',  tag:'t1 第1个dup', log:'t1：客户收到第 1 个重复确认 ack_seq=100', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'t2 第2个dup', log:'t2：客户收到第 2 个重复确认 ack_seq=100', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'t3 第3个dup', log:'t3：客户收到第 3 个重复确认 ack_seq=100——达到快速重传的触发条件（3 个）', count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'立即重传', log:'客户立即重发 seq=100 段：就在 t3，不必等超时', count:3 },
+    { cls:'done',  tag:'完成', log:'快速重传发生在 t3（第 3 个重复确认到达时）；t4 只是超时时刻，本题用不上 → 选 C', count:3, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var n = Math.min(i, ROWS.length);
+    var html = '';
+    for(var k = 0; k < n; k++) html += ROWS[k];
+    msgsBox.innerHTML = html;
+    if(dupChip){
+      var c = Math.min(sn.count != null ? sn.count : 0, 3);
+      dupChip.innerHTML = '重复确认计数：<b style="font-size:15px">' + c + '</b> / 3' +
+        (c >= 3 ? ' —— 触发快速重传!' : '');
+    }
+  },
+
+  result: {
+    big: '重发时刻 = t3',
+    html: '快速重传规则：<b>收到 3 个重复确认立即重传</b>。t0 的 ack_seq=100 是首次确认不算重复；t1/t2/t3 到达的是第 1/2/3 个重复确认 → 在 <b>t3</b> 重发 seq=100，选 <b>C</b>。误选 B（t2）是把 t0 计入重复数；误选 D（t4）是以为必须等超时。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

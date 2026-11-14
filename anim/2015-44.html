@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-44 动画 · 指令编码与执行阶段时钟周期推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-44（计算机组成原理·指令系统与数据通路，大题）
+     过程推演：指令格式拼装 → 控制信号 → 执行阶段周期计数
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var FMT = [['OP','7 位'],['Md','1'],['Rd','2'],['Ms1','1'],['Rs1','2'],['Ms2','1'],['Rs2','2']];
+var INSTRS = [
+  { name: 'inc R1（单地址，末 6 位 0）', segs: ['0000001','0','01','0','00','0','00'], bits: '0000 0010 0100 0000', hex: '0240H' },
+  { name: 'shl R2,R1（二地址，末 3 位 0）', segs: ['0000010','0','10','0','01','0','00'], bits: '0000 0100 1000 1000', hex: '0488H' },
+  { name: 'sub R3,(R1),R2（三地址）', segs: ['0000011','0','11','1','01','0','10'], bits: '0000 0110 1110 1010', hex: '06EAH' },
+];
+var INC_CYC = [
+  ['周期 1', 'R1out=1、Tin=1', '(R1) → T（ALU A 端口）'],
+  ['周期 2', 'ALUop=inc、SRop=mov、SRout=1、R1in=1', '(R1)+1 经 SR 直送上总线 → 写回 R1'],
+];
+var SUB_CYC = [
+  ['周期 1', 'R2out=1、MARin=1、MEMop=read', '(R2) → MAR，启动主存读间接操作数 ((R2))'],
+  ['周期 2', 'R3out=1、Tin=1', '(R3) → T（ALU A 端口）'],
+  ['周期 3', 'MDRout=1、MUXop=1、ALUop=sub、SRop=mov', '((R2)) 经 MUX → B 端口；A−B = (R3)−((R2)) → SR'],
+  ['周期 4', 'SRout=1、R1in=1', '结果上总线 → 写回 R1'],
+];
+
+// 每步状态：instr = 当前展示的指令（-1 无），table = 周期表（null/'inc'/'sub'/'both'），rows = 已点亮行数
+var ST = [
+  { instr: -1, table: null, rows: 0 },
+  { instr: 0,  table: null, rows: 0 },
+  { instr: 1,  table: null, rows: 0 },
+  { instr: 2,  table: null, rows: 0 },
+  { instr: -1, table: null, rows: 0 },
+  { instr: -1, table: null, rows: 0 },
+  { instr: -1, table: null, rows: 0 },
+  { instr: -1, table: 'inc', rows: 1 },
+  { instr: -1, table: 'inc', rows: 2 },
+  { instr: -1, table: 'sub', rows: 1 },
+  { instr: -1, table: 'sub', rows: 2 },
+  { instr: -1, table: 'sub', rows: 3 },
+  { instr: -1, table: 'sub', rows: 4 },
+  { instr: -1, table: 'both', rows: 4 },
+];
+
+var fmtBox = null, codeBox = null, cycBox = null;
+
+function segCell(lab, bits, on){
+  var bd = on ? '#2563eb' : '#cbd5e1', bg = on ? '#eff6ff' : '#fff', fg = on ? '#1d4ed8' : '#94a3b8';
+  return '<div style="border:2px solid ' + bd + ';background:' + bg + ';color:' + fg +
+         ';border-radius:8px;padding:6px 8px;text-align:center;font-family:Menlo,monospace;transition:all .3s">' +
+         '<div style="font-size:11.5px;font-weight:700">' + lab + '</div>' +
+         '<div style="font-size:11px;margin-top:2px">' + bits + '</div></div>';
+}
+
+function cycTable(rows, lit, title, totalText){
+  var h = '<div class="aw-row-label"><b>' + title + '</b></div>';
+  h += '<table style="border-collapse:collapse;font-size:12.5px;width:100%">';
+  for (var k = 0; k < rows.length; k++){
+    var on = k < lit, fresh = (k === lit - 1);
+    var bg = on ? (fresh ? '#fef3c7' : '#f6fef9') : '#fff';
+    var fg = on ? '#0f172a' : '#cbd5e1';
+    h += '<tr>' +
+         '<td style="border:1px solid #e2e8f0;padding:5px 8px;background:' + bg + ';color:' + (on ? '#1d4ed8' : '#cbd5e1') + ';font-weight:700;white-space:nowrap">' + rows[k][0] + '</td>' +
+         '<td style="border:1px solid #e2e8f0;padding:5px 8px;background:' + bg + ';color:' + fg + ';font-family:Menlo,monospace">' + rows[k][1] + '</td>' +
+         '<td style="border:1px solid #e2e8f0;padding:5px 8px;background:' + bg + ';color:' + fg + '">' + rows[k][2] + '</td></tr>';
+  }
+  h += '</table>';
+  if (totalText && lit >= rows.length){
+    h += '<div style="margin-top:6px;font-size:13.5px;font-weight:800;color:#15803d">' + totalText + '</div>';
+  }
+  return h;
+}
+
+AW.init({
+  title: '指令编码 + 执行阶段周期推演（2015·44）',
+  subtitle: '16 位指令 = <code>OP 7 位 + 目的 3 位 + 源1 3 位 + 源2 3 位</code> · 寻址方式位 0 直接 / 1 间接',
+  counterLabel: '执行阶段周期',
+  intro: '点击「▶ 播放」逐步完成：指令条数 → 机器代码 → 控制信号 → 周期计数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    fmtBox = AW.el('div', '');
+    stage.appendChild(fmtBox);
+    codeBox = AW.el('div', '');
+    codeBox.style.marginTop = '10px';
+    stage.appendChild(codeBox);
+    cycBox = AW.el('div', '');
+    stage.appendChild(cycBox);
+  },
+
+  render: function(stage, sn, i){
+    var st = ST[Math.min(i, ST.length - 1)];
+    var h = '<div class="aw-row-label"><b>题 44 图 b：指令格式</b>（蓝 = 当前指令涉及的位段）</div><div style="display:flex;gap:5px;flex-wrap:wrap">';
+    for (var k = 0; k < FMT.length; k++){
+      var on = st.instr >= 0;
+      h += segCell(FMT[k][0], FMT[k][1], on);
+    }
+    h += '</div>';
+    if (st.instr < 0 && i === 0){
+      h += '<div style="margin-top:8px;font-size:13.5px;font-weight:800;color:#1d4ed8">第 1 问：OP 7 位 → 最多 2 的 7 次方 = 128 条指令</div>';
+    }
+    fmtBox.innerHTML = h;
+
+    var c = '';
+    if (st.instr >= 0){
+      var ins = INSTRS[st.instr];
+      c += '<div class="aw-cells">';
+      for (var b = 0; b < ins.segs.length; b++){
+        c += '<div class="aw-col"><div class="aw-box ok" style="width:' + (34 + ins.segs[b].length * 9) + 'px;font-size:12px">' + ins.segs[b] +
+             '</div><div class="aw-idx">' + FMT[b][0] + '</div></div>';
+      }
+      c += '</div>';
+      c += '<div style="margin-top:8px;font-size:14px;font-weight:800;color:#14532d">' + ins.name +
+           '：<code style="background:#e2e8f0;padding:2px 8px;border-radius:6px;font-family:Menlo,monospace">' + ins.bits +
+           '</code> = <b style="color:#15803d">' + ins.hex + '</b></div>';
+    }
+    codeBox.innerHTML = c;
+
+    var t = '';
+    if (st.table === 'inc'){
+      t = cycTable(INC_CYC, st.rows, 'inc R1 的执行阶段（单总线每周期一个上总线动作）', '执行阶段至少 2 个时钟周期');
+    } else if (st.table === 'sub'){
+      t = cycTable(SUB_CYC, st.rows, 'sub R1, R3, (R2) 的执行阶段（即 (R3)−((R2))→R1）', '执行阶段至少 4 个时钟周期');
+    } else if (st.table === 'both'){
+      t = cycTable(INC_CYC, 2, 'inc R1 的执行阶段', 'inc：至少 2 个时钟周期') +
+          '<div style="height:10px"></div>' +
+          cycTable(SUB_CYC, 4, 'sub R1, R3, (R2) 的执行阶段', 'sub：至少 4 个时钟周期');
+    }
+    cycBox.innerHTML = t;
+  },
+
+  snaps: [
+    { cls: 'step', tag: '问1 条数', log: '指令 16 位 = OP 7 位 + 目的（Md 1 + Rd 2）+ 源1 3 位 + 源2 3 位；OP 7 位 → 最多 2 的 7 次方 = 128 条指令', count: 0 },
+    { cls: 'ok', tag: '问2 inc', log: 'inc R1：OP=0000001、MdRd=001，末 6 位为 0 → 0000 0010 0100 0000 = 0240H', count: 0 },
+    { cls: 'ok', tag: '问2 shl', log: 'shl R2,R1：OP=0000010、MdRd=010、Ms1Rs1=001（源1 R1 直接），末 3 位 0 → 0488H', count: 0 },
+    { cls: 'ok', tag: '问2 sub', log: 'sub R3,(R1),R2：OP=0000011、MdRd=011、Ms1Rs1=101（间接 Ms1=1）、Ms2Rs2=010 → 06EAH', count: 0 },
+    { cls: 'step', tag: '问3 取指', log: '① = MUXop = 0：MUX 选常数 2，配合 ALU 加法实现 (PC)+2；② = SRop = mov：结果直送上总线写入 PC', count: 0 },
+    { cls: 'step', tag: '问3 shl', log: '③ = ALUop = mova（直送 A 端口）；④ = SRop = left（左移一位，实现 (R1)×2）', count: 0 },
+    { cls: 'step', tag: '问3 sub', log: '⑤ = MEMop = read（主存读）；⑥ = ALUop = sub（A−B）；⑦ = SRop = mov；⑧ = SRout（开 SR 输出三态门）', count: 0 },
+    { cls: 'step', tag: 'inc 周期1', log: 'inc R1 执行阶段：周期 1 —— R1out=1、Tin=1：(R1) → T（A 端口）', count: 1 },
+    { cls: 'ok', tag: 'inc 周期2', log: '周期 2 —— ALUop=inc、SRop=mov、SRout=1、R1in=1：(R1)+1 写回 R1 → 执行阶段至少 2 个时钟周期', count: 2 },
+    { cls: 'step', tag: 'sub 周期1', log: 'sub R1,R3,(R2) 执行阶段：周期 1 —— R2out=1、MARin=1、MEMop=read：(R2) → MAR，读主存取 ((R2))', count: 1 },
+    { cls: 'step', tag: 'sub 周期2', log: '周期 2 —— R3out=1、Tin=1：(R3) → T 作 A 端口操作数', count: 2 },
+    { cls: 'step', tag: 'sub 周期3', log: '周期 3 —— MDRout=1、MUXop=1、ALUop=sub、SRop=mov：((R2)) 经 MUX 到 B 端口，A−B = (R3)−((R2)) → SR', count: 3 },
+    { cls: 'step', tag: 'sub 周期4', log: '周期 4 —— SRout=1、R1in=1：结果上总线写回 R1 → 执行阶段至少 4 个时钟周期', count: 4 },
+    { cls: 'done', tag: '全部完成', log: '结论：最多 128 条指令；机器代码 0240H、0488H、06EAH；inc 执行 2 个周期、sub 执行 4 个周期', count: 4, done: true },
+  ],
+
+  result: {
+    big: '128 条 · 0240H/0488H/06EAH · inc 2 个周期 · sub 4 个周期',
+    html: '第 1 问 <b>128 条</b>（OP 7 位）。第 2 问 <code>inc R1=0240H</code>、<code>shl R2,R1=0488H</code>、<code>sub R3,(R1),R2=06EAH</code>（间接寻址 Ms=1）。第 3 问 ①<b>0</b>、②<b>mov</b>、③<b>mova</b>、④<b>left</b>、⑤<b>read</b>、⑥<b>sub</b>、⑦<b>mov</b>、⑧<b>SRout</b>。第 4 问：inc 执行阶段 <b>2 个</b>时钟周期、sub 执行阶段 <b>4 个</b>时钟周期（每周期只安排一个上总线动作）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

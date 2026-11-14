@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-20 数据线上不可能传输的信息</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类动画（复制 tools/anim_concept_template.html，只改 AW.init 区域） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三类总线各管什么',
+    cls: 'key',
+    body: '<p>系统总线分三类：<b>地址线</b>给地址、<b>数据线</b>传数据类代码、<b>控制线</b>发时序与联络信号（读写命令、中断请求、握手应答）。题目问数据线上<b>不可能</b>传的。</p>' },
+  { title: 'A 指令：可能',
+    cls: 'good',
+    body: '<p>取指周期就是一次访存：指令代码从主存<b>经数据线</b>送入 CPU。"指令"本身是一串被传输的二进制代码。</p>' },
+  { title: 'B 操作数：可能',
+    cls: 'good',
+    body: '<p>读/写周期中，操作数在 CPU 与主存（或外设）之间<b>经数据线</b>传输，这是数据线最本职的工作。</p>' },
+  { title: 'D 中断类型号：可能',
+    cls: 'good',
+    body: '<p>中断响应周期里，中断源把<b>中断类型号</b>经<b>数据线</b>送给 CPU，CPU 据此找到中断向量。容易误以为它是"控制信息"，实际它就是经数据线传输的一串代码。</p>' },
+  { title: 'C 握手（应答）信号：不可能 → 本题答案',
+    cls: 'bad',
+    body: '<p>握手/应答信号（如 READY、ACK）是协调通信双方时序的<b>联络信号</b>，属于<b>控制线</b>的职责，不走数据线。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。区分关键不是"信息像不像数据"，而是总线分工：数据线传"码"（指令、操作数、中断类型号），控制线传时序与握手。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011·20 数据线上"不可能"传输的是什么',
+  subtitle: '考点：总线分类 · 地址线 / 数据线 / 控制线的分工',
+  counterLabel: '推进步数',
+  intro: '点击「▶ 播放」逐项判断四种信息走哪条线。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '<b>握手（应答）信号是控制线上的联络信号</b>，不上数据线。指令（取指周期）、操作数（读/写周期）、中断类型号（中断响应周期）都是经数据线传输的代码。记忆锚点：<b>数据线传"码"，控制线传"握手"</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

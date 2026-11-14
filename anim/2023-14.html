@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-14 IEEE 754 单精度 8020 0000H 的真值</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.aw-box.sm{ font-size:15px; }
+.aw-box.amber{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+.bitnote{ margin-left:4px; font-size:13.5px; color:#334155; line-height:1.75; margin-top:4px; }
+.calcbox{ display:inline-block; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#334155; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function cellOf(ch, c, idx){
+  return '<div class="aw-col"><div class="aw-ptr"></div>' +
+         '<div class="aw-box sm' + (c ? ' ' + c : '') + '">' + ch + '</div>' +
+         '<div class="aw-idx">' + (idx || '') + '</div></div>';
+}
+
+// 拆位行：S 1 位 + E 8 位 + M 前 3 位 + 宽格（后 20 位）
+function fields(s, e, m, mk){
+  mk = mk || {};
+  var row = '<div class="aw-cells" style="--cell:40px;--gap:3px">';
+  row += cellOf(s, mk.s || '', 'S');
+  for (var i = 0; i < 8; i++) row += cellOf(e.charAt(i), mk.e || '', (i === 0 ? 'E' : ''));
+  for (var j = 0; j < 3; j++) row += cellOf(m.charAt(j), mk.m || '', (j === 0 ? 'M' : ''));
+  row += '<div class="aw-col" style="width:230px"><div class="aw-ptr"></div>' +
+         '<div class="aw-box sm ' + (mk.rest || 'dim') + '" style="width:230px">000 0000 0000 0000 0000 0</div>' +
+         '<div class="aw-idx">M 的后 20 位</div></div>';
+  row += '</div>';
+  return row;
+}
+
+var S1 = '1000 0000 0010 0000 0000 0000 0000 0000';
+var E8 = '00000000';
+var M3 = '010';
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'x 的机器数 = 8020 0000H，按 IEEE 754 单精度拆解。',
+    html: '<div class="calcbox">机器数 <b>8020 0000H</b>（32 位）<br>二进制 <code>' + S1 + '</code></div>' +
+      '<div class="bitnote">单精度格式：1 位数符 + 8 位阶码（偏置 127）+ 23 位尾数。</div>' },
+  { cls:'step', tag:'拆字段', count:1, ribbon:{k:1, ok:true},
+    log:'拆成 S=1、E=0000 0000、M=010 0000…0 三段。',
+    html: fields('1', E8, M3, {}) +
+      '<div class="bitnote">数符 S = <b>1</b>，阶码 E = <b>0000 0000</b>（全 0），尾数 M 前 3 位 <b>010</b>、后 20 位全 0（M ≠ 0）。</div>' },
+  { cls:'step', tag:'数符', count:2, ribbon:{k:2, ok:true},
+    log:'S = 1 → x 是负数。',
+    html: fields('1', E8, M3, { s:'hit' }) +
+      '<div class="bitnote">数符 S = 1 → <b>负数</b>，最终结果带负号。</div>' },
+  { cls:'shift', tag:'阶码', count:3, ribbon:{k:3, ok:true},
+    log:'E 全 0 且 M≠0 → 非规格化数：隐含位 0，指数 = 1−127 = −126。',
+    html: fields('1', E8, M3, { s:'hit', e:'hit' }) +
+      '<div class="bitnote">E = 0 且 M ≠ 0 → <b>非规格化数</b>（特殊阶码）：隐含整数位为 <b>0</b>，真实指数 = <code>1 − 127 = −126</code>。</div>' },
+  { cls:'step', tag:'尾数', count:4, ribbon:{k:4, ok:true},
+    log:'M = 0.01（二进制）= 0.25 = 2^-2。',
+    html: fields('1', E8, M3, { s:'hit', e:'hit', m:'hit' }) +
+      '<div class="bitnote">M = 二进制小数 <code>0.01</code> = 0.25 = <code>2^-2</code>（没有隐含的 1，就是纯小数）。</div>' },
+  { cls:'step', tag:'求值', count:5, ribbon:{k:5, ok:true},
+    log:'x = −0.01×2^−126 = −2^-128。',
+    html: '<div class="calcbox">x = (−1)^1 × 0.01₂ × 2^-126<br>= −2^-2 × 2^-126<br>= <b>−2^-128</b></div>' +
+      '<div class="bitnote">负号来自数符，指数 −126 来自非规格化的特殊规定，数值大小来自尾数 0.25。</div>' },
+  { cls:'step', tag:'干扰项', count:6,
+    log:'B/C 是把 E=0 当规格化数（补隐含 1）；D 是 NaN 条件没记住。',
+    html: '<div class="calcbox"><b>选项辨析：</b><br>' +
+      'B <code>−1.01×2^-127</code>：错在给 E=0 的数补了隐含 1、指数又取 −127（按规格化解释）；<br>' +
+      'C <code>−1.01×2^-126</code>：同样补了隐含 1，只是指数碰巧用 −126；<br>' +
+      'D NaN：NaN 要求 <b>E 全 1 且 M≠0</b>，本题 E 全 0；<br>' +
+      'A <code>−2^-128</code>：非规格化数正确展开，<b>对</b>。</div>' },
+  { cls:'done', tag:'结论', count:7, done:true,
+    log:'x = −2^-128 → 答案 A。',
+    html: '<div class="calcbox"><b>结论</b>：E 全 0（M≠0）→ 非规格化数，隐含位 0、指数 1−127=−126；x = −0.01₂ × 2^-126 = <b>−2^-128</b> → 答案 <b>A</b>。</div>' },
+];
+
+AW.init({
+  title: '2023-14 · IEEE 754 单精度 8020 0000H 的真值',
+  subtitle: '机器数 <code>8020 0000H</code> · 数符/阶码/尾数三段拆解 · 特殊阶码 E=0',
+  counterLabel: '分析步骤',
+  ribbonTitle: '分析环节（✓ 完成）',
+  intro: '点击「▶ 播放」逐段拆解浮点机器数。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（−2^−128）',
+    html: 'S=1 负数；E 全 0 且 M≠0 → <b>非规格化数</b>：隐含位 0、指数 <code>1−127 = −126</code>；M = <code>0.01₂ = 2^-2</code> → x = <code>−2^-128</code>。B/C 的陷阱是把 E=0 当规格化数补隐含 1。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

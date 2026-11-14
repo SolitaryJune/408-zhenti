@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>概念/分析类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     模板：概念 / 记忆 / 分析推理类题目动画
+     （协议特性、概念辨析、计算题的推理链、协议字段、特性对比……）
+     形态：逐步揭示推理链卡片，每步一张 .aw-stepcard。
+     只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题干关键条件：<code>…</code>。这指向考点：<b>…</b>。</p>' },
+  { title: '逐项分析 A',
+    cls: 'bad',
+    body: '<p>A（…）：错。理由…。</p>' },
+  { title: '逐项分析 B',
+    cls: 'bad',
+    body: '<p>B（…）：错。理由…。</p>' },
+  { title: '逐项分析 C',
+    cls: 'good',
+    body: '<p>C（…）：<b>对</b>。因为…。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。核心记忆点：…。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【例】概念辨析演示（写题时替换为真实标题）',
+  subtitle: '考点：… · 选项逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>…</b>。干扰项 A/B 的常见误区是…',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-13 补码算术移位 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一行位格：chars=位串，paint={位置(1起,自左):'amber'|'green'|'red'|'dim'}，idxLabels=底部标签
+function paintRow(chars, paint, idxLabels){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    var box = AW.el('div', 'aw-box', ch);
+    var p = paint && paint[i + 1];
+    if (p === 'amber'){ box.style.background = '#fef3c7'; box.style.borderColor = '#d97706'; box.style.color = '#92400e'; }
+    else if (p === 'green'){ box.style.background = '#dcfce7'; box.style.borderColor = '#16a34a'; box.style.color = '#14532d'; }
+    else if (p === 'red'){ box.style.background = '#fee2e2'; box.style.borderColor = '#dc2626'; box.style.color = '#b91c1c'; }
+    else if (p === 'dim'){ box.style.opacity = '.45'; }
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', (idxLabels && idxLabels[i]) || 'b' + (chars.length - 1 - i)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+var IDX = ['符号','b6','b5','b4','b3','b2','b1','b0'];
+var box = null, note = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  wrap.appendChild(AW.el('div', 'aw-row-label',
+    '<b>8 位补码机器数</b>（琥珀 = 本次移入的位，绿 = 最终结果）'));
+  box = AW.el('div', '');
+  note = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(box);
+  wrap.appendChild(note);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  box.innerHTML = '';
+  box.appendChild(paintRow(sn.cells, sn.paint, IDX));
+  note.innerHTML = sn.note || '';
+}
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    log:'初始：机器数 1010 0110B（8 位补码，符号位 1，值 −90）。按题干顺序：先算术右移 3 位，再算术左移 2 位。',
+    cells:['1','0','1','0','0','1','1','0'], paint:{},
+    note:'规则：算术右移高位补<b>符号位 1</b>；算术左移低位补 0；符号位始终不变。' },
+  { cls:'shift', tag:'右移第 1 位', count:1, ribbon:{k:1, ok:true},
+    log:'算术右移 1 位：符号位 1 保持，数值位整体右移，最高数值位补入符号位 1 → 1101 0011B。',
+    cells:['1','1','0','1','0','0','1','1'], paint:{2:'amber'},
+    note:'值：−90 → −45（右移一位 ≈ 除 2，向负无穷取整）' },
+  { cls:'shift', tag:'右移第 2 位', count:2, ribbon:{k:2, ok:true},
+    log:'算术右移 2 位：再补入符号位 1 → 1110 1001B。',
+    cells:['1','1','1','0','1','0','0','1'], paint:{2:'amber',3:'amber'},
+    note:'值：−45 → −23' },
+  { cls:'shift', tag:'右移第 3 位', count:3, ribbon:{k:3, ok:true},
+    log:'算术右移 3 位：→ 1111 0100B，右移阶段完成。',
+    cells:['1','1','1','1','0','1','0','0'], paint:{2:'amber',3:'amber',4:'amber'},
+    note:'值：−23 → −12（floor(−23/2) = −12，补入的都是符号位 1）' },
+  { cls:'shift', tag:'左移第 1 位', count:4, ribbon:{k:4, ok:true},
+    log:'算术左移 1 位：符号位 1 保持，最低位补 0 → 1110 1000B。',
+    cells:['1','1','1','0','1','0','0','0'], paint:{8:'amber'},
+    note:'值：−12 → −24（左移一位 = 乘 2，本例无溢出）' },
+  { cls:'shift', tag:'左移第 2 位', count:5, ribbon:{k:5, ok:true},
+    log:'算术左移 2 位：→ 1101 0000B，左移阶段完成。',
+    cells:['1','1','0','1','0','0','0','0'], paint:{7:'amber',8:'amber'},
+    note:'值：−24 → −48' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'最终结果：1101 0000B（值 −48 = −90 先 ÷8 再 ×4）。与选项 A 一致。',
+    cells:['1','1','0','1','0','0','0','0'],
+    paint:{1:'green',2:'green',3:'green',4:'green',5:'green',6:'green',7:'green',8:'green'},
+    note:'最终机器数：<b>1101 0000B</b>' },
+];
+
+AW.init({
+  title: '2026·13 补码算术移位演示',
+  subtitle: '机器数 <code>1010 0110B</code> · 先算术右移 3 位，再算术左移 2 位',
+  counterLabel: '已移位',
+  ribbonTitle: '移位次序（✓ 完成）',
+  intro: '点击「▶ 播放」逐步演示每一次移位。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: '1101 0000B',
+    html: '答案选 <b>A</b>。算术右移 3 位：1010 0110 → 1111 0100（−90 → −12，高位补符号位 1）；算术左移 2 位：→ 1101 0000（−12 → −48，低位补 0，符号位不变）。<br>记忆锚点：<b>算术右移补符号、算术左移补 0、符号位始终不动</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

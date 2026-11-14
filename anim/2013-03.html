@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-03 AVL 树插入 1~7：平衡因子为 0 的分支结点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 结点格子画在 7 列网格上：col 1~7，row 1~3（层）
+function node(v, col, row, cls){
+  return '<div class="aw-box ' + (cls || '') + '" style="grid-column:' + col + ';grid-row:' + row + ';justify-self:center;position:relative">'
+       + v + '<span style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:#64748b;white-space:nowrap">' + NODE_NOTE[v] + '</span></div>';
+}
+var NODE_NOTE = {}; // 每步填：结点上方小注释
+
+function tree(nodes){
+  var h = '<div style="display:grid;grid-template-columns:repeat(7,52px);grid-auto-rows:56px;justify-content:center;margin-top:20px">';
+  for (var i = 0; i < nodes.length; i++){
+    var n = nodes[i];
+    h += node(n[0], n[1], n[2], n[3]);
+  }
+  return h + '</div>';
+}
+function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
+function card(cls, title, body){
+  return '<div class="aw-stepcard ' + cls + '" style="margin-top:12px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 每步：[结点 [值,列,层,类]]，琥珀=旋转关键结点，绿=新插入，红=失衡点
+var T = [
+  { nodes: [[1,4,1,'ok']],                        note:{1:''} },
+  { nodes: [[1,4,1,''],[2,5,2,'hit']],            note:{1:'BF=-1'} },
+  { nodes: [[2,4,1,''],[1,3,2,''],[3,5,2,'']],    note:{2:'BF=0',1:'',3:''} },
+  { nodes: [[2,4,1,''],[1,3,2,''],[3,5,2,''],[4,6,3,'hit']], note:{2:'BF=-1',3:'BF=-1'} },
+  { nodes: [[4,4,1,''],[2,2,2,''],[5,6,2,'hit'],[1,1,3,''],[3,3,3,'']], note:{4:'BF=+1',2:'BF=0',5:''} },
+  { nodes: [[4,4,1,''],[2,2,2,''],[5,6,2,''],[1,1,3,''],[3,3,3,''],[6,7,3,'hit']], note:{4:'BF=0',5:'BF=-1'} },
+  { nodes: [[4,4,1,''],[2,2,2,''],[6,6,2,''],[1,1,3,''],[3,3,3,''],[5,5,3,''],[7,7,3,'hit']], note:{4:'BF=0',2:'BF=0',6:'BF=0'} },
+  { nodes: [[4,4,1,'hit'],[2,2,2,'hit'],[6,6,2,'hit'],[1,1,3,'dim'],[3,3,3,'dim'],[5,5,3,'dim'],[7,7,3,'dim']], note:{4:'BF=0 ✓',2:'BF=0 ✓',6:'BF=0 ✓'} }
+];
+
+var LOGS = [
+  '审题：把 1,2,3,4,5,6,7 依次插入初始为空的 AVL 树，数「平衡因子为 0 的分支结点」个数（分支结点 = 有孩子的结点）',
+  '插入 1：成为根结点',
+  '插入 2：成为 1 的右孩子，BF(1) = −1，未失衡',
+  '插入 3：1 的右孩子的右侧 → RR 型失衡。对失衡点 1 做【左旋】：2 升为根，1、3 分别为左右孩子，三结点 BF 全为 0',
+  '插入 4：接为 3 的右孩子。BF(2) = −1、BF(3) = −1，整树仍平衡',
+  '插入 5：2 的右孩子的右侧 → 在 2 处 RR 型失衡。【左旋】2：4 升为根，2（带左孩子 1、右孩子 3）变为 4 的左孩子，5 为 4 的右孩子',
+  '插入 6：接为 5 的右孩子。BF(5) = −1、BF(4) = 0，全树平衡，无需旋转',
+  '插入 7：5 的右孩子的右侧 → 在 5 处 RR 型失衡。【左旋】5：6 升为 4 的右孩子，5、7 为 6 的左右孩子。数一数：分支结点 4、2、6 的 BF 全为 0 → 共 3 个 → 选 D'
+];
+var TAGS = ['审题', '插 1', '插 2', '插 3 · 左旋', '插 4', '插 5 · 左旋', '插 6', '插 7 · 左旋 + 计数'];
+var CLS  = ['step','step','ok','shift','ok','shift','ok','done'];
+
+var snaps = [];
+for (var i = 0; i < T.length; i++){
+  NODE_NOTE = {};
+  var keys = Object.keys(T[i].note);
+  for (var k = 0; k < keys.length; k++) NODE_NOTE[keys[k]] = T[i].note[keys[k]];
+  var h = rowLabel('当前 AVL 树（列对齐表示左右孩子：上方的结点是父结点）');
+  h += tree(T[i].nodes);
+  h += card(i === 3 || i === 5 || i === 6 ? 'key' : (i === T.length - 1 ? 'good' : ''),
+            TAGS[i], '<p>' + LOGS[i] + '</p>');
+  if (i === T.length - 1){
+    h += card('good', '最终统计',
+      '<p>分支结点（有孩子）只有 <b>4、2、6</b> 三个；叶结点 1、3、5、7 不算。</p>'
+      + '<table style="border-collapse:collapse;margin:6px auto;font-size:13px"><tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">结点</th><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">左子树高</th><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">右子树高</th><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">BF</th></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">4</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">2</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">2</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center"><b>0</b></td></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">2</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center"><b>0</b></td></tr>'
+      + '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">6</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center"><b>0</b></td></tr></table>');
+  }
+  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
+  if (i === 3 || i === 5 || i === 6) sn.ribbon = { k: i, ok: true }; // 三次旋转
+  if (i === T.length - 1) sn.done = true;
+  snaps.push(sn);
+}
+
+AW.init({
+  title: 'AVL 树插入 1~7：平衡因子为 0 的分支结点个数（2013-03）',
+  subtitle: '依次插入 <code>1,2,3,4,5,6,7</code> · 失衡即旋转（本例三次全是 RR 型左旋）',
+  counterLabel: '已插入个数',
+  ribbonTitle: '旋转（✓ 完成一次调整）',
+  intro: '点击「▶ 播放」逐步插入并观察旋转。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：3 个',
+    html: '插入完成后是满二叉树形态：<b>4（根）、2、6</b> 三个分支结点的平衡因子全为 0，叶结点 1、3、5、7 不计入。故选 <b>D</b>。<br>记忆点：本例三次失衡全在「右孩子的右侧」——RR 型，全部用<b>左旋</b>解决。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-33 动画 · 直接为 ICMP 提供服务的协议</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：抓住「直接」二字',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>ICMP 本身是<b>网络层</b>的控制协议，负责差错报告与网络探询（如 <code>ping</code>）。问「直接为它提供服务的协议」，就是问：<b>ICMP 报文由谁装着上路的？</b></p>' },
+  { title: 'ICMP 的封装位置',
+    cls: '',
+    tag: '封装',
+    body: '<p>ICMP 报文要跨越网络送到对方，必须<b>封装在 IP 数据报的数据部分</b>里，由 IP 负责交付传输。IP 首部的协议字段标明里面装的是什么：<code>ICMP = 1</code>、<code>TCP = 6</code>、<code>UDP = 17</code>。</p>' },
+  { title: '逐项分析 A：PPP',
+    cls: 'bad',
+    tag: '排除 A',
+    body: '<p><b>PPP</b> 是点对点<b>链路层</b>协议，位于 IP 之下；它直接服务的是 IP 分组。ICMP 与 PPP 之间隔着 IP 的封装，谈不上「直接」。</p>' },
+  { title: '逐项分析 C：UDP',
+    cls: 'bad',
+    tag: '排除 C',
+    body: '<p><b>UDP</b> 是传输层协议，在 IP 之上；ICMP 根本不经过传输层。<b>ping 用的是 ICMP 报文，不是 UDP</b>——这里最容易糊。</p>' },
+  { title: '逐项分析 D：TCP',
+    cls: 'bad',
+    tag: '排除 D',
+    body: '<p><b>TCP</b> 与 ICMP 是并列关系：两者都被 IP 封装承载，TCP 不为 ICMP 提供任何服务。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '锁定 B',
+    body: '<p>答案选 <b>B（IP）</b>。记忆锚点：ICMP「装在 IP 数据报里」传输；协议字段 <code>ICMP=1 / TCP=6 / UDP=17</code>。</p>' },
+];
+
+var CLSMAP = { key: 'shift', bad: 'miss', good: 'ok' };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (CLSMAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '直接为 ICMP 提供服务的协议（2012·33）',
+  subtitle: '考点：<code>TCP/IP 体系结构 · ICMP 与 IP 的封装关系</code> · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（IP）',
+    html: 'ICMP 报文直接封装在 <b>IP 数据报</b>中传输（IP 首部协议字段 = <code>1</code>）。ICMP 与 TCP、UDP 并列被 IP 承载，但它不经过传输层；PPP 在 IP 之下，更隔着一层。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

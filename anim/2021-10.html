@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-10 LSD 基数排序第 1 趟</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var S10 = ['93','946','372','9','146','151','301','485','236','327','43','892'];
+var D10 = ['3','6','2','9','6','1','1','5','6','7','3','2'];
+
+function srcRow(cls, extra){
+  var h = '<div class="aw-scroll"><div class="aw-row-label"><b>原始序列</b>（格下数字为个位）</div><div class="aw-cells">';
+  S10.forEach(function(v, i){
+    h += '<div class="aw-col"><div class="aw-ptr"></div>' +
+         '<div class="aw-box' + (cls && cls[i] ? ' ' + cls[i] : '') + '">' + v + '</div>' +
+         '<div class="aw-idx">' + D10[i] + '</div></div>';
+  });
+  h += '</div>';
+  if(extra) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>';
+  return h + '</div>';
+}
+function dstRow(vals, cls, subs, extra){
+  var h = '<div class="aw-scroll"><div class="aw-row-label"><b>第 1 趟收集结果</b></div><div class="aw-cells">';
+  vals.forEach(function(v, i){
+    h += '<div class="aw-col"><div class="aw-ptr"></div>' +
+         '<div class="aw-box' + (cls && cls[i] ? ' ' + cls[i] : '') + '">' + v + '</div>' +
+         '<div class="aw-idx">' + (subs && subs[i] ? subs[i] : '') + '</div></div>';
+  });
+  h += '</div>';
+  if(extra) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>';
+  return h + '</div>';
+}
+function bucketLine(txt){
+  return '<div style="font-size:13.5px;line-height:1.7;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;margin:4px 0">' + txt + '</div>';
+}
+
+AW.init({
+  title: 'LSD 基数排序：第 1 趟分配与收集',
+  subtitle: '12 个元素 · 按个位分入 0–9 号桶 · 桶内保持原序 · 按 0→9 收集',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示第 1 趟基数排序。',
+
+  snaps: [
+    { cls:'step', tag:'第 1 趟·个位', log:'LSD 从最低位开始：第 1 趟按个位分配，桶内保持原序，再按 0→9 收集', count:0,
+      html: srcRow([], '第 1 趟只看<b>个位</b>。') },
+
+    { cls:'step', tag:'分配 1–3', log:'个位 1：151、301；个位 2：372、892；个位 3：93、43（各桶内保持原序）', count:1,
+      html: srcRow([false,false,'hit',false,false,'hit','hit',false,false,false,'hit','hit'], '') +
+        bucketLine('1 号桶：151 → 301') + bucketLine('2 号桶：372 → 892') + bucketLine('3 号桶：93 → 43') },
+
+    { cls:'step', tag:'分配 5–9', log:'个位 5：485；个位 6：946、146、236；个位 7：327；个位 9：9；0、4、8 号桶为空', count:2,
+      html: srcRow([false,'hit',false,'hit','hit',false,false,'hit','hit','hit',false,'hit'], '') +
+        bucketLine('5 号桶：485') + bucketLine('6 号桶：946 → 146 → 236') + bucketLine('7 号桶：327') + bucketLine('9 号桶：9') + bucketLine('0、4、8 号桶：空') },
+
+    { cls:'ok', tag:'收集', log:'按 0→9 依次收集：151,301,372,892,93,43,485,946,146,236,327,9', count:3,
+      html: dstRow(['151','301','372','892','93','43','485','946','146','236','327','9'],
+        ['ok','ok','hit','ok','','','','','','','',''],
+        ['','','目标','','','','','','','','',''],
+        '把各桶按 0→9 首尾相接即得。') },
+
+    { cls:'done', tag:'完成', log:'372 之前紧邻 301、之后紧邻 892 → 答案 C', count:4, done:true,
+      html: dstRow(['151','301','372','892','93','43','485','946','146','236','327','9'],
+        ['ok','ok','hit','ok','','','','','','','',''],
+        ['','前邻','目标','后邻','','','','','','','',''],
+        '<b>372</b> 的前一个元素是 <b>301</b>，后一个是 <b>892</b>。') },
+  ],
+
+  result: {
+    big: '前 301 · 后 892（答案 C）',
+    html: 'LSD 第 1 趟只看<b>个位</b>：桶内保持原序、按 0→9 收集，得 151,301,<b>372</b>,892,…。干扰 B（236,301）是<b>原始序列</b>里 372 的邻居——别混；从最高位开始是 MSD，不是 LSD。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

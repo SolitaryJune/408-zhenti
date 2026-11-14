@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-13 IEEE 754 单精度数还原</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var HEX = ['C', '6', '4', '0', '0', '0', '0', '0'];
+var BITS = ('11000110010000000000000000000000').split('');  // 32 位
+var EXP_RANGE = [1, 8];      // 阶码在位串中的下标 1..8
+var MAN_START = 9;           // 尾数下标 9..31
+
+// 每一步的提示文字
+var INFO = [
+  '等待拆解：机器数 C640 0000H（32 位）',
+  '十六进制 → 二进制完成，共 32 位',
+  '数符 S = 最高位 = <b>1</b> → 负数',
+  '阶码字段（第 30~23 位）= <b>1000 1100B</b>',
+  'E = 140 → 真实指数 = 140 − 127 = <b>13</b>',
+  '尾数字段（低 23 位）= 100…0 → 1.M = 1 + 0.5 = <b>1.5</b>',
+  '汇总：数符负 × 1.5 × 2<sup>13</sup> → <b>−1.5 × 2<sup>13</sup></b>',
+  '对照选项：A 即 −1.5×2<sup>13</sup>；B 指数错为 12；C/D 把尾数错还原成 0.5（漏掉隐含的 1）',
+  '完成：该数 = <b>−1.5 × 2<sup>13</sup></b>，答案 A',
+];
+
+var stageBits;
+
+// 自建位行：格下标注位号 31..0（降序）
+function bitRow(chars, classes){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), String(ch)));
+    col.appendChild(AW.el('div', 'aw-idx', String(31 - i)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function hexClasses(i){
+  var c = [];
+  for (var k = 0; k < 8; k++) c.push(i >= 1 ? 'ok' : '');
+  return c;
+}
+
+function binClasses(i){
+  var n = BITS.length, c = new Array(n);
+  for (var k = 0; k < n; k++) c[k] = '';
+  if (i >= 2) c[0] = 'hit';                       // 数符
+  if (i === 3) for (var j = 1; j <= 8; j++) c[j] = 'ok';   // 阶码（琥珀=正在看）
+  if (i >= 4) for (var j2 = 1; j2 <= 8; j2++) c[j2] = 'ok';
+  if (i >= 6) for (var m = MAN_START; m < n; m++) c[m] = 'ok'; // 尾数
+  return c;
+}
+
+AW.init({
+  title: '2013 真题 · IEEE 754 单精度数还原',
+  subtitle: '机器数 <code>C640 0000H</code> · 格式：1 位符号 + 8 位阶码（偏置 127）+ 23 位尾数',
+  counterLabel: '已完成字段',
+  ribbonTitle: '解题要点（✓ 已确认）',
+  intro: '点击「▶ 播放」逐步拆解：转二进制 → 切三段 → 求指数与尾数 → 汇总真值。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var hLabel = AW.el('div', 'aw-row-label', '<b>机器数（十六进制）</b>　C 6 4 0 0 0 0 0 → 每位 4 bit');
+    this._hexBox = AW.el('div', '');
+    inner.appendChild(hLabel);
+    inner.appendChild(this._hexBox);
+
+    var bLabel = AW.el('div', 'aw-row-label', '<b>32 位二进制</b>　（格下标注位号：位 31 = 数符，位 30~23 = 阶码，位 22~0 = 尾数）');
+    var binWrap = AW.el('div', '');
+    binWrap.style.setProperty('--cell', '28px');
+    binWrap.style.setProperty('--gap', '2px');
+    stageBits = AW.el('div', '');
+    binWrap.appendChild(stageBits);
+    inner.appendChild(bLabel);
+    inner.appendChild(binWrap);
+
+    this._info = AW.el('div', 'aw-row-label');
+    this._info.style.marginTop = '14px';
+    this._info.style.fontSize = '14px';
+    this._info.style.color = '#334155';
+    inner.appendChild(this._info);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    this._hexBox.innerHTML = '';
+    this._hexBox.appendChild(AW.cellRow(HEX, hexClasses(i)));
+    stageBits.innerHTML = '';
+    stageBits.appendChild(bitRow(BITS, binClasses(i)));
+    this._info.innerHTML = INFO[Math.min(i, INFO.length - 1)];
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', log: '已知机器数 C640 0000H，按 IEEE754 单精度拆成 1+8+23 三段', count: 0 },
+    { cls: 'step', tag: '转二进制', log: 'C640 0000H = 1100 0110 0100 0000 … 0000（32 位）', count: 0 },
+    { cls: 'ok', tag: '数符', log: '最高位 = 1 → 负数', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'shift', tag: '切阶码', log: '第 30~23 位 = 1000 1100B，这是移码形式的阶码 E = 140', count: 2 },
+    { cls: 'ok', tag: '减偏置', log: '真实指数 = E − 127 = 140 − 127 = 13', count: 3, ribbon: { k: 2, ok: true } },
+    { cls: 'shift', tag: '切尾数', log: '低 23 位 = 100…0，按 1.M 还原 = 1 + 0.5 = 1.5', count: 4 },
+    { cls: 'ok', tag: '汇总', log: '负号 × 1.5 × 2^13 → 该数 = −1.5 × 2^13', count: 5, ribbon: { k: 3, ok: true } },
+    { cls: 'step', tag: '对照选项', log: 'A = −1.5×2^13 ✓；B 指数 12 ✗；C/D 把 1.M 看成 0.5 ✗', count: 5 },
+    { cls: 'done', tag: '完成', log: '答案：A（−1.5 × 2^13）', count: 5, done: true },
+  ],
+
+  result: {
+    big: '−1.5 × 2^13',
+    html: '答案 <b>A</b>。三步拆解：<code>符号 1 位 → 负</code>、<code>阶码 10001100B = 140 → 指数 140−127 = 13</code>、<code>尾数 100…0 → 1.M = 1.5</code>。<br>记忆锚点：单精度偏置 <b>127</b>；尾数永远补上隐含的「1.」，尾数 100…0 是 1.5 不是 0.5。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-33 · H1 到 H2 的最大吞吐量</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程推演动画：三条路径逐条找瓶颈（木桶效应），最大吞吐量 10 Mb/s（答案 B）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PATHS = [
+  { name: '上路径：H1→RA→R上→RB→H2',
+    chain: ['H1','10','RA','1000','R上','1000','RB','10','H2'],
+    kinds: ['host','link','node','link','node','link','node','link','host'],
+    minIdx: 1, minText: '10 Mb/s' },
+  { name: '中路径：H1→RA→R中→RB→H2',
+    chain: ['H1','10','RA','1','R中','1','RB','10','H2'],
+    kinds: ['host','link','node','link','node','link','node','link','host'],
+    minIdx: 3, minText: '1 Mb/s' },
+  { name: '下路径：H1→RA→R下→RB→H2',
+    chain: ['H1','10','RA','100','R下','100','RB','10','H2'],
+    kinds: ['host','link','node','link','node','link','node','link','host'],
+    minIdx: 1, minText: '10 Mb/s' },
+];
+
+AW.init({
+  title: '分组交换网络：H1 到 H2 的最大吞吐量',
+  subtitle: '三条并行路径 · 端到端吞吐量取决于路径上<b>带宽最小的链路</b>（木桶效应）· 单位 Mb/s',
+  counterLabel: '已分析路径',
+  ribbonTitle: '路径（✓ 瓶颈达最大 / ✗ 瓶颈更低）',
+  intro: '点击「▶ 播放」逐条路径找出瓶颈链路。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var legend = AW.el('div', 'aw-row-label',
+      '<b>读图</b>：每行一条路径，格中数字为该段链路带宽；灰格 = 主机/路由器，白格 = 链路，<b style="color:#b91c1c">红格</b> = 该路径的瓶颈链路。');
+    stage.appendChild(legend);
+    var self = this;
+    this._info = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._info);
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._rows = [];
+    PATHS.forEach(function(p){
+      var lab = AW.el('div', 'aw-row-label', '<b>' + p.name + '</b>');
+      var row = AW.el('div', 'aw-cells');
+      var cols = [];
+      p.chain.forEach(function(txt, i){
+        var col = AW.el('div', 'aw-col');
+        col.style.width = '58px';
+        var ptr = AW.el('div', 'aw-ptr', '');
+        var box = AW.el('div', 'aw-box', txt);
+        box.style.width = '54px';
+        box.style.fontSize = txt.length > 2 ? '14px' : '16px';
+        if(p.kinds[i] !== 'link'){
+          box.style.background = '#f1f5f9'; box.style.color = '#475569'; box.style.borderColor = '#cbd5e1';
+        }
+        var idx = AW.el('div', 'aw-idx', p.kinds[i] === 'link' ? '链路' : '');
+        col.appendChild(ptr); col.appendChild(box); col.appendChild(idx);
+        row.appendChild(col);
+        cols.push({ ptr: ptr, box: box, link: p.kinds[i] === 'link' });
+      });
+      inner.appendChild(lab);
+      inner.appendChild(row);
+      self._rows.push(cols);
+    });
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始',
+      log:'H1→H2 有上、中、下三条路径，每条都由「接入链路 + 中间链路」组成；一条路径的吞吐量受限于其上最细的瓶颈链路', count:0 },
+    { cls:'ok', tag:'上路径',
+      log:'上路径：10 → 1000 → 1000 → 10 Mb/s，瓶颈 = H1 的 10 Mb/s 接入链路', count:1, ana:1, ribbon:{k:1, ok:true} },
+    { cls:'miss', tag:'中路径',
+      log:'中路径：10 → 1 → 1 → 10 Mb/s，瓶颈 = 中间的 1 Mb/s 链路，比上路径的瓶颈更低', count:2, ana:2, ribbon:{k:2, ok:false} },
+    { cls:'ok', tag:'下路径',
+      log:'下路径：10 → 100 → 100 → 10 Mb/s，瓶颈 = 仍是 10 Mb/s 接入链路', count:3, ana:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'取最大',
+      log:'最大吞吐量 = 各路径瓶颈中的最大值 = max(10, 1, 10) = 10 Mb/s——无论走哪条路，都绕不开两端 10 Mb/s 的接入链路', count:3, anaAll:true },
+    { cls:'done', tag:'结论',
+      log:'H1 到 H2 的最大吞吐量约为 10 Mb/s，选 B', count:3, anaAll:true, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows || [];
+    var n = sn.anaAll ? 3 : (sn.ana || 0);
+    for(var r = 0; r < rows.length; r++){
+      var cols = rows[r], p = PATHS[r];
+      for(var c = 0; c < cols.length; c++){
+        var o = cols[c];
+        o.ptr.textContent = '';
+        if(!o.link) continue;               // 主机/路由器灰格保持原样
+        var cls = 'aw-box';
+        if(r < n){
+          cls += (c === p.minIdx) ? ' miss' : ' ok';
+        }
+        o.box.className = cls;
+      }
+      if(r < n){
+        cols[p.minIdx].ptr.textContent = '瓶颈';
+      }
+    }
+    if(this._info){
+      if(sn.anaAll){
+        this._info.innerHTML = '三条路径瓶颈：上 <b>10</b> · 中 <b>1</b> · 下 <b>10</b>（Mb/s）→ 最大吞吐量 = max(10, 1, 10) = <b>10 Mb/s</b>';
+      } else if(sn.ana){
+        this._info.innerHTML = '已分析 <b>' + sn.ana + ' / 3</b> 条路径，当前路径瓶颈 = <b>' + PATHS[sn.ana - 1].minText + '</b>';
+      } else {
+        this._info.innerHTML = '尚未开始分析，先明确：瓶颈 = 路径上带宽最小的链路。';
+      }
+    }
+  },
+
+  result: {
+    big: '10 Mb/s',
+    html: '最大吞吐量约 <b>10 Mb/s</b>，选 <b>B</b>。木桶效应：端到端吞吐量由路径上最小带宽链路决定——上/中/下路径瓶颈分别为 <b>10、1、10 Mb/s</b>，取最大得 10 Mb/s（H1、H2 的接入链路是绕不开的短板，1 Mb/s 那条路可以不走）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

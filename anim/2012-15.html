@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-15 结构体对齐 + 小端布局 · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var ADDRS = ['C008','C009','C00A','C00B','C00C','C00D','C00E','C00F'];
+
+/* 每一步：valueRow / memberRow 各 8 格 [字符, 类]，highlight = 需要强调的下标 */
+var states = [
+  { tag: '审题', cls: 'shift',
+    log: '按字节编址、小端存放、边界对齐。成员：a 是 int（4B，地址须为 4 的倍数）、b 是 char（1B）、c 是 short（2B，地址须为 2 的倍数）；record 首地址 0xC008',
+    v: [['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']],
+    m: [['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']] },
+  { tag: '273 → 4 字节', cls: 'step',
+    log: 'record.a = 273 = 0x00000111，int 占 4 个字节，从高到低是 00、00、01、11',
+    v: [['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']],
+    m: [['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim'],['·','dim']] },
+  { tag: '小端落位 a', cls: 'ok',
+    log: '小端 = 低位字节放低地址：最低字节 11 放进 0xC008，其后 01、00、00 → 地址 0xC008 的内容 = 0x11',
+    v: [['11','hit'],['01',''],['00',''],['00',''],['·','dim'],['·','dim'],['·','dim'],['·','dim']],
+    m: [['a','ok'],['a',''],['a',''],['a',''],['·','dim'],['·','dim'],['·','dim'],['·','dim']] },
+  { tag: '放 char b', cls: 'step',
+    log: 'b 是 char（1B），任何地址都能放 → 顺次放在 0xC00C',
+    v: [['11',''],['01',''],['00',''],['00',''],['·','dim'],['·','dim'],['·','dim'],['·','dim']],
+    m: [['a',''],['a',''],['a',''],['a',''],['b','ok'],['·','dim'],['·','dim'],['·','dim']] },
+  { tag: '对齐检查 0xC00D', cls: 'miss',
+    log: 'c 是 short（2B），地址必须是 2 的倍数：下一个可用地址 0xC00D 是奇地址，不满足对齐 → 跳过',
+    v: [['11',''],['01',''],['00',''],['00',''],['·','dim'],['✗','miss'],['·','dim'],['·','dim']],
+    m: [['a',''],['a',''],['a',''],['a',''],['b',''],['✗','miss'],['·','dim'],['·','dim']] },
+  { tag: 'short c 落位', cls: 'ok',
+    log: 'c 从 0xC00E 开始，占 0xC00E ～ 0xC00F → record.c 的地址 = 0xC00E',
+    v: [['11',''],['01',''],['00',''],['00',''],['·','dim'],['—','dim'],['c0',''],['c1','']],
+    m: [['a',''],['a',''],['a',''],['a',''],['b',''],['·','dim'],['c','ok'],['c','ok']] },
+  { tag: '完成', cls: 'done',
+    log: '结论：地址 0xC008 中内容 = 0x11，record.c 的地址 = 0xC00E → 答案 D',
+    v: [['11','hit'],['01',''],['00',''],['00',''],['·','dim'],['—','dim'],['c0',''],['c1','']],
+    m: [['a',''],['a',''],['a',''],['a',''],['b',''],['·','dim'],['c','ok'],['c','ok']] },
+];
+
+function mkRow(items, labels){
+  var row = AW.el('div', 'aw-cells');
+  items.forEach(function(it, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-box' + (it[1] ? ' ' + it[1] : ''), it[0]));
+    col.appendChild(AW.el('div', 'aw-idx', labels ? labels[i] : ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+AW.init({
+  title: '2012·15 结构体 record 在内存里怎么摆？',
+  subtitle: '字节编址 · <code>273 = 0x00000111</code> · 小端 · 边界对齐 · 首地址 <code>0xC008</code>',
+  counterLabel: '推进步',
+  ribbonTitle: '布局关键步（✓ 落位 / ✗ 对齐跳过）',
+  intro: '点击「▶ 播放」，逐字节摆出 a、b、c。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var l1 = AW.el('div', 'aw-row-label', '<b>字节内容</b>（低地址 → 高地址）');
+    var r1 = AW.el('div', '', ''); r1.id = 'vRow';
+    var l2 = AW.el('div', 'aw-row-label', '<b>所属成员</b>');
+    var r2 = AW.el('div', '', ''); r2.id = 'mRow';
+    var note = AW.el('div', 'aw-row-label', '地址：0xC008 起，按字节递增');
+    wrap.appendChild(l1); wrap.appendChild(r1);
+    wrap.appendChild(l2); wrap.appendChild(r2);
+    wrap.appendChild(note);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    var vRow = document.getElementById('vRow');
+    var mRow = document.getElementById('mRow');
+    vRow.innerHTML = '';
+    vRow.appendChild(mkRow(sn.v, ADDRS));
+    mRow.innerHTML = '';
+    mRow.appendChild(mkRow(sn.m, ['','','','','','','','']));
+  },
+  snaps: states.map(function(s, i){
+    var sn = { cls: s.cls, tag: s.tag, log: s.log, count: i, v: s.v, m: s.m };
+    if(i === states.length - 1) sn.done = true;
+    return sn;
+  }),
+  result: {
+    big: '答案 D（0x11、0xC00E）',
+    html: '<b>小端</b>：最低字节 <code>11</code> 放最低地址 <code>0xC008</code>；<b>对齐</b>：short c 必须放在偶地址，0xC00D 是奇地址被跳过 → c 在 <code>0xC00E</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

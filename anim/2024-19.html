@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-19 流水线数据冒险处理辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：数据冒险四种处理说法辨析 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：5 段流水线与数据冒险',
+    cls: 'key',
+    body: '<p>流水段：取指 → 译码/取数 → 执行 → 访存 → 写回。后一条指令要用前一条<b>尚未写回</b>的结果 = <b>数据冒险</b>。找"<b>错误</b>"叙述。</p>' },
+  { title: 'A：相邻指令相关引起冒险 —— 正确',
+    cls: '',
+    body: '<p>相邻指令操作数相关（后条的源 = 前条的目的寄存器）是数据冒险最典型的来源。叙述正确。</p>' },
+  { title: 'B：插入气泡避免冒险 —— 正确',
+    cls: '',
+    body: '<p>在相关指令间插入"气泡"（流水线暂停若干周期），等结果写回后再取用，能避免冒险——代价是损失性能。叙述正确。</p>' },
+  { title: 'C：转发能解决"所有"冒险 —— 错误！',
+    cls: 'bad',
+    body: '<p>转发（旁路）把上一条指令 ALU 的结果直接送给下一条指令的输入，能解决<b>大多数</b>冒险，但不是全部：典型反例 <b>load-use 冒险</b>——<code>lw</code> 的数据到<b>访存段末</b>才可用，紧随其后就用它的指令即使有转发也来不及，必须先暂停一拍再配合转发。"所有都能"不成立 → 选 <b>C</b>。</p>' },
+  { title: 'D：重排 + nop 拉开距离 —— 正确',
+    cls: '',
+    body: '<p>调整指令顺序（编译器把无关指令填入空隙）或插入 nop 指令拉开相关距离——只要间隔足够，任何数据冒险都能消除。叙述正确。</p>' },
+  { title: '结论：load-use 为什么转发救不了',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。ALU 结果在<b>执行段末</b>产生，load 数据在<b>访存段末</b>才产生；下一条指令的执行段"赶不上"这个时间点——转发解决不了时间上的差距，必须先停一拍。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '数据冒险处理：转发是"万能药"吗？',
+  subtitle: '5 段 RISC 流水线 · 气泡 / 转发 / 重排+nop 逐项辨析',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '<p>"所有数据冒险都能靠转发解决"是必错句式——<b>load-use 冒险</b>必须先停一拍（气泡/nop）再配合转发。转发解决不了时间上"赶不上"的相关。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

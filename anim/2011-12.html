@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-12 浮点数操作速度指标</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类动画（复制 tools/anim_concept_template.html，只改 AW.init 区域） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题目问的是描述<b>浮点数操作速度</b>的指标。四个候选：MIPS、CPI、IPC、MFLOPS——谁的计数口径是"浮点运算"（FLOP）？</p>' },
+  { title: 'A 选项 MIPS：错',
+    cls: 'bad',
+    body: '<p>MIPS = 每秒执行的百万条<b>指令</b>数。它数的是"指令"，而一条指令未必是浮点操作（多数是取数、比较、转移），所以 MIPS 描述的是<b>指令执行速度</b>，不针对浮点。</p>' },
+  { title: 'B 选项 CPI：错',
+    cls: 'bad',
+    body: '<p>CPI = 执行<b>一条指令</b>平均所需时钟周期数。它是"周期/指令"的相对量，连"每秒多少次"的频率口径都没有，更谈不上浮点速度。</p>' },
+  { title: 'C 选项 IPC：错',
+    cls: 'bad',
+    body: '<p>IPC = 每个时钟周期执行的指令数，是 CPI 的倒数。单位仍是"指令/周期"，与 MIPS 同病：不区分指令是不是浮点操作。</p>' },
+  { title: 'D 选项 MFLOPS：对',
+    cls: 'good',
+    body: '<p>MFLOPS = 每秒执行的百万次<b>浮点运算</b>次数。计数对象正是"浮点操作"，是衡量浮点运算速度的专用指标（同类还有 GFLOPS、TFLOPS）。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D（MFLOPS）</b>。记忆锚点：指标名里带 <b>FLOP</b> 才管浮点；MIPS/IPC 管指令，CPI 管每条指令的相对耗时。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2011·12 谁描述"浮点数操作速度"',
+  subtitle: '考点：性能指标辨析 · MIPS / CPI / IPC / MFLOPS 逐项推演',
+  counterLabel: '推进步数',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '<b>MFLOPS</b> = 每秒百万次<b>浮点运算</b>，专为浮点操作速度而设。干扰项：MIPS/IPC 以"指令"计数、CPI 是相对耗时——都不针对浮点。记忆锚点：见 <b>FLOP</b> 即浮点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

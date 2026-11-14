@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-39 · UDP 校验和：回卷求和后取反</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程推演动画：两个 16 位数反码求和 → 回卷进位 → 取反得校验和（答案 C）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var R_BITS = '1011100110110110'.split('');
+var W_BITS = '0110010111000101'.split('');
+var S_PRE  = '0001111101111011'.split('');   // 直接相加（未回卷）
+var S_WRAP = '0001111101111100'.split('');   // 回卷进位后
+var C_CHK  = '1110000010000011'.split('');   // 最终校验和
+
+function nibCols(j){ // 第 j 个半字节（0 = 最低 4 位）对应的列范围
+  var s = 12 - 4 * j;
+  return [s, s + 3];
+}
+
+AW.init({
+  title: 'UDP 校验和：回卷求和 + 按位取反',
+  subtitle: '中间结果 <code>1011 1001 1011 0110</code> + 最后一个 16 位数 <code>0110 0101 1100 0101</code> · 从最低 4 位逐组相加',
+  counterLabel: '已完成步骤',
+  ribbonTitle: '步骤（✓ 完成）',
+  intro: '点击「▶ 播放」，逐半字节相加、回卷进位、最后取反。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var legend = AW.el('div', 'aw-row-label',
+      '<b>读图</b>：绿格 = 已算完，实心绿格 = 本步正在算 / 最终结果；S 行最左是<b>第 17 位进位</b>，溢出的 1 最后要回卷加到最低位。');
+    stage.appendChild(legend);
+    var self = this;
+    this._info = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._info);
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    var defs = [
+      { lead: 'R', leadTip: '中间结果', bits: R_BITS },
+      { lead: '+W', leadTip: '加数', bits: W_BITS },
+      { lead: 'S', leadTip: '和', bits: null, carry: true },
+      { lead: 'chk', leadTip: '校验和', bits: null },
+    ];
+    this._rows = [];
+    defs.forEach(function(d){
+      var lab = AW.el('div', 'aw-row-label', '<b>' + d.lead + '</b>（' + d.leadTip + '）');
+      var row = AW.el('div', 'aw-cells');
+      var cols = [];
+      // 最左：进位指示格（仅 S 行）
+      var leadCol = AW.el('div', 'aw-col');
+      leadCol.style.width = '52px';
+      leadCol.appendChild(AW.el('div', 'aw-ptr', ''));
+      var leadBox = AW.el('div', 'aw-box dim', d.carry ? '·' : '—');
+      leadBox.style.width = '44px';
+      leadBox.style.fontSize = '13px';
+      leadCol.appendChild(leadBox);
+      leadCol.appendChild(AW.el('div', 'aw-idx', d.carry ? '第17位' : ''));
+      row.appendChild(leadCol);
+      for(var i = 0; i < 16; i++){
+        var col = AW.el('div', 'aw-col');
+        var ptr = AW.el('div', 'aw-ptr', '');
+        var box = AW.el('div', 'aw-box', d.bits ? d.bits[i] : '·');
+        var idx = AW.el('div', 'aw-idx', String(16 - i));
+        col.appendChild(ptr); col.appendChild(box); col.appendChild(idx);
+        row.appendChild(col);
+        cols.push({ ptr: ptr, box: box });
+      }
+      inner.appendChild(lab);
+      inner.appendChild(row);
+      self._rows.push({ cols: cols, carryBox: d.carry ? leadBox : null });
+    });
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',
+      log:'UDP 校验和 = 全部 16 位字反码求和（进位回卷）后再按位取反；先把中间结果 R 与最后一个 16 位数 W 相加', count:0 },
+    { cls:'ok', tag:'最低 4 位',
+      log:'最低 4 位：0110 + 0101 = 1011，无进位', count:1, nibCur:0, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'第 2 组 4 位',
+      log:'第 2 组：1011 + 1100 = 1 0111 → 本位 0111，向高位进 1', count:2, nibDone:1, nibCur:1, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'第 3 组 4 位',
+      log:'第 3 组：1001 + 0101 + 1（低位进位）= 1111，无进位', count:3, nibDone:2, nibCur:2, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'最高 4 位',
+      log:'最高 4 位：1011 + 0110 = 1 0001 → 本位 0001，又溢出进位 1；得到和 0001 1111 0111 1011',
+      count:4, nibDone:3, nibCur:3, sumPre:true, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'回卷进位',
+      log:'第 17 位溢出的进位 1 回卷加到最低位：0001 1111 0111 1011 + 1 = 0001 1111 0111 1100',
+      count:5, wrapped:true, ribbon:{k:5, ok:true} },
+    { cls:'ok', tag:'按位取反',
+      log:'校验和 = 对回卷后的和按位取反 → 1110 0000 1000 0011',
+      count:6, inverted:true, ribbon:{k:6, ok:true} },
+    { cls:'done', tag:'结论',
+      log:'校验和 = 1110 0000 1000 0011，选 C（B 是未取反的和，A 是未回卷的和，D 是丢进位再取反）',
+      count:7, inverted:true, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows || [];
+    var nibDone = sn.nibDone || (sn.wrapped || sn.inverted ? 4 : 0);
+    var nibCur = sn.nibCur;
+    for(var r = 0; r < rows.length; r++){
+      var row = rows[r];
+      for(var c = 0; c < 16; c++){
+        var o = row.cols[c];
+        o.ptr.textContent = '';
+        var cls = 'aw-box';
+        if(r <= 1){ // R、W 行：逐半字节点亮
+          if(nibCur != null){
+            var seg = nibCols(nibCur);
+            if(c >= seg[0] && c <= seg[1]) cls += ' hit';
+            else if(c > seg[1]) cls += ' ok';
+            else cls += ' dim';
+          } else if(nibDone >= 4){
+            cls += ' ok';
+          } else {
+            cls += ' dim';
+          }
+        } else if(r === 2){ // S 行：和
+          if(sn.wrapped || sn.inverted){
+            var wrapSeg = nibCols(0);
+            cls += (sn.wrapped && c >= wrapSeg[0] && c <= wrapSeg[1] && !sn.inverted) ? ' hit' : ' ok';
+            o.box.textContent = S_WRAP[c];
+          } else if(sn.sumPre){
+            cls += ' ok';
+            o.box.textContent = S_PRE[c];
+            if(c === 0){ o.ptr.textContent = '进位 1 ▶'; }
+          } else {
+            o.box.textContent = '·';
+            cls += ' dim';
+          }
+        } else { // chk 行
+          if(sn.inverted){
+            cls += ' hit';
+            o.box.textContent = C_CHK[c];
+          } else {
+            o.box.textContent = '·';
+            cls += ' dim';
+          }
+        }
+        o.box.className = cls;
+      }
+      if(row.carryBox){
+        if(sn.sumPre || (sn.wrapped && !sn.inverted)){
+          row.carryBox.textContent = '1';
+          row.carryBox.className = 'aw-box';
+          row.carryBox.style.background = '#fef3c7';
+          row.carryBox.style.borderColor = '#d97706';
+          row.carryBox.style.color = '#92400e';
+        } else {
+          row.carryBox.textContent = sn.inverted ? '0' : '·';
+          row.carryBox.className = 'aw-box' + (sn.inverted ? ' ok' : ' dim');
+          row.carryBox.style.background = '';
+          row.carryBox.style.borderColor = '';
+          row.carryBox.style.color = '';
+        }
+      }
+    }
+    if(this._info){
+      if(sn.inverted){
+        this._info.innerHTML = '和（回卷后）= <code>0001 1111 0111 1100</code> → 校验和 = <code>1110 0000 1000 0011</code>';
+      } else if(sn.wrapped){
+        this._info.innerHTML = '已把溢出的进位 1 回卷加到最低位：和 = <code>0001 1111 0111 1100</code>（下一步取反）';
+      } else if(sn.sumPre){
+        this._info.innerHTML = '直接相加的和 = <code>0001 1111 0111 1011</code>，第 17 位溢出进位 <b>1</b>，别忘了回卷';
+      } else if(nibCur != null){
+        this._info.innerHTML = '从最低 4 位开始逐组相加（含低位进位），已算完 <b>' + nibDone + '</b> 组';
+      } else {
+        this._info.innerHTML = '先明确三步：逐 16 位求和 → 进位回卷 → 按位取反。';
+      }
+    }
+  },
+
+  result: {
+    big: '1110 0000 1000 0011',
+    html: '校验和 = <code>1110 0000 1000 0011</code>，选 <b>C</b>。记忆锚点：<b>回卷求和 → 按位取反</b>两步缺一不可——B 是没取反的和，A 是丢进位的和，D 是丢进位后再取反（A 的反码）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-02 栈的入栈序列与出栈序列</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 示例符号集 S = {a, b, c}。
+   场景一：进一个出一个 → out = a b c = in（推翻 C）
+   场景二：全部进完再全部出 → out = c b a = in 的倒序（证实 D） */
+var INSEQ = ['a', 'b', 'c'];
+var OUT1  = ['a', 'b', 'c'];
+var OUT2  = ['c', 'b', 'a'];
+
+/* 每步显示状态：inCls = 入栈序列各格（0 普通/1 ok/2 hit）
+   stack = 栈内容（下标 0 为栈底）；o1/o2 = 两个 out 行（0 空/1 ok/2 hit） */
+var STATES = [
+  { inCls: [0, 0, 0], stack: [],              o1: [0, 0, 0], o2: [0, 0, 0] },  // 0 初始
+  { inCls: [2, 0, 0], stack: ['a'],           o1: [0, 0, 0], o2: [0, 0, 0] },  // 1 进 a
+  { inCls: [1, 0, 0], stack: [],              o1: [2, 0, 0], o2: [0, 0, 0] },  // 2 出 a
+  { inCls: [1, 2, 0], stack: ['b'],           o1: [2, 0, 0], o2: [0, 0, 0] },  // 3 进 b
+  { inCls: [1, 1, 0], stack: [],              o1: [1, 2, 0], o2: [0, 0, 0] },  // 4 出 b
+  { inCls: [1, 1, 2], stack: ['c'],           o1: [1, 2, 0], o2: [0, 0, 0] },  // 5 进 c
+  { inCls: [1, 1, 1], stack: [],              o1: [1, 1, 2], o2: [0, 0, 0] },  // 6 出 c
+  { inCls: [2, 1, 1], stack: ['a'],           o1: [1, 1, 1], o2: [0, 0, 0] },  // 7 进 a
+  { inCls: [2, 2, 1], stack: ['a', 'b'],      o1: [1, 1, 1], o2: [0, 0, 0] },  // 8 进 b
+  { inCls: [2, 2, 2], stack: ['a', 'b', 'c'], o1: [1, 1, 1], o2: [0, 0, 0] },  // 9 进 c
+  { inCls: [2, 2, 2], stack: ['a', 'b'],      o1: [1, 1, 1], o2: [2, 0, 0] },  // 10 出 c
+  { inCls: [2, 2, 2], stack: ['a'],           o1: [1, 1, 1], o2: [1, 2, 0] },  // 11 出 b
+  { inCls: [2, 2, 2], stack: [],              o1: [1, 1, 1], o2: [1, 1, 2] },  // 12 出 a
+  { inCls: [1, 1, 1], stack: [],              o1: [1, 1, 1], o2: [1, 1, 1] },  // 13 分析 A/B
+  { inCls: [1, 1, 1], stack: [],              o1: [1, 1, 1], o2: [1, 1, 1] },  // 14 完成
+];
+
+var inRow, stRow, o1Row, o2Row;
+
+function clsOf(code){ return code === 2 ? ' hit' : (code === 1 ? ' ok' : ''); }
+
+function paint(i){
+  var s = STATES[i], j;
+  for (j = 0; j < 3; j++){
+    inRow.children[j].children[1].className = 'aw-box' + clsOf(s.inCls[j]);
+    o1Row.children[j].children[1].className = 'aw-box' + clsOf(s.o1[j]);
+    o2Row.children[j].children[1].className = 'aw-box' + clsOf(s.o2[j]);
+    o1Row.children[j].children[1].textContent = s.o1[j] ? OUT1[j] : '';
+    o2Row.children[j].children[1].textContent = s.o2[j] ? OUT2[j] : '';
+    var ptr = inRow.children[j].children[0];
+    ptr.textContent = (s.inCls[j] === 2) ? '▲当前' : '';
+  }
+  for (j = 0; j < 4; j++){
+    var b = stRow.children[j].children[1];
+    if (j < s.stack.length){
+      b.textContent = s.stack[j];
+      b.className = 'aw-box' + (j === s.stack.length - 1 ? ' hit' : ' ok');
+    } else {
+      b.textContent = '';
+      b.className = 'aw-box';
+    }
+  }
+}
+
+AW.init({
+  title: '入栈序列与出栈序列：谁可能是谁？（2022-02）',
+  subtitle: '示例符号集 <code>S = {a, b, c}</code> · 场景一「进一个出一个」 · 场景二「全进再全出」',
+  counterLabel: '累计出栈',
+  ribbonTitle: '出栈动作（✓ 完成）',
+  intro: '点击「▶ 播放」，用两个极端场景检验四个选项。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>入栈序列 in</b>（固定按此顺序进栈）'));
+    inRow = AW.cellRow(INSEQ, ['', '', ''], null, 1);
+    inner.appendChild(inRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>栈 ST</b>（左=栈底，右=栈顶，绿=当前栈顶）'));
+    stRow = AW.cellRow(['', '', '', ''], ['', '', '', ''], null, 1);
+    inner.appendChild(stRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>场景一 out</b>（进一个就出一个）'));
+    o1Row = AW.cellRow(['', '', ''], ['', '', ''], null, 1);
+    inner.appendChild(o1Row);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>场景二 out</b>（全部进完再依次出）'));
+    o2Row = AW.cellRow(['', '', ''], ['', '', ''], null, 1);
+    inner.appendChild(o2Row);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'shift', tag: '开始',   log: '示例取 S={a,b,c}。判断 out 能否由 in 得到，唯一办法：按 in 进栈、按 out 出栈做模拟。先试 C：in 与 out 能否完全相同？', count: 0 },
+    { cls: 'step',  tag: '进 a',   log: 'a 入栈（栈底）', count: 0 },
+    { cls: 'ok',    tag: '出 a',   log: 'a 出栈：out 第 1 位记 a，栈又空了', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'step',  tag: '进 b',   log: 'b 入栈', count: 1 },
+    { cls: 'ok',    tag: '出 b',   log: 'b 出栈：out 第 2 位记 b', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'step',  tag: '进 c',   log: 'c 入栈', count: 2 },
+    { cls: 'ok',    tag: '出 c',   log: 'c 出栈 ⇒ out = a b c = in！in 与 out 可以完全相同 ⇒ C「一定不同」错', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'shift', tag: '场景二', log: '换一种极端操作验证 D：a、b、c 全部入栈后再依次出栈。a 入栈', count: 3 },
+    { cls: 'step',  tag: '进 b',   log: 'b 入栈，压在 a 上', count: 3 },
+    { cls: 'step',  tag: '进 c',   log: 'c 入栈：3 个符号全在栈里', count: 3 },
+    { cls: 'ok',    tag: '出 c',   log: '出栈：栈顶 c 先出 ⇒ out 第 1 位 = c', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'ok',    tag: '出 b',   log: 'b 出栈 ⇒ out 第 2 位 = b', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'ok',    tag: '出 a',   log: 'a 最后出 ⇒ out = c b a，恰为 in 的倒序 ⇒ D「可能互为倒序」对', count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'step',  tag: '看 A/B', log: 'A、B 说「不能判断」：但模拟是确定性算法，给 in 和 out 一定能判出可能/不可能 ⇒ A、B 都错', count: 6 },
+    { cls: 'done',  tag: '完成',   log: '结论：in 与 out 可能相同、也可能互为倒序 ⇒ 答案 D', count: 6, done: true },
+  ],
+  render: function(stage, sn, i){ paint(i); },
+  result: {
+    big: '答案 D',
+    html: '「进一个出一个」得到 out = <code>a b c</code> = in（C 错）；「全进再全出」得到 out = <code>c b a</code>，互为倒序（D 对）。判断某个 out 是否可能：<b>按 in 进栈、按 out 出栈模拟</b>即可唯一判定，所以 A、B 的「不能判断」不成立。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

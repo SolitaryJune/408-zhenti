@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-11 动画 · 希尔排序的组内排序方法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：希尔排序 = 按增量分组 + 组内排序 + 缩小增量',
+    cls: 'key',
+    body: '<p>希尔排序（缩小增量排序）：取增量 d，把下标相差 d 的元素划成 d 组，' +
+          '<b>各组内部先排好</b>；再缩小 d 重复；最后 d=1 收尾。题目问的是：<b>组内排序用的是什么算法</b>。</p>' },
+  { title: '为什么组内是直接插入排序',
+    cls: 'good',
+    body: '<p>组内元素<b>数量少</b>（前几趟尤其如此）；前几趟排完后整个序列已<b>基本有序</b>。' +
+          '直接插入排序恰好在"小规模 + 基本有序"时效率最高（接近 O(n)），且<b>不需要额外空间</b> —— ' +
+          '希尔正是用它扬长避短，整体突破 O(n²)。</p>' },
+  { title: '排除 B：折半插入排序',
+    cls: 'bad',
+    body: '<p>折半插入只减少<b>比较次数</b>、移动次数不变；而且组是"间隔 d 抽取"的子序列而非连续段，' +
+          '"折半定位中点"没有意义。不是希尔的做法。</p>' },
+  { title: '排除 C / D：快速排序、归并排序',
+    cls: 'bad',
+    body: '<p>快速排序的划分与递归开销对少量、基本有序的小组元素得不偿失；' +
+          '归并排序需要 O(n) 辅助空间，用在小组内是浪费。二者都不是希尔排序的定义。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A（直接插入排序）</b>。记忆锚点：<b>希尔排序 = 分组 + 组内直接插入 + 增量缩到 1</b>；' +
+          'd=1 那一趟就是一次普通的直接插入排序。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2015-11 · 希尔排序的组内排序采用的是',
+  subtitle: '考点：希尔排序流程与直接插入排序的适配性',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A · 直接插入排序',
+    html: '记忆锚点：组内<b>元素少、基本有序</b>，恰好是直接插入排序的最佳适用场景（接近 O(n)、零额外空间）；' +
+          '折半插入只省比较不省移动，快排/归并对小组元素开销过大。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

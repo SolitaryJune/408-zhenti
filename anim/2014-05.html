@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-05 森林转二叉树动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：左孩子右兄弟 → 叶结点 ↔ 左指针为空 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>森林 F 转二叉树 T 用<b>「左孩子、右兄弟」</b>表示法：左指针 = 森林中的<b>第一个孩子</b>，右指针 = <b>下一个兄弟</b>。问的是：F 的叶结点数对应 T 中的什么？</p>' },
+  { title: '叶结点在转换后的样子',
+    cls: '',
+    body: '<p>森林里的叶结点<b>没有任何孩子</b> → 转换后<b>左指针必为空</b>（没有"第一个孩子"可放）。反过来，T 中左指针为空的结点，在森林里恰好就是没有孩子的结点。两者<b>一一对应</b>。</p>' },
+  { title: '小例子验证（森林：A(B,C) 与 D(E)）',
+    cls: '',
+    body: '<p>转成 T：A 的左孩子 B、右孩子 D；B 的右孩子 C；D 的左孩子 E。</p>' +
+          '<p><table><tr><th>T 结点</th><th>左指针</th><th>右指针</th><th>森林中的身份</th></tr>' +
+          '<tr><td>A</td><td>B</td><td>D</td><td>内部结点</td></tr>' +
+          '<tr><td>B</td><td><b>空</b></td><td>C</td><td><b>叶</b></td></tr>' +
+          '<tr><td>C</td><td><b>空</b></td><td>空</td><td><b>叶</b></td></tr>' +
+          '<tr><td>D</td><td>E</td><td>空</td><td>内部结点</td></tr>' +
+          '<tr><td>E</td><td><b>空</b></td><td>空</td><td><b>叶</b></td></tr></table></p>' +
+          '<p>F 的叶 B、C、E 共 3 个 = T 中左指针为空的结点 3 个，对上了。</p>' },
+  { title: '逐项排错',
+    cls: 'bad',
+    body: '<p><b>A</b>「T 的叶结点数」：要求左右指针都空（例中只有 C、E 共 2 个），比 F 的叶少。<br>' +
+          '<b>B</b>「度为 1 的结点数」：例中 B、D 度为 1，个数对不上。<br>' +
+          '<b>D</b>「右指针空」：只代表"同级最后一个兄弟"（例中 A、C、D、E 共 4 个），与叶无关。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C：T 中左孩子指针为空的结点个数</b>。记忆锚点：左指针 = 第一个孩子，森林的「无孩子」↔ 二叉树的「左空」。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2014-05　森林的叶结点 ↔ 二叉树的左空结点',
+  subtitle: '转换规则：左孩子、右兄弟 · 用反例小森林验证各选项',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: 'F 中叶结点个数 = T 中<b>左孩子指针为空</b>的结点个数。<br>注意区分：T 的叶（左右都空）只对应"无孩子且无兄弟"的结点；右指针空只代表"最后一个兄弟"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

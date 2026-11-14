@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-25 · 进程切换更新的寄存器</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链动画：进程切换需更新的三项寄存器（答案 D）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    tag: '审题',
+    log: '判断标准：该信息是否随进程而异——是就必须更新',
+    body: '<p>题干给出三个动作：Ⅰ 更新程序计数器、Ⅱ 更新栈基址寄存器、Ⅲ 更新页表基地址寄存器。判断标准：切换后这条信息是否<b>随进程而异</b>——是，就必须更新。</p>' },
+  { title: '进程切换的本质',
+    cls: 'key',
+    tag: '核心',
+    log: '切换 = 保存旧现场 + 恢复新现场 + 换用新进程页表',
+    body: '<p><b>进程切换的本质</b>：保存当前进程的运行现场（上下文），恢复新进程的现场，并让地址转换机构改用新进程的页表。凡是「每个进程各有一份」的信息都要换。</p>' },
+  { title: 'Ⅰ 更新程序计数器',
+    cls: 'good',
+    tag: 'Ⅰ 判定',
+    log: 'PC 要指向新进程的指令：必须更新 ✓',
+    body: '<p>Ⅰ 更新程序计数器（PC）：PC 存放下一条指令的地址，切换后应执行<b>新进程</b>的指令 → <b>必须更新</b> ✓。</p>',
+    ribbon: { k: 1, ok: true } },
+  { title: 'Ⅱ 更新栈基址寄存器',
+    cls: 'good',
+    tag: 'Ⅱ 判定',
+    log: '每个进程用户栈不同：寄存器要改指新栈，必须更新 ✓',
+    body: '<p>Ⅱ 更新栈基址寄存器：每个进程有自己的用户栈，栈基址寄存器要改指新进程的栈，否则会用到旧进程的栈 → <b>必须更新</b> ✓。</p>',
+    ribbon: { k: 2, ok: true } },
+  { title: 'Ⅲ 更新页表基地址寄存器',
+    cls: 'good',
+    tag: 'Ⅲ 判定',
+    log: '每进程页表不同：不换页表会映射到旧进程内存，必须更新 ✓',
+    body: '<p>Ⅲ 更新页表基地址寄存器：每个进程地址空间独立、页表不同；不换页表，新进程会映射到旧进程的物理内存 → <b>必须更新</b> ✓。</p>',
+    ribbon: { k: 3, ok: true } },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    log: 'Ⅰ、Ⅱ、Ⅲ 全部需要更新，选 D',
+    body: '<p>三项全部需要更新，答案是 <b>D</b>。记忆锚点：<b>换进程 = 换指令流（PC）+ 换栈（栈寄存器）+ 换地址空间（页表基址）</b>。</p>' },
+];
+
+var CLS_MAP = { good: 'ok', bad: 'miss', key: 'shift' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : (CLS_MAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+  if(s.ribbon) sn.ribbon = s.ribbon;
+  return sn;
+});
+
+AW.init({
+  title: '进程切换要更新哪些寄存器',
+  subtitle: '考点：<code>换指令流（PC）+ 换栈 + 换地址空间（页表基址）</code> · 三项逐条判定',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  counterLabel: '推理步',
+  ribbonTitle: '条目判定（✓ 必须更新）',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '<b>Ⅰ、Ⅱ、Ⅲ 全部需要更新。</b>程序计数器决定执行谁的指令，栈基址寄存器决定用谁的栈，页表基址寄存器决定访问谁的地址空间——三者都随进程而异。<br>记忆锚点：<b>换进程 = 换 PC + 换栈 + 换页表</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

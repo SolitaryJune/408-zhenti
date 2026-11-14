@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-33 · OSI 封装开销与传输效率</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：数清"中间几层"要加开销',
+    cls: 'key',
+    body: '<p>OSI 共 <b>7 层</b>：应用、表示、会话、传输、网络、数据链路、物理。题干：除<b>物理层和应用层</b>之外，其余各层封装 PDU 时各加 <code>20B</code> 开销 → 要加开销的是<b>中间 5 层</b>：表示、会话、传输、网络、数据链路。</p>' },
+  { title: '逐层封装（上半）',
+    cls: '',
+    body: '<p>应用层 400B 数据逐层下传：表示层 +20 → <code>420B</code>；会话层 +20 → <code>440B</code>。</p>' },
+  { title: '逐层封装（下半）',
+    cls: '',
+    body: '<p>传输层 +20 → <code>460B</code>；网络层 +20 → <code>480B</code>；数据链路层 +20 → <code>500B</code>（封装成帧）。</p>' },
+  { title: '物理层不再加开销',
+    cls: '',
+    body: '<p>物理层只把帧变成比特信号发送，<b>不引入额外开销</b> → 线路上传输总量 = 400 + 5×20 = <code>500B</code>。</p>' },
+  { title: '计算传输效率',
+    cls: 'good',
+    body: '<p>传输效率 = 有效数据 ÷ 总数据 = <code>400 ÷ 500 = 80%</code>。</p>' },
+  { title: '逐项排除干扰项',
+    cls: 'bad',
+    body: '<p>B 83% ≈ 400/480（少算一层）；C 87% ≈ 400/460（漏掉<b>表示层和会话层</b>，最常见错法）；D 91% ≈ 400/440（层数仍不对）。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A（80%）</b>。记忆锚点：OSI 夹在中间的 5 层各加 20B 共 100B，400/500 = 80%。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2017-33 · OSI 分层封装：应用层数据传输效率',
+  subtitle: '应用层数据 <code>400B</code> · 中间各层各加 <code>20B</code> 开销 · 求传输效率',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A · 80%',
+    html: '加开销的是<b>表示、会话、传输、网络、数据链路</b>共 5 层，各 20B 共 100B；总长 500B，效率 = <b>400/500 = 80%</b>。漏掉表示、会话两层会误选 C（87%）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

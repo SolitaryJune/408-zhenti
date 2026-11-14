@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>算法/过程类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-47（大题 9 分）：子网划分 + R1 路由表 + R2 路由聚合
+     模板：算法 / 过程演示类（逐问逐行构建路由表）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var TD = ' style="border:1px solid #cbd5e1;padding:6px 9px;font-size:13px;font-family:Menlo,Consolas,monospace"';
+var TH = ' style="border:1px solid #cbd5e1;padding:6px 9px;background:#f1f5f9;font-size:13px"';
+var TDHL = ' style="border:1px solid #cbd5e1;padding:6px 9px;font-size:13px;font-family:Menlo,Consolas,monospace;background:#fef9c3"';
+
+function rtable(rows, hl){
+  var h = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;margin:2px 0 8px">';
+  h += '<tr><th' + TH + '>目的网络 IP 地址</th><th' + TH + '>子网掩码</th><th' + TH + '>下一跳 IP 地址</th><th' + TH + '>接口</th></tr>';
+  rows.forEach(function(r, idx){
+    var bg = (idx + 1 === hl) ? TDHL : TD;
+    h += '<tr><td' + bg + '>' + r[0] + '</td><td' + bg + '>' + r[1] + '</td><td' + bg + '>' + r[2] + '</td><td' + bg + '>' + r[3] + '</td></tr>';
+  });
+  h += '</table></div>';
+  return h;
+}
+
+function subBar(split){
+  if(!split){
+    return '<div style="display:flex;gap:6px;margin:4px 0 10px">' +
+      '<div style="flex:1;background:#e2e8f0;border:2px solid #94a3b8;border-radius:10px;padding:10px;text-align:center;font-weight:700;color:#334155">202.118.1.0 / 24（256 个地址，未划分）</div></div>';
+  }
+  return '<div style="display:flex;gap:6px;margin:4px 0 10px">' +
+    '<div style="flex:1;background:#dcfce7;border:2px solid #16a34a;border-radius:10px;padding:8px;text-align:center;color:#14532d"><b>子网1：202.118.1.0/25</b><br><span style="font-size:12px">地址 0～127 → 局域网1（E1）</span></div>' +
+    '<div style="flex:1;background:#dbeafe;border:2px solid #2563eb;border-radius:10px;padding:8px;text-align:center;color:#1e3a8a"><b>子网2：202.118.1.128/25</b><br><span style="font-size:12px">地址 128～255 → 局域网2（E2）</span></div></div>';
+}
+
+var R1ROWS = [
+  ['202.118.1.0',   '255.255.255.128', '直接',        'E1'],
+  ['202.118.1.128', '255.255.255.128', '直接',        'E2'],
+  ['202.118.3.2',   '255.255.255.255', '202.118.2.2', 'L0'],
+  ['0.0.0.0',       '0.0.0.0',         '202.118.2.2', 'L0'],
+];
+var R2ROWS = [
+  ['202.118.1.0', '255.255.255.0', '202.118.2.1', 'L0'],
+];
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'地址块 202.118.1.0/24 要划 2 个子网，每个局域网 ≥ 120 个 IP；R1 的 L0 = 202.118.2.1，R2 的 L0 = 202.118.2.2',
+    html: card(1, 'key', '审题：题面条件',
+      '<p>地址块 <code>202.118.1.0/24</code> 划 2 个子网给两个局域网，各 ≥ <b>120</b> 个 IP。R1：E1→局域网1、E2→局域网2、L0（<code>202.118.2.1</code>）→R2；R2 的 L0 = <code>202.118.2.2</code>，域名服务器 <code>202.118.3.2</code> 在 R2 的 E0 网段。路由表四元组：目的网络 | 子网掩码 | 下一跳 | 接口。</p>') + subBar(false) },
+  { cls:'step', tag:'第1问 · 定掩码', count:1,
+    log:'主机位 7 位：2⁷−2 = 126 ≥ 120（2⁶−2 = 62 不够）→ 借 1 位子网位，掩码 /25',
+    html: card(2, 'key', '第1问：算主机位定掩码',
+      '<p>设主机位为 n，要求 2ⁿ − 2 ≥ 120：2⁶ − 2 = 62 不够；<b>2⁷ − 2 = 126 ≥ 120</b> 够 → 主机位 7 位，从 24 位前缀借 1 位做子网位 → 掩码 <code>/25 = 255.255.255.128</code>。</p>') },
+  { cls:'ok', tag:'第1问 · 划分', count:2,
+    log:'子网1 = 202.118.1.0/25（0～127）→ 局域网1；子网2 = 202.118.1.128/25（128～255）→ 局域网2（方案一）',
+    html: card(3, 'good', '第1问：划分结果（方案一）',
+      '<p>两个 /25 子网连续对半分：子网1 → 局域网1，子网2 → 局域网2。两种对调分配（方案二）均可得分，本演示取方案一，后两问与之一致。</p>') + subBar(true) },
+  { cls:'ok', tag:'R1 行 1', count:3, ribbon:{k:1, ok:true},
+    log:'局域网1 直连路由：202.118.1.0 / 255.255.255.128 / 直接 / E1',
+    html: card(4, 'good', '第2问：R1 行 1 —— 局域网1 直连',
+      '<p>局域网1 接在 E1 上，直连路由的下一跳写「直接」。</p>') + rtable(R1ROWS.slice(0, 1), 1) },
+  { cls:'ok', tag:'R1 行 2', count:4, ribbon:{k:2, ok:true},
+    log:'局域网2 直连路由：202.118.1.128 / 255.255.255.128 / 直接 / E2',
+    html: card(5, 'good', '第2问：R1 行 2 —— 局域网2 直连',
+      '<p>局域网2 接在 E2 上，直连路由的下一跳同样写「直接」。</p>') + rtable(R1ROWS.slice(0, 2), 2) },
+  { cls:'ok', tag:'R1 行 3', count:5, ribbon:{k:3, ok:true},
+    log:'域名服务器主机路由：202.118.3.2 / 255.255.255.255 / 202.118.2.2 / L0',
+    html: card(6, 'good', '第2问：R1 行 3 —— 域名服务器主机路由',
+      '<p>域名服务器是单台主机，且题目要求「明确给出」→ 写<b>主机路由</b>：掩码 32 位全 1（<code>255.255.255.255</code>）。它在 R2 的 E0 网段 → 下一跳是 R2 的 L0 <code>202.118.2.2</code>，从本机 L0 接口发出。</p>') + rtable(R1ROWS.slice(0, 3), 3) },
+  { cls:'ok', tag:'R1 行 4', count:6, ribbon:{k:4, ok:true},
+    log:'互联网默认路由：0.0.0.0 / 0.0.0.0 / 202.118.2.2 / L0',
+    html: card(7, 'good', '第2问：R1 行 4 —— 互联网默认路由',
+      '<p>除上面三条明确指明的目的地外，其余流量（互联网）都发往 R2 → 默认路由 <code>0.0.0.0 / 0.0.0.0</code>，下一跳 <code>202.118.2.2</code>，接口 L0。</p>') + rtable(R1ROWS.slice(0, 4), 4) },
+  { cls:'shift', tag:'第3问 · R2 聚合', count:7,
+    log:'两个 /25 恰好拼成完整 /24 → R2 聚合路由：202.118.1.0 / 255.255.255.0 / 202.118.2.1 / L0',
+    html: card(8, 'key', '第3问：R2 聚合路由',
+      '<p>R2 到两个局域网都经 R1 转发。两个 /25 子网地址连续（0～127 与 128～255），合并正好是完整一个 /24 → 聚合为 <code>202.118.1.0 / 255.255.255.0</code>；下一跳指回 R1 的 L0 <code>202.118.2.1</code>，接口 L0。</p>') + rtable(R2ROWS, 1) },
+  { cls:'done', tag:'完成', count:8, done:true,
+    log:'三问完成：/25 划分 + R1 四条路由 + R2 一条 /24 聚合路由',
+    html: card(9, 'good', '总结（对照参考答案）',
+      '<p>① 掩码 <b>/25</b>（2⁷ − 2 = 126 ≥ 120），子网1 → 局域网1、子网2 → 局域网2（对调也可）；② R1 四条：<b>两条直连</b>（E1/E2）+ <b>主机路由</b>（掩码全 1，下一跳 202.118.2.2）+ <b>默认路由</b>（0.0.0.0/0.0.0.0）；③ R2 一条 <b>/24 聚合路由</b>回指 R1（下一跳 202.118.2.1）。</p>') + rtable(R1ROWS, 0) + rtable(R2ROWS, 0) },
+];
+
+AW.init({
+  title: '2009-47（9 分）：子网划分与两级路由表',
+  subtitle: '202.118.1.0/24 → 两个 /25 子网 · R1 四条路由 · R2 聚合成 /24',
+  counterLabel: '进度',
+  ribbonTitle: '路由表条目（✓ 已填入）',
+  intro: '点击「▶ 播放」按问逐条构建划分结果与路由表。',
+  snaps: snaps,
+  result: {
+    big: '9 分拿下',
+    html: '第1问：<b>主机位 7 位</b>（2⁷−2 = 126 ≥ 120）→ 掩码 /25，两子网 <code>202.118.1.0/25</code> 与 <code>202.118.1.128/25</code>。<br>第2问：R1 四条——两条<b>直连</b>（下一跳「直接」）、域名服务器<b>主机路由</b>（掩码 255.255.255.255）、<b>默认路由</b>（0.0.0.0/0.0.0.0），后两条下一跳均为 202.118.2.2、接口 L0。<br>第3问：R2 把两个 /25 <b>聚合</b>成 <code>202.118.1.0/255.255.255.0</code>，下一跳 202.118.2.1、接口 L0。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

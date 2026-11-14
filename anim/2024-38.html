@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-38 · TCP 从建连到 CLOSED 的最短时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程推演动画：建连 1RTT + 数据 2RTT + 释放 1RTT + 2MSL = 60.04s（答案 D）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PHASES = [
+  { name: '① 三次握手', dur: '1 RTT', end: 't = 10 ms' },
+  { name: '② 传输 3000 B（慢开始）', dur: '2 RTT', end: 't = 30 ms' },
+  { name: '③ 四次挥手', dur: '1 RTT', end: 't = 40 ms' },
+  { name: '④ TIME_WAIT', dur: '2 MSL = 60 s', end: 't = 60.04 s' },
+];
+
+AW.init({
+  title: 'TCP：从请求建连到进入 CLOSED 至少要多久',
+  subtitle: '报文 3000 B · MSS = 1000 B（3 个报文段）· RTT = 10 ms · MSL = 30 s · 忽略传输时延 · H 主动关闭',
+  counterLabel: '累计时刻',
+  ribbonTitle: '阶段（✓ 完成）',
+  intro: '点击「▶ 播放」，逐阶段累计时刻。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var legend = AW.el('div', 'aw-row-label',
+      '<b>读图</b>：每行一个阶段，右端格给出该阶段结束时的累计时刻；H 在 t = 0 发出 SYN。');
+    stage.appendChild(legend);
+    var self = this;
+    this._info = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._info);
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._rows = [];
+    PHASES.forEach(function(p){
+      var lab = AW.el('div', 'aw-row-label', '<b>' + p.name + '</b>　耗时 ' + p.dur);
+      var row = AW.el('div', 'aw-cells');
+      var cols = [];
+      [['阶段', p.name, 'name'], ['累计', p.end, 'end']].forEach(function(item){
+        var col = AW.el('div', 'aw-col');
+        col.style.width = item[2] === 'name' ? '300px' : '150px';
+        var ptr = AW.el('div', 'aw-ptr', '');
+        var box = AW.el('div', 'aw-box', item[1]);
+        box.style.width = (item[2] === 'name' ? '296px' : '146px');
+        box.style.fontSize = '13.5px';
+        col.appendChild(ptr); col.appendChild(box);
+        row.appendChild(col);
+        cols.push({ ptr: ptr, box: box });
+      });
+      inner.appendChild(lab);
+      inner.appendChild(row);
+      self._rows.push(cols);
+    });
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'t = 0',
+      log:'H 发送 SYN 请求建立 TCP 连接；3000 B ÷ MSS 1000 B = 3 个报文段', count:'0 ms', step:0 },
+    { cls:'ok', tag:'建连 1 RTT',
+      log:'H 收到 SYN+ACK，回第三次 ACK 后进入 ESTABLISHED（t = 10 ms）；按慢开始初始拥塞窗口 1 MSS，立即发出第 1 个报文段',
+      count:'10 ms', step:1, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'数据 2 RTT',
+      log:'t = 20 ms 收到确认，拥塞窗口增至 2 MSS，发出第 2、3 个报文段；t = 30 ms 收到最后报文段的确认 → 报文传输结束（慢开始 1+2 = 3 段，共 2 个 RTT）',
+      count:'30 ms', step:2, ribbon:{k:2, ok:true} },
+    { cls:'ok', tag:'释放 1 RTT',
+      log:'H 发送 FIN 请求断开；服务器收到后立即回 ACK 和自己的 FIN；t = 40 ms H 收到 FIN、回最后一个 ACK，进入 TIME_WAIT（1 RTT）',
+      count:'40 ms', step:3, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'等 2MSL',
+      log:'TIME_WAIT 状态等待 2MSL = 2 × 30 s = 60 s：保证最后一个 ACK 可重传、本次连接的旧报文在网络中消亡',
+      count:'40 ms + 60 s', step:4, ribbon:{k:4, ok:true} },
+    { cls:'done', tag:'结论',
+      log:'t = 4 RTT + 2MSL = 40 ms + 60 s = 60.04 s，H 进入 CLOSED 状态，选 D',
+      count:'60.04 s', step:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows || [];
+    var n = sn.step || 0;
+    for(var r = 0; r < rows.length; r++){
+      var cols = rows[r];
+      cols[0].ptr.textContent = '';
+      cols[1].ptr.textContent = '';
+      cols[0].box.className = 'aw-box' + (r < n ? ' ok' : '');
+      cols[1].box.className = 'aw-box' + (r < n ? ' hit' : '');
+      if(r === n && n > 0 && n < 4){
+        cols[1].ptr.textContent = '▶ 进行中';
+      }
+    }
+    if(this._info){
+      if(sn.step >= 4){
+        this._info.innerHTML = '总时间 = 建连 1 RTT + 数据 2 RTT + 释放 1 RTT + 2MSL = <b>40 ms + 60 s = 60.04 s</b>';
+      } else {
+        this._info.innerHTML = '已完成 <b>' + n + ' / 4</b> 个阶段，累计时刻 <b>' + sn.count + '</b>';
+      }
+    }
+  },
+
+  result: {
+    big: '60.04 s',
+    html: '选 <b>D</b>。记忆锚点：主动关闭方必等 <b>2MSL = 60 s</b> 才 CLOSED；数据阶段按<b>慢开始</b>（cwnd 1 → 2），3 个报文段要 <b>2 个 RTT</b> 发完并确认。合计：建连 1 + 数据 2 + 释放 1 = <b>4 RTT = 40 ms</b>，40 ms + 60 s = <b>60.04 s</b>（干扰项 60.03 s 是把数据阶段只算 1 RTT）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

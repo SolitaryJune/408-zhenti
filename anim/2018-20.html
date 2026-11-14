@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-20 流水线 CPU 的时钟周期</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SEG = [
+  { name: 'A 段', t: 80 },
+  { name: 'B 段', t: 50 },
+  { name: 'C 段', t: 50 },
+  { name: 'D 段', t: 70 },
+  { name: 'E 段', t: 50 },
+];
+var SCALE = 1.8;          // px / ps
+var REG = 20;             // 段寄存器延时
+
+AW.init({
+  title: '流水线时钟周期：最慢段 + 段寄存器延时',
+  subtitle: '五段 A～E 耗时 <code>80/50/50/70/50 ps</code> · 段寄存器延时 <code>20ps</code> · 蓝条 = 加工，黄条 = 写段寄存器',
+  counterLabel: '已考察段数',
+  ribbonTitle: '80ps 时钟能否容纳（✓ 能 / ✗ 不能）',
+  intro: '点击「▶ 播放」逐段考察每段需要多大的时钟周期。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._rows = [];
+    SEG.forEach(function(s){
+      var row = AW.el('div', '');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;margin:7px 0;padding:5px 8px;border-radius:10px;border:2px solid transparent;';
+      var lb = AW.el('div', '', '<b>' + s.name + '</b>');
+      lb.style.cssText = 'width:76px;font-size:13.5px;flex:0 0 auto;';
+      var seg = AW.el('div', '', s.t + 'ps');
+      seg.style.cssText = 'height:26px;border-radius:6px;background:#bfdbfe;color:#1e3a8a;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;width:' + (s.t * SCALE) + 'px;flex:0 0 auto;';
+      var reg = AW.el('div', '', '+' + REG + 'ps');
+      reg.style.cssText = 'height:26px;border-radius:6px;background:#fde68a;color:#92400e;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;width:' + (REG * SCALE) + 'px;flex:0 0 auto;';
+      var tot = AW.el('div', '', '= ' + (s.t + REG) + 'ps');
+      tot.style.cssText = 'font-size:13.5px;font-weight:700;color:#334155;flex:0 0 auto;';
+      row.appendChild(lb); row.appendChild(seg); row.appendChild(reg); row.appendChild(tot);
+      inner.appendChild(row);
+      this._rows.push(row);
+    }, this);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var cur = -1;                        // 本步考察的段下标
+    if(i >= 2 && i <= 6){ cur = i - 2; }
+    var doneAll = (i >= 7);
+    this._rows.forEach(function(row, k){
+      if(doneAll && k === 0){
+        row.style.background = '#f6fef9';
+        row.style.borderColor = '#16a34a';
+      } else if(k === cur){
+        row.style.background = '#fffbeb';
+        row.style.borderColor = '#d97706';
+      } else {
+        row.style.background = 'transparent';
+        row.style.borderColor = 'transparent';
+      }
+    });
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'最复杂指令分 5 段由部件 A～E 完成：80/50/50/70/50 ps；段寄存器延时 20 ps', count:0 },
+    { cls:'step', tag:'定原理', log:'流水线每个时钟周期内，每段要完成加工并把结果写入段寄存器：时钟周期 ≥ max(各段耗时) + 20ps', count:0, ribbon:{k:1, ok:true} },
+    { cls:'miss', tag:'考察 A 段', log:'A 段：80 + 20 = 100ps —— 目前最大，成为瓶颈候选；80ps 的时钟（选项 C）装不下它', count:1, ribbon:{k:2, ok:false} },
+    { cls:'ok', tag:'考察 B 段', log:'B 段：50 + 20 = 70ps，比 A 段小', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'考察 C 段', log:'C 段：50 + 20 = 70ps，同样装得下', count:3, ribbon:{k:4, ok:true} },
+    { cls:'miss', tag:'考察 D 段', log:'D 段：70 + 20 = 90ps，也超过 80ps——即使没有 A 段，80ps 也不够', count:4, ribbon:{k:5, ok:false} },
+    { cls:'ok', tag:'考察 E 段', log:'E 段：50 + 20 = 70ps，装得下', count:5, ribbon:{k:6, ok:true} },
+    { cls:'done', tag:'完成', log:'瓶颈 = A 段 100ps → CPU 时钟周期至少 100ps，答案 D', count:5, done:true },
+  ],
+
+  result: {
+    big: '100ps（答案 D）',
+    html: '时钟周期 = 最慢段 80ps + 段寄存器延时 20ps = <b>100ps</b>。选 80ps（选项 C）时 A 段（80+20=100）和 D 段（70+20=90）都装不下；漏加 20ps 就会错选 C。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-47 局域网设备选型 / IP 规划 / 广播</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var nd = {}, d1sub = null, d2sub = null, d3sub = null, info = null;
+
+var STYLES = {
+  green: { b: '#16a34a', bg: '#f0fdf4', c: '#15803d', op: 1 },
+  blue:  { b: '#2563eb', bg: '#eff6ff', c: '#1d4ed8', op: 1 },
+  amber: { b: '#d97706', bg: '#fffbeb', c: '#92400e', op: 1 },
+  dim:   { b: '#cbd5e1', bg: '#fff',    c: '#334155', op: .4 },
+};
+function resetNodes(){
+  ['NET','R','D1','D2','D3','H1','H2','H3','H4'].forEach(function(k){
+    if(!nd[k]) return;
+    nd[k].style.borderColor = '#94a3b8';
+    nd[k].style.background = '#fff';
+    nd[k].style.color = '#334155';
+    nd[k].style.opacity = '1';
+  });
+}
+function apply(list){
+  (list || []).forEach(function(it){
+    var e = nd[it[0]], s = STYLES[it[1]];
+    if(!e || !s) return;
+    e.style.borderColor = s.b;
+    e.style.background = s.bg;
+    e.style.color = s.c;
+    e.style.opacity = s.op;
+  });
+}
+
+// 每步：节点高亮 + 设备1/2/3 副标签 + 底部结论行（下标对应 snaps）
+var LOOK = [
+  { hl: [], d1: '待选型', d2: '待选型', d3: '待选型',
+    text: 'R 为路由器（接口已配 IP）。设备 1、2、3 可选以太网交换机（无 VLAN）或路由器，逐问推演。', c: '#334155' },
+  { hl: [['D1','amber'],['R','blue'],['D2','blue'],['D3','blue']], d1: '→ 路由器', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(1) 设备 1 连接三个不同子网（/30 链路 + LAN1 + LAN2），需按 IP 目的网络转发 → 选<b>路由器</b>；设备 2、3 只在本子网内连主机 → 选<b>以太网交换机</b>。', c: '#334155' },
+  { hl: [['D1','blue'],['H1','blue'],['H2','blue']], d1: '→ 路由器', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(2) LAN1 = 192.168.1.0/26：H1 是 .2/26、H2 是 .3/26，默认网关 .1 → 设备 1 接口 IF2 配 <b>192.168.1.1</b>。', c: '#334155' },
+  { hl: [['D1','blue'],['H3','blue'],['H4','blue']], d1: '→ 路由器', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(2) LAN2 = 192.168.1.64/26：H3 是 .66/26、H4 是 .67/26，默认网关 .65 → IF3 配 <b>192.168.1.65</b>。', c: '#334155' },
+  { hl: [['R','amber'],['D1','amber']], d1: '路由器：IF1 = ? · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(2) R 与设备 1 之间是 /30 链路（192.168.1.252～255，可分配 .253/.254）：R 端已占 .253 → IF1 配 <b>192.168.1.254</b>。', c: '#334155' },
+  { hl: [['D1','green']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(2) 小结：交换机接口不配 IP——只有设备 1（路由器）的三个接口需要 IP：<b>.254 / .1 / .65</b>。', c: '#15803d' },
+  { hl: [['R','amber'],['NET','amber']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(3) 内网全部是 192.168.1.0/24 私有地址，Internet 上不可路由 → R 必须提供 <b>NAT（网络地址转换）</b>服务，H1～H4 才能访问 Internet。', c: '#334155' },
+  { hl: [['H3','amber'],['H4','amber'],['D1','blue']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(4) H3 = 192.168.1.66/26 → 子网 192.168.1.64/26，主机位全 1 的直接广播地址 = <b>192.168.1.127</b> → 该数据报在 LAN2 内广播。', c: '#334155' },
+  { hl: [['H4','green'],['D1','blue'],['H3','dim'],['H1','dim'],['H2','dim']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '(4) 路由器隔离广播域：H1、H2 收不到；H3 是发送方，不接收自己发出的数据报 → <b>只有 H4 接收</b>。', c: '#15803d' },
+  { hl: [['D1','green'],['D2','green'],['D3','green'],['R','blue'],['NET','blue'],['H4','green']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
+    text: '汇总：(1) 设备 1 = 路由器，设备 2/3 = 交换机；(2) 仅设备 1 配 IP：.254 / .1 / .65；(3) R 提供 NAT；(4) 只有 H4 接收。', c: '#334155' },
+];
+
+function nodeBox(t, subHtml){
+  var d = AW.el('div', '');
+  d.style.cssText = 'padding:7px 14px;border:2px solid #94a3b8;border-radius:10px;background:#fff;' +
+    'font-weight:700;font-size:14px;color:#334155;text-align:center;transition:all .35s;line-height:1.4;';
+  d.innerHTML = t + (subHtml ? '<div style="font-size:11px;font-weight:400;color:#64748b;margin-top:2px"></div>' : '');
+  if(subHtml){
+    var s = d.lastChild;
+    s.innerHTML = subHtml;
+    d._sub = s;
+  }
+  return d;
+}
+function vline(label){
+  var w = AW.el('div', '');
+  w.style.cssText = 'display:flex;flex-direction:column;align-items:center;margin:0 auto;';
+  var l = AW.el('div', '');
+  l.style.cssText = 'width:2px;height:14px;background:#94a3b8;';
+  w.appendChild(l);
+  if(label){
+    var t = AW.el('div', '');
+    t.style.cssText = 'font-size:10.5px;color:#94a3b8;margin:1px 0 3px;white-space:nowrap;';
+    t.innerHTML = label;
+    w.appendChild(t);
+  }
+  return w;
+}
+
+AW.init({
+  title: '2019·47 小型局域网：设备选型、IP 配置、NAT 与广播',
+  subtitle: 'R 已配置 IP；H1/H2 网关 <code>.1</code>，H3/H4 网关 <code>.65</code> · 四问逐问推演',
+  counterLabel: '已解决问数',
+  intro: '点击「▶ 播放」，按 (1)～(4) 问逐步推演拓扑。',
+
+  build: function(stage){
+    nd = {};
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.maxWidth = '640px';
+    inner.style.margin = '0 auto';
+
+    // Internet
+    var r0 = AW.el('div', '');
+    r0.style.cssText = 'display:flex;justify-content:center;';
+    nd.NET = nodeBox('Internet');
+    r0.appendChild(nd.NET);
+    inner.appendChild(r0);
+    inner.appendChild(vline('公网侧 101.1.2.10'));
+
+    // R
+    var r1 = AW.el('div', '');
+    r1.style.cssText = 'display:flex;justify-content:center;';
+    nd.R = nodeBox('R（路由器）', '接口已配 IP');
+    r1.appendChild(nd.R);
+    inner.appendChild(r1);
+    inner.appendChild(vline('192.168.1.253/30 → 设备1 IF1'));
+
+    // 设备1
+    var r2 = AW.el('div', '');
+    r2.style.cssText = 'display:flex;justify-content:center;';
+    nd.D1 = nodeBox('设备 1', '待选型');
+    d1sub = nd.D1._sub;
+    r2.appendChild(nd.D1);
+    inner.appendChild(r2);
+
+    // 两个子树（设备2 / 设备3）
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:40px;justify-content:center;';
+    var sides = [
+      { key: 'D2', name: '设备 2', ifLabel: 'IF2', hosts: [
+        { key: 'H1', name: 'H1', ip: '192.168.1.2/26<br>网关 .1' },
+        { key: 'H2', name: 'H2', ip: '192.168.1.3/26<br>网关 .1' } ] },
+      { key: 'D3', name: '设备 3', ifLabel: 'IF3', hosts: [
+        { key: 'H3', name: 'H3', ip: '192.168.1.66/26<br>网关 .65' },
+        { key: 'H4', name: 'H4', ip: '192.168.1.67/26<br>网关 .65' } ] },
+    ];
+    sides.forEach(function(sd){
+      var col = AW.el('div', '');
+      col.style.cssText = 'display:flex;flex-direction:column;align-items:center;min-width:200px;';
+      col.appendChild(vline(sd.ifLabel));
+      nd[sd.key] = nodeBox(sd.name, '待选型');
+      if(sd.key === 'D2') d2sub = nd.D2._sub; else d3sub = nd.D3._sub;
+      col.appendChild(nd[sd.key]);
+      var hostsRow = AW.el('div', '');
+      hostsRow.style.cssText = 'display:flex;gap:26px;margin-top:0;';
+      sd.hosts.forEach(function(h){
+        var hc = AW.el('div', '');
+        hc.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+        hc.appendChild(vline(''));
+        nd[h.key] = nodeBox(h.name, '');
+        hc.appendChild(nd[h.key]);
+        var ip = AW.el('div', '');
+        ip.style.cssText = 'font-size:10.5px;color:#64748b;margin-top:3px;text-align:center;line-height:1.45;font-family:Menlo,monospace;';
+        ip.innerHTML = h.ip;
+        hc.appendChild(ip);
+        hostsRow.appendChild(hc);
+      });
+      col.appendChild(hostsRow);
+      row.appendChild(col);
+    });
+    inner.appendChild(row);
+
+    info = AW.el('div', '');
+    info.style.cssText = 'margin-top:14px;padding:10px 14px;border-radius:10px;background:#f8fafc;' +
+      'border:1px solid #e2e8f0;font-size:13.5px;line-height:1.75;color:#334155;';
+    inner.appendChild(info);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'题面', log:'R 为路由器（接口已配 IP），H1～H4 已按图配置 IP 与默认网关；设备 1、2、3 待选型。逐问推演', count:0 },
+    { cls:'ok',    tag:'(1) 设备选型', log:'设备 1 左接 R 的 /30 链路、右分出 LAN1 与 LAN2 两个不同子网，需按 IP 转发 → 选路由器；设备 2、3 只在本子网内连主机 → 选以太网交换机', count:1 },
+    { cls:'step',  tag:'(2) IF2', log:'LAN1 = 192.168.1.0/26：H1 是 .2、H2 是 .3，默认网关 .1 → 设备 1 接口 IF2 配 192.168.1.1', count:1 },
+    { cls:'step',  tag:'(2) IF3', log:'LAN2 = 192.168.1.64/26：H3 是 .66、H4 是 .67，默认网关 .65 → IF3 配 192.168.1.65', count:1 },
+    { cls:'step',  tag:'(2) IF1', log:'R 与设备 1 之间是 /30 链路（192.168.1.252～255）：R 端已占 .253 → IF1 配 192.168.1.254', count:1 },
+    { cls:'ok',    tag:'(2) 小结', log:'交换机接口不需要 IP：只有设备 1（路由器）的三个接口需要配 IP：IF1 .254、IF2 .1、IF3 .65', count:2 },
+    { cls:'step',  tag:'(3) NAT', log:'内网 192.168.1.0/24 是私有地址，Internet 上不可路由 → R 必须提供 NAT（网络地址转换）服务，H1～H4 才能上网', count:3 },
+    { cls:'step',  tag:'(4) 定位广播', log:'H3 = 192.168.1.66/26 → 子网 192.168.1.64/26，主机位全 1 的直接广播地址 = 192.168.1.127 → 数据报在 LAN2 内广播', count:4 },
+    { cls:'ok',    tag:'(4) 谁接收', log:'路由器隔离广播域：H1、H2 收不到；H3 是发送方，不接收自己发出的数据报 → 只有 H4 接收', count:4 },
+    { cls:'done',  tag:'完成', log:'(1) 设备 1 = 路由器，设备 2/3 = 以太网交换机；(2) 仅设备 1 配 IP：.254 / .1 / .65；(3) NAT；(4) 只有 H4 接收', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = LOOK[i] || LOOK[0];
+    resetNodes();
+    apply(st.hl);
+    if(d1sub) d1sub.innerHTML = st.d1;
+    if(d2sub) d2sub.innerHTML = st.d2;
+    if(d3sub) d3sub.innerHTML = st.d3;
+    if(info){
+      info.style.color = st.c;
+      info.innerHTML = st.text;
+    }
+  },
+
+  result: {
+    big: '四问全解（9 分）',
+    html: '(1) 设备 1 = <b>路由器</b>，设备 2/3 = <b>以太网交换机</b>；(2) 只有设备 1 需配 IP：IF1 = <code>192.168.1.254</code>、IF2 = <code>192.168.1.1</code>、IF3 = <code>192.168.1.65</code>；(3) R 提供 <b>NAT</b> 服务；(4) <code>192.168.1.127</code> 是 LAN2 的广播地址，<b>只有 H4 接收</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

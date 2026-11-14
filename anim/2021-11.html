@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-11 大根堆依次插入</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 堆数组一行（固定 7 格）：arr=已插入值 cls=各类 ptrs=上方标注
+function heapRow(arr, cls, ptrs, extra){
+  var h = '<div class="aw-scroll"><div class="aw-row-label"><b>堆数组</b>（层序，1 起下标；i 的双亲 = ⌊i/2⌋）</div><div class="aw-cells">';
+  for(var i = 0; i < 7; i++){
+    var v = i < arr.length ? arr[i] : '·';
+    var c = cls && cls[i] ? ' ' + cls[i] : (i < arr.length ? '' : ' dim');
+    h += '<div class="aw-col"><div class="aw-ptr">' + ((ptrs && ptrs[i]) || '') + '</div>' +
+         '<div class="aw-box' + c + '">' + v + '</div>' +
+         '<div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  h += '</div>';
+  if(extra) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>';
+  return h + '</div>';
+}
+
+AW.init({
+  title: '大根堆：依次插入 6,9,1,5,8,4,7',
+  subtitle: '初始为空堆 · 新元素放数组尾部，比双亲大就上浮',
+  counterLabel: '已插入',
+  ribbonTitle: '插入序号（✓ 完成）',
+  intro: '点击「▶ 播放」逐个插入并上浮调整。',
+
+  snaps: [
+    { cls:'step', tag:'空堆', log:'大根堆：任一结点 ≥ 其孩子；新元素先放到数组尾部，再与双亲比较、大则上浮', count:0,
+      html: heapRow([], [], [], '等待依次插入 6,9,1,5,8,4,7。') },
+
+    { cls:'ok', tag:'插入 6', log:'插入 6：放到 1 号位，成为堆顶', count:1, ribbon:{k:1, ok:true},
+      html: heapRow(['6'], ['hit'], [], '数组：6') },
+
+    { cls:'shift', tag:'插入 9', log:'插入 9：9 > 父 6（2 号的双亲是 1 号），交换上浮 → 9,6', count:2, ribbon:{k:2, ok:true},
+      html: heapRow(['9','6'], ['hit','','','','',''], ['新插入','下沉', '','','',''], '9 与 6 交换后 9 到堆顶。数组：9,6') },
+
+    { cls:'ok', tag:'插入 1', log:'插入 1：1 < 父 6（3 号的双亲是 1 号），不上浮 → 9,6,1', count:3, ribbon:{k:3, ok:true},
+      html: heapRow(['9','6','1'], ['','','hit'], ['','','', '','',''], '数组：9,6,1') },
+
+    { cls:'ok', tag:'插入 5', log:'插入 5：5 < 父 6（4 号的双亲是 2 号），不上浮 → 9,6,1,5', count:4, ribbon:{k:4, ok:true},
+      html: heapRow(['9','6','1','5'], ['','','','hit'], ['','','','5<6 不动','',''], '数组：9,6,1,5') },
+
+    { cls:'shift', tag:'插入 8', log:'插入 8：8 > 父 6（5 号的双亲是 2 号）交换上浮；8 < 父 9 停 → 9,8,1,5,6', count:5, ribbon:{k:5, ok:true},
+      html: heapRow(['9','8','1','5','6'], ['','','','hit','hit'], ['','','','6 下移','8 上浮',''], '8 与 6 交换：数组 9,6,1,5,8 → 9,8,1,5,6') },
+
+    { cls:'shift', tag:'插入 4', log:'插入 4：4 > 父 1（6 号的双亲是 3 号）交换；4 < 父 8 停 → 9,8,4,5,6,1', count:6, ribbon:{k:6, ok:true},
+      html: heapRow(['9','8','4','5','6','1'], ['','','hit','','','hit'], ['','','4 上浮','','','1 下移'], '4 与 1 交换：数组 9,8,1,5,6,4 → 9,8,4,5,6,1') },
+
+    { cls:'shift', tag:'插入 7', log:'插入 7：7 > 父 4（7 号的双亲是 3 号）交换；7 < 父 9 停 → 9,8,7,5,6,1,4', count:7, ribbon:{k:7, ok:true},
+      html: heapRow(['9','8','7','5','6','1','4'], ['','','hit','','','','hit'], ['','','7 上浮','','','4 下移'], '7 与 4 交换：数组 9,8,4,5,6,1,7 → 9,8,7,5,6,1,4') },
+
+    { cls:'done', tag:'完成', log:'最终堆的层序数组 = 9,8,7,5,6,1,4 → 答案 B', count:7, done:true,
+      html: heapRow(['9','8','7','5','6','1','4'], ['ok','ok','ok','ok','ok','ok','ok'], [], '逐层验证：9 ≥ 8,7；8 ≥ 5,6；7 ≥ 1,4 —— 大根堆性质成立。') },
+  ],
+
+  result: {
+    big: '9,8,7,5,6,1,4（答案 B）',
+    html: '插入上浮只影响"新结点到根"这一条路径；堆只保证<b>双亲 ≥ 孩子</b>，层序数组不是有序的——干扰 A（9,8,7,6,5,4,1）就是把它当成了有序数组。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

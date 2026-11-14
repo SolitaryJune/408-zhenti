@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-45 · 文件系统目录项与多级索引推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 地址项分组：直接×10 / 一级×1 / 二级×1 / 三级×1 */
+var ADDR = [
+  { name: '直接地址 ×10', cap: '覆盖 10 块' },
+  { name: '一级间接 ×1',  cap: '+1024 块' },
+  { name: '二级间接 ×1',  cap: '+1024² 块' },
+  { name: '三级间接 ×1',  cap: '+1024³ 块' },
+];
+
+var addrRow, capText, slotRow;
+
+function paint(st){
+  for (var j = 0; j < 4; j++){
+    var d = addrRow.children[j];
+    var cls = st.addr[j] || '';
+    if (cls === 'hit'){
+      d.style.background = '#fef3c7'; d.style.borderColor = '#d97706'; d.style.color = '#92400e';
+    } else if (cls === 'ok'){
+      d.style.background = '#dcfce7'; d.style.borderColor = '#16a34a'; d.style.color = '#14532d';
+    } else if (cls === 'dim'){
+      d.style.opacity = '0.4';
+    } else {
+      d.style.background = '#f8fafc'; d.style.borderColor = '#cbd5e1'; d.style.color = '#475569';
+      d.style.opacity = '1';
+    }
+  }
+  capText.innerHTML = st.cap || '';
+  for (var k = 0; k < 2; k++){
+    var s = slotRow.children[k];
+    s.innerHTML = st.slots[k] || '　';
+    s.style.background = st.slotCls[k] ? '#fef3c7' : '#f8fafc';
+    s.style.borderColor = st.slotCls[k] ? '#d97706' : '#cbd5e1';
+    s.style.color = st.slotCls[k] ? '#92400e' : '#94a3b8';
+  }
+}
+
+AW.init({
+  title: '目录项与多级索引推演（2022-45）',
+  subtitle: '块 4 KB · 地址项 4 B → 每块 1024 个地址 · 索引结点 256 B（直接 10 + 一/二/三级各 1）',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，按第 1）~4）问逐步推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>索引结点地址项分组</b>（琥珀 = 本步重点，绿 = 已确认在用）'));
+    addrRow = AW.el('div', '');
+    addrRow.style.display = 'flex';
+    addrRow.style.gap = '8px';
+    addrRow.style.width = 'max-content';
+    for (var j = 0; j < 4; j++){
+      var d = AW.el('div', '');
+      d.style.border = '2px solid #cbd5e1';
+      d.style.borderRadius = '10px';
+      d.style.textAlign = 'center';
+      d.style.padding = '10px 10px 8px';
+      d.style.minWidth = '110px';
+      d.style.transition = 'background .25s, border-color .25s';
+      var p1 = AW.el('div', '', ADDR[j].name);
+      p1.style.fontWeight = '700';
+      p1.style.fontSize = '13.5px';
+      var p2 = AW.el('div', '', ADDR[j].cap);
+      p2.style.fontSize = '11.5px';
+      p2.style.marginTop = '3px';
+      d.appendChild(p1);
+      d.appendChild(p2);
+      addrRow.appendChild(d);
+    }
+    inner.appendChild(addrRow);
+
+    capText = AW.el('div', 'aw-row-label', '');
+    capText.style.marginTop = '12px';
+    capText.style.fontSize = '13.5px';
+    inner.appendChild(capText);
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>第 3）问读盘步骤</b>（打开 course1 并读入内存）'));
+    slotRow = AW.el('div', '');
+    slotRow.style.display = 'flex';
+    slotRow.style.gap = '8px';
+    for (var k = 0; k < 2; k++){
+      var s = AW.el('div', '', '　');
+      s.style.border = '2px solid #cbd5e1';
+      s.style.borderRadius = '8px';
+      s.style.padding = '8px 12px';
+      s.style.fontSize = '13px';
+      s.style.minWidth = '240px';
+      s.style.textAlign = 'center';
+      slotRow.appendChild(s);
+    }
+    inner.appendChild(slotRow);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint({ addr: ['', '', '', ''], cap: '', slots: ['', ''], slotCls: ['', ''] });
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '条件',
+      st: { addr: ['', '', '', ''], cap: '', slots: ['', ''], slotCls: ['', ''] },
+      log: '审题：磁盘块 4 KB，地址项 4 B → 一块可放 4096 ÷ 4 = 1024 个地址；索引结点 256 B，含 10 个直接地址项与一、二、三级间接地址项各 1 个',
+      count: 0 },
+    { cls: 'step', tag: '问 1',
+      st: { addr: ['', '', '', ''], cap: '<b>第 1）问</b>：目录项 = 文件名 + 索引结点号 → stu 的两个目录项为（course, 2）和（doc, 10）', slots: ['', ''], slotCls: ['', ''] },
+      log: '第 1）问：目录项由文件名和索引结点号构成 → 目录文件 stu 的两个目录项是（course, 2）与（doc, 10）',
+      count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'ok', tag: '问 2',
+      st: { addr: ['', '', '', ''], cap: '<b>第 2）问</b>：doc 与 course1 索引结点号同为 10 → 共享同一索引结点 → x = 30', slots: ['', ''], slotCls: ['', ''] },
+      log: '第 2）问：doc 与 course1 的索引结点号同为 10 → 二者共享同一索引结点；索引结点中记录了文件占用的磁盘块号（course1 的数据块为 30）→ x = 30',
+      count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'step', tag: '问 3·起点',
+      st: { addr: ['', '', '', ''], cap: '<b>第 3）问</b>：course 目录内容已在内存 → 直接取得 course1 的索引结点号 10，不必再读目录块', slots: ['', ''], slotCls: ['', ''] },
+      log: '第 3）问前提：course 目录内容已在内存 → 从目录项直接取得 course1 的索引结点号 10（目录块不占读盘次数）',
+      count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'shift', tag: '问 3·第 1 块',
+      st: { addr: ['', '', '', ''], cap: '', slots: ['① course1 的索引结点所在块（每块 16 个结点，10 号在第 0 块）', ''], slotCls: ['hit', ''] },
+      log: '读第 1 个磁盘块：course1 的索引结点所在块（每块 4096 ÷ 256 = 16 个结点，10 号结点位于索引结点区第 0 块）',
+      count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'shift', tag: '问 3·第 2 块',
+      st: { addr: ['', '', '', ''], cap: '<b>结论</b>：打开并读入 course1 共读 2 个磁盘块', slots: ['① course1 的索引结点所在块', '② 30 号数据块'], slotCls: ['hit', 'hit'] },
+      log: '读第 2 个磁盘块：按索引结点中的地址读 30 号数据块 → 共需读 2 个磁盘块',
+      count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'step', tag: '问 4·算块数',
+      st: { addr: ['hit', '', '', ''], cap: 'course2 增长到 6 MB = 6 × 1024 KB ÷ 4 KB = <b>1536</b> 块；直接地址项只能覆盖 10 块', slots: ['', ''], slotCls: ['', ''] },
+      log: '第 4）问：course2 增长到 6 MB，共 6 × 1024 KB ÷ 4 KB = 1536 块；先看直接地址项——只有 10 个，覆盖 10 块，远不够',
+      count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'step', tag: '问 4·一级',
+      st: { addr: ['ok', 'hit', '', ''], cap: '直接 10 + 一级间接 1024 = <b>1034</b> 块，仍小于 1536 → 一级也不够', slots: ['', ''], slotCls: ['', ''] },
+      log: '加上一级间接：1 个地址表块可记 1024 个地址 → 直接 + 一级 = 10 + 1024 = 1034 块，仍小于 1536',
+      count: 7, ribbon: { k: 7, ok: true } },
+    { cls: 'done', tag: '完成',
+      st: { addr: ['ok', 'ok', 'hit', 'dim'], cap: '二级间接可记 1024 × 1024 块 ≥ 剩余 502 块 → <b>需使用一级和二级间接地址项</b>；三级用不到', slots: ['', ''], slotCls: ['', ''] },
+      log: '还需二级间接：可记 1024 × 1024 块，覆盖剩余 502 块绰绰有余 → 需使用一级和二级间接地址项（三级不需要）',
+      count: 8, ribbon: { k: 8, ok: true }, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    paint(sn.st);
+  },
+
+  result: {
+    big: 'x=30 · 读 2 块 · 需一级和二级间接',
+    html: '① 目录项 =（文件名, 索引结点号）：stu 有（course, 2）、（doc, 10）；② doc 与 course1 共享索引结点 10 → <b>x = 30</b>；③ course 目录已在内存 → 只读 course1 的索引结点所在块 + 30 号数据块，共 <b>2</b> 块；④ 6 MB = 1536 块 &gt; 10 + 1024 = 1034 → 需使用<b>一级和二级间接地址项</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-19 同步总线带宽计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/推理链类（纯计算推理） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：带宽公式', cls: 'key',
+    log: '带宽 = 时钟频率 × 每周期传送次数 × 每次传送字节数',
+    body: '<p>总线带宽 = <code>时钟频率 × 每周期传送次数 × 每次传送的字节数</code>，逐个确定三个量。</p>' },
+  { title: '每次传送 32 位 = 4 字节', cls: '',
+    log: '32 根地址/数据复用线传数据时全作数据线 → 每次 4 字节',
+    body: '<p>地址/数据线复用：传送数据时 32 根线<b>全部用作数据线</b> → 每次传送 32 位 = <b>4 字节</b>。复用不减少数据宽度。</p>' },
+  { title: '每周期传送 2 次', cls: '',
+    log: '上升沿、下降沿各传一次 → 每周期 2 次',
+    body: '<p>同步总线在时钟<b>上升沿和下降沿各传送一次数据</b> → 每个时钟周期传送 <b>2 次</b>。</p>' },
+  { title: '时钟频率 66 MHz', cls: '',
+    log: '每秒 66M 个时钟周期',
+    body: '<p>总线时钟 66 MHz → 每秒有 <b>66M 个</b>时钟周期可供传送。</p>' },
+  { title: '合成带宽', cls: 'good',
+    log: '66M × 2 × 4B = 528 MB/s',
+    body: '<p>带宽 = 66M × 2 × 4 B = <b>528 MB/s</b>，对应选项 <b>C</b>。</p>' },
+  { title: '逐项排错', cls: 'bad',
+    log: 'B 漏乘 2；A 把 32 位当 1 字节；D 重复计双沿',
+    body: '<p>B 264 MB/s = 66M × 4：漏乘"每周期 2 次"；A 132 MB/s = 66M × 2 × 1B：把 32 位当成 1 字节；D 1056 MB/s：把双沿又多乘一遍。</p>' },
+  { title: '结论', cls: 'good',
+    log: '答案 C：最大数据传输率 528 MB/s',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>带宽 = 频率 × 每周期次数 × 每次字节数</b>，复用不减宽度、双沿翻倍。</p>' },
+];
+
+var COUNTS = [0, 0, 0, 0, 528, 528, 528];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : (s.cls === 'key' ? 'shift' : 'step'))),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: COUNTS[i],
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2014-19 · 同步总线的最大数据传输率',
+  subtitle: '地址/数据线复用 32 根 · 时钟 66 MHz · 每周期上升沿 + 下降沿各传一次',
+  counterLabel: '带宽 (MB/s)',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '528 MB/s（C）',
+    html: '带宽 = 66M × 每周期 2 次 × 每次 4B = <b>528 MB/s</b>，选 <b>C</b>。B 的 264 漏乘双沿；A 的 132 把 32 位当 1 字节。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

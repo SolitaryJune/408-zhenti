@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-41 · 输出有向图中的 K 顶点</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 题 41 图：顶点 a,b,c,d；边 a→b, a→d, b→c, b→d, c→d */
+var V = ['a','b','c','d'];
+var M = [
+  [0,1,0,1],
+  [0,0,1,1],
+  [0,0,0,1],
+  [0,0,0,0],
+];
+/* 行和（出度）= [2,2,1,0]，列和（入度）= [0,1,1,3] */
+
+function cellBox(txt, bg, bd, fg){
+  return '<div style="width:40px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid ' + bd +
+    ';background:' + bg + ';color:' + fg + ';border-radius:8px;font-family:Menlo,monospace;font-weight:700;font-size:14px">' + txt + '</div>';
+}
+function mtxHTML(hiK){
+  var h = '<div class="aw-row-label"><b>邻接矩阵 Edge</b>（行 k = 顶点 k 发出的边 → 出度；列 k = 指向顶点 k 的边 → 入度）</div>';
+  h += '<div style="display:inline-block">';
+  h += '<div style="display:flex;gap:4px;margin-bottom:4px"><div style="width:48px"></div>';
+  for (var j = 0; j < 4; j++){ h += cellBox('到' + V[j], '#f1f5f9', '#e2e8f0', '#64748b'); }
+  h += '</div>';
+  for (var i = 0; i < 4; i++){
+    h += '<div style="display:flex;gap:4px;margin-bottom:4px">';
+    h += '<div style="width:48px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-weight:700;color:#334155;font-size:13px">' + V[i] + ' 行</div>';
+    for (var j2 = 0; j2 < 4; j2++){
+      var bg = '#fff', bd = '#cbd5e1', fg = '#475569';
+      if (hiK != null && i === hiK){ bg = '#fef3c7'; bd = '#d97706'; fg = '#92400e'; }
+      if (hiK != null && j2 === hiK){ bg = '#dbeafe'; bd = '#2563eb'; fg = '#1d4ed8'; }
+      if (hiK != null && i === hiK && j2 === hiK){ bg = '#fde68a'; bd = '#d97706'; fg = '#92400e'; }
+      h += cellBox(String(M[i][j2]), bg, bd, fg);
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+function degRow(label, arr, states){
+  var h = '<div class="aw-row-label">' + label + '</div><div class="aw-cells">';
+  for (var i = 0; i < 4; i++){
+    var c = states[i] ? ' ' + states[i] : (arr[i] == null ? ' dim' : '');
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box' + c + '">' + (arr[i] == null ? '·' : arr[i]) + '</div><div class="aw-idx">' + V[i] + '</div></div>';
+  }
+  return h + '</div>';
+}
+function stageHTML(st){
+  var h = mtxHTML(st.k);
+  h += degRow('<b>出度</b>（行和，琥珀=本步刚算出）', st.out, st.stOut);
+  h += degRow('<b>入度</b>（列和，琥珀=本步刚算出）', st.ind, st.stIn);
+  h += degRow('<b>K 顶点判定</b>（绿=是 K 顶点，红=不是）', V, st.ver);
+  h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.note + '</div>';
+  return h;
+}
+
+/* stOut/stIn: ''=未算, 'shift'=本步算出, 'ok'=已算 */
+var STATES = [
+  { k:null, out:[null,null,null,null], ind:[null,null,null,null], stOut:['','','',''], stIn:['','','',''], ver:['dim','dim','dim','dim'],
+    note:'示例即题 41 图：边 a→b、a→d、b→c、b→d、c→d。邻接矩阵中 Edge[i][j]=1 表示有边 i→j。' },
+  { k:null, out:[null,null,null,null], ind:[null,null,null,null], stOut:['','','',''], stIn:['','','',''], ver:['dim','dim','dim','dim'],
+    note:'第 1 问·设计思想：顶点 k 的出度 = 第 k 行元素之和，入度 = 第 k 列元素之和；出度 ＞ 入度即为 K 顶点，输出该顶点并计数，最后返回个数。时间 O(n²)、空间 O(1)。' },
+  { k:0, out:[2,null,null,null], ind:[0,null,null,null], stOut:['shift','','',''], stIn:['shift','','',''], ver:['ok','dim','dim','dim'],
+    note:'顶点 a：第 0 行和 = 2（出度），第 0 列和 = 0（入度）。2 ＞ 0 → K 顶点，输出 a。' },
+  { k:1, out:[2,2,null,null], ind:[0,1,null,null], stOut:['ok','shift','',''], stIn:['ok','shift','',''], ver:['ok','ok','dim','dim'],
+    note:'顶点 b：行和 = 2（出度），列和 = 1（入度）。2 ＞ 1 → K 顶点，输出 b。' },
+  { k:2, out:[2,2,1,null], ind:[0,1,1,null], stOut:['ok','ok','shift',''], stIn:['ok','ok','shift',''], ver:['ok','ok','miss','dim'],
+    note:'顶点 c：行和 = 1（出度），列和 = 1（入度）。1 ＞ 1 不成立 → 不是 K 顶点，跳过。' },
+  { k:3, out:[2,2,1,0], ind:[0,1,1,3], stOut:['ok','ok','ok','shift'], stIn:['ok','ok','ok','shift'], ver:['ok','ok','miss','miss'],
+    note:'顶点 d：行和 = 0（出度），列和 = 3（入度）。0 ＞ 3 不成立 → 不是 K 顶点。' },
+  { k:null, out:[2,2,1,0], ind:[0,1,1,3], stOut:['ok','ok','ok','ok'], stIn:['ok','ok','ok','ok'], ver:['ok','ok','miss','miss'],
+    note:'第 2 问·代码要点：双重 for 逐顶点求行和（出度 Edge[k][m]）与列和（入度 Edge[m][k]）；outdegree ＞ indegree 则 printf 输出、count++；最后 return count。' },
+  { k:null, out:[2,2,1,0], ind:[0,1,1,3], stOut:['ok','ok','ok','ok'], stIn:['ok','ok','ok','ok'], ver:['ok','ok','miss','miss'],
+    note:'结束：输出 K 顶点 a、b，函数返回 2。' },
+];
+
+var snaps = STATES.map(function(st, i){
+  var last = i === STATES.length - 1;
+  var cntArr = [0,0,1,2,2,2,2,2];
+  var clsArr = ['shift','step','ok','ok','miss','miss','step','done'];
+  var tagArr = ['题 41 图','第 1 问·思想','判定 a','判定 b','判定 c','判定 d','第 2 问·代码','完成'];
+  var logArr = [
+    '题 41 图：a→b, a→d, b→c, b→d, c→d；K 顶点 = 出度大于入度的顶点',
+    '设计思想：出度 = 行和、入度 = 列和；大于则输出并计数，返回个数',
+    'a：出度 2 ＞ 入度 0 → K 顶点，输出 a',
+    'b：出度 2 ＞ 入度 1 → K 顶点，输出 b',
+    'c：出度 1，入度 1，不成立 → 跳过',
+    'd：出度 0，入度 3，不成立 → 跳过',
+    '代码：双重 for 行列求和，大于则 printf + count++，return count；O(n²)、O(1)',
+    '输出 a、b，函数返回 2 —— 与题图「a 和 b 为 K 顶点」一致'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: cntArr[i],
+    html: stageHTML(st), done: last,
+  };
+  if (i >= 2 && i <= 5){ sn.ribbon = { k: i - 1, ok: (i === 2 || i === 3) }; }
+  return sn;
+});
+
+AW.init({
+  title: '2023-41 · 输出有向图 G 中所有 K 顶点（出度 ＞ 入度）',
+  subtitle: '邻接矩阵存储 <code>MGraph</code> · 出度 = 行和，入度 = 列和 · 以题 41 图为示例',
+  counterLabel: '已判定顶点',
+  ribbonTitle: '各顶点（✓ 是 K 顶点 / ✗ 不是）',
+  intro: '点击「▶ 播放」逐顶点计算行和与列和并判定。',
+  snaps: snaps,
+  result: {
+    big: '输出 a、b，返回 2',
+    html: '第 1 问：<b>出度 = 第 k 行非零元素和，入度 = 第 k 列非零元素和</b>，出度＞入度即输出该顶点并计数，最后返回个数。第 2 问：双重 for 求行和/列和，<code>outdegree &gt; indegree</code> 则 <code>printf("%c", G.VerticesList[k])</code>、<code>count++</code>，末尾 <code>return count</code>。时间 <b>O(n²)</b>，空间 <b>O(1)</b>。易错：出度走行 <code>Edge[k][m]</code>、入度走列 <code>Edge[m][k]</code>，下标次序不能反。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-17 Store指令偏移量位数与取值范围</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（32位指令字字段切分） · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 每步：字段条各段的显示状态（0 隐 1 显 2 高亮）、寄存器编号说明卡、结果卡
+var ST = [
+  { seg:[0,0,0,0], info:false, off:false, range:false },
+  { seg:[0,0,0,0], info:true,  off:false, range:false },
+  { seg:[1,0,0,0], info:true,  off:false, range:false },
+  { seg:[2,1,0,0], info:true,  off:false, range:false },
+  { seg:[2,2,1,0], info:true,  off:false, range:false },
+  { seg:[2,2,2,1], info:true,  off:true,  range:false },
+  { seg:[2,2,2,2], info:true,  off:true,  range:true  },
+  { seg:[2,2,2,2], info:true,  off:true,  range:true  },
+];
+
+var SEGS = [
+  { t:'操作码 + 寻址方式位<br>8 位', w:'25%',  c1:'#fef3c7', c2:'#d97706', c3:'#92400e' },
+  { t:'源操作数<br>寄存器编号 4 位', w:'12.5%', c1:'#dbeafe', c2:'#2563eb', c3:'#1d4ed8' },
+  { t:'基址寄存器编号<br>4 位',      w:'12.5%', c1:'#dbeafe', c2:'#2563eb', c3:'#1d4ed8' },
+  { t:'偏移量<br>16 位（补码）',     w:'50%',   c1:'#dcfce7', c2:'#16a34a', c3:'#15803d' },
+];
+
+AW.init({
+  title: '2014-17 · Store 指令偏移量取值范围',
+  subtitle: '32 位定长指令字 · 操作码（含寻址方式位）8 位 · 16 个通用寄存器 · 源=寄存器直接 / 目的=基址寻址',
+  counterLabel: '已定位字段',
+  ribbonTitle: '字段（✓ 已定位）',
+  intro: '点击「▶ 播放」：把 32 位指令字一段一段切给各字段，剩下的就是偏移量。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var lb = AW.el('div', 'aw-row-label', '<b>32 位定长指令字</b>（Store 指令的字段切分，段宽按位数比例）');
+    var bar = AW.el('div', '');
+    bar.style.cssText = 'display:flex;width:100%;max-width:760px;height:62px;border:2px solid #cbd5e1;border-radius:12px;overflow:hidden;margin-top:6px';
+    var segEls = [];
+    SEGS.forEach(function(s, k){
+      var d = AW.el('div', '');
+      d.style.cssText = 'width:' + s.w + ';display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;line-height:1.5;opacity:.12;transition:opacity .35s;border-right:' + (k < 3 ? '1.5px solid #cbd5e1' : 'none');
+      d.innerHTML = s.t;
+      bar.appendChild(d);
+      segEls.push(d);
+    });
+
+    var info = AW.el('div', '');
+    info.style.cssText = 'display:none;font-size:13.5px;color:#334155;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;margin:12px 0 4px';
+    info.innerHTML = '16 个通用寄存器 → 寄存器编号需 <b style="color:#2563eb">4 位</b>（2<sup>4</sup> = 16）。';
+
+    var off = AW.el('div', '');
+    off.style.cssText = 'display:none;font-size:14px;color:#334155;background:#fffbeb;border:1.5px solid #d97706;border-radius:10px;padding:8px 12px;margin:8px 0';
+    off.innerHTML = '偏移量 = 32 − 8 − 4 − 4 = <b style="color:#d97706">16 位</b>（补码表示）。';
+
+    var range = AW.el('div', '');
+    range.style.cssText = 'display:none;font-size:14px;line-height:1.8;color:#14532d;background:#dcfce7;border:2px solid #16a34a;border-radius:12px;padding:10px 14px;margin:10px 0';
+    range.innerHTML = '16 位补码范围：<b style="color:#15803d">−32768 ~ +32767</b>（负端多 1）→ 选 <b style="color:#15803d">A</b>。<br>B 端点错；C/D 是把 16 位无符号数硬套正负号。';
+
+    inner.appendChild(lb); inner.appendChild(bar);
+    inner.appendChild(info); inner.appendChild(off); inner.appendChild(range);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._segEls = segEls; this._info = info; this._off = off; this._range = range;
+  },
+
+  snaps: [
+    { cls:'step',  tag:'题面',       log:'32 位定长指令字；操作码字段（含寻址方式位）8 位；16 个通用寄存器；Store：源操作数寄存器直接寻址、目的操作数基址寻址。', count:0 },
+    { cls:'step',  tag:'寄存器编号', log:'16 个通用寄存器 → 编号需要 4 位（2^4 = 16）。', count:0 },
+    { cls:'shift', tag:'操作码 8 位', log:'操作码字段（含寻址方式位）占 8 位 → 32 位里先切走 1/4。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'源寄存器 4 位', log:'源操作数用寄存器直接寻址：只需给出寄存器编号 → 4 位。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'shift', tag:'基址寄存器 4 位', log:'目的操作数用基址寻址：先给出基址寄存器编号（可用任一通用寄存器）→ 又占 4 位；其余留给偏移量。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'偏移量 16 位', log:'偏移量 = 32 − 8 − 4 − 4 = 16 位，用补码表示。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'范围 −32768~+32767', log:'16 位补码：最小 1000…0B = −32768，最大 0111…1B = +32767 → 选 A。', count:4 },
+    { cls:'done',  tag:'结论',       log:'答案 A：偏移量 16 位补码，范围 −32768 ~ +32767。', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = ST[i];
+    var segEls = this._segEls;
+    SEGS.forEach(function(s, k){
+      var v = st.seg[k];
+      var d = segEls[k];
+      d.style.opacity = v === 0 ? '.12' : '1';
+      if (v === 2){ d.style.background = s.c1; d.style.color = s.c3; d.style.borderColor = s.c2; }
+      else if (v === 1){ d.style.background = s.c1; d.style.color = s.c3; d.style.borderColor = s.c2; }
+      else { d.style.background = '#f1f5f9'; d.style.color = '#94a3b8'; d.style.borderColor = 'transparent'; }
+    });
+    this._info.style.display = st.info ? 'block' : 'none';
+    this._off.style.display = st.off ? 'block' : 'none';
+    this._range.style.display = st.range ? 'block' : 'none';
+  },
+
+  result: {
+    big: '−32768 ~ +32767（A）',
+    html: '32 位切分：操作码 8 + 源寄存器编号 4 + 基址寄存器编号 4 = 16 位 → 偏移量 <b>16 位</b>（补码），范围 <b>−32768 ~ +32767</b>，选 <b>A</b>。16 个寄存器 → 编号 4 位（2^4 = 16），别算成 5 位。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

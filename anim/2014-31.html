@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-31 管道通信的正确叙述</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function pipePic(state){
+  // state: 'mid' 半双工示意 / 'empty' 读阻塞 / 'full' 写阻塞
+  var fill = state === 'full' ? 8 : (state === 'empty' ? 0 : 4);
+  var cells = '';
+  for(var i = 0; i < 8; i++){
+    var c = i < fill ? '#2563eb' : '#ffffff';
+    cells += '<div style="width:20px;height:26px;border:1.5px solid #94a3b8;background:' + c +
+             ';border-radius:4px"></div>';
+  }
+  var left = state === 'full' ? '写进程 W<br><span style="color:#b91c1c;font-weight:700">阻塞（等空位）</span>'
+                              : '写进程 W';
+  var right = state === 'empty' ? '读进程 R<br><span style="color:#b91c1c;font-weight:700">阻塞（等数据）</span>'
+                                : '读进程 R';
+  var note = state === 'empty' ? '← 管道空：读操作阻塞'
+           : state === 'full'  ? '← 管道满：写操作阻塞'
+           : '← 内核缓冲区：半双工，同一时刻单向流动';
+  return '<div style="display:flex;gap:12px;align-items:center;margin:8px 0">' +
+    '<div style="font-size:13px;text-align:center;color:#334155">' + left + '</div>' +
+    '<div style="display:flex;gap:3px">' + cells + '</div>' +
+    '<div style="font-size:13px;text-align:center;color:#334155">' + right + '</div>' +
+    '<div style="font-size:12.5px;color:#64748b">' + note + '</div></div>';
+}
+
+var STEPS = [
+  { title: '审题眼：管道 = 内核里的半双工缓冲区',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>管道（Pipe）是<b>内核中固定大小的内存缓冲区</b>，以<b>半双工</b>方式传送字节流：某段时间只能一端写、另一端读。</p>' + pipePic('mid') },
+  { title: 'A 双向传输：✗',
+    cls: 'bad',
+    tag: '选项 A',
+    body: '<p>管道是<b>半双工</b>的，一个管道同一时刻只能单向传输；要双向交流需要<b>两个管道</b>。</p>' },
+  { title: 'B 容量受磁盘限制：✗',
+    cls: 'bad',
+    tag: '选项 B',
+    body: '<p>管道在<b>内存</b>里，容量由内核缓冲区大小决定，跟磁盘容量没有关系。</p>' },
+  { title: 'C 读、写都可能被阻塞：✓ 正确',
+    cls: 'good',
+    tag: '选项 C',
+    body: '<p>两个方向都会阻塞：管道<b>空</b>时读进程等数据 → ' + pipePic('empty') + '管道<b>满</b>时写进程等空位 → ' + pipePic('full') + '</p>' },
+  { title: 'D 只能一个读进程或一个写进程：✗',
+    cls: 'bad',
+    tag: '选项 D',
+    body: '<p>一个管道允许<b>一个写进程和一个读进程</b>分别占用两端、同时协作（一端写入、另一端读出可同时进行），并非"读、写只能占其一"。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>半双工（A 错）、在内存（B 错）、读写都能阻塞（C 对）、两端可同时各占一端（D 错）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-31】关于管道通信的正确叙述',
+  subtitle: '考点：管道的半双工 / 缓冲区位置 / 阻塞行为',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '管道是<b>内核中的半双工内存缓冲区</b>：空时<b>读阻塞</b>、满时<b>写阻塞</b>（C 对）；不能双向（A 错）、与磁盘无关（B 错）、两端可同时各占一端（D 错）。<br>记忆点：<b>"半双工 + 内存 + 空读满写均阻塞"</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

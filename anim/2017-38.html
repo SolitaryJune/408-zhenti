@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-38 · 子网划分：借位与可分配地址数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法 / 过程演示类题目动画（外壳与控件由 assets/anim-engine.js 提供） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var bitBoxes = [];
+var groupRow;
+var infoLine;
+
+function chip(w, txt, bg, fg, border){
+  var d = AW.el('div', '', txt);
+  d.style.cssText = 'width:' + (w * 30 - 4) + 'px;height:30px;display:flex;align-items:center;justify-content:center;' +
+    'font-size:12px;font-weight:700;border-radius:8px;background:' + bg + ';color:' + fg +
+    ';border:2px solid ' + (border || bg) + ';margin-right:4px;white-space:nowrap;';
+  return d;
+}
+
+AW.init({
+  title: '2017-38 · 等分 128 个子网后，每个子网可分配多少 IP 地址',
+  subtitle: '网络 <code>21.3.0.0/16</code> · 等规模划分 · 求"可分配"的最大地址数',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示借位与扣减。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.style.setProperty('--cell', '26px');
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>32 位地址位</b>（浅绿 = 原前缀位，亮绿 = 新借子网位，白 = 主机位，红 = 不可分配）'));
+    var row = AW.el('div', 'aw-cells');
+    for (var i = 0; i < 32; i++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      var b = AW.el('div', 'aw-box dim', '·');
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', String(i)));
+      row.appendChild(col);
+      bitBoxes.push(b);
+    }
+    inner.appendChild(row);
+
+    groupRow = AW.el('div', 'aw-cells');
+    groupRow.style.marginTop = '10px';
+    inner.appendChild(groupRow);
+
+    infoLine = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(infoLine);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '初始',
+      log: '21.3.0.0/16：前 16 位是网络位，后 16 位是主机位（掩码 255.255.0.0）',
+      count: 0, mode: 'init',
+      groups: [[16, '网络位 16 位', '#dcfce7', '#15803d'], [16, '主机位 16 位', '#f1f5f9', '#64748b']],
+      info: '要求：等分出 128 个规模相同的子网' },
+    { cls: 'shift', tag: '借位',
+      log: '128 = 2^7 → 从主机位借 7 位做子网位',
+      count: 1, mode: 'borrow',
+      groups: [[16, '网络位', '#dcfce7', '#15803d'], [7, '新借 7 位', '#16a34a', '#ffffff'], [9, '主机位', '#f1f5f9', '#64748b']],
+      info: '子网位取值 0000000~1111111，正好 128 种组合' },
+    { cls: 'step', tag: '新前缀',
+      log: '新前缀 = /16 + 7 = /23，子网掩码 255.255.254.0',
+      count: 2, mode: 'borrow',
+      groups: [[16, '网络位', '#dcfce7', '#15803d'], [7, '子网位 7 位', '#16a34a', '#ffffff'], [9, '主机位', '#f1f5f9', '#64748b']],
+      info: '每个子网的"网络前缀"变成 23 位，规模完全相同' },
+    { cls: 'step', tag: '主机位',
+      log: '主机位剩 32 − 23 = 9 位 → 每个子网地址总数 = 2^9 = 512 个',
+      count: 3, mode: 'host',
+      groups: [[16, '网络位', '#dcfce7', '#15803d'], [7, '子网位', '#16a34a', '#ffffff'], [9, '主机位 9 位', '#eff6ff', '#1d4ed8']],
+      info: '512 只是"地址总数"，还不是"可分配数"' },
+    { cls: 'miss', tag: '扣除',
+      log: '主机位全 0 = 子网的网络地址，全 1 = 广播地址，都不能分配给主机',
+      count: 4, mode: 'deduct',
+      groups: [[16, '网络位', '#dcfce7', '#15803d'], [7, '子网位', '#16a34a', '#ffffff'], [9, '主机位（−2 不可用）', '#fee2e2', '#b91c1c']],
+      info: '512 − 2 = 510 个可分配' },
+    { cls: 'step', tag: '辨析',
+      log: '选 512（D）是忘了减 2；选 254（A）/256（B）是误按借 8 位、/24 计算',
+      count: 5, mode: 'deduct',
+      groups: [[16, '网络位', '#dcfce7', '#15803d'], [7, '子网位 7 位', '#16a34a', '#ffffff'], [9, '主机位 9 位', '#fee2e2', '#b91c1c']],
+      info: '只借 7 位即可：2^7 = 128 正好，多借一位子网数变 256' },
+    { cls: 'done', tag: '结论',
+      log: '每个子网可分配的最大 IP 地址个数 = 512 − 2 = 510 → 选 C',
+      count: 6, mode: 'deduct', done: true,
+      groups: [[16, '网络位', '#dcfce7', '#15803d'], [7, '子网位', '#16a34a', '#ffffff'], [9, '可分配 510', '#fee2e2', '#b91c1c']],
+      info: '' },
+  ],
+
+  render: function(stage, sn){
+    for (var i = 0; i < 32; i++){
+      var ch = '·', cls = 'dim';
+      if (sn.mode === 'init'){
+        if (i < 16){ ch = '1'; cls = 'ok'; }
+      } else if (sn.mode === 'borrow'){
+        if (i < 16){ ch = '1'; cls = 'ok'; }
+        else if (i < 23){ ch = '1'; cls = 'hit'; }
+      } else if (sn.mode === 'host'){
+        if (i < 16){ ch = '1'; cls = 'ok'; }
+        else if (i < 23){ ch = '1'; cls = 'hit'; }
+        else { ch = '0'; cls = ''; }
+      } else if (sn.mode === 'deduct'){
+        if (i < 16){ ch = '1'; cls = 'ok'; }
+        else if (i < 23){ ch = '1'; cls = 'hit'; }
+        else if (i === 23 || i === 31){ ch = '0'; cls = 'miss'; }
+        else { ch = '0'; cls = ''; }
+      }
+      bitBoxes[i].textContent = ch;
+      bitBoxes[i].className = 'aw-box' + (cls ? ' ' + cls : '');
+    }
+    groupRow.innerHTML = '';
+    for (var j = 0; j < sn.groups.length; j++){
+      var g = sn.groups[j];
+      groupRow.appendChild(chip(g[0], g[1], g[2], g[3], g[4]));
+    }
+    infoLine.textContent = sn.info || '';
+  },
+
+  result: {
+    big: '答案 C · 510',
+    html: '128 个子网 → 借 <b>7 位</b> → 前缀 <b>/23</b>（掩码 255.255.254.0）→ 主机位 9 位 → 2^9 = 512，减去网络地址与广播地址 → <b>510</b>。忘减 2 会误选 D，误借 8 位会误选 A/B。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

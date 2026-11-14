@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-29 · 磁盘逻辑格式化的职责</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：磁盘初始化三阶段',
+    cls: 'key',
+    log: '三阶段：低级格式化 → 分区 → 逻辑格式化，逐项归位',
+    body: '<p>磁盘投入使用前要经过三步：<b>① 低级（物理）格式化</b>——划分扇区、定扇区内部布局；<b>② 分区</b>——划分逻辑卷；<b>③ 逻辑（高级）格式化</b>——在分区上建立文件系统。题眼：哪些属于第 ③ 步。</p>' },
+  { title: 'I. 对磁盘进行分区 ✗',
+    cls: 'bad',
+    log: 'I 不属于：分区是逻辑格式化之前的独立步骤',
+    ribbon: { k:1, ok:false },
+    body: '<p>分区在<b>逻辑格式化之前</b>完成，是独立的准备步骤，不属于逻辑格式化本身。</p>' },
+  { title: 'II. 建立文件系统的根目录 ✓',
+    cls: 'good',
+    log: 'II 属于：逻辑格式化创建根目录与文件系统元数据',
+    ribbon: { k:2, ok:true },
+    body: '<p>逻辑格式化要在分区上<b>建立根目录</b>并写入文件系统的元数据，让分区变成一个可用的文件系统。属于。</p>' },
+  { title: 'III. 确定扇区校验码位数 ✗',
+    cls: 'bad',
+    log: 'III 不属于：扇区级细节由低级（物理）格式化确定',
+    ribbon: { k:3, ok:false },
+    body: '<p>扇区怎么划、每个扇区里校验码占多少位，是<b>低级（物理）格式化</b>决定的，与逻辑格式化无关。</p>' },
+  { title: 'IV. 初始化空闲磁盘块结构 ✓',
+    cls: 'good',
+    log: 'IV 属于：初始化空闲块位示图/空闲链等数据结构',
+    ribbon: { k:4, ok:true },
+    body: '<p>逻辑格式化要<b>初始化保存空闲磁盘块信息的数据结构</b>（如空闲块位示图、空闲块链），供文件分配使用。属于。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '仅 II、IV 属于逻辑格式化 → 答案 B',
+    body: '<p>答案选 <b>B（仅 II、IV）</b>。记忆锚点：逻辑格式化只做"搭文件系统骨架"——<b>根目录 + 空闲块管理结构</b>；分区在前、扇区校验码属物理格式化。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'bad' ? 'miss' : s.cls === 'good' ? 'ok' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last
+  };
+});
+
+AW.init({
+  title: '2017-29 · 哪些工作属于磁盘逻辑格式化',
+  subtitle: '陈述：I 分区 ｜ II 建根目录 ｜ III 扇区校验码位数 ｜ IV 初始化空闲块结构',
+  ribbonTitle: '归位判定（✓ 属于 / ✗ 不属于）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：仅 II、IV',
+    html: '记忆锚点：磁盘初始化三部曲 <b>低级格式化（定扇区/校验码）→ 分区 → 逻辑格式化（建根目录 + 初始化空闲块结构）</b>。I 在前一步、III 在第一步，都不属于逻辑格式化。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

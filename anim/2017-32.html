@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-32 · DMA 方式读磁盘的执行顺序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（tools/anim_algo_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var OPS = [
+  { no:'②', name:'初始化 DMA 控制器并启动磁盘', desc:'CPU 设置内存起始地址、传送字数，发出读命令并启动' },
+  { no:'③', name:'从磁盘传输一块数据到内存缓冲区', desc:'DMA 控制器独立完成整块传送，CPU 可并行做别的事' },
+  { no:'①', name:'DMA 控制器发出中断请求', desc:'一块数据传完，DMA 向 CPU 报告完成' },
+  { no:'④', name:'执行"DMA 结束"中断服务程序', desc:'CPU 响应中断，做善后处理' }
+];
+
+function slotsHTML(n){
+  var h = '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+  for (var i = 0; i < 4; i++){
+    if (i < n){
+      h += '<div style="flex:1 1 160px;min-width:160px;border:2px solid #16a34a;background:#f6fef9;border-radius:14px;padding:12px 14px">' +
+           '<div style="font-size:12px;color:#15803d;font-weight:700;margin-bottom:4px">第 ' + (i + 1) + ' 步</div>' +
+           '<div style="font-weight:700;font-size:15px">' + OPS[i].no + ' ' + OPS[i].name + '</div>' +
+           '<div style="font-size:12.5px;color:#64748b;margin-top:4px">' + OPS[i].desc + '</div></div>';
+    } else {
+      h += '<div style="flex:1 1 160px;min-width:160px;border:2px dashed #cbd5e1;background:#fff;border-radius:14px;padding:12px 14px;color:#94a3b8">' +
+           '<div style="font-size:12px;font-weight:700;margin-bottom:4px">第 ' + (i + 1) + ' 步</div>' +
+           '<div style="font-weight:700;font-size:15px">待填</div></div>';
+    }
+  }
+  h += '</div>';
+  return h;
+}
+
+function legendHTML(done){
+  var h = '<div style="margin-top:12px;font-size:12.5px;color:#64748b;border-top:1px dashed #e2e8f0;padding-top:8px">' +
+          '原始编号：① DMA 控制器发出中断请求 ｜ ② 初始化 DMA 控制器并启动磁盘 ｜ ③ 从磁盘传输一块数据到内存缓冲区 ｜ ④ 执行"DMA 结束"中断服务程序</div>';
+  if (done) h += '<div style="margin-top:10px;font-size:15px;font-weight:700;color:#16a34a">正确顺序：②→③→①→④ → 答案 B</div>';
+  return h;
+}
+
+var snaps = [
+  { cls:'step', tag:'审题',   log:'DMA 方式下数据传送由硬件完成，CPU 只管"启动"与"结束处理"两头，按因果链排序', count:0, html: slotsHTML(0) + legendHTML(false) },
+  { cls:'ok',   tag:'第 1 步', log:'② 先初始化 DMA 控制器并启动磁盘：不设置内存地址和传送字数，硬件不知道往哪传', count:1, ribbon:{k:1, ok:true}, html: slotsHTML(1) + legendHTML(false) },
+  { cls:'ok',   tag:'第 2 步', log:'③ 从磁盘传输一块数据到内存缓冲区：传送期间 CPU 可并行工作，这正是 DMA 的卖点', count:2, ribbon:{k:2, ok:true}, html: slotsHTML(2) + legendHTML(false) },
+  { cls:'ok',   tag:'第 3 步', log:'① 一块数据传完，DMA 控制器发出中断请求，向 CPU 报告完成', count:3, ribbon:{k:3, ok:true}, html: slotsHTML(3) + legendHTML(false) },
+  { cls:'ok',   tag:'第 4 步', log:'④ CPU 响应中断，执行"DMA 结束"中断服务程序做善后', count:4, ribbon:{k:4, ok:true}, html: slotsHTML(4) + legendHTML(false) },
+  { cls:'done', tag:'完成',   log:'完整顺序 ②→③→①→④，对照选项即 B', count:5, done:true, html: slotsHTML(4) + legendHTML(true) }
+];
+
+AW.init({
+  title: '2017-32 · DMA 方式读磁盘的执行顺序',
+  subtitle: '操作：① DMA 发中断请求 ｜ ② 初始化 DMA 并启动磁盘 ｜ ③ 传一块数据到内存缓冲区 ｜ ④ 执行 DMA 结束中断服务程序',
+  counterLabel: '已排序',
+  ribbonTitle: '顺序位（✓ 已排定）',
+  intro: '点击「▶ 播放」逐步把四个操作放进正确位置。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：②→③→①→④',
+    html: '链条：<b>初始化启动 → DMA 传数据 → DMA 发中断 → CPU 善后</b>。中断请求（①）是"传完之后"的报告，放最前的 D 错；不先初始化硬件不会干活，漏掉 ② 的 A 错。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

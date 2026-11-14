@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-39 · TCP 发送窗口剩余量</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：TCP 滑动窗口推演（发送窗口 vs 已发未确认）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2010-39 · TCP 发送窗口剩余量',
+  subtitle: 'MSS = 1000B · 甲的拥塞窗口 cwnd = 4000B · 已连发两个最大段 · 确认段通告接收窗口 rwnd = 2000B',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论）',
+  intro: '点击「▶ 播放」逐步推演还能发送多少字节。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>窗口面板</b>（单位 B）：'));
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:14px;margin:6px 0;';
+    var defs = [['cwnd', '拥塞窗口'], ['rwnd', '乙通告的接收窗口'], ['发送窗口', 'min(cwnd, rwnd)']];
+    this._win = [];
+    for(var d = 0; d < 3; d++){
+      var item = AW.el('div', '');
+      item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;';
+      var b = AW.el('div', 'aw-box', '·');
+      b.style.cssText = 'width:120px;height:46px;font-size:18px;';
+      item.appendChild(b);
+      item.appendChild(AW.el('div', '', '<span style="font-size:11px;color:#64748b">' + defs[d][0] + ' · ' + defs[d][1] + '</span>'));
+      row.appendChild(item);
+      this._win.push(b);
+    }
+    inner.appendChild(row);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>字节序号</b>（每格 = 1 个 MSS = 1000B）：'));
+    var cells = AW.el('div', 'aw-cells');
+    cells.style.cssText = 'margin:4px 0;';
+    this._segs = [];
+    for(var i = 0; i < 8; i++){
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      col.appendChild(ptr);
+      var box = AW.el('div', 'aw-box', String(i + 1));
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', (i * 1000 + 1) + '~' + ((i + 1) * 1000)));
+      cells.appendChild(col);
+      this._segs.push({ ptr: ptr, box: box });
+    }
+    inner.appendChild(cells);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      cwnd:4000, rwnd:null, segs:['','','','','','','',''],
+      log:'甲的拥塞窗口 cwnd = 4000B（4 个 MSS），MSS = 1000B。此刻甲还没收到乙的任何确认段。' },
+    { cls:'step', tag:'连发两段', count:1,
+      cwnd:4000, rwnd:null, segs:['sent','sent','','','','','',''],
+      log:'甲一口气发出两个最大段：段1（字节 1~1000）、段2（1001~2000），都已发送、未确认。' },
+    { cls:'ok', tag:'确认到达', count:2,
+      cwnd:4000, rwnd:2000, segs:['ack','sent','','','','','',''],
+      log:'乙对第一个段的确认到达：段1 变绿（已确认）；确认段中通告接收窗口 rwnd = 2000B。' },
+    { cls:'shift', tag:'发送窗口', count:3,
+      cwnd:4000, rwnd:2000, segs:['ack','sent','win','','','','',''],
+      log:'发送窗口 = min(cwnd, rwnd) = min(4000, 2000) = 2000B——乙的接收窗口卡住了上限，窗口覆盖段2~段3。' },
+    { cls:'step', tag:'已占部分', count:4,
+      cwnd:4000, rwnd:2000, segs:['ack','sent','win','','','','',''],
+      log:'窗口内：段2 已发送未确认，占掉 1000B；段3 还没发。' },
+    { cls:'ok', tag:'剩余可发', count:5,
+      cwnd:4000, rwnd:2000, segs:['ack','sent','win','','','','',''],
+      log:'还可发送 = 2000 − 1000 = 1000B，正好再发一个最大段（段3）。' },
+    { cls:'done', tag:'完成', count:6, done:true,
+      cwnd:4000, rwnd:2000, segs:['ack','sent','win','','','','',''],
+      log:'结论：还能发送 1000B，选 A。干扰项：2000 忘了减去已发未确认的 1000B；4000 忽略了接收窗口的限制。' },
+  ],
+
+  render: function(stage, sn){
+    var clsMap = {
+      ack: ['已确认', '#dcfce7', '#16a34a', '#14532d'],
+      sent: ['未确认', '#fef3c7', '#d97706', '#92400e'],
+      win: ['可发送', '#dbeafe', '#2563eb', '#1d4ed8'],
+      '': ['', '#fff', '#cbd5e1', '#94a3b8'],
+    };
+    var segs = sn.segs || ['', '', '', '', '', '', '', ''];
+    for(var i = 0; i < 8; i++){
+      var st = segs[i] || '';
+      var c = clsMap[st];
+      var o = this._segs[i];
+      o.box.style.background = c[1];
+      o.box.style.borderColor = c[2];
+      o.box.style.color = st ? c[3] : '#cbd5e1';
+      o.ptr.innerHTML = c[0];
+      o.ptr.style.color = st ? c[3] : '#94a3b8';
+    }
+    var w = this._win;
+    w[0].innerHTML = String(sn.cwnd);
+    w[0].style.background = '#f8fafc';
+    w[0].style.borderColor = '#2563eb';
+    w[0].style.color = '#334155';
+    if(sn.rwnd == null){
+      w[1].innerHTML = '·'; w[1].style.background = '#fff'; w[1].style.borderColor = '#cbd5e1'; w[1].style.color = '#94a3b8';
+      w[2].innerHTML = '·'; w[2].style.background = '#fff'; w[2].style.borderColor = '#cbd5e1'; w[2].style.color = '#94a3b8';
+    } else {
+      w[1].innerHTML = String(sn.rwnd);
+      w[1].style.background = '#fef3c7'; w[1].style.borderColor = '#d97706'; w[1].style.color = '#92400e';
+      w[2].innerHTML = String(Math.min(sn.cwnd, sn.rwnd));
+      w[2].style.background = '#dcfce7'; w[2].style.borderColor = '#16a34a'; w[2].style.color = '#14532d';
+    }
+  },
+
+  result: {
+    big: '1000B（选 A）',
+    html: '发送窗口 = min(cwnd = 4000, rwnd = 2000) = <b>2000B</b>；已发送未确认 1000B（段 2）→ 还能发送 = 2000 − 1000 = <b>1000B</b>。口诀：还能发多少 = min(cwnd, rwnd) − 已发送未确认。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

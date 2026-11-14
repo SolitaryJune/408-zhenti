@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-25 位图法管理空闲页框的空间开销</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：每个页框在位图中占 1 个比特',
+    cls: 'key',
+    body: '<p>页式存储用<b>位图（ bitmap ）</b>记录空闲页框：每个页框对应 <b>1 bit</b>（0 空闲 / 1 已分配）。' +
+          '题面：页大小 <code>4KB</code>，物理内存 <code>16GB</code>。求位图占的空间 = <b>页框数 × 1 bit</b>，所以第一步必须先算出页框数。</p>' },
+  { title: '第一步：把两个数换成 2 的幂',
+    cls: 'step',
+    body: '<p>16GB = 16 × 2³⁰ B = <b>2³⁴ B</b>；4KB = <b>2¹² B</b>。' +
+          '408 的默认口径：1KB = 2¹⁰ B，1GB = 2³⁰ B，按 2 的幂换算。</p>' },
+  { title: '第二步：求页框个数',
+    cls: 'step',
+    body: '<p>页框数 = 物理内存 ÷ 页大小 = 2³⁴ ÷ 2¹² = <b>2²² 个</b>。' +
+          '物理内存被划成约四百万个页框，每个页框在位图里都有唯一一格。</p>' },
+  { title: '第三步：位图总位数',
+    cls: 'step',
+    body: '<p>每个页框占 1 bit → 位图共 <b>2²² bit</b>（约四百万位）。</p>' },
+  { title: '第四步：bit 换成 B，再换 KB',
+    cls: 'key',
+    body: '<p>选项单位是字节，必须 <b>÷8</b>（即 ÷2³）：2²² bit ÷ 8 = <b>2¹⁹ B</b>；' +
+          '再除以 2¹⁰ 得 KB：2¹⁹ B = 2⁹ KB = <b>512KB</b>。</p>' },
+  { title: '结论：512KB，选 C',
+    cls: 'good',
+    body: '<p>链条：16GB ÷ 4KB = 2²² 个页框 → 2²² bit → ÷8 → 2¹⁹ B = <b>512KB</b>，<b>答案选 C</b>。' +
+          '干扰项 D（4MB）正是漏除 8 的结果：把 bit 当成了字节。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '位图管理空闲页框：位图占多少空间',
+  subtitle: '页大小 <code>4KB</code> · 物理内存 <code>16GB</code> · 每页框 1 bit',
+  intro: '点击「▶ 播放」逐步展开计算推理链。',
+  snaps: snaps,
+  result: {
+    big: '512KB，选 C',
+    html: '记忆链条：<b>内存 ÷ 页大小 = 页框数（2²²）→ 页框数 × 1bit = 位图位数（2²² bit）→ ÷8 = 2¹⁹ B = 512KB</b>。' +
+          '两个坑：① GB/KB 要按 2 的幂换算；② 最后必须除以 8（bit→B），漏除就错选 4MB。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

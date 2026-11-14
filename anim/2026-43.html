@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-43 16 位定长指令编码 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var IDX = ['15~12','11~8','7~4','3~0'];
+
+function paintRow(cells, idxLabels){
+  var row = AW.el('div', 'aw-cells');
+  cells.forEach(function(c, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    var box = AW.el('div', 'aw-box', c.t);
+    if (c.c === 'ok'){ box.style.background = '#dcfce7'; box.style.borderColor = '#16a34a'; box.style.color = '#14532d'; }
+    else if (c.c === 'blank'){ box.style.background = '#fef3c7'; box.style.borderColor = '#d97706'; box.style.color = '#92400e'; box.style.borderStyle = 'dashed'; }
+    else if (c.c === 'hi'){ box.style.background = '#dbeafe'; box.style.borderColor = '#2563eb'; box.style.color = '#1d4ed8'; }
+    else if (c.c === 'dim'){ box.style.opacity = '.45'; }
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', (idxLabels && idxLabels[i]) || ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+// 四条指令的基础格：null = 待填空白（①~④）
+var BASE = {
+  I1: [null, '0000', '0000', '0000'],
+  I2: ['0000', null, null, '0010'],
+  I3: ['0100', '0000', null, null],
+  I4: ['1111', null, null, null],
+};
+var MARK = { I1: '①', I2: '②', I3: '③', I4: '④' };
+var FILL = {
+  I1: ['1110', null, null, null],
+  I2: [null, '0000', '0100', null],
+  I3: [null, null, '1111', '1011'],
+  I4: [null, '0000', '0000', '0010'],
+};
+var Q3 = ['0000', '0010', '1001', '0001'];
+
+function rowCells(name, filled){
+  var base = BASE[name];
+  var fill = FILL[name];
+  var useFill = filled && filled[name];
+  return base.map(function(b, i){
+    if (useFill && fill[i] != null) return { t: fill[i], c: 'ok' };
+    if (b == null) return { t: MARK[name], c: 'blank' };
+    return { t: b, c: '' };
+  });
+}
+
+var holders = {}, q3holder = null, note = null, q3cells = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  wrap.appendChild(AW.el('div', 'aw-row-label',
+    '<b>16 位定长指令</b>（每格 4 位）：R 型 0000|rt|rs·num|op1，I 型 op2|rt|imm8，M 型 op3|offset；琥珀虚线格 = 待填的 ①~④，绿 = 已填答案'));
+  var names = ['I1', 'I2', 'I3', 'I4'];
+  var labels = {
+    I1: '<b>I1</b>：R0 ← M[R15+0]，取出 x（M 型取数）',
+    I2: '<b>I2</b>：R0 ← R0 左移 4 位，即 ×16（R 型左移）',
+    I3: '<b>I3</b>：R0 ← R0 + (−5)（I 型加立即数）',
+    I4: '<b>I4</b>：M[R15+2] ← R0，存入 y（M 型存数）',
+  };
+  names.forEach(function(n){
+    wrap.appendChild(AW.el('div', 'aw-row-label', labels[n]));
+    holders[n] = AW.el('div', '');
+    wrap.appendChild(holders[n]);
+  });
+  wrap.appendChild(AW.el('div', 'aw-row-label', '<b>题（3）</b>：指令 0000 0010 1001 0001 的译码'));
+  q3holder = AW.el('div', '');
+  q3holder.style.display = 'none';
+  wrap.appendChild(q3holder);
+  note = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(note);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  ['I1','I2','I3','I4'].forEach(function(n){
+    holders[n].innerHTML = '';
+    holders[n].appendChild(paintRow(rowCells(n, sn.filled), IDX));
+  });
+  q3holder.style.display = (sn.q3 ? '' : 'none');
+  if (sn.q3){
+    q3holder.innerHTML = '';
+    q3holder.appendChild(paintRow(Q3.map(function(t, i){
+      return { t: t, c: (i === 0 ? 'hi' : 'ok') };
+    }), ['op1位', 'rt', 'rs/num', 'op']));
+  }
+  note.innerHTML = sn.note || '';
+}
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0, filled:null, q3:false,
+    log:'题面：16 位机按字节编址，R0～R15 编号 0～15；R 型 0000|rt|rs·num|op1（op1=0001 加、0010 左移），I 型 op2|rt|imm8（op2=0100 加立即数），M 型 op3|offset（op3=1110 取数、1111 存数）。',
+    note:'待填：①（I1 首格）、②（I2 中间 8 位）、③（I3 的 imm8）、④（I4 的 offset）。' },
+  { cls:'step', tag:'问（1）', count:1, filled:null, q3:false,
+    log:'（1）按字节编址 → 主存单元宽度 = 8 位；16 位计算机 → 通用寄存器宽度 = 16 位（R15 作 16 位地址基址可印证）。',
+    note:'（1）主存单元 <b>8 位</b>，通用寄存器 <b>16 位</b>。' },
+  { cls:'step', tag:'问（2）', count:2, filled:null, q3:false,
+    log:'（2）op1 位于 R 型最低 4 位（bits 3~0），op2 位于 I 型最高 4 位（bits 15~12）——字段位置不同，译码先看最高 4 位分型，编码<b>可以相同</b>。',
+    note:'op1 与 op2：<b>可以相同</b>（不同型、不同字段）。' },
+  { cls:'miss', tag:'问（2）续', count:3, filled:null, q3:false,
+    log:'（2）续：op2 与 op3 同占最高 4 位的操作码字段，编码相同就无法区分指令——<b>不可以相同</b>（题中 0100 与 1110/1111 恰好互异）。',
+    note:'op2 与 op3：<b>不可以相同</b>（同占一个操作码字段）。' },
+  { cls:'step', tag:'问（3）译码', count:4, filled:null, q3:true,
+    log:'（3）指令 0000 0010 1001 0001：最高 4 位 0000 → R 型；rt=0010=2，rs/num=1001=9，op1=0001=加，即 R2 ← R2 + R9。',
+    note:'R 型加法：R[2] ← R[2] + R[9]' },
+  { cls:'ok', tag:'问（3）求值', count:5, filled:null, q3:true,
+    log:'（3）求值：ABCDH + F001H = 1 9BCEH，截取低 16 位（丢弃进位）→ R2 = 9BCEH；R9 只作源操作数，保持 F001H 不变。',
+    note:'（3）<b>R2 = 9BCEH，R9 = F001H</b>' },
+  { cls:'ok', tag:'问（4）·I1', count:6, filled:{I1:true}, q3:true,
+    log:'（4）I1：取 x。x 在 M[R15] 处，用 M 型取数：op3 = 1110，offset = 0000 0000 0000 → ① = 1110。',
+    note:'① = <b>1110</b>（R0 ← M[R15+0]）' },
+  { cls:'ok', tag:'问（4）·I2', count:7, filled:{I1:true, I2:true}, q3:true,
+    log:'（4）I2：乘 16 = 左移 4 位。R 型：op1=0010（左移），num=0100（4），rt=0000 → ② = 0000 0100。',
+    note:'② = <b>0000 0100</b>（R0 ← R0 左移 4 位）' },
+  { cls:'ok', tag:'问（4）·I3', count:8, filled:{I1:true, I2:true, I3:true}, q3:true,
+    log:'（4）I3：加 −5。I 型：op2=0100，rt=0000，imm8 = −5 的 8 位补码 = 1111 1011 → ③ = 1111 1011。',
+    note:'③ = <b>1111 1011</b>（+5=0000 0101 → 取反加一）' },
+  { cls:'ok', tag:'问（4）·I4', count:9, filled:{I1:true, I2:true, I3:true, I4:true}, q3:true,
+    log:'（4）I4：存 y。y 与 x 连续存放、各占 2 字节，y 在 M[R15+2]；M 型存数 op3=1111，offset=0000 0000 0010 → ④ = 0000 0000 0010。',
+    note:'④ = <b>0000 0000 0010</b>（M[R15+2] ← R0）' },
+  { cls:'done', tag:'完成', count:10, done:true, filled:{I1:true, I2:true, I3:true, I4:true}, q3:true,
+    log:'全部完成：①1110；②0000 0100；③1111 1011；④0000 0000 0010；R2=9BCEH，R9=F001H。',
+    note:'答案齐了，见下方结论卡。' },
+];
+
+AW.init({
+  title: '2026·43 16 位定长指令的译码与编码',
+  subtitle: 'R / I / M 三种格式 · 逐问推演：（1）宽度（2）操作码相容性（3）指令译码（4）y=16*x−5 的编码',
+  counterLabel: '步骤',
+  ribbonTitle: '解题步骤（✓ 完成）',
+  intro: '点击「▶ 播放」按问逐段推演。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: 'R2 = 9BCEH，R9 = F001H',
+    html: '（1）主存单元 8 位、通用寄存器 16 位。（2）op1 与 op2 <b>可以相同</b>（不同字段），op2 与 op3 <b>不可以相同</b>（同占最高 4 位）。<br>（4）① = <b>1110</b>，② = <b>0000 0100</b>，③ = <b>1111 1011</b>，④ = <b>0000 0000 0010</b>。<br>记忆锚点：x、y 各占 2 字节，y 的偏移是 <b>2</b>；16 位加法要<b>截断进位</b>（ABCDH+F001H → 9BCEH）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

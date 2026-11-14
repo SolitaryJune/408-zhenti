@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-18 动画 · 4 体交叉存储器的访存冲突</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2015-18（计算机组成原理·主存储器·多体交叉）
+     过程推演：地址序列逐个算体号，找冲突对
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var ADDRS = [8005, 8006, 8007, 8008, 8001, 8002, 8003, 8004, 8000];
+var BANKS = ADDRS.map(function(a){ return a % 4; });
+
+var seqBox = null, bankBox = null, noteBox = null;
+
+AW.init({
+  title: '4 体交叉访存冲突推演（2015·18）',
+  subtitle: '体号 = 地址 <code>mod 4</code> · 流水依次启动各体 · <b>同一体必须间隔访问</b>',
+  counterLabel: '已处理地址',
+  ribbonTitle: '访问次序（✓ 正常 / ✗ 冲突）',
+  intro: '点击「▶ 播放」逐个处理地址，观察体号与冲突。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    seqBox = AW.el('div', '');
+    stage.appendChild(seqBox);
+    bankBox = AW.el('div', '');
+    bankBox.style.marginTop = '12px';
+    stage.appendChild(bankBox);
+    noteBox = AW.el('div', '');
+    stage.appendChild(noteBox);
+  },
+
+  render: function(stage, sn, i){
+    var done = i; // 前 i 个地址已处理（i 为 0~9）
+    // 访问序列
+    var h = '<div class="aw-row-label"><b>主存地址序列</b>（琥珀 = 当前访问，灰 = 未处理）</div><div class="aw-cells">';
+    for (var k = 0; k < ADDRS.length; k++){
+      var cls = 'aw-box';
+      if (k < done - 1){ cls += ' ok'; }
+      else if (k === done - 1){ cls += (k === 8 ? ' miss' : ' hit'); }
+      else { cls += ' dim'; }
+      h += '<div class="aw-col"><div class="' + cls + '" style="font-size:14px">' + ADDRS[k] +
+           '</div><div class="aw-idx">体' + BANKS[k] + ' · 第' + (k + 1) + '个</div></div>';
+    }
+    h += '</div>';
+    seqBox.innerHTML = h;
+
+    // 4 个存储体
+    var b = '<div class="aw-row-label"><b>4 个存储体</b>（每个体内显示已分配的地址）</div><div style="display:flex;gap:10px;flex-wrap:wrap">';
+    for (var bi = 0; bi < 4; bi++){
+      var items = [];
+      for (var m = 0; m < done; m++){ if (BANKS[m] === bi){ items.push(ADDRS[m]); } }
+      var conflict = (i === 9 && bi === 0);
+      var bd = conflict ? '#dc2626' : '#cbd5e1', bg = conflict ? '#fee2e2' : '#f8fafc';
+      b += '<div style="border:2px solid ' + bd + ';background:' + bg + ';border-radius:10px;padding:8px 10px;min-width:110px;text-align:center">' +
+           '<div style="font-size:12.5px;font-weight:800;color:' + (conflict ? '#b91c1c' : '#334155') + '">体 ' + bi + '</div>' +
+           '<div style="font-size:12px;color:#64748b;margin-top:4px;font-family:Menlo,monospace">' +
+           (items.length ? items.join('<br>') : '空') + '</div></div>';
+    }
+    b += '</div>';
+    bankBox.innerHTML = b;
+
+    var n = '';
+    if (i === 9){
+      n = '<div style="margin-top:10px;border:2px solid #dc2626;background:#fee2e2;border-radius:10px;padding:9px 13px;font-size:13.5px;font-weight:700;color:#b91c1c">' +
+          '第 8 个（8004，体 0）与第 9 个（8000，体 0）连续访问同一体：前一个访问未完成，体 0 无法再次启动 → 冲突！</div>';
+    } else if (i === 8){
+      n = '<div style="margin-top:10px;border:2px dashed #16a34a;border-radius:10px;padding:8px 13px;font-size:12.5px;color:#15803d">' +
+          '8004 与 8008 虽同在体 0，但中间隔了 8001、8002、8003 三次访问，流水早已完成 → 不冲突</div>';
+    }
+    noteBox.innerHTML = n;
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '规则', log: '4 体交叉编址：体号 = 地址 mod 4；流水依次启动，同一体必须间隔 → 紧挨着访问同一体会冲突', count: 0 },
+    { cls: 'ok', tag: '第1个', log: '8005 mod 4 = 1 → 体 1，启动流水，无冲突', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'ok', tag: '第2个', log: '8006 → 体 2，无冲突', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'ok', tag: '第3个', log: '8007 → 体 3，无冲突', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'ok', tag: '第4个', log: '8008 → 体 0，无冲突', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'ok', tag: '第5个', log: '8001 → 体 1：与 8005 同体但相隔 4 次访问，流水早已完成，无冲突', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'ok', tag: '第6个', log: '8002 → 体 2，无冲突', count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'ok', tag: '第7个', log: '8003 → 体 3，无冲突', count: 7, ribbon: { k: 7, ok: true } },
+    { cls: 'ok', tag: '第8个', log: '8004 → 体 0：与 8008 同体但中间隔了 8001/8002/8003 三次访问 → 流水已空，无冲突', count: 8, ribbon: { k: 8, ok: true } },
+    { cls: 'miss', tag: '冲突！', log: '8000 → 体 0：紧跟 8004 连续访问同一体，前一访问未完成 → 访存冲突！', count: 9, ribbon: { k: 9, ok: false } },
+    { cls: 'done', tag: '完成', log: '结论：可能发生访存冲突的地址对是 8004 和 8000 → 答案选 D', count: 9, done: true },
+  ],
+
+  result: {
+    big: '冲突对：8004 和 8000（答案 D）',
+    html: '体号 = 地址 mod 4：8004 与 8000 都是<b>体 0</b>，且在序列中<b>连续</b>访问 → 冲突。A 的 8004/8008 虽同体但相隔 3 次访问，流水来得及完成。冲突判据 = <b>时间相邻 + 同一体</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

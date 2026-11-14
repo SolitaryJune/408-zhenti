@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-27 两进程并发不出错的充要条件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：并发错误从哪来',
+    cls: 'key',
+    body: '<p>P、Q 并发执行的错误来源只有三类冲突：<b>写写冲突</b>（都写同一数据）、<b>读-写冲突</b>（一方读另一方写的）、<b>写-读冲突</b>（同上）。共同点：都含有<b>写</b>。而"读读"不改变任何数据，永远无害。四个条件逐一判定"是否必要"。</p>' },
+  { title: 'I. W(P)∩W(Q)=∅：必要',
+    cls: 'good',
+    ribbon: { k: 1, ok: true },
+    body: '<p>Q 不写 P 要写的数据。若违反（写写冲突）：x 的最终值取决于谁后写，并发结果不可再现。<b>√ 必须成立</b></p>' },
+  { title: 'II. R(P)∩W(Q)=∅：必要',
+    cls: 'good',
+    ribbon: { k: 2, ok: true },
+    body: '<p>Q 不写 P 要读的数据。若违反：Q 先写则 P 读到新值，P 先读则读到旧值——P 的结果依赖时序。<b>√ 必须成立</b></p>' },
+  { title: 'III. W(P)∩R(Q)=∅：必要',
+    cls: 'good',
+    ribbon: { k: 3, ok: true },
+    body: '<p>P 不写 Q 要读的数据。与 II 对称：Q 读到的值将依赖 P、Q 谁先执行。<b>√ 必须成立</b></p>' },
+  { title: 'IV. R(P)∩R(Q)=∅：不必要',
+    cls: 'bad',
+    ribbon: { k: 4, ok: false },
+    body: '<p>两个进程<b>都只是读</b>同一数据：读不改变数据，任何执行顺序下结果都相同。<b>× 可以不成立</b>——这是本题最大的干扰项。</p>' },
+  { title: '充分性：三条交集为空 ⇒ 任意交错等价于串行',
+    cls: '',
+    body: '<p>当 I、II、III 同时成立，P、Q 的读写集合互不触碰对方的数据，<b>任何交错执行的结果都与某个串行顺序一致</b>，结果唯一、可再现 → 并发不会出错。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>充要条件 = I、II、III 同时成立 → 答案选 <b>C</b>。记忆锚点：<b>读读并行无害，凡有"写"必冲突</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var o = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (s.ribbon) o.ribbon = s.ribbon;
+  return o;
+});
+
+AW.init({
+  title: '2026-27 · 并发不出错的充要条件（Bernstein 条件）',
+  subtitle: '考点：<code>读-写 / 写-读 / 写写冲突 · 读读无害</code> · 四个条件逐条判定必要性',
+  counterLabel: '推理步',
+  ribbonTitle: '条件判定（✓ 必要 / ✗ 不必要）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>写写、读-写、写-读三类交集为空</b>是并发不出错的充要条件；<b>读读交集为空（IV）不是必要条件</b>——两个进程都读同一数据不会改变任何结果。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

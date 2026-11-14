@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-16 组相联Cache比较器</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.aw-box.blue{ background:#dbeafe; border-color:#2563eb; color:#1e40af; }
+.aw-box.amber{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 32 位地址条：tag 20 位（蓝）、组号 6 位（琥珀）、块内 6 位（绿）
+function addrBar(stage_k){
+  // stage_k: 0=全灰 1=块内点亮 2=组号点亮 3=tag 点亮
+  var row = '<div class="aw-cells" style="--cell:20px;--gap:2px">';
+  for (var i = 0; i < 32; i++){
+    var c = 'dim';
+    if (stage_k >= 1 && i >= 26) c = 'ok';
+    if (stage_k >= 2 && i >= 20 && i < 26) c = 'amber';
+    if (stage_k >= 3 && i < 20) c = 'blue';
+    var lbl = (i === 0) ? '31' : (i === 19 ? '12' : (i === 25 ? '6' : (i === 31 ? '0' : '')));
+    row += '<div class="aw-col"><div class="aw-ptr"></div>' +
+           '<div class="aw-box ' + c + '" style="font-size:11px;border-radius:5px">' + (stage_k ? '' : '') + '</div>' +
+           '<div class="aw-idx">' + lbl + '</div></div>';
+  }
+  row += '</div>';
+  var seg = '<div style="display:flex;width:max-content;font-size:11px;color:#64748b;margin:2px 0 2px">' +
+    '<div style="width:440px;text-align:center;color:#2563eb;font-weight:700">tag（20 位）</div>' +
+    '<div style="width:132px;text-align:center;color:#d97706;font-weight:700">组号（6 位）</div>' +
+    '<div style="width:132px;text-align:center;color:#16a34a;font-weight:700">块内（6 位）</div></div>';
+  return seg + row;
+}
+
+// 8 个比较器
+function cmpRow(lit){
+  var row = '<div class="aw-cells">';
+  for (var i = 0; i < 8; i++){
+    var c = i < lit ? ' ok' : ' dim';
+    row += '<div class="aw-col"><div class="aw-ptr">路' + i + '</div>' +
+           '<div class="aw-box' + c + '" style="font-size:12px">20位</div>' +
+           '<div class="aw-idx"></div></div>';
+  }
+  return row + '</div>';
+}
+
+function note(t){
+  return '<div class="aw-row-label" style="margin-top:8px">' + t + '</div>';
+}
+
+function calc(t){
+  return '<div style="display:inline-block;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 12px;font-size:14px;line-height:1.8;color:#334155">' + t + '</div>';
+}
+
+function stage(inner){
+  return '<div class="aw-scroll"><div style="width:max-content;min-width:100%">' + inner + '</div></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'主存地址 32 位、按字节编址；Cache 数据区 32 KB、块 64 B、8 路组相联。',
+    html: stage(calc('<b>已知</b>：主存地址 <code>32 位</code>（按字节编址）· Cache 数据区 <code>32 KB</code> · 主存块 <code>64 B</code> · <code>8 路组相联</code>。求：比较器的<b>个数</b>与<b>位数</b>。') +
+      note('主存地址 32 位的划分（逐步点亮）') + addrBar(0)),
+    ribbon:{k:1, ok:true} },
+  { cls:'step', tag:'块数', count:1,
+    log:'32 KB ÷ 64 B = 512 块（2^15 / 2^6 = 2^9）。',
+    html: stage(calc('<b>Cache 行数</b>：<code>32 KB ÷ 64 B = 512 块</code>（<code>2^15 ÷ 2^6 = 2^9</code>）。') +
+      note('主存地址 32 位的划分（逐步点亮）') + addrBar(0)),
+    ribbon:{k:2, ok:true} },
+  { cls:'step', tag:'组数 → 组号位数', count:2,
+    log:'512 块 ÷ 8 路 = 64 组 → 组号 6 位。',
+    html: stage(calc('<b>组数</b>：<code>512 ÷ 8 路 = 64 组</code> → 组号占 <code>2^6 = 64</code> → <b>6 位</b>。注意组号位数由<b>组数</b>决定，不是由路数 8（2^3）决定。') +
+      note('主存地址 32 位的划分（逐步点亮）') + addrBar(2)),
+    ribbon:{k:3, ok:true} },
+  { cls:'step', tag:'块内偏移位数', count:3,
+    log:'块 64 B → 块内地址 6 位。',
+    html: stage(calc('<b>块内偏移</b>：<code>2^6 = 64 B</code> → <b>6 位</b>（按字节编址）。') +
+      note('主存地址 32 位的划分（逐步点亮）') + addrBar(1)),
+    ribbon:{k:4, ok:true} },
+  { cls:'shift', tag:'tag 位数', count:4,
+    log:'tag = 32 - 6 - 6 = 20 位。',
+    html: stage(calc('<b>tag</b>：剩余的高位全做 tag：<code>32 - 6(组号) - 6(块内) = 20 位</code>。') +
+      note('主存地址 32 位的划分（点亮完成）') + addrBar(3)),
+    ribbon:{k:5, ok:true} },
+  { cls:'ok', tag:'比较器个数与位数', count:5,
+    log:'组内 8 路的 tag 同时比较 → 8 个比较器，每个 20 位。',
+    html: stage(calc('<b>比较器</b>：组号定位到一组后，组内 <b>8 路</b>的 tag 要<b>同时</b>与主存地址的 20 位 tag 比较 → 每路 1 个比较器，共 <b>8 个</b>，每个 <b>20 位</b>。') +
+      note('主存地址 32 位的划分（点亮完成）') + addrBar(3) +
+      note('一组内 8 路各自的 tag 比较器') + cmpRow(8)),
+    ribbon:{k:6, ok:true} },
+  { cls:'step', tag:'干扰项', count:6,
+    log:'64 个（按组数配）错；23 位（把 8 路当组号 3 位）错。',
+    html: stage(calc('<b>干扰项</b>：<b>64 个</b>（C/D）——按组数配比较器，错；同组 8 行共用一次比较，比较器只跟路数走。<b>23 位</b>（B/D）——把 8 路当组号 3 位，得 32 - 3 - 6 = 23，错；组号由组数 64 决定是 6 位。') +
+      note('主存地址 32 位的划分（点亮完成）') + addrBar(3) +
+      note('一组内 8 路各自的 tag 比较器') + cmpRow(8)),
+    ribbon:{k:7, ok:true} },
+  { cls:'done', tag:'结论', count:7, done:true,
+    log:'比较器 8 个、每个 20 位 → 答案 A。',
+    html: stage(calc('<b>结论</b>：tag 20 位，每路 1 个比较器 → <b>8 个 20 位比较器</b> = 选项 <b>A</b>。') +
+      note('主存地址 32 位的划分（点亮完成）') + addrBar(3) +
+      note('一组内 8 路各自的 tag 比较器') + cmpRow(8)) },
+];
+
+AW.init({
+  title: '2022-16 · 组相联 Cache 的比较器个数与位数',
+  subtitle: '主存地址 32 位 · 数据区 32 KB · 块 64 B · 8 路组相联',
+  counterLabel: '推导环节',
+  ribbonTitle: '推导环节（✓ 完成）',
+  intro: '点击「▶ 播放」逐步划分地址并数比较器。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（8 个，20 位）',
+    html: '512 块 ÷ 8 路 = 64 组 → 组号 6 位；块内 6 位；tag = 32 - 6 - 6 = <b>20 位</b>。比较器按<b>路数</b>配：<b>8 个</b>，每位数 = tag 位数 <b>20</b>。易错：比较器按组数算成 64、组号误用路数 2^3 得 tag 23。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

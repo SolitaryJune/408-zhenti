@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-14 数据表示方法选择动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：α、β 的数据表示方法推理 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个要求、两个变量',
+    cls: 'key',
+    body: '<p>要求同时满足：<b>保证表数精度</b> + <b>提高运算速度</b>。α 的范围 ±2<sup>20</sup>，β 的范围 ±2<sup>40</sup>。解题主线：<b>按"范围"选类型，按"尾数位数"保精度</b>。</p>' },
+  { title: 'α：32 位整数，够用且最快',
+    cls: 'good',
+    body: '<p>32 位补码整数的表数范围是 −2<sup>31</sup> ~ 2<sup>31</sup>−1，完全覆盖 ±2<sup>20</sup>；整数按原值<b>精确</b>表示、运算比浮点快 → α 用 <b>32 位整数</b>。</p>' },
+  { title: 'β：32 位整数装不下',
+    cls: 'bad',
+    body: '<p>±2<sup>40</sup> 远超 32 位整数的 ±2<sup>31</sup>，<b>装不下</b> → 排除"两个都用 32 位整数"（选项 A）。</p>' },
+  { title: 'β：单精度丢精度',
+    cls: 'bad',
+    body: '<p>单精度浮点的有效尾数是 <b>24 位</b>（23 位尾数 + 1 位隐含首位），最多精确表示 24 位以内的整数；表示 ±2<sup>40</sup> 内的整数最多需要 <b>41 位</b>精度 → <b>丢精度</b>，排除选项 B、D。</p>' },
+  { title: 'β：双精度恰好精确',
+    cls: 'good',
+    body: '<p>双精度的有效尾数是 <b>53 位</b>（52 + 1），2<sup>40</sup> &lt; 2<sup>53</sup>，±2<sup>40</sup> 内的每个整数都能精确表示；且浮点由硬件支持，比软件模拟双字整数运算快 → β 用 <b>双精度浮点数</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>：α 用 32 位整数、β 用双精度浮点数。记忆锚点：<b>范围</b>看阶码/位数上限，<b>精度</b>看尾数位数——24 位尾数容不下 41 位的整数。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '整型参数 α、β 的数据表示方法选择',
+  subtitle: 'α ∈ ±2<sup>20</sup> · β ∈ ±2<sup>40</sup> · 保精度 + 提速度',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '<p>α：<b>32 位整数</b>（±2<sup>20</sup> 在 ±2<sup>31</sup> 内，精确且快）；β：<b>双精度浮点数</b>（±2<sup>40</sup> 超 int 范围；单精度尾数 24 位丢精度，双精度尾数 53 位 ≥ 41 位恰好精确表示）。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

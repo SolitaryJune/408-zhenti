@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-36 CSMA/CD 传播时延推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var siteA = null, siteB = null, goLine = null, backLine = null, tauLabel = null, calcRows = [], ROWS_TOTAL = 4;
+
+// 每步：显示的计算行数、箭头/τ 标注颜色
+var LOOK = [
+  { rows: 0, go: 'dim', back: 'dim', tau: 'dim' },
+  { rows: 0, go: 'go',  back: 'back', tau: 'tau' },   // 原理步：往返 2τ
+  { rows: 1, go: 'go',  back: 'dim',  tau: 'dim' },
+  { rows: 2, go: 'go',  back: 'dim',  tau: 'dim' },
+  { rows: 3, go: 'go',  back: 'back', tau: 'tau' },   // 列 2τ 不等式
+  { rows: 4, go: 'go',  back: 'back', tau: 'solve' }, // 解出 τ
+  { rows: 4, go: 'go',  back: 'back', tau: 'solve' },
+];
+
+function siteBox(t){
+  var d = AW.el('div', '');
+  d.style.cssText = 'padding:12px 18px;border:2px solid #94a3b8;border-radius:12px;background:#fff;' +
+    'font-weight:700;font-size:15px;color:#334155;text-align:center;transition:all .3s;flex:0 0 auto;';
+  d.innerHTML = t;
+  return d;
+}
+function arrowRow(t, color, top){
+  var d = AW.el('div', '');
+  d.style.cssText = 'position:absolute;left:0;right:0;top:' + top + 'px;text-align:center;font-size:12.5px;' +
+    'font-weight:700;white-space:nowrap;transition:opacity .35s, color .35s;letter-spacing:1px;';
+  d.innerHTML = t;
+  return d;
+}
+
+AW.init({
+  title: '2019·36 CSMA/CD：100 Mb/s、最小帧长 128 B，单向传播时延最多？',
+  subtitle: '最短帧长 = 2τ × 数据率（τ 为单向传播时延）· 答案待推演',
+  counterLabel: '已推演',
+  intro: '点击「▶ 播放」，从"边发边检冲突"的原理逐步推出 τ 上限。',
+
+  build: function(stage){
+    calcRows = [];
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    // 站点 + 链路示意
+    var line = AW.el('div', '');
+    line.style.cssText = 'display:flex;align-items:center;gap:0;margin-bottom:14px;';
+    siteA = siteBox('A 站');
+    siteB = siteBox('B 站');
+    var link = AW.el('div', '');
+    link.style.cssText = 'flex:1;position:relative;min-width:260px;height:74px;';
+    var mid = AW.el('div', '');
+    mid.style.cssText = 'position:absolute;left:0;right:0;top:36px;height:2px;background:#cbd5e1;';
+    link.appendChild(mid);
+    goLine = arrowRow('<span style="color:#2563eb">帧 ────────▶</span>', '#2563eb', 6);
+    backLine = arrowRow('<span style="color:#dc2626">◀ ┈┈┈┈ 冲突信号</span>', '#dc2626', 46);
+    link.appendChild(goLine);
+    link.appendChild(backLine);
+    tauLabel = AW.el('div', '');
+    tauLabel.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:14px;' +
+      'font-size:13px;font-weight:700;color:#64748b;transition:color .35s;';
+    tauLabel.innerHTML = '单向传播时延 τ';
+    link.appendChild(tauLabel);
+    line.appendChild(siteA);
+    line.appendChild(link);
+    line.appendChild(siteB);
+    inner.appendChild(line);
+
+    // 计算过程表
+    var items = [
+      ['最小帧长', '128 B × 8 = <b>1024 bit</b>'],
+      ['帧发送时间', '1024 bit ÷ 100 Mb/s = <b>10.24 μs</b>'],
+      ['检测冲突条件', '发送时间 ≥ 2τ（往返）'],
+      ['单向传播时延', 'τ ≤ 10.24 μs ÷ 2 = <b>5.12 μs</b>'],
+    ];
+    items.forEach(function(it, i){
+      var r = AW.el('div', '');
+      r.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:9px 14px;' +
+        'border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ' +
+        (i === 3 ? '#16a34a' : '#2563eb') + ';font-size:14px;transition:opacity .35s;';
+      r.innerHTML = '<span style="color:#64748b;flex:0 0 110px;font-size:13px">' + it[0] + '</span>' +
+        '<span style="font-family:Menlo,monospace;font-weight:700">' + it[1] + '</span>';
+      r.style.opacity = '0';
+      calcRows.push(r);
+      inner.appendChild(r);
+    });
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'题面', log:'条件：100 Mb/s 局域网采用 CSMA/CD，最小帧长 128 B。求冲突域内两站点之间单向传播时延的最大值', count:0 },
+    { cls:'step',  tag:'原理', log:'CSMA/CD 边发送边检测冲突：最坏情况冲突发生在最远端，冲突信号还要再走 τ 才能回到发送方 → 帧发送时间必须 ≥ 2τ（往返），否则帧发完了还检不到冲突', count:1 },
+    { cls:'step',  tag:'换算比特', log:'第一步：最小帧长 128 B × 8 = 1024 bit', count:2 },
+    { cls:'step',  tag:'算发送时间', log:'第二步：发送时间 = 1024 bit ÷ 100 Mb/s = 10.24 μs', count:3 },
+    { cls:'step',  tag:'列不等式', log:'第三步：发送时间 ≥ 2τ → 10.24 μs ≥ 2τ', count:4 },
+    { cls:'ok',    tag:'解出 τ', log:'第四步：τ ≤ 10.24 μs ÷ 2 = 5.12 μs —— 单向传播时延最多 5.12 μs', count:5 },
+    { cls:'done',  tag:'完成', log:'单向传播时延最多 5.12 μs，选 B', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = LOOK[i] || LOOK[0];
+    for(var k = 0; k < ROWS_TOTAL; k++){
+      calcRows[k].style.opacity = (k < st.rows) ? '1' : '0';
+    }
+    goLine.style.opacity  = st.go === 'dim' ? '.25' : '1';
+    backLine.style.opacity = st.back === 'dim' ? '.18' : '1';
+    if(st.tau === 'dim'){ tauLabel.style.color = '#94a3b8'; }
+    else if(st.tau === 'tau'){ tauLabel.style.color = '#d97706'; }
+    else { tauLabel.style.color = '#16a34a'; tauLabel.innerHTML = 'τ ≤ 5.12 μs'; }
+    if(st.tau === 'dim'){ tauLabel.innerHTML = '单向传播时延 τ'; }
+  },
+
+  result: {
+    big: 'τ ≤ 5.12 μs',
+    html: '最短帧长 = 2τ × 数据率：τ = (128 × 8) bit ÷ (2 × 100 Mb/s) = <b>5.12 μs</b>，选 <b>B</b>。10.24 μs 是往返争用期 2τ（干扰项 C）；2.56 μs 是多除一次 2 的错误（干扰项 A）；20.48 μs 是错把 2τ 又翻倍（干扰项 D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

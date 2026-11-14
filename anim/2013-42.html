@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-42 让平均查找长度更短：顺序表与链表两种改造</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// S = {do, for, repeat, while}，概率 0.35, 0.15, 0.15, 0.35
+function tblRow(head, cells, hiIdx){
+  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:13px"><tr>';
+  for (var i = 0; i < head.length; i++){
+    h += '<th style="border:1px solid #e2e8f0;padding:3px 12px;background:#f1f5f9">' + head[i] + '</th>';
+  }
+  h += '</tr><tr>';
+  for (var i = 0; i < cells.length; i++){
+    h += '<td style="border:1px solid #e2e8f0;padding:3px 12px;text-align:center;font-family:Menlo,monospace;background:'
+       + (hiIdx === i ? '#dcfce7' : '#fff') + ';font-weight:700">' + cells[i] + '</td>';
+  }
+  return h + '</tr></table>';
+}
+function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
+function card(cls, title, body){
+  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
+}
+// 树结点（7 列网格）
+function tnode(v, col, row, cls, note){
+  return '<div class="aw-box ' + (cls || '') + '" style="grid-column:' + col + ';grid-row:' + row + ';justify-self:center;width:70px;height:40px;font-size:13px;position:relative">'
+       + v + (note ? '<span style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:#64748b;white-space:nowrap">' + note + '</span>' : '') + '</div>';
+}
+function halfTree(){
+  var h = '<div style="display:grid;grid-template-columns:repeat(7,70px);grid-auto-rows:54px;justify-content:center;margin-top:16px">';
+  h += tnode('for(2)', 4, 1, 'hit', '层1·0.15');
+  h += tnode('do(1)', 2, 2, 'ok', '层2·0.35');
+  h += tnode('repeat(3)', 6, 2, 'ok', '层2·0.15');
+  h += tnode('while(4)', 7, 3, 'ok', '层3·0.35');
+  h += '</div>';
+  return h;
+}
+function bstTree(){
+  var h = '<div style="display:grid;grid-template-columns:repeat(7,70px);grid-auto-rows:54px;justify-content:center;margin-top:16px">';
+  h += tnode('for', 4, 1, 'hit', '层1·0.15');
+  h += tnode('do', 2, 2, 'ok', '层2·0.35');
+  h += tnode('while', 6, 2, 'ok', '层2·0.35');
+  h += tnode('repeat', 5, 3, 'ok', '层3·0.15');
+  h += '</div>';
+  return h;
+}
+
+var LOGS = [
+  '审题：S = {do, for, repeat, while}，查找概率 0.35, 0.15, 0.15, 0.35。折半查找 ASL = 2.2 是基准。目标：两问分别找更短的方案',
+  '先验证基准：4 个元素折半（mid=⌊(1+4)/2⌋=2），判定树为 for(层1)、do 与 repeat(层2)、while(层3)。ASL = 0.15×1 + 0.35×2 + 0.15×2 + 0.35×3 = 2.2 ✓（与题干一致）',
+  '第(1)问思路：顺序存储可以折半，但折半的比较次数由判定树形状决定、与怎么排无关，仍是 2.2。要更短就【换查找方法】：改用顺序查找——第 k 个元素比 k 次，把大概率元素放最前面（按概率降序排列）',
+  '第(1)问排列：do(0.35)、while(0.35)、for(0.15)、repeat(0.15)——两个 0.35 抢占第 1、2 位',
+  '第(1)问计算：ASL = 0.35×1 + 0.35×2 + 0.15×3 + 0.15×4 = 2.1 < 2.2 ✓',
+  '第(2)问思路：链式存储不支持随机访问、不能折半；改用【二叉排序树（链式）】查找，让大概率元素靠根。按字典序 do < for < repeat < while，取 for 为根：do 左孩子、while 右孩子，repeat 插为 while 的左孩子',
+  '第(2)问结构验证：for 层 1、do 层 2、while 层 2、repeat 层 3（BST 查找次数 = 层号）',
+  '第(2)问计算：ASL = 0.15×1 + 0.35×2 + 0.35×2 + 0.15×3 = 2.0 < 2.1。两问答案：顺序存储降序 + 顺序查找得 2.1；链式存储 BST 查找得 2.0'
+];
+var TAGS = ['审题', '基准折半 ASL=2.2', '第(1)问思路', '第(1)问降序排列', '第(1)问 ASL=2.1',
+            '第(2)问思路', '第(2)问 BST 结构', '完成'];
+var CLS  = ['step', 'step', 'key', 'ok', 'ok', 'key', 'ok', 'done'];
+
+var snaps = [];
+for (var i = 0; i < 8; i++){
+  var h = '';
+  if (i === 0){
+    h += rowLabel('集合 S 与查找概率');
+    h += tblRow(['元素', 'do', 'for', 'repeat', 'while'], ['概率', '0.35', '0.15', '0.15', '0.35']);
+    h += card('key', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 1){
+    h += rowLabel('折半查找判定树（括号内为表内位置，mid = 2 为根）');
+    h += halfTree();
+    h += card('', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 2){
+    h += tblRow(['元素', 'do', 'for', 'repeat', 'while'], ['概率', '0.35', '0.15', '0.15', '0.35']);
+    h += card('key', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 3){
+    h += rowLabel('第(1)问：顺序表按概率降序排列 + 顺序查找（第 k 个元素比 k 次）');
+    h += tblRow(['位置', '1', '2', '3', '4'], ['元素', 'do', 'while', 'for', 'repeat'], 1);
+    h += tblRow(['', '概率×次数'], ['', '0.35×1, 0.35×2, 0.15×3, 0.15×4']);
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 4){
+    h += rowLabel('第(1)问：顺序表按概率降序排列 + 顺序查找');
+    h += tblRow(['位置', '1', '2', '3', '4'], ['元素', 'do', 'while', 'for', 'repeat']);
+    h += tblRow(['', '比较次数'], ['', '1', '2', '3', '4']);
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 5){
+    h += card('key', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else if (i === 6){
+    h += rowLabel('第(2)问：二叉排序树（for 为根，do 左孩子，while 右孩子，repeat 为 while 的左孩子）');
+    h += bstTree();
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  } else {
+    h += rowLabel('第(2)问：二叉排序树查找（比较次数 = 层号）');
+    h += bstTree();
+    h += tblRow(['元素', 'for', 'do', 'while', 'repeat'], ['层号×概率', '1×0.15', '2×0.35', '2×0.35', '3×0.15']);
+    h += card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
+  }
+  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
+  if (i === 3 || i === 4 || i === 6) sn.ribbon = { k: i, ok: true };
+  if (i === 7) sn.done = true;
+  snaps.push(sn);
+}
+
+AW.init({
+  title: '让平均查找长度更短：顺序表与链表的两种改造（2013-42）',
+  subtitle: 'S = <code>{do, for, repeat, while}</code> · 折半基准 ASL = 2.2 → 目标更短',
+  counterLabel: '推理步',
+  ribbonTitle: '要点（✓ 关键步骤）',
+  intro: '点击「▶ 播放」先验证基准，再逐问展开。',
+  snaps: snaps,
+  result: {
+    big: '(1) 2.1　(2) 2.0',
+    html: '第(1)问：顺序存储<b>按概率降序</b>（do, while, for, repeat）+ <b>顺序查找</b>：ASL = 0.35×1+0.35×2+0.15×3+0.15×4 = <b>2.1</b>。<br>第(2)问：链式存储建<b>二叉排序树</b>（for 为根，do 左、while 右，repeat 为 while 左孩子）：ASL = 0.15×1+0.35×2+0.35×2+0.15×3 = <b>2.0</b>。均优于折半的 2.2。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

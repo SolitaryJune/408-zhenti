@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-22 显存带宽计算 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：刷新带宽 ÷ 占比 = 总带宽', cls: 'key',
+    body: '<p>显存有两条"水路"：一条专供<b>刷新屏幕</b>（分辨率 × 色深 × 帧频），题目说它只占总带宽的 <b>50%</b>。所以求总带宽 = 先算刷新带宽，再 <b>÷ 0.5</b> 放大一倍。</p>' },
+  { title: '第 1 步：每帧数据量', cls: '',
+    body: '<p>每帧要刷出的数据 = 分辨率 × 颜色深度 = 1600 × 1200 像素 × 24 bit = <b>46 080 000 bit</b>（约 46.08 Mb）。这一步只跟"一帧画面"有关，还没轮到时间维度。</p>' },
+  { title: '第 2 步：乘帧频 → 刷新带宽', cls: 'good',
+    body: '<p>每秒刷 85 帧：46 080 000 × 85 = <b>3 916 800 000 bit/s ≈ 3916.8 Mbps</b>。这就是"刷新屏幕"那一支路需要的带宽。</p>' },
+  { title: '第 3 步：按 50% 占比放大', cls: 'good',
+    body: '<p>刷新只占总带宽的一半 → 总带宽 = 3916.8 ÷ 50% = <b>7833.6 ≈ 7834 Mbps</b>。方向别搞反：是"放大"，不是"减半"。</p>' },
+  { title: '第 4 步：核对干扰项', cls: '',
+    body: '<p>A 245 ≈ 7834 的 1/32、B 979 ≈ 1/8、C 1958 ≈ 1/4——都是把帧频、色深或占比漏乘/用反后的<b>中间值</b>；只有 <b>7834Mbps</b> 是完整走完全部三步的结果。</p>' },
+  { title: '结论：选 D', cls: 'good',
+    body: '<p>链条：1600×1200×24 bit × 85Hz = 3916.8Mbps（刷新）→ ÷ 50% = <b>≈ 7834Mbps</b> → 答案选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-22 · 显存总带宽至少多少',
+  subtitle: '<code>1600×1200 · 24 位色深 · 85Hz · 刷新占 50%</code> · 三步计算链',
+  counterLabel: '计算步',
+  intro: '点击「▶ 播放」逐步计算。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（约 7834Mbps）',
+    html: '刷新带宽 = 1600×1200×24 bit × 85 Hz = <b>3916.8Mbps</b>；它只占总带宽 50% → 总带宽 = 3916.8 ÷ 0.5 ≈ <b>7834Mbps</b>。记忆锚点：<b>先算"刷新那一路"，再按占比放大</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

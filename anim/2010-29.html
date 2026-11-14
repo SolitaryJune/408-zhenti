@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-29 二级页表的页目录表项数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/纯计算推理类动画（复制 tools/anim_concept_template.html，只改 AW.init 区域）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链
+var STEPS = [
+  { title: '审题眼：三块拼图',
+    cls: 'key',
+    body: '<p>题给条件：页大小 <code>2^10 B</code>、页表项 <code>2B</code>、逻辑地址空间 <code>2^16 页</code>。求"页目录表项数"= 总页数 ÷ 每张页表能管的页数——先算出<b>一张页表装多少个页表项</b>。</p>' },
+  { title: '第一步：页内偏移 10 位',
+    cls: 'step',
+    body: '<p>页大小 <code>2^10 B</code> 按字节编址 → 页内偏移占 <b>10 位</b>。这一位段与页目录号、页号共同拼出逻辑地址。</p>' },
+  { title: '第二步：一张页表装 512 项',
+    cls: 'step',
+    body: '<p>每张页表本身也要放进一个页：一张页表的页表项数 = 页大小 ÷ 页表项大小 = <code>2^10 ÷ 2 = 2^9 = 512</code> 项，即<b>一张页表最多映射 512 页</b>。</p>' },
+  { title: '第三步：页目录项数 = 128',
+    cls: 'good',
+    body: '<p>页目录表每项指向一张页表，覆盖 2^16 页需要页表张数 = <code>2^16 ÷ 2^9 = 2^7 = 128</code> → 页目录表至少 <b>128 项</b>。</p>' },
+  { title: '自洽性核对 + 排干扰项',
+    cls: 'key',
+    body: '<p>核对：128 × 2B = 256B ≤ 一页，方案成立。D（512）是把"每张页表的项数"当成答案；C（256）是页表项误按 4B 算；A（64）是把"每张页表管的页数"错用成页大小 2^10。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B（128）</b>。记忆锚点：<b>页目录项数 = 逻辑页数 ÷（页大小 ÷ 页表项大小）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010·29 二级页表：页目录表至少多少项',
+  subtitle: '考点：内存管理（二级页表）· 页大小 2^10B · 页表项 2B · 逻辑空间 2^16 页',
+  intro: '点击「▶ 播放」逐步展开计算推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（128）',
+    html: '计算链：<b>2^10 ÷ 2 = 512</b>（每张页表的项数）→ <b>2^16 ÷ 512 = 2^7 = 128</b>（页目录项数）。核对：128 × 2B = 256B 放得进一页。干扰项 512/256/64 分别对应"拿错对象、页表项按 4B、按页大小除"三种典型错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

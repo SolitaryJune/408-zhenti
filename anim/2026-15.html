@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-15 交叉编址芯片定位 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function paintRow(chars, paint, idxLabels){
+  var row = AW.el('div', 'aw-cells');
+  chars.forEach(function(ch, i){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    var box = AW.el('div', 'aw-box', ch);
+    var p = paint && paint[i + 1];
+    if (p === 'amber'){ box.style.background = '#fef3c7'; box.style.borderColor = '#d97706'; box.style.color = '#92400e'; }
+    else if (p === 'green'){ box.style.background = '#dcfce7'; box.style.borderColor = '#16a34a'; box.style.color = '#14532d'; }
+    else if (p === 'red'){ box.style.background = '#fee2e2'; box.style.borderColor = '#dc2626'; box.style.color = '#b91c1c'; }
+    else if (p === 'dim'){ box.style.opacity = '.45'; }
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', (idxLabels && idxLabels[i]) != null ? idxLabels[i] : String(i)));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+var CHIPS = ['0','1','2','3','4','5','6','7'];
+var IDX = ['芯片0','芯片1','芯片2','芯片3','芯片4','芯片5','芯片6','芯片7'];
+
+var box = null, note = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  wrap.appendChild(AW.el('div', 'aw-row-label',
+    '<b>8 个 64M×8 位芯片交叉编址</b>（每片 8 位 = 1 字节，64 位总线一次并行读 8 片；琥珀 = 目标所在芯片，绿 = 与目标同芯片，红 = 不同芯片）'));
+  box = AW.el('div', '');
+  note = AW.el('div', 'aw-row-label', '');
+  wrap.appendChild(box);
+  wrap.appendChild(note);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  box.innerHTML = '';
+  box.appendChild(paintRow(CHIPS, sn.paint, IDX));
+  note.innerHTML = sn.note || '';
+}
+
+var snaps = [
+  { cls:'step', tag:'初始', count:0,
+    log:'规则：交叉编址下相邻地址轮流分布在 8 个芯片上，芯片号 = 主存地址 mod 8，即地址二进制的最低 3 位。',
+    paint:{}, note:'64 位总线 = 8 片 × 8 位，一次最多读写 64 位（8 个字节，分属 8 个芯片）。' },
+  { cls:'step', tag:'定位目标', count:1,
+    log:'目标地址 0018 001DH：末字节 1DH = 0001 1101B，低 3 位 101 = 5 → 位于 5 号芯片。',
+    paint:{6:'amber'}, note:'0018 001DH → 芯片号 = 1DH mod 8 = <b>5</b>' },
+  { cls:'ok', tag:'核对 A', count:2, ribbon:{k:1, ok:true},
+    log:'选项 A 0000 01D5H：末字节 D5H = 1101 0101B，低 3 位 101 = 5 → 同在 5 号芯片 ✓。',
+    paint:{6:'green'}, note:'A：D5H mod 8 = 5 → <b>与目标同芯片</b>（✓）' },
+  { cls:'miss', tag:'核对 B', count:3, ribbon:{k:2, ok:false},
+    log:'选项 B 000F A020H：末字节 20H = 0010 0000B，低 3 位 000 = 0 → 0 号芯片 ✗。',
+    paint:{1:'red'}, note:'B：20H mod 8 = 0 → 芯片 0，不同（✗）' },
+  { cls:'miss', tag:'核对 C', count:4, ribbon:{k:3, ok:false},
+    log:'选项 C 0018 001EH：末字节 1EH = 0001 1110B，低 3 位 110 = 6 → 6 号芯片 ✗。',
+    paint:{7:'red'}, note:'C：1EH mod 8 = 6 → 芯片 6，不同（✗）' },
+  { cls:'miss', tag:'核对 D', count:5, ribbon:{k:4, ok:false},
+    log:'选项 D 0F02 0014H：末字节 14H = 0001 0100B，低 3 位 100 = 4 → 4 号芯片 ✗。',
+    paint:{5:'red'}, note:'D：14H mod 8 = 4 → 芯片 4，不同（✗）' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'只有选项 A 与主存地址 0018 001DH 同在 5 号芯片。',
+    paint:{6:'green'}, note:'答案：<b>A</b>（0000 01D5H 与 0018 001DH 同属芯片 5）' },
+];
+
+AW.init({
+  title: '2026·15 交叉编址：地址落在哪个芯片',
+  subtitle: '8 片 64M×8 位 DRAM · 64 位总线 · 按字节编址 · 芯片号 = 地址 mod 8',
+  counterLabel: '已核对',
+  ribbonTitle: '选项核对（✓ 同芯片 / ✗ 不同芯片）',
+  intro: '点击「▶ 播放」先定位目标地址，再逐个核对选项。',
+  build: build,
+  render: render,
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '目标 <code>0018 001DH</code> 的低 3 位 = 101（芯片 5）；<code>0000 01D5H</code> 的低 3 位同为 101 → 同芯片。<br>记忆锚点：<b>交叉编址看最低位</b>（芯片号 = 地址 mod 芯片数）；按高位分芯片是顺序编址的规则，正是 B/C/D 三个干扰项的误判来源。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

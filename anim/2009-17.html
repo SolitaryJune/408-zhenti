@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-17 RISC 特征辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-17：RISC 叙述找错误（推理链）
+     模板：概念/推理链类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找「错误」的叙述',
+    cls: 'key',
+    body: '<p>RISC 的五大特征：<b>①</b> 指令数、寻址方式、指令格式种类少；<b>②</b> 指令定长、大多数指令一个时钟周期完成；<b>③</b> 只有 Load/Store 访存；<b>④</b> 通用寄存器多；<b>⑤</b> 控制器用<b>组合逻辑（硬布线）</b>实现 + 流水线。</p>' },
+  { title: '选项 A：RISC 普遍采用微程序控制器',
+    cls: 'bad',
+    ribbon: {k:1, ok:false},
+    body: '<p><b>错误（就是它）</b>。RISC 指令简单规整，控制器用<b>组合逻辑</b>直接产生控制信号，更快；<b>微程序</b>便于实现复杂指令，是 <b>CISC</b> 的典型做法。</p>' },
+  { title: '选项 B：大多数指令一个时钟周期内完成',
+    cls: 'good',
+    ribbon: {k:2, ok:true},
+    body: '<p><b>正确</b>。指令简单、定长、不频繁访存，配合流水线，大多数指令一个机器周期即可完成——RISC 的标志性特征。</p>' },
+  { title: '选项 C：通用寄存器数量相对 CISC 多',
+    cls: 'good',
+    ribbon: {k:3, ok:true},
+    body: '<p><b>正确</b>。RISC 设大量通用寄存器，让操作尽量在寄存器之间完成，只有 Load/Store 访问内存，从而减少访存次数。</p>' },
+  { title: '选项 D：指令数、寻址方式、指令格式种类相对 CISC 少',
+    cls: 'good',
+    ribbon: {k:4, ok:true},
+    body: '<p><b>正确</b>。「三少」是 RISC 的第一条特征：指令种类少、寻址方式少、指令格式少，译码和控制逻辑因此大为简化。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>RISC 简单到用硬布线，CISC 复杂到用微程序</b>——「快而僵」对「慢而活」。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || null,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-17 RISC 的叙述辨析（找错误）',
+  subtitle: '考点：CISC 与 RISC 的基本概念 · 特征对比',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐项推演。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: 'A 错：RISC 普遍采用<b>组合逻辑（硬布线）控制器</b>，微程序控制器用于实现复杂指令、是 CISC 的做法。B/C/D 均为 RISC 标准特征：单周期、寄存器多、「三少」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

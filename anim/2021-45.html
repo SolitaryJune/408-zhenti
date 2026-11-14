@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-45 · 信号量操作与开/关中断互斥</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三问的结构', cls: 'key',
+    body: '<p>题目给出整型信号量 <code>wait(S){ while(S<=0); S=S-1; }</code>、<code>signal(S){ S=S+1; }</code>，以及两种用开/关中断实现互斥的方法。三问：① 为何对 S 的访问必须互斥 ② 方法 1 / 方法 2 是否正确 ③ 用户程序能否用开/关中断实现临界区互斥。</p>' },
+  { title: '第 1）问：S 是"读—改—写"的共享变量', cls: '',
+    body: '<p>wait/signal 对 S 的操作是"读（判断 <code>while(S<=0)</code>）→ 改写（<code>S=S-1</code> 或 <code>S=S+1</code>）"，不是原子的。设 S=1：进程 P_A 判断 S&gt;0 成立后被打断；P_B 也判断 S&gt;0 成立并把 S 减为 0；P_A 恢复后再减 1 → S 变 -1。<b>1 个资源被两个进程同时"拿到"</b>，计数语义被破坏——所以对 S 的读、改、写必须<b>互斥（原子）</b>执行。</p>' },
+  { title: '第 2）问·方法 1：忙等中始终关中断 → 错', cls: 'bad',
+    body: '<p>方法 1 的 wait：<code>关中断 → while(S<=0) 忙等 → S=S-1 → 开中断</code>。忙等期间中断<b>一直关闭</b>：时钟中断进不来，进程切换无从发生；当 S≤0 时，能执行 <code>signal(S)</code> 使 S 增大的进程<b>永远得不到运行机会</b>，执行 wait 的进程在关中断状态下无限空转 → 系统死循环。<b>方法 1 错误</b>。</p>' },
+  { title: '第 2）问·方法 2：等待时开中断 → 对', cls: 'good',
+    body: '<p>方法 2 的 wait：<code>关中断 → while(S<=0){ 开中断; 关中断; } → S=S-1 → 开中断</code>。忙等循环体内<b>先开中断</b>：给时钟中断和其他进程（包括能执行 signal 的进程）运行机会；随后<b>再关中断</b>继续测试；跳出循环后修改 <code>S=S-1</code> 时仍处关中断保护下——既保证原子性，又不会让系统死等。<b>方法 2 正确</b>。</p>' },
+  { title: '第 3）问：开/关中断是特权指令 → 不能', cls: '',
+    body: '<p>开/关中断指令是<b>特权指令</b>，只能在<b>内核态</b>执行；用户程序运行在用户态，执行会被硬件拒绝（非法操作陷入内核）。所以用户程序<b>不能</b>用开/关中断实现临界区互斥，应使用系统提供的同步机制（经系统调用进入内核的信号量等）。</p>' },
+  { title: '结论：三问答案', cls: 'good',
+    body: '<p>① 对 S 的读、改、写必须原子执行，否则并发交错使 S 的值错误、信号量语义被破坏；② <b>方法 1 错误</b>（忙等期间始终关中断，signal 得不到执行机会，可能陷入死循环），<b>方法 2 正确</b>（等待期间重新开中断，修改 S 前再次关中断）；③ <b>不能</b>——开/关中断是特权指令，只能在内核态执行。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '信号量操作的互斥与开/关中断（2021-45）',
+  subtitle: '考点：信号量原子性 · 开/关中断实现互斥的两种方法 · 特权指令',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，按第 1）～3）问逐步展开推理链。',
+  snaps: [{ cls: 'shift', tag: '开始', log: '', html: '' }].concat(snaps),
+  result: {
+    big: '方法 1 错 · 方法 2 对 · 用户不能用',
+    html: '① S 的"读—改—写"必须<b>原子</b>执行，否则并发交错使 S 值错误；② 方法 1 错在<b>忙等期间始终关中断</b>（signal 进程饿死 → 死循环），方法 2 在等待时<b>重新开中断</b>、修改 S 前再关中断，正确；③ 开/关中断是<b>特权指令</b>，仅内核态可执行，用户程序不能用。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

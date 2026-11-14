@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-07 AOE 网：时间余量最大的活动</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 题面 AOE 网（6 事件、10 活动）：
+   a(1→2)=2  b(1→3)=5  c(2→3)=1  d(2→4)=3  e(3→4)=3
+   f(3→5)=4  g(3→6)=1  h(4→5)=1  i(4→6)=4  j(5→6)=1  */
+var VE = ['0', '2', '5', '8', '9', '12'];
+var VL = ['0', '4', '5', '8', '11', '12'];
+var SL = ['2', '0', '2', '3', '0', '2', '6', '2', '0', '2'];
+var LB = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+
+/* 每步显示状态：veN/vlN = 已揭示的事件个数；sl = 各活动（0 隐藏/1 ok/2 miss=余量0/3 hit=最大） */
+var ST = [
+  { ve: 0, vl: 0, sl: [] },                                     // 0
+  { ve: 2, vl: 0, sl: [] },                                     // 1
+  { ve: 3, vl: 0, sl: [] },                                     // 2
+  { ve: 5, vl: 0, sl: [] },                                     // 3
+  { ve: 6, vl: 0, sl: [] },                                     // 4
+  { ve: 6, vl: 2, sl: [] },                                     // 5
+  { ve: 6, vl: 6, sl: [] },                                     // 6
+  { ve: 6, vl: 6, sl: [1, 0, 1, 0, 0, 0, 0, 0, 0, 0] },         // 7  a c
+  { ve: 6, vl: 6, sl: [1, 2, 1, 1, 0, 0, 0, 0, 0, 0] },         // 8  b d
+  { ve: 6, vl: 6, sl: [1, 2, 1, 1, 2, 1, 0, 0, 0, 0] },         // 9  e f
+  { ve: 6, vl: 6, sl: [1, 2, 1, 1, 2, 1, 3, 1, 0, 0] },         // 10 g h
+  { ve: 6, vl: 6, sl: [1, 2, 1, 1, 2, 1, 3, 1, 2, 1] },         // 11 i j
+  { ve: 6, vl: 6, sl: [1, 2, 1, 1, 2, 1, 3, 1, 2, 1] },         // 12 done
+];
+
+var veRow, vlRow, slRow, slBox = [];
+
+/* 活动行：格子下方显示活动字母（不用序号） */
+function letterRow(chars){
+  var row = AW.el('div', 'aw-cells');
+  for (var i = 0; i < chars.length; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', ''));
+    col.appendChild(AW.el('div', 'aw-box', chars[i]));
+    col.appendChild(AW.el('div', 'aw-idx', LB[i]));
+    row.appendChild(col);
+    slBox.push(col.children[1]);
+  }
+  return row;
+}
+
+function fillRow(row, vals, n, hi){
+  for (var j = 0; j < vals.length; j++){
+    var b = row.children[j].children[1];
+    if (j < n){
+      b.textContent = vals[j];
+      b.className = 'aw-box ok';
+    } else {
+      b.textContent = '';
+      b.className = 'aw-box';
+    }
+  }
+}
+
+function paint(i){
+  var s = ST[i], j;
+  fillRow(veRow, VE, s.ve);
+  fillRow(vlRow, VL, s.vl);
+  for (j = 0; j < 10; j++){
+    var code = s.sl[j] || 0;
+    slBox[j].textContent = code ? SL[j] : '';
+    slBox[j].className = 'aw-box' + (code === 1 ? ' ok' : code === 2 ? ' miss' : code === 3 ? ' hit' : '');
+  }
+}
+
+AW.init({
+  title: 'AOE 网：哪个活动时间余量最大？（2022-07）',
+  subtitle: '6 个事件 · 10 个活动 · 余量 = vl(终点) − ve(起点) − 工期 · 红=关键活动',
+  counterLabel: '已算余量活动',
+  ribbonTitle: '活动（✓ 有富余 / ✗ 余量 0）',
+  intro: '点击「▶ 播放」：先正推 ve，再逆推 vl，最后逐个活动算余量。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>事件最早发生时间 ve</b>（事件 1～6，拓扑序正推）'));
+    veRow = AW.cellRow(['', '', '', '', '', ''], ['', '', '', '', '', ''], null, 1);
+    inner.appendChild(veRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>事件最迟发生时间 vl</b>（逆推，vl(6) = 工期）'));
+    vlRow = AW.cellRow(['', '', '', '', '', ''], ['', '', '', '', '', ''], null, 1);
+    inner.appendChild(vlRow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>活动时间余量</b>（格内=余量，格下=活动名；红=0 关键，绿=最大）'));
+    slRow = letterRow(['', '', '', '', '', '', '', '', '', '']);
+    inner.appendChild(slRow);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'shift', tag: '开始',   log: '活动 a(1→2)=2、b(1→3)=5、c(2→3)=1、d(2→4)=3、e(3→4)=3、f(3→5)=4、g(3→6)=1、h(4→5)=1、i(4→6)=4、j(5→6)=1。先正推 ve', count: 0 },
+    { cls: 'step',  tag: '正推 ①', log: 've(1)=0；ve(2)=ve(1)+a=0+2=2', count: 0 },
+    { cls: 'step',  tag: '正推 ②', log: 've(3)=max(b:0+5, c:2+1)=5', count: 0 },
+    { cls: 'step',  tag: '正推 ③', log: 've(4)=max(d:2+3, e:5+3)=8；ve(5)=max(f:5+4, h:8+1)=9', count: 0 },
+    { cls: 'step',  tag: '正推 ④', log: 've(6)=max(i:8+4, g:5+1, j:9+1)=12 ⇒ 总工期 12', count: 0 },
+    { cls: 'step',  tag: '逆推 ①', log: 'vl(6)=12；vl(5)=12−j=11', count: 0 },
+    { cls: 'step',  tag: '逆推 ②', log: 'vl(4)=min(i:12−4, h:11−1)=8；vl(3)=min(e:8−3, f:11−4, g:12−1)=5；vl(2)=min(c:5−1, d:8−3)=4；vl(1)=min(a:4−2, b:5−5)=0', count: 0 },
+    { cls: 'ok',    tag: '余量 a c', log: 'a = vl(2)−ve(1)−2 = 4−0−2 = 2；c = vl(3)−ve(2)−1 = 5−2−1 = 2', count: 2, ribbon: { k: 1, ok: true } },
+    { cls: 'ok',    tag: '余量 b d', log: 'b = vl(3)−ve(1)−5 = 0（关键活动）；d = vl(4)−ve(2)−3 = 8−2−3 = 3', count: 4, ribbon: { k: 2, ok: false } },
+    { cls: 'ok',    tag: '余量 e f', log: 'e = vl(4)−ve(3)−3 = 0（关键活动）；f = vl(5)−ve(3)−4 = 11−5−4 = 2', count: 6, ribbon: { k: 5, ok: false } },
+    { cls: 'ok',    tag: '余量 g h', log: 'g = vl(6)−ve(3)−1 = 12−5−1 = 6 ← 目前最大；h = vl(5)−ve(4)−1 = 11−8−1 = 2', count: 8, ribbon: { k: 7, ok: true } },
+    { cls: 'ok',    tag: '余量 i j', log: 'i = vl(6)−ve(4)−4 = 0（关键活动）；j = vl(6)−ve(5)−1 = 12−9−1 = 2', count: 10, ribbon: { k: 9, ok: false } },
+    { cls: 'done',  tag: '完成',   log: '全部余量：a2 b0 c2 d3 e0 f2 g6 h2 i0 j2 ⇒ 最大的是 g（余量 6），答案 B', count: 10, done: true },
+  ],
+  render: function(stage, sn, i){ paint(i); },
+  result: {
+    big: '答案 B（活动 g，余量 6）',
+    html: '余量 = <b>vl(终点) − ve(起点) − 工期</b>。g = 12 − 5 − 1 = <b>6</b>，远超第二名 d（3）。b、e、i 余量为 0，是关键路径上的活动——关键活动余量最小，别当成「最大」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

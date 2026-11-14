@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-06 前缀编码判定动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类：逐选项两两比对找前缀冲突 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：什么是前缀编码',
+    cls: 'key',
+    body: '<p>前缀编码：<b>任何一个编码都不是另一个编码的前缀</b>。译码时从左往右扫描无歧义（哈夫曼编码天然满足）。判别动作：<b>两两比对</b>，找"短码 = 某长码开头"的冲突对。</p>' },
+  { title: '检查 A：01, 0000, 0001, 001, 1',
+    cls: 'good',
+    body: '<p><code>0000 / 0001 / 001</code> 都以 00 开头、互不为前缀；<code>01</code> 不是任何码的开头；以 <code>1</code> 开头的只有 <code>1</code> 自己。<b>是前缀编码</b>（排除）。</p>' },
+  { title: '检查 B：011, 000, 001, 010, 1',
+    cls: 'good',
+    body: '<p>三个 3 位码 <code>000 / 001 / 010</code> 互不为前缀；<code>011</code> 与 <code>1</code> 也不做任何码的开头。<b>是前缀编码</b>（排除）。</p>' },
+  { title: '检查 C：000, 001, 010, 011, 100',
+    cls: 'good',
+    body: '<p>五个码<b>等长</b>（都是 3 位）。长度相同则谁也做不了谁的前缀，等长编码是前缀编码的特例。<b>是前缀编码</b>（排除）。</p>' },
+  { title: '检查 D：0, 100, 110, 1110, 1100',
+    cls: 'bad',
+    body: '<p>两两比对发现冲突：<code>110</code> 恰好是 <code>1100</code> 的<b>前 3 位</b>！码流 <code>1100…</code> 会被译码器在读完 <code>110</code> 时提前断字，产生歧义。<b>不是前缀编码</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：判前缀编码 = 逐对找「短码是长码前缀」；等长编码天然安全。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2014-06　哪组编码不是前缀编码',
+  subtitle: '定义：任何码字不做其他码字的前缀 · 逐项两两比对',
+  intro: '点击「▶ 播放」逐项检查。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: 'D 组中 <code>110</code> 是 <code>1100</code> 的前缀 → 译码歧义 → 不是前缀编码。<br>A、B 组互不为前缀；C 组等长，天然是前缀编码。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

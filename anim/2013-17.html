@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-17 变址寻址取操作数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 单元格 HTML 小工具
+function bx(t, cls, wide){
+  return '<div class="aw-box ' + (cls || '') + '"' + (wide ? ' style="width:auto;min-width:72px;padding:0 12px;font-size:15px"' : '') + '>' + t + '</div>';
+}
+function sep(t){
+  return '<div class="aw-box" style="border:none;background:none;width:auto;min-width:34px;color:#64748b;font-size:20px">' + t + '</div>';
+}
+function row(inner){
+  return '<div class="aw-cells" style="align-items:center">' + inner + '</div>';
+}
+
+var INFO = [
+  '已知：变址寄存器 R = 1000H，形式地址 A = 2000H；M[1000H]=2000H，M[2000H]=3000H，M[3000H]=4000H',
+  '变址寻址公式：有效地址 EA = (R) + A，先求地址、后取数',
+  'EA = 1000H + 2000H = <b>3000H</b> —— 这只是地址，还不是操作数',
+  '按 EA = 3000H 访问主存（注意：不是访问 1000H 或 2000H）',
+  '操作数 = M[3000H] = <b>4000H</b> → 对应选项 D',
+  '辨析：3000H 只是有效地址（选 C 错）；M[2000H]=3000H、M[1000H]=2000H 都是干扰路径',
+  '完成：变址寻址 EA = (R)+A，操作数 = M[EA] = 4000H → 答案 D',
+];
+
+var stageBox = null, infoEl = null;
+
+function stageHtml(i){
+  // 第 4 步起高亮主存中的 3000H 单元
+  var m1000 = bx('M[1000H]<br><b>2000H</b>', '', true);
+  var m2000 = bx('M[2000H]<br><b>3000H</b>', '', true);
+  var m3000cls = i >= 4 ? 'ok' : (i >= 3 ? 'hit' : '');
+  var m3000 = bx('M[3000H]<br><b>4000H</b>', m3000cls, true);
+
+  var rCls = i >= 2 ? 'ok' : '';
+  var aCls = i >= 2 ? 'ok' : '';
+  var eaCls = i === 2 ? 'hit' : (i >= 3 ? 'ok' : '');
+
+  var line1 = row(
+    bx('R = 1000H', rCls, true) + sep('＋') + bx('A = 2000H', aCls, true) +
+    sep('＝') + bx('EA = 3000H', eaCls, true)
+  );
+  var line2 = row(sep('↓ 按 EA 访存') + m3000 + sep('→') + bx('操作数 = 4000H', i >= 5 ? 'hit' : '', true));
+  var line3 = row(
+    '<div style="font-size:12.5px;color:#64748b;font-family:Menlo,monospace;line-height:1.8">' +
+    '干扰单元：' + m1000 + '（内容 2000H，只用于求 EA）　' + m2000 + '（内容 3000H，本题不访问）' +
+    '</div>'
+  );
+
+  var h = line1 + '<div style="height:10px"></div>' + line2;
+  if (i >= 6) h += '<div style="height:10px"></div>' + line3;
+  return h;
+}
+
+AW.init({
+  title: '2013 真题 · 变址寻址取操作数',
+  subtitle: 'R = <code>1000H</code> · 形式地址 A = <code>2000H</code> · M[1000H]=2000H，M[2000H]=3000H，M[3000H]=4000H',
+  counterLabel: '已完成步骤',
+  ribbonTitle: '关键环节（✓ 已完成）',
+  intro: '点击「▶ 播放」逐步演示：求有效地址 EA → 按 EA 访存 → 取出操作数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    infoEl = AW.el('div', 'aw-row-label');
+    infoEl.style.marginBottom = '10px';
+    infoEl.style.fontSize = '14px';
+    infoEl.style.color = '#334155';
+    stageBox = AW.el('div', '');
+    stage.appendChild(infoEl);
+    stage.appendChild(stageBox);
+  },
+
+  render: function(stage, sn, i){
+    infoEl.innerHTML = INFO[Math.min(i, INFO.length - 1)];
+    stageBox.innerHTML = stageHtml(i);
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始', log: '变址寻址：R = 1000H，形式地址 A = 2000H，主存内容如题', count: 0 },
+    { cls: 'step', tag: '公式', log: '变址寻址有效地址：EA = (R) + A', count: 1 },
+    { cls: 'ok', tag: '求 EA', log: 'EA = 1000H + 2000H = 3000H（这是地址，不是操作数）', count: 2, ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '访存', log: '按 EA = 3000H 访问主存单元 M[3000H]', count: 3, ribbon: { k: 2, ok: true } },
+    { cls: 'ok', tag: '取操作数', log: '操作数 = M[3000H] = 4000H → 选项 D', count: 4, ribbon: { k: 3, ok: true } },
+    { cls: 'step', tag: '辨析干扰', log: '3000H 只是有效地址（选 C 的错因）；M[1000H]、M[2000H] 均不在访存路径上', count: 5 },
+    { cls: 'done', tag: '完成', log: '答案：D（操作数 4000H）', count: 6, done: true },
+  ],
+
+  result: {
+    big: '操作数 = 4000H',
+    html: '答案 <b>D</b>。变址寻址一条链：<code>EA = (R) + A = 1000H + 2000H = 3000H</code> → <code>M[3000H] = 4000H</code>。<br>记忆锚点：EA 是「取数的<b>地址</b>」，操作数是 EA 单元里的<b>内容</b>——选 3000H 就是把这二者混为一谈。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

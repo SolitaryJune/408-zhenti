@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-30 设备独立性</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：设备独立性是什么',
+    cls: 'key',
+    body: '<p>设备独立性 = 应用程序与具体物理设备<b>解耦</b>：用户程序用<b>逻辑设备名</b>提 I/O 请求，系统用映射机制找到当前实际的物理设备。目的就一句话：<b>换设备不改程序</b>。本题<b>选错误项</b>。</p>' },
+  { title: '逐项分析 A',
+    cls: 'good',
+    body: '<p>A（可以使用文件名访问物理设备）：<b>对</b>。设备被组织成特殊文件出现在文件系统中，用文件名（设备文件名）就能访问物理设备——设备即文件。</p>' },
+  { title: '逐项分析 B',
+    cls: 'good',
+    body: '<p>B（用户程序使用逻辑设备名访问物理设备）：<b>对</b>。程序只认「打印机 1」这样的逻辑名，不直接认物理设备，这正是设备独立性的核心。</p>' },
+  { title: '逐项分析 C',
+    cls: 'good',
+    body: '<p>C（需要建立逻辑设备与物理设备之间的映射关系）：<b>对</b>。系统靠逻辑设备表等映射机制，把逻辑设备名翻译成当前实际的物理设备。</p>' },
+  { title: '逐项分析 D',
+    cls: 'bad',
+    body: '<p>D（更换物理设备后必须修改访问该设备的应用程序）：<b>错</b>。有了映射层，换设备时<b>只需更新映射关系</b>，应用程序一行都不用改——「必须修改程序」与设备独立性的目的正好相反，是本题要选的错误项。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>错误的是 <b>D</b>。核心记忆点：<b>程序认逻辑名，映射表认物理设备；换设备只换映射，不动程序</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '具备设备独立性的系统：哪个说法错了',
+  subtitle: '考点：<code>I/O · 设备独立性软件</code> · 找出错误叙述',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（错误项）',
+    html: '设备独立性的意义就是「换设备不改程序」：A 设备当文件、按文件名访问（对）；B 用户程序用逻辑设备名（对）；C 建立逻辑→物理映射（对）；D 换设备必须改程序——恰是设备独立性要消灭的事，<b>错</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

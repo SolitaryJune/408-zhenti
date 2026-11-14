@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-30 哪些算法可能出现 Belady 异常</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var TH = ' style="border:1px solid #cbd5e1;padding:5px 10px;background:#f1f5f9;font-size:13px;color:#334155"';
+var TD = ' style="border:1px solid #cbd5e1;padding:5px 10px;font-size:13px;font-family:Menlo,Consolas,monospace"';
+var TDR = ' style="border:1px solid #cbd5e1;padding:5px 10px;font-size:13px;font-family:Menlo,Consolas,monospace;background:#fee2e2;font-weight:700;color:#b91c1c"';
+var TDG = ' style="border:1px solid #cbd5e1;padding:5px 10px;font-size:13px;font-family:Menlo,Consolas,monospace;background:#dcfce7;font-weight:700;color:#14532d"';
+
+function table(){
+  return '<div style="overflow-x:auto"><table style="border-collapse:collapse;margin:4px 0">' +
+    '<tr><th' + TH + '>页框数</th><th' + TH + '>FIFO 缺页次数</th></tr>' +
+    '<tr><td' + TD + '>3</td><td' + TDG + '>9</td></tr>' +
+    '<tr><td' + TD + '>4</td><td' + TDR + '>10（反而更多！）</td></tr>' +
+    '</table></div>';
+}
+
+var STEPS = [
+  { title: '审题眼：Belady 异常的定义',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>Belady 异常 = <b>分配的页框越多，缺页次数反而越多</b>。要判断 LRU / FIFO / OPT 谁可能出现它，关键是看算法是否"栈式"。</p>' },
+  { title: '栈式算法：页框多缺页必不多',
+    cls: 'key',
+    tag: '理论',
+    body: '<p><b>栈式算法</b>：n 个页框时的驻留页面集合 ⊆ n+1 个页框时的驻留集合。于是页框增加只会让缺页不变或减少——<b>数学上不可能</b>出现 Belady 异常。LRU 与 OPT 都是栈式算法。</p>' },
+  { title: 'I LRU：不可能 ✗',
+    cls: 'bad',
+    tag: '选项 I',
+    body: '<p>LRU 按最近访问时间排序，具备栈式包含关系 → <b>不可能</b>出现 Belady 异常。</p>' },
+  { title: 'II FIFO：可能出现 ✓',
+    cls: 'good',
+    tag: '选项 II',
+    body: '<p>FIFO 只按"进入内存的早晚"换页，与页面未来是否使用无关，<b>不是</b>栈式算法。教材经典反例（访问串 <code>1,2,3,4,1,2,5,1,2,3,4,5</code>）：' + table() + '页框从 3 加到 4，缺页 9 → 10，异常出现。</p>' },
+  { title: 'III OPT：不可能 ✗',
+    cls: 'bad',
+    tag: '选项 III',
+    body: '<p>OPT 按"未来最久不用"换页，是最优的栈式算法 → <b>不可能</b>出现 Belady 异常。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    body: '<p>只有 FIFO 可能 → 答案选 <b>A（仅 II）</b>。记忆锚点：<b>LRU、OPT 按使用规律排队（栈式），FIFO 按资历排队（非栈式）——Belady 异常是"论资排辈"的代价</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2014-30】可能出现 Belady 异常的页面置换算法',
+  subtitle: 'I LRU · II FIFO · III OPT · 用"栈式算法"性质判断',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（仅 II FIFO）',
+    html: '<b>LRU、OPT 是栈式算法</b>：n 页框驻留集 ⊆ n+1 页框驻留集，页框多缺页必不多，绝无 Belady 异常；<b>FIFO 非栈式</b>，经典反例 1,2,3,4,1,2,5,1,2,3,4,5 下 3 帧 9 次、4 帧 10 次。<br>记忆点：Belady 异常是 FIFO 的"专利"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

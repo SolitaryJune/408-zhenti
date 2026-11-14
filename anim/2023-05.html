@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-05 · 由树形和后序推前序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 树形（与题图一致）：a 为根；左孩子 e、右孩子 c；e 左 d 右 b；d 的孩子 f（画在右下） */
+var NODES = [
+  { name:'a', x:300, y:36 },
+  { name:'e', x:176, y:132 },
+  { name:'c', x:428, y:132 },
+  { name:'d', x:84,  y:228 },
+  { name:'b', x:268, y:228 },
+  { name:'f', x:176, y:308 },
+];
+var EDGES = [[0,1],[0,2],[1,3],[1,4],[3,5]];
+var POST = ['f','d','b','e','c','a'];
+var PRE  = ['a','e','d','f','b','c'];
+
+function nodeAt(name){
+  for (var i = 0; i < NODES.length; i++){ if (NODES[i].name === name){ return NODES[i]; } }
+  return NODES[0];
+}
+function seqRow(label, chars, litCount, cls){
+  var h = '<div class="aw-row-label">' + label + '</div><div class="aw-cells">';
+  for (var i = 0; i < chars.length; i++){
+    var c = cls && cls[i] ? ' ' + cls[i] : '';
+    if (litCount != null){
+      c = i < litCount ? ' hit' : (cls && cls[i] ? ' ' + cls[i] : ' dim');
+    }
+    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box' + c + '">' + chars[i] + '</div><div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  return h + '</div>';
+}
+function stageHTML(st){
+  var h = '<div style="position:relative;width:520px;height:350px;margin:0 auto">';
+  var svg = '<svg width="520" height="350" style="position:absolute;left:0;top:0">';
+  for (var i = 0; i < EDGES.length; i++){
+    var p1 = NODES[EDGES[i][0]], p2 = NODES[EDGES[i][1]];
+    svg += '<line x1="' + p1.x + '" y1="' + p1.y + '" x2="' + p2.x + '" y2="' + p2.y + '" stroke="#94a3b8" stroke-width="2"/>';
+  }
+  svg += '</svg>';
+  h += svg;
+  for (var j = 0; j < NODES.length; j++){
+    var nd = NODES[j];
+    var on = st.lit[nd.name];
+    var style = 'position:absolute;left:' + (nd.x - 22) + 'px;top:' + (nd.y - 22) + 'px;' +
+      'width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;' +
+      'font-weight:700;font-size:19px;border:2px solid ' + (on ? '#16a34a' : '#cbd5e1') + ';' +
+      'background:' + (on ? '#16a34a' : '#fff') + ';color:' + (on ? '#fff' : '#0f172a') + ';' +
+      'transition:all .2s;font-family:Menlo,monospace';
+    h += '<div style="' + style + '">' + nd.name + '</div>';
+  }
+  h += '</div>';
+  h += seqRow('<b>后序</b>（题干已知）', POST, null, ['ok','ok','ok','ok','ok','ok']);
+  h += seqRow('<b>前序</b>（逐位求出）', PRE, st.preLit, null);
+  h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.note + '</div>';
+  return h;
+}
+
+function litMap(arr){
+  var m = {};
+  for (var i = 0; i < arr.length; i++){ m[arr[i]] = true; }
+  return m;
+}
+
+/* 每步：lit=已访问结点集合，preLit=前序行已点亮的位数，note=本步说明 */
+var STATES = [
+  { lit:{}, preLit:0,
+    note:'由题图：根 a；a 左孩子 e、右孩子 c；e 左孩子 d、右孩子 b；d 的孩子 f。已知后序 f d b e c a，按「根 → 左 → 右」求前序。' },
+  { lit:{a:1}, preLit:1,
+    note:'前序第 1 位：访问根 a（根 → 左子树 → 右子树）。' },
+  { lit:{a:1,e:1}, preLit:2,
+    note:'进入左子树：子树根 e 先被访问，前序第 2 位。' },
+  { lit:{a:1,e:1,d:1}, preLit:3,
+    note:'e 的左子树：访问 d，前序第 3 位。' },
+  { lit:{a:1,e:1,d:1,f:1}, preLit:4,
+    note:'d 只有一个孩子 f：访问 f，前序第 4 位。d 的子树走完。' },
+  { lit:{a:1,e:1,d:1,f:1,b:1}, preLit:5,
+    note:'回到 e 的右子树：访问 b，前序第 5 位。左子树全部完成。' },
+  { lit:{a:1,e:1,d:1,f:1,b:1,c:1}, preLit:6,
+    note:'回到根 a：访问右子树根 c，前序第 6 位。遍历结束。' },
+  { lit:{a:1,e:1,d:1,f:1,b:1,c:1}, preLit:6,
+    note:'前序 = a, e, d, f, b, c —— 答案 A。后序 f, d, b, e, c, a 与题干一致 ✓' },
+];
+
+var snaps = STATES.map(function(st, i){
+  var last = i === STATES.length - 1;
+  var clsArr = ['shift','ok','ok','ok','ok','ok','ok','done'];
+  var tagArr = ['树形与已知条件','访问 a','访问 e','访问 d','访问 f','访问 b','访问 c','完成'];
+  var logArr = [
+    '树形：a(e(d(f), b), c)；已知后序 f d b e c a',
+    '前序规则「根左右」：第 1 位访问根 a',
+    '进入左子树：子树根 e 是前序第 2 位',
+    'e 的左孩子 d 是前序第 3 位',
+    'd 的孩子 f 是前序第 4 位',
+    'e 的右孩子 b 是前序第 5 位',
+    '左子树走完，右子树根 c 是前序第 6 位',
+    '前序 = a, e, d, f, b, c → 答案 A'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: Math.max(0, st.preLit),
+    html: stageHTML(st), done: last,
+  };
+  if (i >= 1 && i <= 6){ sn.ribbon = { k: i, ok: true }; }
+  return sn;
+});
+
+AW.init({
+  title: '2023-05 · 由树形和后序序列推前序序列',
+  subtitle: '后序 <code>f, d, b, e, c, a</code> · 前序规则：根 → 左子树 → 右子树',
+  counterLabel: '已访问结点',
+  ribbonTitle: '前序各位（✓ 已确定）',
+  intro: '点击「▶ 播放」按前序规则逐个点亮结点。',
+  snaps: snaps,
+  result: {
+    big: '前序 = a, e, d, f, b, c（答案 A）',
+    html: '树形：a 的左孩子 e、右孩子 c；e 左 d 右 b；d 的孩子 f。按「根 → 左 → 右」点亮即得 <b>a, e, d, f, b, c</b>。核验：后序按「左 → 右 → 根」恰为 f, d, b, e, c, a ✓。易错：b 是 e 的右孩子不是 a 的孩子；不能先走右子树（B 选项正是这个错）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

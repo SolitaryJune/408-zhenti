@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-15 动画 · 数组循环访问的 Cache 缺失率推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：a[k]=a[k]+32 逐次访问 Cache 的命中/缺失推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var BLK = ['a0','a1','a2','a3'];   // 一个 16B 块里的 4 个 int
+
+// Cache 块一行：filled 表示块内已有效元素个数；cur 当前被访问元素下标（-1 无）
+function blkRow(filled, cur, kind){
+  var chars = [], cls = [], i;
+  for(i = 0; i < 4; i++){
+    chars.push(filled > i ? BLK[i] : '—');
+    if(filled > i){ cls.push(i === cur ? kind : 'ok'); }
+    else { cls.push('dim'); }
+  }
+  return AW.cellRow(chars, cls, null, 0).outerHTML;
+}
+
+function wrap(label, nodeHtml){
+  return '<div class="aw-row-label">' + label + '</div><div class="aw-scroll">' + nodeHtml + '</div>';
+}
+
+function card(cls, html){
+  return '<div class="aw-stepcard ' + cls + '"><p>' + html + '</p></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'a[k]=a[k]+32 执行 1000 次：每元素一读一写，共 2000 次访问；块 16B 装 4 个 int，数组共 250 块',
+    html: card('key', '数组 <code>a</code> 1000 个 int（4B）= 4000B；块大小 16B = <b>4 个 int/块</b>。<br>每轮循环对 <code>a[k]</code> 先读后写 → 对数组共 <b>2000 次</b>访问。Cache 初始为空，逐次访问看命中/缺失。') +
+        wrap('数据 Cache 中的一个块（16B = 4 个 int，初始为空）', blkRow(0, -1)) },
+
+  { cls:'miss', tag:'缺失', count:1, ribbon:{k:1, ok:false},
+    log:'第 1 次访问：读 a[0] —— Cache 为空，块 0 不在其中 → 缺失，调入整块 a[0..3]',
+    html: wrap('调入块后（a[0] 刚被读）', blkRow(4, 0, 'miss')) },
+
+  { cls:'ok', tag:'命中', count:2, ribbon:{k:2, ok:true},
+    log:'第 2 次访问：写 a[0] —— 块已在 Cache → 写命中',
+    html: wrap('块已在 Cache', blkRow(4, 0, 'hit')) },
+
+  { cls:'ok', tag:'命中', count:3, ribbon:{k:3, ok:true},
+    log:'第 3 次访问：读 a[1] —— 同一块 → 命中',
+    html: wrap('同一块内', blkRow(4, 1, 'hit')) },
+
+  { cls:'ok', tag:'命中', count:4, ribbon:{k:4, ok:true},
+    log:'第 4 次访问：写 a[1] —— 命中',
+    html: wrap('同一块内', blkRow(4, 1, 'hit')) },
+
+  { cls:'ok', tag:'命中', count:5, ribbon:{k:5, ok:true},
+    log:'第 5 次访问：读 a[2] —— 命中',
+    html: wrap('同一块内', blkRow(4, 2, 'hit')) },
+
+  { cls:'ok', tag:'命中', count:6, ribbon:{k:6, ok:true},
+    log:'第 6 次访问：写 a[2] —— 命中',
+    html: wrap('同一块内', blkRow(4, 2, 'hit')) },
+
+  { cls:'ok', tag:'命中', count:7, ribbon:{k:7, ok:true},
+    log:'第 7 次访问：读 a[3] —— 命中',
+    html: wrap('同一块内', blkRow(4, 3, 'hit')) },
+
+  { cls:'ok', tag:'命中', count:8, ribbon:{k:8, ok:true},
+    log:'第 8 次访问：写 a[3] —— 命中。一块的 8 次访问只缺失 1 次',
+    html: wrap('一块访问完毕', blkRow(4, 3, 'hit')) +
+          card('good', '规律出现：读 a[0] 缺失一次（调入整块），之后 <b>a[0..3] 的 1 读 1 写共 8 次访问里 7 次命中</b> → 1/8。') },
+
+  { cls:'step', tag:'归纳规律', count:9,
+    log:'每 4 个元素（1 块）缺失 1 次：缺失发生在块内第一次读，其余 7 次全命中',
+    html: card('key', '从 a[4] 起重复同样模式：读 a[4] 缺失（调入下一块）→ 其余 7 次命中。数组 4000B ÷ 16B = <b>250 块</b> → 缺失 <b>250 次</b>，总访问 <b>2000 次</b>。') +
+        wrap('数据 Cache 中的一个块', blkRow(4, -1)) },
+
+  { cls:'step', tag:'算缺失率', count:10,
+    log:'缺失率 = 250 ÷ 2000 = 12.5%（Cache 只有 1KB/64 块装不下数组，但顺序访问不回头，换出不添缺失）',
+    html: card('good', '缺失率 = 250 ÷ 2000 = <b>12.5%</b>。<br>Cache 数据区仅 1KB（64 块）装不下 250 块，但访问严格顺序前进、块用完不再回头，直接映射的换出<b>不产生额外缺失</b>。') },
+
+  { cls:'done', tag:'完成', count:11,
+    log:'缺失率约 12.5% → 答案 C',
+    done:true,
+    html: card('good', '答案选 <b>C（12.5%）</b>。每块 4 个 int、首读缺失、其余 7 次命中：<code>250 / 2000 = 12.5%</code>。') },
+];
+
+AW.init({
+  title: '2016-15 数组循环访问的 Cache 缺失率',
+  subtitle: '<code>for(k=0;k&lt;1000;k++) a[k]=a[k]+32;</code> · int 4B · 直接映射 · 块 16B（4 个 int） · 考点：Cache 缺失率',
+  counterLabel: '已访问',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺失）',
+  intro: '点击「▶ 播放」逐次访问推演。',
+  snaps: snaps,
+  result: {
+    big: '缺失率 12.5%',
+    html: '答案选 <b>C</b>。记忆锚点：<b>块 16B = 4 个 int，每块只在第一次读时缺失，之后读 + 写共 7 次全命中</b> → 缺失 250 次 / 访问 2000 次 = 12.5%。<br>两个坑：写也是 Cache 访问（漏写会得 25%，即干扰项 D）；Cache 装不下数组也不添缺失（顺序访问不回头）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

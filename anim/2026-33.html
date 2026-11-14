@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-33 分层网络体系结构 · 概念辨析动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：选"错误"的那句',
+    cls: 'key',
+    body: '<p>题干问分层网络体系结构的叙述中<b>错误</b>的一项。分层的好处在教材里是原话级考点：解耦——<b>标准化</b>、<b>各层技术独立演化</b>、<b>降低设计与实现复杂度</b>；但分层是有代价的，"层次越多"并不等于"越好"。</p>' },
+  { title: '逐项分析 A：有利于标准化',
+    cls: 'good',
+    body: '<p>A（有利于标准化）：<b>正确</b>。每层功能明确、层间接口清晰，各层可以独立定义标准接口，便于标准化（如 TCP/IP 各层协议都有自己的标准）。</p>' },
+  { title: '逐项分析 B：层次越多效率越高',
+    cls: 'bad',
+    body: '<p>B（层次越多效率越高）：<b>错误</b>。数据每穿过一层都要<b>封装/解封装</b>（加头、去头），层数越多处理开销越大、时延越长；层间接口越多，协议越臃肿，整体效率反而<b>下降</b>。层次要适度，绝不是越多越好。</p>' },
+  { title: '逐项分析 C：各层技术独立演化',
+    cls: 'good',
+    body: '<p>C（有利于各层技术独立演化）：<b>正确</b>。只要层间接口保持不变，某一层内部的技术升级（如更换链路层技术）不会影响其他层——这正是"高内聚、低耦合"的好处。</p>' },
+  { title: '逐项分析 D：降低设计与实现复杂度',
+    cls: 'good',
+    body: '<p>D（降低网络系统设计与实现的复杂度）：<b>正确</b>。分层把复杂的网络问题分解为若干相对独立的子问题，每层只解决一类问题，设计和实现都变简单。</p>' },
+  { title: '结论：分层赢在解耦，输在开销',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>分层"赢在解耦"（标准化、独立演化、降复杂度），"输在开销"（层越多封装越多、效率越低）</b>——B 把"分层有好处"偷换成"越多越好"。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    ribbon: i > 0 && i < 5 ? { k: i, ok: i !== 2 } : (i === 5 ? { k: 5, ok: true } : null),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2026-33 · 分层网络体系结构：哪句说法是错的',
+  subtitle: '考点：<code>分层的优点与代价</code> · 选项逐项推演',
+  counterLabel: '已分析',
+  ribbonTitle: '选项/结论（✓ 正确 · ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '分层赢在<b>解耦</b>：标准化（A）、各层独立演化（C）、降低复杂度（D）都是教材原话级的优点；但每层都要封装/解封装，<b>层越多开销越大、效率越低</b>，所以"层次越多效率越高"错。记忆锚点：分层适度，不是越多越好。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

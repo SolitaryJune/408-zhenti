@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-13 浮点加法 X+Y 演算动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-13：浮点加法 对阶→尾数相加→判溢出
+     模板：算法/过程类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var XE  = ['0','0','1','1','1'];
+var XM  = ['0','0','1','1','1','0','1'];
+var YE0 = ['0','0','1','0','1'];
+var YM0 = ['0','0','1','0','1','0','0'];
+var YE1 = ['0','0','1','1','1'];
+var YM1 = ['0','0','0','0','1','0','1'];
+var SM  = ['0','1','0','0','0','1','0'];
+
+function dim(n){ var a = [], i; for(i = 0; i < n; i++){ a.push('dim'); } return a; }
+function fill(n, c){ var a = [], i; for(i = 0; i < n; i++){ a.push(c); } return a; }
+
+function row(label, chars, cls){
+  return '<div class="aw-row-label">' + label + '</div>' +
+         '<div class="aw-scroll">' + AW.cellRow(chars, cls || [], null, 1).outerHTML + '</div>';
+}
+function pair(name, e, m, eCls, mCls){
+  return row(name + '：阶码（5 位含双符号）', e, eCls) + row(name + '：尾数（7 位含双符号）', m, mCls);
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'X = 2^7 × 29/32 = 2^7 × 0.11101，Y = 2^5 × 5/8 = 2^5 × 0.101；阶码 5 位、尾数 7 位，均含 2 位符号位',
+    html:'<div class="aw-stepcard key"><p>浮点加减五步：<b>对阶 → 尾数运算 → 规格化 → 舍入 → 判溢出</b>。阶码、尾数均为补码，阶码 5 位、尾数 7 位（均含 2 位符号位）。X = 2<sup>7</sup> × 29/32，Y = 2<sup>5</sup> × 5/8。</p></div>' },
+
+  { cls:'ok', tag:'写机器数', count:1, ribbon:{k:1, ok:true},
+    log:'X = 00111 0011101，Y = 00101 0010100（正数补码：符号位 00）',
+    html: pair('X', XE, XM, [], []) + pair('Y', YE0, YM0, [], []) },
+
+  { cls:'shift', tag:'对阶', count:2, ribbon:{k:2, ok:true},
+    log:'对阶：小阶向大阶对齐，阶差 = 7 − 5 = 2，Y 阶码加 2、尾数右移 2 位 → Y = 00111 0000101',
+    html: pair('X', XE, XM, dim(5), dim(7)) +
+          row('Y：阶码 +2', YE1, fill(5,'hit')) +
+          row('Y：尾数右移 2 位（新增两位已标出）', YM1, ['dim','dim','shift','shift','hit','dim','dim']) },
+
+  { cls:'step', tag:'尾数相加', count:3, ribbon:{k:3, ok:true},
+    log:'尾数相加（双符号位）：00.11101 + 00.00101 = 01.00010',
+    html: row('X 尾数：00.11101', XM, ['','','','','','','']) +
+          row('Y 尾数（对阶后）：00.00101', YM1, ['','','','','','','']) +
+          row('和 = 01.00010', SM, ['miss','miss','','','','','']) },
+
+  { cls:'miss', tag:'判溢出', count:4, ribbon:{k:4, ok:false},
+    log:'双符号位 01 → 正溢出（上溢）！真值验证：X+Y = 116 + 20 = 136 = 2^7 × 1.00010 > 最大正数 2^7 × (127/128) = 127，且阶码已到最大值 7，无法右规',
+    html: row('和 = 01.00010（双符号位 01 → 上溢）', SM, ['miss','miss','hit','hit','hit','hit','hit']) +
+          '<div class="aw-stepcard bad"><p>和的<b>双符号位为 01</b>：两正数相加结果符号位变 01 即<b>正溢出</b>。真值 136 超出该格式的最大正数 127，且阶码已是最大值 7，尾数无法再右规补偿。</p></div>' },
+
+  { cls:'step', tag:'干扰项', count:5, ribbon:{k:5, ok:true},
+    log:'选项 B 是未判溢出的「和」；选项 C 强行右规后阶码 01000 的双符号位也是 01——阶码同样溢出',
+    html: '<div class="aw-stepcard bad"><p><b>选项 B（00111 0100010）</b>：就是把和 01.00010 直接当结果、不做溢出判断——错。</p></div>' +
+          '<div class="aw-stepcard bad"><p><b>选项 C（01000 0010001）</b>：右规一次，尾数变 00.10001、阶码 8 = 01000，双符号位 01 说明<b>阶码也溢出</b>——错。</p></div>' +
+          '<div class="aw-stepcard bad"><p><b>选项 A（00111 1100010）</b>：数值对不上，属于把和当负数处理的笔误——错。</p></div>' },
+
+  { cls:'done', tag:'完成', count:6, ribbon:{k:6, ok:false},
+    log:'浮点加法最终结果：发生溢出 → 答案 D',
+    done:true,
+    html: row('X 尾数：00.11101', XM, dim(7)) +
+          row('Y 尾数（对阶后）：00.00101', YM1, dim(7)) +
+          row('和 = 01.00010 → 溢出', SM, ['miss','miss','hit','hit','hit','hit','hit']) },
+];
+
+AW.init({
+  title: '2009-13 浮点加法 X + Y 的演算',
+  subtitle: 'X = 2<sup>7</sup>×29/32，Y = 2<sup>5</sup>×5/8 · 阶码 5 位、尾数 7 位（均含双符号位补码）',
+  counterLabel: '运算步',
+  ribbonTitle: '运算过程（✓ 正常 / ✗ 溢出）',
+  intro: '点击「▶ 播放」按五步法演算。',
+  snaps: snaps,
+  result: {
+    big: '发生溢出（答案 D）',
+    html: '尾数相加得 <code>01.00010</code>，双符号位 <b>01 → 正溢出</b>。真值 2<sup>7</sup>×1.00010 = 136，超过该格式最大正数 2<sup>7</sup>×(127/128) = 127，且阶码已达最大值 7 无法右规。干扰项 B 是未判溢的和、C 右规后阶码本身也溢出。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

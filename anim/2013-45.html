@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-45 博物馆 500 人：信号量与 P/V 推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .sem-wrap{ display:flex; gap:16px; margin: 8px 0 4px; flex-wrap:wrap; }
+  .sem{ border:2px solid #cbd5e1; border-radius:12px; padding:8px 16px; text-align:center;
+        background:#fff; min-width:150px; transition: border-color .2s; }
+  .sem .nm{ font-size:12px; color:#64748b; font-family:monospace; }
+  .sem .v{ font-size:28px; font-weight:800; font-family:"SF Mono",Menlo,monospace; line-height:1.2; }
+  .sem .cap{ font-size:10.5px; color:#94a3b8; }
+  .sem.free{ border-color:#16a34a; } .sem.free .v{ color:#16a34a; }
+  .sem.locked{ border-color:#dc2626; } .sem.locked .v{ color:#dc2626; }
+  .sem.blocked{ border-color:#dc2626; background:#fff7f7; } .sem.blocked .v{ color:#dc2626; }
+  .codebox{ font-family:"SF Mono",Menlo,monospace; font-size:12.5px; background:#f8fafc;
+            border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-top:10px;
+            display:flex; gap:14px; flex-wrap:wrap; }
+  .cl{ color:#475569; padding:1px 6px; border-radius:6px; }
+  .cl.hl{ background:#fef3c7; color:#92400e; font-weight:700; }
+  .vrow{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .vchip{ border-radius:999px; padding:4px 13px; font-size:12.5px; border:1.5px solid #e2e8f0;
+          background:#f8fafc; color:#64748b; transition: all .2s; }
+  .vchip.in{ background:#dcfce7; border-color:#16a34a; color:#14532d; font-weight:700; }
+  .vchip.waiting{ background:#fee2e2; border-color:#dc2626; color:#b91c1c; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+var CODE = ['P(empty);', 'P(mutex);', '进门;', 'V(mutex);', '参观;',
+            'P(mutex);', '出门;', 'V(mutex);', 'V(empty);'];
+
+/* 每步的信号量值 / 访客状态 / 高亮代码行 */
+var STATE = [
+  { mx:1, em:500, a:'馆外排队', b:'馆外排队', hl:-1, cap:'初始：出入口空闲，馆全空' },
+  { mx:1, em:499, a:'拿到空位', b:'馆外排队', hl:0,  cap:'甲：P(empty)，申请到一个空位' },
+  { mx:0, em:499, a:'占住门',   b:'馆外排队', hl:1,  cap:'甲：P(mutex)，占住出入口' },
+  { mx:1, em:499, a:'参观中',   b:'馆外排队', hl:3,  cap:'甲进门后立刻 V(mutex)：出入口让出' },
+  { mx:1, em:498, a:'参观中',   b:'参观中',   hl:0,  cap:'乙：P(empty)→P(mutex) 进门→V(mutex)，馆内 2 人' },
+  { mx:0, em:498, a:'等门',     b:'参观中',   hl:5,  cap:'甲参观结束：P(mutex)，再次申请出入口（出门也要互斥）' },
+  { mx:1, em:498, a:'出馆',     b:'参观中',   hl:6,  cap:'甲出门，V(mutex)：出入口空闲' },
+  { mx:1, em:499, a:'已离开',   b:'参观中',   hl:8,  cap:'甲 V(empty)：腾出一个空位（乙仍在馆内）' },
+  { mx:1, em:0,   a:'—',       b:'—',       hl:-1, cap:'推演满馆：馆内已有 500 人，empty=0' },
+  { mx:1, em:-1,  a:'—',       b:'—',       hl:0,  cap:'第 501 位访客：P(empty)→empty=-1，阻塞排队' },
+  { mx:1, em:0,   a:'—',       b:'—',       hl:8,  cap:'有人出门执行 V(empty)：唤醒队首访客进馆' },
+];
+
+function drawCode(){
+  var box = AW.el('div', 'codebox');
+  CODE.forEach(function(c, k){
+    box.appendChild(AW.el('div', 'cl' + (S.hlMap && S.hlMap[k] ? ' hl' : ''), (k + 1) + '. ' + c));
+  });
+  return box;
+}
+
+AW.init({
+  title: '【2013-45】博物馆 500 人参观：信号量设计与 P/V 推演',
+  subtitle: '出入口一次过一人 → <code>mutex=1</code> · 最多容纳 500 人 → <code>empty=500</code>',
+  counterLabel: '馆内人数',
+  ribbonTitle: '关键步骤（✓ 已完成）',
+  intro: '点击「▶ 播放」：跟两位访客走一遍 P/V 流程，再推演满馆阻塞的场景。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    S.mxBox = AW.el('div', 'sem', '<div class="nm">mutex</div><div class="v">1</div><div class="cap">出入口互斥</div>');
+    S.emBox = AW.el('div', 'sem', '<div class="nm">empty</div><div class="v">500</div><div class="cap">剩余空位数</div>');
+    var sw = AW.el('div', 'sem-wrap');
+    sw.appendChild(S.mxBox); sw.appendChild(S.emBox);
+    inner.appendChild(sw);
+    S.chips = AW.el('div', 'vrow');
+    inner.appendChild(S.chips);
+    S.code = AW.el('div', '');
+    inner.appendChild(S.code);
+    S.note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.note);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    if (i === 0){
+      S.mxBox.className = 'sem free'; S.mxBox.querySelector('.v').textContent = '1';
+      S.emBox.className = 'sem free'; S.emBox.querySelector('.v').textContent = '500';
+      S.chips.innerHTML = '';
+      S.note.innerHTML = '<b>初始</b>：mutex=1（出入口空闲），empty=500（馆全空，可进 500 人）。先看访客甲的正常流程。';
+      S.hlMap = null;
+      S.code.innerHTML = ''; S.code.appendChild(drawCode());
+      return;
+    }
+    var st = STATE[i];
+    S.mxBox.querySelector('.v').textContent = st.mx;
+    S.emBox.querySelector('.v').textContent = st.em;
+    S.mxBox.className = 'sem ' + (st.mx === 0 ? 'locked' : 'free');
+    S.emBox.className = 'sem ' + (st.em === 0 ? 'blocked' : (st.em < 0 ? 'blocked' : 'free'));
+    if (st.em < 0) S.emBox.querySelector('.v').textContent = st.em + '（阻塞）';
+    var chip = function(name, state){
+      var cls = 'vchip';
+      if (state === '参观中') cls += ' in';
+      if (state === '等门' || state === '阻塞等待') cls += ' waiting';
+      return AW.el('div', cls, name + '：' + state);
+    };
+    S.chips.innerHTML = '';
+    if (i <= 7){ S.chips.appendChild(chip('甲', st.a)); S.chips.appendChild(chip('乙', st.b)); }
+    S.hlMap = {};
+    if (st.hl >= 0) S.hlMap[st.hl] = true;
+    S.code.innerHTML = '';
+    S.code.appendChild(drawCode());
+    S.note.innerHTML = '<b>' + st.cap + '</b>';
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', log:'mutex=1（出入口空闲），empty=500（可容纳 500 人）', count:0 },
+    { cls:'step',  tag:'P(empty)', log:'甲：P(empty)→499，先申请空位（等待发生在门锁之外）', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'P(mutex)', log:'甲：P(mutex)→0，占住出入口', count:0, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'进门', log:'甲进门后立刻 V(mutex)→1：出入口让出，甲开始参观', count:1, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'乙进馆', log:'乙：P(empty)→498 → P(mutex) 进门 → V(mutex)；馆内 2 人', count:2, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'再申请门', log:'甲参观结束：P(mutex)→0，出门也要互斥使用出入口', count:2, ribbon:{k:5, ok:true} },
+    { cls:'step',  tag:'出门', log:'甲出门，V(mutex)→1：出入口空闲', count:1, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'腾空位', log:'甲：V(empty)→499，腾出一个空位（乙仍在馆内）', count:1, ribbon:{k:7, ok:true} },
+    { cls:'shift', tag:'推演满馆', log:'推演：馆内已有 500 人 → empty=0', count:500, ribbon:{k:8, ok:true} },
+    { cls:'miss',  tag:'阻塞', log:'第 501 位访客：P(empty)→-1，阻塞排队等待空位', count:500, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'唤醒', log:'有人出门执行 V(empty)：唤醒队首访客，其 P(empty) 返回 0 得以进馆', count:500, ribbon:{k:10, ok:true} },
+    { cls:'done',  tag:'完成', log:'容量用 empty 同步、出入口用 mutex 互斥；顺序必须先 P(empty) 后 P(mutex)', count:500, done:true },
+  ],
+
+  result: {
+    big: 'mutex=1 · empty=500',
+    html: '框架：<code>P(empty) → P(mutex) → 进门 → V(mutex) → 参观 → P(mutex) → 出门 → V(mutex) → V(empty)</code>。记忆点：<b>先申请空位再申请门锁</b>——若先 P(mutex) 再 P(empty)，馆满时有人握着门锁等空位，馆内的人出不了门，空位永不产生 → 死锁；出门与进门是对出入口的两次互斥使用，各配一对 P(mutex)/V(mutex)。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

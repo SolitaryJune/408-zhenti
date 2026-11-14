@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-05 动画 · 有向图 DFS 序列枚举</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 有向图：E = {<v0,v1>, <v0,v2>, <v0,v3>, <v1,v3>}
+var NS = 'http://www.w3.org/2000/svg';
+var POS = { v0: [130, 110], v1: [350, 55], v2: [90, 250], v3: [360, 225] };
+var ARROWS = [ ['v0','v1'], ['v0','v2'], ['v0','v3'], ['v1','v3'] ];
+var nodeEls = {};
+var seqBox = null;
+
+function edgeEnds(a, b, r){
+  var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.sqrt(dx*dx + dy*dy);
+  var ux = dx / len, uy = dy / len;
+  var sx = a[0] + ux * (r + 4), sy = a[1] + uy * (r + 4);
+  var ex = b[0] - ux * (r + 12), ey = b[1] - uy * (r + 12);
+  return [sx, sy, ex, ey];
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var flex = AW.el('div', '');
+  flex.style.display = 'flex';
+  flex.style.gap = '18px';
+  flex.style.flexWrap = 'wrap';
+  flex.style.alignItems = 'flex-start';
+
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 460 320');
+  svg.setAttribute('width', '430');
+  svg.setAttribute('height', '300');
+  var defs = document.createElementNS(NS, 'defs');
+  defs.innerHTML = '<marker id="awArr" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">' +
+                   '<path d="M0,0 L8,3.5 L0,7 Z" fill="#64748b"/></marker>';
+  svg.appendChild(defs);
+  ARROWS.forEach(function(e){
+    var p = POS[e[0]], q = POS[e[1]];
+    var ends = edgeEnds(p, q, 30);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', ends[0]); ln.setAttribute('y1', ends[1]);
+    ln.setAttribute('x2', ends[2]); ln.setAttribute('y2', ends[3]);
+    ln.setAttribute('stroke', '#64748b'); ln.setAttribute('stroke-width', '2.5');
+    ln.setAttribute('marker-end', 'url(#awArr)');
+    svg.appendChild(ln);
+  });
+  ['v0','v1','v2','v3'].forEach(function(n){
+    var p = POS[n];
+    var g = document.createElementNS(NS, 'g');
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r', 30);
+    c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#334155'); c.setAttribute('stroke-width', '2.5');
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', p[0]); t.setAttribute('y', p[1] + 7);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-size', '19'); t.setAttribute('font-weight', '700'); t.setAttribute('fill', '#0f172a');
+    t.textContent = n;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    nodeEls[n] = c;
+  });
+  flex.appendChild(svg);
+
+  var right = AW.el('div', '');
+  right.style.minWidth = '260px';
+  right.style.flex = '1';
+  var lab = AW.el('div', 'aw-row-label', '<b>当前 DFS 序列</b>');
+  right.appendChild(lab);
+  seqBox = AW.el('div', '');
+  right.appendChild(seqBox);
+  var note = AW.el('div', 'aw-row-label',
+    '邻接表：v0 → {v1, v2, v3}；v1 → {v3}；v2 → ∅；v3 → ∅<br>起点固定 v0，邻居访问次序可以任选');
+  note.style.marginTop = '10px';
+  right.appendChild(note);
+  flex.appendChild(right);
+
+  wrap.appendChild(flex);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  ['v0','v1','v2','v3'].forEach(function(n){ nodeEls[n].setAttribute('fill', '#ffffff'); });
+  var seq = sn.seq || [];
+  seq.forEach(function(n, i){
+    var c = nodeEls[n];
+    if(i === seq.length - 1) c.setAttribute('fill', '#16a34a');
+    else c.setAttribute('fill', '#dcfce7');
+  });
+  seqBox.innerHTML = '';
+  if(sn.seq){
+    var classes = sn.seq.map(function(_, i){ return i === sn.seq.length - 1 ? 'hit' : 'ok'; });
+    seqBox.appendChild(AW.cellRow(sn.seq, classes, null, 1));
+  }
+}
+
+var SEQ1 = ['v0','v1','v3','v2'];
+var SEQ2 = ['v0','v2','v1','v3'];
+var SEQ3 = ['v0','v2','v3','v1'];
+var SEQ4 = ['v0','v3','v1','v2'];
+var SEQ5 = ['v0','v3','v2','v1'];
+
+AW.init({
+  title: '2015-05 · 从 v0 出发深度优先遍历的可能序列',
+  subtitle: '有向图 <code>E = {&lt;v0,v1&gt;, &lt;v0,v2&gt;, &lt;v0,v3&gt;, &lt;v1,v3&gt;}</code> · 按"v0 之后第一个访问谁"分类枚举',
+  counterLabel: '已得序列',
+  ribbonTitle: '候选序列（✓ 成立）',
+  intro: '点击「▶ 播放」逐一枚举 5 种可能的 DFS 序列。',
+
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'step', tag:'准备',
+      log:'起点固定 v0。DFS 规则：每到一个顶点先走它的未访问邻接点，走不动再回溯；v0 的三个邻居 v1、v2、v3 谁先访问都可以',
+      count:0, seq:[] },
+    { cls:'ok', tag:'v1 先',
+      log:'先访问 v1：v1 只能去 v3；v3 无出边，回溯到 v0，再访问 v2 → 序列 v0 v1 v3 v2（1 种）',
+      count:1, ribbon:{k:1, ok:true}, seq:SEQ1 },
+    { cls:'ok', tag:'v2 先·接 v1',
+      log:'先访问 v2（无出边）回溯；再访问 v1 → v3 → 序列 v0 v2 v1 v3',
+      count:2, ribbon:{k:2, ok:true}, seq:SEQ2 },
+    { cls:'ok', tag:'v2 先·接 v3',
+      log:'先访问 v2，回溯后第二个选 v3（无出边）回溯，最后访问 v1（其邻居 v3 已访问）→ 序列 v0 v2 v3 v1',
+      count:3, ribbon:{k:3, ok:true}, seq:SEQ3 },
+    { cls:'ok', tag:'v3 先·接 v1',
+      log:'先访问 v3（无出边）回溯；再访问 v1（v3 已访问，走不动）回溯，最后访问 v2 → 序列 v0 v3 v1 v2',
+      count:4, ribbon:{k:4, ok:true}, seq:SEQ4 },
+    { cls:'ok', tag:'v3 先·接 v2',
+      log:'先访问 v3，回溯后第二个选 v2，最后访问 v1 → 序列 v0 v3 v2 v1',
+      count:5, ribbon:{k:5, ok:true}, seq:SEQ5 },
+    { cls:'done', tag:'完成',
+      log:'按"v0 之后第一个访问谁"分类：先 v1（1 种）+ 先 v2（2 种）+ 先 v3（2 种）= 5 种，选 D',
+      count:5, seq:SEQ5, done:true },
+  ],
+
+  result: {
+    big: '5 种 · 选 D',
+    html: '分类口诀：<b>按"v0 之后第一个访问的顶点"分类枚举</b>：先 v1 → 1 种（v3 被迫紧跟）；先 v2 → 2 种；先 v3 → 2 种，共 <b>5</b> 种。' +
+          '注意 v1→v3 的出边约束：<code>v0,v1,v2,v3</code> 不可能出现。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

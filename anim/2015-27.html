@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-27 LRU：访问 7 时应淘汰哪一页</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SEQ = [2,0,2,9,3,4,2,8,2,4,8,4,5,7];
+var HIT = [false,false,true,false,false,false,true,false,true,true,true,true,false,false];
+
+// LRU 模拟：mem 为驻留页，从左(最久未用)到右(刚使用)
+var FR = [];
+(function(){
+  var mem = [];
+  for (var t = 0; t < SEQ.length; t++){
+    var p = SEQ[t], ix = mem.indexOf(p);
+    if (ix >= 0){ mem.splice(ix, 1); mem.push(p); }
+    else { if (mem.length >= 4) mem.shift(); mem.push(p); }
+    FR.push(mem.slice());
+  }
+})();
+
+var NOTES = [
+  'LRU 淘汰"最后一次使用最早"的页；驻留栈左端 = 最久未用，是下一个被淘汰的候选。',
+  '2 进驻，栈：[2]。',
+  '0 进驻，栈：[2, 0]。',
+  '命中 2 → 提到最新位置：[0, 2]。命中不换页。',
+  '9 进驻：[0, 2, 9]。',
+  '3 进驻：[0, 2, 9, 3] —— 4 个页框已满。',
+  '4 缺页且栈满 → 淘汰栈底 0（最后一次使用是第 2 步）：[2, 9, 3, 4]。',
+  '命中 2 → [9, 3, 4, 2]。',
+  '8 缺页 → 淘汰栈底 9（最后一次使用第 4 步）：[3, 4, 2, 8]。',
+  '命中 2 → [3, 4, 8, 2]。',
+  '命中 4 → [3, 8, 2, 4]。',
+  '命中 8 → [3, 2, 4, 8]。',
+  '命中 4 → [3, 2, 8, 4]。',
+  '5 缺页 → 比最后使用时间：3（第 5 步）< 2（第 9 步）< 8（第 11 步）< 4（第 12 步）→ 淘汰 3：[2, 8, 4, 5]。',
+  '7 缺页 → 驻留 2、8、4、5 的最后使用：第 9 / 11 / 12 / 13 步 → 最久未用的是 2 → 淘汰页号 2，选 A。'
+];
+
+var S = { cols: [] };
+
+AW.init({
+  title: '【2015-27】LRU 算法：访问页 7 时淘汰哪一页',
+  subtitle: '已访问序列 <code>2 0 2 9 3 4 2 8 2 4 8 4 5</code> · 下一页 <code>7</code> · 物理页框 <code>4 个</code> · 算法：LRU',
+  counterLabel: '已访问',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺页）',
+  intro: '点击「▶ 播放」，逐步模拟 13 次访问，最后看访问 7 时淘汰谁。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>访问序列</b>（绿 = 命中，红 = 缺页，灰 = 未到达）'));
+    S.seq = AW.el('div', 'aw-cells');
+    inner.appendChild(S.seq);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>驻留页（LRU 使用栈：左 = 最久未使用，右 = 刚使用）</b>'));
+    var row = AW.el('div', 'aw-cells');
+    S.cols = [];
+    for (var c = 0; c < 4; c++){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '72px';
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', '');
+      box.style.cssText = 'width:72px;height:64px;font-size:24px';
+      col.appendChild(ptr);
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', '位' + (c + 1)));
+      row.appendChild(col);
+      S.cols.push({ ptr: ptr, box: box });
+    }
+    inner.appendChild(row);
+
+    S.note = AW.el('div', 'aw-row-label', '');
+    S.note.style.cssText = 'margin-top:12px;font-size:14px;color:#334155;line-height:1.7';
+    inner.appendChild(S.note);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    // 访问序列行
+    S.seq.innerHTML = '';
+    var chars = [], classes = [], ptrMap = {};
+    for (var j = 0; j < SEQ.length; j++){
+      chars.push(String(SEQ[j]));
+      if (j < i - 1) classes.push(HIT[j] ? 'ok' : 'miss');
+      else if (j === i - 1) classes.push(HIT[j] ? 'hit' : 'miss');
+      else classes.push('dim');
+    }
+    if (i > 0) ptrMap[i] = '▲';
+    S.seq.appendChild(AW.cellRow(chars, classes, ptrMap));
+
+    // 驻留页 4 格
+    var fr = i === 0 ? [] : FR[i - 1];
+    for (var c = 0; c < 4; c++){
+      var box = S.cols[c].box;
+      var pg = fr[c];
+      box.textContent = (pg === undefined ? '' : String(pg));
+      var cls = '';
+      if (c === fr.length - 1 && i > 0) cls = HIT[i - 1] ? 'hit' : 'miss';
+      else if (c === 0 && fr.length === 4) cls = 'dim';
+      box.className = 'aw-box' + (cls ? ' ' + cls : '');
+    }
+    S.cols[3].ptr.textContent = '刚使用';
+    S.cols[0].ptr.textContent = '最久未用';
+
+    S.note.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始',   log:'初始：4 个页框全空；LRU 把驻留页排成使用栈，左端最久未用', count:0 },
+    { cls:'miss',  tag:'缺页',   log:'访问 2：内存为空 → 缺页，调入 2', count:1, ribbon:{k:1, ok:false} },
+    { cls:'miss',  tag:'缺页',   log:'访问 0：缺页，调入 0', count:2, ribbon:{k:2, ok:false} },
+    { cls:'ok',    tag:'命中',   log:'访问 2：命中，把 2 提到最新位置', count:3, ribbon:{k:3, ok:true} },
+    { cls:'miss',  tag:'缺页',   log:'访问 9：缺页，调入 9', count:4, ribbon:{k:4, ok:false} },
+    { cls:'miss',  tag:'缺页',   log:'访问 3：缺页，调入 3 —— 4 个页框已满', count:5, ribbon:{k:5, ok:false} },
+    { cls:'miss',  tag:'淘汰 0', log:'访问 4：缺页且已满 → 淘汰最久未用的 0（上次使用第 2 步）', count:6, ribbon:{k:6, ok:false} },
+    { cls:'ok',    tag:'命中',   log:'访问 2：命中', count:7, ribbon:{k:7, ok:true} },
+    { cls:'miss',  tag:'淘汰 9', log:'访问 8：缺页 → 淘汰 9（上次使用第 4 步）', count:8, ribbon:{k:8, ok:false} },
+    { cls:'ok',    tag:'命中',   log:'访问 2：命中', count:9, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'命中',   log:'访问 4：命中', count:10, ribbon:{k:10, ok:true} },
+    { cls:'ok',    tag:'命中',   log:'访问 8：命中', count:11, ribbon:{k:11, ok:true} },
+    { cls:'ok',    tag:'命中',   log:'访问 4：命中', count:12, ribbon:{k:12, ok:true} },
+    { cls:'miss',  tag:'淘汰 3', log:'访问 5：缺页 → 2(第9步)/3(第5步)/4(第12步)/8(第11步) 中 3 最早 → 淘汰 3', count:13, ribbon:{k:13, ok:false} },
+    { cls:'done',  tag:'完成',   log:'访问 7：缺页 → 驻留 2(第9步)/8(第11步)/4(第12步)/5(第13步)，最久未用 = 2 → 淘汰页号 2，选 A', count:14, done:true },
+  ],
+
+  result: {
+    big: '淘汰页号 2（选 A）',
+    html: 'LRU 只比<code>最后一次使用时间</code>。第 13 步访问 5 时 3 已被淘汰（它最后一次使用是第 5 步）；访问 7 时驻留为 <code>2、8、4、5</code>，最后使用分别是第 <b>9 / 11 / 12 / 13</b> 步 → 最久未用的是 <b>页 2</b>。干扰项：<b>B(3)</b> 早已被淘汰；<b>D(8)</b> 在第 11 步刚用过。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

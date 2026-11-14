@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-12 主频·CPI 与 GIPS、用户 CPU 时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>已知：主频 <code>1.5GHz</code>、指令条数 <code>5×10^5</code>、平均 CPI <code>1.2</code>。求两个量：<b>指令执行速度</b>（GIPS）与<b>用户 CPU 时间</b>。<br>两条公式：<b>速度 = 主频 ÷ CPI</b>；<b>CPU 时间 = 指令条数 × CPI ÷ 主频</b>。</p>' },
+  { title: '求指令执行速度', cls: '',
+    body: '<p>每秒有 1.5×10^9 个周期，每条指令平均占 1.2 个周期 → 每秒执行 <code>1.5×10^9 ÷ 1.2 = 1.25×10^9</code> 条指令 = <b>1.25 GIPS</b>。</p>' },
+  { title: '求用户 CPU 时间', cls: '',
+    body: '<p>先求总周期数：<code>5×10^5 × 1.2 = 6×10^5</code> 个周期。<br>再除以主频：<code>6×10^5 ÷ 1.5×10^9 = 4×10^-4 s</code>。</p>' },
+  { title: '单位换算', cls: '',
+    body: '<p><code>4×10^-4 s = 0.4 ms</code>（1 ms = 10^-3 s）＝ 400 μs。<br>若把结果缩小 1000 倍写成 0.4 μs，就是选项里的单位陷阱。</p>' },
+  { title: '选项 A（0.8GIPS, 0.4ms）', cls: 'bad',
+    body: '<p><b>0.8 GIPS</b> 是把式子算成 <code>1.2 ÷ 1.5 = 0.8</code>——CPI 与主频弄反；0.4 ms 本身没错。速度错 → A 排除。</p>' },
+  { title: '选项 B（0.8GIPS, 0.4μs）', cls: 'bad',
+    body: '<p>速度错（同 A），时间又错成 0.4 μs（差 1000 倍）→ B 排除。</p>' },
+  { title: '选项 C（1.25GIPS, 0.4ms）', cls: 'good',
+    body: '<p>速度 <b>1.25 GIPS</b> ✓、时间 <b>0.4 ms</b> ✓，两项全对。</p>' },
+  { title: '选项 D（1.25GIPS, 0.4μs）', cls: 'bad',
+    body: '<p>速度对，但 0.4 μs 差了 1000 倍（应为 400 μs）→ D 排除。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>速度 = 主频/CPI，时间 = 指令数×CPI/主频</b>；ms 与 μs 差 10^3。</p>' },
+];
+
+var RIBBONS = { 4: { k: 1, ok: false }, 5: { k: 2, ok: false }, 6: { k: 3, ok: true }, 7: { k: 4, ok: false } };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBONS[i]) sn.ribbon = RIBBONS[i];
+  return sn;
+});
+
+AW.init({
+  title: '2023-12 · 由主频与 CPI 求 GIPS 和用户 CPU 时间',
+  subtitle: '主频 <code>1.5GHz</code> · 指令数 <code>5×10^5</code> · 平均 CPI <code>1.2</code> · 逐项推演',
+  counterLabel: '推理步骤',
+  ribbonTitle: '选项（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（1.25GIPS, 0.4ms）',
+    html: '速度 = <code>1.5G ÷ 1.2 = 1.25 GIPS</code>；用户 CPU 时间 = <code>5×10^5 × 1.2 ÷ 1.5G = 4×10^-4 s = 0.4 ms</code>。易错：把 CPI 与主频弄反得 0.8 GIPS（A/B）；ms 写成 μs 差 1000 倍（B/D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-27 · 分段系统最大段长</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：逻辑地址位段划分推导（答案 C，2^24 B）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+AW.init({
+  title: '2009-27 · 分段系统的最大段长',
+  subtitle: '地址长度 32 位 · 段号占 8 位 · 求最大段长',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步拆解逻辑地址结构。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>32 位逻辑地址</b>（分段系统：段号 + 段内偏移）'));
+    var bar = AW.el('div', '');
+    bar.style.cssText = 'display:flex;gap:8px;align-items:stretch;margin:10px 0 2px;';
+    var seg = AW.el('div', 'aw-box', '段号<br><span style="font-size:12px;font-weight:400">8 位</span>');
+    seg.style.cssText = 'width:110px;height:66px;flex:0 0 auto;font-size:15px;';
+    var off = AW.el('div', 'aw-box', '段内偏移<br><span style="font-size:12px;font-weight:400">? 位</span>');
+    off.style.cssText = 'width:330px;height:66px;flex:0 0 auto;font-size:15px;';
+    bar.appendChild(seg);
+    bar.appendChild(off);
+    inner.appendChild(bar);
+    inner.appendChild(AW.el('div', 'aw-row-label', '宽度即位数：段号块 8 份宽，偏移块 24 份宽（按比例）'));
+    this._seg = seg;
+    this._off = off;
+    this._info = AW.el('div', 'aw-row-label', '');
+    this._calc = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._info);
+    inner.appendChild(this._calc);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'读题', count:0,
+      log:'分段系统的逻辑地址由「段号 + 段内偏移」组成。题目给出：地址长度 32 位，其中段号占 8 位。',
+      st:{ segCls:'ok', offCls:'', info:'段号 8 位 + 段内偏移 ？ 位 = 32 位', calc:'' } },
+    { cls:'step', tag:'划分', count:1,
+      log:'段内偏移位数 = 32 − 8 = 24 位：地址中除段号外的其余位全部是段内偏移。',
+      st:{ segCls:'ok', offCls:'ok', info:'段号 8 位 + 段内偏移 24 位 = 32 位', calc:'' } },
+    { cls:'shift', tag:'关键', count:2,
+      log:'段的长度由段内偏移的位数决定：偏移 n 位 → 段内可编址 2 的 n 次方个单元 → 最大段长 = 2 的 n 次方 B。',
+      st:{ segCls:'ok', offCls:'hit', info:'段内偏移 24 位 → 决定最大段长', calc:'最大段长 = 2<sup>24</sup> B' } },
+    { cls:'ok', tag:'计算', count:3,
+      log:'最大段长 = 2 的 24 次方 B。',
+      st:{ segCls:'ok', offCls:'hit', info:'段内偏移 24 位 → 最大段长 2 的 24 次方 B', calc:'最大段长 = 2<sup>24</sup> B' } },
+    { cls:'ok', tag:'换算', count:4,
+      log:'2 的 24 次方 B = 2 的 4 次方 × 2 的 20 次方 B = 16 MB（2 的 20 次方 = 1M）。',
+      st:{ segCls:'ok', offCls:'hit', info:'2<sup>24</sup> B = 16 MB', calc:'2<sup>24</sup> B = 16 MB' } },
+    { cls:'miss', tag:'排除', count:5,
+      log:'A 的 2 的 8 次方 B：把段号位数当成了段长；B 的 2 的 16 次方 B：臆断偏移只有 16 位；D 的 2 的 32 次方 B：把整个逻辑地址空间当成了一个段。',
+      st:{ segCls:'miss', offCls:'hit', info:'A / B / D 均不成立', calc:'2<sup>24</sup> B = 16 MB' } },
+    { cls:'done', tag:'结论', count:6, done:true,
+      log:'最大段长 = 2 的 24 次方 B = 16 MB，答案选 C。',
+      st:{ segCls:'ok', offCls:'hit', info:'段号 8 位 + 段内偏移 24 位 = 32 位', calc:'最大段长 = 2<sup>24</sup> B = 16 MB → 选 C' } },
+  ],
+
+  render: function(stage, sn){
+    var stt = sn.st || {};
+    this._seg.className = 'aw-box' + (stt.segCls ? ' ' + stt.segCls : '');
+    this._off.className = 'aw-box' + (stt.offCls ? ' ' + stt.offCls : '');
+    this._info.innerHTML = stt.info || '';
+    this._calc.innerHTML = stt.calc ? '<b>' + stt.calc + '</b>' : '';
+  },
+
+  result: {
+    big: '2^24 B（= 16 MB）',
+    html: '答案 <b>C</b>。记忆锚点：<b>段长上限由段内偏移位数决定</b>：32 位地址 − 8 位段号 = 24 位偏移 → 最大段长 2<sup>24</sup> B = 16 MB。干扰项 A 把段号位数当段长；B 臆断偏移 16 位；D 把整个地址空间当一个段。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

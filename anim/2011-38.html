@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-38 · /30 子网里谁能收广播分组</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：/30 子网 4 个地址的角色判定与广播接收推演
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2011-38 · /30 子网里谁能收广播分组',
+  subtitle: '子网 <code>192.168.4.0/30</code> · 目的地址 <code>192.168.4.3</code> · 能接收的最大主机数',
+  counterLabel: '已判定地址',
+  ribbonTitle: '4 个地址（✓ 可作主机 / ✗ 不可）',
+  intro: '点击「▶ 播放」逐个判定 4 个地址的角色。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>子网 192.168.4.0/30</b>：主机位 2 位，共 4 个地址（格子内为主机位取值）'));
+    var line = AW.el('div', '');
+    line.style.cssText = 'display:flex;align-items:flex-start;margin:10px 0 4px;';
+    this._ptrs = [];
+    this._boxes = [];
+    this._idxs = [];
+    for(var f = 0; f <= 3; f++){
+      var col = AW.el('div', '');
+      col.style.cssText = 'width:96px;display:flex;flex-direction:column;align-items:center;margin-right:14px;';
+      var ptr = AW.el('div', '', '');
+      ptr.style.cssText = 'height:22px;font-size:12px;font-weight:700;white-space:nowrap;';
+      var box = AW.el('div', 'aw-box', '');
+      box.style.width = '72px';
+      var idx = AW.el('div', 'aw-idx', '192.168.4.' + f);
+      col.appendChild(ptr);
+      col.appendChild(box);
+      col.appendChild(idx);
+      line.appendChild(col);
+      this._ptrs.push(ptr);
+      this._boxes.push(box);
+      this._idxs.push(idx);
+    }
+    inner.appendChild(line);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      st:['dim','dim','dim','dim'], bt:['00','01','10','11'], pt:{},
+      log:'/30 子网：主机位 = 32 − 30 = 2 位，共 4 个地址 192.168.4.0 ~ 192.168.4.3（格子内是 2 位主机位）。' },
+    { cls:'miss', tag:'网络地址', count:1, ribbon:{k:1, ok:false},
+      st:['miss','dim','dim','dim'], bt:['00','01','10','11'], pt:{0:{t:'主机位全 0 → 网络地址', c:'#b91c1c'}},
+      log:'192.168.4.0：主机位全 0，是网络地址，不能配置给主机。' },
+    { cls:'ok', tag:'主机 1', count:2, ribbon:{k:2, ok:true},
+      st:['miss','ok','dim','dim'], bt:['00','01','10','11'], pt:{0:{t:'网络地址', c:'#b91c1c'}, 1:{t:'主机地址 ✓', c:'#15803d'}},
+      log:'192.168.4.1：可分配给主机（第 1 台）。' },
+    { cls:'ok', tag:'主机 2', count:3, ribbon:{k:3, ok:true},
+      st:['miss','ok','ok','dim'], bt:['00','01','10','11'], pt:{0:{t:'网络地址', c:'#b91c1c'}, 1:{t:'主机 ✓', c:'#15803d'}, 2:{t:'主机地址 ✓', c:'#15803d'}},
+      log:'192.168.4.2：可分配给主机（第 2 台）。' },
+    { cls:'miss', tag:'广播地址', count:4, ribbon:{k:4, ok:false},
+      st:['miss','ok','ok','miss'], bt:['00','01','10','11'], pt:{0:{t:'网络地址', c:'#b91c1c'}, 1:{t:'主机 ✓', c:'#15803d'}, 2:{t:'主机 ✓', c:'#15803d'}, 3:{t:'主机位全 1 → 广播地址', c:'#b91c1c'}},
+      log:'192.168.4.3：主机位全 1，是子网广播地址，也不能配置给主机。' },
+    { cls:'step', tag:'目的地址入座', count:4,
+      st:['miss','ok','ok','hit'], bt:['00','01','10','11'], pt:{0:{t:'网络地址', c:'#b91c1c'}, 1:{t:'主机 ✓', c:'#15803d'}, 2:{t:'主机 ✓', c:'#15803d'}, 3:{t:'目的地址 = 广播', c:'#92400e'}},
+      log:'目的地址 192.168.4.3 正是这个广播地址——发往它的分组会被本子网内所有主机接收。' },
+    { cls:'done', tag:'完成', count:4, done:true,
+      st:['miss','ok','ok','hit'], bt:['00','01','10','11'], pt:{0:{t:'不可配', c:'#b91c1c'}, 1:{t:'能收 ✓', c:'#15803d'}, 2:{t:'能收 ✓', c:'#15803d'}, 3:{t:'广播，全网收', c:'#92400e'}},
+      log:'能接收的主机 = 子网内全部主机 = 2 台（192.168.4.1、192.168.4.2），选 C。' },
+  ],
+
+  render: function(stage, sn){
+    var st = sn.st || ['', '', '', ''];
+    var bt = sn.bt || ['', '', '', ''];
+    var pt = sn.pt || {};
+    for(var f = 0; f <= 3; f++){
+      this._boxes[f].className = 'aw-box' + (st[f] ? ' ' + st[f] : '');
+      this._boxes[f].innerHTML = bt[f];
+      var p = pt[f];
+      this._ptrs[f].innerHTML = p ? p.t : '';
+      this._ptrs[f].style.color = p ? (p.c || '#334155') : '#334155';
+    }
+  },
+
+  result: {
+    big: '2 台（选 C）',
+    html: '/30 子网 4 个地址：.0 是网络地址、.3 是广播地址，均不可配给主机；可配主机只有 <b>192.168.4.1、192.168.4.2</b> 两台。目的地址 <b>192.168.4.3 是本子网广播地址</b>，子网内全部 <b>2 台</b>主机都接收。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

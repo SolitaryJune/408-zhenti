@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-33 时空图描述的协议要素</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/分析类动画：协议三要素（语法/语义/时序）逐项对照题图
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：题图画的是什么',
+    cls: 'key',
+    body: '<p>题图是「发送方—接收方」<b>时空图</b>，纵轴是时间：发送方先发出一帧 → 接收方沿时间轴回送一帧 → 发送方再发下一帧。问：它体现了协议三要素（I 语法 / II 语义 / III 时序）中的哪些？</p>' },
+  { title: '对照 I 语法：没有',
+    cls: 'bad',
+    body: '<p><b>语法</b>规定数据与控制信息的<b>格式与结构</b>——字段怎么排、各多长、用什么编码。图中只有带箭头的线段，<b>没有任何字段、格式、编码信息</b>，所以不体现语法。</p>' },
+  { title: '对照 II 语义：也没有',
+    cls: 'bad',
+    body: '<p><b>语义</b>规定需要发出何种控制信息、完成何种动作、做出何种应答——即每部分内容的<b>含义</b>。图中没有标注任何一条线段「是什么帧、收到后该做什么」，所以也不体现语义。</p>' },
+  { title: '对照 III 时序：正是它',
+    cls: 'good',
+    body: '<p><b>时序</b>规定事件实现的<b>顺序</b>。图中清清楚楚画出「先发数据 → 再收回执 → 再发下一帧」的收发先后关系——箭头的上下位置只表示时间先后，这正是<b>时序</b>。</p>' },
+  { title: '排除干扰项 A、B、D',
+    cls: 'step',
+    body: '<p>A（仅 I）、B（仅 II）：语法、语义在图中都没出现，排除；D（I、II 和 III）：I、II 不成立，D 也错。只剩 C。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（仅 III）</b>。记忆锚点：<b>时空图/顺序图只画"何时谁发谁收" = 时序</b>；要考"语法"得画出字段格式，要考"语义"得写出动作含义。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '下图描述的协议要素是？',
+  subtitle: '发送方—接收方时空图 · 对照协议三要素：I 语法 / II 语义 / III 时序',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（仅 III）',
+    html: '记忆锚点：<b>时空图只画"何时谁发谁收" = 时序</b>。语法=格式结构，语义=含义与动作，图中均未出现，故 A、B、D 均错。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

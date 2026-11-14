@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-23 微内核与宏内核特征对比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：微内核 = 内核「小」＋ 服务外移',
+    cls: 'key',
+    body: '<p>微内核只保留<b>进程调度、中断与时钟处理、进程间通信原语</b>等最基本功能；' +
+          '文件系统、设备驱动、网络协议等统统作为<b>用户态服务进程</b>运行。' +
+          '四个特征 Ⅰ～Ⅳ 是否属于微内核，全从这个「小」字推。</p>' },
+  { title: 'Ⅰ. 较好的性能 —— 不是微内核的特征',
+    cls: 'bad',
+    body: '<p>服务之间要靠<b>消息传递</b>通信，还要频繁发生<b>用户态/内核态切换</b>，开销大，' +
+          '性能反而<b>不如</b>宏内核（宏内核内服务直接函数调用）。Ⅰ 排除。</p>' },
+  { title: 'Ⅱ. 较高的可靠性 —— 是',
+    cls: 'good',
+    body: '<p>各服务是<b>独立的用户态进程</b>，一个服务崩溃只损失它自己，' +
+          '不像宏内核那样一个模块出错就<b>拖垮整个内核</b>。Ⅱ 保留。</p>' },
+  { title: 'Ⅲ. 较高的安全性 —— 是',
+    cls: 'good',
+    body: '<p>内核代码量小、需要特权运行的部分少，<b>被攻击的面小</b>，安全性提高。Ⅲ 保留。</p>' },
+  { title: 'Ⅳ. 较强的可扩展性 —— 是',
+    cls: 'good',
+    body: '<p>新增或修改服务只需在<b>用户态</b>增加/替换对应进程，<b>不必重新编译内核</b>，扩展性强。Ⅳ 保留。</p>' },
+  { title: '结论：仅 Ⅱ、Ⅲ、Ⅳ',
+    cls: 'good',
+    body: '<p>微内核三优一劣：<b>可靠、安全、易扩展，性能差</b>。' +
+          '对照选项，<b>答案选 D</b>（仅 Ⅱ、Ⅲ、Ⅳ）。干扰项 B、C 都把 Ⅰ「性能好」错给了微内核。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '微内核操作系统具有哪些特征',
+  subtitle: '考点：宏内核 vs 微内核 · 逐条推演 Ⅰ～Ⅳ',
+  intro: '点击「▶ 播放」逐步展开推理链，逐项判断四个特征。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：微内核「内核小、服务外移」→ <b>更可靠（服务崩溃不连坐）、更安全（特权代码少）、易扩展（用户态加服务）</b>；' +
+          '但消息传递＋频繁状态切换 → <b>性能差</b>。所以仅 Ⅱ、Ⅲ、Ⅳ，选 <b>D</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

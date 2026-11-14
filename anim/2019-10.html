@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-10 快速排序第二趟结果判定</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function seqHtml(arr, marks, cap, sub){
+  var h = '';
+  if (cap) h += '<div class="aw-row-label">' + cap + '</div>';
+  h += '<div class="aw-cells">';
+  for (var i = 0; i < arr.length; i++){
+    h += '<div class="aw-col"><div class="aw-ptr"></div>' +
+         '<div class="aw-box' + (marks && marks[i] ? ' ' + marks[i] : '') + '" style="width:50px;height:50px;font-size:17px">' +
+         arr[i] + '</div><div class="aw-idx">' + (i + 1) + '</div></div>';
+  }
+  h += '</div>';
+  if (sub) h += '<div class="aw-row-label" style="margin-top:10px">' + sub + '</div>';
+  return h;
+}
+function ruleHtml(){
+  return '<div style="font-size:15px;line-height:2.1">' +
+    '<b>判定依据：</b><br>' +
+    '① 每一趟快排会把本趟的<b>枢轴</b>放进最终位置，枢轴满足「左边都 ≤ 它 ≤ 右边都 ≥ 它」；<br>' +
+    '② 题干定义「一趟」= 对<b>所有尚未确定最终位置的元素</b>处理一遍 → 第一趟分裂出的<b>每个子表</b>，第二趟都必须被处理一次（各产生一个新枢轴）。</div>';
+}
+
+var OPTS = [
+  { L:'A', arr:[5,2,16,12,28,60,32,72], cand:[4,7],
+    sub:'满足「左≤右≥」：28（5号）、72（8号）。两趟过程：第一趟枢轴 <b>72</b>（最大元，8 号位）→ 第二趟处理 1~7 号，枢轴 <b>28</b> 在 5 号位就位 → 与 A 一致 ✓' },
+  { L:'B', arr:[2,16,5,28,12,60,32,72], cand:[0,3,7],
+    sub:'满足「左≤右≥」：2（1号）、28（4号）、72（8号）。两趟过程：第一趟枢轴 <b>2</b>（最小元，1 号位）→ 第二趟处理 2~8 号，枢轴 <b>28</b> 在 4 号位就位 → 与 B 一致 ✓' },
+  { L:'C', arr:[2,12,16,5,28,32,72,60], cand:[0,4,5],
+    sub:'满足「左≤右≥」：2（1号）、28（5号）、32（6号）。两趟过程：第一趟枢轴 <b>28</b>（5 号位）→ 第二趟左段 {2,12,16,5} 枢轴 <b>2</b> 落 1 号位、右段 {32,72,60} 枢轴 <b>32</b> 落 6 号位 → 与 C 一致 ✓' },
+];
+
+var snaps = [
+  { cls:'step', tag:'判定法则', count:0, html: ruleHtml(),
+    log:'先立规矩：每趟枢轴落入最终位（左≤枢轴≤右）；一趟要处理所有未定位元素。两趟之后：第一趟的枢轴 + 第二趟各子表的枢轴都已就位。' },
+];
+OPTS.forEach(function(o, idx){
+  var marks = {};
+  o.cand.forEach(function(p){ marks[p] = 'ok'; });
+  snaps.push({
+    cls:'ok', tag:'选项 ' + o.L + ' 可能', count: idx + 1, ribbon:{ k: idx + 1, ok:true },
+    html: seqHtml(o.arr, marks, '<b>选项 ' + o.L + '</b>：' + o.arr.join(', '), o.sub),
+    log:'选项 ' + o.L + '：' + o.sub.replace(/<\/?b>/g, '') + '。可能是第二趟结果 ✓',
+  });
+});
+snaps.push({
+  cls:'step', tag:'选项 D 起疑', count:4,
+  html: seqHtml([5,2,12,28,16,32,72,60], {2:'hit',5:'hit'},
+    '<b>选项 D</b>：5, 2, 12, 28, 16, 32, 72, 60',
+    '满足「左≤右≥」的只有 12（3号）、32（6号）→ 第一趟枢轴必是其一。分别检验：'),
+  log:'选项 D：候选枢轴只有 12、32。两种情况都要在第二趟处理某个二元残段——先看第一趟枢轴是 12 的情形。'
+});
+snaps.push({
+  cls:'miss', tag:'反证一（第一趟枢轴 12）', count:4,
+  html: seqHtml([5,2,12,28,16,32,72,60], {0:'miss',1:'miss',2:'ok',5:'hit'},
+    '假设第一趟枢轴 = 12（3 号位）→ 第二趟必须处理 <b>{5,2}</b>（1~2 号）和 {28,16,32,72,60}（4~8 号）',
+    '{5,2} 中：5 的右边有更小的 2，2 的左边有更大的 5 —— <b>谁也不能成为本趟就位的枢轴</b>（红框），与「每趟必有枢轴就位」矛盾 ✗'),
+  log:'反证一：第一趟枢轴 12 → 第二趟必须处理 {5,2}，但其中 5、2 互相大小交错，谁也不能就位 → 矛盾 ✗'
+});
+snaps.push({
+  cls:'miss', tag:'反证二（第一趟枢轴 32）', count:4, ribbon:{ k:4, ok:false },
+  html: seqHtml([5,2,12,28,16,32,72,60], {6:'miss',7:'miss',5:'ok'},
+    '假设第一趟枢轴 = 32（6 号位）→ 第二趟必须处理 {5,2,12,28,16}（1~5 号）和 <b>{72,60}</b>（7~8 号）',
+    '{72,60} 中：72 的右边有更小的 60，60 的左边有更大的 72 —— 同样谁也当不了枢轴（红框），矛盾 ✗'),
+  log:'反证二：第一趟枢轴 32 → 第二趟必须处理 {72,60}，同样无人能就位 → 矛盾 ✗。两种情况都不成立，D 不可能。'
+});
+snaps.push({
+  cls:'done', tag:'结论', count:4, done:true,
+  html: seqHtml([5,2,12,28,16,32,72,60], {2:'ok',5:'ok'},
+    '<b>结论</b>',
+    'A、B、C 都能构造出两趟过程；D 无论 12 还是 32 作第一趟枢轴，第二趟的二元残段（{5,2} 或 {72,60}）都无法产生就位枢轴 → <b>D 不可能</b>，选 D。'),
+  log:'结论：A、B、C 可能，D 不可能是快速排序第二趟的结果 → 答案 D。'
+});
+
+AW.init({
+  title: '2019-10 · 哪个序列不可能是快排第二趟结果',
+  subtitle: '依据：<code>枢轴落最终位</code> + <code>一趟要处理所有未定位元素</code> · 逐选项检验',
+  counterLabel: '已检查选项',
+  ribbonTitle: '选项（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」逐选项检验。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: 'A：第一趟枢轴 72 → 第二趟枢轴 28 ✓；B：第一趟枢轴 2 → 第二趟枢轴 28 ✓；C：第一趟枢轴 28 → 第二趟枢轴 2 和 32 ✓。<b>D 不可能</b>：候选枢轴 12、32 之外，必剩 {5,2} 或 {72,60} 二元残段，第二趟处理它时没有任何元素能满足「左≤右≥」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-44 ADD (R1)，R0 执行阶段节拍表</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-44：ADD (R1)，R0 执行阶段节拍与控制信号推演
+     模板：算法/过程类（节拍表逐步生成），只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var BASIC = [
+  ['C5',  'MAR ← (R1)',          'R1out, MARin'],
+  ['C6',  'MDR ← M(MAR)',        'MemR, MDRinE'],
+  ['C7',  'A ← (MDR)',           'MDRout, Ain'],
+  ['C8',  'AC ← (A) + (R0)',     'R0out, Add, ACin'],
+  ['C9',  'MDR ← (AC)',          'ACout, MDRin'],
+  ['C10', 'M(MAR) ← (MDR)',      'MDRoutE, MemW'],
+];
+var OPT = [
+  ['C5', 'MAR ← (R1)',                    'R1out, MARin'],
+  ['C6', 'MDR ← M(MAR), A ← (R0)',        'MemR, MDRinE, R0out, Ain'],
+  ['C7', 'AC ← (MDR) + (A)',              'MDRout, Add, ACin'],
+  ['C8', 'MDR ← (AC)',                    'ACout, MDRin'],
+  ['C9', 'M(MAR) ← (MDR)',                'MDRoutE, MemW'],
+];
+
+function beatTable(rows, hi){
+  var th = ['时钟节拍', '功能', '有效控制信号'];
+  var h = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:13.5px;margin-top:6px">';
+  h += '<tr>';
+  th.forEach(function(t){
+    h += '<th style="border:1px solid #e2e8f0;background:#f1f5f9;padding:7px 10px;text-align:left;color:#334155">' + t + '</th>';
+  });
+  h += '</tr>';
+  rows.forEach(function(r, i){
+    var bg = (i === hi) ? '#fef3c7' : '#ffffff';
+    var wt = (i === hi) ? 'font-weight:700;color:#92400e;' : 'color:#334155;';
+    h += '<tr>';
+    r.forEach(function(c){
+      h += '<td style="border:1px solid #e2e8f0;padding:7px 10px;background:' + bg + ';' + wt +
+           'text-align:left;font-family:Menlo,Consolas,monospace">' + c + '</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</table></div>';
+}
+function note(cls, html){
+  return '<div class="aw-stepcard ' + cls + '"><p>' + html + '</p></div>';
+}
+function cap(text){
+  return '<div class="aw-row-label">' + text + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'ADD (R1)，R0：((R0) + ((R1)) → (R1) 所指主存单元。取指译码 C1~C4 已完成，下面列执行阶段',
+    html: note('key', '指令功能：<b>(R0) + ((R1)) → (R1) 所指主存单元</b>（R1 间接寻址）。题面已给出取指译码 C1~C4，本动画从 <b>C5</b> 起逐步推出<b>执行阶段</b>的节拍表：取内存操作数 → ALU 相加 → 写回主存。') },
+
+  { cls:'step', tag:'C5 送地址', count:1, ribbon:{k:1, ok:true},
+    log:'C5：MAR ← (R1)。R1 内容是操作数地址，经内部总线送 MAR：R1out, MARin',
+    html: cap('基本方案（逐拍生成）') + beatTable([BASIC[0]], 0) },
+
+  { cls:'step', tag:'C6 读内存', count:2, ribbon:{k:2, ok:true},
+    log:'C6：MDR ← M(MAR)。发读命令从主存取操作数，数据经 DB 打入 MDR：MemR, MDRinE',
+    html: cap('基本方案（逐拍生成）') + beatTable(BASIC.slice(0, 2), 1) },
+
+  { cls:'step', tag:'C7 暂存 A', count:3, ribbon:{k:3, ok:true},
+    log:'C7：A ← (MDR)。内存操作数从 MDR 经内部总线暂存到暂存器 A：MDRout, Ain',
+    html: cap('基本方案（逐拍生成）') + beatTable(BASIC.slice(0, 3), 2) },
+
+  { cls:'step', tag:'C8 相加', count:4, ribbon:{k:4, ok:true},
+    log:'C8：AC ← (A) + (R0)。另一操作数 R0 上总线、ALU 做加法、结果进 AC：R0out, Add, ACin',
+    html: cap('基本方案（逐拍生成）') + beatTable(BASIC.slice(0, 4), 3) },
+
+  { cls:'step', tag:'C9 结果送 MDR', count:5, ribbon:{k:5, ok:true},
+    log:'C9：MDR ← (AC)。和从 AC 经内部总线送入 MDR：ACout, MDRin',
+    html: cap('基本方案（逐拍生成）') + beatTable(BASIC.slice(0, 5), 4) },
+
+  { cls:'done', tag:'C10 写回', count:6, ribbon:{k:6, ok:true},
+    log:'C10：M(MAR) ← (MDR)。MDR 经外部通路写回主存：MDRoutE, MemW。基本方案共 6 拍（C5~C10）',
+    done:true,
+    html: cap('基本方案（6 个节拍）') + beatTable(BASIC, -1) +
+          note('good', 'C10 写主存必须用 <b>MDRoutE</b>（MDR 的外部输出通路）+ <b>MemW</b>（存储器写命令），与内部传输用的 MDRout 不是同一信号。') },
+
+  { cls:'shift', tag:'优化方案', count:7, ribbon:{k:7, ok:true},
+    log:'优化：C6 访存读 MDR 的同时让 R0 → A（走不同通路、互不冲突），省 1 拍 → 执行阶段共 5 拍',
+    html: cap('优化方案（5 个节拍）') + beatTable(OPT, 1) +
+          note('key', '关键：访存走<b>存储器数据通路</b>（MemR, MDRinE），R0 → A 走<b>内部总线</b>（R0out, Ain），两条通路互不冲突，可在同一节拍并行。') },
+
+  { cls:'done', tag:'总结', count:8, ribbon:{k:8, ok:true},
+    log:'基本方案 6 拍（C5~C10）；优化方案 5 拍（C5~C9）',
+    done:true,
+    html: cap('基本方案（6 个节拍）') + beatTable(BASIC, -1) +
+          cap('优化方案（5 个节拍）') + beatTable(OPT, -1) },
+];
+
+AW.init({
+  title: '2009-44 ADD (R1)，R0 执行阶段的节拍表',
+  subtitle: '功能：(R0) + ((R1)) → (R1) 所指主存单元 · 考点：指令执行过程 · 数据通路与控制信号',
+  counterLabel: '节拍',
+  ribbonTitle: '节拍进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐拍生成执行阶段节拍表。',
+  snaps: snaps,
+  result: {
+    big: '基本方案 6 拍 / 优化方案 5 拍',
+    html: '链条：<b>取地址（MAR←R1）→ 读内存（MDR←M(MAR)）→ 暂存（A←MDR）→ 相加（AC←A+R0，需 R0out + Add + ACin）→ 送 MDR → 写回（MDRoutE + MemW）</b>。<br>优化点：C6 让 R0 → A 与读内存并行（互不冲突），省 1 拍。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

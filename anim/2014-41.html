@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-41 WPL 算法动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：先序递归求 WPL（示例树演示参考答案方法一） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 示例树（用于演示参考答案的先序递归算法）：
+//   根 A0：左孩子 AL、右孩子 AR
+//   AL：左孩子 L1(权2)，右孩子 A1；A1：左孩子 L2(权3)、右孩子 L3(权4)；AR：右孩子 L4(权5)
+var NODES = {
+  A0: { x: 230, y: 30,  name: 'A0', w: null },
+  AL: { x: 130, y: 115, name: 'AL', w: null },
+  AR: { x: 330, y: 115, name: 'AR', w: null },
+  L1: { x: 60,  y: 205, name: 'L1', w: 2 },
+  A1: { x: 200, y: 205, name: 'A1', w: null },
+  L4: { x: 330, y: 205, name: 'L4', w: 5 },
+  L2: { x: 140, y: 290, name: 'L2', w: 3 },
+  L3: { x: 260, y: 290, name: 'L3', w: 4 },
+};
+var EDGES = [['A0','AL'],['A0','AR'],['AL','L1'],['AL','A1'],['A1','L2'],['A1','L3'],['AR','L4']];
+var CENTER = 22;
+
+// 先序递归访问序列：deep 为参数下传的深度（根深度 0），叶结点累加 deep×weight
+var VISIT = [
+  { key:'A0', deep:0, leaf:false, log:'wpl(A0, 0)：非叶结点 → 递归左、右子树，深度参数加 1' },
+  { key:'AL', deep:1, leaf:false, log:'wpl(AL, 1)：非叶结点 → 继续递归，深度加 1' },
+  { key:'L1', deep:2, leaf:true,  mul:'2×2=4', add:4, log:'wpl(L1, 2)：叶结点！累加 deep×weight = 2×2 = 4' },
+  { key:'A1', deep:2, leaf:false, log:'wpl(A1, 2)：非叶结点 → 递归其左、右子树，深度加 1' },
+  { key:'L2', deep:3, leaf:true,  mul:'3×3=9', add:9, log:'wpl(L2, 3)：叶结点！累加 3×3 = 9' },
+  { key:'L3', deep:3, leaf:true,  mul:'4×3=12', add:12, log:'wpl(L3, 3)：叶结点！累加 4×3 = 12' },
+  { key:'AR', deep:1, leaf:false, log:'wpl(AR, 1)：非叶结点 → 递归右子树，深度加 1' },
+  { key:'L4', deep:2, leaf:true,  mul:'5×2=10', add:10, log:'wpl(L4, 2)：叶结点！累加 5×2 = 10' },
+];
+
+// 生成快照
+var snaps = [{
+  cls:'step', tag:'初始', vis:0, wpl:0, contribs:[],
+  log:'题目：求二叉树 WPL（叶结点 deep×weight 之和）。方法：先序递归，deep 作参数下传，根深度为 0，遇叶累加（下面用示例树演示）',
+  count:0
+}];
+var wpl = 0, contribs = [], leafK = 0;
+VISIT.forEach(function(v, i){
+  if (v.leaf){
+    wpl += v.add; leafK++;
+    contribs.push(v.mul);
+  }
+  var isLast = (i === VISIT.length - 1);
+  snaps.push({
+    cls: isLast ? 'done' : (v.leaf ? 'ok' : 'step'),
+    tag: v.leaf ? ('叶子 +' + v.add) : ('深度 ' + v.deep),
+    log: v.log,
+    vis: i + 1, curKey: v.key, wpl: wpl, contribs: contribs.slice(),
+    count: i + 1,
+    ribbon: v.leaf ? { k: leafK, ok: true } : null,
+    done: false
+  });
+});
+snaps.push({
+  cls:'done', tag:'完成', vis:VISIT.length, wpl:wpl, contribs:contribs.slice(),
+  log:'遍历结束：WPL = ' + contribs.join(' + ') + ' = 35。算法要点：深度作参数下传、只在叶结点累加、根深度为 0',
+  count: VISIT.length, done:true
+});
+
+AW.init({
+  title: '2014-41　先序递归求二叉树 WPL',
+  subtitle: '示例树演示参考答案方法一：<code>wpl(bt, deep)</code> · 叶结点累加 <code>deep×weight</code> · 根深度 0',
+  counterLabel: '已访问',
+  ribbonTitle: '叶结点累加次序（✓ deep×weight）',
+  intro: '点击「▶ 播放」跟踪递归与累加过程。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.position = 'relative';
+    inner.style.width = '420px';
+    inner.style.height = '320px';
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '420'); svg.setAttribute('height', '320');
+    svg.style.position = 'absolute'; svg.style.left = '0'; svg.style.top = '0';
+    EDGES.forEach(function(ed){
+      var p1 = NODES[ed[0]], p2 = NODES[ed[1]];
+      var ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', p1.x); ln.setAttribute('y1', p1.y);
+      ln.setAttribute('x2', p2.x); ln.setAttribute('y2', p2.y);
+      ln.setAttribute('stroke', '#94a3b8'); ln.setAttribute('stroke-width', '2');
+      svg.appendChild(ln);
+    });
+    inner.appendChild(svg);
+    this._nodes = {};
+    Object.keys(NODES).forEach(function(k){
+      var p = NODES[k];
+      var box = AW.el('div', 'aw-box', p.w != null ? String(p.w) : p.name);
+      box.style.position = 'absolute';
+      box.style.left = (p.x - CENTER) + 'px';
+      box.style.top = (p.y - CENTER) + 'px';
+      if (p.w != null){ box.style.fontSize = '15px'; }
+      inner.appendChild(box);
+      this._nodes[k] = box;
+      var lbl = AW.el('div', 'aw-ptr', p.w != null ? p.name : '');
+      lbl.style.position = 'absolute';
+      lbl.style.left = (p.x - CENTER) + 'px';
+      lbl.style.top = (p.y - CENTER - 24) + 'px';
+      lbl.style.width = '44px';
+      lbl.style.textAlign = 'center';
+      inner.appendChild(lbl);
+    }, this);
+    // 累加器面板（放在树容器下方，避免与绝对定位的结点重叠）
+    this._wpl = AW.el('div', 'aw-row-label', '');
+    this._wpl.style.marginTop = '14px';
+    wrap.appendChild(this._wpl);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    Object.keys(this._nodes).forEach(function(k){
+      var c = 'aw-box';
+      if (sn.curKey === k && sn.cls !== 'done') c += ' hit';
+      else if (sn.vis > 0 && VISIT[sn.vis - 1] && VISIT[sn.vis - 1].key === k && sn.cls === 'done') c += ' hit';
+      else if (sn.vis > 0) {
+        for (var j = 0; j < sn.vis; j++){
+          if (VISIT[j].key === k){ c += ' ok'; break; }
+        }
+      }
+      this._nodes[k].className = c;
+    }, this);
+    this._wpl.innerHTML = 'WPL 累加器：' + (sn.contribs.length ? 'wpl = ' + sn.contribs.join(' + ') +
+      ' = <b>' + sn.wpl + '</b>' : 'wpl = <b>0</b>');
+  },
+  snaps: snaps,
+  result: {
+    big: 'WPL = 35（示例树）',
+    html: '递归算法：非叶 → 继续递归（deep+1）；叶 → 返回 <code>deep×weight</code>；空树返回 0。时间 <b>O(n)</b>。<br>答题时另写参考答案中的方法二（层次遍历 + lastNode 标记层尾），两种方法任选其一即可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

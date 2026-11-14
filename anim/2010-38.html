@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-38 · 谁能隔离广播域</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/分析类：网络设备与广播域/冲突域辨析
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：抑制广播风暴 = 隔离广播域',
+    cls: 'key',
+    body: '<p>广播风暴：广播帧被设备不断复制、洪泛，占满带宽。想挡住它，设备必须<b>不转发广播帧</b>。先分清两个概念：<b>冲突域</b>由数据链路层设备划分，<b>广播域</b>由网络层设备划分。</p>' },
+  { title: '设备层次一览',
+    cls: '',
+    body: '<ul><li>中继器、集线器：<b>物理层</b>，只放大转发信号</li><li>网桥（交换机）：<b>数据链路层</b>，按 MAC 地址转发</li><li>路由器：<b>网络层</b>，按 IP 转发，不转发广播帧</li></ul>' },
+  { title: '逐项 I：中继器',
+    cls: 'bad',
+    body: '<p>I 中继器：物理层再生放大信号，来什么转什么，广播帧照传——既不分冲突域，更不分广播域。✗</p>' },
+  { title: '逐项 II：集线器',
+    cls: 'bad',
+    body: '<p>II 集线器：本质是多口中继器，所有端口同属<b>一个冲突域、一个广播域</b>，风暴照样蔓延。✗</p>' },
+  { title: '逐项 III：网桥',
+    cls: 'bad',
+    body: '<p>III 网桥：按 MAC 地址转发、能<b>隔离冲突域</b>；但广播帧的目的 MAC 是全 1，网桥必须向所有端口洪泛——<b>广播域不隔离</b>，风暴照样穿过它。✗</p>' },
+  { title: '逐项 IV：路由器',
+    cls: 'good',
+    body: '<p>IV 路由器：网络层设备，<b>不转发广播帧</b>——广播域到此为止，风暴被挡住。✓</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>能抑制广播风暴的只有路由器，答案选 <b>D（仅 IV）</b>。记忆锚点：<b>隔离冲突域找网桥/交换机，隔离广播域找路由器</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010-38 · 谁能隔离广播域',
+  subtitle: '考点：冲突域 vs 广播域 · 中继器/集线器/网桥/路由器逐项推演',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（仅 IV）',
+    html: '中继器/集线器不分任何域；网桥/交换机只隔离<b>冲突域</b>；只有<b>路由器</b>不转发广播帧、隔离广播域，能抑制广播风暴。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-40 动画 · 迭代解析中本地域名服务器的查询次数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：DNS 迭代查询链推演（最少 0 次 / 最多 4 次）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 查询链：H4 → 本地DNS → 根 → com → xyz.com → abc.xyz.com */
+var CHAIN = [
+  { id:'H4',   label:'H4',            sub:'主机' },
+  { id:'LD',   label:'本地 DNS',      sub:'201.1.1.1（发查询者）' },
+  { id:'ROOT', label:'根',            sub:'根域名服务器' },
+  { id:'COM',  label:'com',           sub:'顶级域服务器' },
+  { id:'XYZ',  label:'xyz.com',       sub:'权威服务器' },
+  { id:'ABC',  label:'abc.xyz.com',   sub:'权威服务器' }
+];
+
+var ST = {
+  '':    { bg:'#ffffff', bd:'#cbd5e1', fg:'#0f172a', op:1 },
+  send:  { bg:'#fef3c7', bd:'#d97706', fg:'#92400e', op:1 },
+  ok:    { bg:'#dcfce7', bd:'#16a34a', fg:'#14532d', op:1 },
+  dim:   { bg:'#ffffff', bd:'#cbd5e1', fg:'#94a3b8', op:.45 }
+};
+
+var nodeEls = {};
+var cntEl = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.cssText = 'width:760px;';
+
+  var row = AW.el('div', '');
+  row.style.cssText = 'display:flex;align-items:center;gap:5px;margin:6px 0 14px;';
+  CHAIN.forEach(function(n, i){
+    var d = AW.el('div', '');
+    d.style.cssText = 'flex:1 1 auto;border:2px solid #cbd5e1;border-radius:12px;background:#fff;' +
+      'padding:9px 4px;text-align:center;font-weight:700;font-size:13px;color:#0f172a;transition:all .25s;';
+    d.innerHTML = n.label + '<span style="display:block;font-size:10px;font-weight:400;color:#64748b;margin-top:3px;">' + n.sub + '</span>';
+    nodeEls[n.id] = d;
+    row.appendChild(d);
+    if(i < CHAIN.length - 1){
+      var ar = AW.el('div', '');
+      ar.style.cssText = 'flex:0 0 auto;color:#94a3b8;font-size:16px;font-weight:700;';
+      ar.innerHTML = '→';
+      row.appendChild(ar);
+    }
+  });
+  inner.appendChild(row);
+
+  cntEl = AW.el('div', '');
+  cntEl.style.cssText = 'display:flex;gap:12px;align-items:center;width:100%;background:#f8fafc;' +
+    'border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13px;color:#334155;';
+  inner.appendChild(cntEl);
+
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  CHAIN.forEach(function(n){
+    var d = nodeEls[n.id];
+    var st = ST[(sn.who && sn.who[n.id]) || ''];
+    d.style.background = st.bg;
+    d.style.borderColor = st.bd;
+    d.style.color = st.fg;
+    d.style.opacity = st.op;
+  });
+  var n = (sn.q == null ? 0 : sn.q);
+  cntEl.innerHTML =
+    '<div style="background:#0f172a;color:#fff;border-radius:10px;padding:6px 14px;font-weight:800;font-size:15px;white-space:nowrap;">' +
+    '已发出查询 <span style="color:#fbbf24;font-size:18px;">' + n + '</span> 次</div>' +
+    '<div style="font-size:12.5px;color:#64748b;">' + (sn.cnt || '') + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0, q:0, who:{}, cnt:'计数对象 = 本地服务器 201.1.1.1 发出的查询（H4 → 201.1.1.1 那一次是 H4 发的，不计入）',
+    log:'迭代查询：H4 只把请求交给本地服务器 201.1.1.1，之后由 201.1.1.1 亲自逐级向各级域名服务器发查询。' },
+  { cls:'ok', tag:'最少 0 次', count:0, q:0, who:{ LD:'ok', H4:'ok' }, cnt:'缓存命中：201.1.1.1 直接应答 H4',
+    log:'最少情形 = 0 次：201.1.1.1 缓存中已有 www.abc.xyz.com 的记录（此前解析过且未过期），直接应答 H4。' },
+  { cls:'step', tag:'最多·第 1 次', count:1, q:1, who:{ LD:'send', ROOT:'ok' }, cnt:'缓存未命中 → 先问根',
+    log:'最多情形开始：201.1.1.1 向根域名服务器发第 1 次查询 → 得到「去问 com 顶级域服务器」。' },
+  { cls:'step', tag:'最多·第 2 次', count:2, q:2, who:{ LD:'send', COM:'ok' }, cnt:'问 com 顶级域服务器',
+    log:'向 com 顶级域服务器发第 2 次查询 → 得到「去问 xyz.com 的权威服务器」。' },
+  { cls:'step', tag:'最多·第 3 次', count:3, q:3, who:{ LD:'send', XYZ:'ok' }, cnt:'问 xyz.com 权威服务器',
+    log:'向 xyz.com 权威服务器发第 3 次查询 → 得到「去问子域 abc.xyz.com 的权威服务器」。' },
+  { cls:'ok', tag:'最多·第 4 次', count:4, q:4, who:{ LD:'send', ABC:'ok' }, cnt:'问 abc.xyz.com 权威服务器，拿到 IP',
+    log:'向 abc.xyz.com 权威服务器发第 4 次查询 → 得到 www.abc.xyz.com 的 IP 地址。' },
+  { cls:'step', tag:'交回 H4', count:4, q:4, who:{ LD:'ok', H4:'ok' }, cnt:'解析结果交回 H4；次数范围 0 ～ 4',
+    log:'201.1.1.1 把结果交回 H4。它可能发出的查询次数：最少 0，最多 4。' },
+  { cls:'done', tag:'完成', count:4, q:4, done:true, who:{ LD:'ok', ROOT:'dim', COM:'dim', XYZ:'dim', ABC:'dim', H4:'ok' },
+    cnt:'最少 0 次（缓存命中）；最多 4 次（根→com→xyz.com→abc.xyz.com）',
+    log:'结论：最少和最多次数 = 0 和 4 → 选 C。' },
+];
+
+AW.init({
+  title: '本地域名服务器 201.1.1.1 最少和最多发出几次 DNS 查询？',
+  subtitle: '考点：域名系统 · 迭代查询 · 缓存与逐级委托（2016-40）',
+  counterLabel: '已发查询',
+  ribbonTitle: '推理步骤（✓ 正确 / ✗ 易错点）',
+  intro: '点击「▶ 播放」逐步演示迭代解析的查询链。',
+  snaps: snaps,
+  build: build,
+  render: render,
+  result: {
+    big: '最少 0 · 最多 4（选 C）',
+    html: '迭代解析 = 本地服务器 201.1.1.1 逐级<b>亲自</b>问：<b>根 → com → xyz.com → abc.xyz.com</b>，最多 4 次；缓存命中时最少 <b>0</b> 次。注意：H4→201.1.1.1 的请求是主机发的，不计入；abc.xyz.com 是独立的一层授权，漏了它就会算成 3 次。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

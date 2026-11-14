@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-37 动画 · IP 路由器的功能边界</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：路由器的两大本职',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>路由器 = <b>路由选择</b>（控制面：跑路由协议、维护路由表）+ <b>分组转发</b>（数据面：查表、按目的 IP 送出端口）。四条叙述逐一「对号入座」。</p>' },
+  { title: '叙述 I：运行路由协议，设置路由表',
+    cls: 'good',
+    tag: 'I 对',
+    body: '<p><b>对。</b>RIP、OSPF、BGP 等路由协议就运行在路由器上，路由表由它们生成并动态更新——这是「路由选择」本职。</p>' },
+  { title: '叙述 II：监测到拥塞时合理丢弃 IP 分组',
+    cls: 'good',
+    tag: 'II 对',
+    body: '<p><b>对。</b>路由器缓存有限，监测到拥塞时主动、合理地丢弃分组（如 RED 随机早期检测）正是它实际承担的动作。</p>' },
+  { title: '叙述 III：校验分组头，确保 IP 分组不丢失',
+    cls: 'bad',
+    tag: 'III 错',
+    body: '<p><b>错。</b>「对分组头做差错校验」没错，但「<b>确保传输的 IP 分组不丢失</b>」错了——IP 网络尽力而为：校验只查<b>首部</b>、校验不过直接丢弃、丢了不重传，绝不承诺不丢失。</p>' },
+  { title: '叙述 IV：按目的 IP 转发到合适输出线路',
+    cls: 'good',
+    tag: 'IV 对',
+    body: '<p><b>对。</b>查路由表、TTL 减 1、重算首部校验和、从合适端口转发出去——这是「分组转发」本职。</p>' },
+  { title: '结论',
+    cls: 'good',
+    tag: '答案 C',
+    body: '<p>I、II、IV 正确，III 错误 → 答案选 <b>C（仅 I、II、IV）</b>。记忆锚点：路由器叙述里凡带「<b>确保 / 保证 / 不丢失</b>」字眼的，多半是坑。</p>' },
+];
+
+var CLSMAP = { key: 'shift', bad: 'miss', good: 'ok' };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (CLSMAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'IP 路由器的功能边界（2012·37）',
+  subtitle: '考点：<code>路由选择 vs 分组转发 · IP 尽力而为</code> · 逐条辨析 I~IV',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（仅 I、II、IV）',
+    html: 'I 路由协议与路由表、II 拥塞时合理丢弃、IV 按目的 IP 转发都对；III 错在「确保不丢失」——<b>IP 层永远不承诺可靠</b>，首部校验不过直接丢弃、不重传。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

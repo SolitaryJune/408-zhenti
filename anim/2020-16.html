@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-16 指令位段划分与直接寻址范围</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-16：16 位定长指令 操作码/寻址方式/地址码 位段划分演示
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var AMBER_CSS = 'border-color:#d97706;background:#fef3c7;color:#92400e;';
+var BLUE_CSS  = 'border-color:#2563eb;background:#dbeafe;color:#1d4ed8;';
+
+// paint: 'none' | 'op' | 'opMode' | 'all'
+function stylesFor(paint){
+  var out = [], i;
+  for (i = 0; i < 16; i++){
+    if (paint === 'none') out.push('');
+    else if (i < 6) out.push(AMBER_CSS);
+    else if (i < 8) out.push(paint === 'op' ? '' : AMBER_CSS);
+    else out.push(paint === 'all' ? BLUE_CSS : '');
+  }
+  return out;
+}
+
+// 16 位指令格行：左 b15，右 b0
+function bitRow(styles){
+  var row = AW.el('div', 'aw-cells');
+  for (var i = 0; i < 16; i++){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '30px';
+    var box = AW.el('div', 'aw-box', '');
+    box.style.width = '28px';
+    box.style.height = '38px';
+    box.style.borderRadius = '7px';
+    if (styles && styles[i]) box.style.cssText += styles[i];
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', i === 0 ? 'b15' : (i === 15 ? 'b0' : '')));
+    row.appendChild(col);
+  }
+  return row;
+}
+
+function segLabels(paint){
+  var bar = AW.el('div', '');
+  bar.style.cssText = 'display:flex;gap:8px;width:max-content;margin:2px 0 4px;';
+  function seg(w, bd, bg, colr, txt){
+    var d = AW.el('div', '', txt);
+    d.style.cssText = 'width:' + w + 'px;height:30px;display:flex;align-items:center;justify-content:center;' +
+      'font-size:12.5px;font-weight:700;border-radius:8px;border:2px solid ' + bd + ';background:' + bg +
+      ';color:' + colr + ';';
+    return d;
+  }
+  var onOp = paint !== 'none';
+  var onMode = paint === 'opMode' || paint === 'all';
+  var onAddr = paint === 'all';
+  bar.appendChild(seg(184, onOp ? '#d97706' : '#cbd5e1', onOp ? '#fef3c7' : '#f1f5f9',
+                      onOp ? '#92400e' : '#94a3b8', '操作码 6 位（b15～b10）'));
+  bar.appendChild(seg(64, onMode ? '#d97706' : '#cbd5e1', onMode ? '#fef3c7' : '#f1f5f9',
+                      onMode ? '#92400e' : '#94a3b8', '寻址 2 位'));
+  bar.appendChild(seg(224, onAddr ? '#2563eb' : '#cbd5e1', onAddr ? '#dbeafe' : '#f1f5f9',
+                      onAddr ? '#1d4ed8' : '#94a3b8', '地址码 8 位（b7～b0）'));
+  return bar;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '500px';
+  inner.appendChild(AW.el('div', 'aw-row-label', '<b>16 位定长指令</b>（左高位 b15，右低位 b0）'));
+  inner.appendChild(bitRow(sn.styles));
+  inner.appendChild(segLabels(sn.paint));
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+AW.init({
+  title: '2020-16 · 16 位指令的位段划分',
+  subtitle: '48 条指令 · 4 种寻址方式 · 单地址指令 → 直接寻址范围',
+  counterLabel: '推演步',
+  ribbonTitle: '选项核对（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」或「下一步」：先把 16 位分干净，再算范围。',
+  render: render,
+  snaps: [
+    { cls:'step', tag:'开始', count:0, paint:'none',
+      log:'16 位定长指令，操作码位数、寻址方式位数固定；共 48 条指令、4 种寻址方式。求单地址指令直接寻址范围。',
+      note:'三个字段要分这 16 位：操作码 + 寻址方式 + 地址码。' },
+    { cls:'shift', tag:'分操作码', count:1, paint:'op',
+      log:'48 条指令：2 的 5 次方 = 32 不够，2 的 6 次方 = 64 够 → 操作码 6 位（b15～b10）。',
+      note:'2<sup>5</sup> = 32 &lt; 48 ≤ 64 = 2<sup>6</sup> → 操作码取 <b>6 位</b>。' },
+    { cls:'shift', tag:'分寻址方式', count:2, paint:'opMode',
+      log:'4 种寻址方式（直接、间接、立即、相对）：2 位即可（b9～b8）。',
+      note:'2<sup>2</sup> = 4，恰好表示 4 种寻址方式 → 寻址方式字段 <b>2 位</b>。' },
+    { cls:'step', tag:'剩地址码', count:3, paint:'all',
+      log:'地址码 = 16 − 6 − 2 = 8 位（b7～b0）。单地址指令就靠它给出操作数的主存地址。',
+      note:'6 + 2 + 8 = 16，位段分干净了。' },
+    { cls:'ok', tag:'算范围', count:4, paint:'all',
+      log:'直接寻址：地址码就是主存单元地址，8 位无符号 → 0000 0000B～1111 1111B = 0～255 → 选项 A。',
+      note:'8 位无符号数范围：<b>0 ～ 2<sup>8</sup> − 1 = 0 ～ 255</b> ✓', noteCls:'good', ribbon:{k:1, ok:true} },
+    { cls:'miss', tag:'排除 B', count:5, paint:'all',
+      log:'选项 B 说 0～1023：需要 10 位地址码（2 的 10 次方 = 1024），8 位给不了 → 排除。',
+      note:'0～1023 要 <b>10 位</b>地址码，本题地址码只有 8 位。', ribbon:{k:2, ok:false} },
+    { cls:'miss', tag:'排除 C', count:6, paint:'all',
+      log:'选项 C 说 −128～127：那是 8 位补码的范围，用于立即数、相对寻址的带符号偏移量；直接寻址的地址是无符号的 → 排除。',
+      note:'−128～127 是 8 位<b>补码</b>取值，不是直接寻址的地址范围。', ribbon:{k:3, ok:false} },
+    { cls:'miss', tag:'排除 D', count:7, paint:'all',
+      log:'选项 D 说 −512～511：那是 10 位补码的范围，与 8 位地址码无关 → 排除。',
+      note:'−512～511 是 <b>10 位补码</b>的取值范围。', ribbon:{k:4, ok:false} },
+    { cls:'done', tag:'完成', count:8, paint:'all',
+      log:'位段账：6（操作码）+ 2（寻址方式）+ 8（地址码）= 16；直接寻址范围 0～255 → 答案 A。',
+      note:'结论：直接寻址范围 <b>0 ～ 255</b>，选 A。', noteCls:'good', done:true },
+  ],
+  result: {
+    big: '答案 A（0～255）',
+    html: '记忆锚点：先看操作码 <code>2^5=32 &lt; 48 ≤ 64=2^6 → 6 位</code>，寻址方式 <code>4 种 → 2 位</code>，地址码 <code>16−6−2=8 位</code>；<br>' +
+      '直接寻址 = 地址码按<b>无符号数</b>解释 → 0～255。−128～127 是补码范围（相对/立即用），别混。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

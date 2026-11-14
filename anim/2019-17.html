@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019-17 一条指令的取数与执行需要哪些部件</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先拆解指令功能', cls: 'key', tag: '审题',
+    body: '<p>指令功能 <code>R[r2]←R[r1] + M[R[r0]]</code>：第一个源操作数在寄存器 r1 中（<b>寄存器寻址</b>）；第二个源操作数在主存中，其地址放在寄存器 r0 中（<b>寄存器间接寻址</b>）；结果写回寄存器 r2。问：<b>取数及执行</b>过程用到哪些部件。</p>' },
+  { title: 'I. 通用寄存器组（GPRs）——需要', cls: 'good', tag: 'I 需要',
+    body: '<p>r0、r1 要从寄存器组中读出，运算结果还要写入 r2——通用寄存器组是取数与执行的主角之一。</p>' },
+  { title: 'II. 算术逻辑单元（ALU）——需要', cls: 'good', tag: 'II 需要',
+    body: '<p>两个源操作数相加 <code>R[r1] + M[R[r0]]</code> 由 <b>ALU</b> 完成。</p>' },
+  { title: 'III. 存储器（Memory）——需要', cls: 'good', tag: 'III 需要',
+    body: '<p>寄存器间接寻址的操作数在主存里：先取出 R[r0] 作为地址，再<b>访存</b>读出 M[R[r0]]。</p>' },
+  { title: 'IV. 指令译码器（ID）——不需要', cls: 'bad', tag: 'IV 不需要',
+    body: '<p>指令译码器在<b>译码阶段</b>工作；题目问的是"取数及执行过程"，译码不在其列，IV 排除。</p>' },
+  { title: '结论：需要 I、II、III', cls: 'good', tag: '完成',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>寄存器间接 = 寄存器给地址 + 存储器出数据</b>；加法必经 ALU；译码器不属于取数与执行阶段。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  var logCls = s.cls === 'good' ? 'ok' : (s.cls === 'bad' ? 'miss' : (s.cls === 'key' ? 'shift' : 'step'));
+  return {
+    cls: last ? 'done' : logCls,
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '2019·17 指令 R[r2]←R[r1]+M[R[r0]] 需要哪些部件',
+  subtitle: '源操作数：<code>寄存器寻址 + 寄存器间接寻址</code> · 限定"取数及执行"阶段',
+  intro: '点击「▶ 播放」逐个部件分析。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（I、II、III）',
+    html: '取数与执行用到：<b>通用寄存器组</b>（取 r0/r1、写 r2）、<b>ALU</b>（做加法）、<b>存储器</b>（取 M[R[r0]]）。<b>指令译码器</b>属于译码阶段的部件，不在"取数及执行"之列——这是本题唯一的排除点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

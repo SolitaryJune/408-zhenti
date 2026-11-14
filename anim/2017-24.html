@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-24 · 系统调用的执行顺序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程类（tools/anim_algo_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var OPS = [
+  { no:'③', name:'传递系统调用参数', desc:'用户态：把系统调用号与参数放入约定的寄存器/栈' },
+  { no:'②', name:'执行陷入（trap）指令', desc:'由用户态转入核心态，是进入内核的"门"' },
+  { no:'④', name:'执行相应的服务程序', desc:'核心态：按调用号执行对应的内核服务例程' },
+  { no:'①', name:'返回用户态', desc:'服务完成后返回断点，继续执行用户程序' }
+];
+
+function slotsHTML(n){
+  var h = '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+  for (var i = 0; i < 4; i++){
+    if (i < n){
+      h += '<div style="flex:1 1 160px;min-width:160px;border:2px solid #16a34a;background:#f6fef9;border-radius:14px;padding:12px 14px">' +
+           '<div style="font-size:12px;color:#15803d;font-weight:700;margin-bottom:4px">第 ' + (i + 1) + ' 步</div>' +
+           '<div style="font-weight:700;font-size:15px">' + OPS[i].no + ' ' + OPS[i].name + '</div>' +
+           '<div style="font-size:12.5px;color:#64748b;margin-top:4px">' + OPS[i].desc + '</div></div>';
+    } else {
+      h += '<div style="flex:1 1 160px;min-width:160px;border:2px dashed #cbd5e1;background:#fff;border-radius:14px;padding:12px 14px;color:#94a3b8">' +
+           '<div style="font-size:12px;font-weight:700;margin-bottom:4px">第 ' + (i + 1) + ' 步</div>' +
+           '<div style="font-weight:700;font-size:15px">待填</div></div>';
+    }
+  }
+  h += '</div>';
+  return h;
+}
+
+function legendHTML(done){
+  var h = '<div style="margin-top:12px;font-size:12.5px;color:#64748b;border-top:1px dashed #e2e8f0;padding-top:8px">' +
+          '原始编号：① 返回用户态 ｜ ② 执行陷入（trap）指令 ｜ ③ 传递系统调用参数 ｜ ④ 执行相应的服务程序</div>';
+  if (done) h += '<div style="margin-top:10px;font-size:15px;font-weight:700;color:#16a34a">正确顺序：③→②→④→① → 答案 C</div>';
+  return h;
+}
+
+var snaps = [
+  { cls:'step', tag:'审题',   log:'四个操作被打乱了顺序，按「准备 → 进门 → 办事 → 回家」的因果链还原', count:0, html: slotsHTML(0) + legendHTML(false) },
+  { cls:'ok',   tag:'第 1 步', log:'③ 先传递系统调用参数：在用户态备好调用号和参数，内核才知道"要干什么"', count:1, ribbon:{k:1, ok:true}, html: slotsHTML(1) + legendHTML(false) },
+  { cls:'ok',   tag:'第 2 步', log:'② 执行陷入（trap）指令：CPU 由用户态转入核心态，正式进内核', count:2, ribbon:{k:2, ok:true}, html: slotsHTML(2) + legendHTML(false) },
+  { cls:'ok',   tag:'第 3 步', log:'④ 执行相应的服务程序：在核心态按调用号执行内核例程', count:3, ribbon:{k:3, ok:true}, html: slotsHTML(3) + legendHTML(false) },
+  { cls:'ok',   tag:'第 4 步', log:'① 返回用户态：服务做完，回到断点继续执行用户程序', count:4, ribbon:{k:4, ok:true}, html: slotsHTML(4) + legendHTML(false) },
+  { cls:'done', tag:'完成',   log:'完整顺序 ③→②→④→①，对照选项即 C', count:5, done:true, html: slotsHTML(4) + legendHTML(true) }
+];
+
+AW.init({
+  title: '2017-24 · 系统调用的执行顺序',
+  subtitle: '操作：① 返回用户态 ｜ ② 执行陷入指令 ｜ ③ 传递系统调用参数 ｜ ④ 执行相应的服务程序',
+  counterLabel: '已排序',
+  ribbonTitle: '顺序位（✓ 已排定）',
+  intro: '点击「▶ 播放」逐步把四个操作放进正确位置。',
+  snaps: snaps,
+  result: {
+    big: '答案 C：③→②→④→①',
+    html: '链条：<b>传参 → 陷入 → 服务 → 返回</b>。参数必须先备好，否则内核拿到手是空的（A、B 把陷入放最前，错）；服务程序执行完才谈得上返回（D 把 ①④ 颠倒）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

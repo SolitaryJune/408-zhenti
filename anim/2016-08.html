@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-08 Dijkstra 最短路径的收编次序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+var S = {};
+var FIN = { 5:1, 2:2, 3:3, 6:4, 4:5 };   // 顶点 → 收编轮次
+var CIRC = ['', '①', '②', '③', '④', '⑤'];
+var DIST = [
+  ['0','5','∞','∞','4','∞'],
+  ['0','5','10','11','4','9'],
+  ['0','5','7','11','4','9'],
+  ['0','5','7','11','4','9'],
+  ['0','5','7','11','4','9'],
+  ['0','5','7','11','4','9']
+];
+
+function edgeList(){
+  return '<div style="text-align:center;font-size:13.5px;line-height:2.1">' +
+    '<b>有向边（权）</b>：<code>1→2(5)</code> <code>1→5(4)</code> <code>2→3(2)</code> <code>2→5(6)</code> ' +
+    '<code>5→4(7)</code> <code>5→6(5)</code> <code>5→3(6)</code> <code>6→3(2)</code> <code>4→1(2)</code></div>';
+}
+
+AW.init({
+  title: '2016·Dijkstra：从顶点 1 出发，各最短路径目标顶点的次序',
+  subtitle: 'dist 行的 ①~⑤ = 该顶点第几轮被定案 · 绿 = 已定案 · 灰 = 尚为 ∞',
+  counterLabel: '已收编',
+  ribbonTitle: '收编的顶点号（按先后）',
+  intro: '点击「▶ 播放」逐轮演示“挑最小、定案、松弛”。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', '', edgeList()));
+    var lab = AW.el('div', 'aw-row-label', '<b>各顶点 dist 值</b>（1~6 号，下标同顶点号）');
+    S.row = AW.el('div', '');
+    wrap.appendChild(lab);
+    wrap.appendChild(S.row);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始化', count:0, round:0,
+      log:'从 1 号顶点出发。初始 dist：2 号 = 5（边 1→2），5 号 = 4（边 1→5），其余为 ∞。每轮收编未定顶点中 dist 最小者，再用它的出边松弛邻居。' },
+    { cls:'ok', tag:'第1轮', count:1, round:1, ribbon:{k:5, ok:true},
+      log:'候选 2:5、5:4 → 最小是 5 号（4）→ 收编 5 号。松弛出边：4 号 = 4+7 = 11，6 号 = 4+5 = 9，3 号 = 4+6 = 10。' },
+    { cls:'ok', tag:'第2轮', count:2, round:2, ribbon:{k:2, ok:true},
+      log:'候选 2:5、6:9、3:10、4:11 → 收编 2 号（5）。松弛 2→3：5+2 = 7 < 10，3 号由 10 更新为 7。' },
+    { cls:'ok', tag:'第3轮', count:3, round:3, ribbon:{k:3, ok:true},
+      log:'候选 3:7、6:9、4:11 → 收编 3 号（7）。3 号没有出边，无松弛。' },
+    { cls:'ok', tag:'第4轮', count:4, round:4, ribbon:{k:6, ok:true},
+      log:'候选 6:9、4:11 → 收编 6 号（9）。6→3 的终点 3 号已定案，无更新。' },
+    { cls:'ok', tag:'第5轮', count:5, round:5, ribbon:{k:4, ok:true},
+      log:'只剩 4 号未定 → 收编 4 号（11，路径 1→5→4）。全部顶点定案。' },
+    { cls:'done', tag:'结论', count:6, round:5, done:true,
+      log:'定案次序：5 → 2 → 3 → 6 → 4，与选项 B 一致。' },
+  ],
+
+  render: function(stage, sn){
+    var r = sn.round || 0;
+    var vals = DIST[r];
+    var cls = [], ptr = { 1:'起点' };
+    for(var v = 1; v <= 6; v++){
+      var fin = (v === 1) || (FIN[v] && FIN[v] <= r);
+      cls.push(fin ? 'hit' : (vals[v - 1] === '∞' ? 'dim' : ''));
+      if(fin && v !== 1){ ptr[v] = CIRC[FIN[v]]; }
+    }
+    S.row.innerHTML = '';
+    S.row.appendChild(AW.cellRow(vals, cls, ptr, 1));
+  },
+
+  result: {
+    big: '5, 2, 3, 6, 4（选 B）',
+    html: 'Dijkstra 定案次序 = dist 从小到大：4（顶点5）→ 5（顶点2）→ 7（顶点3）→ 9（顶点6）→ 11（顶点4）。易错点：第一轮要全局挑最小（5 号的 4，不是 2 号的 5）；松弛会改判（3 号 10 → 7）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

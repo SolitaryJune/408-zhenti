@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-23 · 中断、异常与系统调用</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析动画：中断/异常发生与处理的态切换（答案 A）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    tag: '审题',
+    log: '选「错误」的一项：考点是中断/异常发生与处理时的 CPU 态',
+    body: '<p>题目要选出<b>叙述错误</b>的一项。考点锁定：<b>中断/异常「发生时」与「开始处理时」CPU 各处于什么态</b>，以及系统调用、中断服务例程的基本事实。</p>' },
+  { title: '关键链条：发生 ≠ 处理',
+    cls: 'key',
+    tag: '核心',
+    log: '中断/异常被检测到时 CPU 还在用户程序里，响应后才切换进内核态',
+    body: '<p>CPU 平时执行用户程序，处于<b>用户态</b>。中断或异常<b>发生（被检测到）</b>的那一刻，CPU 还在执行用户程序——<b>仍是用户态</b>；硬件<b>响应</b>之后，才把特权级切换到<b>内核态</b>，再执行中断/异常处理程序。</p>' },
+  { title: '逐项判定 A',
+    cls: 'bad',
+    tag: 'A 判定',
+    log: 'A 把「发生」当成「处理」：发生时尚在用户态，叙述错误，当选',
+    body: '<p>A「中断或异常发生时，CPU 处于内核态」：<b>错误</b>。发生时尚处于用户态，响应后才切换进内核态——把「发生」与「处理」混为一谈。<b>本题选 A</b>。</p>',
+    ribbon: { k: 1, ok: false } },
+  { title: '逐项判定 B',
+    cls: 'good',
+    tag: 'B 判定',
+    log: '每个系统调用都有对应内核服务例程：叙述正确',
+    body: '<p>B「每个系统调用都有对应的内核服务例程」：正确。系统调用只是进入内核的入口，系统调用号对应一张服务例程入口表，每个调用都有例程完成实际服务。</p>',
+    ribbon: { k: 2, ok: true } },
+  { title: '逐项判定 C',
+    cls: 'good',
+    tag: 'C 判定',
+    log: '中断处理程序开场时已在内核态：叙述正确',
+    body: '<p>C「中断处理程序开始执行时，CPU 处于内核态」：正确。中断响应过程中硬件已完成用户态 → 内核态的切换，处理程序一开场就在内核态运行。</p>',
+    ribbon: { k: 3, ok: true } },
+  { title: '逐项判定 D',
+    cls: 'good',
+    tag: 'D 判定',
+    log: '新设备需注册中断服务例程：叙述正确',
+    body: '<p>D「系统添加新类型设备时，需注册相应的中断服务例程」：正确。新设备要装入驱动程序并在系统中登记其中断服务例程（ISR），中断发生时才能找到处理入口。</p>',
+    ribbon: { k: 4, ok: true } },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    log: '叙述错误的是 A：中断/异常发生时 CPU 尚在用户态',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>中断/异常发生时 CPU 仍在用户态，开始执行处理程序时才进入内核态</b>；B、C、D 均为正确叙述。</p>' },
+];
+
+var CLS_MAP = { good: 'ok', bad: 'miss', key: 'shift' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : (CLS_MAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+  if(s.ribbon) sn.ribbon = s.ribbon;
+  return sn;
+});
+
+AW.init({
+  title: '中断、异常与系统调用：态转换时序辨析',
+  subtitle: '考点：<code>发生 ≠ 处理</code> · 选项逐项判定（找错误叙述）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 叙述正确 / ✗ 叙述错误）',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '<b>叙述错误的是 A。</b>中断/异常发生时 CPU 还在用户态执行用户程序，响应后才切换到内核态。<br>记忆锚点：<b>「发生」≠「处理」</b>——检测到事件时仍是用户态，开始执行处理程序时才处于内核态。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

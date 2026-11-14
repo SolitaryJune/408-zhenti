@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-02 动画：栈的概念辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-02 栈的概念辨析（概念/推理链类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>题目要找「<b>错误</b>」的叙述。四个命题：Ⅰ 非递归方式重写递归程序<b>必须</b>使用栈；Ⅱ 函数调用时系统要用栈保存必要信息；Ⅲ 只要确定了入栈次序<b>就可</b>确定出栈次序；Ⅳ 栈是受限线性表，允许在<b>两端</b>进行操作。——「必须」「就可」这类绝对化表述是命题陷阱高发区。</p>' },
+  { title: '命题Ⅰ：错', cls: 'bad',
+    body: '<p>用栈模拟递归是<b>常用手段</b>，但不是「必须」：尾递归、简单的递推关系可以直接改写成循环（迭代），完全不需要栈。「必须」二字过于绝对 → <b>Ⅰ 错</b>。</p>' },
+  { title: '命题Ⅱ：对', cls: 'good',
+    body: '<p>函数调用时，系统把<b>返回地址、参数、局部变量</b>等压入函数调用栈，返回时弹出——正契合栈「后进先出」与函数「最后调用的最先返回」的对应关系 → <b>Ⅱ 对</b>。</p>' },
+  { title: '命题Ⅲ：错', cls: 'bad',
+    body: '<p>入栈次序确定，出栈次序<b>并不确定</b>：入栈、出栈可以任意交错。1、2、3 依次入栈（中途允许出栈）就能得到 <b>5 种</b>（Catalan 数）不同的合法出栈序列 → <b>Ⅲ 错</b>。</p>' },
+  { title: '命题Ⅳ：错', cls: 'bad',
+    body: '<p>栈只允许在<b>一端（栈顶）</b>插入和删除；允许两端操作的是<b>双端队列</b>。前半句「受限线性表」对，后半句「两端操作」错，整句话错 → <b>Ⅳ 错</b>。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>错误的是 <b>Ⅰ、Ⅲ、Ⅳ</b>，正确的只有 Ⅱ → 选 <b>C</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2017-02　栈的概念辨析：找出错误的叙述',
+  subtitle: '考点：<code>栈的特性与典型应用</code> · 逐项推演 Ⅰ～Ⅳ',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>栈 = 单端（栈顶）进出</b>。见到「必须」「只要…就…」这类绝对化说法要警惕：递归改非递归不一定用栈（可迭代化），出栈序列也不唯一（n 个元素最多 <code>Catalan(n)</code> 种）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

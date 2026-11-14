@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-37 概念辨析：交换机的本质与两个「域」</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类动画：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题目要挑出<b>正确</b>的一项。判断交换机说法的三条主线：① 与网桥的关系（同为数据链路层设备）；② 隔离冲突域 / 广播域的能力；③ 它看不看得懂网络层。</p>' },
+  { title: '选项 A：本质是多端口网桥',
+    cls: 'good',
+    body: '<p><b>A「以太网交换机本质上是一种多端口网桥」</b>：<b>正确，本题答案</b>。两者都工作在数据链路层、靠「自学习」建 MAC 地址表、按目的 MAC 转发帧；交换机 = 端口更多、可并行转发的网桥。</p>' },
+  { title: '选项 B：一个冲突域？',
+    cls: 'bad',
+    body: '<p><b>B「通过交换机互连的一组工作站构成一个冲突域」</b>：错。交换机<b>每个端口就是一个独立冲突域</b>，它正是用来隔离冲突域的；把一群主机捆成一个冲突域的是<b>集线器</b>。</p>' },
+  { title: '选项 C：每端口一个广播域？',
+    cls: 'bad',
+    body: '<p><b>C「交换机每个端口所连网络构成一个独立的广播域」</b>：错。交换机收到广播帧会向所有端口泛洪，不划分 VLAN 时整个交换网络仍是<b>一个广播域</b>；隔离广播域要靠<b>路由器</b>（或 VLAN + 三层设备）。</p>' },
+  { title: '选项 D：跨网络层协议互联？',
+    cls: 'bad',
+    body: '<p><b>D「以太网交换机可实现采用不同网络层协议的网络互联」</b>：错。交换机只看 MAC 帧、不解析 IP 等网络层协议；互联采用不同网络层协议的网络是<b>路由器</b>（三层设备）的职责。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：网桥加端口 = 交换机；<b>交换机隔离冲突域、不隔离广播域</b>；路由器两者都隔离。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2015-37 以太网交换机：哪句是对的？',
+  subtitle: '考点：<code>数据链路层设备</code> · 冲突域 vs 广播域 · 选项逐项核对',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '以太网交换机 = <b>多端口网桥</b>（二层、自学习、按 MAC 转发）。<br>两个「域」口诀：<b>交换机隔离冲突域（每端口一个），不隔离广播域</b>（广播向所有端口泛洪）；路由器两者都隔离。不同网络层协议的网络互联，交给路由器。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

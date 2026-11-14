@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-12 z=x+y 机器数演算动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-12：x=127(int)、y=-9(short)，z=x+y 的位级演算
+     模板：算法/过程类（位级演算过程），只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var X    = ['0','0','0','0','0','0','7','F'];
+var Y16  = ['F','F','F','7'];
+var Y32  = ['F','F','F','F','F','F','F','7'];
+var SUM9 = ['1','0','0','0','0','0','0','7','6'];
+var Z8   = ['0','0','0','0','0','0','7','6'];
+
+function dim(n){ var a = [], i; for(i = 0; i < n; i++){ a.push('dim'); } return a; }
+function fill(n, c){ var a = [], i; for(i = 0; i < n; i++){ a.push(c); } return a; }
+
+function row(label, chars, cls){
+  return '<div class="aw-row-label">' + label + '</div>' +
+         '<div class="aw-scroll">' + AW.cellRow(chars, cls || [], null, 1).outerHTML + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'32 位机器：x 为 int 型且 x = 127，y 为 short 型且 y = -9，执行 z = x + y',
+    html:'<div class="aw-stepcard key"><p>32 位机器上执行 <code>z = x + y</code>：x 为 <code>int</code> 型（32 位），y 为 <code>short</code> 型（16 位）。求 x、y、z 的机器数（十六进制）。</p></div>' },
+
+  { cls:'ok', tag:'x 的补码', count:1, ribbon:{k:1, ok:true},
+    log:'x = 127 = 7FH → 32 位 int 补码 0000007FH',
+    html: row('x（int，32 位）', X, ['','','','','','','hit','hit']) },
+
+  { cls:'step', tag:'y 的补码', count:2, ribbon:{k:2, ok:true},
+    log:'y = -9：9 的 16 位机器数是 0009H，取反加一 → FFF7H',
+    html: row('x（int，32 位）', X, dim(8)) +
+          row('y（short，16 位）', Y16, fill(4,'hit')) },
+
+  { cls:'shift', tag:'符号扩展', count:3, ribbon:{k:3, ok:true},
+    log:'z = x + y 时 short 转 int 需符号扩展：FFF7H → FFFFFFF7H（最高位为 1，高 16 位补全 1）',
+    html: row('x（int，32 位）', X, dim(8)) +
+          row('y（short，16 位）', Y16, dim(4)) +
+          row('y 符号扩展为 int（32 位）', Y32, fill(8,'hit')) },
+
+  { cls:'step', tag:'补码相加', count:4, ribbon:{k:4, ok:true},
+    log:'0000007FH + FFFFFFF7H = 1 00000076H，最高位进位超出 32 位被丢弃',
+    html: row('x（int，32 位）', X, dim(8)) +
+          row('y 扩展为 int（32 位）', Y32, dim(8)) +
+          row('x + y（33 位，首位是进位）', SUM9, ['dim'].concat(fill(8,'hit'))) },
+
+  { cls:'ok', tag:'十进制验证', count:5, ribbon:{k:5, ok:true},
+    log:'127 + (-9) = 118 = 76H，与机器数结果一致 → z = 00000076H',
+    html: row('z = x + y（int，32 位）', Z8, ['','','','','','','hit','hit']) },
+
+  { cls:'done', tag:'完成', count:6, ribbon:{k:6, ok:true},
+    log:'x = 0000007FH，y = FFF7H，z = 00000076H → 答案 D',
+    done:true,
+    html: row('x（int，32 位）', X, ['','','','','','','hit','hit']) +
+          row('y（short，16 位）', Y16, fill(4,'hit')) +
+          row('z = x + y（int，32 位）', Z8, fill(8,'hit')) },
+];
+
+AW.init({
+  title: '2009-12 z = x + y 的机器数演算',
+  subtitle: 'x = 127（int） · y = -9（short） · 考点：补码表示 · 符号扩展 · 定点加法',
+  counterLabel: '演算步',
+  ribbonTitle: '演算进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步演算。',
+  snaps: snaps,
+  result: {
+    big: 'x=0000007FH，y=FFF7H，z=00000076H',
+    html: '答案选 <b>D</b>。两个关键动作：<b>①</b> y 求 16 位补码「取反加一」得 <code>FFF7H</code>（<code>FFF9H</code> 是漏加 1 的错误结果）；<b>②</b> short→int 符号扩展 <code>FFF7H → FFFFFFF7H</code>，补码相加的最高位进位丢弃，得 z = <code>00000076H</code>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

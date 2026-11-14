@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-17 Cache 组相联 + LRU · 过程动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SEQ = [0, 4, 8, 2, 0, 6, 8, 6, 4, 8];
+
+/* 每次访问后的 Cache 状态（组号 = 地址 mod 4；组内两格按 最近使用 → 最久未用 排列）
+   a=访问地址 g=组号 hit=是否命中 ev=被淘汰的块 g0/g2=组0/组2 内容 */
+var ACC = [
+  { a:0, g:0, hit:false, ev:null, g0:[0] },
+  { a:4, g:0, hit:false, ev:null, g0:[4,0] },
+  { a:8, g:0, hit:false, ev:0,    g0:[8,4] },
+  { a:2, g:2, hit:false, ev:null, g0:[8,4], g2:[2] },
+  { a:0, g:0, hit:false, ev:4,    g0:[0,8], g2:[2] },
+  { a:6, g:2, hit:false, ev:null, g0:[0,8], g2:[6,2] },
+  { a:8, g:0, hit:true,  g0:[8,0], g2:[6,2] },
+  { a:6, g:2, hit:true,  g0:[8,0], g2:[6,2] },
+  { a:4, g:0, hit:false, ev:0,    g0:[4,8], g2:[6,2] },
+  { a:8, g:0, hit:true,  g0:[8,4], g2:[6,2] },
+];
+
+var LOGS = [
+  '访问 0：0 mod 4 = 0 → 组 0 有空行，调入块 0 → 缺失',
+  '访问 4：4 mod 4 = 0 → 组 0 还有空行，调入块 4 → 缺失',
+  '访问 8：8 mod 4 = 0 → 组 0 已满且无块 8，LRU 淘汰最久未用的块 0，调入块 8 → 缺失',
+  '访问 2：2 mod 4 = 2 → 组 2 有空行，调入块 2 → 缺失',
+  '访问 0：0 mod 4 = 0 → 组 0 已满且无块 0（已被淘汰），LRU 淘汰块 4，调入块 0 → 缺失',
+  '访问 6：6 mod 4 = 2 → 组 2 还有空行，调入块 6 → 缺失',
+  '访问 8：8 mod 4 = 0 → 组 0 里正好有块 8 → 命中！把它刷新为最近使用',
+  '访问 6：6 mod 4 = 2 → 组 2 里正好有块 6 → 命中！',
+  '访问 4：4 mod 4 = 0 → 组 0 无块 4，LRU 淘汰块 0（第 7 步命中后它成了最久未用），调入块 4 → 缺失',
+  '访问 8：8 mod 4 = 0 → 组 0 里有块 8 → 命中！',
+];
+
+function groupRow(g, arr, cur, hit, active){
+  var row = AW.el('div', 'aw-cells');
+  var label = AW.el('div', 'aw-idx', '组 ' + g);
+  label.style.cssText = 'width:56px;font-size:13px;color:' + (active ? '#2563eb' : '#94a3b8') + ';font-weight:700;';
+  row.appendChild(label);
+  for(var i = 0; i < 2; i++){
+    var has = arr && arr[i] != null;
+    var content = has ? String(arr[i]) : '—';
+    var cls = '';
+    if(has && cur != null && arr[i] === cur){ cls = hit ? 'hit' : 'miss'; }
+    if(!has){ cls = 'dim'; }
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), content));
+    row.appendChild(col);
+  }
+  return row;
+}
+
+AW.init({
+  title: '2012·17 Cache 2 路组相联 + LRU：命中几次？',
+  subtitle: '访问序列 <code>0 4 8 2 0 6 8 6 4 8</code> · 组号 = 地址 mod 4 · 每组 2 行 · 组内 LRU',
+  counterLabel: '已访问',
+  ribbonTitle: '访问序号（✓ 命中 / ✗ 缺失）',
+  intro: '点击「▶ 播放」，逐次访问并观察替换。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var info = AW.el('div', '');
+    info.style.cssText = 'font-size:12.5px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;line-height:1.7;margin-bottom:10px;';
+    info.innerHTML = '块大小 1 字、按字编址 → 地址即块号。组号 = 地址 mod 4：0、4、8 → 组 0；2、6 → 组 2（组 1、组 3 本序列用不到）。每组 2 行，装不下时按 LRU 淘汰本组最久未用的行。';
+    var l1 = AW.el('div', 'aw-row-label', '<b>访问序列</b>（绿=命中，红=缺失）');
+    var r1 = AW.el('div', '', ''); r1.id = 'seqRow';
+    var l2 = AW.el('div', 'aw-row-label', '<b>Cache 各组</b>（每格一块；组内从左到右 = 最近使用 → 最久未用）');
+    var r2 = AW.el('div', '', ''); r2.id = 'grpWrap';
+    wrap.appendChild(info);
+    wrap.appendChild(l1); wrap.appendChild(r1);
+    wrap.appendChild(l2); wrap.appendChild(r2);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn){
+    var k = sn.k;                       // 已完成的访问次数（0~10）
+    var seqRow = document.getElementById('seqRow');
+    seqRow.innerHTML = '';
+    var srow = AW.el('div', 'aw-cells');
+    SEQ.forEach(function(addr, j){
+      var cls = 'dim';
+      if(j < k){ cls = ACC[j].hit ? 'hit' : 'miss'; }
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), String(addr)));
+      col.appendChild(AW.el('div', 'aw-idx', String(j + 1)));
+      srow.appendChild(col);
+    });
+    seqRow.appendChild(srow);
+
+    var grpWrap = document.getElementById('grpWrap');
+    grpWrap.innerHTML = '';
+    var cur = sn.acc;
+    [0, 1, 2, 3].forEach(function(g){
+      var arr = cur ? (g === 0 ? cur.g0 : g === 2 ? cur.g2 : null) : null;
+      grpWrap.appendChild(groupRow(g, arr, cur ? cur.a : null, cur ? cur.hit : false, !!cur && cur.g === g));
+    });
+  },
+  snaps: (function(){
+    var sn = [{ cls:'shift', tag:'初始', count:0, k:0, acc:null,
+                log:'Cache 初始为空。按官方答案口径把 4 个行当作 4 组（组号 = 地址 mod 4），每组 2 行，组内全相联 + LRU 替换' }];
+    ACC.forEach(function(a, i){
+      sn.push({
+        cls: a.hit ? 'ok' : 'miss',
+        tag: a.hit ? '命中' : '缺失',
+        count: i + 1,
+        k: i + 1, acc: a,
+        log: LOGS[i],
+        ribbon: { k: i + 1, ok: a.hit },
+      });
+    });
+    sn.push({ cls:'done', tag:'完成', count:10, k:10, acc:ACC[9], done:true,
+              log:'序列结束：10 次访问命中 3 次（第 7、8、10 次）→ 答案 C' });
+    return sn;
+  })(),
+  result: {
+    big: '答案 C（命中 3 次）',
+    html: '第 <b>7、8、10</b> 次访问命中，其余 7 次缺失。要点：<b>LRU 只在本组内淘汰最久未用的块</b>，且命中后要把该块刷新为"最近使用"。（若按 4 行 ÷ 2 路 = 2 组划分，全部偶地址落进同一组，模拟得 1 次——这是本题的口径争议，考试按官方答案 C。）',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-31 单缓冲与双缓冲耗时计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.gl-panel{position:relative;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px 10px;margin-bottom:10px;background:#fff}
+.gl-head{font-weight:700;font-size:14px;color:#334155;margin:2px 0 8px}
+.gl-lane{display:flex;align-items:center;margin-bottom:5px}
+.gl-name{width:96px;font-size:12px;color:#64748b;flex:none;text-align:right;padding-right:8px}
+.gl-track{position:relative;flex:1;height:26px;background:#f8fafc;border-radius:5px;
+  background-image:linear-gradient(90deg,#e2e8f0 1px,transparent 1px);background-size:6.25% 100%}
+.gl-bar{position:absolute;top:2px;bottom:2px;border-radius:4px;color:#fff;font-size:10.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
+.gl-mark{position:absolute;top:34px;bottom:8px;width:0;border-left:2px dashed #ef4444;z-index:3;pointer-events:none}
+.gl-mark span{position:absolute;top:-19px;font-size:11px;font-weight:700;color:#dc2626;background:#fff;
+  padding:0 3px;border-radius:3px;white-space:nowrap}
+.gl-note{text-align:center;font-size:13.5px;color:#334155;min-height:22px;margin-top:4px;line-height:1.5}
+.gl-legend{text-align:center;font-size:12px;color:#64748b;margin-bottom:10px}
+.gl-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 12px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var T = 100, M = 50, C = 50, N = 10;   // 读入 / 送用户区 / CPU 分析，共 10 块
+var TMAX = 1600;
+var COL = { read:'#3b82f6', move:'#f59e0b', cpu:'#16a34a' };
+
+// 时间线（与公式逐块吻合）：单缓冲第 1 块 0 起，之后每块 150μs；双缓冲每块 100μs
+var SINGLE = { read:[], move:[], cpu:[] };
+var DOUBLE = { read:[], move:[], cpu:[] };
+for(var i = 0; i < 5; i++){
+  var t0 = (i === 0) ? 0 : 150 + (i - 1) * 150;
+  var s0 = i * 100;
+  SINGLE.read.push([t0, t0 + 100, '块' + (i + 1), COL.read]);
+  SINGLE.move.push([t0 + 100, t0 + 150, '块' + (i + 1), COL.move]);
+  SINGLE.cpu .push([t0 + 150, t0 + 200, '块' + (i + 1), COL.cpu]);
+  DOUBLE.read.push([s0, s0 + 100, '块' + (i + 1), COL.read]);
+  DOUBLE.move.push([s0 + 100, s0 + 150, '块' + (i + 1), COL.move]);
+  DOUBLE.cpu .push([s0 + 150, s0 + 200, '块' + (i + 1), COL.cpu]);
+}
+
+function laneHtml(name, segs){
+  var h = '<div class="gl-lane"><span class="gl-name">' + name + '</span><div class="gl-track">';
+  for(var i = 0; i < segs.length; i++){
+    var s = segs[i];
+    h += '<div class="gl-bar" style="left:' + (s[0] / TMAX * 100).toFixed(2) +
+         '%;width:' + ((s[1] - s[0]) / TMAX * 100).toFixed(2) + '%;background:' + s[3] + '">' + s[2] + '</div>';
+  }
+  return h + '</div></div>';
+}
+function markHtml(t){
+  var pos = (t > TMAX * 0.72) ? 'right:-6px;' : 'left:-24px;';
+  return '<div class="gl-mark" style="left:' + (t / TMAX * 100).toFixed(2) + '%"><span style="' + pos + '">' + t + 'μs</span></div>';
+}
+function panelHtml(title, R, Mc, Cp, mark){
+  var h = '<div class="gl-panel"><div class="gl-head">' + title + '</div>';
+  h += laneHtml('磁盘→缓冲区', R) + laneHtml('缓冲区→用户区', Mc) + laneHtml('CPU 分析', Cp);
+  if(mark != null) h += markHtml(mark);
+  return h + '</div>';
+}
+function G(sr, sm, sc, smark, dr, dm, dc, dmark, note, cls, tag, count, log, ribbon){
+  var h = panelHtml('单缓冲（1 个缓冲区）', SINGLE.read.slice(0, sr), SINGLE.move.slice(0, sm), SINGLE.cpu.slice(0, sc), smark) +
+          panelHtml('双缓冲（2 个缓冲区）', DOUBLE.read.slice(0, dr), DOUBLE.move.slice(0, dm), DOUBLE.cpu.slice(0, dc), dmark) +
+          '<div class="gl-note">' + note + '</div>';
+  return { html: h, cls: cls, tag: tag, count: count, log: log, ribbon: ribbon || null, done: false };
+}
+
+var SNAPS = [
+  G(0,0,0,null, 0,0,0,null,
+    '参数：读入缓冲区 T=100μs，缓冲区→用户区 M=50μs，CPU 分析 C=50μs，共 10 块',
+    'shift', '准备', 0,
+    '先看单缓冲：同一缓冲区「读入」与「送出」不能同时进行；CPU 分析不占缓冲区，可与读盘并行'),
+  G(1,0,0,null, 0,0,0,null,
+    '单缓冲·块 1：磁盘读入 0 → 100μs',
+    'step', '块1读入', 100,
+    '第 1 块读入缓冲区（T=100μs），此时什么都还没并行'),
+  G(1,1,0,null, 0,0,0,null,
+    '单缓冲·块 1 送用户区 100 → 150μs（缓冲区被占用）',
+    'step', '块1送出', 150,
+    '缓冲区→用户区（M=50μs）期间缓冲区被占，读块 2 必须等它送完——这就是单缓冲每块多付 50μs 的原因'),
+  G(2,1,1,null, 0,0,0,null,
+    '单缓冲·块 1 分析 150→200μs 与块 2 读入 150→250μs 并行',
+    'ok', '并行出现', 200,
+    '块 1 一送走，缓冲区空出：CPU 分析（C=50）与读块 2（T=100）并行，C 被 T 完全覆盖'),
+  G(2,2,2,null, 0,0,0,null,
+    '单缓冲·块 2 走完 250→350μs：每块周期 = max(T,C)+M = 100+50 = 150μs',
+    'step', '每块150', 350,
+    '块 2：传送 250→300、分析 300→350。从第 2 块起每块只增加 max(T,C)+M = 150μs'),
+  G(5,5,5,1550, 0,0,0,null,
+    '单缓冲总时间 = (T+M+C) + (n−1)×[max(T,C)+M] = 200 + 9×150 = <b>1550μs</b>',
+    'ok', '单缓冲合计', 1550, {k:1, ok:true},
+    '块 5 的模式一直重复到块 10：第 10 块读入 1350→1450、送出 1450→1500、分析 1500→1550，总计 1550μs'),
+  G(5,5,5,1550, 1,1,1,null,
+    '双缓冲·块 1：读入 0→100、送出 100→150、分析 150→200',
+    'step', '双缓冲开始', 200,
+    '换成双缓冲：两块缓冲区轮流服务，块 1 的节奏与单缓冲相同（首块都要 T+M+C=200μs）'),
+  G(5,5,5,1550, 2,1,1,null,
+    '双缓冲·块 2 读入 100→200 与块 1 送出 100→150 并行（两个缓冲区！）',
+    'ok', '读送并行', 200,
+    '关键区别：CPU 用 buf2 送块 1 时，磁盘同时往 buf1 读块 2——T 与 (M+C) 完全重叠'),
+  G(5,5,5,1550, 3,2,2,null,
+    '双缓冲·块 2 送 200→250、析 250→300：每块周期 = max(T, M+C) = max(100,100) = 100μs',
+    'step', '每块100', 350,
+    '块 3 读入 200→300 与块 2 的送/析并行。每块周期 100μs（本题 T 恰好等于 M+C）'),
+  G(5,5,5,1550, 5,5,5,1100,
+    '双缓冲总时间 = (T+M+C) + (n−1)×max(T,M+C) = 200 + 9×100 = <b>1100μs</b>',
+    'ok', '双缓冲合计', 1100, {k:2, ok:true},
+    '块 10：读入 900→1000、送出 1000→1050、分析 1050→1100，总计 1100μs'),
+  G(5,5,5,1550, 5,5,5,1100,
+    '结论：单缓冲 <b>1550μs</b>、双缓冲 <b>1100μs</b> → 答案 B',
+    'done', '结论', 1100,
+    '首块代价都是 T+M+C=200μs；差别在后续块：单缓冲每块 150（M 单独付），双缓冲每块 100（T 与 M+C 取 max）'),
+];
+SNAPS[SNAPS.length - 1].done = true;
+
+var LEGEND = '<div class="gl-legend">' +
+  '<span class="gl-dot" style="background:' + COL.read + '"></span>磁盘读入缓冲区' +
+  '<span class="gl-dot" style="background:' + COL.move + '"></span>缓冲区→用户区' +
+  '<span class="gl-dot" style="background:' + COL.cpu + '"></span>CPU 分析' +
+  '<span class="gl-dot" style="background:#ef4444;width:2px;border-radius:0"></span>总时间' +
+  '</div>';
+
+AW.init({
+  title: '2011-31 单缓冲 vs 双缓冲：10 块数据要多久',
+  subtitle: 'T=100μs（读入）· M=50μs（送用户区）· C=50μs（分析）· n=10 块',
+  counterLabel: '当前时刻(μs)',
+  ribbonTitle: '合计时间（✓ 已算出）',
+  intro: '点击「▶ 播放」逐步铺开两份时间线（甘特图）。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', '', LEGEND));
+  },
+
+  render: function(stage, sn){
+    stage.innerHTML = LEGEND + sn.html;
+  },
+
+  result: {
+    big: '单缓冲 1550μs · 双缓冲 1100μs（答案 B）',
+    html: '单缓冲：(T+M+C) + (n−1)×[max(T,C)+M] = 200 + 9×150 = <b>1550μs</b>；双缓冲：(T+M+C) + (n−1)×max(T,M+C) = 200 + 9×100 = <b>1100μs</b>。首块都要 T+M+C；单缓冲的 M 无法与读盘重叠，双缓冲可以。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

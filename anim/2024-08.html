@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-08 快速排序一趟划分后的性质</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body) {
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+    '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  {
+    title: '审题眼：一趟划分做完了什么',
+    cls: 'key',
+    body: '<p>快排一趟（一次划分）：选定枢轴 pivot，把除枢轴外的 n−1 个元素分成两块 —— 左块 P 中元素 <b>≤</b> 枢轴，右块 Q 中元素 <b>≥</b> 枢轴（划分结束时枢轴到达最终位置）。题设 P、Q 均<b>不为空</b>（n ≥ 3 保证两侧可有元素）。</p>'
+  },
+  {
+    title: 'A 为什么对：块间有序',
+    cls: 'good',
+    body: '<p>P 中任一元素 ≤ 枢轴 ≤ Q 中任一元素，所以「P 整体 ≤ Q 整体」—— 这正是<b>块间有序</b>：两块之间有一个明确的先后关系（P 的任何元素都排在 Q 的任何元素之前才对）。A 正确。</p>'
+  },
+  {
+    title: 'B 为什么错：块内未必有序',
+    cls: 'bad',
+    body: '<p>划分只负责「把小的丢左边、大的丢右边」，块内部元素之间的相对位置完全没管。例如 [3,1,2] 枢轴 4：P=[3,1,2] 内部无序。P、Q 各自还要靠<b>后续递归</b>才能有序。B 错。</p>'
+  },
+  {
+    title: 'C 为什么错：块的大小取决于枢轴',
+    cls: 'bad',
+    body: '<p>P、Q 的元素个数由枢轴的取值决定：枢轴恰为中位数时才大致相等；取到最小/最大元素时一侧元素就少。题干只说两块非空，没说枢轴位置居中。C 错。</p>'
+  },
+  {
+    title: 'D 为什么错：重复元素随便出现',
+    cls: 'bad',
+    body: '<p>若数组含重复关键字，与枢轴相等的元素两侧都可放置，P 或 Q 内部完全可能存在相等元素（如 [2,2,5] 枢轴 3，P=[2,2]）。划分过程不会剔除重复。D 错。</p>'
+  },
+  {
+    title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。一趟快排的「保票」只有两条：<b>枢轴就位 + 枢轴两侧块间有序</b>；块内有序、块的大小、重复元素统统不保证。</p>'
+  }
+];
+
+var snaps = STEPS.map(function (s, i) {
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function (x, j) {
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '快排一趟划分后，P 与 Q 有什么性质（2024-08）',
+  subtitle: '枢轴已就位 · P（≤ 枢轴）与 Q（≥ 枢轴）均非空 · 逐项检验',
+  intro: '点击「▶ 播放」，先回顾划分干了什么，再逐项判断。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '一趟快排只保证：<b>枢轴到达最终位置 + P、Q 块间有序</b>（P 全部 ≤ Q）。块内是否有序、两块元素个数是否接近、有无重复元素 —— 一概不保证。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-36 概念辨析：CSMA/CD 的四个说法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 概念/推理链类动画：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题目要挑出<b>错误</b>的一项。CSMA/CD = 载波监听多路访问 / <b>冲突检测</b>，主场是有线总线型以太网（半双工）。核对三条主线：边发边检、争用期 2τ 与最小帧长、传播时延对利用率的影响。</p>' },
+  { title: '选项 A：边发送边检测冲突',
+    cls: 'good',
+    body: '<p><b>A「边发送数据帧，边检测是否发生冲突」</b>：说法<b>正确</b>，不选。这正是「CD」的含义——发送时持续侦听信道，一旦检出冲突立即停发、退避重传。</p>' },
+  { title: '选项 B：适用于无线网络',
+    cls: 'bad',
+    body: '<p><b>B「适用于无线网络，以实现无线链路共享」</b>：<b>错误，本题答案</b>。无线环境下一边发送就难以一边接收（自身强信号淹没远处弱信号），还有隐蔽站问题，无法可靠「检测」冲突 → 无线局域网用 <b>CSMA/CA（冲突避免）</b>。</p>' },
+  { title: '选项 C：最小帧长受限',
+    cls: 'good',
+    body: '<p><b>C「需要根据网络跨距和数据传输速率限定最小帧长」</b>：说法<b>正确</b>，不选。帧发送时间必须 ≥ 争用期 2τ 冲突才来得及被检测，故最小帧长 = 2τ × 数据率——跨距越大（τ 越大）、速率越高，最小帧长越长。</p>' },
+  { title: '选项 D：利用率极限',
+    cls: 'good',
+    body: '<p><b>D「当信号传播延迟趋近 0 时，信道利用率趋近 100%」</b>：说法<b>正确</b>，不选。极限利用率 U = Tt ÷ (Tt + τ)，τ → 0 时 U → 100%。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：有线「边发边检」= CD；无线「先听后发、退避避让」= CA——CSMA/CD 只属于有线以太网。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2015-36 CSMA/CD 协议：哪句说错了？',
+  subtitle: '考点：<code>介质访问控制</code> · 选项逐项核对',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: 'CSMA/CD 适用于<b>有线</b>以太网：边发边检冲突。无线做不到「边发边收」，802.11 改用 <b>CSMA/CA（冲突避免）</b>。<br>配套记：最小帧长 = 2τ × 数据率（与跨距、速率相关）；极限利用率 U = Tt ÷ (Tt + τ) → τ 越小越接近 100%。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

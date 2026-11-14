@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-43 指令译码与带符号运算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var AMBER_CSS = 'border-color:#d97706;background:#fef3c7;color:#92400e;';
+var BLUE_CSS  = 'border-color:#2563eb;background:#dbeafe;color:#1d4ed8;';
+var GREEN_CSS = 'border-color:#16a34a;background:#dcfce7;color:#14532d;';
+var MISS_CSS  = 'border-color:#dc2626;background:#fee2e2;color:#b91c1c;';
+var Q_CSS     = 'border-color:#cbd5e1;background:#f1f5f9;color:#94a3b8;';
+
+var BITS2 = ['0','0','0','0','0','0','0','1','1','0','1','1','0','0','1','0']; // 01B2H
+var BITS3 = ['0','0','0','0','0','0','0','1','1','0','1','1','0','0','1','1']; // 01B3H
+
+// paint: 'none' | 'op' | 'all'
+function fieldStyles(paint){
+  var out = [], i;
+  for (i = 0; i < 16; i++){
+    if (paint === 'none') out.push('');
+    else if (i < 6) out.push(AMBER_CSS);
+    else if (i < 12) out.push(paint === 'all' ? BLUE_CSS : '');
+    else out.push(paint === 'all' ? GREEN_CSS : '');
+  }
+  return out;
+}
+
+function bitRow(vals, styles, hot){
+  var row = AW.el('div', 'aw-cells');
+  for (var i = 0; i < 16; i++){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '30px';
+    var box = AW.el('div', 'aw-box' + (hot && i === 15 ? ' hit' : ''), vals[i]);
+    box.style.cssText = 'width:28px;height:36px;border-radius:7px;font-size:15px;' +
+      (styles && styles[i] ? styles[i] : Q_CSS);
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', i === 0 ? 'b15' : (i === 15 ? 'b0' : '')));
+    row.appendChild(col);
+  }
+  return row;
+}
+
+function segBar(paint){
+  function seg(w, on, bd, bg, colr, txt){
+    var d = AW.el('div', '', txt);
+    d.style.cssText = 'width:' + w + 'px;height:26px;display:flex;align-items:center;justify-content:center;' +
+      'font-size:12px;font-weight:700;border-radius:8px;border:2px solid ' + (on ? bd : '#cbd5e1') +
+      ';background:' + (on ? bg : '#f1f5f9') + ';color:' + (on ? colr : '#94a3b8') + ';';
+    return d;
+  }
+  var bar = AW.el('div', '');
+  bar.style.cssText = 'display:flex;gap:6px;width:max-content;margin:2px 0 8px;';
+  bar.appendChild(seg(198, paint !== 'none', '#d97706', '#fef3c7', '#92400e', '000000（R 型标志，6 位）'));
+  bar.appendChild(seg(198, paint === 'all', '#2563eb', '#dbeafe', '#1d4ed8', 'rs 2 位 · rt 2 位 · rd 2 位'));
+  bar.appendChild(seg(130, paint === 'all', '#16a34a', '#dcfce7', '#14532d', 'op1 4 位'));
+  return bar;
+}
+
+function regBoxes(regs){
+  var row = AW.el('div', 'aw-cells');
+  regs.forEach(function(r){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '110px';
+    col.appendChild(AW.el('div', 'aw-ptr', r.label));
+    var box = AW.el('div', 'aw-box' + (r.cls ? ' ' + r.cls : ''), r.val);
+    box.style.cssText = 'width:104px;height:40px;font-size:15px;';
+    if (r.border) box.style.cssText += r.border;
+    col.appendChild(box);
+    col.appendChild(AW.el('div', 'aw-idx', r.note || ''));
+    row.appendChild(col);
+  });
+  return row;
+}
+
+function noteCard(html, cls){
+  return AW.el('div', 'aw-stepcard ' + (cls || 'key'), '<p>' + html + '</p>');
+}
+
+var PARAMS = [['字长 16 位', '#dbeafe', '#1d4ed8'], ['地址线 20 位', '#fef3c7', '#92400e'],
+              ['数据线 8 位', '#dcfce7', '#14532d'], ['按字节编址', '#ede9fe', '#6d28d9']];
+
+function paramBar(){
+  var bar = AW.el('div', '');
+  bar.style.cssText = 'display:flex;gap:8px;width:max-content;margin-bottom:8px;';
+  PARAMS.forEach(function(p){
+    var d = AW.el('div', '', p[0]);
+    d.style.cssText = 'font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 12px;' +
+      'background:' + p[1] + ';color:' + p[2] + ';';
+    bar.appendChild(d);
+  });
+  return bar;
+}
+
+function render(stage, sn){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var inner = AW.el('div', '');
+  inner.style.minWidth = '620px';
+  inner.appendChild(paramBar());
+  if (sn.showBits){
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>指令 01B2H</b> = 0000 0001 1011 0010（16 位）'));
+    inner.appendChild(bitRow(BITS2, fieldStyles(sn.paint), sn.hotBit));
+    inner.appendChild(segBar(sn.paint));
+  }
+  if (sn.showBits3){
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>指令 01B3H</b> = 0000 0001 1011 0011（仅最低位与 01B2H 不同）'));
+    inner.appendChild(bitRow(BITS3, fieldStyles(sn.paint), true));
+  }
+  if (sn.regs){
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>通用寄存器当前内容</b>（B052H 最高位为 1 → 负数）'));
+    inner.appendChild(regBoxes(sn.regs));
+  }
+  if (sn.note) inner.appendChild(noteCard(sn.note, sn.noteCls));
+  wrap.appendChild(inner);
+  stage.appendChild(wrap);
+}
+
+var RQ = [
+  { label: 'R[1]', val: 'B052H', note: '−20398', border: AMBER_CSS },
+  { label: 'R[2]', val: '0008H', note: '8', border: AMBER_CSS },
+  { label: 'R[3]', val: '0020H', note: '待写入', border: Q_CSS },
+];
+
+AW.init({
+  title: '2021-43 · 16 位定长指令：译码与带符号运算',
+  subtitle: '字长 16 位 · 地址线 20 / 数据线 8 · R 型：000000+rs+rt+rd+op1 · I 型：op2+rs+rt+imm · J 型：op3+target',
+  counterLabel: '推演步',
+  ribbonTitle: '五大问（✓ 已答）',
+  intro: '点击「▶ 播放」：第 1、2 问定参数，第 3 问拆指令算数，第 4、5 问收尾。',
+  render: render,
+  snaps: [
+    { cls: 'step', tag: '开始', count: 0,
+      log: '机器 M：字长 16 位，按字节编址，地址线 20 位，数据线 8 位，16 位定长指令，分 R / I / J 三种格式。逐问作答。',
+      note: '三种格式：R 型 = 000000+rs+rt+rd+op1；I 型 = op2+rs+rt+imm；J 型 = op3+target。' },
+    { cls: 'ok', tag: '问 1·ALU', count: 1,
+      log: '问 1：ALU 一次运算的数据宽度 = 字长 = 16 位。',
+      note: 'ALU 宽度 = <b>16 位</b>。' },
+    { cls: 'step', tag: '问 1·寻址空间', count: 2,
+      log: '可寻址空间由地址线决定：2 的 20 次方 B = 1MB（按字节编址）。',
+      note: '可寻址主存 = 2<sup>20</sup> B = <b>1 MB</b>。' },
+    { cls: 'ok', tag: '问 1·寄存器', count: 3,
+      log: 'IR 存整条指令 16 位；MAR 与地址线等宽 20 位；MDR 与数据线等宽 8 位。第 1 问完成。',
+      note: 'IR <b>16</b> 位 · MAR <b>20</b> 位 · MDR <b>8</b> 位（跟数据线走，不跟字长走）。', ribbon: { k: 1, ok: true } },
+    { cls: 'step', tag: '问 2·R 型', count: 4,
+      log: '问 2：R 型的扩展操作码 op1 有 4 位 → 最多 2 的 4 次方 = 16 种操作。',
+      note: 'R 型最多 <b>16 种</b>操作。' },
+    { cls: 'ok', tag: '问 2·I/J 型', count: 5,
+      log: 'I 型 op2 与 J 型 op3 都占前 6 位，共用 64 个码点，000000 已被 R 型占用 → 总共最多 63 种；寄存器编号 2 位 → 通用寄存器最多 4 个。第 2 问完成。',
+      note: 'I + J 总共 <b>63 种</b>（64 − 000000）；通用寄存器最多 <b>4 个</b>。', ribbon: { k: 2, ok: true } },
+    { cls: 'shift', tag: '问 3·拆指令', count: 6, showBits: true, paint: 'op',
+      log: '问 3：把 01B2H 展开成 0000 0001 1011 0010。前 6 位 = 000000 → 这是 R 型指令。',
+      note: '01B2H 是 <b>R 型</b>：R[rd] ← R[rs] op1 R[rt]。' },
+    { cls: 'ok', tag: '问 3·译码', count: 7, showBits: true, paint: 'all',
+      log: 'rs = 01（1 号）、rt = 10（2 号）、rd = 11（3 号）、op1 = 0010 = 带符号减法 → 功能：R[3] ← R[1] − R[2]。',
+      note: '<code>R[3] ← R[1] − R[2]</code>（带符号整数减法）。' },
+    { cls: 'step', tag: '问 3·求真值', count: 8, showBits: true, paint: 'all', regs: RQ,
+      log: 'R[1] = B052H：最高位 1 → 负数，真值 = B052H − 10000H = −4FAEH = −20398；R[2] = 0008H = 8。',
+      note: 'R[1] = <b>−20398</b>，R[2] = <b>8</b>。' },
+    { cls: 'ok', tag: '问 3·减法', count: 9, showBits: true, paint: 'all',
+      regs: [ { label: 'R[1]', val: 'B052H', note: '−20398', border: AMBER_CSS },
+              { label: 'R[2]', val: '0008H', note: '8', border: AMBER_CSS },
+              { label: 'R[3]', val: 'B04AH', note: '−20406，不溢出', border: GREEN_CSS, cls: 'ok' } ],
+      log: '−20398 − 8 = −20406，在 16 位补码范围 [−32768, 32767] 内 → 不溢出；补码 = 10000H − 4FB6H = B04AH。',
+      note: '执行 01B2H 后 <code>R[3] = B04AH</code>，<b>不溢出</b>。' },
+    { cls: 'shift', tag: '问 3·乘法指令', count: 10, showBits: true, showBits3: true, paint: 'all',
+      regs: RQ,
+      log: '01B3H 与 01B2H 只差最低位 → op1 = 0011 = 带符号乘法 → R[3] ← R[1] × R[2]。',
+      note: '<code>R[3] ← R[1] × R[2]</code>（带符号整数乘法）。' },
+    { cls: 'miss', tag: '问 3·溢出', count: 11, showBits: true, showBits3: true, paint: 'all',
+      regs: [ { label: 'R[1]', val: 'B052H', note: '−20398', border: AMBER_CSS },
+              { label: 'R[2]', val: '0008H', note: '8', border: AMBER_CSS },
+              { label: 'R[3]', val: '8290H', note: '溢出！', border: MISS_CSS, cls: 'miss' } ],
+      log: '真值 −20398 × 8 = −163184，远超 16 位补码范围 [−32768, 32767] → 溢出；取低 16 位：−163184 + 3×65536 = 33424 = 8290H。第 3 问完成。',
+      note: '执行 01B3H 后 <code>R[3] = 8290H</code>，<b>溢出</b>。', noteCls: 'bad', ribbon: { k: 3, ok: true } },
+    { cls: 'ok', tag: '问 4·扩展方式', count: 12,
+      log: '问 4：访存指令的 imm 是基址偏移量，可正可负（向前/向后访问）→ 地址计算时对 imm 做<b>符号扩展</b>。',
+      note: '对 imm 做<b>符号扩展</b>——保持带符号数值不变。', ribbon: { k: 4, ok: true } },
+    { cls: 'ok', tag: '问 5·转移格式', count: 13,
+      log: '问 5：无条件转移只需改 PC，不需要寄存器操作数 → 用 J 型格式（op3 + target，PC 低 10 位 ← target）。',
+      note: '无条件转移采用 <b>J 型格式</b>。', ribbon: { k: 5, ok: true } },
+    { cls: 'done', tag: '完成', count: 14,
+      log: '五问答毕：ALU 16 位 / 1MB / IR16-MAR20-MDR8；R 型 16 种、I+J 共 63 种、寄存器 4 个；B04AH 不溢出、8290H 溢出；imm 符号扩展；J 型。',
+      note: '全部答案见结论卡。', noteCls: 'good', done: true },
+  ],
+  result: {
+    big: '5 问全解',
+    html: '<b>问1</b>：ALU <b>16 位</b>；可寻址 <b>1 MB</b>；IR <b>16</b> / MAR <b>20</b> / MDR <b>8</b> 位。<br>' +
+      '<b>问2</b>：R 型 <b>16 种</b>；I+J 共 <b>63 种</b>（64 码点 − 000000）；通用寄存器 <b>4 个</b>。<br>' +
+      '<b>问3</b>：<code>01B2H</code> → <code>R[3]←R[1]−R[2]</code> = <b>B04AH</b> 不溢出；<code>01B3H</code> → 乘法 = <b>8290H</b> 溢出。<br>' +
+      '<b>问4</b>：imm 做<b>符号扩展</b>。<b>问5</b>：无条件转移用 <b>J 型</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

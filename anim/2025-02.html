@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-02 括号匹配栈容量动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '栈容量 3 的括号匹配：哪个串会溢出？',
+  subtitle: '左括号入栈、右括号配对出栈 · 关键看"同时在栈里"的最大层数是否超过 <code>3</code>',
+  counterLabel: '当前栈深',
+  ribbonTitle: '四个选项（✓ 能处理 / ✗ 溢出）',
+  intro: '点击「▶ 播放」先模拟 D 选项的入栈过程，再逐个核对 A、B、C。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    this._optLabel = AW.el('div', 'aw-row-label', '');
+    this._seqWrap = AW.el('div', '');
+    var grid = AW.el('div', '');
+    grid.style.display = 'flex';
+    grid.style.gap = '26px';
+    grid.style.alignItems = 'flex-start';
+    grid.style.marginTop = '10px';
+    // 栈示意：4 个槽位，从下往上为 层1..层4（层4 超容量）
+    var stackBox = AW.el('div', '');
+    stackBox.appendChild(AW.el('div', 'aw-row-label', '<b>栈</b>（容量 3，从下往上压）'));
+    this._slots = AW.el('div', '');
+    this._slots.style.display = 'flex';
+    this._slots.style.flexDirection = 'column';
+    this._slots.style.gap = '4px';
+    var SLBL = ['层4（超容量！）', '层3（顶）', '层2', '层1（底）'];
+    this._slotEls = [];
+    for (var s = 3; s >= 0; s--){
+      var slot = AW.el('div', 'aw-box', '');
+      slot.style.width = '150px';
+      slot.style.height = '34px';
+      slot.style.fontSize = '13px';
+      slot.appendChild(AW.el('span', '', SLBL[s]));
+      this._slots.appendChild(slot);
+      this._slotEls.unshift(slot);
+    }
+    stackBox.appendChild(this._slots);
+    this._depthNote = AW.el('div', 'aw-row-label', '');
+    stackBox.appendChild(this._depthNote);
+    var noteBox = AW.el('div', '');
+    noteBox.style.flex = '1';
+    this._note = AW.el('div', 'aw-row-label',
+      '扫描规则：左括号压栈 +1 层，右括号弹栈 −1 层；某一层超过 3 就溢出。');
+    noteBox.appendChild(this._note);
+    grid.appendChild(stackBox);
+    grid.appendChild(noteBox);
+    inner.appendChild(this._optLabel);
+    inner.appendChild(this._seqWrap);
+    inner.appendChild(grid);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'栈容量只有 3。先模拟 D：[a-(b+[c*(d+e)-f]+g+h)]', count:0 },
+    { cls:'step', tag:'[ 入栈', log:'D 第 1 个括号 [：入栈，栈深 1', count:1 },
+    { cls:'step', tag:'( 入栈', log:'第 2 个括号 (：入栈，栈深 2', count:2 },
+    { cls:'step', tag:'[ 入栈', log:'第 3 个括号 [：入栈，栈深 3 —— 栈已满', count:3 },
+    { cls:'miss', tag:'溢出！', log:'第 4 个括号 (：要压入第 4 层 → 超过容量 3，栈溢出，算法 A 无法处理 D', count:4 },
+    { cls:'ok', tag:'A 能处理', log:'A 的括号 ( [ ( ) ] )：最大深度 3 ≤ 3，能处理', count:3, ribbon:{k:'A', ok:true} },
+    { cls:'ok', tag:'B 能处理', log:'B 的括号 [ ( ) ( ) ]：最大深度 2 ≤ 3，能处理', count:2, ribbon:{k:'B', ok:true} },
+    { cls:'ok', tag:'C 能处理', log:'C 的括号 [ ( ( ) ( ) ]：最大深度 3 ≤ 3，能处理', count:3, ribbon:{k:'C', ok:true} },
+    { cls:'done', tag:'完成', log:'只有 D 需要栈深 4 > 3：A 不能处理的是 D', count:4, ribbon:{k:'D', ok:false}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    // 每个 snap 的序列与状态
+    var SEQ = {
+      D: ['[','(','[','(',')',']',')',']'],
+      A: ['(','[','(',')',']',')'],
+      B: ['[','(',')','(',')',']'],
+      C: ['[','(','(',')','(',')',']'],
+    };
+    var cur = null;
+    if (i >= 1 && i <= 4) cur = { opt:'D', mark:i, depth:i, over:i === 4 };
+    else if (i === 5) cur = { opt:'A', mark:2, depth:3, over:false };
+    else if (i === 6) cur = { opt:'B', mark:1, depth:2, over:false };
+    else if (i === 7) cur = { opt:'C', mark:2, depth:3, over:false };
+
+    if (!cur){
+      this._optLabel.innerHTML = '<b>准备中</b>——先看 D 选项（也是答案）';
+      this._seqWrap.innerHTML = '';
+      for (var s = 0; s < 4; s++) this._slotEls[s].className = 'aw-box';
+      this._depthNote.innerHTML = '';
+      return;
+    }
+    var names = { A:'(a+[b+(c+d)/e]+f)+g-h', B:'[a*((b+c)/(d-e)+f/g)]-h',
+                  C:'[a*(b-(c-d)*e/(f+g))-h]', D:'[a-(b+[c*(d+e)-f]+g+h)]' };
+    this._optLabel.innerHTML = '<b>' + cur.opt + ' 选项</b>：<code>' + names[cur.opt] + '</code>';
+    // 序号带：只看括号
+    var chars = SEQ[cur.opt], cls = [], ptr = {};
+    for (var c = 0; c < chars.length; c++){
+      if (c < cur.mark){ cls.push('ok'); }
+      else if (c === cur.mark){ cls.push(cur.over ? 'miss' : 'hit'); }
+      else { cls.push(''); }
+    }
+    ptr[cur.mark + 1] = cur.over ? '溢出点' : '第' + cur.mark + '个';
+    this._seqWrap.innerHTML = '';
+    this._seqWrap.appendChild(AW.cellRow(chars, cls, ptr, 1));
+    // 栈槽位
+    for (var s2 = 0; s2 < 4; s2++){
+      var el = this._slotEls[s2];
+      if (cur.over && s2 === 3){ el.className = 'aw-box miss'; }
+      else { el.className = 'aw-box' + (s2 < cur.depth ? ' hit' : ''); }
+    }
+    this._depthNote.innerHTML = cur.over
+      ? '需要 <b>4</b> 层 &gt; 容量 3 → <b>溢出</b>'
+      : '最大深度 <b>' + cur.depth + '</b> ≤ 3，' + (i >= 5 ? '能处理' : '继续扫描');
+    this._note.innerHTML = (i <= 4)
+      ? 'D 选项的第 4 个括号 ( 入栈时，前面已压着 [ 和 ( ——它是第 4 层。'
+      : '其余三个选项配对过程中最大深度都不超过 3。';
+  },
+
+  result: {
+    big: '答案 D',
+    html: '判断方法：遇左括号深度 +1、右括号 −1，记录最大深度。<br>D = <code>[a-(b+[c*(d+e)-f]+g+h)]</code> 中 <code>(</code> 入栈时栈深达到 <b>4</b> &gt; 容量 3，<b>溢出</b>；A、C 最大深 3，B 最大深 2，都能处理。<br>记忆锚点：容量限制的是<b>同时在栈里的层数</b>，不是括号总数。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-12 CPU 提速后的总时间 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：总时间由两段串联', cls: 'key',
+    body: '<p>总时间 100s = <b>CPU 时间 90s</b> + <b>I/O 时间 10s</b>（100 − 90）。CPU 提速只影响前一段，I/O 照旧。</p>' },
+  { title: '规则：工作量不变，时间与速度成反比', cls: 'key',
+    body: '<p>由「工作量 = 速度 × 时间」：CPU 速度提高 50% → 新速度 = 1.5 倍 → 新 CPU 时间 = 原时间 ÷ <b>1.5</b>。注意是 ÷1.5，<b>不是减半</b>。</p>' },
+  { title: '算 CPU 新时间：90 ÷ 1.5 = 60s', cls: 'good',
+    body: '<p>90 ÷ 1.5 = <b>60s</b>。（若误把"提速 50%"当成"时间减半"，会算出 100 − 45 = 55s，正是干扰项 A。）</p>' },
+  { title: 'I/O 时间原样保留：10s', cls: 'good',
+    body: '<p>I/O 速度不变，I/O 时间仍为 <b>10s</b>。CPU 再快也缩短不了 I/O——这是本题最容易丢的分。</p>' },
+  { title: '合计：60 + 10 = 70s', cls: 'good',
+    body: '<p>总时间 = 60 + 10 = <b>70s</b>，选 <b>D</b>。</p>' },
+  { title: '逐项排除干扰项', cls: 'bad',
+    body: '<p><b>A 55s</b>：把提速当时长减半；<b>B 60s</b>：只算 CPU、漏加 I/O 的 10s；<b>C 65s</b>：把总时间错误折算凑数。三者的共同病根：没分清"谁提速谁折算"。</p>' },
+  { title: '结论：答案 D', cls: 'good',
+    body: '<p>答案选 <b>D（70s）</b>。记忆锚点：<b>谁提速，只折算谁的时间，其余原样保留</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[2].ribbon = { k: 1, ok: true };
+snaps[3].ribbon = { k: 2, ok: true };
+snaps[5].ribbon = { k: 3, ok: false };
+
+AW.init({
+  title: '2012·12 CPU 提速 50% 后，基准程序要跑多久？',
+  subtitle: '总时间 <code>100s</code> · CPU <code>90s</code> · I/O <code>10s</code> · CPU 速度 +50% · I/O 不变',
+  counterLabel: '推理步',
+  ribbonTitle: '时间构成（✓ 已折算 / ✗ 干扰项）',
+  intro: '点击「▶ 播放」，逐步把两段时间折算清楚。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（70s）',
+    html: 'CPU 提速 50% → CPU 时间 <b>90 ÷ 1.5 = 60s</b>；I/O 不变 <b>10s</b>；合计 <b>70s</b>。干扰项 A/B/C 分别对应"时间减半 / 漏加 I/O / 错折总时间"三种典型失误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

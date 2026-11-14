@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-44 条件转移指令的执行</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：指令格式与转移规则', cls: 'key',
+    body: '<p>16 位 = <code>00000</code>(5 位 OP) + <code>C Z N</code>(3 位检测位) + <code>OFFSET</code>(8 位补码)。检测位为 1 才检测对应标志；被检测标志<b>有一个为 1 就转移</b>。转移目标 = <code>(PC)+2+2×OFFSET</code>，顺序执行 = <code>(PC)+2</code>。</p>' },
+  { title: '（1）按字节编址', cls: 'good',
+    body: '<p>顺序执行下条指令地址 = (PC)+2，而指令是 16 位 = 2 字节 → 每条指令占 2 个编址单元 → 存储器<b>按字节编址</b>。</p>' },
+  { title: '（1）向后最多 127 条', cls: 'good',
+    body: '<p>8 位补码 OFFSET 最小 = −128；目标 = (PC)+2+2×(−128) = (PC)−254。相对本指令后退 254B ÷ 2B/条 = <b>127 条</b>指令。</p>' },
+  { title: '（2）读指令 200CH', cls: '',
+    body: '<p>指令机器码：C=0、Z=1、N=1 → 只检测 <b>ZF 和 NF</b>；OFFSET = <code>1110 0011B = E3H</code>（8 位补码，负数）。</p>' },
+  { title: '（2）情况一 NF=1 → 转移', cls: '',
+    body: '<p>CF=0、ZF=0、NF=1：被检测标志 NF=1 → <b>转移</b>。E3H 符号扩展 → <code>FFE3H</code>（−29）；左移 1 位（×2）→ <code>FFC6H</code>（−58）。</p>' },
+  { title: '（2）情况一的目标地址', cls: 'good',
+    body: '<p>目标 = (PC)+2+2×OFFSET = <code>200CH + 2 + FFC6H</code> = 200EH + FFC6H = <b>1FD4H</b> → PC = 1FD4H。</p>' },
+  { title: '（2）情况二 ZF=NF=0 → 不转移', cls: 'good',
+    body: '<p>CF=1、ZF=0、NF=0：被检测的 ZF、NF 均为 0 → <b>不转移</b>，顺序执行 → PC = 200CH + 2 = <b>200EH</b>。</p>' },
+  { title: '（3）无符号「小于等于转移」', cls: 'good',
+    body: '<p>无符号比较：CF = 借位（小于）、ZF = 相等。「小于<b>或</b>等于」→ 检测 CF 与 ZF → <b>C=1，Z=1，N=0</b>（N 对无符号数无意义）。</p>' },
+  { title: '（4）部件①②③', cls: 'good',
+    body: '<p>① 存整条指令 → <b>指令寄存器 IR</b>；② 符号扩展后左移 1 位实现 ×2 → <b>移位寄存器</b>；③ 求 (PC)+2 与 2×OFFSET 之和 → <b>加法器</b>。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案：<b>按字节编址、向后最多 127 条</b>；转移时 PC=<b>1FD4H</b>、不转移 PC=<b>200EH</b>；<b>C=1、Z=1、N=0</b>；① IR、② 移位寄存器、③ 加法器。</p>' },
+];
+
+var RIBBON_AT = { 1: { k: 1, ok: true }, 2: { k: 2, ok: true }, 5: { k: 3, ok: true }, 6: { k: 4, ok: true }, 7: { k: 5, ok: true }, 8: { k: 6, ok: true } };
+
+var RIBBON_LABELS = ['问(1)编址 ✓', '问(1)127条 ✓', '问(2)转移 ✓', '问(2)不转移 ✓', '问(3)CZN ✓', '问(4)部件 ✓'];
+var SCLS = { '': 'step', key: 'shift', good: 'ok', bad: 'miss' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : SCLS[s.cls || ''],
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (RIBBON_AT[i]) {
+    var slot = RIBBON_AT[i];
+    sn.ribbon = slot;
+    sn.cls = 'ok';
+    sn.tag = RIBBON_LABELS[slot.k - 1];
+  }
+  return sn;
+});
+
+AW.init({
+  title: '2013 真题 · 条件转移指令的执行（大题）',
+  subtitle: '16 位指令 <code>OP|C|Z|N|OFFSET</code> · 转移目标 <code>(PC)+2+2×OFFSET</code> · 指令在 200CH',
+  counterLabel: '步骤',
+  ribbonTitle: '各问要点（✓ 已推得）',
+  intro: '点击「▶ 播放」按问展开：编址与跳转范围 → 两种标志下的 PC → 无符号比较 → 数据通路部件。',
+  snaps: snaps,
+  result: {
+    big: 'PC = 1FD4H 或 200EH',
+    html: '（1）<b>按字节编址</b>（(PC)+2 与 16 位指令），向后最多 <b>127 条</b>；（2）NF=1 转移：<code>E3H → FFE3H → FFC6H</code>，PC = <b>1FD4H</b>；不转移 PC = <b>200EH</b>；（3）<b>C=1、Z=1、N=0</b>；（4）① IR、② 移位寄存器、③ 加法器。<br>记忆锚点：8 位补码偏移先<b>符号扩展</b>再<b>左移 ×2</b>；无符号比较只看 CF 与 ZF。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

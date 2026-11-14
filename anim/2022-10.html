@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-10 二路归并操作的功能</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 示例：表1=[2,5,8]，表2=[1,3,9]（各自有序）。
+   归并依次取走：1(表2)、2(表1)、3(表2)、5(表1)、8(表1)、9(表2) */
+var L1 = ['2', '5', '8'];
+var L2 = ['1', '3', '9'];
+var RES = ['1', '2', '3', '5', '8', '9'];
+var TAKE = [2, 1, 2, 1, 1, 1];   // 每步取自哪张表（1/2）
+
+var r1, r2, rr;
+
+function paint(t){   // t = 已完成的取走步数（0..6）
+  var c1 = 0, c2 = 0, j;
+  for (j = 0; j < t; j++){ if (TAKE[j] === 1) c1++; else c2++; }
+  for (j = 0; j < 3; j++){
+    var b1 = r1.children[j].children[1];
+    var b2 = r2.children[j].children[1];
+    b1.className = 'aw-box' + (j < c1 ? ' ok' : (t < 6 && j === c1 && TAKE[t] === 1 ? ' hit' : ''));
+    b2.className = 'aw-box' + (j < c2 ? ' ok' : (t < 6 && j === c2 && TAKE[t] === 2 ? ' hit' : ''));
+    var p1 = r1.children[j].children[0], p2 = r2.children[j].children[0];
+    p1.textContent = (t < 6 && j === c1) ? '▲i' : '';
+    p2.textContent = (t < 6 && j === c2) ? '▲j' : '';
+  }
+  for (j = 0; j < 6; j++){
+    var b = rr.children[j].children[1];
+    if (j < t){
+      b.textContent = RES[j];
+      b.className = 'aw-box' + (j === t - 1 ? ' hit' : ' ok');
+    } else {
+      b.textContent = '';
+      b.className = 'aw-box';
+    }
+  }
+}
+
+AW.init({
+  title: '二路归并：把两个有序表合成一个（2022-10）',
+  subtitle: '示例：表1 <code>[2,5,8]</code> + 表2 <code>[1,3,9]</code> · 指针 i、j 每次取较小者',
+  counterLabel: '归并放入个数',
+  ribbonTitle: '归并序号（✓ 已放入）',
+  intro: '点击「▶ 播放」，逐步演示一次二路归并。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>有序表 1</b>（指针 i）'));
+    r1 = AW.cellRow(L1, ['', '', ''], null, 1);
+    inner.appendChild(r1);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>有序表 2</b>（指针 j）'));
+    r2 = AW.cellRow(L2, ['', '', ''], null, 1);
+    inner.appendChild(r2);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>归并结果表</b>（新表，整体有序）'));
+    rr = AW.cellRow(['', '', '', '', '', ''], ['', '', '', '', '', ''], null, 1);
+    inner.appendChild(rr);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'shift', tag: '开始',  log: '二路归并排序 = 自顶向下分解 + 自底向上归并。归并操作做的是「合成」：两个各自有序的表 → 一个整体有序的新表', count: 0 },
+    { cls: 'ok',    tag: '取 1',  log: '比较 2 与 1：1 较小 → 1 进入结果表，j 后移', count: 1, ribbon: { k: 1, ok: true } },
+    { cls: 'ok',    tag: '取 2',  log: '比较 2 与 3：2 较小 → 2 进入，i 后移', count: 2, ribbon: { k: 2, ok: true } },
+    { cls: 'ok',    tag: '取 3',  log: '比较 5 与 3：3 较小 → 3 进入，j 后移', count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'ok',    tag: '取 5',  log: '比较 5 与 9：5 较小 → 5 进入，i 后移', count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'ok',    tag: '取 8',  log: '比较 8 与 9：8 较小 → 8 进入，i 后移', count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'ok',    tag: '收尾',  log: '表1 用完，表2 剩下的 9 直接接上 ⇒ 结果 [1,2,3,5,8,9] 整体有序', count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'step',  tag: '对照选项', log: '这正是 A「将两个有序表合并为一个新的有序表」。B「划分两半」、C「划成 n 个单元素」是归并排序的分解动作，D「按值分一大一小两堆」是快速排序的划分——都不是归并操作', count: 6 },
+    { cls: 'done',  tag: '完成',  log: '归并操作 = 两个有序表进、一个有序表出 ⇒ 答案 A', count: 6, done: true },
+  ],
+  render: function(stage, sn, i){ paint(i); },
+  result: {
+    big: '答案 A',
+    html: '二路归并操作的功能：<b>将两个有序表合并为一个新的有序表</b>。注意区分：「划分两半」「划成 n 个单元素」是分解步骤，「按值分一大一小两堆」是快速排序的划分，都不叫归并。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-39 动画 · TCP 段的序号与确认号</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .seg{ display:inline-block; border:2px solid #64748b; background:#f1f5f9; color:#334155;
+        border-radius:10px; padding:7px 14px; font-size:13px; font-weight:700; margin-right:10px; }
+  .seg b{ color:#1d4ed8; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var JIA = ['2042','2043','2044','2045','2046','2047','2048'];   // 甲发送流
+var YI  = ['1913','…','2012','2013','2014'];                    // 乙发送流（… 即 1914~2011）
+
+AW.init({
+  title: 'TCP 段的序号与确认号推演（2013·39）',
+  subtitle: '乙→甲 的段：<code>seq = 1913 ｜ ack = 2046 ｜ 载荷 100B</code> · 求 甲 立即回发的 seq 与 ack',
+  counterLabel: '推演步数',
+  ribbonTitle: '两个关键字段（✓ 确定）',
+  intro: '点击「▶ 播放」按「序号接自己、确认号接对方」两步推演。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>乙 → 甲 的段</b>：<span class="seg">seq = <b>1913</b></span><span class="seg">载荷 = <b>100 字节</b></span><span class="seg">ack = <b>2046</b></span>'));
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>甲的发送字节流</b>（甲立即发送的段从这里取序号）'));
+    var rowJ = AW.cellRow(JIA, JIA.map(function(){ return 'dim'; }), null, 0);
+    inner.appendChild(rowJ);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>乙的发送字节流</b>（甲的确认号从这里取）'));
+    var rowY = AW.cellRow(YI, YI.map(function(){ return 'dim'; }), null, 0);
+    inner.appendChild(rowY);
+
+    var fx = AW.el('div', 'aw-row-label', '');
+    fx.style.fontWeight = '700';
+    inner.appendChild(fx);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._j = [];
+    this._y = [];
+    var b1 = rowJ.querySelectorAll('.aw-box');
+    for (var k = 0; k < b1.length; k++){ this._j.push(b1[k]); }
+    var b2 = rowY.querySelectorAll('.aw-box');
+    for (var m = 0; m < b2.length; m++){ this._y.push(b2[m]); }
+    this._fx = fx;
+  },
+
+  // segJ: 甲流点亮 2046；segY: 乙段 1913~2012 点亮；nextY: 2013 点亮
+  snaps: [
+    { cls:'step', tag:'场景',      segJ:false, segY:false, nextY:false, count:0,
+      log:'甲乙已建 TCP 连接、持续互传数据。看乙发来的段：seq = 1913、载荷 100 字节、ack = 2046' },
+    { cls:'step', tag:'乙的数据',  segJ:false, segY:true,  nextY:false, count:1,
+      log:'乙的段携带 100 字节数据：从 1913 起，占 1913 ~ 2012' },
+    { cls:'ok',   tag:'甲的 ack',  segJ:false, segY:true,  nextY:true, count:2, ribbon:{k:1, ok:true},
+      log:'甲的确认号 = 乙的 seq + 载荷 = 1913 + 100 = 2013（期望乙下一段从 2013 开始；注意不是 2012）' },
+    { cls:'ok',   tag:'甲的 seq',  segJ:true,  segY:true,  nextY:true, count:3, ribbon:{k:2, ok:true},
+      log:'乙的 ack = 2046：乙已收妥甲发到 2045 为止的字节，期望甲下一个字节从 2046 开始 → 甲下一段的序号 = 2046' },
+    { cls:'step', tag:'组装',      segJ:true,  segY:true,  nextY:true, count:4,
+      log:'甲立即发送的段：序号接自己的流 = 2046；确认号接对方的流 = 2013' },
+    { cls:'done', tag:'结论',      segJ:true,  segY:true,  nextY:true, count:5, done:true,
+      log:'甲发给乙：序号 2046、确认号 2013 → 选 B' },
+  ],
+
+  render: function(stage, sn, i){
+    for (var j = 0; j < JIA.length; j++){
+      var b = this._j[j];
+      if (j < 4){ b.className = sn.segJ ? 'aw-box ok' : 'aw-box dim'; }
+      else if (j === 4){ b.className = sn.segJ ? 'aw-box hit' : 'aw-box dim'; }
+      else { b.className = 'aw-box dim'; }
+    }
+    for (var m = 0; m < YI.length; m++){
+      var c = this._y[m];
+      if (m <= 2){ c.className = sn.segY ? 'aw-box ok' : 'aw-box dim'; }
+      else if (m === 3){ c.className = sn.nextY ? 'aw-box hit' : 'aw-box dim'; }
+      else { c.className = 'aw-box dim'; }
+    }
+    this._fx.textContent = sn.segJ && sn.nextY ?
+      '→ 甲发给乙的段：seq = 2046，ack = 2013' :
+      (sn.nextY ? '→ 甲的确认号 = 2013 已确定' : '');
+  },
+
+  result: {
+    big: '序号 2046、确认号 2013（选 B）',
+    html: '两条规则：甲的<b>序号</b>接自己的发送流 = 乙上次回的 ack = <b>2046</b>；甲的<b>确认号</b>接对方的发送流 = 乙的 seq + 载荷 = 1913 + 100 = <b>2013</b>（确认号是「期望的下一个字节」，不能减 1 得 2012）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-37 · 定长子网划分</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：子网掩码位拆分推演（255.255.255.248 = /29）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2010-37 · 定长子网划分',
+  subtitle: '地址空间 192.168.5.0/24 · 子网掩码 255.255.255.248 · 求最大子网个数与每子网可分配地址数',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论）',
+  intro: '点击「▶ 播放」逐步拆解掩码位。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>IP 地址第四字节的 8 个位</b>（从高位到低位）：'));
+    var cells = AW.el('div', 'aw-cells');
+    cells.style.cssText = 'margin:4px 0;';
+    this._bits = [];
+    for(var i = 0; i < 8; i++){
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      col.appendChild(ptr);
+      var box = AW.el('div', 'aw-box', '·');
+      col.appendChild(box);
+      col.appendChild(AW.el('div', 'aw-idx', '位' + (7 - i)));
+      cells.appendChild(col);
+      this._bits.push({ ptr: ptr, box: box });
+    }
+    inner.appendChild(cells);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>统计结果</b>：'));
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:14px;margin:6px 0;';
+    var defs = [['子网数', '2^5'], ['每子网地址数', '2^3'], ['可分配地址', '8 − 2']];
+    this._res = [];
+    for(var d = 0; d < 3; d++){
+      var item = AW.el('div', '');
+      item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;width:130px;';
+      var b = AW.el('div', 'aw-box', '·');
+      b.style.cssText = 'width:130px;height:46px;font-size:20px;';
+      item.appendChild(b);
+      item.appendChild(AW.el('div', '', '<span style="font-size:11px;color:#64748b">' + defs[d][0] + ' · ' + defs[d][1] + '</span>'));
+      row.appendChild(item);
+      this._res.push(b);
+    }
+    inner.appendChild(row);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0, mode:'init',
+      log:'地址空间 192.168.5.0/24（前 24 位是网络前缀），采用定长子网划分，子网掩码 255.255.255.248。看点就在第四字节的 8 个位上。' },
+    { cls:'shift', tag:'看掩码', count:1, mode:'split',
+      log:'248 = 11111000：掩码为 1 的位被"借"作子网位 → 第四字节前 5 位是子网位，剩下 3 位仍是主机位。' },
+    { cls:'ok', tag:'子网数', count:2, mode:'split',
+      log:'子网位有 5 位 → 最大子网个数 = 2^5 = 32 个。题目问"最大"，且 192.168.5.0/24 是给定的地址空间，子网位全 0 / 全 1 的子网也可使用，不减 2。' },
+    { cls:'step', tag:'地址数', count:3, mode:'split',
+      log:'主机位剩 3 位 → 每个子网的地址总数 = 2^3 = 8 个。' },
+    { cls:'miss', tag:'扣特殊地址', count:4, mode:'split',
+      log:'每个子网内：主机位全 0 的是网络地址、全 1 的是广播地址，都不能分配给主机 → 可分配 = 8 − 2 = 6 个。' },
+    { cls:'done', tag:'完成', count:5, mode:'split', done:true,
+      log:'结论：最大子网 32 个、每子网可分配 6 个地址 → 选 B。A 忘了减 2；C、D 把子网位与主机位看反了。' },
+  ],
+
+  render: function(stage, sn){
+    var mode = sn.mode || 'init';
+    for(var i = 0; i < 8; i++){
+      var o = this._bits[i];
+      if(mode === 'init'){
+        o.box.innerHTML = '·';
+        o.box.style.background = '#dbeafe';
+        o.box.style.borderColor = '#2563eb';
+        o.box.style.color = '#334155';
+        o.ptr.innerHTML = '';
+      } else if(i < 5){
+        o.box.innerHTML = '1';
+        o.box.style.background = '#fef3c7';
+        o.box.style.borderColor = '#d97706';
+        o.box.style.color = '#92400e';
+        o.ptr.innerHTML = (i === 2) ? '子网位' : '';
+        o.ptr.style.color = '#92400e';
+      } else {
+        o.box.innerHTML = '0';
+        o.box.style.background = '#dbeafe';
+        o.box.style.borderColor = '#2563eb';
+        o.box.style.color = '#334155';
+        o.ptr.innerHTML = (i === 5) ? '主机位' : '';
+        o.ptr.style.color = '#1d4ed8';
+      }
+    }
+    var vals = [sn.count >= 2 ? '32' : '·', sn.count >= 3 ? '8' : '·', sn.count >= 4 ? '6' : '·'];
+    for(var k = 0; k < 3; k++){
+      var b = this._res[k];
+      b.innerHTML = vals[k];
+      if(vals[k] === '·'){
+        b.style.background = '#fff';
+        b.style.borderColor = '#cbd5e1';
+        b.style.color = '#94a3b8';
+      } else if(k === 2){
+        b.style.background = '#dcfce7';
+        b.style.borderColor = '#16a34a';
+        b.style.color = '#14532d';
+      } else {
+        b.style.background = '#f8fafc';
+        b.style.borderColor = '#2563eb';
+        b.style.color = '#334155';
+      }
+    }
+  },
+
+  result: {
+    big: '32 个子网 · 6 个可分配地址（选 B）',
+    html: '掩码 255.255.255.248 = /29：借 5 位子网位 → 子网数 2^5 = <b>32</b>（问"最大"，不减 2）；剩 3 位主机位 → 每子网 2^3 − 2 = <b>6</b> 个可分配地址（必须扣网络地址与广播地址）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

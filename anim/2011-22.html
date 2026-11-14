@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011-22 定时查询的 CPU 时间占比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：时钟周期 20ns → 单次查询 10μs → 每秒 2ms → 占比 0.2% -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+var SNAPS = [
+  { clk:false, one:false, tot:false, pct:0, acc:'尚未开始累计',
+    cls:'shift', tag:'准备', count:0,
+    log:'主频 50MHz；查询程序运行一次至少 500 个时钟周期；设备 A 工作期间每秒至少查询 200 次 → 求 CPU 用于设备 A 的 I/O 时间占比至少是多少' },
+  { clk:true, one:false, tot:false, pct:0, acc:'时钟周期 = 20ns',
+    cls:'ok', tag:'时钟周期', count:1, ribbon:{k:1, ok:true},
+    log:'主频 50MHz → 1 秒 50×10⁶ 个时钟周期 → 时钟周期 = 1÷(50×10⁶) = 20ns' },
+  { clk:true, one:true, tot:false, pct:0, acc:'一次查询 = 500 × 20ns = 10μs',
+    cls:'ok', tag:'单次查询', count:2, ribbon:{k:2, ok:true},
+    log:'查询程序一次至少 500 个时钟周期 → 500 × 20ns = 10000ns = 10μs' },
+  { clk:true, one:true, tot:true, pct:0.2, acc:'每秒累计 = 200 × 10μs = 2ms',
+    cls:'ok', tag:'每秒累计', count:3, ribbon:{k:3, ok:true},
+    log:'为保证数据不丢失，每秒至少查询 200 次 → 每秒用于设备 A 的 I/O 时间 = 200 × 10μs = 2000μs = 2ms（下图琥珀色段，按真实比例仅约 2px 宽）' },
+  { clk:true, one:true, tot:true, pct:0.2, acc:'占比 = 2ms ÷ 1000ms = 0.2%',
+    cls:'done', tag:'求占比', count:4, ribbon:{k:4, ok:true},
+    log:'1 秒 = 1000ms → 占比 = 2ms ÷ 1000ms × 100% = 0.2% → 选 C' },
+  { clk:true, one:true, tot:true, pct:0.2, acc:'答案：至少 0.20%',
+    cls:'done', tag:'完成', count:5, done:true,
+    log:'结论：时钟周期 20ns → 单次查询 10μs → 每秒 2ms → 占比至少 0.20%，选 C' },
+];
+
+AW.init({
+  title: '2011·22 定时查询：CPU 用于设备 A 的时间占比',
+  subtitle: '主频 <code>50MHz</code> · 查询一次 ≥ <code>500 时钟周期</code> · 每秒查询 ≥ <code>200 次</code>',
+  counterLabel: '计算步数',
+  ribbonTitle: '计算环节（✓ 完成）',
+  intro: '点击「▶ 播放」，按时钟周期 → 单次查询 → 每秒累计 → 占比 推演。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    // 参数说明
+    var params = AW.el('div', '');
+    params.style.cssText = 'font-size:12.5px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;line-height:1.7;margin-bottom:14px;';
+    params.innerHTML = '占比 = <b>每秒用于 I/O 的总时间 ÷ 1 秒</b>。定时查询（程序查询）方式下，CPU 主动定期执行查询程序，查询之外的 CPU 时间都留给原程序。';
+    inner.appendChild(params);
+
+    // 三块计算卡
+    refs.cards = AW.el('div', '');
+    refs.cards.style.cssText = 'display:flex;gap:10px;width:max-content;';
+    refs.c1 = AW.el('div', '', '<div style="font-size:12px;color:#64748b">① 时钟周期</div><div class="v" style="font-size:17px;font-weight:800;margin-top:4px;font-family:Menlo,monospace">？</div>');
+    refs.c2 = AW.el('div', '', '<div style="font-size:12px;color:#64748b">② 一次查询</div><div class="v" style="font-size:17px;font-weight:800;margin-top:4px;font-family:Menlo,monospace">？</div>');
+    refs.c3 = AW.el('div', '', '<div style="font-size:12px;color:#64748b">③ 每秒累计</div><div class="v" style="font-size:17px;font-weight:800;margin-top:4px;font-family:Menlo,monospace">？</div>');
+    [refs.c1, refs.c2, refs.c3].forEach(function(c){
+      c.style.cssText += 'background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;min-width:150px;transition:all .25s;';
+      refs.cards.appendChild(c);
+    });
+    inner.appendChild(refs.cards);
+
+    // 1 秒时间条
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>1 秒 = 1000ms</b> 时间条（琥珀色 = CPU 花在设备 A 查询上的时间，真实比例）'));
+    var barWrap = AW.el('div', '');
+    barWrap.style.cssText = 'position:relative;height:44px;background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:10px;overflow:hidden;';
+    refs.bar = AW.el('div', '');
+    refs.bar.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width .6s cubic-bezier(.22,.8,.3,1);';
+    barWrap.appendChild(refs.bar);
+    refs.barLabel = AW.el('div', '');
+    refs.barLabel.style.cssText = 'position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:700;color:#92400e;white-space:nowrap;';
+    barWrap.appendChild(refs.barLabel);
+    inner.appendChild(barWrap);
+
+    // 累计行
+    refs.acc = AW.el('div', '');
+    refs.acc.style.cssText = 'margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13.5px;color:#334155;font-family:"SF Mono",Menlo,Consolas,monospace;';
+    inner.appendChild(refs.acc);
+    inner.appendChild(AW.el('div', 'aw-hint', '卡片点亮 = 该环节已算出；时间条宽度即最终占比'));
+
+    stage.appendChild(inner);
+  },
+
+  render: function(stage, sn){
+    var fill = function(card, on, txt){
+      card.querySelector('.v').textContent = txt;
+      card.style.borderColor = on ? '#16a34a' : '#e2e8f0';
+      card.style.background = on ? '#f6fef9' : '#fff';
+      card.querySelector('.v').style.color = on ? '#15803d' : '#94a3b8';
+    };
+    fill(refs.c1, sn.clk, sn.clk ? '20ns' : '？');
+    fill(refs.c2, sn.one, sn.one ? '10μs' : '？');
+    fill(refs.c3, sn.tot, sn.tot ? '2ms' : '？');
+    refs.bar.style.width = (sn.tot ? sn.pct : 0) + '%';
+    refs.barLabel.textContent = sn.tot ? '2ms（0.2%）' : '';
+    refs.acc.textContent = sn.acc;
+  },
+
+  result: {
+    big: '0.20%（选 C）',
+    html: '链条：<b>20ns</b>（1÷50MHz）→ <b>10μs</b>（500 × 20ns）→ <b>2ms</b>（200 × 10μs）→ <b>0.2%</b>（2ms ÷ 1000ms）。记忆锚点：占比必须按"每秒总耗时 ÷ 1 秒"算，单次 10μs 不能直接当占比。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

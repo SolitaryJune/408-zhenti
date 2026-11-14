@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-19 指令流水线数据通路的组成</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：数据通路的边界',
+    cls: 'key',
+    body: '<p>数据通路 = 数据在 CPU 内流经的部件与路径（ALU、寄存器、总线、取指部件…）。要挑出关于"指令流水线数据通路"<b>错误</b>的叙述。</p>' },
+  { title: '核对 B：ALU',
+    cls: 'good',
+    body: '<p>ALU 是数据通路的核心运算部件 ✓ —— 所有算术逻辑运算的数据都要流经它。</p>' },
+  { title: '核对 C：寄存器组与取指部件',
+    cls: 'good',
+    body: '<p>通用寄存器组、取指部件（PC 与取指逻辑）都在数据通路中 ✓ —— 取指本身就是数据流动的一部分。</p>' },
+  { title: '核对 D：逻辑类型',
+    cls: 'good',
+    body: '<p>数据通路既有组合逻辑（运算、译码路径），又有时序逻辑（流水段寄存器、通用寄存器打拍更新），两者组合而成 ✓。</p>' },
+  { title: 'A 错在哪',
+    cls: 'bad',
+    body: '<p>"包含生成控制信号的控制部件"——<b>错</b>。生成控制信号的是<b>控制器</b>，它与数据通路是"指挥与被指挥"的关系：控制器发信号，数据通路执行。控制部件不属于数据通路。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：CPU = 数据通路 + 控制器；<b>数据通路管"数据怎么流"，控制器管"发什么控制信号"</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '流水线数据通路：哪个说法错了',
+  subtitle: 'ALU · 通用寄存器组 · 取指部件 · 控制器 —— 谁在数据通路里？',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '数据通路包含 ALU、通用寄存器组、取指部件，由组合逻辑与时序逻辑组合而成；但<b>生成控制信号的控制部件属于控制器</b>，不属于数据通路。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

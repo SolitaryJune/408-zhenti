@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-18 自陷 Trap 的性质</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-18：关于"自陷"的叙述找错（概念辨析）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：给事件分好类',
+    cls: 'key',
+    body: '<p>外部中断：CPU 外部设备随时发来，与当前指令无关。内部异常：由指令执行引发，分故障（Fault）、自陷（Trap）、终止（Abort）。<b>自陷是内部异常</b>——本题找错误叙述。</p>' },
+  { title: 'A：说自陷是"外部中断事件" —— 错误！',
+    cls: 'bad',
+    body: '<p>"通过陷阱指令预先设定"这半句对，但自陷是<b>程序内部安排的异常</b>，触发者是陷阱指令，与外部设备无关，不是外部中断事件 → <b>此叙述错误，选 A</b>。</p>' },
+  { title: 'B：可用于断点设置和单步跟踪 —— 正确',
+    cls: 'good',
+    body: '<p>调试器的断点（断点指令）和单步跟踪正是靠<b>陷阱机制</b>实现的 → B 叙述正确。</p>' },
+  { title: 'C：发生后转去执行操作系统内核程序 —— 正确',
+    cls: 'good',
+    body: '<p>自陷发生后 CPU 转去执行<b>操作系统内核</b>的相应处理程序（系统调用就是这么进内核的）→ C 叙述正确。</p>' },
+  { title: 'D：处理完返回陷阱指令的下一条 —— 正确',
+    cls: 'good',
+    body: '<p>陷阱指令本身已经<b>执行完毕</b>才触发自陷，处理完成后返回<b>下一条</b>指令继续执行 → D 叙述正确。（对比：故障 Fault 处理完返回当前指令重执行。）</p>' },
+  { title: '结论：选 A',
+    cls: 'good',
+    body: '<p>错误叙述是 <b>A</b>。记忆锚点：自陷 = 程序里埋好的钩子（内部异常）；设备敲门的才是外部中断。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2020-18 · 自陷（Trap）逐项辨析',
+  subtitle: '考点：异常与中断的分类 · 自陷的性质与返回行为',
+  intro: '点击「▶ 播放」或「下一步」，逐项核对四个叙述。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：自陷由<b>陷阱指令</b>预先安排，属于<b>内部异常</b>，不是外部中断事件。<br>' +
+      '易混点：故障（Fault）处理完返回<b>当前</b>指令重执行；自陷（Trap）处理完返回<b>下一条</b>指令。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

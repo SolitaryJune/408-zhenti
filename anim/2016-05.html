@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-05 森林中树的棵数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>森林 F 有 <b>15 条边、25 个结点</b>，求包含树的棵数。关键恒等式：<b>任何一棵树的边数 = 结点数 − 1</b>（除根之外，每个结点都恰好对应一条来自父亲的边）。</p>' },
+  { title: '从树推广到森林',
+    cls: 'good',
+    body: '<p>森林 = 若干棵互不相交的树。对每棵树分别写“边 = 结点 − 1”再全部相加：<b>森林总边数 = 森林总结点数 − 树的棵数</b>。</p>' },
+  { title: '代入求解',
+    cls: 'good',
+    body: '<p>树的棵数 = 25 − 15 = <b>10</b> → 选 <b>C</b>。</p>' },
+  { title: '画图自检',
+    cls: 'key',
+    body: '<p>两棵各有 3 个结点的树：结点共 6、边共 4，棵数 = 6 − 4 = 2，与公式一致 ✓。再验一棵链：4 结点 3 边 → 4 − 3 = 1 棵 ✓。</p>' },
+  { title: '干扰项从哪来',
+    cls: 'bad',
+    body: '<p><b>B（9）</b>：在 25−15 之后又多减 1——把森林整体又当成一棵树“补了根”；<b>D（11）</b>：方向反了又多加 1；<b>A（8）</b>：无公式来源的凑数。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>C（10 棵）</b>。记忆锚点：树是“边数 = 结点数 − 1”，森林是“<b>棵数 = 结点数 − 边数</b>”。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2016·森林 F：15 条边、25 个结点，包含几棵树？',
+  subtitle: '考点：树与森林的结点数、边数关系',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '10 棵（选 C）',
+    html: '森林恒等式：<b>棵数 = 结点数 − 边数</b> = 25 − 15 = 10。对比：单棵树是“边数 = 结点数 − 1”，不要给森林再补“−1 的根”。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

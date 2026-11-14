@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-24 保证不死锁的最小设备数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var NEED = [3, 4, 5];          // P1/P2/P3 的需求台数
+var PNAME = ['P1', 'P2', 'P3'];
+
+// 每步状态：alloc=各进程已占台数（占着没释放的）；rowCls=行状态 ''|'hit'(凑齐)|'dim'(已释放)
+// total=设备池总台数（第 4 步演示 n=9 的反例）；inUse=当前被占用的总台数
+var S = [
+  { alloc:[0,0,0], rowCls:['','',''],   total:10, inUse:0  },
+  { alloc:[2,0,0], rowCls:['','',''],   total:10, inUse:2  },
+  { alloc:[2,3,0], rowCls:['','',''],   total:10, inUse:5  },
+  { alloc:[2,3,4], rowCls:['','',''],   total:10, inUse:9  },
+  { alloc:[2,3,4], rowCls:['','',''],   total:9,  inUse:9  },
+  { alloc:[2,3,4], rowCls:['','',''],   total:10, inUse:9  },
+  { alloc:[3,3,4], rowCls:['hit','',''], total:10, inUse:10 },
+  { alloc:[3,4,4], rowCls:['dim','hit',''], total:10, inUse:8 },
+  { alloc:[3,5,5], rowCls:['dim','dim','hit'], total:10, inUse:5 },
+  { alloc:[3,5,5], rowCls:['dim','dim','dim'], total:10, inUse:0 },
+];
+
+var POOL_LBL, POOL_ROW, PROC_ROWS, REM_CHIP;
+
+function blockDiv(txt, cls, extra){
+  var d = AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), txt);
+  if(extra) d.style.cssText = extra;
+  return d;
+}
+
+AW.init({
+  title: '【2014-24】确保系统不死锁的最小设备数',
+  subtitle: '3 个进程分别需要 <code>3、4、5</code> 台同类设备 · 思路：最坏分配 + 剩 1 台破局',
+  counterLabel: '已占用设备',
+  ribbonTitle: '推演要点（✓ 已确认 / ✗ 不安全）',
+  intro: '点击「▶ 播放」，先构造最坏分配情形，再验证 n=9 与 n=10 的差别。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    POOL_LBL = AW.el('div', 'aw-row-label', '<b>设备池</b>（同类设备，互斥使用）');
+    POOL_ROW = AW.el('div', 'aw-cells');
+    inner.appendChild(POOL_LBL);
+    inner.appendChild(POOL_ROW);
+
+    PROC_ROWS = [];
+    for(var i = 0; i < 3; i++){
+      var lbl = AW.el('div', 'aw-row-label', '');
+      var row = AW.el('div', 'aw-cells');
+      inner.appendChild(lbl);
+      inner.appendChild(row);
+      PROC_ROWS.push({ lbl: lbl, row: row });
+    }
+
+    REM_CHIP = AW.el('div', 'aw-row-label', '');
+    REM_CHIP.style.cssText = 'margin-top:12px;font-size:14px;font-weight:700;color:#334155';
+    inner.appendChild(REM_CHIP);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var st = S[Math.min(i, S.length - 1)];
+
+    // 设备池：10 个格子，total=9 时第 10 格隐藏为 —
+    POOL_ROW.innerHTML = '';
+    var left = st.inUse;
+    for(var d = 0; d < 10; d++){
+      var cls = '';
+      var txt = 'D' + (d + 1);
+      if(st.total === 9 && d === 9){ cls = 'dim'; txt = '—'; }
+      else if(left > 0){ cls = 'ok'; left--; }
+      POOL_ROW.appendChild(blockDiv(txt, cls));
+    }
+
+    // 三个进程行
+    for(var p = 0; p < 3; p++){
+      var need = NEED[p];
+      var occ = st.alloc[p];
+      var rc = st.rowCls[p];
+      var extra = '';
+      if(rc === 'hit') extra = '　<b style="color:#15803d">✓ 攒齐，可运行完成</b>';
+      else if(rc === 'dim') extra = '　<b style="color:#64748b">已完成，释放 ' + NEED[p] + ' 台</b>';
+      else if(occ === need - 1) extra = '　<b style="color:#b45309">只差 1 台！</b>';
+      PROC_ROWS[p].lbl.innerHTML = '<b>' + PNAME[p] + '</b>（需 ' + need + ' 台，已占 ' + occ + ' 台）' + extra;
+      PROC_ROWS[p].row.innerHTML = '';
+      for(var s = 0; s < need; s++){
+        var c = '';
+        if(rc === 'dim') c = 'dim';
+        else if(s < occ) c = (rc || 'ok');
+        PROC_ROWS[p].row.appendChild(blockDiv(s < occ ? '●' : '○', c));
+      }
+    }
+
+    var rem = st.total - st.inUse;
+    REM_CHIP.innerHTML = '设备池剩余 <span style="color:#2563eb;font-size:18px">' + rem + '</span> 台' +
+      (i === 4 ? '　← <b style="color:#b91c1c">n=9：发完了，谁都等不到下一台 → 可能死锁</b>' : '') +
+      (i === 5 ? '　← <b style="color:#15803d">n=10：还剩 1 台，就是破局钥匙</b>' : '');
+  },
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'n 台同类设备，P1 需 3、P2 需 4、P3 需 5 台。先构造"最坏"分配情形', count:0 },
+    { cls:'step', tag:'最坏分配', log:'让设备尽量分散：P1 先占 2 台（差 1 台）', count:2 },
+    { cls:'step', tag:'最坏分配', log:'P2 先占 3 台（差 1 台）', count:5 },
+    { cls:'shift', tag:'最坏情形形成', log:'P3 先占 4 台（差 1 台）：共发出 9 台，人人只差 1 台', count:9, ribbon:{k:1, ok:true} },
+    { cls:'miss', tag:'验证 n=9', log:'若 n=9：设备恰好发完、剩余 0 台，谁也等不到下一台 → 可能死锁，9 不够', count:9, ribbon:{k:2, ok:false} },
+    { cls:'step', tag:'验证 n=10', log:'若 n=10：同样最坏分配后仍剩 1 台', count:9 },
+    { cls:'ok', tag:'破局', log:'把最后 1 台给 P1 → P1 攒齐 3 台，可以运行完成', count:10 },
+    { cls:'ok', tag:'释放推进', log:'P1 完成并释放 3 台 → P2 拿到 1 台凑齐 4 台，也可完成', count:8, ribbon:{k:3, ok:true} },
+    { cls:'ok', tag:'释放推进', log:'P2 完成释放 4 台 → P3 凑齐 5 台 → 全部进程都能推进完毕，必不死锁', count:5 },
+    { cls:'done', tag:'完成', log:'结论：n 最小 = (3−1)+(4−1)+(5−1)+1 = 10 → 选 B', count:0, done:true },
+  ],
+
+  result: {
+    big: 'n 最小 = 10（选 B）',
+    html: '公式：<b>(w1−1)+(w2−1)+…+1</b> = 2+3+4+1 = <b>10</b>。<br>n=9 时最坏分配（2+3+4）发完设备、人人差 1 台 → 死锁；n=10 永远剩 1 台给某个进程"通关"，它释放后其余进程依次推进。<br>记忆点：<b>不是 3+4+5=12（那是同时满足），而是"各差 1 台 + 1 把钥匙"。</b>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-08 3阶B树最少关键字数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类题目动画：B 树下限逐层推算
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：3 阶 B 树的下限',
+    cls: 'key',
+    body: '<p>m 阶 B 树：根结点最少 <b>2 棵子树、1 个关键字</b>；非根结点最少 ⌈m/2⌉ = ⌈3/2⌉ = <b>2 棵子树、1 个关键字</b>（最多 3 棵子树、2 个关键字）。求「至少」→ 每个结点都取下限：1 关键字、2 子树。</p>' },
+  { title: '每层结点数翻倍',
+    cls: 'key',
+    body: '<p>每个结点最少 2 棵子树 → 第 1 层 1 个结点，第 2 层最少 2 个，第 3 层最少 4 个，第 4 层最少 8 个，第 5 层最少 16 个。高度 5 = 5 层结点（第 5 层为叶结点层，其上一层终端结点含关键字）。</p>' },
+  { title: '逐层求和',
+    cls: 'good',
+    body: '<p>每层结点都只放 1 个关键字（最少情形）：<br><code>1 + 2 + 4 + 8 + 16 = 31</code></p>' },
+  { title: '逐项解剖干扰项',
+    cls: 'bad',
+    body: '<p>A <code>15</code>：1+2+4+8 只算 4 层——把「高度 5」当成 4 层关键字结点，少算一层。<br>C <code>62</code>：2×31，误以为每结点至少 2 个关键字。<br>D <code>242</code>：按满树算（结点 1,3,9,27,81、每结点 2 关键字），那是「最多」不是「至少」。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>（31）。记忆锚点：<b>最少关键字 = 逐层结点数 ×2 翻倍之和</b>；最多才用满树公式。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·数据结构（八） 高度为 5 的 3 阶 B 树，关键字至少多少个',
+  subtitle: '3 阶 B 树 · 高度 5 · 求「至少」含有的关键字个数',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（31）',
+    html: '最少情形下每个结点 1 个关键字、2 棵子树，五层结点数 <b>1、2、4、8、16</b>，关键字共 <b>31</b> 个。15 只算 4 层，62 误设每结点 2 关键字，242 是满树的「最多」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

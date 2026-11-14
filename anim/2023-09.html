@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-09 · 散列表删除后查找失败的 ASL</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 每步状态：vals=HT 内容，cls=配色，ptr=起点指针（1-based 格位），note=说明 */
+var STATES = [
+  { vals:['∅','∅','∅','∅','∅'], cls:['dim','dim','dim','dim','dim'], ptr:null,
+    note:'初始空表 HT[0..4]，散列函数 H(k) = (k+4) % 5，线性探查再散列。' },
+  { vals:['∅','2022','∅','∅','∅'], cls:['dim','ok','dim','dim','dim'], ptr:null,
+    note:'插入 2022：(2022+4) % 5 = 2026 % 5 = 1，HT[1] 空直接放入。' },
+  { vals:['∅','2022','12','∅','∅'], cls:['dim','shift','ok','dim','dim'], ptr:null,
+    note:'插入 12：(12+4) % 5 = 16 % 5 = 1 冲突（HT[1] 琥珀），线性探测 HT[2] 空放入。' },
+  { vals:['∅','2022','12','∅','25'], cls:['dim','ok','ok','dim','ok'], ptr:null,
+    note:'插入 25：(25+4) % 5 = 29 % 5 = 4，HT[4] 空直接放入。' },
+  { vals:['∅','2022','12','∅','25'], cls:['dim','ok','ok','dim','shift'], ptr:null,
+    note:'删除 25：不能物理置空（会掐断探测链），打删除标记——该格仍算占用。' },
+  { vals:['∅','2022','12','∅','25'], cls:['miss','ok','ok','dim','shift'], ptr:1,
+    note:'查失败 H=0：比 HT[0]（空）即失败 → 1 次。' },
+  { vals:['∅','2022','12','∅','25'], cls:['dim','miss','miss','miss','shift'], ptr:2,
+    note:'查失败 H=1：比 HT[1]、HT[2]、HT[3]（空停）→ 3 次。' },
+  { vals:['∅','2022','12','∅','25'], cls:['dim','ok','miss','miss','shift'], ptr:3,
+    note:'查失败 H=2：比 HT[2]、HT[3] → 2 次。' },
+  { vals:['∅','2022','12','∅','25'], cls:['dim','ok','ok','miss','shift'], ptr:4,
+    note:'查失败 H=3：比 HT[3] → 1 次。' },
+  { vals:['∅','2022','12','∅','25'], cls:['miss','ok','ok','dim','miss'], ptr:5,
+    note:'查失败 H=4：比 HT[4]（标记，穿过去）、绕回 HT[0]（空停）→ 2 次。' },
+  { vals:['∅','2022','12','∅','25'], cls:['dim','ok','ok','dim','shift'], ptr:null,
+    note:'ASL失败 = (1+3+2+1+2) ÷ 5 = 9 ÷ 5 = 1.8 → 答案 C。' },
+];
+
+function stageHTML(st){
+  var h = '<div class="aw-row-label"><b>散列表 HT</b>（下标 0..4；绿=有效关键字，琥珀=删除标记，红=本步比较过，灰=空）</div>';
+  h += '<div class="aw-cells">';
+  var ptrMap = {};
+  if (st.ptr != null){ ptrMap[st.ptr] = '起点'; }
+  for (var i = 0; i < 5; i++){
+    h += '<div class="aw-col"><div class="aw-ptr">' + (ptrMap[i + 1] || '') + '</div>' +
+         '<div class="aw-box ' + st.cls[i] + '">' + st.vals[i] + '</div>' +
+         '<div class="aw-idx">' + i + '</div></div>';
+  }
+  h += '</div>';
+  h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.note + '</div>';
+  return h;
+}
+
+var snaps = STATES.map(function(st, i){
+  var last = i === STATES.length - 1;
+  var cntArr = [0,0,0,0,0,1,4,6,7,9,9];
+  var clsArr = ['shift','ok','shift','ok','shift','miss','miss','miss','miss','miss','done'];
+  var tagArr = ['初始','插入 2022','插入 12 冲突','插入 25','删除 25','失败 H=0','失败 H=1','失败 H=2','失败 H=3','失败 H=4','结论'];
+  var logArr = [
+    '初始空表，H(k) = (k+4) % 5',
+    '2022 → 地址 1，直接放入',
+    '12 → 地址 1 冲突，探测后放入 HT[2]',
+    '25 → 地址 4，直接放入',
+    '删除 25：打标记占位，探测链不断',
+    '失败探测 H=0：1 次比较',
+    '失败探测 H=1：3 次比较（累计 4）',
+    '失败探测 H=2：2 次（累计 6）',
+    '失败探测 H=3：1 次（累计 7）',
+    '失败探测 H=4：穿过标记格再比 HT[0]，2 次（累计 9）',
+    'ASL失败 = (1+3+2+1+2)/5 = 1.8 → 答案 C'
+  ];
+  var sn = {
+    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: cntArr[i],
+    html: stageHTML(st), done: last,
+  };
+  if (i >= 5 && i <= 9){ sn.ribbon = { k: i - 4, ok: false }; }
+  return sn;
+});
+
+AW.init({
+  title: '2023-09 · 删除 25 后，查找失败的平均查找长度',
+  subtitle: '表长 5 · <code>H(k) = (k+4) % 5</code> · 线性探查再散列 · 插入 2022, 12, 25 后删除 25',
+  counterLabel: '失败探测累计比较',
+  ribbonTitle: '各散列地址（✗ 该起点查找失败）',
+  intro: '点击「▶ 播放」先插入删除、再逐地址模拟查找失败。',
+  snaps: snaps,
+  result: {
+    big: 'ASL失败 = 1.8（答案 C）',
+    html: '(1 + 3 + 2 + 1 + 2) ÷ 5 = <b>1.8</b>。核心：<b>线性探测下删除要打标记</b>，H=4 的失败探测要穿过 HT[4] 绕到 HT[0]，花 2 次；若把 25 物理置空则只比 1 次，得 1.6 —— 正是干扰项 B。失败 ASL 按散列地址 0..4 共 5 个起点等概率平均。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

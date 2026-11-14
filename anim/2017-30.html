@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-30 · 文件权限位串位数计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+function gridHTML(){
+  var users = ['安全管理员', '文件主', '文件主的伙伴', '其他用户'];
+  var perms = ['完全控制', '执行', '修改', '读取', '写入'];
+  var h = '<table style="border-collapse:collapse;font-size:12px;margin:8px 0 2px">';
+  h += '<tr><th style="border:1px solid #e2e8f0;padding:4px 8px;background:#f8fafc">用户 \\ 权限</th>';
+  perms.forEach(function(p){ h += '<th style="border:1px solid #e2e8f0;padding:4px 8px;background:#f8fafc">' + p + '</th>'; });
+  h += '</tr>';
+  users.forEach(function(u){
+    h += '<tr><td style="border:1px solid #e2e8f0;padding:4px 8px;background:#fff">' + u + '</td>';
+    perms.forEach(function(p){
+      h += '<td style="border:1px solid #e2e8f0;padding:4px 8px;text-align:center;color:#2563eb;font-family:Menlo,monospace">1位</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table><div style="font-size:11.5px;color:#64748b">每格 = 「该类用户是否具有该权限」的开关，占 1 个二进制位</div>';
+  return h;
+}
+
+var STEPS = [
+  { title: '审题眼：位串模型',
+    cls: 'key',
+    log: '1 位 = 一类用户 × 一种权限的开关，两位数相乘',
+    body: '<p>FCB 用二进制位串表示权限：每个位是"某类用户<b>是否</b>具有某种权限"的开关。所以<b>位数 = 用户类别数 × 权限种数</b>。</p>' },
+  { title: '展开 4 × 5 的权限矩阵',
+    cls: 'step',
+    log: '4 类用户 × 5 种权限 = 20 个开关格',
+    body: '<p>' + gridHTML() + '</p>' },
+  { title: '权限维度：每类用户 5 位',
+    cls: 'step',
+    log: '5 种权限 → 每类用户需要 5 位',
+    body: '<p>权限 5 种：完全控制、执行、修改、读取、写入 → 描述<b>一类用户</b>的权限需要 <b>5 位</b>。</p>' },
+  { title: '用户维度：4 类共 20 位',
+    cls: 'good',
+    log: '4 类用户 × 5 位 = 20 位',
+    body: '<p>用户 4 类：安全管理员、文件主、文件主的伙伴、其他用户，各类独立一套 → 4 × 5 = <b>20 位</b>。</p>' },
+  { title: '干扰项辨析',
+    cls: 'bad',
+    log: 'A 只算一类；B/C 是 Unix 9 位旧模型的套用',
+    body: '<p><b>5（A）</b>：只描述了 1 类用户的权限，其余 3 类没位可用；<b>9（B）/12（C）</b>：常见 Unix 模型是"3 类用户 × rwx 3 种权限 = 9 位"，本题是 <b>4 类 × 5 种</b>，条件变了位数就变。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '位数 = 4 × 5 = 20 → 答案 D',
+    body: '<p>答案选 <b>D（20 位）</b>。记忆锚点：<b>位数 = 用户类别数 × 权限种数</b>，别背"9 位"的旧模型。</p>' }
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.cls === 'bad' ? 'miss' : s.cls === 'good' ? 'ok' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last
+  };
+});
+
+AW.init({
+  title: '2017-30 · 表示文件权限至少需要多少位',
+  subtitle: '4 类用户（安全管理员/文件主/伙伴/其他） × 5 种权限（完全控制/执行/修改/读取/写入）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D：20 位',
+    html: '位数 = <b>用户类别数 × 权限种数 = 4 × 5 = 20</b>。干扰项：5 位只覆盖一类用户；9/12 位是 Unix「3 类 × rwx」旧模型的错误套用。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

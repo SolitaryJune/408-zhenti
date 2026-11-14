@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-37 动画 · HDLC 0 比特填充组帧</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var IN = '0111110001111110'.split('');   // 原始数据 01111100 01111110
+
+// 按规则模拟：连续 5 个 1 后插一个 0；OUT = [{c:'0'|'1', f:1(插入)|0(照抄)}]
+var OUT = [];
+(function(){
+  var run = 0;
+  for (var i = 0; i < IN.length; i++){
+    OUT.push({ c: IN[i], f: 0 });
+    if (IN[i] === '1'){
+      run++;
+      if (run === 5){ OUT.push({ c: '0', f: 1 }); run = 0; }
+    } else { run = 0; }
+  }
+})();
+
+AW.init({
+  title: 'HDLC 组帧：0 比特填充（2013·37）',
+  subtitle: '数据 <code>01111100 01111110</code> · 规则：连续 5 个 1 → 其后插 1 个 0 · 防止出现假标志 01111110',
+  counterLabel: '已输出位数',
+  ribbonTitle: '填充步骤（✓ 完成）',
+  intro: '点击「▶ 播放」逐段完成比特填充。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>原始数据</b>（16 位，虚线以下是扫描进度）'));
+    var inRow = AW.cellRow(IN, IN.map(function(){ return 'dim'; }), null, 1);
+    inner.appendChild(inRow);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>输出比特流</b>（实心绿格 = 插入的填充 0）'));
+    var outHolder = AW.el('div', '');
+    inner.appendChild(outHolder);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    this._inBoxes = [];
+    var boxes = inRow.querySelectorAll('.aw-box');
+    for (var k = 0; k < boxes.length; k++){ this._inBoxes.push(boxes[k]); }
+    this._outHolder = outHolder;
+  },
+
+  // upto：已扫描的原始位数；count：已输出的位数
+  snaps: [
+    { cls:'shift', tag:'规则',      upto:0,  count:0,
+      log:'HDLC 用 01111110 作帧定界标志；发送端连续扫描整条比特流（不按字节切），每遇连续 5 个 1 就在其后插入一个 0' },
+    { cls:'shift', tag:'填第1个0',  upto:6,  count:7,  ribbon:{k:1, ok:true},
+      log:'位 2~6 是连续 5 个 1 → 在其后插入一个 0（输出第 7 格），连续计数清零' },
+    { cls:'step',  tag:'照抄 000',  upto:9,  count:10, ribbon:{k:2, ok:true},
+      log:'位 7~9 的 000 照抄输出，不构成 5 连 1' },
+    { cls:'shift', tag:'填第2个0',  upto:14, count:16, ribbon:{k:3, ok:true},
+      log:'位 10~14 又是连续 5 个 1 → 在其后插入一个 0（输出第 16 格）' },
+    { cls:'step',  tag:'收尾 1 0',  upto:16, count:18, ribbon:{k:4, ok:true},
+      log:'位 15 是第 6 个连续 1（只在凑满 5 个时才填，不再填）、位 16 照抄 → 输出 10' },
+    { cls:'done',  tag:'完成',      upto:16, count:18, done:true,
+      log:'输出共 18 位：01111100 00111110 10 → 对应选项 A' },
+  ],
+
+  render: function(stage, sn, i){
+    var upto = sn.upto || 0, count = sn.count || 0;
+    // 输入行：已扫描 ok，最后一位 hit，未扫描 dim
+    for (var j = 0; j < IN.length; j++){
+      var b = this._inBoxes[j];
+      b.textContent = IN[j];
+      if (j < upto - 1){ b.className = 'aw-box ok'; }
+      else if (j === upto - 1){ b.className = 'aw-box hit'; }
+      else { b.className = 'aw-box dim'; }
+    }
+    // 输出行：按 count 截取
+    var chars = [], cls = [], ptr = {};
+    for (var m = 0; m < count; m++){
+      chars.push(OUT[m].c);
+      cls.push(OUT[m].f ? 'hit' : 'ok');
+    }
+    if (count > 0){ ptr[count] = '输出→'; }
+    this._outHolder.innerHTML = '';
+    this._outHolder.appendChild(AW.cellRow(chars.length ? chars : [' '], cls.length ? cls : ['dim'], ptr, 1));
+  },
+
+  result: {
+    big: '01111100 00111110 10（选 A）',
+    html: '对 <code>01111100 01111110</code> 整串扫描：两处 5 连 1 后各插一个 0，输出 <b>18 位</b>：<code>01111100 00111110 10</code>。三个易错——<b>按字节各自填充再拼接</b>、<b>把标志 01111110 混入结果</b>、<b>6 连 1 处多填</b>（只在凑满 5 个时填一次）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

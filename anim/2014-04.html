@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-04 中序线索化动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：二叉树中序遍历 → 线索指向 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 树结构（按题图）：a 根；b、c 是 a 的孩子；d、x 是 b 的孩子；e 是 d 的孩子
+var NODES = {
+  a: { x: 250, y: 30,  name: 'a' },
+  b: { x: 140, y: 120, name: 'b' },
+  c: { x: 370, y: 120, name: 'c' },
+  d: { x: 70,  y: 210, name: 'd' },
+  x: { x: 225, y: 210, name: 'x' },
+  e: { x: 130, y: 295, name: 'e' },
+};
+var EDGES = [['a','b'],['a','c'],['b','d'],['b','x'],['d','e']];
+var INORDER = ['d','e','b','x','a','c'];
+var CENTER = 22; // 结点半径（44px 盒子）
+
+var snaps = [
+  { cls:'step', tag:'初始', log:'二叉树如题图：x 是叶子（左右指针均为空），线索化时两个指针都要放线索', count:0, vis:0 },
+  { cls:'ok', tag:'访问 d', log:'中序第 1 位：d（d 是中序序列的第一个结点）', count:1, vis:1, ribbon:{k:1, ok:true} },
+  { cls:'ok', tag:'访问 e', log:'中序第 2 位：e', count:2, vis:2, ribbon:{k:2, ok:true} },
+  { cls:'ok', tag:'访问 b', log:'中序第 3 位：b', count:3, vis:3, ribbon:{k:3, ok:true} },
+  { cls:'shift', tag:'访问 x', log:'中序第 4 位：x。x 无左孩子、无右孩子 → 左指针放前驱、右指针放后继（此刻先记下位置，继续遍历才知道邻居是谁）', count:4, vis:4, ribbon:{k:4, ok:true} },
+  { cls:'ok', tag:'访问 a', log:'中序第 5 位：a —— 它紧跟在 x 之后！', count:5, vis:5, ribbon:{k:5, ok:true} },
+  { cls:'ok', tag:'访问 c', log:'中序第 6 位：c。序列确定为 d、e、b、x、a、c', count:6, vis:6, ribbon:{k:6, ok:true} },
+  { cls:'shift', tag:'定左线索', log:'x 的中序前驱 = 序列里 x 的前一位 = b → 左线索指向 b', count:6, vis:6, thread:1 },
+  { cls:'shift', tag:'定右线索', log:'x 的中序后继 = 序列里 x 的后一位 = a → 右线索指向 a', count:6, vis:6, thread:2 },
+  { cls:'done', tag:'完成', log:'x 的左、右线索分别指向 b、a，选 D', count:6, vis:6, thread:2, done:true },
+];
+
+AW.init({
+  title: '2014-04　中序线索化：x 的左、右线索',
+  subtitle: 'x 为叶结点（左右指针空）· 中序序列：左 → 根 → 右',
+  counterLabel: '已访问',
+  ribbonTitle: '中序访问次序（✓ 已入序列）',
+  intro: '点击「▶ 播放」先走中序，再定线索。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.position = 'relative';
+    inner.style.width = '440px';
+    inner.style.height = '330px';
+    // 边
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '440'); svg.setAttribute('height', '330');
+    svg.style.position = 'absolute'; svg.style.left = '0'; svg.style.top = '0';
+    EDGES.forEach(function(ed){
+      var p1 = NODES[ed[0]], p2 = NODES[ed[1]];
+      var ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', p1.x); ln.setAttribute('y1', p1.y);
+      ln.setAttribute('x2', p2.x); ln.setAttribute('y2', p2.y);
+      ln.setAttribute('stroke', '#94a3b8'); ln.setAttribute('stroke-width', '2');
+      svg.appendChild(ln);
+    });
+    // 两条线索（虚线，默认隐藏）
+    var t1 = document.createElementNS(svgNS, 'line');
+    t1.setAttribute('id', 'thL');
+    t1.setAttribute('x1', NODES.x.x); t1.setAttribute('y1', NODES.x.y);
+    t1.setAttribute('x2', NODES.b.x); t1.setAttribute('y2', NODES.b.y);
+    t1.setAttribute('stroke', '#d97706'); t1.setAttribute('stroke-width', '2.5');
+    t1.setAttribute('stroke-dasharray', '6 4'); t1.style.opacity = '0';
+    svg.appendChild(t1);
+    var t2 = document.createElementNS(svgNS, 'line');
+    t2.setAttribute('id', 'thR');
+    t2.setAttribute('x1', NODES.x.x); t2.setAttribute('y1', NODES.x.y);
+    t2.setAttribute('x2', NODES.a.x); t2.setAttribute('y2', NODES.a.y);
+    t2.setAttribute('stroke', '#2563eb'); t2.setAttribute('stroke-width', '2.5');
+    t2.setAttribute('stroke-dasharray', '6 4'); t2.style.opacity = '0';
+    svg.appendChild(t2);
+    inner.appendChild(svg);
+    // 结点
+    this._nodes = {};
+    Object.keys(NODES).forEach(function(k){
+      var p = NODES[k];
+      var box = AW.el('div', 'aw-box', p.name);
+      box.style.position = 'absolute';
+      box.style.left = (p.x - CENTER) + 'px';
+      box.style.top = (p.y - CENTER) + 'px';
+      inner.appendChild(box);
+      this._nodes[k] = box;
+    }, this);
+    // 中序序列行（放在树容器下方，避免与绝对定位的结点重叠）
+    var lbl = AW.el('div', 'aw-row-label', '<b>中序序列</b>（绿=已访问，绿底=当前）');
+    lbl.style.marginTop = '14px';
+    this._seq = AW.el('div', '');
+    wrap.appendChild(lbl);
+    wrap.appendChild(this._seq);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    // 结点配色
+    var cur = sn.vis > 0 ? INORDER[sn.vis - 1] : null;
+    Object.keys(this._nodes).forEach(function(k){
+      var c = 'aw-box';
+      if (k === 'x' && sn.thread === 1) c = ' aw-box hit';
+      else if (k === cur) c += ' hit';
+      else if (sn.vis > 0 && INORDER.indexOf(k) < sn.vis) c += ' ok';
+      this._nodes[k].className = c;
+    }, this);
+    // 线索虚线
+    var t1 = document.getElementById('thL'), t2 = document.getElementById('thR');
+    if (t1) t1.style.opacity = (sn.thread >= 1 && sn.thread != null) ? '1' : '0';
+    if (t2) t2.style.opacity = (sn.thread === 2) ? '1' : '0';
+    // 序列行
+    this._seq.innerHTML = '';
+    var chars = [], cls = [];
+    for (var j = 0; j < INORDER.length; j++){
+      chars.push(INORDER[j]);
+      if (j < sn.vis) cls.push(j === sn.vis - 1 && sn.cls !== 'done' ? 'hit' : 'ok');
+      else cls.push('dim');
+    }
+    if (i === 0){ chars = INORDER.map(function(){ return '·'; }); cls = chars.map(function(){ return 'dim'; }); }
+    this._seq.appendChild(AW.cellRow(chars, cls, null));
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D：b、a',
+    html: '中序序列 <code>d e b x a c</code>：x 左指针空 → 存前驱 <b>b</b>（x 前一位）；右指针空 → 存后继 <b>a</b>（x 后一位）。<br>树结构验证：x 是 b 的右孩子（前驱=最近"右侧"祖先 b）；x 是 a 左子树中最后访问的结点（后继=最近"左侧"祖先 a）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

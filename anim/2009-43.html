@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-43 中断 / DMA 方式的 CPU 时间占比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-43：中断方式与 DMA 方式的 CPU 时间占比计算（推理链）
+     模板：概念/计算推理类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼与答题框架',
+    cls: 'key',
+    body: '<p>已知：主频 <code>500MHz</code>（每秒 500M 个时钟周期）、<code>CPI = 5</code>。框架：<b>占比 = 每秒 CPU 为外设花掉的周期数 ÷ 500M</b>，分子 = <b>每秒事件次数 × 每次开销</b>。</p>' },
+  { title: '问 1 · 第 1 步：每秒中断次数',
+    cls: '',
+    ribbon: {k:1, ok:true},
+    body: '<p>外设数据率 <code>0.5MB/s</code>，中断方式每次传 32 位 = <code>4B</code>：每秒中断次数 = 0.5MB ÷ 4B = <b>125000 次</b>。</p>' },
+  { title: '问 1 · 第 2 步：每次中断的开销',
+    cls: '',
+    ribbon: {k:2, ok:true},
+    body: '<p>服务程序 18 条指令 + 其他开销折合 2 条 = 20 条，CPI = 5：每次中断开销 = <b>(18 + 2) × 5 = 100 个时钟周期</b>。</p>' },
+  { title: '问 1 · 第 3 步：时间占比 2.5%',
+    cls: 'good',
+    ribbon: {k:3, ok:true},
+    body: '<p>每秒 I/O 开销 = 100 × 125000 = <b>12.5M 个周期</b>；占比 = 12.5M ÷ 500M = <b>2.5%</b>。</p>' },
+  { title: '问 2 · 第 1 步：每秒 DMA 次数',
+    cls: '',
+    ribbon: {k:4, ok:true},
+    body: '<p>改用 DMA：数据率 <code>5MB/s</code>，块大小 <code>5000B</code>：每秒 DMA 次数 = 5MB ÷ 5000B = <b>1000 次</b>。</p>' },
+  { title: '问 2 · 第 2 步：CPU 只管预处理和后处理',
+    cls: 'key',
+    body: '<p>数据传送由 <b>DMA 控制器</b>完成，不占 CPU 时间（题目设 DMA 与 CPU 无访存冲突）；CPU 只承担<b>预处理 + 后处理</b>，共 <code>500</code> 个时钟周期。</p>' },
+  { title: '问 2 · 第 3 步：时间占比 0.1%',
+    cls: 'good',
+    ribbon: {k:5, ok:true},
+    body: '<p>每秒开销 = 1000 × 500 = <b>0.5M 个周期</b>；占比 = 0.5M ÷ 500M = <b>0.1%</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答：<b>问 1 为 2.5%，问 2 为 0.1%</b>。对比可见 DMA 的优势：中断方式每 4B 就要 CPU 服务 100 个周期，DMA 只在整块 5000B 前后各处理一次。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || null,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-43 中断方式与 DMA 方式的 CPU 时间占比',
+  subtitle: '主频 500MHz · CPI = 5 · 中断 0.5MB/s（每次 4B） · DMA 5MB/s（块 5000B）',
+  counterLabel: '计算步',
+  ribbonTitle: '计算进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐问推演。',
+  snaps: snaps,
+  result: {
+    big: '问 1：2.5%　问 2：0.1%',
+    html: '问 1：每秒中断 125000 次 × 100 周期 = 12.5M ÷ 500M = <b>2.5%</b>。<br>问 2：每秒 DMA 1000 次 × 500 周期 = 0.5M ÷ 500M = <b>0.1%</b>（传送本身由 DMA 控制器完成，不占 CPU）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

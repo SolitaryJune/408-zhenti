@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-14 补码减法与溢出标志动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：补码减法转加法 → 竖式逐位相加 → 判 OF -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '8 位补码减法：x − y 与 OF 标志',
+  subtitle: '<code>[x]补 = A3H</code> · <code>[y]补 = 75H</code> · 做减法 x − y = x + [−y]补',
+  counterLabel: '步骤',
+  ribbonTitle: '关键步骤（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐步演示竖式相加与标志位判断。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var self = this;
+    var inner = AW.el('div', '');
+
+    var mkBits = function(label, bits, marginBottom){
+      inner.appendChild(AW.el('div', 'aw-row-label', label));
+      var row = AW.el('div', 'aw-cells');
+      row.style.marginBottom = (marginBottom || '4px');
+      var boxes = [];
+      bits.forEach(function(c){
+        var b = AW.el('div', 'aw-box dim', c);
+        b.style.fontSize = '17px';
+        row.appendChild(b); boxes.push(b);
+      });
+      inner.appendChild(row);
+      return boxes;
+    };
+    self._bx = mkBits('<b>[x]补 = A3H</b>', ['1','0','1','0','0','0','1','1']);
+    self._by = mkBits('<b>[y]补 = 75H</b>', ['0','1','1','1','0','1','0','1']);
+    self._bny = mkBits('<b>[−y]补 = 8BH</b>（取反加 1）', ['1','0','0','0','1','0','1','1']);
+    self._rs = mkBits('<b>8 位结果</b>（x + [−y]补）', ['?','?','?','?','?','?','?','?'], '6px');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>真值与标志</b>'));
+    var chipRow = AW.el('div', 'aw-cells');
+    chipRow.style.marginBottom = '6px';
+    var mkChip = function(txt, w){
+      var b = AW.el('div', 'aw-box dim', txt);
+      b.style.width = (w || 120) + 'px'; b.style.height = '40px'; b.style.fontSize = '14px';
+      chipRow.appendChild(b); return b;
+    };
+    self._cx = mkChip('x = ?');
+    self._cy = mkChip('y = ?');
+    self._cOF = mkChip('OF = ?', 80);
+    self._cv = mkChip('x−y 真值 = ?', 170);
+    inner.appendChild(chipRow);
+
+    self._note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(self._note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',       log:'8 位机，[x]补 = A3H，[y]补 = 75H。补码加减运算器做 x − y，求结果与 OF。', count:0, note:'x − y = x + [−y]补' },
+    { cls:'ok',    tag:'求真值',     log:'[x]补 = 1010 0011B，符号位 1：x = −128+32+2+1 = −93；[y]补 = 0111 0101B：y = 117。', count:1, ribbon:{k:1, ok:true}, note:'x = −93，y = 117' },
+    { cls:'shift', tag:'减法转加法', log:'x − y = x + [−y]补；y = 0111 0101B 按位取反加 1 得 [−y]补 = 1000 1011B = 8BH。', count:2, ribbon:{k:2, ok:true}, note:'[−y]补 = 8BH' },
+    { cls:'ok',    tag:'加低 4 位',  log:'bit0：1+1=进1得0；bit1：1+1+1=进1得1；bit2：0+0+1=1；bit3：0+1=1 → 低 4 位 1110。', count:3, ribbon:{k:3, ok:true}, note:'低 4 位 = 1110' },
+    { cls:'ok',    tag:'加高 4 位',  log:'bit4：0+0=0；bit5：1+0=1；bit6：0+0=0；bit7：1+1=进1得0 → 高 4 位 0010；最高位进位 C7=1（丢弃），次高位进位 C6=0。', count:4, ribbon:{k:4, ok:true}, note:'高 4 位 = 0010，C7=1、C6=0' },
+    { cls:'ok',    tag:'得结果',     log:'8 位结果 = 0010 1110B = 2EH = 46。', count:5, ribbon:{k:5, ok:true}, note:'结果 = 2EH = 46' },
+    { cls:'miss',  tag:'判 OF',     log:'OF = C7 与 C6 相异 = 1；或看符号：负 + 负 = 正，溢出。真值核对：x−y = −93−117 = −210，超出 −128～127，确实溢出。', count:6, ribbon:{k:6, ok:true}, note:'OF = 1（负+负=正）' },
+    { cls:'done',  tag:'完成',       log:'结论：x − y 的机器结果 = 46，OF = 1，选 D。', count:7, done:true, note:'答案 D（46，1）' },
+  ],
+
+  render: function(stage, sn, i){
+    var self = this;
+    var set = function(b, cls, txt){
+      b.className = 'aw-box' + (cls ? ' ' + cls : '');
+      if(txt != null) b.textContent = txt;
+    };
+    self._bx.forEach(function(b){ set(b, 'dim'); });
+    self._by.forEach(function(b){ set(b, 'dim'); });
+    self._bny.forEach(function(b){ set(b, 'dim'); });
+    self._rs.forEach(function(b, k){ set(b, 'dim', '?'); });
+    set(self._cx, 'dim', 'x = ?'); set(self._cy, 'dim', 'y = ?');
+    set(self._cOF, 'dim', 'OF = ?'); set(self._cv, 'dim', 'x−y 真值 = ?');
+    if(i >= 1){
+      self._bx.forEach(function(b){ set(b, 'ok'); });
+      self._by.forEach(function(b){ set(b, 'ok'); });
+      set(self._cx, 'ok', 'x = −93');
+      set(self._cy, 'ok', 'y = 117');
+    }
+    if(i >= 2){ self._bny.forEach(function(b){ set(b, 'shift'); }); }
+    if(i >= 3){
+      ['0','0','0','0','?','?','1','1'].forEach(function(c, k){ set(self._rs[k], 'ok', c); });
+    }
+    if(i >= 4){
+      ['0','0','1','0','0','0','1','1'].forEach(function(c, k){ set(self._rs[k], 'ok', c); });
+    }
+    if(i >= 5){ set(self._cv, 'shift', 'x−y 真值 = −210'); }
+    if(i >= 6){ set(self._cOF, 'miss', 'OF = 1'); }
+    self._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '答案 D（46，1）',
+    html: '<p>x + [−y]补 = A3H + 8BH = <b>2EH = 46</b>（最高位进位丢弃）；C7=1、C6=0 → <b>OF = 1</b>（真值 −93−117 = −210 溢出）。记忆锚点：<b>OF 看符号——负加负得正必溢出</b>；CF 看进位，两者不是一回事。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

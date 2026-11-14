@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-46 · 前趋图与信号量同步演示</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var T1CODE = ['A;', 'signal(S_AC);', 'wait(S_CE);', 'E;', 'F;'];
+var T2CODE = ['B;', 'wait(S_AC);', 'C;', 'signal(S_CE);', 'D;'];
+
+var nodeRow, semAC, semCE, t1Lines, t2Lines;
+
+function codeLine(txt){
+  var d = AW.el('div', '', txt);
+  d.style.fontFamily = '"SF Mono", Menlo, Consolas, monospace';
+  d.style.fontSize = '13.5px';
+  d.style.padding = '5px 12px';
+  d.style.borderRadius = '7px';
+  d.style.margin = '3px 0';
+  d.style.border = '2px solid transparent';
+  d.style.background = '#f8fafc';
+  d.style.color = '#334155';
+  d.style.transition = 'background .25s, border-color .25s';
+  return d;
+}
+
+function paintCode(lines, states){
+  for (var i = 0; i < lines.length; i++){
+    var s = states[i] || '';
+    if (s === 'hit'){
+      lines[i].style.background = '#fef3c7';
+      lines[i].style.borderColor = '#d97706';
+      lines[i].style.color = '#92400e';
+    } else if (s === 'ok'){
+      lines[i].style.background = '#f6fef9';
+      lines[i].style.borderColor = '#16a34a';
+      lines[i].style.color = '#14532d';
+    } else {
+      lines[i].style.background = '#f8fafc';
+      lines[i].style.borderColor = 'transparent';
+      lines[i].style.color = '#334155';
+    }
+  }
+}
+
+function paint(st){
+  for (var j = 0; j < 6; j++){
+    var ch = 'ABCDEF'[j];
+    var d = nodeRow.children[j].children[1];
+    if (st.hitOp === ch){ d.className = 'aw-box hit'; }
+    else if (st.doneOps.indexOf(ch) >= 0){ d.className = 'aw-box ok'; }
+    else { d.className = 'aw-box'; }
+  }
+  semAC.innerHTML = '<b>S_AC</b> = ' + st.sAC + '（初值 0，同步 A→C）';
+  semCE.innerHTML = '<b>S_CE</b> = ' + st.sCE + '（初值 0，同步 C→E）';
+  paintCode(t1Lines, st.t1);
+  paintCode(t2Lines, st.t2);
+}
+
+AW.init({
+  title: '前趋图与信号量同步演示（2022-46）',
+  subtitle: '约束：A→C、B→C、C→D、C→E、E→F · T1 执行 A、E、F；T2 执行 B、C、D',
+  counterLabel: '已执行操作',
+  ribbonTitle: '操作完成序（✓ 已完成）',
+  intro: '点击「▶ 播放」，按并发推进顺序演示 wait/signal 如何保证前趋约束。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>跨线程边</b>：A→C 设 S_AC，C→E 设 S_CE（初值均为 0）；B→C、C→D 在 T2 内、E→F 在 T1 内，由语句顺序保证'));
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>6 个操作</b>（深绿 = 本步完成，浅绿 = 已完成）'));
+    nodeRow = AW.cellRow(['A', 'B', 'C', 'D', 'E', 'F'], ['', '', '', '', '', ''], null, 1);
+    inner.appendChild(nodeRow);
+
+    var semWrap = AW.el('div', '');
+    semWrap.style.display = 'flex';
+    semWrap.style.gap = '16px';
+    semWrap.style.margin = '10px 0 4px';
+    semAC = AW.el('div', 'aw-row-label', '');
+    semCE = AW.el('div', 'aw-row-label', '');
+    semWrap.appendChild(semAC);
+    semWrap.appendChild(semCE);
+    inner.appendChild(semWrap);
+
+    var codeWrap = AW.el('div', '');
+    codeWrap.style.display = 'flex';
+    codeWrap.style.gap = '14px';
+    var t1Box = AW.el('div', '');
+    var t2Box = AW.el('div', '');
+    t1Box.appendChild(AW.el('div', 'aw-row-label', '<b>线程 T1</b>'));
+    t2Box.appendChild(AW.el('div', 'aw-row-label', '<b>线程 T2</b>'));
+    t1Lines = [];
+    t2Lines = [];
+    for (var i = 0; i < 5; i++){
+      var l1 = codeLine(T1CODE[i]);
+      t1Box.appendChild(l1);
+      t1Lines.push(l1);
+      var l2 = codeLine(T2CODE[i]);
+      t2Box.appendChild(l2);
+      t2Lines.push(l2);
+    }
+    codeWrap.appendChild(t1Box);
+    codeWrap.appendChild(t2Box);
+    inner.appendChild(codeWrap);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint({ hitOp: null, doneOps: [], sAC: 0, sCE: 0,
+            t1: ['', '', '', '', ''], t2: ['', '', '', '', ''] });
+  },
+
+  snaps: [
+    { cls: 'shift', tag: '开始',
+      st: { hitOp: null, doneOps: [], sAC: 0, sCE: 0,
+            t1: ['', '', '', '', ''], t2: ['', '', '', '', ''] },
+      log: '初始：S_AC=0、S_CE=0。A 与 B 无前驱可立即执行；C 等 A、B，E 等 C，D 等 C，F 等 E',
+      count: 0 },
+    { cls: 'ok', tag: 'T2 执行 B',
+      st: { hitOp: 'B', doneOps: [], sAC: 0, sCE: 0,
+            t1: ['', '', '', '', ''], t2: ['hit', '', '', '', ''] },
+      log: 'T2 执行 B（B 无前驱）→ B 完成。C 还要等 A 完成（A 在 T1 中）',
+      count: 1, ribbon: { k: 2, ok: true } },
+    { cls: 'ok', tag: 'T1 执行 A',
+      st: { hitOp: 'A', doneOps: [], sAC: 0, sCE: 0,
+            t1: ['hit', '', '', '', ''], t2: ['ok', '', '', '', ''] },
+      log: 'T1 执行 A（A 无前驱）→ A 完成',
+      count: 2, ribbon: { k: 1, ok: true } },
+    { cls: 'shift', tag: 'signal(S_AC)',
+      st: { hitOp: null, doneOps: ['A'], sAC: 1, sCE: 0,
+            t1: ['ok', 'hit', '', '', ''], t2: ['ok', '', '', '', ''] },
+      log: 'T1 执行 signal(S_AC)：S_AC 0→1，通知 T2「A 已完成」',
+      count: 2 },
+    { cls: 'shift', tag: 'wait(S_AC)',
+      st: { hitOp: null, doneOps: ['A'], sAC: 0, sCE: 0,
+            t1: ['ok', 'ok', '', '', ''], t2: ['ok', 'hit', '', '', ''] },
+      log: 'T2 执行 wait(S_AC)：S_AC=1 通过并减为 0 → 跨线程约束 A→C 达成，C 具备执行条件',
+      count: 2 },
+    { cls: 'ok', tag: 'T2 执行 C',
+      st: { hitOp: 'C', doneOps: ['A', 'B'], sAC: 0, sCE: 0,
+            t1: ['ok', 'ok', '', '', ''], t2: ['ok', 'ok', 'hit', '', ''] },
+      log: 'T2 执行 C：A、B 均已完成（B→C 由 T2 内语句顺序保证）→ C 完成',
+      count: 3, ribbon: { k: 3, ok: true } },
+    { cls: 'shift', tag: 'signal(S_CE)',
+      st: { hitOp: null, doneOps: ['A', 'B', 'C'], sAC: 0, sCE: 1,
+            t1: ['ok', 'ok', '', '', ''], t2: ['ok', 'ok', 'ok', 'hit', ''] },
+      log: 'T2 执行 signal(S_CE)：S_CE 0→1，通知 T1「C 已完成」',
+      count: 3 },
+    { cls: 'ok', tag: 'T2 执行 D',
+      st: { hitOp: 'D', doneOps: ['A', 'B', 'C'], sAC: 0, sCE: 1,
+            t1: ['ok', 'ok', '', '', ''], t2: ['ok', 'ok', 'ok', 'ok', 'hit'] },
+      log: 'T2 继续执行 D：C→D 是 T2 线程内顺序，直接执行 → D 完成，T2 结束',
+      count: 4, ribbon: { k: 4, ok: true } },
+    { cls: 'shift', tag: 'wait(S_CE)',
+      st: { hitOp: null, doneOps: ['A', 'B', 'C', 'D'], sAC: 0, sCE: 0,
+            t1: ['ok', 'ok', 'hit', '', ''], t2: ['ok', 'ok', 'ok', 'ok', 'ok'] },
+      log: 'T1 执行 wait(S_CE)：S_CE=1 通过并减为 0 → 跨线程约束 C→E 达成，E 具备执行条件',
+      count: 4 },
+    { cls: 'ok', tag: 'T1 执行 E',
+      st: { hitOp: 'E', doneOps: ['A', 'B', 'C', 'D'], sAC: 0, sCE: 0,
+            t1: ['ok', 'ok', 'ok', 'hit', ''], t2: ['ok', 'ok', 'ok', 'ok', 'ok'] },
+      log: 'T1 执行 E（C 已完成）→ E 完成',
+      count: 5, ribbon: { k: 5, ok: true } },
+    { cls: 'ok', tag: 'T1 执行 F',
+      st: { hitOp: 'F', doneOps: ['A', 'B', 'C', 'D', 'E'], sAC: 0, sCE: 0,
+            t1: ['ok', 'ok', 'ok', 'ok', 'hit'], t2: ['ok', 'ok', 'ok', 'ok', 'ok'] },
+      log: 'T1 执行 F：E→F 是 T1 线程内顺序 → F 完成，6 个操作全部执行完毕',
+      count: 6, ribbon: { k: 6, ok: true } },
+    { cls: 'done', tag: '完成',
+      st: { hitOp: null, doneOps: ['A', 'B', 'C', 'D', 'E', 'F'], sAC: 0, sCE: 0,
+            t1: ['ok', 'ok', 'ok', 'ok', 'ok'], t2: ['ok', 'ok', 'ok', 'ok', 'ok'] },
+      log: '全部约束满足：仅 2 个信号量 S_AC、S_CE（初值均为 0）——跨线程边才需要信号量',
+      count: 6, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    paint(sn.st);
+  },
+
+  result: {
+    big: '2 个信号量，初值均为 0',
+    html: '跨线程的前趋边各设一个同步信号量：<code>S_AC</code> 保证 C 在 A 完成后执行（T1 signal、T2 wait），<code>S_CE</code> 保证 E 在 C 完成后执行（T2 signal、T1 wait）。B→C、C→D 由 T2 语句顺序保证，E→F 由 T1 语句顺序保证；同步信号量初值为 <b>0</b>（初值 1 是互斥用法）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

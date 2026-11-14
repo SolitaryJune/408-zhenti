@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-25 中断处理：硬件与操作系统的分工</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：一条分界线',
+    cls: 'key',
+    body: '<p>判断标准只有一条：响应中断时由<b>硬件（中断隐指令）</b>自动完成的，不属于操作系统；进入<b>中断服务程序之后</b>由软件完成的，才是操作系统的工作。</p>' },
+  { title: '逐项分析 I：保存中断点',
+    cls: 'bad',
+    body: '<p>I（保存被中断程序的中断点）：<b>不是操作系统做的</b>。保存断点（如 PC）属于硬件<b>中断隐指令</b>的三个动作之一——关中断、保存断点、引出中断服务程序入口，全部由硬件自动完成。</p>' },
+  { title: '逐项分析 II：提供中断服务',
+    cls: 'good',
+    body: '<p>II（提供中断服务）：<b>是操作系统做的</b>。中断服务程序本身就是操作系统代码：时钟中断服务、键盘中断服务等都在内核里实现。</p>' },
+  { title: '逐项分析 III：初始化中断向量表',
+    cls: 'good',
+    body: '<p>III（初始化中断向量表）：<b>是操作系统做的</b>。各中断类型对应的服务程序入口地址（中断向量）由 OS 在系统启动/装入阶段填写好，之后硬件才能据此引出服务程序。</p>' },
+  { title: '逐项分析 IV：保存中断屏蔽字',
+    cls: 'good',
+    body: '<p>IV（保存中断屏蔽字）：<b>是操作系统做的</b>。屏蔽字在 PSW 中，属于「现场」；进入服务程序后先保存现场（含屏蔽字），再设置新屏蔽字——这已经是软件的活了。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>操作系统完成的是 <b>II、III、IV</b>，答案选 <b>D</b>。核心记忆点：<b>断点硬件存，现场 OS 存；服务 OS 做，向量表 OS 建</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '中断相关操作：哪些由操作系统完成',
+  subtitle: '考点：<code>操作系统的运行环境 · 中断与异常</code> · 硬件隐指令 vs 操作系统',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（仅 II、III、IV）',
+    html: '分界线：<b>中断隐指令（硬件）</b>只干三件事——关中断、保存断点、引出服务程序入口，所以 I 不算 OS 的活；<b>保存现场（含屏蔽字 IV）、提供中断服务 II、初始化中断向量表 III</b> 都是操作系统的工作。易混点：断点 ≠ 现场。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

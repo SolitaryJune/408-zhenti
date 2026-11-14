@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-13 32位补码表示范围</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>问 <b>32 位补码</b>能表示的整数范围。考点：补码范围公式 <code>-2^(n-1) ~ 2^(n-1)-1</code>，以及它比原码/反码多一个最小负数的特性。</p>' },
+  { title: '拆位数：符号位 + 数值位', cls: '',
+    body: '<p>32 位中最高位是符号位，数值位只有 <b>31 位</b>。这一点决定了上下界的量级都在 <code>2^31</code> 附近。</p>' },
+  { title: '正方向的上界', cls: '',
+    body: '<p>最大正数：符号 0，数值位全 1，即 <code>0111...1</code>（31 个 1）= <code>2^31 - 1</code>。</p>' },
+  { title: '负方向的下界（补码特有）', cls: 'good',
+    body: '<p>最小负数：补码码点 <code>1000...0</code> = <code>-2^31</code>。原码里它是负 0，补码里让它表示多出来的那个最小负数——这就是补码不对称的来源。</p>' },
+  { title: '和原码/反码对比', cls: '',
+    body: '<p>原码、反码：0 有 +0 / 负 0 两个码点，范围对称 <code>-(2^31-1) ~ 2^31-1</code>；补码把负 0 的码点腾出来给了 -2^31，所以负方向多表示一个数。</p>' },
+  { title: '逐项排除干扰项', cls: '',
+    body: '<p><b>A</b>（-2^32 ~ 2^31-1）与 <b>C</b>（-2^32 ~ 2^32-1）：把 32 全当数值位；<b>D</b>（-2^31 ~ 2^32-1）：正边界算成 32 位数值。凡出现 2^32 都错。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>B</b>：-2^31 ~ 2^31 - 1。记忆锚点：范围由<b>数值位 31 位</b>决定，负方向多一个 <code>1000...0</code> = -2^31。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2022-13 · 32 位补码的表示范围',
+  subtitle: '考点：补码范围公式 · 补码比原码多表示一个最小负数',
+  counterLabel: '推理步骤',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（-2^31 ~ 2^31 - 1）',
+    html: '32 位 = 1 符号位 + 31 数值位：正上界 <b>2^31 - 1</b>，负下界是补码特有的最小负数 <b>-2^31</b>（码点 1000...0）。凡出现 2^32 的选项都是把数值位错算成 32 位。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

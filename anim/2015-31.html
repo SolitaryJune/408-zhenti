@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-31 位图法定位释放盘块所在的位图盘块与字节</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：位图映射关系', cls: 'key',
+    log: '位图第 i 位 ↔ 盘块号 i（从 0 编号）：释放盘块 409612 = 把位图第 409612 位置 0',
+    body: '<p>位图每一位对应一个盘块：<code>盘块号 i ↔ 位图第 i 位</code>（均从 0 编号）。位图存放在<b>磁盘 32~127 号块</b>，每块 1024 字节。要释放盘块 <code>409612</code>，就是改位图中的第 <code>409612</code> 位。</p>' },
+  { title: '第一步：位 → 字节（÷8）', cls: 'shift',
+    log: '409612 ÷ 8 = 51201 余 4 → 位于位图第 51201 字节、字节内第 4 位',
+    body: '<p><code>409612 ÷ 8 = 51201 ···· 4</code>（余 4）→ 该位在位图的第 <code>51201</code> 个字节（0 起）内，是字节内的第 4 位。注意：字节序号取<b>商</b>（向下取整），余数只是位偏移。</p>' },
+  { title: '第二步：字节 → 位图块（÷1024）', cls: 'shift',
+    log: '51201 ÷ 1024 = 50 余 1 → 位图区内第 50 块、块内第 1 字节',
+    body: '<p>每个位图盘块装 <code>1024</code> 字节：<code>51201 ÷ 1024 = 50 ···· 1</code> → 第 51201 字节在位图区的第 <code>50</code> 个位图块（0 起）内、块内第 <code>1</code> 字节。</p>' },
+  { title: '第三步：叠加起始块号 32', cls: 'good',
+    log: '盘块号 = 32 + 50 = 82，块内字节 = 1；82 在 32~127 范围内，校验通过',
+    body: '<p>位图区从磁盘 <code>32</code> 号块开始 → 所在盘块号 = <code>32 + 50 = 82</code>，块内字节序号 = <code>1</code>。82 ≤ 127，落在位图区内，<b>校验通过</b>。</p>' },
+  { title: '核对四个选项', cls: 'step',
+    log: 'A 81、1 ✗　B 81、2 ✗　C 82、1 ✓　D 82、2 ✗ —— 起始块号决定 81/82，余数决定 1/2',
+    body: '<p><b>A 81、1</b>：少加了 1（把 51201÷1024 算成 49 余 1）。<b>B 81、2</b>：双重错。<b>C 82、1</b>：<b>正确</b>。<b>D 82、2</b>：块内字节没从 0 数。分水岭就在：<b>起始块号 32 要叠加、块内字节从 0 编号</b>。</p>' },
+  { title: '结论', cls: 'good',
+    log: '答案 C：位图盘块号 82、块内字节序号 1',
+    body: '<p>答案选 <b>C</b>（82、1）。记忆锚点：<code>位序号 ÷ 8 → 字节号</code>；<code>字节号 ÷ 1024 → 位图区内块号 + 块内字节</code>；最后<b>叠加起始块号 32</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2015-31】位图法：释放盘块 409612 要改哪个盘块的哪个字节',
+  subtitle: '考点：文件存储空间管理——位图法（bitmap）的位 / 字节 / 盘块换算',
+  intro: '点击「▶ 播放」沿"位 → 字节 → 位图块 → 磁盘块"三级换算走一遍。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（82、1）',
+    html: '<code>409612 ÷ 8 = 51201 余 4</code> → 位图第 51201 字节；<code>51201 ÷ 1024 = 50 余 1</code> → 位图区内第 50 块、块内第 1 字节；叠加起始块号：<code>32 + 50 = 82</code> → <b>盘块 82、块内字节 1</b>。记忆点：字节号取商、块内从 0 编号、别忘了起始块号 32。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

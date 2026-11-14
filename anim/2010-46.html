@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-46 地址变换 + FIFO/CLOCK 置换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
+     演示：17CAH 拆页号 → FIFO 淘汰 → CLOCK 指针清零扫描 → 物理地址
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var refs = {};
+
+// CLOCK 循环中的页框（顺时针顺序，指针初始指向 2 号页框）
+var FR = [
+  { f:'2', p:'2' },   // 2 号框装 2 号页
+  { f:'9', p:'3' },   // 9 号框装 3 号页
+  { f:'7', p:'0' },   // 7 号框装 0 号页
+  { f:'4', p:'1' },   // 4 号框装 1 号页
+];
+
+var ADDR_PAGE  = '页号 = 17CAH ÷ 400H = <b>5</b>，页内偏移 = <b>3CAH</b>（17CAH − 5×400H = 17CAH − 1400H = 3CAH）';
+var ADDR_FIFO  = 'FIFO 物理地址 = 7×400H + 3CAH = 1C00H + 3CAH = <b>1FCAH</b>';
+var ADDR_CLOCK = 'CLOCK 物理地址 = 2×400H + 3CAH = 800H + 3CAH = <b>0BCAH</b>';
+var ADDR_BOTH  = 'FIFO → <b>1FCAH</b> ｜ CLOCK → <b>0BCAH</b>';
+
+var SNAPS = [
+  { bits:[1,1,1,1], hi:[], sel:-1, pg0:'页2', ptr:-1, addr:'—', hl:[], st:[],
+    cls:'shift', tag:'初始', count:0,
+    log:'时刻 260 要访问逻辑地址 17CAH；页表中已装入 0~3 号页（四个页框的访问位全为 1）' },
+  { bits:[1,1,1,1], hi:[], sel:-1, pg0:'页2', ptr:-1, addr:ADDR_PAGE, hl:[], st:[],
+    cls:'step', tag:'问1 页号', count:1,
+    log:'问1：页大小 1KB = 400H，17CAH ÷ 400H 商 5 余 3CAH → 页号为 5，页内偏移为 3CAH' },
+  { bits:[1,1,1,1], hi:[], sel:-1, pg0:'页2', ptr:-1, addr:'页号 5 不在页表（表中只有 0~3 页）→ 缺页', hl:[], st:[],
+    cls:'miss', tag:'缺页', count:2,
+    log:'页表中没有 5 号页 → 缺页；固定分配局部置换：只能从本进程已占的 4 个页框中淘汰一个' },
+  { bits:[1,1,1,1], hi:[], sel:-1, pg0:'页2', ptr:-1, addr:'FIFO：装入时刻最早的是 0 号页（130）→ 淘汰 0 号页', hl:[0], st:[],
+    cls:'step', tag:'问2 FIFO', count:3,
+    log:'问2 FIFO 只看装入时刻：0 页 130、1 页 230、2 页 200、3 页 260 → 最早装入的 0 号页（130）被淘汰' },
+  { bits:[1,1,1,1], hi:[], sel:-1, pg0:'页2', ptr:-1, addr:ADDR_FIFO, hl:[0], st:[],
+    cls:'ok', tag:'FIFO 结果', count:4,
+    log:'0 号页占 7 号页框 → 5 号页装入 7 号页框：物理地址 = 7×400H + 3CAH = 1C00H + 3CAH = 1FCAH' },
+  { bits:[1,1,1,1], hi:[], sel:-1, pg0:'页2', ptr:0, addr:'CLOCK：从 2 号页框开始顺时针扫描（FIFO 结果 1FCAH 供对比）', hl:[], st:[],
+    cls:'step', tag:'问3 CLOCK', count:5,
+    log:'问3 CLOCK：指针指向 2 号页框，顺时针顺序 框2→框9→框7→框4；四框访问位全 1，开始扫描' },
+  { bits:[0,1,1,1], hi:[0], sel:-1, pg0:'页2', ptr:1, addr:'CLOCK：第 1 次检查框2 → 访问位 1，清 0 后下移', hl:[], st:[],
+    cls:'miss', tag:'清零', count:6, ribbon:{k:1, ok:false},
+    log:'第 1 次检查框2（页2）：访问位 = 1 → 清 0，指针下移到框9' },
+  { bits:[0,0,1,1], hi:[1], sel:-1, pg0:'页2', ptr:2, addr:'CLOCK：第 2 次检查框9 → 清 0 后下移', hl:[], st:[],
+    cls:'miss', tag:'清零', count:7, ribbon:{k:2, ok:false},
+    log:'第 2 次检查框9（页3）：访问位 = 1 → 清 0，指针下移到框7' },
+  { bits:[0,0,0,1], hi:[2], sel:-1, pg0:'页2', ptr:3, addr:'CLOCK：第 3 次检查框7 → 清 0 后下移', hl:[], st:[],
+    cls:'miss', tag:'清零', count:8, ribbon:{k:3, ok:false},
+    log:'第 3 次检查框7（页0）：访问位 = 1 → 清 0，指针下移到框4' },
+  { bits:[0,0,0,0], hi:[3], sel:-1, pg0:'页2', ptr:0, addr:'CLOCK：第 4 次检查框4 → 清 0，指针绕回框2', hl:[], st:[],
+    cls:'miss', tag:'清零', count:9, ribbon:{k:4, ok:false},
+    log:'第 4 次检查框4（页1）：访问位 = 1 → 清 0，指针绕回框2 —— 一圈四个访问位全部清零' },
+  { bits:[0,0,0,0], hi:[], sel:0, pg0:'页5', ptr:0, addr:'CLOCK：第 5 次检查框2 → 访问位已是 0，选中淘汰 2 号页', hl:[], st:[],
+    cls:'ok', tag:'选中', count:10, ribbon:{k:5, ok:true},
+    log:'第 5 次检查框2：访问位已是 0 → 选中！淘汰 2 号页，5 号页装入 2 号页框' },
+  { bits:[0,0,0,0], hi:[], sel:0, pg0:'页5', ptr:0, addr:ADDR_CLOCK, hl:[], st:[],
+    cls:'ok', tag:'CLOCK 结果', count:11,
+    log:'5 号页装入 2 号页框：物理地址 = 2×400H + 3CAH = 800H + 3CAH = 0BCAH' },
+  { bits:[0,0,0,0], hi:[], sel:0, pg0:'页5', ptr:0, addr:ADDR_BOTH, hl:[], st:[],
+    cls:'done', tag:'完成', count:12, done:true,
+    log:'结论：页号 5；FIFO 淘汰 0 号页 → 物理地址 1FCAH；CLOCK 清零一圈后选中 2 号框 → 物理地址 0BCAH' },
+];
+
+AW.init({
+  title: '2010·46 逻辑地址 17CAH：FIFO 与 CLOCK 置换',
+  subtitle: '逻辑/物理空间均 64KB · 页大小 1KB（400H）· 固定分配局部置换 4 个页框 · CLOCK 指针指向 2 号页框顺时针移动',
+  counterLabel: '推演步数',
+  ribbonTitle: 'CLOCK 指针检查（✗ 清零 / ✓ 选中）',
+  intro: '点击「▶ 播放」，按问推演：拆页号 → FIFO → CLOCK。',
+  snaps: SNAPS,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    // 题目给的页表
+    var cap = AW.el('div', 'aw-row-label', '<b>时刻 260 的页表</b>（装入时刻单位为时刻，访问位 1=近期访问过）');
+    inner.appendChild(cap);
+    var html = '<table style="border-collapse:collapse;font-size:12.5px;font-family:Menlo,Consolas,monospace"><tr>';
+    ['页号','页框号','装入时刻','访问位'].forEach(function(h){
+      html += '<th style="border:1px solid #e2e8f0;padding:4px 12px;background:#f1f5f9;color:#475569;font-family:inherit">' + h + '</th>';
+    });
+    html += '</tr>';
+    var DATA = [[0,7,130,1],[1,4,230,1],[2,2,200,1],[3,9,260,1]];
+    DATA.forEach(function(r){
+      html += '<tr>';
+      r.forEach(function(v){
+        html += '<td style="border:1px solid #e2e8f0;padding:4px 12px;text-align:center;color:#334155">' + v + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</table>';
+    var tbl = AW.el('div', '', html);
+    inner.appendChild(tbl);
+    refs.rows = tbl.querySelectorAll('tr');
+
+    // CLOCK 循环（顺时针顺序排列，指针标记当前检查的页框）
+    var cap2 = AW.el('div', 'aw-row-label', '<b>CLOCK 循环队列</b>（顺时针：框2 → 框9 → 框7 → 框4）');
+    cap2.style.marginTop = '14px';
+    inner.appendChild(cap2);
+    refs.fr = [];
+    var cyc = AW.el('div', 'aw-cells');
+    cyc.style.gap = '12px';
+    FR.forEach(function(f){
+      var col = AW.el('div', 'aw-col');
+      col.style.width = '72px';
+      col.style.flex = '0 0 auto';
+      var slot = AW.el('div', 'aw-ptr');
+      col.appendChild(slot);
+      var box = AW.el('div', '');
+      box.style.cssText = 'width:72px;height:72px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:background .25s,border-color .25s;';
+      var frl = AW.el('div', '', '<span style="font-size:10.5px;color:#94a3b8">页框' + f.f + '</span>');
+      var pgl = AW.el('div', '', '<b style="font-size:15px;font-family:Menlo,Consolas,monospace">页' + f.p + '</b>');
+      var bt = AW.el('div', '', '');
+      box.appendChild(frl);
+      box.appendChild(pgl);
+      box.appendChild(bt);
+      col.appendChild(box);
+      cyc.appendChild(col);
+      refs.fr.push({ slot: slot, box: box, pgl: pgl, bt: bt });
+    });
+    inner.appendChild(cyc);
+
+    // 地址算式行
+    refs.addr = AW.el('div', '');
+    refs.addr.style.cssText = 'margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13.5px;line-height:1.7;color:#334155;font-family:Menlo,Consolas,monospace;';
+    inner.appendChild(refs.addr);
+    inner.appendChild(AW.el('div', 'aw-hint',
+      '红=该框访问位 1 被清零（未选中），绿=访问位 0 被选中淘汰；FIFO 在页表中高亮 0 号页'));
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    // 页表行高亮（FIFO 淘汰对象）
+    for(var i = 1; i < refs.rows.length; i++){
+      refs.rows[i].style.background = (sn.hl.indexOf(i - 1) >= 0) ? '#fef3c7' : '#fff';
+    }
+    // CLOCK 页框
+    refs.fr.forEach(function(o, i){
+      o.bt.innerHTML = '访问位 <b style="color:' + (sn.bits[i] ? '#d97706' : '#16a34a') + '">' + sn.bits[i] + '</b>';
+      o.pgl.innerHTML = '<b style="font-size:15px;font-family:Menlo,Consolas,monospace;color:' + (sn.sel === i ? '#15803d' : '#0f172a') + '">' + (i === 0 ? sn.pg0 : '页' + FR[i].p) + '</b>';
+      var hi = sn.hi.indexOf(i) >= 0;
+      var sel = (sn.sel === i);
+      o.box.style.background = sel ? '#dcfce7' : (hi ? '#fef3c7' : '#fff');
+      o.box.style.borderColor = sel ? '#16a34a' : (hi ? '#d97706' : '#cbd5e1');
+      o.slot.innerHTML = (sn.ptr === i) ? '<span style="color:#d97706;font-weight:800">▼ 指针</span>' : '';
+    });
+    refs.addr.innerHTML = sn.addr;
+  },
+
+  result: {
+    big: 'FIFO→1FCAH · CLOCK→0BCAH',
+    html: '问1：<b>17CAH ÷ 400H</b> 商 <b>5</b> 余 <b>3CAH</b> → 页号 5，偏移 3CAH。问2：FIFO 淘汰装入最早的 <b>0 号页</b>（130），5 号页进 <b>7 号框</b>，物理地址 = 7×400H + 3CAH = <b>1FCAH</b>。问3：CLOCK 清零一圈后<b>第五次</b>检查命中框2（访问位 0），淘汰 2 号页进 <b>2 号框</b>，物理地址 = <b>0BCAH</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

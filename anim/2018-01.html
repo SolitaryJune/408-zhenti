@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-01 双栈协同求值</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S1ROW, S2ROW, CALC;
+
+function paintStack(row, chars, classes, topIdx, n){
+  row.innerHTML = '';
+  for(var i = 0; i < n; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-ptr', (topIdx === i && chars[i] !== '') ? '栈顶' : ''));
+    var ch = chars[i] === '' ? '&nbsp;' : chars[i];
+    col.appendChild(AW.el('div', 'aw-box' + (classes[i] ? ' ' + classes[i] : ''), ch));
+    col.appendChild(AW.el('div', 'aw-idx', String(i + 1)));
+    row.appendChild(col);
+  }
+}
+
+AW.init({
+  title: '2018·数据结构（一） 双栈协同完成运算',
+  subtitle: 'S1 存操作数 <code>5,8,3,2</code>（2 在栈顶） · S2 存运算符 <code>*,-,+</code>（+ 在栈顶） · 调用 3 次 F()',
+  counterLabel: '已调用F()',
+  ribbonTitle: '第几次 F()（✓ 完成）',
+  intro: '点击「▶ 播放」逐步演示每次 F() 的弹栈、运算与压栈。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    S1ROW = AW.el('div', 'aw-cells');
+    S2ROW = AW.el('div', 'aw-cells');
+    CALC = AW.el('div', 'aw-row-label', '&nbsp;');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>操作数栈 S1</b>（下标 1 在栈底，右端为栈顶）'));
+    wrap.appendChild(S1ROW);
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>运算符栈 S2</b>（右端为栈顶）'));
+    wrap.appendChild(S2ROW);
+    wrap.appendChild(CALC);
+    stage.appendChild(wrap);
+    paintStack(S1ROW, ['5','8','3','2'], ['','','',''], 3, 4);
+    paintStack(S2ROW, ['*','-','+'], ['','',''], 2, 3);
+    CALC.innerHTML = '初始状态：尚未调用 F()';
+  },
+
+  render: function(stage, sn){
+    paintStack(S1ROW, sn.s1, sn.s1c, sn.s1top, 4);
+    paintStack(S2ROW, sn.s2, sn.s2c, sn.s2top, 3);
+    CALC.innerHTML = sn.calc || '&nbsp;';
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'S1 = 5,8,3,2（栈顶 2）；S2 = *,-,+（栈顶 +）', count:0,
+      s1:['5','8','3','2'], s1c:['','','',''], s1top:3,
+      s2:['*','-','+'], s2c:['','',''], s2top:2,
+      calc:'初始状态：尚未调用 F()' },
+    { cls:'step', tag:'F1 弹栈', log:'第 1 次 F()：先弹 a=2，再弹 b=3，弹出运算符 +', count:0,
+      s1:['5','8','',''], s1c:['','','miss','miss'], s1top:1,
+      s2:['*','-',''], s2c:['','','miss'], s2top:1,
+      calc:'F1 弹出：a=2（栈顶）、b=3、op=+' },
+    { cls:'ok', tag:'F1 结果', log:'b op a = 3 + 2 = 5，压回 S1 → S1 变为 5,8,5', count:1, ribbon:{k:1, ok:true},
+      s1:['5','8','5',''], s1c:['','','ok',''], s1top:2,
+      s2:['*','-',''], s2c:['','',''], s2top:1,
+      calc:'F1 计算：b op a = 3 + 2 = 5，压回 S1' },
+    { cls:'step', tag:'F2 弹栈', log:'第 2 次 F()：先弹 a=5，再弹 b=8，弹出运算符 -', count:1,
+      s1:['5','','',''], s1c:['','miss','miss',''], s1top:0,
+      s2:['*','',''], s2c:['','miss',''], s2top:0,
+      calc:'F2 弹出：a=5（栈顶）、b=8、op=-' },
+    { cls:'ok', tag:'F2 结果', log:'b op a = 8 - 5 = 3，压回 S1 → S1 变为 5,3', count:2, ribbon:{k:2, ok:true},
+      s1:['5','3','',''], s1c:['','ok','',''], s1top:1,
+      s2:['*','',''], s2c:['','',''], s2top:0,
+      calc:'F2 计算：b op a = 8 - 5 = 3，压回 S1' },
+    { cls:'step', tag:'F3 弹栈', log:'第 3 次 F()：先弹 a=3，再弹 b=5，弹出运算符 *', count:2,
+      s1:['','','',''], s1c:['miss','miss','',''], s1top:0,
+      s2:['','',''], s2c:['miss','',''], s2top:0,
+      calc:'F3 弹出：a=3（栈顶）、b=5、op=*' },
+    { cls:'ok', tag:'F3 结果', log:'b op a = 5 × 3 = 15，压回 S1 → S1 变为 5,15', count:3, ribbon:{k:3, ok:true},
+      s1:['5','15','',''], s1c:['','ok','',''], s1top:1,
+      s2:['','',''], s2c:['','',''], s2top:0,
+      calc:'F3 计算：b op a = 5 × 3 = 15，压回 S1' },
+    { cls:'done', tag:'完成', log:'三次 F() 调用结束：S1 栈顶 = 15 → 答案 B', count:3, done:true,
+      s1:['5','15','',''], s1c:['','hit','',''], s1top:1,
+      s2:['','',''], s2c:['','',''], s2top:0,
+      calc:'最终 S1 栈顶保存 15 → 答案 B' },
+  ],
+
+  result: {
+    big: '15',
+    html: 'S1 栈顶最终保存 <b>15</b>，答案 <b>B</b>。记忆锚点：先弹的给 a、后弹的给 b，按 <b>b op a</b> 计算并压回操作数栈；运算符按 S2 栈顶顺序 +、-、* 依次参与。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

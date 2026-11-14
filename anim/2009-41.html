@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-41 动画 · 贪心求最短路径的两个反例</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：在两张 SVG 图上演示贪心「就近选点」的失败过程
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var NS = 'http://www.w3.org/2000/svg';
+
+// 图(1)：1-2、2-3、3-4 权均为 1，另有直达边 1-4 权 2
+var P1 = {1:[70,150], 2:[185,55], 3:[315,55], 4:[410,150]};
+var E1 = { e12:[1,2,'1'], e23:[2,3,'1'], e34:[3,4,'1'], e14:[1,4,'2'] };
+var W1 = { e12:[128,92], e23:[250,40], e34:[368,92], e14:[240,168] };
+// 图(2)：只有 1-2（权 1）、1-3（权 2）
+var P2 = {1:[100,105], 2:[255,45], 3:[255,165]};
+var E2 = { f12:[1,2,'1'], f13:[1,3,'2'] };
+var W2 = { f12:[165,62], f13:[165,148] };
+
+var svg1 = null, svg2 = null;
+var l1 = {}, n1 = {}, w1 = {}, l2 = {}, n2 = {}, w2 = {};
+
+function mkSvg(x, w){
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + x + ' ' + w);
+  svg.setAttribute('width', x); svg.setAttribute('height', w);
+  return svg;
+}
+function mkGraph(pos, edges, wpos, edgeStore, nodeStore, wStore, svg){
+  Object.keys(edges).forEach(function(id){
+    var e = edges[id], a = pos[e[0]], b = pos[e[1]];
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', a[0]); ln.setAttribute('y1', a[1]);
+    ln.setAttribute('x2', b[0]); ln.setAttribute('y2', b[1]);
+    ln.setAttribute('stroke', '#cbd5e1'); ln.setAttribute('stroke-width', '3');
+    svg.appendChild(ln);
+    edgeStore[id] = ln;
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', wpos[id][0]); t.setAttribute('y', wpos[id][1]);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-size', '17'); t.setAttribute('font-weight', '700'); t.setAttribute('fill', '#475569');
+    t.textContent = e[2];
+    svg.appendChild(t);
+    wStore[id] = t;
+  });
+  Object.keys(pos).forEach(function(id){
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', pos[id][0]); c.setAttribute('cy', pos[id][1]); c.setAttribute('r', 21);
+    c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#334155'); c.setAttribute('stroke-width', '2.5');
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', pos[id][0]); t.setAttribute('y', pos[id][1] + 7);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-size', '19'); t.setAttribute('font-weight', '700'); t.setAttribute('fill', '#0f172a');
+    t.textContent = id;
+    svg.appendChild(c); svg.appendChild(t);
+    nodeStore['node' + id] = { circle: c, text: t };
+  });
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lb1 = AW.el('div', 'aw-row-label', '<b>图（1）</b>　初始顶点 1 · 目标顶点 4　（边权标在旁）');
+  svg1 = mkSvg(470, 200);
+  mkGraph(P1, E1, W1, l1, n1, w1, svg1);
+  var lb2 = AW.el('div', 'aw-row-label', '<b>图（2）</b>　初始顶点 1 · 目标顶点 3');
+  svg2 = mkSvg(330, 210);
+  mkGraph(P2, E2, W2, l2, n2, w2, svg2);
+  wrap.appendChild(lb1); wrap.appendChild(svg1);
+  wrap.appendChild(lb2); wrap.appendChild(svg2);
+  stage.appendChild(wrap);
+}
+
+function edgeState(ln, tx, mode){
+  if(mode === 'go'){ ln.setAttribute('stroke', '#d97706'); ln.setAttribute('stroke-width', '4.5'); }
+  else if(mode === 'true'){ ln.setAttribute('stroke', '#16a34a'); ln.setAttribute('stroke-width', '4.5'); ln.setAttribute('stroke-dasharray', '7 5'); }
+  else { ln.setAttribute('stroke', '#cbd5e1'); ln.setAttribute('stroke-width', '3'); ln.removeAttribute('stroke-dasharray'); }
+}
+function nodeState(o, mode){
+  var fill = '#ffffff', stroke = '#334155', tfill = '#0f172a';
+  if(mode === 'cur'){ fill = '#d97706'; stroke = '#b45309'; tfill = '#ffffff'; }
+  else if(mode === 'stuck'){ fill = '#dc2626'; stroke = '#b91c1c'; tfill = '#ffffff'; }
+  o.circle.setAttribute('fill', fill); o.circle.setAttribute('stroke', stroke);
+  o.text.setAttribute('fill', tfill);
+}
+
+function render(stage, sn){
+  var st = sn.st;
+  // 图(1)
+  svg1.style.opacity = st.dim1 ? '0.35' : '1';
+  Object.keys(E1).forEach(function(id){
+    var mode = '';
+    if(st.g1 && st.g1.indexOf(id) >= 0) mode = 'go';
+    if(id === 'e14' && st.showTrue) mode = 'true';
+    edgeState(l1[id], w1[id], mode);
+  });
+  [1,2,3,4].forEach(function(id){
+    var mode = '';
+    if(st.cur1 === id) mode = 'cur';
+    nodeState(n1['node' + id], mode);
+  });
+  // 图(2)
+  svg2.style.opacity = st.g2mode === 'dim' ? '0.35' : '1';
+  Object.keys(E2).forEach(function(id){
+    edgeState(l2[id], w2[id], (st.g2 && st.g2.indexOf(id) >= 0) ? 'go' : '');
+  });
+  [1,2,3].forEach(function(id){
+    var mode = '';
+    if(st.cur2 === id) mode = st.stuck ? 'stuck' : 'cur';
+    nodeState(n2['node' + id], mode);
+  });
+}
+
+AW.init({
+  title: '贪心「就近选点」能求最短路径吗？',
+  subtitle: '每步选「离当前顶点 u 最近且未加入路径」的顶点 · 图（1）与图（2）双反例推演（2009-41）',
+  counterLabel: '累计权值',
+  ribbonTitle: '贪心决策（✓ 顺路 / ✗ 致错）',
+  intro: '点击「▶ 播放」，看贪心在两张图上如何失败。',
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'方法回顾：设初始路径只含初始顶点，u = 1；每轮选「离 u 最近且未加入路径」的顶点 v，直到 u 是目标顶点。图（1）：边 1-2、2-3、3-4 权均为 1，另有直达边 1-4 权 2。', count:0, st:{dim1:false, g1:[], cur1:1, g2mode:'dim'} },
+    { cls:'ok', tag:'选顶点 2', log:'图（1）第 1 轮：离 1 最近的是 2（距离 1）→ 加入路径，u = 2，累计长度 1。', count:1, st:{g1:['e12'], cur1:2, g2mode:'dim'}, ribbon:{k:1, ok:true} },
+    { cls:'ok', tag:'选顶点 3', log:'第 2 轮：离 2 最近且未加入的是 3（距离 1）→ u = 3，累计长度 2。', count:2, st:{g1:['e12','e23'], cur1:3, g2mode:'dim'}, ribbon:{k:2, ok:true} },
+    { cls:'miss', tag:'错过直达边', log:'第 3 轮：离 3 最近的是 4（距离 1）→ u = 4，累计长度 3，u 是目标顶点，方法停止。但这一步恰恰错过了底部的直达边 1-4（权 2）！', count:3, st:{g1:['e12','e23','e34'], cur1:4, g2mode:'dim'}, ribbon:{k:3, ok:false} },
+    { cls:'miss', tag:'检验失败', log:'检验：贪心路径 1→2→3→4 长 3；真实最短路径是绿色虚线直达边 1→4，长 2。求出的不是最短路径 —— 反例一成立。', count:3, st:{g1:['e12','e23','e34'], cur1:4, showTrue:true, g2mode:'dim'} },
+    { cls:'shift', tag:'换图（2）', log:'再看图（2）：只有边 1-2（权 1）与 1-3（权 2），初始顶点 1、目标顶点 3。', count:0, st:{dim1:true, g1:[], cur1:0, g2mode:'run', g2:[], cur2:1} },
+    { cls:'ok', tag:'选顶点 2', log:'图（2）第 1 轮：离 1 最近的是 2（距离 1）→ 加入路径，u = 2，累计长度 1。', count:1, st:{dim1:true, g1:[], cur1:0, g2mode:'run', g2:['f12'], cur2:2}, ribbon:{k:4, ok:true} },
+    { cls:'miss', tag:'卡死', log:'2 没有任何未加入路径的邻接点，也不是目标顶点 3 —— 步骤②无法继续，该方法连 1 到 3 的路径都求不出（红色 = 卡死）。反例二成立。', count:1, st:{dim1:true, g1:[], cur1:0, g2mode:'run', g2:['f12'], cur2:2, stuck:true}, ribbon:{k:4, ok:false} },
+    { cls:'done', tag:'结论', log:'两个反例足以判定：该方法不能求得最短路径 —— 反例一求出的路径偏长（3 > 2），反例二直接无解。', count:0, st:{g1:['e12','e23','e34'], cur1:4, showTrue:true, g2mode:'end', g2:['f12'], cur2:2, stuck:true}, done:true },
+  ],
+
+  result: {
+    big: '不能求得最短路径',
+    html: '反例一：贪心走 <b>1→2→3→4</b> 长 <b>3</b>，而最短是直达边 <b>1→4</b> 长 <b>2</b>；反例二：走进顶点 2 后无路可走，<b>连路径都求不出</b>。「局部最近」≠「全局最短」——需像 Dijkstra 那样维护起点到各顶点的<b>当前最短距离</b>，而非只比相邻边权。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

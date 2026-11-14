@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-15 结构体对齐与小端存放动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 算法/过程类：结构体对齐布局 → 数组寻址 → 小端字节定位 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '结构体数组：对齐布局 + 小端字节定位',
+  subtitle: '32 位机 · 字节编址 · 小端 · 边界对齐 · 求机器数 <code>1234 5678H</code> 中 56H 的地址',
+  counterLabel: '步骤',
+  ribbonTitle: '关键步骤（✓ 对 / ✗ 陷阱）',
+  intro: '点击「▶ 播放」逐步定位 56H 所在字节。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var self = this;
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>struct record 的对齐布局</b>（单位：字节，总大小 = 20B）'));
+    var lay = AW.el('div', 'aw-cells');
+    lay.style.marginBottom = '6px';
+    var mkSeg = function(txt, w, scale){
+      var b = AW.el('div', 'aw-box dim', txt);
+      b.style.width = (w * scale) + 'px'; b.style.height = '44px';
+      b.style.fontSize = '13px';
+      lay.appendChild(b); return b;
+    };
+    self._segId  = mkSeg('id（int）<br>偏移 0～3', 4, 22);
+    self._segNm  = mkSeg('name[10]<br>偏移 4～13', 10, 22);
+    self._segPad = mkSeg('填充<br>14～15', 2, 22);
+    self._segSa  = mkSeg('salary（int）<br>偏移 16～19', 4, 22);
+    inner.appendChild(lay);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>employee[1].id 的 4 个字节（小端存放 1234 5678H）</b>'));
+    var addrRow = AW.el('div', 'aw-cells');
+    addrRow.style.marginBottom = '4px';
+    self._bytes = [];
+    ['78','56','34','12'].forEach(function(c){
+      var col = AW.el('div', '');
+      var b = AW.el('div', 'aw-box dim', c);
+      b.style.fontSize = '17px';
+      col.appendChild(b);
+      col.appendChild(AW.el('div', 'aw-idx', ''));
+      addrRow.appendChild(col);
+      self._bytes.push(b);
+    });
+    inner.appendChild(addrRow);
+    var addrLbl = AW.el('div', 'aw-cells');
+    addrLbl.style.marginBottom = '6px';
+    self._addrs = [];
+    ['A0C4H','A0C5H','A0C6H','A0C7H'].forEach(function(a){
+      var d = AW.el('div', 'aw-idx', a);
+      d.style.width = '48px'; d.style.textAlign = 'center';
+      addrLbl.appendChild(d); self._addrs.push(d);
+    });
+    inner.appendChild(addrLbl);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>定位结论</b>'));
+    self._ans = AW.el('div', 'aw-box dim', '56H 的地址 = ?');
+    self._ans.style.width = '220px'; self._ans.style.height = '40px'; self._ans.style.fontSize = '14px';
+    inner.appendChild(self._ans);
+
+    self._note = AW.el('div', 'aw-row-label', '');
+    var wrap = AW.el('div', 'aw-scroll');
+    inner.appendChild(self._note);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',       log:'32 位机、字节编址、小端存放、边界对齐。已知 employee 起始地址 0000 A0B0H、employee[1].id = 1234 5678H，求 56H 的地址。', count:0, note:'目标：56H 的地址' },
+    { cls:'ok',    tag:'id 占位',    log:'id 是 int 型，4 字节对齐 → 从偏移 0 开始，占 0～3。', count:1, ribbon:{k:1, ok:true}, note:'id：偏移 0～3' },
+    { cls:'ok',    tag:'name 占位',  log:'name[10] 是 char 数组，1 字节对齐 → 占 4～13。', count:2, ribbon:{k:2, ok:true}, note:'name：偏移 4～13' },
+    { cls:'ok',    tag:'填充对齐',   log:'salary 是 int，必须从 4 的倍数开始 → 13 之后填充 2 字节（14～15），salary 占 16～19；结构体大小须为 4 的倍数 = 20B。', count:3, ribbon:{k:3, ok:true}, note:'sizeof = 20B（含填充）' },
+    { cls:'shift', tag:'定位元素',   log:'employee[1] 是第二个元素：起始地址 = A0B0H + 1 × 20B(14H) = 0000 A0C4H；id 在偏移 0 → 占 A0C4H～A0C7H。', count:4, ribbon:{k:4, ok:true}, note:'employee[1].id @ A0C4H' },
+    { cls:'ok',    tag:'小端落位',   log:'小端 = 低字节放低地址：78H→A0C4H、56H→A0C5H、34H→A0C6H、12H→A0C7H。', count:5, ribbon:{k:5, ok:true}, note:'78H 在 A0C4H，56H 在 A0C5H' },
+    { cls:'miss',  tag:'陷阱',       log:'若按大端想（12H 在 A0C4H）会选 D（A0C6H）；若漏掉 salary 前的填充、把元素算成 18B，起点就成了 A0C2H——都错。', count:6, ribbon:{k:6, ok:false}, note:'✗ 大端/漏填充都会错' },
+    { cls:'done',  tag:'完成',       log:'结论：56H 的地址 = 0000 A0C5H，选 C。', count:7, done:true, note:'答案 C' },
+  ],
+
+  render: function(stage, sn, i){
+    var self = this;
+    var set = function(b, cls, html){
+      b.className = 'aw-box' + (cls ? ' ' + cls : '');
+      if(html != null) b.innerHTML = html;
+    };
+    set(self._segId, 'dim', 'id（int）<br>偏移 0～3');
+    set(self._segNm, 'dim', 'name[10]<br>偏移 4～13');
+    set(self._segPad, 'dim', '填充<br>14～15');
+    set(self._segSa, 'dim', 'salary（int）<br>偏移 16～19');
+    self._bytes.forEach(function(b){ set(b, 'dim'); });
+    self._addrs.forEach(function(d){ d.style.color = '#94a3b8'; });
+    set(self._ans, 'dim', '56H 的地址 = ?');
+    if(i >= 1){ set(self._segId, 'ok'); }
+    if(i >= 2){ set(self._segNm, 'ok'); }
+    if(i >= 3){
+      set(self._segPad, 'shift');
+      set(self._segSa, 'ok');
+    }
+    if(i >= 4){
+      self._addrs.forEach(function(d){ d.style.color = '#0f172a'; });
+    }
+    if(i >= 5){
+      set(self._bytes[0], 'ok', '78');
+      set(self._bytes[1], 'shift', '56');
+      set(self._bytes[2], 'ok', '34');
+      set(self._bytes[3], 'ok', '12');
+    }
+    if(i >= 7){ set(self._ans, 'ok', '56H 的地址 = 0000 A0C5H'); }
+    self._note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '答案 C（0000 A0C5H）',
+    html: '<p>结构体含填充共 <b>20B</b>，employee[1] 起于 <b>A0C4H</b>，id 占 A0C4H～A0C7H；小端存放下低字节 78H 在最低地址，<b>56H 在 0000 A0C5H</b>。记忆锚点：<b>小端 = 低字节低地址</b>；算元素地址先算含填充的结构体大小。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

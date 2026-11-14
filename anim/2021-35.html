@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-35 子网划分 · 完整性检验</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     过程演示类：把候选子网放上地址轴，检验能否不重不漏划分
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var RANGE = ['0~31', '32~63', '64~95', '96~127', '128~159', '160~191', '192~223', '224~255'];
+var segEls = [], noteBox, resBox;
+
+// 每步 8 段的着色：''=无关(dim)，'B'=已知子网(蓝)，'G'=候选/补全块(绿)，'R'=盖不住的孤岛(红)
+var PAINT = [
+  ['', '', '', '', '', '', '', ''],
+  ['', '', '', '', 'B', 'B', '', ''],
+  ['G', 'G', 'G', 'G', 'B', 'B', 'G', 'G'],
+  ['G', 'G', 'G', 'G', 'B', 'B', 'G', 'G'],
+  ['', '', '', '', 'B', 'B', 'G', 'G'],
+  ['G', 'G', 'R', 'R', 'B', 'B', 'R', 'R'],
+  ['G', 'G', 'R', 'R', 'B', 'B', 'R', 'R'],
+];
+
+AW.init({
+  title: '子网划分：哪个不可能是另外两个子网之一',
+  subtitle: '已知子网 <code>192.168.9.128/26</code>（128~191） · 地址轴每格 = 32 个地址 · 逐项检验 A/B/C/D',
+  counterLabel: '已检验选项',
+  ribbonTitle: '逐项检验（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」，把候选子网一块块放上地址轴。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    var axis = AW.el('div', 'aw-row-label', '<b>192.168.9.0 ~ 192.168.9.255</b>（8 格，每格 32 个地址）');
+    inner.appendChild(axis);
+
+    var bar = AW.el('div', '');
+    bar.style.cssText = 'display:flex;width:100%;max-width:760px;';
+    segEls = [];
+    RANGE.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'flex:1;margin:2px;padding:7px 0;border-radius:8px;text-align:center;' +
+        'font-size:12px;font-weight:700;font-family:Menlo,monospace;border:2px solid #cbd5e1;' +
+        'background:#f1f5f9;color:#94a3b8;opacity:.45;transition:all .35s;';
+      d.innerHTML = r;
+      bar.appendChild(d);
+      segEls.push(d);
+    });
+    inner.appendChild(bar);
+
+    var legend = AW.el('div', 'aw-row-label');
+    legend.innerHTML = '颜色：<b style="color:#2563eb">蓝 = 已知子网 128/26</b> · <b style="color:#16a34a">绿 = 候选子网 / 补全块</b> · <b style="color:#dc2626">红 = 盖不住的剩余孤岛</b>';
+    inner.appendChild(legend);
+
+    noteBox = AW.el('div', '');
+    noteBox.style.cssText = 'margin-top:10px;font-size:14.5px;line-height:1.75;color:#334155;';
+    inner.appendChild(noteBox);
+
+    resBox = AW.el('div', '');
+    resBox.style.cssText = 'margin-top:6px;font-size:14px;font-weight:800;color:#0f172a;';
+    inner.appendChild(resBox);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step', tag: '审题', count: 0,
+      log: '一个 IP 网络划分为 3 个子网，其中一个是 192.168.9.128/26（占 128~191）。三个子网要不重不漏地覆盖整个网络',
+      note: '检验标准：候选子网 + 已知子网 128/26 + 最后一个子网，能否恰好覆盖整个原网络？' },
+    { cls: 'step', tag: '已知子网', count: 0,
+      log: '先把已知子网 192.168.9.128/26 放上地址轴：占据 128~191',
+      note: '已知子网 192.168.9.128/26 占据 128~191（蓝色两格）。' },
+    { cls: 'ok', tag: 'A 可能 ✓', count: 1, ribbon: { k: 1, ok: true },
+      log: 'A 192.168.9.0/25（0~127）：再补一个 192.168.9.192/26 → 0/25 + 128/26 + 192/26 恰好拼满 /24 → 可能',
+      note: '检验 A <code>192.168.9.0/25</code>（0~127）：第三个子网取 192.168.9.192/26（192~255），三块拼满整个 /24。',
+      res: 'A 可能 ✓' },
+    { cls: 'ok', tag: 'C 可能 ✓', count: 2, ribbon: { k: 2, ok: true },
+      log: 'C 192.168.9.192/26（192~255）：与 128/26 拼成 128~255，再补 192.168.9.0/25 → 拼满 → 可能',
+      note: '检验 C <code>192.168.9.192/26</code>（192~255）：第三个子网取 192.168.9.0/25，三块拼满整个 /24。',
+      res: 'C 可能 ✓' },
+    { cls: 'ok', tag: 'D 可能 ✓', count: 3, ribbon: { k: 3, ok: true },
+      log: 'D 192.168.9.192/27（192~223）：原网络不必是 /24！取 192.168.9.128/25 → 128/26 + 192/27 + 224/27 拼满 128~255 → 可能',
+      note: '检验 D <code>192.168.9.192/27</code>（192~223）：原网络可以缩小为 192.168.9.128/25（128~255），三块 128/26 + 192/27 + 224/27 拼满。',
+      res: 'D 可能 ✓（原网络可以是 192.168.9.128/25）' },
+    { cls: 'miss', tag: 'B 不可能 ✗', count: 4, ribbon: { k: 4, ok: false },
+      log: 'B 192.168.9.0/26（0~63）：剩余空间至少含 64~127 与 192~255 两块孤岛（中间隔着已占用的 128~191）→ 一个连续子网盖不住 → 不可能',
+      note: '检验 B <code>192.168.9.0/26</code>（0~63）：不管原网络取多大，剩余地址必被切成 64~127 与 192~255 两块互不相邻的孤岛；最后一个子网名额只有一个连续地址块，盖不住。',
+      res: 'B 不可能 ✗' },
+    { cls: 'done', tag: '完成', count: 4, done: true,
+      log: 'A/C/D 都能构造出完整划分，只有 B 会让剩余地址出现两块孤岛 → 选 B',
+      note: '答案：B。' },
+  ],
+
+  render: function(stage, sn, i){
+    var C = PAINT[Math.min(i, PAINT.length - 1)];
+    for(var j = 0; j < 8; j++){
+      var d = segEls[j];
+      if(C[j] === 'B'){ d.style.background = '#dbeafe'; d.style.borderColor = '#2563eb'; d.style.color = '#1d4ed8'; d.style.opacity = 1; }
+      else if(C[j] === 'G'){ d.style.background = '#dcfce7'; d.style.borderColor = '#16a34a'; d.style.color = '#14532d'; d.style.opacity = 1; }
+      else if(C[j] === 'R'){ d.style.background = '#fee2e2'; d.style.borderColor = '#dc2626'; d.style.color = '#b91c1c'; d.style.opacity = 1; }
+      else { d.style.background = '#f1f5f9'; d.style.borderColor = '#cbd5e1'; d.style.color = '#94a3b8'; d.style.opacity = .45; }
+    }
+    noteBox.innerHTML = sn.note || '';
+    resBox.innerHTML = sn.res || '';
+  },
+
+  result: {
+    big: '答案 B',
+    html: '已知 128/26 后：<b>A</b> 补 192/26、<b>C</b> 补 0/25、<b>D</b> 把原网络缩小为 128/25 再补 224/27——都能凑出完整划分；<b>B 取走 0~63 后剩 64~127 与 192~255 两块孤岛</b>，一个连续子网盖不住 → 选 <b>B</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

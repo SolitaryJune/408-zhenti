@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-01 · 顺序表操作的时间复杂度</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>关键词：<b>顺序存储</b>的有序表（长度 n）。顺序表占一段连续内存，第 i 个元素的地址 = 首地址 + (i−1) × 元素大小，<b>按位序访问与 n 无关</b>。考点：各操作的平均时间复杂度。</p>' },
+  { title: '逐项分析 A：查找指定值元素',
+    cls: 'bad',
+    body: '<p>按<b>值</b>找元素必须逐个比较：顺序扫 O(n) 次；即使利用有序性折半，也要比较 O(log n) 次。都不是 O(1)。</p>' },
+  { title: '逐项分析 B：插入指定值元素',
+    cls: 'bad',
+    body: '<p>先找到插入位置（平均 O(n)），再把插入点之后的元素<b>平均后移 n/2 个</b>。平均时间复杂度 O(n)。</p>' },
+  { title: '逐项分析 C：删除第 i (1≤i≤n) 个元素',
+    cls: 'bad',
+    body: '<p>位序 i 已给定，省掉了查找，但顺序表必须保持连续：平均要<b>前移 (n−1)/2 个元素</b>，仍是 O(n)。</p>' },
+  { title: '逐项分析 D：获取第 i (1≤i≤n) 个元素',
+    cls: 'good',
+    body: '<p>地址 = 首地址 + (i−1) × 元素大小，<b>一次算术运算直接取出</b>，不比较、不移动任何元素，严格 O(1)。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。核心记忆点：顺序表<b>按下标 O(1)、按值 O(n)</b>；「有序」只能加速查找，救不了插删的搬移。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2023-01 · 顺序表哪种操作平均时间复杂度是 O(1)？',
+  subtitle: '考点：顺序存储的随机存取特性 · 选项逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '获取第 i 个元素靠<b>地址公式直算</b>，严格 O(1)。查找 / 插入 / 删除都要比较或搬移元素，平均 O(n)（有序表查找可折半到 O(log n)，但改变不了 A、B 不是 O(1)）。记忆锚点：<b>按下标 O(1)，按值 O(n)</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

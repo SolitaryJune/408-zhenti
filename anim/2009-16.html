@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-16 相对寻址目标地址演算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-16：相对寻址——PC 自增与目标地址计算
+     模板：算法/过程类，只改 AW.init 区域
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function memRow(pcIdx, fetched){
+  var cells = [['2000','OP'],['2001','06'],['2002','·'],['2003','·']];
+  var h = '<div class="aw-row-label"><b>主存</b>：转移指令占 2000H（操作码）、2001H（位移量 06H）两个字节</div><div class="aw-cells">';
+  cells.forEach(function(c, i){
+    var ptr = (i === pcIdx) ? 'PC=' + c[0] : '';
+    var cls = (fetched && i < 2) ? 'ok' : '';
+    h += '<div class="aw-col"><div class="aw-ptr">' + ptr + '</div>' +
+         '<div class="aw-box ' + cls + '">' + c[1] + '</div>' +
+         '<div class="aw-idx">' + c[0] + 'H</div></div>';
+  });
+  return h + '</div>';
+}
+function formula(html){
+  return '<div class="aw-stepcard key"><p>' + html + '</p></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'转移指令采用相对寻址，两个字节组成：第一字节操作码、第二字节位移量 06H；取指每取一个字节 PC 自动加 1',
+    html:'<div class="aw-stepcard key"><p>相对寻址规则：<b>目标地址 = (PC) + 位移量</b>，基准是<b>取指完成后的 PC</b>（本题每取 1 字节 PC 自动 +1）。</p></div>' + memRow(0, false) },
+
+  { cls:'step', tag:'取指前', count:1, ribbon:{k:1, ok:true},
+    log:'取指前：PC = 2000H，指向转移指令首字节',
+    html: memRow(0, false) },
+
+  { cls:'shift', tag:'PC 自增', count:2, ribbon:{k:2, ok:true},
+    log:'取指：依次取 2000H、2001H 两个字节，每取一字节 PC +1 → 取完整条指令后 PC = 2002H',
+    html: memRow(2, true) },
+
+  { cls:'step', tag:'套规则', count:3, ribbon:{k:3, ok:true},
+    log:'相对寻址：目标地址 = (PC) + 位移量 = 2002H + 06H（基准是取指后的 PC，不是指令首址）',
+    html: memRow(2, true) + formula('目标地址 = (PC) + 位移量 = <code>2002H</code> + <code>06H</code>') },
+
+  { cls:'ok', tag:'算结果', count:4, ribbon:{k:4, ok:true},
+    log:'2002H + 06H = 2008H → 转移成功后跳到 2008H 继续执行',
+    html: memRow(2, true) + formula('目标地址 = <code>2002H</code> + <code>06H</code> = <b>2008H</b> ✓') },
+
+  { cls:'step', tag:'干扰项', count:5, ribbon:{k:5, ok:false},
+    log:'A（2006H）= 2000H + 06H：误用指令首址作基准；B（2007H）= 2001H + 06H：只算了 1 字节自增——都错',
+    html: '<div class="aw-stepcard bad"><p><b>A：2006H</b> = 2000H + 06H，基准错了——取指后 PC 已经不是指令首址。</p></div>' +
+          '<div class="aw-stepcard bad"><p><b>B：2007H</b> = 2001H + 06H，自增量错了——指令长 2 字节，PC 加的是 2。</p></div>' +
+          '<div class="aw-stepcard bad"><p><b>D：2009H</b>：无计算依据，仅作凑数项。</p></div>' },
+
+  { cls:'done', tag:'完成', count:6, ribbon:{k:6, ok:true},
+    log:'目标地址 = 取指后的 PC（2002H）+ 位移量（06H）= 2008H → 答案 C',
+    done:true,
+    html: memRow(2, true) + formula('目标地址 = <code>2002H</code> + <code>06H</code> = <b>2008H</b>，选 C') },
+];
+
+AW.init({
+  title: '2009-16 相对寻址的目标地址演算',
+  subtitle: '指令首址 2000H · 位移量 06H · 每取 1 字节 PC +1 · 考点：相对寻址 · PC 自增时机',
+  counterLabel: '演算步',
+  ribbonTitle: '演算进度（✓ 完成 / ✗ 陷阱）',
+  intro: '点击「▶ 播放」逐步演算。',
+  snaps: snaps,
+  result: {
+    big: '目标地址 2008H（答案 C）',
+    html: '链条：<b>指令 2 字节 → 取指后 PC = 2002H → 目标 = PC + 位移量 = 2008H</b>。<br>干扰项 A（2006H）错在用指令首址当基准，B（2007H）错在只加 1 字节自增。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

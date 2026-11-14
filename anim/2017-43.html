@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-43 f1(int) 与 f2(float) 累加 f(n) 的五问推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: 'f1（int）与 f2（float）累加 f(n) 的五问推演',
+  subtitle: 'f(n) = 2<sup>n+1</sup> − 1（二进制 n+1 个 1）· 循环 n 轮（i = 0 … n−1）· unsigned 规则与 IEEE 754 单精度',
+  counterLabel: '步骤',
+  ribbonTitle: '五个小问（✓ 平稳 · ✗ 有陷阱）',
+  intro: '点击「▶ 播放」，沿循环的关键里程碑走一遍五个小问。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var HEADS = ['循环进度', 'power（每轮 ×2）', 'f1 的 sum（int）', 'f2 的 sum（float）', '发生了什么'];
+    var ROWS = [
+      ['初始', '1', '1（00000001H）', '1.0（精确）', 'sum=1、power=1，尚未进入循环'],
+      ['i = 0', '2', '3（00000003H）', '3.0（精确）', '普通累加：int 与 float 都精确'],
+      ['i = 22', '2<sup>23</sup>', '16777215（00FFFFFFH）', '16777215.0（4B7FFFFFH）', '恰好 24 个 1，float 装得下：f1(23) = f2(23)（问2）'],
+      ['i = 23', '2<sup>24</sup>', '33554431（01FFFFFFH）', '33554432.0（4B800000H）', '25 个 1 必须舍入：f1(24) ≠ f2(24)（问3）'],
+      ['i = 29', '2<sup>30</sup>', '2147483647（7FFFFFFFH）', '2147483648.0（4F000000H）', 'int 的最大正数，仍正确；float 恰为 2 的幂，精确'],
+      ['i = 30', '2<sup>31</sup>', 'FFFFFFFFH → −1', '4294967296.0（4F800000H）', 'int 全 1 按补码是 −1（问4）；float 是 2 的幂，精确'],
+      ['i = 126', '2<sup>127</sup>', '（早已溢出，无意义）', '+∞（7F800000H）', '2<sup>127</sup> + 2<sup>127</sup> = 2<sup>128</sup> 超出 float 上限（问5）'],
+    ];
+    var wrap = AW.el('div', 'aw-scroll');
+    var tbl = AW.el('table', '');
+    tbl.style.cssText = 'border-collapse:collapse;font-size:12.5px;min-width:660px;';
+    var thead = AW.el('thead', '');
+    var htr = AW.el('tr', '');
+    for (var h = 0; h < HEADS.length; h++){
+      var th = AW.el('th', '', HEADS[h]);
+      th.style.cssText = 'border:1px solid #e2e8f0;background:#f1f5f9;padding:6px 9px;color:#475569;';
+      htr.appendChild(th);
+    }
+    thead.appendChild(htr);
+    tbl.appendChild(thead);
+    var tbody = AW.el('tbody', '');
+    var rows = [];
+    for (var r = 0; r < ROWS.length; r++){
+      var tr = AW.el('tr', '');
+      for (var c = 0; c < ROWS[r].length; c++){
+        var td = AW.el('td', '', ROWS[r][c]);
+        td.style.cssText = 'border:1px solid #e2e8f0;padding:6px 9px;color:#334155;';
+        tr.appendChild(td);
+      }
+      tr.style.display = 'none';
+      tbody.appendChild(tr);
+      rows.push(tr);
+    }
+    tbl.appendChild(tbody);
+    wrap.appendChild(tbl);
+    stage.appendChild(wrap);
+    this._rows = rows;
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题眼', reveal:1, curRow:0,
+      log:'f(n) = 2^(n+1) − 1，即二进制 n+1 个 1。f1 用 int 累加、f2 用 float 累加，各跑 n 轮（i = 0 … n−1），结束后 sum = 2^(n+1) − 1。下表按关键里程碑展开。' },
+    { cls:'miss', tag:'问(1) 死循环', reveal:1, curRow:0, ribbon:{k:1, ok:false},
+      log:'n=0 时循环条件先算 n−1：i、n 是 unsigned，0−1 下溢 = FFFFFFFFH（2^32−1，unsigned 的最大值）→ i ≤ n−1 恒成立，死循环；若 i、n 都改成 int，n−1 = −1，条件 0 ≤ −1 不成立，不会死循环。' },
+    { cls:'ok', tag:'i=0', reveal:2, curRow:1,
+      log:'第 1 轮：power=2、sum=3，数值很小，int 与 float 都精确。' },
+    { cls:'ok', tag:'i=22 · 问(2)', reveal:3, curRow:2, ribbon:{k:2, ok:true},
+      log:'n=23 的最后一轮：sum = 2^24 − 1 = 16777215，恰好 24 个 1；float 有效数字 24 位（隐含首位 1 + 23 位尾数）刚好装下 → f1(23) = 00FFFFFFH = f2(23) = 16777215.0（4B7FFFFFH），相等。' },
+    { cls:'miss', tag:'i=23 · 问(3)', reveal:4, curRow:3, ribbon:{k:3, ok:false},
+      log:'n=24 的最后一轮：sum = 2^25 − 1 = 33554431，25 个 1 超出 24 位有效数字 → float 舍入为 33554432.0（4B800000H）；int 不舍入 → f1(24) = 33554431 ≠ f2(24)。' },
+    { cls:'ok', tag:'i=29', reveal:5, curRow:4,
+      log:'sum = 2^31 − 1 = 7FFFFFFFH，是 int 能表示的最大正数，f1 仍正确；float 这边从 2^25 起和恰为 2 的幂序列，一直精确。' },
+    { cls:'miss', tag:'i=30 · 问(4)', reveal:6, curRow:5,
+      log:'sum = 2^32 − 1：int 装不下，32 位全 1 按补码解释为 −1 → f1(31) = −1；float 是 2^32 = 4294967296.0（4F800000H），毫无压力。' },
+    { cls:'step', tag:'问(4) 边界', reveal:6, curRow:5, ribbon:{k:4, ok:true},
+      log:'要 f1(n) 与 f(n) 相等，需 2^(n+1) − 1 ≤ 2^31 − 1，即 n ≤ 30 → 使 f1 正确的最大 n = 30。' },
+    { cls:'miss', tag:'i=126 · 问(5)', reveal:7, curRow:6,
+      log:'n=127 的最后一轮：power = 2^127，sum = 2^127 + 2^127 = 2^128，超过 float 上限（约 (2−2^−23)×2^127，略小于 2^128）→ 溢出为 +∞，机器数 7F800000H。' },
+    { cls:'step', tag:'问(5) 边界', reveal:7, curRow:6, ribbon:{k:5, ok:false},
+      log:'不溢出的最大 n：末轮和 2^(n+1) 不得超过上限 → n = 126；结果精确（无舍入）的最大 n：有效位数 n+1 ≤ 24 → n = 23。' },
+    { cls:'done', tag:'总结', reveal:7, rowCls:{2:'ok',3:'miss',5:'miss',6:'miss'}, done:true,
+      log:'一条线串五问：unsigned 下溢（问1）→ 24 位有效数字装下 24 个 1（问2）→ 第 25 位触发舍入（问3）→ int 溢出全 1 为 −1（问4）→ float 上限溢出为 +∞（问5）。' },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    var rev = sn.reveal || 1;
+    for (var k = 0; k < rows.length; k++){
+      rows[k].style.display = (k < rev) ? '' : 'none';
+      var bg = '';
+      if (sn.rowCls && sn.rowCls[k]) bg = (sn.rowCls[k] === 'ok') ? '#dcfce7' : '#fee2e2';
+      else if (k === sn.curRow) bg = '#fef3c7';
+      rows[k].style.background = bg;
+    }
+  },
+
+  result: {
+    big: '五问全解',
+    html: '问(1) unsigned 的 0−1 = 2^32−1 → 死循环（改 int 则否）；问(2) f1(23) = f2(23)，机器数 00FFFFFFH / 4B7FFFFFH；问(3) 25 个 1 超出 24 位有效数字，f2(24) 舍入为 33554432.0；问(4) 2^32−1 全 1 即 −1，f1 正确的最大 n = 30；问(5) f2(127) = +∞（7F800000H），不溢出最大 n = 126、精确最大 n = 23。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

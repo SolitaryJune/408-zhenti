@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-15 页式虚存虚实地址转换</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.aw-box.amber{ background:#fef3c7; border-color:#d97706; color:#92400e; }
+.aw-box.blue{ background:#dbeafe; border-color:#2563eb; color:#1e40af; }
+.pt-table{ border-collapse:collapse; font-size:13.5px; margin:4px 0; }
+.pt-table th{ border:1.5px solid #94a3b8; background:#f1f5f9; padding:5px 16px; font-weight:700; }
+.pt-table td{ border:1.5px solid #cbd5e1; padding:5px 16px; text-align:center; font-family:Menlo,Consolas,monospace; }
+.pt-table tr.hl td{ background:#dcfce7; border-color:#16a34a; font-weight:700; }
+.pt-table tr.trap td{ background:#fff7f7; border-color:#fca5a5; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 8 格十六进制地址条（虚地址 32 位）
+function addrRow8(chars, cls, ptrs){
+  var idx = ['31~28','27~24','23~20','19~16','15~12','11~8','7~4','3~0'];
+  var row = '<div class="aw-cells">';
+  for (var i = 0; i < 8; i++){
+    var c = (cls && cls[i]) ? ' ' + cls[i] : '';
+    row += '<div class="aw-col"><div class="aw-ptr">' + ((ptrs && ptrs[i]) || '') + '</div>' +
+           '<div class="aw-box' + c + '">' + chars[i] + '</div>' +
+           '<div class="aw-idx">' + idx[i] + '</div></div>';
+  }
+  return row + '</div>';
+}
+
+// 6 格十六进制地址条（主存地址 24 位）
+function addrRow6(chars, cls, ptrs){
+  var idx = ['23~20','19~16','15~12','11~8','7~4','3~0'];
+  var row = '<div class="aw-cells">';
+  for (var i = 0; i < 6; i++){
+    var c = (cls && cls[i]) ? ' ' + cls[i] : '';
+    row += '<div class="aw-col"><div class="aw-ptr">' + ((ptrs && ptrs[i]) || '') + '</div>' +
+           '<div class="aw-box' + c + '">' + chars[i] + '</div>' +
+           '<div class="aw-idx">' + idx[i] + '</div></div>';
+  }
+  return row + '</div>';
+}
+
+function ptTable(high, trap){
+  var rows = [
+    ['82',  '024H', '0'],
+    ['...', '...',  '...'],
+    ['129', '180H', '1'],
+    ['130', '018H', '1']
+  ];
+  var t = '<table class="pt-table"><tr><th>虚页号</th><th>实页号（页框号）</th><th>存在位</th></tr>';
+  rows.forEach(function(r, i){
+    var c = '';
+    if (high === i) c = ' class="hl"';
+    else if (trap === i) c = ' class="trap"';
+    t += '<tr' + c + '><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>';
+  });
+  return t + '</table>';
+}
+
+function note(t){
+  return '<div class="aw-row-label" style="margin-top:8px">' + t + '</div>';
+}
+
+function stage(inner){
+  return '<div class="aw-scroll"><div style="width:max-content;min-width:100%">' + inner + '</div></div>';
+}
+
+var VA = ['0','0','0','8','2','8','4','0'];
+var PA = ['0','1','8','8','4','0'];
+// 虚地址：前 5 格（高 20 位）= 虚页号 蓝，后 3 格 = 偏移 琥珀
+var VAC = ['blue','blue','blue','blue','blue','amber','amber','amber'];
+var PAC = ['blue','blue','blue','amber','amber','amber'];
+var DIM8 = ['dim','dim','dim','dim','dim','dim','dim','dim'];
+var DIM6 = ['dim','dim','dim','dim','dim','dim'];
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'页 4 KB → 偏移 12 位；虚存 4 GB → 虚地址 32 位；主存地址 24 位。',
+    html: stage(note('<b>地址结构</b>：页大小 4 KB = <code>2^12</code> B → 页内偏移占 <b>低 12 位</b>；虚拟空间 4 GB = <code>2^32</code> B → 虚拟地址 32 位 → <b>虚页号占高 20 位</b>；主存地址 24 位 = <b>页框号 12 位 + 偏移 12 位</b>。') +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, DIM8) + note('主存地址（24 位，待拼出）') + addrRow6(['?','?','?','?','?','?'], DIM6)),
+    ribbon:{k:1, ok:true} },
+  { cls:'shift', tag:'拆分', count:1,
+    log:'0008 2840H 拆成：虚页号 00082H（高 20 位）+ 页内偏移 840H（低 12 位）。',
+    html: stage(note('<b>拆分虚拟地址</b>：<code>0008 2840H</code> → 虚页号 = 高 20 位 <code>00082H</code>（蓝色），页内偏移 = 低 12 位 <code>840H</code>（琥珀，转换时原样保留）。') +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, VAC, [null,null,null,null,'虚页号→',null,null,'→偏移']) + note('主存地址（24 位，待拼出）') + addrRow6(['?','?','?','?','?','?'], DIM6)),
+    ribbon:{k:2, ok:true} },
+  { cls:'step', tag:'进位制', count:2,
+    log:'虚页号 00082H = 128 + 2 = 130（十进制）；页表里的虚页号是十进制。',
+    html: stage(note('<b>换算成十进制</b>：<code>00082H</code> = 8 × 16 + 2 = <b>130</b>。页表中的虚页号按十进制给出——表里的「82」是十进制 82（即 <code>0052H</code>），和 <code>00082H</code> 不是同一行，别认错。') +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, VAC) + note('主存地址（24 位，待拼出）') + addrRow6(['?','?','?','?','?','?'], DIM6)),
+    ribbon:{k:3, ok:true} },
+  { cls:'ok', tag:'查页表', count:3,
+    log:'查虚页号 130 → 实页号 018H，存在位 1，页在主存，不缺页。',
+    html: stage(note('<b>查页表</b>：虚页号 <b>130</b> 行 → 实页号 <code>018H</code>，存在位 = 1 → 页在主存，<b>不缺页</b>。') +
+      ptTable(3) +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, VAC) + note('主存地址（24 位，待拼出）') + addrRow6(['?','?','?','?','?','?'], DIM6)),
+    ribbon:{k:4, ok:true} },
+  { cls:'shift', tag:'拼接', count:4,
+    log:'主存地址 = 页框号 018H 拼偏移 840H = 018840H，即 01 8840H。',
+    html: stage(note('<b>拼接主存地址</b>：页框号（12 位）<code>018H</code> ‖ 偏移（12 位）<code>840H</code> = <code>018840H</code>，写成 <b>01 8840H</b>。') +
+      ptTable(3) +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, VAC) + note('主存地址（24 位）') + addrRow6(PA, PAC, [null,null,'页框号→',null,null,'→偏移'])),
+    ribbon:{k:5, ok:true} },
+  { cls:'step', tag:'干扰项', count:5,
+    log:'A/D：误把 00082H 当十进制 82 匹配到 024H、存在位 0；B：错用 129 行的 180H。',
+    html: stage(note('<b>干扰项来源</b>：<b>A</b>（02 4840H）与 <b>D</b>（缺页异常）——把 <code>00082H</code> 直接当十进制 82 匹配到第 1 行（024H 且存在位 0）；<b>B</b>（18 0840H）——错拿虚页 129 行的实页号 <code>180H</code> 来拼。') +
+      ptTable(3, 0) +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, VAC) + note('主存地址（24 位）') + addrRow6(PA, PAC)),
+    ribbon:{k:6, ok:true} },
+  { cls:'done', tag:'结论', count:6, done:true,
+    log:'虚页 130 → 页框 018H，拼偏移 840H → 主存地址 01 8840H，答案 C。',
+    html: stage(note('<b>结论</b>：虚页号 130 → 页框 <code>018H</code>（存在位 1，不缺页），拼偏移 <code>840H</code> → 主存地址 <b>01 8840H</b> = 选项 <b>C</b>。') +
+      ptTable(3) +
+      note('虚拟地址 0008 2840H（32 位）') + addrRow8(VA, VAC) + note('主存地址（24 位）') + addrRow6(PA, PAC)) },
+];
+
+AW.init({
+  title: '2022-15 · 页式虚存的虚-实地址转换',
+  subtitle: '虚拟地址 0008 2840H · 页 4 KB · 虚存 4 GB · 主存地址 24 位',
+  counterLabel: '转换进度',
+  ribbonTitle: '转换环节（✓ 完成）',
+  intro: '点击「▶ 播放」看虚地址如何一步步变主存地址。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（主存地址 01 8840H）',
+    html: '虚地址拆成 <b>虚页号 00082H = 130</b> 与 <b>偏移 840H</b>；查表 130 → 页框 <code>018H</code>（存在位 1，不缺页）；拼接得 <b>018840H = 01 8840H</b>。易错：把十六进制 00082H 当十进制 82 去查表（错成 A/D）、错拿 129 行的 180H（错成 B）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

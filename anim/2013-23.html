@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2013-23 删除文件时系统不可能执行的操作</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：删除文件，系统会做什么',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>删除文件 F 的过程 = <b>删目录项 + 回收 FCB + 回收磁盘块/内存缓冲区</b>。题目问的是系统<b>不可能</b>执行的操作——凡是删除文件时“本来就该做”的事都是干扰项。</p>' },
+  { title: 'B 删目录项 / C 删 FCB：删除文件的核心动作',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>删除文件的第一步就是在目录文件中<b>删除该文件的目录项</b>（B 会执行），并回收其<b>文件控制块（FCB）</b>占用的空间（C 会执行）。这两步缺一不可，否则文件系统元数据残缺。</p>' },
+  { title: 'D 释放内存缓冲区：同样会执行',
+    cls: 'good',
+    scls: 'step',
+    body: '<p>文件内容可能还驻留在<b>内存缓冲区</b>中。删除文件时要释放与之关联的缓冲区，避免残留数据被误用。D 也是系统会执行的操作。</p>' },
+  { title: 'A 删除所在目录：绝不可能',
+    cls: 'bad',
+    scls: 'ok',
+    body: '<p>目录本身也是文件（目录文件），里面存着<b>许多</b>文件的目录项。删除其中一个文件，只是从目录文件中移走一条记录，<b>目录仍然要为其他文件服务</b>。只有用户另外执行“删除目录”操作时才会删目录，删文件绝不会连带删目录。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>删除文件动的是“文件的元数据”（目录项、FCB、缓冲区），动不了它的上级目录</b>；目录项 ≠ 目录。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2013-23】删除文件过程中不可能执行的操作',
+  subtitle: '考点：文件删除流程（目录项 / FCB / 缓冲区 / 目录）· 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '删除文件会：删<b>目录项</b>（B）、回收 <b>FCB</b>（C）、释放<b>缓冲区</b>（D）；<b>不可能删除其所在目录</b>（A）。记忆点：目录项只是目录文件里的一条记录，目录还要为其他文件服务。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-26 安全性检测算法推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .btable{ border-collapse:collapse; font-size:13.5px; margin-top:8px; width:100%; }
+  .btable th, .btable td{ border:1px solid #e2e8f0; padding:7px 10px; text-align:center; }
+  .btable th{ background:#f1f5f9; color:#475569; }
+  .btable td.ok{ background:#f6fef9; color:#15803d; font-weight:700; }
+  .btable td.no{ background:#fff8f8; color:#b91c1c; font-weight:700; }
+  .btable td.dimc{ color:#cbd5e1; }
+  .avail{ display:inline-block; background:#0f172a; color:#fff; border-radius:12px;
+    padding:8px 16px; font-size:14px; font-weight:700; margin-top:12px; }
+  .avail span{ color:#fbbf24; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};
+
+/* 4 个同类资源；已分配 P1=2, P2=1, P3=0；还需要 P1=2, P2=2, P3=1 */
+var P = [
+  { name:'P₁', alloc:2, need:2 },
+  { name:'P₂', alloc:1, need:2 },
+  { name:'P₃', alloc:0, need:1 },
+];
+/* 每步的判定状态：null=未判定, 'fail'=不能完成, 'ok'=可完成（假定） */
+var JUDGE = [
+  [null, null, null],
+  [null, null, null],
+  ['fail', null, null],
+  ['fail', 'fail', null],
+  ['fail', 'fail', 'ok'],
+  ['fail', 'fail', 'ok'],
+  ['fail', 'fail', 'ok'],
+  ['fail', 'fail', 'ok'],
+];
+
+function judgeCell(j){
+  if (j === 'fail') return '<td class="no">✗ 还需 &gt; 可用</td>';
+  if (j === 'ok')   return '<td class="ok">✓ 可满足，假定完成</td>';
+  return '<td class="dimc">待检测</td>';
+}
+
+function tableHTML(i){
+  var j = JUDGE[i];
+  var h = '<table class="btable"><tr><th>进程</th><th>需要总量</th><th>已申请到</th><th>还需要</th><th>安全性判定</th></tr>';
+  P.forEach(function(p, k){
+    var shown = i >= 1;
+    h += '<tr><th>' + p.name + '</th><td>' + [4, 3, 1][k] + '</td><td>' + p.alloc + '</td>' +
+      '<td class="' + (shown ? 'ok' : 'dimc') + '">' + (shown ? p.need : '—') + '</td>' +
+      judgeCell(j[k]) + '</tr>';
+  });
+  h += '</table>';
+  return h;
+}
+
+function availHTML(i){
+  var note = '';
+  if (i === 0) note = '可用 = 4 − (2+1+0)';
+  else if (i === 5) note = '关键陷阱：P₃ 占有 0 个，释放后可用资源不增加';
+  else note = 'P₃ 完成后归还其占有的 0 个，可用资源仍是 1';
+  return '<div class="avail">可用资源 Available = <span>1</span>　<span style="font-weight:400;font-size:12px;color:#94a3b8">（' + note + '）</span></div>';
+}
+
+function htmlFor(i){
+  var h = tableHTML(i) + availHTML(i);
+  if (i >= 6){
+    h += '<div class="aw-stepcard bad" style="margin-top:12px"><h4>安全性检测结论</h4><p>第二轮扫描：P₁、P₂ 还需要 2 &gt; 可用 1，谁也无法完成；P₃ 虽能完成，但释放 0 个资源救不了局面。<b>不存在安全序列 → 系统处于不安全状态 → 选 A</b>。</p></div>';
+  } else if (i >= 4){
+    h += '<div class="aw-stepcard key" style="margin-top:12px"><h4>正在进行</h4><p>P₃ 还需要 1 ≤ 可用 1，可假定其完成并<b>归还它已申请到的资源（0 个）</b>——注意可用资源不会因此增加。</p></div>';
+  }
+  return h;
+}
+
+AW.init({
+  title: '2018·26 银行家算法安全性检测（2 分选择题）',
+  subtitle: '系统 4 个同类资源 · P₁/P₂/P₃ 需要总量 4/3/1 · 已申请到 2/1/0',
+  counterLabel: '试探次数',
+  ribbonTitle: '进程判定（✓ 可完成 / ✗ 不能）',
+  intro: '点击「▶ 播放」逐步执行安全性检测。',
+
+  render: function(stage, sn, i){
+    stage.innerHTML = htmlFor(i);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'算可用',  log:'系统共 4 个同类资源，已分出 2+1+0 = 3 个 → 可用 Available = 4 − 3 = 1', count:0 },
+    { cls:'step',  tag:'算还需要', log:'还需要：P₁ = 4−2 = 2，P₂ = 3−1 = 2，P₃ = 1−0 = 1', count:0 },
+    { cls:'miss',  tag:'试探 P₁', log:'P₁ 还需 2 &gt; 可用 1 → 不能满足，P₁ 暂无法完成', count:1, ribbon:{k:1, ok:false} },
+    { cls:'miss',  tag:'试探 P₂', log:'P₂ 还需 2 &gt; 可用 1 → 不能满足，P₂ 暂无法完成', count:2, ribbon:{k:2, ok:false} },
+    { cls:'ok',    tag:'试探 P₃', log:'P₃ 还需 1 ≤ 可用 1 → 可满足，假定 P₃ 完成并归还资源', count:3, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'归还后',  log:'P₃ 已申请到的资源为 0 个 → 释放后 Available 仍是 1（关键陷阱！）', count:3 },
+    { cls:'miss',  tag:'再扫一遍', log:'P₁、P₂ 还需要都是 2 &gt; 1，谁也完不成 → 找不到安全序列', count:4, ribbon:{k:4, ok:false} },
+    { cls:'done',  tag:'结论',   log:'不存在安全序列，系统处于不安全状态 → 选 A', count:4, done:true },
+  ],
+
+  result: {
+    big: '不安全状态（答案 A）',
+    html: '可用资源 = 4 − (2+1+0) = <b>1</b>：P₁、P₂ 还需 2 均无法满足；P₃ 虽可完成，但占有 <b>0</b> 个资源，释放后可用资源<b>仍是 1</b>。找不到使全部进程完成的安全序列 → <b>不存在安全序列，系统不安全</b>。记忆锚点：<b>进程归还的是它占有的资源，占 0 个就还 0 个</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

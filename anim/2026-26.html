@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-26 信号量 S=-2 时的进程计数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：算法/过程演示类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var UI = {};
+
+// 每个 snap 携带“此刻已执行完 wait(S) 的进程数”，render 由此推导全部画面状态
+var READ_STEPS = [
+  { cls:'shift', tag:'读数 n', log:'此刻 S=-2：S 为负 → 其绝对值 2 就是因执行 wait(S) 被阻塞的进程数，n=2；而从 5 降到 -2 共减 1 七次，即已有 7 个进程执行过 wait(S)。' },
+  { cls:'ok', tag:'得 m', log:'7 个执行过 wait(S) 的进程中 2 个被阻塞，其余 7-2=5 个通过并进入（或已执行完）代码Q → m=5。' },
+  { cls:'done', tag:'选 A', log:'m=5、n=2 → 选 A（5、2）。注意：|S| 只统计阻塞在等待队列上的进程，尚未执行 wait 的第 8 个进程不计入任何一方。', done:true },
+];
+
+var snaps = [{ cls:'shift', tag:'初始', log:'初始：S=5。8 个进程都会执行「wait(S) → 代码Q → signal(S)」，逐个执行 wait(S) 观察 S 的变化。', count:0 }];
+for (var k = 0; k < 7; k++){
+  var sv = 5 - (k + 1);
+  var pass = k < 5;
+  snaps.push({
+    cls: pass ? 'ok' : 'miss',
+    tag: pass ? '通过' : '阻塞',
+    log: pass
+      ? '进程 P' + (k+1) + ' 执行 wait(S)：S=' + (sv+1) + '-1=' + sv + ' ≥ 0，通过，进入代码Q'
+      : '进程 P' + (k+1) + ' 执行 wait(S)：S=' + (sv+1) + '-1=' + sv + ' < 0，被阻塞，挂在 S 的等待队列上',
+    count: k + 1,
+    ribbon: { k: k + 1, ok: pass },
+  });
+}
+READ_STEPS.forEach(function(s){ s.count = 7; snaps.push(s); });
+
+AW.init({
+  title: '2026-26 · 信号量 S=-2 时，m 和 n 各是多少',
+  subtitle: '每个进程执行 <code>wait(S); 代码Q; signal(S);</code> · S 初值 5 · 8 个进程',
+  counterLabel: '已执行 wait(S)',
+  ribbonTitle: 'wait(S) 执行序（✓ 通过 / ✗ 阻塞）',
+  intro: '点击「▶ 播放」，逐个观察进程执行 wait(S) 后 S 值的变化。',
+  snaps: snaps,
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>8 个进程</b>（绿=已通过进入代码Q　红=阻塞在 wait(S)　灰=尚未执行）'));
+    UI.row = AW.cellRow(['P1','P2','P3','P4','P5','P6','P7','P8'], ['','','','','','','',''], null);
+    UI.boxes = Array.prototype.slice.call(UI.row.querySelectorAll('.aw-box'));
+    UI.ptrs  = Array.prototype.slice.call(UI.row.querySelectorAll('.aw-ptr'));
+    inner.appendChild(UI.row);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>信号量 S 的当前值</b>（初值 5）'));
+    UI.sbox = AW.el('div', 'aw-box', '5');
+    UI.sbox.style.width = '64px'; UI.sbox.style.height = '52px'; UI.sbox.style.fontSize = '24px';
+    inner.appendChild(UI.sbox);
+
+    UI.stat = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(UI.stat);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var waits = Math.max(0, Math.min(7, i));   // 此刻已执行完 wait(S) 的进程数
+    var passed = Math.min(waits, 5);
+    var blocked = Math.max(0, waits - 5);
+    for (var p = 0; p < 8; p++){
+      var st = p < waits ? (p < 5 ? 'ok' : 'miss') : '';
+      UI.boxes[p].className = 'aw-box' + (st ? ' ' + st : '');
+      UI.ptrs[p].innerHTML = p < waits
+        ? (p < 5 ? '<span style="color:#15803d">通过</span>' : '<span style="color:#b91c1c">阻塞</span>')
+        : '';
+    }
+    var s = 5 - waits;
+    UI.sbox.innerHTML = String(s);
+    UI.sbox.className = 'aw-box' + (s < 0 ? ' miss' : (s === 0 ? ' hit' : ''));
+    UI.stat.innerHTML = '已通过进入代码Q：<b>' + passed + '</b> 个　　阻塞在 wait(S)：<b>' + blocked + '</b> 个';
+  },
+
+  result: {
+    big: '答案 A（m=5，n=2）',
+    html: '记忆锚点：<b>S &lt; 0 时，|S| = 等待队列上被阻塞的进程数</b>（n=2）；<b>S 从 5 降到 -2 减了 7，即 7 个进程执行过 wait(S)</b>，其中通过进入代码Q 的 m=7-2=5。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

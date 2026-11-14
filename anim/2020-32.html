@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-32 临界区互斥的准则</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先列四准则',
+    cls: 'key',
+    body: '<p>实现临界区互斥的四条准则：<b>忙则等待</b>、<b>空闲让进</b>、<b>有限等待</b>、<b>让权等待</b>。关键判断：前三条是互斥机制<b>必须</b>满足的；第四条只是改进<b>建议</b>。</p>' },
+  { title: '准则 I：忙则等待（必须）',
+    cls: 'good',
+    body: '<p>I（两个进程不能同时进入临界区）：<b>必须遵循</b>。这是「互斥」二字的底线——忙则等待，一次只允许一个进程在临界区内。</p>' },
+  { title: '准则 II：空闲让进（必须）',
+    cls: 'good',
+    body: '<p>II（允许进程访问空闲的临界资源）：<b>必须遵循</b>。临界资源空闲时应当允许一个请求进程立即进入（空闲让进），不能让资源白白闲置、进程无谓等待。</p>' },
+  { title: '准则 III：有限等待（必须）',
+    cls: 'good',
+    body: '<p>III（进程等待进入临界区的时间是有限的）：<b>必须遵循</b>。请求进入的进程应在有限时间内得到满足，否则可能「死等」，破坏进程的合理推进。</p>' },
+  { title: '准则 IV：让权等待（只是建议）',
+    cls: 'bad',
+    body: '<p>IV（不能进入临界区的执行态进程立即放弃 CPU）：<b>不是必须的</b>。「让权等待」是提高 CPU 利用率的改进建议；忙等待式的实现（如 TS/Swap 指令循环探测）同样是合格的互斥机制，并不违反准则——所以不能把 IV 选进去。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>必须遵循的是 <b>I、II、III</b>，答案选 <b>C</b>。核心记忆点：<b>忙则等待、空闲让进、有限等待是硬性准则；让权等待是锦上添花</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '实现临界区互斥必须遵循的准则',
+  subtitle: '考点：<code>同步与互斥 · 临界区管理准则</code> · 四条逐个过',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 C（仅 I、II、III）',
+    html: '硬性三条：<b>忙则等待</b>（I，互斥底线）、<b>空闲让进</b>（II，不许闲置）、<b>有限等待</b>（III，不许死等）。<b>让权等待</b>（IV）只是建议——忙等待的 TS/Swap 实现照样合格。把 IV 当硬性准则误选 D 是最常见错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

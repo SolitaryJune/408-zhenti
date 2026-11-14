@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-32 · 哪些操作通过系统调用完成</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：系统调用的两条判据', cls: 'key',
+    body: '<p>系统调用 = <b>用户程序主动请求</b> + <b>必须由内核代劳</b>的服务：用户程序经 trap（访管）指令陷入内核态，内核完成后返回。两条判据缺一不可。</p>' },
+  { title: 'A. 页置换：内核自动行为 ✗', cls: 'bad',
+    body: '<p>内存不足或缺页时，内核<b>自主</b>启动置换，没有"用户请求"这个入口——不是系统调用。</p>' },
+  { title: 'B. 进程调度：内核自动行为 ✗', cls: 'bad',
+    body: '<p>调度程序按调度时机（时间片用完、进程阻塞、进程结束等）由内核<b>自动</b>执行，用户进程既无法也无需"调用"它——不是系统调用。</p>' },
+  { title: 'C. 创建新进程：标准系统调用 ✓', cls: 'good',
+    body: '<p>用户程序调用 <code>fork()</code> 等接口，经 trap 陷入内核态，由内核的进程创建原语完成——<b>正是"用户主动请求 + 内核代劳"</b>的系统调用（进程控制类）。</p>' },
+  { title: 'D. 生成随机整数：用户态库函数 ✗', cls: 'bad',
+    body: '<p>可由用户态函数库实现（如 <code>rand()</code>），通常不必进内核——不是系统调用。易错：把库函数当系统调用，关键看它<b>是否陷入内核</b>。</p>' },
+  { title: '结论：答案 C', cls: 'good',
+    body: '<p>只有"创建新进程"同时满足两条判据，答案选 <b>C</b>。记忆锚点：内核<b>自动</b>做的（页置换、调度）和用户态<b>库函数</b>做的都不算系统调用；系统调用四大类——进程控制、文件操作、设备操作、信息维护。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '通过系统调用完成的操作（2021-32）',
+  subtitle: '考点：系统调用的判据 · 页置换 / 进程调度 / 创建新进程 / 生成随机整数',
+  counterLabel: '已核对',
+  ribbonTitle: '选项（✓ 系统调用 / ✗ 不是）',
+  intro: '点击「▶ 播放」，用"用户主动请求 + 内核代劳"逐项检验。',
+  snaps: [{ cls: 'shift', tag: '开始', log: '', html: '' }].concat(snaps),
+  result: {
+    big: '答案 C',
+    html: '<b>创建新进程</b>（fork() 等）是标准系统调用。页置换与进程调度是内核<b>自动</b>行为、无用户请求入口；生成随机整数由用户态库函数完成、不陷入内核。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

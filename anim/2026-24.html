@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-24 指令执行过程中硬件与 OS 的分工</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：一条指令的执行过程',
+    cls: 'key',
+    body: '<p>访存指令的完整链路：<b>CPU 取指→译码→执行</b>（硬件，顺带查操作码合法性）→ 算出虚拟地址 → <b>MMU 查页表</b>完成虚实转换并检查权限位 → 有问题则 CPU <b>产生异常</b>，硬件转内核模式 → <b>OS 异常处理程序</b>善后。抓主线：硬件管"高频的转换与检测"，OS 管"异常后的处理"。</p>' },
+  { title: 'A 虚实地址转换由 OS 完成：错',
+    cls: 'bad',
+    ribbon: { k: 1, ok: false },
+    body: '<p>每条访存指令都要转换地址，若由 OS 用软件逐条完成，开销不可接受。虚实转换由 <b>MMU 硬件</b>完成（页表基址寄存器 + 页表项查询）；OS 只在<b>缺页异常</b>时负责把缺的页调入。<b>× 由硬件 MMU 完成</b></p>' },
+  { title: 'B 访问权限由 OS 检测：错',
+    cls: 'bad',
+    ribbon: { k: 2, ok: false },
+    body: '<p>页表项中存有权限位（读写、内核/用户）。每次访存由 <b>MMU 硬件</b>对照权限位检查，违规时才产生异常交给 OS。检测在硬件，处理在 OS。<b>× 由硬件检测</b></p>' },
+  { title: 'C 指令合法性由 OS 验证：错',
+    cls: 'bad',
+    ribbon: { k: 3, ok: false },
+    body: '<p>非法操作码、用户态使用特权指令，都是 CPU 在<b>取指/译码/执行</b>阶段由硬件发现并产生异常（如"非法指令异常"）。OS 不做逐条指令的合法性验证。<b>× 由 CPU 硬件发现</b></p>' },
+  { title: 'D CPU 产生的异常由 OS 处理：对',
+    cls: 'good',
+    ribbon: { k: 4, ok: true },
+    body: '<p>缺页、越权、非法指令等异常都是 <b>CPU 执行指令时产生</b>的。硬件只负责"发现 + 切到内核模式 + 转异常处理入口"，后续处理（调入缺页、终止进程等）必须由<b>操作系统的异常处理程序</b>完成。<b>√ 正确</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>硬件管"检测与转换"，OS 管"处理与善后"</b>——A/B/C 都把 OS 的职责提前到了每条指令的执行过程中，只有 D 说对了 OS 的介入时机。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var o = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (s.ribbon) o.ribbon = s.ribbon;
+  return o;
+});
+
+AW.init({
+  title: '2026-24 · 指令执行过程：硬件与 OS 的分工',
+  subtitle: '考点：<code>虚实转换 · 权限检测 · 异常处理</code> · 四句叙述逐项判断',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判断（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>硬件完成地址转换（MMU）与权限/合法性检测，异常产生后的处理才由操作系统完成</b>。A/B/C 三项都是把 OS 的职责错放到了"每条指令都执行"的环节上。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

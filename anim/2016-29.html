@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-29 工作集窗口计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+/* 访问序列：…,1,3,4,5,6,0,3,2,3,2【t】,0,4,0,3,2,9,2,1,… 窗口 Δ=6 */
+
+var PRE  = [1, 3, 4, 5, 6, 0, 3, 2, 3, 2];   // t 时刻及之前（最后一个 2 是 t 时刻的访问）
+var POST = [0, 4, 0, 3, 2, 9, 2, 1];         // t 之后
+var WIN_FROM = 4;                            // 窗口起点下标：PRE[4..9] = 6,0,3,2,3,2
+
+function rowHtml(arr, idxStart, classFn){
+  var chars = [], classes = [];
+  arr.forEach(function(v, i){
+    chars.push(v);
+    classes.push(classFn(i));
+  });
+  return AW.cellRow(chars, classes, null, idxStart).outerHTML;
+}
+
+function seqHtml(winFrom, hiT){
+  var h = '<div class="aw-row-label"><b>t 时刻及之前</b>（时间从左往右；最后一位的 2 就是 t 时刻的访问）</div>';
+  h += rowHtml(PRE, 1, function(i){
+    if(winFrom >= 0 && i >= winFrom) return (hiT && i === 9) ? 'hit' : 'ok';
+    return (hiT && i === 9) ? 'hit' : '';
+  });
+  h += '<div class="aw-row-label"><b>t 之后</b>（工作集只看访问历史，这些不算）</div>';
+  h += rowHtml(POST, 11, function(){ return 'dim'; });
+  return h;
+}
+
+var seqStep = function(winFrom, hiT, cls, tag, log, count, done){
+  var s = { cls:cls, tag:tag, log:log, count:count, html:seqHtml(winFrom, hiT) };
+  if(done) s.done = true;
+  return s;
+};
+
+var snaps = [
+  seqStep(-1, false, 'step', '开始', '工作集 WS(t, Δ)：时刻 t 为止（含 t 这次）往前 Δ 次访问涉及的页面集合；这里 Δ = 6', 0),
+  seqStep(-1, true, 'shift', '定位 t', '定位 t：t 时刻访问的页面是 2（箭头处最后一个 2）', 1),
+  seqStep(WIN_FROM, true, 'shift', '取窗口', '从 t 往前数 6 次访问：窗口覆盖 2, 3, 2, 3, 0, 6（t 之后的 0,4,… 全部不算）', 2),
+  seqStep(WIN_FROM, true, 'step', '收集', '收集窗口内的页面序列：2、3、2、3、0、6 —— 2 和 3 各出现了两次', 3),
+  seqStep(WIN_FROM, true, 'ok', '去重', '去重成集合 {2, 3, 0, 6}，即 {6, 0, 3, 2}，共 4 个页面', 4),
+  seqStep(WIN_FROM, true, 'done', '完成', '对照选项：A {6,0,3,2} ✓；B 的 4 在 t 之后；C 混入 9、4；D 把窗口多退了两格。答案 A', 5, true)
+];
+
+AW.init({
+  title: '工作集：窗口 Δ=6 怎么切',
+  subtitle: '访问序列 <code>…,1,3,4,5,6,0,3,2,3,2【t】,0,4,0,3,2,9,2,1,…</code> · 工作集 = t 时刻往前 6 次访问的页面集合',
+  counterLabel: '已走步骤',
+  ribbonTitle: '步骤（✓ 得出集合）',
+  intro: '点击「▶ 播放」，看窗口如何落在序列上并去重成集合。',
+  snaps: snaps,
+  result: {
+    big: '{6, 0, 3, 2}（选 A）',
+    html: '两条规则：<b>窗口只向过去看</b>（含 t 这次访问，t 之后的 0、4、9 一概不算），<b>结果是集合</b>（窗口里 2、3 重复，只保留一次）。B、C 混入 t 之后的页面，D 把窗口起点数错。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

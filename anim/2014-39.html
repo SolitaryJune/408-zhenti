@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2014-39 动画 · UDP 三条叙述辨析</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：三条叙述对应 UDP 的三张"名片"',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>I 无连接、II 复用/分用、III 差错校验保障可靠。前两个是 UDP 的本职，第三个是"半真半假"的经典陷阱——要拆成"有校验"和"保障可靠"两半来看。</p>' },
+  { title: '叙述 I：提供无连接服务',
+    cls: 'good',
+    tag: 'I 对',
+    body: '<p><b>对。</b>UDP 发送前不握手、不建立连接、不为连接维护状态，报文加上 8 字节首部直接发出去——这正是它时延小、开销小的根源。</p>' },
+  { title: '叙述 II：提供复用/分用服务',
+    cls: 'good',
+    tag: 'II 对',
+    body: '<p><b>对。</b>UDP 首部带<b>源端口 + 目的端口</b>：发送端多个应用进程共用 UDP 发报文（复用），接收端按目的端口把数据交回对应进程（分用）。凡是传输层都有这一功能。</p>' },
+  { title: '叙述 III：差错校验保障可靠传输',
+    cls: 'bad',
+    tag: 'III 错',
+    body: '<p><b>错。</b>前半句真：UDP 有校验和字段，能<b>检测</b>首部+数据的比特差错；后半句假：检出后只是<b>丢弃</b>，不确认、不重传、不排序——<b>检错 ≠ 可靠</b>。可靠要承诺不丢、不错、按序，UDP 一条都不承诺。</p>' },
+  { title: '结论：仅 I、II',
+    cls: 'good',
+    tag: '答案 B',
+    body: '<p>I 对、II 对、III 错 → 答案选 <b>B（仅 I、II）</b>。选 D 的同学是被"UDP 也做校验"这半句真话带偏，把 III 也算成了对。</p>' },
+  { title: '记忆锚点',
+    cls: 'key',
+    tag: '锚点',
+    body: '<p>UDP 四字诀：<b>无连接、不可靠</b>；但它<b>有端口</b>（复用/分用）也<b>有校验和</b>（只检错、不补救）。"校验"与"可靠"在选择题里永远要拆开判断。</p>' },
+];
+
+var CLSMAP = { key: 'shift', bad: 'miss', good: 'ok' };
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (CLSMAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: 'UDP 协议 · 三条叙述逐项辨析（2014·39）',
+  subtitle: '考点：<code>无连接 · 端口复用/分用 · 校验和不等于可靠</code>',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B（仅 I、II）',
+    html: 'I 无连接、II 复用/分用都对；III 错在"保障可靠"——UDP 校验和<b>只检错、检出即丢弃、不重传</b>。陷阱话术就是先给半句真话（有差错校验）再接半句假话（保障可靠）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

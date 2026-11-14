@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-15 TLB 与 Cache 对比</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-15：TLB 与 Cache 的叙述找错（概念对比）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：TLB 与 Cache 是同源机制',
+    cls: 'key',
+    body: '<p>TLB（快表）= 页表项的高速缓存；Cache = 主存块的缓存。两者机制同源：靠局部性命中、可能缺失、缺失有代价。本题找<b>错误</b>叙述。</p>' },
+  { title: 'A：命中率都与程序局部性有关 —— 正确',
+    cls: 'good',
+    body: '<p>两者都靠"最近用过的东西还在里面"吃饭，时间/空间局部性直接决定命中率 → A 叙述正确。</p>' },
+  { title: 'B：缺失后都需要去访问主存 —— 正确',
+    cls: 'good',
+    body: '<p>TLB 缺失 → 去主存查页表；Cache 缺失 → 去主存取数据块 → B 叙述正确。</p>' },
+  { title: 'C：缺失处理都可以由硬件实现 —— 正确',
+    cls: 'good',
+    body: '<p>TLB 缺失与 Cache 缺失都由<b>硬件</b>完成（若交给软件，速度优势荡然无存）→ C 叙述正确。</p>' },
+  { title: 'D：都由 DRAM 存储器组成 —— 错误！',
+    cls: 'bad',
+    body: '<p>Cache 和 TLB 都要求高速，用 <b>SRAM</b> 实现；DRAM 靠电容存储、需刷新、速度慢，用来做<b>主存</b>。D 把材质说反了。</p>' },
+  { title: '结论：选 D',
+    cls: 'good',
+    body: '<p>错误项是 <b>D</b>。记忆锚点：TLB / Cache = <b>SRAM</b> 加速器；DRAM = 主存。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2020-15 · TLB 与 Cache 逐项对比',
+  subtitle: '考点：高速缓存机制 · SRAM 与 DRAM 的分工',
+  intro: '点击「▶ 播放」或「下一步」，逐项核对四个叙述。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>TLB 和 Cache 都用 SRAM</b>，DRAM 只做主存。<br>' +
+      '相同点：都靠局部性命中（A）、缺失后访主存（B）、缺失处理由硬件完成（C）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

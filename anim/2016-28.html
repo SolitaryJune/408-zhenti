@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-28 分段地址转换：越界检查</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+/* 段表 + 逻辑地址(段号2, 段内地址400) 逐步做检查 */
+
+var SEG = [
+  { no:0, len:100, base:6000, perm:'只读', mem:'在内存' },
+  { no:1, len:200, base:'…',  perm:'读写', mem:'不在内存' },
+  { no:2, len:300, base:4000, perm:'读写', mem:'在内存' }
+];
+var COLS = ['段号', '段长', '内存起始地址', '权限', '状态'];
+var KEYS = ['no', 'len', 'base', 'perm', 'mem'];
+
+function segTable(hlRow, hlKey){
+  var h = '<table style="border-collapse:collapse;margin:4px auto 10px;font-size:14px">';
+  h += '<tr>' + COLS.map(function(c){
+    return '<th style="border:1px solid #cbd5e1;padding:6px 14px;background:#f1f5f9">' + c + '</th>';
+  }).join('') + '</tr>';
+  SEG.forEach(function(r, i){
+    h += '<tr>' + KEYS.map(function(k){
+      var hl = (i === hlRow && hlKey === k);
+      var bg = hl ? '#dcfce7' : (i === hlRow ? '#fffbeb' : '#ffffff');
+      return '<td style="border:1px solid #cbd5e1;padding:6px 14px;background:' + bg + ';' + (hl ? 'font-weight:700;' : '') + '">' + r[k] + '</td>';
+    }).join('') + '</tr>';
+  });
+  return h + '</table>';
+}
+
+function addrCard(){
+  return '<div style="text-align:center;margin:0 0 8px"><span style="display:inline-block;border:1px solid #cbd5e1;border-radius:8px;padding:6px 16px;font-size:14.5px;background:#f8fafc">逻辑地址：段号 <b>2</b> ，段内地址 <b>400</b></span></div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'开始', count:0, html:addrCard() + segTable(-1, null),
+    log:'分段地址转换开始：逻辑地址（段号 2，段内地址 400），先查段表' },
+  { cls:'step', tag:'查表', count:1, ribbon:{k:1, ok:true}, html:addrCard() + segTable(2, 'no'),
+    log:'按段号 2 查段表 → 命中第 3 项：段长 300，起始地址 4000，权限读写，状态在内存' },
+  { cls:'ok', tag:'在内存 ✓', count:2, ribbon:{k:2, ok:true}, html:addrCard() + segTable(2, 'mem'),
+    log:'状态检查：段 2「在内存」→ 不会产生段缺失异常，排除 A（不在内存的是段 1）' },
+  { cls:'ok', tag:'权限 ✓', count:3, ribbon:{k:3, ok:true}, html:addrCard() + segTable(2, 'perm'),
+    log:'权限检查：段 2 为「读写」，本次访问无权限冲突 → 不会产生越权异常，排除 C' },
+  { cls:'miss', tag:'越界 ✗', count:4, ribbon:{k:4, ok:false}, html:addrCard() + segTable(2, 'len'),
+    log:'越界检查：段内地址 400 ≥ 段长 300 → 触发越界异常！转换到此终止' },
+  { cls:'done', tag:'完成', count:4, done:true, html:addrCard() + segTable(2, 'len'),
+    log:'结论：越界异常，选 D。越界检查在地址相加之前——所以不会得到 4000+400=4400（B 的陷阱）' }
+];
+
+AW.init({
+  title: '分段地址转换：为什么是越界异常',
+  subtitle: '逻辑地址（段号 2，段内地址 400） · 检查顺序：查段表 → 状态 → 权限 → 越界',
+  counterLabel: '已执行检查',
+  ribbonTitle: '检查项（✓ 通过 / ✗ 触发异常）',
+  intro: '点击「▶ 播放」，按分段系统的检查顺序一步步走。',
+  snaps: snaps,
+  result: {
+    big: '越界异常（选 D）',
+    html: '分段转换规则：<b>0 ≤ 段内地址 &lt; 段长</b> 必须成立。这里 400 ≥ 300 直接越界，异常发生在地址相加之前，因此 B 项的 4400 = 4000 + 400 是跳过检查的陷阱；段 2 在内存（非段缺失 A）、读写权限无冲突（非越权 C）。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-03 行优先存储地址计算</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>行优先存储、每个元素占 <code>1</code> 个存储单元、下标从 0 开始：<code>LOC(A[0][0])=100</code>、<code>LOC(A[3][3])=220</code>，求 <code>LOC(A[5][5])</code>。考点：<b>行优先地址公式</b>。</p>' },
+  { title: '地址公式',
+    cls: '',
+    body: '<p>每行 n 个元素时：<code>LOC(A[i][j]) = LOC(A[0][0]) + i×n + j</code>。A[i][j] 之前有 <b>i 个整行</b>（i×n 个元素），再加本行的 j 个。</p>' },
+  { title: '用 A[3][3] 反求列数 n',
+    cls: 'key',
+    body: '<p><code>220 − 100 = 120 = 3n + 3</code> → <code>n = 39</code>。每行 39 个元素。</p>' },
+  { title: '代入求 A[5][5] 并验算',
+    cls: 'good',
+    body: '<p><code>LOC(A[5][5]) = 100 + 5×39 + 5 = 300</code>。<br>验算（从 A[3][3] 后移 2 行 2 列）：<code>220 + 2×39 + 2 = 300</code> ✓ 两条路一致。</p>' },
+  { title: '干扰项分析',
+    cls: 'bad',
+    body: '<p>A <code>295</code>：列数 n 估少（公式没对齐）；C <code>301</code>：把首地址当"第 1 个单元"，差一多加 1；D <code>306</code>：列数估多——都源于 i、j、n 位置没对齐或差一错误。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。核心：<b>地址差 ÷ 每行元素数</b>先求 n，再代公式；最后用另一条路径验算。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '二维数组行优先存储：求 A[5][5] 的地址',
+  subtitle: '每元素 1 单元 · <code>LOC(A[0][0])=100</code> · <code>LOC(A[3][3])=220</code>',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: 'LOC = 300（答案 B）',
+    html: '由 <code>120 = 3n + 3</code> 得 <code>n=39</code>，再代 <code>100 + 5×39 + 5 = 300</code>；验算 <code>220 + 2×39 + 2 = 300</code>。差一错误是本题最大陷阱。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

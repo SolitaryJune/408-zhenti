@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-27 最少页框数由什么决定</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body) {
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+    '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  {
+    title: '审题眼："最少"页框数在问什么',
+    cls: 'key',
+    body: '<p>最少页框数＝保证进程能运行的<b>最小</b>物理页框数。衡量标准：<b>一条指令执行时，最多有多少个页面必须同时驻留内存</b>——缺任何一个，该指令就无法完成，进程无法推进。</p>'
+  },
+  {
+    title: '关键推理：一条指令会同时碰几个页',
+    cls: 'key',
+    body: '<p>以<b>间接寻址</b>为例：取指令本身可能跨页（2 页）＋ 间接地址所在的页（1 页）＋ 操作数所在的页（1 页）——一条指令就可能同时涉及 3～4 个页。指令在缺页处理期间这些页都必须在内存。而"一条指令最多访问几个页"正是由<b>寻址方式</b>规定的。</p>'
+  },
+  {
+    title: 'A 代码长度：错',
+    cls: 'bad',
+    body: '<p>代码长只说明程序占的<b>页数多</b>（页表项多），不影响"一条指令最少要几个页框"。程序可以只把当前用到的页调入。A 不是决定指标。</p>',
+    ribbon: { k: 1, ok: false }
+  },
+  {
+    title: 'B 虚拟地址空间大小：错',
+    cls: 'bad',
+    body: '<p>虚拟地址空间大 → 页表规模大，这是"总量"问题；单条指令的页需求与虚拟空间多大毫无关系。B 不是决定指标。</p>',
+    ribbon: { k: 2, ok: false }
+  },
+  {
+    title: 'C 物理地址空间大小：错',
+    cls: 'bad',
+    body: '<p>物理地址空间决定<b>全系统最多有多少个页框</b>（系统容量上限），不是单个进程"最少需要几个"。C 不是决定指标。</p>',
+    ribbon: { k: 3, ok: false }
+  },
+  {
+    title: 'D 指令系统支持的寻址方式：对',
+    cls: 'good',
+    body: '<p>寻址方式直接规定一条指令<b>最多同时访问几个页</b>（间接寻址、多级变址越多，需要的页框越多）。要保证任何指令都能完成，最少页框数就必须按"最复杂指令"配备——D 是决定指标。</p>',
+    ribbon: { k: 4, ok: true }
+  },
+  {
+    title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>最少页框数由指令系统的寻址方式决定</b>——保证最复杂的一条指令所需的页都能同时在内存；代码长度、虚拟/物理空间大小都只管"多少"，不管"最少"。</p>'
+  }
+];
+
+var snaps = STEPS.map(function (s, i) {
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function (x, j) {
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '确定进程最少页框数，要考虑什么指标（2025-27）',
+  subtitle: '虚拟内存管理 · 最少页框数＝<b>保证任何一条指令都能完成</b>所需的最小页框数',
+  ribbonTitle: '选项判定（✓ 决定指标 / ✗ 无关指标）',
+  intro: '点击「▶ 播放」，先想清"最少"的含义，再逐项判断。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '<b>最少页框数由指令系统支持的寻址方式决定</b>：一条指令（如间接寻址）可能同时涉及取指、间接地址、操作数等多个页面，这些页必须同时驻留内存。代码长度与虚拟空间大小只决定页的"总量"，物理地址空间只决定页框的"上限"。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

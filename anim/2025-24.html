@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-24 虚拟化技术的错误说法</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body) {
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+    '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  {
+    title: '审题眼：VMM 与客户 OS 的特权关系',
+    cls: 'key',
+    body: '<p>虚拟化结构：<b>应用程序 → 客户操作系统 → VMM（虚拟机管理程序）→ 硬件</b>。VMM 直接掌控硬件，客户 OS 的<b>敏感指令必须能下陷（trap）到 VMM</b> 由它截获模拟——这要求 VMM 的特权级<b>高于</b>客户 OS。找出"错误说法"就看谁破坏了这条规则。</p>'
+  },
+  {
+    title: 'A 操作系统可以在虚拟机上运行：对',
+    cls: 'good',
+    body: '<p>这就是<b>客户操作系统</b>（guest OS）：在虚拟机里安装并运行 Windows/Linux 等，由 VMM 为它"伪装"出一台完整的机器。说法正确。</p>',
+    ribbon: { k: 1, ok: true }
+  },
+  {
+    title: 'B 一台主机可以支持多个虚拟机：对',
+    cls: 'good',
+    body: '<p>虚拟化的核心能力：把一台物理机的 CPU、内存、外设虚拟成多份，<b>多个虚拟机相互隔离、并行运行</b>。说法正确。</p>',
+    ribbon: { k: 2, ok: true }
+  },
+  {
+    title: 'C VMM 与操作系统特权级相同：错！',
+    cls: 'key',
+    body: '<p>若特权级相同，客户 OS 的敏感指令就可能<b>直接在硬件上执行、绕过 VMM</b>，VMM 无法截获模拟，虚拟化失控。VMM 必须运行在<b>更高特权级</b>（如根模式 / ring 0，客户 OS 被降权运行）——<b>这就是要选的错误说法</b>。</p>',
+    ribbon: { k: 3, ok: false }
+  },
+  {
+    title: 'D 一台主机可模拟多种 ISA：对',
+    cls: 'good',
+    body: '<p>通过<b>二进制翻译 / 指令集模拟</b>，虚拟机可以运行与宿主机不同的指令集架构（如在 x86 主机上模拟 ARM）。说法正确。</p>',
+    ribbon: { k: 4, ok: true }
+  },
+  {
+    title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>VMM 特权级 ＞ 客户 OS</b>——敏感指令必须被 VMM 截获模拟，"特权级相同"直接推翻虚拟化的根基。</p>'
+  }
+];
+
+var snaps = STEPS.map(function (s, i) {
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function (x, j) {
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1
+  };
+});
+
+AW.init({
+  title: '关于虚拟化技术，哪个说法是错的（2025-24）',
+  subtitle: '虚拟机管理程序 VMM · 客户操作系统 · 敏感指令的截获与模拟',
+  ribbonTitle: '选项判定（✓ 说法正确 / ✗ 说法错误）',
+  intro: '点击「▶ 播放」，逐项检验四个说法。',
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '<b>VMM 的特权级必须高于客户 OS</b>，才能截获并模拟客户 OS 的敏感指令；"VMM 与操作系统特权级相同"是错误说法。而 OS 可运行于虚拟机（guest OS）、一台主机支持多虚拟机、可模拟多种 ISA，都是虚拟化的正常能力。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

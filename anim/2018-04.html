@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-04 满形态二叉树结点总数</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念/推理链类题目动画：度数分析推理链
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先看结点的度',
+    cls: 'key',
+    body: '<p>三个条件：非空、所有叶结点同层、每个非叶结点都有 2 个孩子 → 每个结点要么是叶（度 0），要么恰好 2 个孩子（度 2），<b>不存在度为 1 的结点，n1 = 0</b>。整棵树每层排满，是满二叉树形态。</p>' },
+  { title: '基本公式：n0 = n2 + 1',
+    cls: 'key',
+    body: '<p>二叉树恒等式：<code>n0 = n2 + 1</code>。来历：树中边数 = 结点数 − 1，也 = n1 + 2·n2（每条边由一个孩子贡献）。两式联立：n0 + n1 + n2 − 1 = n1 + 2·n2 → 移项即得。这个式子对<b>任何</b>二叉树都成立。</p>' },
+  { title: '代入 k 求解',
+    cls: 'good',
+    body: '<p>叶结点 n0 = k → n2 = k − 1，n1 = 0 → 结点总数 n = k + 0 + (k−1) = <b>2k − 1</b>。</p>' },
+  { title: '小例子验证',
+    cls: 'good',
+    body: '<p>k = 4：第 3 层 4 个叶结点，第 1、2 层共 3 个非叶结点，总数 4 + 3 = 7 = 2×4 − 1 ✓。再验 k = 8：8 叶 + 7 非叶 = 15 = 2×8 − 1 ✓</p>' },
+  { title: '逐项排除干扰项',
+    cls: 'bad',
+    body: '<p>D <code>2^k−1</code>：把 k 当成了树高 h 才用的公式，本题 k 是叶数。<br>B <code>2k</code>：丢了根结点带来的 −1。<br>C <code>k²</code>：结点数与叶数是线性关系，不是平方关系。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>（2k − 1）。记忆锚点：<b>叶结点数为 k 的满形态二叉树，结点总数恒为 2k − 1</b>；推导靠 n0 = n2 + 1，不要背「乘 2 减 1」以外的记忆版。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·数据结构（四） 叶结点 k 个，结点总数是多少',
+  subtitle: '完全二叉树 · 所有叶同层 · 每个非叶结点恰有 2 个孩子 · 求结点总数',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（2k − 1）',
+    html: 'n1 = 0 + n0 = n2 + 1 → n2 = k − 1 → 总数 = k + (k−1) = <b>2k − 1</b>。干扰项 D <code>2^k−1</code> 是把叶数当树高，B <code>2k</code> 丢了 −1，C <code>k²</code> 无从谈起。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

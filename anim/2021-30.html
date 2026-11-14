@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-30 · 删除文件时内核做什么</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找"不属于删除流程"的那一项', cls: 'key',
+    body: '<p>目录 <code>dir</code> 下删除文件 <code>file1</code>，问内核<b>不必</b>完成哪项。先把删除文件的内核标准动作列全，再对照四个选项找"局外人"。</p>' },
+  { title: '删除文件的三步标准动作', cls: '',
+    body: '<p>① 在目录 <code>dir</code> 中找到并<b>删除 file1 的目录项</b>；② <b>释放 file1 的 FCB</b>（文件控制块/索引结点）；③ <b>回收 file1 占用的磁盘空间</b>（数据块、索引块）。这三步做完，文件才算真正消失。</p>' },
+  { title: '选项 B、C、D：都是必做', cls: 'good',
+    body: '<p>B = 释放 FCB（动作②），C = 回收磁盘空间（动作③），D = 删除目录项（动作①）——三者都是内核删除文件<b>必须完成</b>的工作。</p>' },
+  { title: '选项 A：快捷方式是"局外人"', cls: 'bad',
+    body: '<p>快捷方式（符号链接）是<b>另一个独立的目录项/文件</b>，里面存的只是指向 <code>file1</code> 的路径。删除 <code>file1</code> 的动作只作用于它自己的目录项、FCB 和磁盘空间；快捷方式不会被联动删除（之后访问它才会发现目标失效），更不是必须先删它。<b>不必完成</b>。</p>' },
+  { title: '结论：答案 A', cls: 'good',
+    body: '<p>删除文件三件套——删目录项、释放 FCB、回收磁盘块；快捷方式不在其列，答案选 <b>A</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '删除文件时内核做什么、不做什么（2021-30）',
+  subtitle: '考点：文件的删除流程 · 目录项 / FCB / 磁盘空间 / 快捷方式',
+  counterLabel: '已核对',
+  ribbonTitle: '选项（✓ 必做 / ✗ 不必做）',
+  intro: '点击「▶ 播放」，先列全删除流程，再逐项排除。',
+  snaps: [{ cls: 'shift', tag: '开始', log: '', html: '' }].concat(snaps),
+  result: {
+    big: '答案 A',
+    html: '删除 <code>file1</code> 必做：删目录项（D）、释放 FCB（B）、回收磁盘空间（C）；<b>快捷方式是独立条目</b>，不会被联动删除，也无需先删（A 不必做）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

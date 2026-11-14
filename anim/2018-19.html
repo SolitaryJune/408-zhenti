@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018-19 减法指令的 CF 与 OF</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：CF 管无符号，OF 管有符号',
+    cls: 'key',
+    body: '<p>指令 <code>sub R1, R2, R3</code>：(R1) − (R2) → R3。操作数 (R1) = <code>FFFF FFFFH</code>、(R2) = <code>FFFF FFF0H</code>。CF 是进位/借位标志（无符号口径），OF 是溢出标志（有符号口径），分别独立判断。</p>' },
+  { title: 'CF：无符号大减小，无借位',
+    cls: 'good',
+    body: '<p>无符号看：4294967295 − 4294967280，<b>大数减小数，够减，无借位 → CF = 0</b>。</p>' },
+  { title: 'CF 的电路口径验证',
+    cls: 'step',
+    body: '<p>减法化作加法：(R1) + (R2)取反 + 1 = <code>FFFF FFFFH</code> + <code>0000 000FH</code> + 1 = <code>1 0000 000FH</code>，最高位进位 Cout = 1；减法时 <b>CF = Cout ⊕ 1 = 0</b>，与借位口径一致。</p>' },
+  { title: 'OF：真值结果不越界',
+    cls: 'good',
+    body: '<p>有符号看：(R1) = −1，(R2) = −16。−1 − (−16) = <b>15</b>，结果 <code>0000 000FH</code> 在 int 范围内 → <b>OF = 0</b>。（双进位法：符号位进位入 = 1、进位出 = 1，1 ⊕ 1 = 0，同样无溢出。）</p>' },
+  { title: '排除干扰项',
+    cls: 'bad',
+    body: '<p>B、D 的 CF = 1 来自"减法必有借位"的误解（或把 Cout 直接当 CF）；C、D 的 OF = 1 来自"两个 FF 开头的数运算会溢出"的误解——<b>同号相减永远不会溢出</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>CF = 0，OF = 0，答案选 <b>A</b>，结果 (R3) = <code>0000 000FH</code>。记忆锚点：CF = 借位（无符号），OF = 越界（有符号）。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '减法指令的进位/借位标志 CF 与溢出标志 OF',
+  subtitle: '(R1) = <code>FFFF FFFFH</code> · (R2) = <code>FFFF FFF0H</code> · (R1) − (R2) → R3',
+  counterLabel: '推理步',
+  ribbonTitle: '推理进度（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步推演。',
+  snaps: snaps,
+  result: {
+    big: 'CF=0, OF=0（答案 A）',
+    html: '无符号：大减小无借位 → <b>CF = 0</b>（电路口径 Cout = 1，CF = Cout ⊕ 1 = 0）；有符号：−1 − (−16) = 15 不越界 → <b>OF = 0</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

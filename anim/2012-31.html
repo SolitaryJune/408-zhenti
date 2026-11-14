@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-31 进程与线程的基本关系</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2012-31（选择题）关于进程和线程的叙述，正确的是
+     形态：概念辨析 · 逐项揭示推理链
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个「基本单位」',
+    cls: 'key',
+    scls: 'shift', tag: '审题',
+    body: '<p>进程与线程的核心口诀：<b>进程是资源分配（拥有资源）的基本单位，线程是处理机调度的基本单位</b>。用这条口诀逐项检验。</p>' },
+  { title: 'A 进程始终是资源分配的基本单位——对',
+    cls: 'good',
+    scls: 'ok',
+    body: '<p>不支持线程时：进程既拥有资源又被调度；引入线程后：资源仍由<b>进程</b>拥有，线程只瓜分 CPU 调度权。所以<b>不管系统是否支持线程，进程都是资源分配的基本单位</b>，A 正确。</p>' },
+  { title: 'B 两个角色说反了——错',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p>B 说「线程是资源分配的基本单位，进程是调度的基本单位」——恰好把口诀<b>对调</b>。资源分配看进程、调度看线程，B 错。</p>' },
+  { title: 'C 用户级线程切换不需要内核——错',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p><b>内核级线程</b>的切换要由内核完成（陷入核心态换上下文），但<b>用户级线程</b>的切换完全在<b>用户空间</b>由线程库（运行时系统）完成，<b>不需要内核支持</b>。「都需要内核支持」的说法错。</p>' },
+  { title: 'D 同一进程的线程共享地址空间——错',
+    cls: 'bad',
+    scls: 'miss',
+    body: '<p>同一进程内的所有线程<b>共享</b>该进程的地址空间与资源（代码段、数据段、打开文件等），各自私有的只是<b>栈、寄存器上下文、程序计数器</b>。「拥有各自不同的地址空间」错。</p>' },
+  { title: '结论',
+    cls: 'good',
+    scls: 'done',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>分配看进程、调度看线程；用户级线程切换不进内核；线程共享进程地址空间、只私有栈和寄存器</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var last = i === STEPS.length - 1;
+  return {
+    cls: last ? 'done' : (s.scls || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: last,
+  };
+});
+
+AW.init({
+  title: '【2012-31】进程与线程关系辨析',
+  subtitle: '考点：进程/线程基本概念 · 逐项推演',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>不管系统是否支持线程，进程都是资源分配的基本单位</b>。B 把两个「基本单位」对调；C 错在用户级线程切换不需要内核；D 错在地址空间是共享的。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

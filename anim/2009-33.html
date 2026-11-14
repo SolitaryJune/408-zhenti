@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>概念/分析类动画模板</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2009-33：OSI 参考模型中自下而上第一个提供端到端服务的层次
+     模板：概念 / 分析推理类（逐步揭示推理链卡片）
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：两个限定词',
+    cls: 'key',
+    body: '<p>题干限定：<b>自下而上</b>（从物理层往上数）＋ <b>第一个</b>提供<b>端到端</b>服务。这指向考点：<b>端到端与点到点的分层分界</b>。</p>' },
+  { title: '端到端 vs 点到点',
+    cls: '',
+    body: '<p><b>点到点</b>：一台设备到直接相邻的下一台设备，逐跳转发，中间结点参与处理。<br><b>端到端</b>：两个端系统的<b>进程</b>之间完整交付，通信子网内部结点只搬运、不参与。</p>' },
+  { title: '自下而上核对下三层',
+    cls: 'bad',
+    body: '<p>物理层：比特上介质，点到点；数据链路层：相邻结点间传帧，点到点；网络层：把分组送到目的<b>主机</b>，逐跳选路——仍是主机到主机，都不是进程级的端到端。</p>' },
+  { title: '传输层：第一个端到端',
+    cls: 'good',
+    body: '<p>传输层为两台主机中<b>进程之间的通信</b>提供服务，第一次实现「发送方进程 → 接收方进程」的完整交付。所以自下而上第一个端到端层次是<b>传输层</b>，选 <b>B</b>。</p>' },
+  { title: '排除 C、D',
+    cls: 'bad',
+    body: '<p>会话层、应用层也在传输层之上、也提供端到端服务，但题干限定「<b>第一个</b>」——比传输层更靠上的都不是答案，C、D 排除。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-33：OSI 自下而上第一个端到端层次',
+  subtitle: '考点：OSI 参考模型 · 端到端 vs 点到点 · 选项逐项推演',
+  counterLabel: '步数',
+  ribbonTitle: '推理步（✓ 结论 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B：传输层',
+    html: '记忆锚点：<b>下三层管「路」（点到点/逐跳），传输层管「人」（端到端进程通信）</b>。<br>干扰项：A 数据链路层只有一跳相邻范围；C 会话层、D 应用层虽端到端但不是「第一个」。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

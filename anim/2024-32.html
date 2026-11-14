@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-32 · CSCAN 磁盘调度推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     调度过程动画：CSCAN 磁盘调度（答案 C：788 磁道）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var TRACKS = [0, 110, 120, 160, 200, 210, 300, 399];
+
+AW.init({
+  title: 'CSCAN 磁盘调度：从 200 号磁道向减小方向',
+  subtitle: '磁道 <code>0～399</code> · 请求：<code>300 120 110 0 160 210 399</code> · 到尽头快速返回另一端，返程也计入移动距离',
+  counterLabel: '已移动',
+  ribbonTitle: '请求完成顺序（✓ 已服务）',
+  intro: '点击「▶ 播放」逐段推演磁头移动。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var axis = AW.el('div', 'aw-row-label', '<b>磁道轴</b>（只画出现过的磁道号）　← 减小方向　|　增大方向 →');
+    stage.appendChild(axis);
+    var row = AW.el('div', 'aw-cells');
+    row.style.gap = '14px';
+    this._cols = [];
+    for(var k = 0; k < TRACKS.length; k++){
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', String(TRACKS[k]));
+      box.style.width = '52px';
+      var idx = AW.el('div', 'aw-idx', '');
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(idx);
+      row.appendChild(col);
+      this._cols.push({ ptr: ptr, box: box, idx: idx });
+    }
+    stage.appendChild(row);
+    this._dir = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._dir);
+    this._seg = AW.el('div', 'aw-row-label', '');
+    stage.appendChild(this._seg);
+  },
+
+  snaps: [
+    { cls:'step', tag:'初始',     log:'刚完成 200 号磁道的请求，磁头位于 200；此后磁头向磁道号减小方向移动（CSCAN 单向服务）', count:0,   head:200, served:[], dir:'服务方向：磁道号减小 ←', seg:'段一：去程 200 → 0' },
+    { cls:'ok',   tag:'服务 160', log:'沿减小方向：200 → 160，移动 40，服务 160 号请求', count:40,  head:160, served:[160], dir:'服务方向：磁道号减小 ←', seg:'段一：去程 200 → 0', ribbon:{k:1, ok:true} },
+    { cls:'ok',   tag:'服务 120', log:'160 → 120，移动 40，服务 120 号请求', count:80,  head:120, served:[160,120], dir:'服务方向：磁道号减小 ←', seg:'段一：去程 200 → 0', ribbon:{k:2, ok:true} },
+    { cls:'ok',   tag:'服务 110', log:'120 → 110，移动 10，服务 110 号请求', count:90,  head:110, served:[160,120,110], dir:'服务方向：磁道号减小 ←', seg:'段一：去程 200 → 0', ribbon:{k:3, ok:true} },
+    { cls:'ok',   tag:'到达 0',   log:'110 → 0，移动 110，服务 0 号请求；去程共移动 200，本方向请求全部服务完', count:200, head:0,   served:[160,120,110,0], dir:'服务方向：磁道号减小 ←', seg:'段一：去程 200 → 0（合计 200）', ribbon:{k:4, ok:true} },
+    { cls:'shift',tag:'快速返回', log:'CSCAN：到尽头后直接返回另一端 0 → 399，移动 399（途中不服务任何请求）', count:599, head:399, served:[160,120,110,0], dir:'快速返回：磁道号增大 →（不服务）', seg:'段二：0 → 399（合计 399）' },
+    { cls:'ok',   tag:'服务 399', log:'到达 399 号磁道，恰好完成 399 号请求', count:599, head:399, served:[160,120,110,0,399], dir:'到达另一端，准备再沿减小方向', seg:'段二：0 → 399（合计 399）', ribbon:{k:5, ok:true} },
+    { cls:'ok',   tag:'服务 300', log:'再沿减小方向：399 → 300，移动 99，服务 300 号请求', count:698, head:300, served:[160,120,110,0,399,300], dir:'服务方向：磁道号减小 ←', seg:'段三：399 → 210', ribbon:{k:6, ok:true} },
+    { cls:'ok',   tag:'服务 210', log:'300 → 210，移动 90，服务 210 号请求；7 个请求全部完成，段三共移动 189', count:788, head:210, served:[160,120,110,0,399,300,210], dir:'服务方向：磁道号减小 ←', seg:'段三：399 → 210（合计 189）', ribbon:{k:7, ok:true} },
+    { cls:'done', tag:'结论',     log:'总移动 = 200 + 399 + 189 = 788，选 C', count:788, head:210, served:[160,120,110,0,399,300,210], dir:'', seg:'三段合计：200 + 399 + 189 = 788', done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var cols = this._cols || [];
+    var head = sn.head, served = sn.served || [];
+    for(var k = 0; k < cols.length; k++){
+      var t = TRACKS[k];
+      var cls = 'aw-box';
+      if(t === head) cls += ' shift';
+      else if(t === 200) cls += ' ok';
+      else if(served.indexOf(t) >= 0) cls += ' hit';
+      cols[k].box.className = cls;
+      cols[k].ptr.textContent = (t === head) ? '▲ 磁头' : '';
+      cols[k].idx.textContent = (t === 200) ? '起点(已完成)' : (served.indexOf(t) >= 0 ? '已服务 ✓' : '');
+    }
+    this._dir.innerHTML = sn.dir ? '当前状态：<b>' + sn.dir + '</b>' : '';
+    this._seg.innerHTML = '<b>累计：</b>' + sn.count + ' 磁道　·　' + sn.seg;
+  },
+
+  result: {
+    big: '788 磁道',
+    html: '总移动 = <b>200</b>（200→160→120→110→0）+ <b>399</b>（0→399 快速返回，途中不服务）+ <b>189</b>（399→300→210）= <b>788 磁道</b>，选 <b>C</b>。<br>记忆点：CSCAN 到尽头后快速返回另一端，<b>返程距离也要计入移动距离</b>；回到 399 端点时顺带完成 399 号请求。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

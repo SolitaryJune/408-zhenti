@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015-09 动画 · 移动次数与初始排列无关的排序</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：判据是"移动次数"是否随初始次序波动',
+    cls: 'key',
+    body: '<p>凡是<b>按比较结果决定要不要移动、移动多少</b>的排序，移动次数都随初始排列变化；' +
+          '只有<b>按固定流程机械搬运</b>的排序才与初始次序无关。逐项过一遍四个选项。</p>' },
+  { title: '选项 A：直接插入排序 —— 有关',
+    cls: 'bad',
+    body: '<p>每趟把 L[i] 插入前面有序段，插入到哪儿由<b>比较</b>决定：序列正序时每趟只比较一次、几乎不移动；' +
+          '逆序时每趟都把 L[i] 一路挪到最前面。移动次数随初始次序大幅波动 ✗。</p>' },
+  { title: '选项 B：起泡排序 —— 有关',
+    cls: 'bad',
+    body: '<p>起泡排序只在<b>逆序对</b>处交换（一次交换 = 3 次赋值移动），交换总次数 = 序列的逆序对个数：' +
+          '正序 0 次交换，逆序时最多。移动次数随初始次序变化 ✗。</p>' },
+  { title: '选项 C：基数排序 —— 无关 ✓',
+    cls: 'good',
+    body: '<p>基数排序<b>不做任何关键字比较</b>：每一趟按关键字某一位"分配→收集"，' +
+          '<b>每个元素每趟固定分配一次、收集一次</b>，趟数 d 只由关键字位数决定（与元素排列无关）。' +
+          '总移动次数 ≈ n × 2 × d，是<b>定值</b> ✓。</p>' },
+  { title: '选项 D：快速排序 —— 有关',
+    cls: 'bad',
+    body: '<p>划分过程中枢轴归位、元素按与枢轴的比较结果左右交换：初始排列越乱/越巧，交换与移动越多，' +
+          '基本有序时反而退化。移动次数随初始次序变化 ✗。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C（基数排序）</b>。记忆锚点：<b>不比较、按位分配收集 → 每个元素每趟必动固定次数</b>；' +
+          '比较类排序（直接插入/起泡/快排）的移动都由比较结果触发，必然受初始排列影响。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2015-09 · 移动次数与关键字初始排列无关的排序',
+  subtitle: '考点：排序算法特性对比（移动次数指标）',
+  intro: '点击「▶ 播放」逐项推演四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 C · 基数排序',
+    html: '记忆锚点：基数排序<b>不比较、按位"分配→收集"</b>，每个元素每趟固定移动 2 次、共 d 趟，移动次数是定值；' +
+          '直接插入/起泡/快排的移动都由比较结果决定，随初始排列波动。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

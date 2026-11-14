@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017-09 动画：B+ 树的适用场景</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 2017-09 B+树应用场景辨析（概念/推理链类） -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：B+ 树的特征', cls: 'key',
+    body: '<p>① 多路平衡：一个结点容纳多个关键字 → 扇出大、树矮，<b>磁盘 I/O 次数少</b>；② <b>全部记录（卫星数据）都在叶子层</b>，叶子串成有序链表；③ 天然支持<b>范围查询</b>与顺序遍历。</p>' },
+  { title: '选项 B：关系数据库索引 ✓', cls: 'good',
+    body: '<p>数据量大、存磁盘、按主键等值查询＋范围查询频繁——与 B+ 树特征<b>一一对应</b>（MySQL InnoDB 的索引就是 B+ 树）→ 最适合。</p>' },
+  { title: '选项 A：词法分析 ✗', cls: 'bad',
+    body: '<p>编译器词法分析用<b>有穷状态自动机（DFA）</b>逐字符识别单词，与 B+ 树无关。</p>' },
+  { title: '选项 C：路由表快速查找 ✗', cls: 'bad',
+    body: '<p>路由查找的核心是<b>最长前缀匹配</b>，用 Trie（线索/前缀树）等专用结构。</p>' },
+  { title: '选项 D：磁盘空闲块管理 ✗', cls: 'bad',
+    body: '<p>空闲块的登记与分配用<b>位图</b>或空闲链表即可，用不着 B+ 树。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>适合使用 B+ 树的是<b>关系数据库系统中的索引</b> → 选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2017-09　B+ 树适合用在哪儿？',
+  subtitle: '考点：<code>B树和B+树</code> · 特征匹配 + 逐项排除',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：B+ 树 = <b>数据库索引标配</b>——叶子链表让范围查询快、多叉让树矮、I/O 少。其他场景各归其主：词法分析 → DFA；路由查找 → Trie；空闲块 → 位图/链表。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

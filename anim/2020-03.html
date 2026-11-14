@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-03 顺序存储二叉树所需单元数动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2020-03 高度 5、10 个结点的"任意"二叉树顺序存储至少需要多少单元
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var cellsRow, noteLine;
+
+// 两种树形的层序编号插入顺序（都合法：每个编号都是已有编号的孩子）
+var WORST = [1, 3, 7, 15, 31, 2, 6, 12, 13, 30];   // 最坏：挂满最右链
+var BEST  = [1, 2, 3, 4, 5, 6, 7, 8, 9, 16];       // 最省：结点尽量靠左
+
+function drawCells(mode, filled, hiIdx){
+  cellsRow.innerHTML = '';
+  var list = mode === 'best' ? BEST : WORST;
+  for(var idx = 1; idx <= 31; idx++){
+    var col = AW.el('div', 'aw-col');
+    var cls = '';
+    var used = false;
+    for(var k = 0; k < filled; k++){
+      if(list[k] === idx){ used = true; break; }
+    }
+    if(idx === hiIdx){ cls = 'hit'; }
+    else if(used){ cls = 'ok'; }
+    col.appendChild(AW.el('div', 'aw-ptr', idx === hiIdx ? '深度5' : ''));
+    col.appendChild(AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), used ? '●' : ''));
+    col.appendChild(AW.el('div', 'aw-idx', String(idx)));
+    cellsRow.appendChild(col);
+  }
+}
+
+AW.init({
+  title: '顺序存储"任意"一棵高度 5 的二叉树要多少单元？',
+  subtitle: '高度 5 · 10 个结点 · 每结点占 1 个单元 · 顺序存储按<b>层序编号</b>（i 号的孩子是 2i、2i+1）',
+  counterLabel: '推导步',
+  ribbonTitle: '推导步骤（✓ 完成）',
+  intro: '点击「▶ 播放」逐步推演：数组必须装得下"任意"这种树，即最坏树形。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>存储数组（层序编号 1..31）</b> · ● = 有结点 · 绿框 = 深度 5 的结点'));
+    cellsRow = AW.el('div', 'aw-cells');
+    inner.appendChild(cellsRow);
+    noteLine = AW.el('div', 'aw-row-label', '');
+    noteLine.style.marginTop = '12px';
+    inner.appendChild(noteLine);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',     log:'高度 5、10 个结点的二叉树，顺序存储。问"任意"一棵至少需要多少单元。', count:0 },
+    { cls:'step',  tag:'存储规则', log:'顺序存储按层序编号：i 号结点的左、右孩子是 2i、2i+1；深度 5 的结点编号范围 16..31。', count:1, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'最坏树形', log:'"任意一棵"→ 树形未知，按最坏预留：结点沿最右链 1→3→7→15→31 挂下，深度 5 由 31 号达成。', count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'补足结点', log:'其余 5 个结点补在已有结点的孩子处：2、6、12、13、30 —— 10 个结点、最大编号 31。', count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'定容量',   log:'只要深度 5 的结点可能落在 31 号，数组就必须开到 31 个单元。', count:4, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'对比陷阱', log:'若这棵树"恰好"结点尽量靠左（1..9 加 16 号），16 个就够——但只对某一棵树成立，不满足"任意"。', count:5, ribbon:{k:5, ok:true} },
+    { cls:'done',  tag:'完成',     log:'高度 5 的"任意"二叉树最坏占满编号 31 → 至少 31 个存储单元，选 A。', count:6, ribbon:{k:6, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var mode = 'worst', filled = 0, hi = 0;
+    if(i >= 1 && i <= 2){ filled = 1; }
+    if(i === 2){ filled = 5; hi = 31; }
+    if(i >= 3 && i <= 4){ filled = 10; hi = 31; }
+    if(i === 5){ mode = 'best'; filled = 10; hi = 16; }
+    if(i >= 6){ mode = 'worst'; filled = 10; hi = 31; }
+    drawCells(mode, filled, hi);
+    if(i === 0){ noteLine.innerHTML = '注意题干关键词：<b>任意</b>一棵高度为 5 且有 10 个结点的二叉树。'; }
+    else if(i === 1){ noteLine.innerHTML = '深度 5 的结点最小编号 2⁴ = <b>16</b>，最大编号 <b>31</b>。'; }
+    else if(i === 2){ noteLine.innerHTML = '最右链 1→3→7→15→31：每个编号都是前一个的<b>右孩子</b>（2i+1）。'; }
+    else if(i === 3){ noteLine.innerHTML = '2←1、6←3、12←6、13←6、30←15，全部是已有结点的孩子，树合法。'; }
+    else if(i === 4){ noteLine.innerHTML = '数组大小 = 本树最大编号 = <b>31</b>（空缺编号也占单元）。'; }
+    else if(i === 5){ noteLine.innerHTML = '16 只保证"这一棵"靠左的树；换一棵树就可能放不下。'; }
+    else { noteLine.innerHTML = '<b>答案：31，选 A。</b> 干扰项：16（B，只顾最省树形）、15（C）、10（D，只数结点）。'; }
+  },
+
+  result: {
+    big: '31 个单元',
+    html: '<b>答案选 A。</b>"任意一棵"= 按最坏树形预留：深度 5 的结点可落在编号 <code>31</code>（最右链 1→3→7→15→31），10 个结点全部能装进编号 1..31。若只给 16 个单元（选项 B），最右偏的树就放不下。记忆锚点：<b>高度 h 的顺序存储上界 = 2 的 h 次方 − 1</b>，"任意"二字逼你按上界预留。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

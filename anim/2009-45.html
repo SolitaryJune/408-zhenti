@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-45 · 信号量同步与互斥推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：信号量机制推演（P1/P2/P3 奇偶生产消费）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function st(sem, chg, buf, opt){
+  return { sem: sem, chg: chg || [], buf: buf, opt: opt || '' };
+}
+
+AW.init({
+  title: '2009-45 · 信号量同步与互斥推演',
+  subtitle: 'mutex=1 · empty=N（演示取 2）· odd=0 · even=0 · 演示一轮"生产奇数 → 消费奇数"',
+  counterLabel: '操作数',
+  intro: '点击「▶ 播放」观察信号量值的变化。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>信号量面板</b>（金色高亮 = 本步发生变化）'));
+    var row = AW.el('div', '');
+    row.style.cssText = 'display:flex;gap:14px;margin:8px 0 4px;';
+    var defs = [
+      ['mutex', '互斥 · 初值 1'],
+      ['empty', '空单元数 · 初值 N'],
+      ['odd', '奇数个数 · 初值 0'],
+      ['even', '偶数个数 · 初值 0'],
+    ];
+    this._sem = {};
+    for(var i = 0; i < 4; i++){
+      var item = AW.el('div', '');
+      item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;width:92px;';
+      item.appendChild(AW.el('div', '', '<b style="font-size:13.5px">' + defs[i][0] + '</b>'));
+      var box = AW.el('div', 'aw-box', '·');
+      box.style.cssText = 'width:54px;height:42px;font-size:17px;';
+      item.appendChild(box);
+      item.appendChild(AW.el('div', '', '<span style="font-size:11px;color:#94a3b8">' + defs[i][1] + '</span>'));
+      row.appendChild(item);
+      this._sem[defs[i][0]] = box;
+    }
+    inner.appendChild(row);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>缓冲区</b>（演示取 N = 2 个单元，绿 = 存有数据）'));
+    var buf = AW.el('div', 'aw-cells');
+    this._buf = [];
+    for(var b = 0; b < 2; b++){
+      var col = AW.el('div', 'aw-col');
+      col.appendChild(AW.el('div', 'aw-ptr', ''));
+      col.appendChild(AW.el('div', 'aw-box', ''));
+      col.appendChild(AW.el('div', 'aw-idx', '单元' + (b + 1)));
+      buf.appendChild(col);
+      this._buf.push(col.children[1]);
+    }
+    inner.appendChild(buf);
+    this._opt = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(this._opt);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'初始', count:0,
+      log:'三个进程：P1 生成整数放入缓冲区，P2 取奇数统计，P3 取偶数统计。定义信号量：mutex=1（互斥）、empty=N（空单元数，演示取 2）、odd=0、even=0。缓冲区初始为空。',
+      st: st({mutex:1, empty:2, odd:0, even:0}, [], ['',''], '') },
+    { cls:'step', tag:'生产', count:1,
+      log:'P1 执行 x = produce()：生成一个正整数，设为奇数 5。要放入缓冲区，必须先申请空单元。',
+      st: st({mutex:1, empty:2, odd:0, even:0}, [], ['',''], 'P1：produce() 得到奇数 5') },
+    { cls:'shift', tag:'P 操作', count:2,
+      log:'P1 执行 P(empty)：申请一个空单元，empty 由 2 减到 1。缓冲区未满，P1 顺利通过。',
+      st: st({mutex:1, empty:1, odd:0, even:0}, ['empty'], ['',''], 'P1：P(empty)，empty 2 → 1') },
+    { cls:'shift', tag:'P 操作', count:3,
+      log:'P1 执行 P(mutex)：申请进入缓冲区（临界区），mutex 由 1 减到 0。',
+      st: st({mutex:0, empty:1, odd:0, even:0}, ['mutex'], ['',''], 'P1：P(mutex)，mutex 1 → 0') },
+    { cls:'step', tag:'放入', count:4,
+      log:'P1 执行 put()：把 5 放进缓冲区的一个空单元。此时缓冲区有 1 个数据（奇数）。',
+      st: st({mutex:0, empty:1, odd:0, even:0}, [], ['5',''], 'P1：put() 放入 5') },
+    { cls:'ok', tag:'V 操作', count:5,
+      log:'P1 执行 V(mutex)（0 → 1）退出临界区；x = 5 是奇数 → 执行 V(odd)：odd 由 0 加到 1，表示缓冲区中多了一个奇数，唤醒等待奇数的 P2。',
+      st: st({mutex:1, empty:1, odd:1, even:0}, ['mutex','odd'], ['5',''], 'P1：V(mutex) 后判断奇偶 → V(odd)') },
+    { cls:'shift', tag:'P 操作', count:6,
+      log:'P2 执行 P(odd)：odd 由 1 减到 0，拿到"取一个奇数"的配额。若缓冲区中没有奇数，P2 会在此阻塞等待。',
+      st: st({mutex:1, empty:1, odd:0, even:0}, ['odd'], ['5',''], 'P2：P(odd)，odd 1 → 0') },
+    { cls:'shift', tag:'P 操作', count:7,
+      log:'P2 执行 P(mutex)：mutex 由 1 减到 0，进入缓冲区。',
+      st: st({mutex:0, empty:1, odd:0, even:0}, ['mutex'], ['5',''], 'P2：P(mutex)，mutex 1 → 0') },
+    { cls:'ok', tag:'V 操作', count:8,
+      log:'P2 执行 getodd() 取出 5 → V(mutex)（0 → 1）退出临界区 → V(empty)：empty 由 1 加到 2，空单元归还 → countodd() 统计。一轮奇数生产-消费完成。',
+      st: st({mutex:1, empty:2, odd:0, even:0}, ['mutex','empty'], ['',''], 'P2：getodd() → V(mutex) → V(empty)') },
+    { cls:'done', tag:'结论', count:9, done:true,
+      log:'信号量含义：mutex 互斥访问缓冲区；empty 管空单元数（流量控制）；odd/even 是缓冲区中奇/偶数的个数（同步配对）。偶数路径同理：P1 放偶数后 V(even) 唤醒 P3，P3 取出后 V(empty)。',
+      st: st({mutex:1, empty:2, odd:0, even:0}, [], ['',''], 'mutex=1，empty=N，odd=0，even=0') },
+  ],
+
+  render: function(stage, sn){
+    var stt = sn.st || {};
+    var sems = stt.sem || {};
+    var chg = stt.chg || [];
+    var names = ['mutex', 'empty', 'odd', 'even'];
+    for(var i = 0; i < 4; i++){
+      var n = names[i];
+      var box = this._sem[n];
+      box.innerHTML = (sems[n] != null) ? String(sems[n]) : '·';
+      box.className = 'aw-box' + (chg.indexOf(n) >= 0 ? ' hit' : '');
+    }
+    var buf = stt.buf || ['',''];
+    for(var b = 0; b < 2; b++){
+      this._buf[b].innerHTML = buf[b] || '';
+      this._buf[b].className = 'aw-box' + (buf[b] ? ' hit' : '');
+    }
+    this._opt.innerHTML = stt.opt ? '<b>' + stt.opt + '</b>' : '';
+  },
+
+  result: {
+    big: 'mutex=1，empty=N，odd=0，even=0',
+    html: '答题要点：<b>mutex（初值 1）保证互斥访问缓冲区；empty（初值 N）表示空单元个数，防止溢出；odd、even（初值 0）分别表示缓冲区中奇数、偶数的个数</b>，实现 P1 与 P2/P3 的同步配对。顺序要点：<b>P(empty) 必须在 P(mutex) 之前</b>——反过来，缓冲区满时生产者抱着锁等空单元，消费者进不了缓冲区，造成死锁。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

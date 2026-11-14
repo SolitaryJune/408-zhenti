@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-06 AVL 插入 23 与 RL 双旋</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function edgeLine(P, a, b, c){
+  var p = P[a], q = P[b];
+  var dx = q[0]-p[0], dy = q[1]-p[1], L = Math.sqrt(dx*dx+dy*dy), ux = dx/L, uy = dy/L;
+  var x1 = p[0]+ux*24, y1 = p[1]+uy*24, x2 = q[0]-ux*27, y2 = q[1]-uy*27;
+  return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+(c||'#cbd5e1')+'" stroke-width="2.4" marker-end="url(#arw)"/>';
+}
+function nodeC(P, k, c){
+  var p = P[k], fill = '#fff', st = '#64748b', op = 1;
+  if(c === 'ok'){ fill = '#dcfce7'; st = '#16a34a'; }
+  else if(c === 'key'){ fill = '#fef3c7'; st = '#d97706'; }
+  else if(c === 'miss'){ fill = '#fee2e2'; st = '#dc2626'; }
+  else if(c === 'dim'){ op = 0.35; }
+  return '<g opacity="'+op+'"><circle cx="'+p[0]+'" cy="'+p[1]+'" r="22" fill="'+fill+'" stroke="'+st+'" stroke-width="2.6"/>' +
+         '<text x="'+p[0]+'" y="'+(p[1]+6)+'" text-anchor="middle" font-size="16.5" font-weight="700" fill="#0f172a">'+k+'</text></g>';
+}
+function svgTree(P, edges, nodes, note){
+  var s = '<div class="aw-scroll"><svg width="480" height="300" viewBox="0 0 480 300" style="max-width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:12px">';
+  s += '<defs><marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>';
+  edges.forEach(function(e){ s += edgeLine(P, e[0], e[1], e[2]); });
+  nodes.forEach(function(n){ s += nodeC(P, n[0], n[1]); });
+  s += '</svg></div>';
+  if(note) s += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:8px">' + note + '</div>';
+  return s;
+}
+
+var P1 = { '20':[240,42], '16':[130,122], '30':[350,122], '25':[290,202], '40':[410,202] };
+var E1 = [['20','16'],['20','30'],['30','25'],['30','40']];
+var P2 = { '20':[240,42], '16':[130,122], '30':[350,122], '25':[290,202], '40':[410,202], '23':[230,272] };
+var E2 = [['20','16'],['20','30'],['30','25'],['30','40'],['25','23']];
+var E2p = [['20','16'],['20','30','#d97706'],['30','25','#d97706'],['30','40'],['25','23','#d97706']];
+var P5 = { '20':[240,42], '16':[130,122], '25':[350,122], '23':[290,202], '30':[430,202], '40':[430,272] };
+var E5 = [['20','16'],['20','25'],['25','23'],['25','30'],['30','40']];
+var P6 = { '25':[240,42], '20':[120,122], '30':[360,122], '16':[70,202], '23':[180,202], '40':[410,202] };
+var E6 = [['25','20'],['25','30'],['20','16'],['20','23'],['30','40']];
+
+AW.init({
+  title: '平衡二叉树：插入 23 后的根',
+  subtitle: '初始 AVL：根 20，左 16，右 30（30 的孩子 25、40） · 插入关键字 <code>23</code>',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示插入与旋转调整。',
+
+  snaps: [
+    { cls:'step', tag:'初始', log:'初始平衡二叉树：根 20，左孩子 16，右孩子 30；30 的左孩子 25、右孩子 40', count:0,
+      html: svgTree(P1, E1, [['20',''],['16',''],['30',''],['25',''],['40','']], '') },
+
+    { cls:'step', tag:'插入 23', log:'按 BST 找位：23>20 → 右；23<30 → 左；23<25 → 左，作为 25 的左孩子插入', count:1,
+      html: svgTree(P2, E2p, [['20','key'],['16',''],['30','key'],['25','key'],['40',''],['23','ok']],
+        '插入路径（琥珀色箭头）：20 → 30 → 25 → 左。') },
+
+    { cls:'miss', tag:'失衡点 20', log:'自新结点向上查平衡因子：25 号 +1、30 号 +1 平衡；根 20 左高 1、右高 3，BF=−2 失衡', count:2,
+      html: svgTree(P2, E2, [['20','miss'],['16','dim'],['30','key'],['25','key'],['40','dim'],['23','ok']],
+        'BF(25)=+1 ✓、BF(30)=+1 ✓、<b>BF(20) = 1 − 3 = −2 ✗</b> —— 最小失衡子树的根是 20。') },
+
+    { cls:'shift', tag:'判型 RL', log:'插入落在 20 的右子树(30)的左子树(25)下 → RL 型：先对 30 左旋，再对 20 右旋', count:3,
+      html: svgTree(P2, E2p, [['20','miss'],['16','dim'],['30','key'],['25','key'],['40','dim'],['23','key']],
+        '右（R）孩子 30 的左（L）侧被插入 → <b>RL 型</b>，需要两次旋转。') },
+
+    { cls:'shift', tag:'左旋 30', log:'第一步：对 30 左旋——25 升为该子树根，30 带着右孩子 40 下移', count:4,
+      html: svgTree(P5, E5, [['20','key'],['16',''],['25','key'],['23',''],['30','ok'],['40','']],
+        '左旋后：25 成为 30 的双亲；25 的左孩子 23、右孩子 30；30 的右孩子 40。') },
+
+    { cls:'shift', tag:'右旋 20', log:'第二步：对 20 右旋——25 成为新根：左孩子 20（带 16、23），右孩子 30（带 40）', count:5,
+      html: svgTree(P6, E6, [['25','key'],['20',''],['30',''],['16',''],['23',''],['40','']],
+        '25 的原左孩子 23 转交给 20 作右孩子。') },
+
+    { cls:'ok', tag:'平衡', log:'各结点平衡因子绝对值 ≤ 1，重新平衡；根 = 25', count:6,
+      html: svgTree(P6, E6, [['25','ok'],['20','ok'],['30','ok'],['16','ok'],['23','ok'],['40','ok']],
+        'BF(20)=0、BF(25)=0、BF(30)=−1 —— 全部平衡。') },
+
+    { cls:'done', tag:'完成', log:'插入 23 并调整后，根中的关键字 = 25 → 答案 D', count:7, done:true,
+      html: svgTree(P6, E6, [['25','hit'],['20','ok'],['30','ok'],['16','ok'],['23','ok'],['40','ok']],
+        '新根为 <b>25</b>。') },
+  ],
+
+  result: {
+    big: '根 = 25（答案 D）',
+    html: 'RL 型失衡（插在右孩子的<b>左</b>子树）→ <b>先对右孩子左旋、再对失衡点右旋</b>。干扰项：B（20）是只做了第一步左旋就停手；C（23）是误以为新结点会成为根。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

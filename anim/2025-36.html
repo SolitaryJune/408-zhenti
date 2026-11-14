@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-36 DHCP 四步报文与 IP 封装动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：DHCP 协议时序（DISCOVER→OFFER→REQUEST→ACK）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var S = {};   // 持久 DOM 引用
+
+AW.init({
+  title: 'DHCP 四步报文交换：REQUEST 的 IP 封装',
+  subtitle: '客户 H 动态申请地址 · DHCP 服务器 192.168.5.1 · 预分配 yiaddr = 192.168.5.9',
+  counterLabel: '已推演',
+  ribbonTitle: '报文与推理（✓ 已走）',
+  intro: '点击「▶ 播放」，逐步跟踪四个 DHCP 报文的源 / 目的 IP 地址。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var inner = AW.el('div', '');
+
+    var mkRow = function(label, chips, widths){
+      inner.appendChild(AW.el('div', 'aw-row-label', label));
+      var row = AW.el('div', 'aw-cells');
+      row.style.marginBottom = '6px';
+      var boxes = [];
+      chips.forEach(function(t, k){
+        var b = AW.el('div', 'aw-box dim', t);
+        b.style.width = ((widths && widths[k]) || 160) + 'px';
+        b.style.height = '44px';
+        b.style.fontSize = '13.5px';
+        row.appendChild(b); boxes.push(b);
+      });
+      inner.appendChild(row);
+      return boxes;
+    };
+
+    S.r1 = mkRow('<b>① DISCOVER</b>（客户找服务器）',
+      ['H → 广播', '源 0.0.0.0', '目的 255.255.255.255'], [140, 180, 240]);
+    S.r2 = mkRow('<b>② OFFER</b>（服务器提供地址 yiaddr = 192.168.5.9）',
+      ['服务器 → 广播', '源 192.168.5.1', '目的 255.255.255.255'], [150, 180, 240]);
+    S.r3 = mkRow('<b>③ REQUEST（本题所问）</b>（客户确认选用该地址）',
+      ['H → 广播', '源 0.0.0.0', '目的 255.255.255.255'], [140, 180, 240]);
+    S.r4 = mkRow('<b>④ ACK</b>（服务器确认租约，客户才启用 192.168.5.9）',
+      ['服务器 → 广播', '源 192.168.5.1', '目的 255.255.255.255'], [150, 180, 240]);
+
+    S.note = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(S.note);
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',      log:'新主机 H 上电申请地址，与服务器交换 DISCOVER → OFFER → REQUEST → ACK 四个报文。本题问 REQUEST 封装的 IP 数据报的源、目的 IP 地址。', count:0, note:'客户此时还没有可用的 IP 地址' },
+    { cls:'ok',   tag:'DISCOVER',  log:'H 还没有任何 IP：源地址填 0.0.0.0，目的地址用受限广播 255.255.255.255，在本网段广播寻找 DHCP 服务器。', count:1, ribbon:{k:1, ok:true}, note:'DISCOVER：0.0.0.0 → 255.255.255.255' },
+    { cls:'ok',   tag:'OFFER',     log:'DHCP 服务器（192.168.5.1）广播回 OFFER，提供可租用的 yiaddr = 192.168.5.9——这只是「预分配」，客户还不能正式使用。', count:2, ribbon:{k:2, ok:true}, note:'yiaddr = 192.168.5.9 尚未生效' },
+    { cls:'hit',  tag:'REQUEST ★', log:'客户回 REQUEST 表明选用 192.168.5.9：它仍没有合法 IP，源地址仍是 0.0.0.0；目的地址仍是受限广播 255.255.255.255。', count:3, ribbon:{k:3, ok:true}, note:'REQUEST：0.0.0.0 → 255.255.255.255' },
+    { cls:'ok',   tag:'为何广播',  log:'一来客户没有地址、无法定向单播；二来 REQUEST 要让网段内所有 DHCP 服务器都听到「该地址已被选用」，未中选的服务器好回收预约。', count:4, ribbon:{k:4, ok:true}, note:'不能定向发往 192.168.5.1' },
+    { cls:'ok',   tag:'ACK',       log:'服务器广播 ACK 确认租约，客户从此时起才正式启用 192.168.5.9。', count:5, ribbon:{k:5, ok:true}, note:'ACK 之后才启用 192.168.5.9' },
+    { cls:'done', tag:'完成',      log:'结论：REQUEST 的 IP 数据报目的地址 255.255.255.255、源地址 0.0.0.0，选 C。', count:6, done:true, note:'答案 C' },
+  ],
+
+  render: function(stage, sn, i){
+    var set = function(b, cls){
+      b.className = 'aw-box' + (cls ? ' ' + cls : '');
+    };
+    S.r1.forEach(function(b){ set(b, i >= 1 ? 'ok' : 'dim'); });
+    S.r2.forEach(function(b){ set(b, i >= 2 ? 'ok' : 'dim'); });
+    S.r3.forEach(function(b){ set(b, i >= 3 ? 'hit' : 'dim'); });
+    S.r4.forEach(function(b){ set(b, i >= 5 ? 'ok' : 'dim'); });
+    S.note.innerHTML = '<b>' + (sn.note || '') + '</b>';
+  },
+
+  result: {
+    big: '答案 C',
+    html: '<p>REQUEST 的 IP 数据报：<b>目的 IP = 255.255.255.255</b>（受限广播），<b>源 IP = 0.0.0.0</b>（客户尚无合法地址，yiaddr 只是预分配）。记忆锚点：DHCP 前四步里，客户发出的报文都是 0.0.0.0 → 255.255.255.255；服务器发出的报文源是自己的地址、目的也是广播。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

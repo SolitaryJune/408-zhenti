@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2010-21 单级中断服务程序执行顺序 · 推理动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域 ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：问的是"服务程序内"', cls: 'key',
+    body: '<p>七个动作里有两个<b>根本不属于服务程序</b>：保存断点（IV）和关中断（III）由<b>中断隐指令（硬件）</b>在中断周期自动完成。先把它们剔除，剩下的才是服务程序要写的代码。</p>' },
+  { title: '单级中断：全程关中断、不许嵌套', cls: '',
+    body: '<p>单级中断系统在执行服务程序期间<b>保持关中断</b>，新中断请求一律等返回后再响应。因此服务程序内部不会出现"关中断"动作；"开中断"只能安排在<b>恢复现场之后、中断返回之前</b>。</p>' },
+  { title: '第 1 步：I. 保护现场', cls: 'good',
+    body: '<p>先保存通用寄存器等内容（压栈或存入指定单元），防止接下来的事件处理把它们改掉 → 顺序头一步是 <b>I</b>。</p>' },
+  { title: '第 2 步：V. 中断事件处理，第 3 步：VI. 恢复现场', cls: 'good',
+    body: '<p>现场保护好了才敢干活：<b>V 中断事件处理</b>（设备真正要的服务）；干完立刻 <b>VI 恢复现场</b>——这两步的前后夹着保护/恢复，顺序固定为 <b>I → V → VI</b>。</p>' },
+  { title: '第 4~5 步：II. 开中断 → VII. 中断返回', cls: 'good',
+    body: '<p>现场已完整恢复，这时<b>开中断（II）</b>，让返回之后的新请求能被响应；最后执行<b>中断返回（VII）</b>，由返回指令恢复断点、回到原程序断点处继续 → <b>II → VII</b> 收尾。</p>' },
+  { title: '结论：I→V→VI→II→VII，选 A', cls: 'good',
+    body: '<p>完整链条：<b>保护现场 I → 事件处理 V → 恢复现场 VI → 开中断 II → 中断返回 VII</b>，与选项 <b>A</b> 完全一致。B、C、D 都错在把硬件做的 III/IV 排了进去或顺序错乱。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+snaps[2].ribbon = { k: 1, ok: true };
+snaps[3].ribbon = { k: 2, ok: true };
+snaps[4].ribbon = { k: 3, ok: true };
+
+AW.init({
+  title: '2010-21 · 单级中断服务程序的执行顺序',
+  subtitle: '七个动作 I ~ VII · 剔除硬件动作，排出软件链条',
+  counterLabel: '推理步',
+  ribbonTitle: '三段主体（✓ 已排定）',
+  intro: '点击「▶ 播放」：先剔除隐指令动作，再排出服务程序链条。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（I→V→VI→II→VII）',
+    html: '<b>保存断点、关中断归中断隐指令（硬件）管</b>；服务程序内：保护现场 → 中断事件处理 → 恢复现场 → 开中断 → 中断返回。单级中断不许嵌套，<b>开中断只能放在恢复现场之后</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

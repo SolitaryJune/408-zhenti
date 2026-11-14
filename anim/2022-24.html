@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-24 · 操作系统初始化过程创建的对象</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：谁在「内核初始化」时才被创建', cls: 'key',
+    body: '<p>从加电到内核初始化：<b>CPU 加电 → BIOS/自举程序 → 读主引导记录（含分区表）→ 装载引导程序 → 加载 OS 内核 → 内核初始化</b>。把四个选项放到这条时间线上比较。</p>' },
+  { title: 'C 硬盘分区表：装机时写入，更早', cls: '',
+    body: '<p>分区表由<b>分区工具</b>在磁盘安装/分区时写入 MBR，位于操作系统安装之前；引导程序还要靠它找到系统分区 → 不在内核初始化时创建。</p>' },
+  { title: 'B/D 根目录、索引结点表：格式化时创建', cls: '',
+    body: '<p>磁盘被<b>格式化（建立文件系统）</b>时就生成了根目录与索引结点表；内核初始化只是使用/挂载它们 → 都不属于初始化过程中创建。</p>' },
+  { title: 'A 中断向量表：内核初始化时建立', cls: 'good',
+    body: '<p>内核加载进内存后，由<b>操作系统初始化过程</b>填写各类中断/异常的处理程序入口，建立<b>中断向量表</b> → A 是初始化过程中创建的。</p>' },
+  { title: '内核初始化还做什么', cls: '',
+    body: '<p>内核初始化包括：建立中断向量表、初始化内存管理与调度等数据结构与模块、创建第一个用户进程等。四个选项中仅 A 属于此阶段。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：分区表（装机）→ 根目录/索引结点表（格式化）→ <b>中断向量表（内核初始化）</b>，出现时机层层后移。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '操作系统初始化过程创建的对象（2022-24）',
+  subtitle: '考点：OS 引导流程 · 四个数据结构的出现时机对比',
+  counterLabel: '已推演',
+  ribbonTitle: '推理环节（✓ 环节闭环）',
+  intro: '点击「▶ 播放」，沿引导时间线逐个核对四个选项。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（中断向量表）',
+    html: '记忆锚点：分区表在<b>装机分区</b>时写入；根目录与索引结点表在<b>格式化</b>时生成；只有<b>中断向量表</b>由操作系统<b>初始化过程</b>填写各中断/异常入口而建立。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

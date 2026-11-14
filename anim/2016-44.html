@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016-44 动画 · 中断方式读取 1000 字符的时间推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：设备时间线 + CPU 时间线两条线的推演（2016 大题 44）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function wrap(label, html){
+  return '<div class="aw-row-label">' + label + '</div>' + html;
+}
+
+function card(cls, html){
+  return '<div class="aw-stepcard ' + cls + '"><p>' + html + '</p></div>';
+}
+
+// 分段条：[{t:文字, f:flex, b:背景色, c:字色}]
+function bar(segs){
+  var s = '<div style="display:flex;width:100%;border-radius:10px;overflow:hidden;font-size:11.5px;text-align:center;line-height:1.5">';
+  segs.forEach(function(g){
+    s += '<div style="flex:' + g.f + ';padding:9px 3px;background:' + g.b + ';color:' + g.c +
+         ';font-weight:700;border-right:1px solid #fff;white-space:nowrap">' + g.t + '</div>';
+  });
+  return s + '</div>';
+}
+
+var BLUE  = ['#dbeafe', '#1d4ed8'];
+var AMBER = ['#fef3c7', '#92400e'];
+var GRAY  = ['#f1f5f9', '#64748b'];
+var GREEN = ['#dcfce7', '#15803d'];
+
+function seg(t, f, colors){
+  return { t: t, f: f, b: colors[0], c: colors[1] };
+}
+
+var LOOP = bar([
+  seg('设备准备 0.5ms', 6, BLUE),
+  seg('中断响应<br>10 周期', 1, AMBER),
+  seg('指令 1~15 条<br>15×4=60 周期<br>（第 15 条启动 D）', 2, AMBER),
+]);
+
+var LOOP2 = bar([
+  seg('设备准备 0.5ms', 6, BLUE),
+  seg('中断响应 10 + 指令 1~15 共 60 = 70 周期 → 启动下一个 D', 3, AMBER),
+  seg('指令 16~20 条（20 周期）与设备等待重叠，CPU 仍只占 90 周期/字符', 2, GRAY),
+]);
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'主频 50MHz → 1 时钟周期 20ns；CPI 4 → 每条指令 4 周期。任务：中断方式读 1000 个字符',
+    html: card('key', '<b>主频 50MHz</b>：1 时钟周期 = 1/50MHz = <b>20ns</b>；<b>CPI = 4</b>：每条指令 4 个时钟周期。<br>设备 D：异步串行传 7 位 ASCII + 1 位奇校验 + 1 位停止位；启动 D 到字符进 I/O 端口需 <b>0.5ms</b>。') },
+
+  { cls:'step', tag:'(1) 帧长', count:1, ribbon:{k:1, ok:true},
+    log:'(1) 异步串行每字符一帧：1 起始 + 7 数据 + 1 奇校验 + 1 停止 = 10 位',
+    html: card('key', '问(1)：异步通信<b>必须有一位起始位</b>来同步每一帧。') +
+          wrap('字符帧（共 10 位）', bar([
+            seg('起始 1 位', 1, AMBER),
+            seg('数据 7 位（ASCII）', 7, BLUE),
+            seg('奇校验 1 位', 1, GREEN),
+            seg('停止 1 位', 1, AMBER),
+          ])) },
+
+  { cls:'ok', tag:'(1) 字符率', count:2, ribbon:{k:2, ok:true},
+    log:'(1) 0.5ms 送入一个字符 → 每秒最多 1s ÷ 0.5ms = 2000 个字符',
+    html: card('good', '每字符间隔由设备节拍决定：<code>1s ÷ 0.5ms = 2000 个字符/秒</code>（设备持续工作时送入 I/O 端口的上限）。') },
+
+  { cls:'step', tag:'(2) CPU 开销/字符', count:3, ribbon:{k:3, ok:true},
+    log:'(2) 每字符 CPU 时间 = 中断响应 10 + 服务程序 20 条×4 = 80 → 共 90 周期（1.8μs）',
+    html: card('key', '每来一个字符：中断响应 <b>10 周期</b> + 中断服务程序 <b>20 条指令 × 4 CPI = 80 周期</b> → 每字符 CPU 被占 <b>90 个时钟周期</b>（= 1.8μs，远小于 0.5ms）。') },
+
+  { cls:'step', tag:'时间线起点', count:4, ribbon:{k:4, ok:true},
+    log:'t=0 启动 D → 0.5ms 后字符 1 进入 I/O 端口、申请第一次中断',
+    html: wrap('设备时间线', bar([
+      seg('t=0 CPU 启动 D', 2, GRAY),
+      seg('0.5ms：字符 1 到达端口，申请中断', 6, BLUE),
+    ])) },
+
+  { cls:'shift', tag:'到启动 D 为止', count:5, ribbon:{k:5, ok:true},
+    log:'字符到达 → 响应 10 周期 + 前 15 条指令 15×4=60 周期 → 第 15 条启动 D：共 70 周期',
+    html: wrap('从字符到达到「启动下一个 D」', bar([
+      seg('中断响应 10 周期', 1, AMBER),
+      seg('指令 1~15 条：15×4 = 60 周期，第 15 条启动 D', 3, AMBER),
+    ])) +
+          card('key', '下一个字符的 0.5ms 从此刻开始计时；服务程序剩余 5 条指令（20 周期）在这段等待时间内执行完，不延长循环。') },
+
+  { cls:'step', tag:'循环周期', count:6, ribbon:{k:6, ok:true},
+    log:'每字符一个循环：0.5ms（设备准备）+ 70 周期（响应 + 到启动 D）',
+    html: wrap('单个字符的循环', LOOP) +
+          wrap('重叠情况', LOOP2) },
+
+  { cls:'step', tag:'外推 1000 字符', count:7, ribbon:{k:7, ok:true},
+    log:'总时间 ≈ 1000 × (0.5ms + 70 周期) = 25,000,000 + 70,000 ≈ 25,070,000 个时钟周期',
+    html: card('good', '<code>总时间 ≈ 1000 × (0.5ms + 70 周期)</code><br>= 500ms + 70,000 周期<br>= 25,000,000 + 70,000 ≈ <b>25,070,000 个时钟周期</b>（约 501.4ms）。') },
+
+  { cls:'ok', tag:'CPU 占用时间', count:8, ribbon:{k:8, ok:true},
+    log:'CPU 用于任务的时间 = 1000 × 90 = 90,000 个时钟周期（约 1.8ms，仅占总时长约 0.36%）',
+    html: card('good', '<code>CPU 时间 = 1000 × (10 + 80) = 90,000 个时钟周期</code>。等待设备的 0.5ms 间隙里 CPU 可执行其他程序——这正是中断方式的意义。') },
+
+  { cls:'step', tag:'中断响应阶段', count:9, ribbon:{k:9, ok:true},
+    log:'中断响应（中断隐指令，硬件自动）：关中断、保存断点和程序状态、识别中断源引出服务程序入口',
+    html: card('key', '中断响应阶段 CPU 做三件事：<b>① 关中断；② 保存断点（PC）和程序状态（PSW）；③ 识别中断源、引出中断服务程序入口地址</b>。<br>注意：执行服务程序是响应<b>结束之后</b>的工作，不属于响应阶段。') },
+
+  { cls:'done', tag:'完成', count:10, ribbon:{k:10, ok:true},
+    log:'(1) 10 位、2000 字符/秒；(2) 总时间 ≈25,070,000 周期，CPU 时间 ≈90,000 周期',
+    done:true,
+    html: wrap('单个字符的循环', LOOP) +
+          card('good', '答案：<b>(1)</b> 每字符 10 位，每秒最多 2000 个字符；<b>(2)</b> 总时间约 <b>25,070,000 个时钟周期</b>，CPU 用于任务约 <b>90,000 个时钟周期</b>；中断响应阶段：关中断、保存断点和程序状态、识别中断源。') },
+];
+
+AW.init({
+  title: '2016-44 中断方式读取 1000 个字符的时间推演',
+  subtitle: '主频 50MHz · CPI 4 · 设备 0.5ms/字符 · 考点：异步串行帧格式 + 中断响应/服务时间估算',
+  counterLabel: '推演步',
+  ribbonTitle: '推演进度（✓ 完成）',
+  intro: '点击「▶ 播放」沿两条时间线逐步推演。',
+  snaps: snaps,
+  result: {
+    big: '总时间 ≈ 25,070,000 周期 · CPU 时间 ≈ 90,000 周期',
+    html: '记忆锚点：<b>两条线分开算</b>——设备线 0.5ms/字符定总长：1000 × (0.5ms + 70 周期) ≈ 25,070,000 周期；CPU 线每字符 90 周期（响应 10 + 服务 80）：1000 × 90 = 90,000 周期。<br>(1) 帧长 10 位 = 1 起始 + 7 数据 + 1 校验 + 1 停止，最大 2000 字符/秒；中断响应阶段 = 关中断 + 保存断点/程序状态 + 识别中断源。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

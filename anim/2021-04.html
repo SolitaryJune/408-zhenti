@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021-04 森林的棵数（先序+中序重建）</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PRE = ['a','b','d','c','e','g','f'];
+var IN  = ['b','d','a','e','g','c','f'];
+
+function seqRows(preCls, inCls, extra){
+  var h = '<div class="aw-scroll">';
+  h += '<div class="aw-row-label"><b>先序</b>（第 1 个是根）</div>' + AW.cellRow(PRE, preCls).outerHTML;
+  h += '<div class="aw-row-label"><b>中序</b>（根左边 = 左子树，右边 = 右子树）</div>' + AW.cellRow(IN, inCls).outerHTML;
+  if(extra) h += '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>';
+  return h + '</div>';
+}
+function treeBox(txt, extra){
+  return '<div style="font-family:Menlo,Consolas,monospace;font-size:16px;line-height:1.9;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;letter-spacing:1px">' + txt + '</div>' +
+         (extra ? '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">' + extra + '</div>' : '');
+}
+
+AW.init({
+  title: '森林 → 二叉树：由遍历序列数棵数',
+  subtitle: '先序 <code>a b d c e g f</code> · 中序 <code>b d a e g c f</code> · 先序+中序唯一重建 T',
+  counterLabel: '步骤',
+  ribbonTitle: '阶段进度（✓ 完成）',
+  intro: '点击「▶ 播放」逐步重建二叉树并数出森林棵数。',
+
+  snaps: [
+    { cls:'step', tag:'已知', log:'已知 T 的先序与中序序列：先序定根、中序分左右，可唯一重建二叉树', count:0,
+      html: seqRows([], [], '先序+中序可唯一确定二叉树——逐层切分重建。') },
+
+    { cls:'step', tag:'定根 a', log:'先序第 1 个 a 是根；中序中 a 左侧 {b,d} 是左子树、右侧 {e,g,c,f} 是右子树', count:1,
+      html: seqRows(['hit','','','','','',''], ['ok','ok','hit','ok','ok','ok','ok'],
+        '→ 根 a；左子树 2 个结点 {b,d}，右子树 4 个结点 {c,e,g,f}。') },
+
+    { cls:'step', tag:'左子树', log:'左子树 {b,d}：先序 b,d → 根 b；中序 d 在 b 左 → d 是 b 的左孩子（左子树重建完）', count:2, ribbon:{k:1, ok:true},
+      html: seqRows(['hit','hit','ok','','','',''], ['hit','ok','','','','',''],
+        '→ b 的左孩子 d，b 无右子树。') },
+
+    { cls:'step', tag:'右子树定根 c', log:'右子树 {c,e,g,f}：先序第 1 个 c = 根；中序 e,g | c | f → c 的左子树 {e,g}、右子树 {f}', count:3,
+      html: seqRows(['hit','','','hit','ok','ok','ok'], ['','','','ok','ok','hit','ok'],
+        '→ c 的左子树 2 个结点 {e,g}，右子树 1 个结点 {f}。') },
+
+    { cls:'step', tag:'c 的左', log:'c 的左子树 {e,g}：先序 e,g → 根 e；中序 e 前无、后有 g → g 挂在 e 的右子树', count:4,
+      html: seqRows(['hit','','','hit','hit','ok',''], ['','','','hit','ok','',''],
+        '→ e 的右孩子 g（对应原树中 g 是 e 的兄弟）。') },
+
+    { cls:'step', tag:'右子树完', log:'c 的右子树 = {f}：f 是 c 的右孩子。整棵二叉树重建完成', count:5, ribbon:{k:2, ok:true},
+      html: seqRows(['hit','','','hit','hit','ok','hit'], ['','','','ok','ok','hit','hit'],
+        '→ f 为叶子。7 个结点全部归位。') },
+
+    { cls:'step', tag:'重建完成', log:'T 的括号表示 a(b(d), c(e(–,g), f))——a 左孩子 b（b 左孩子 d）；a 右孩子 c；c 左 e（e 右挂 g）、右 f', count:6,
+      html: treeBox('a( b(d),  c( e(–, g), f ) )',
+        '结构：a 左孩子 <b>b</b>（b 左孩子 d）；a 右孩子 <b>c</b>；c 左孩子 <b>e</b>（e 右孩子 g）、右孩子 <b>f</b>。') },
+
+    { cls:'shift', tag:'关键规则', log:'森林→二叉树：根 = 第 1 棵树的根；根的右链 = 第 2、3…棵树的根；左子树 = 根的孩子森林', count:7,
+      html: treeBox('棵数 = 根沿右孩子链走到底经过的结点数',
+        '所以只需从根出发沿<b>右孩子链</b>数结点。') },
+
+    { cls:'ok', tag:'数右链', log:'沿右链 a → c → f，共 3 个结点 ⇒ F 中有 3 棵树', count:8, ribbon:{k:3, ok:true},
+      html: '<div class="aw-scroll">' + AW.cellRow(['a','c','f'], ['hit','hit','hit']).outerHTML +
+        '<div style="font-size:13.5px;color:#334155;line-height:1.8;margin-top:10px">右链 a → c → f：树 1 根 a、树 2 根 c、树 3 根 f，共 <b>3</b> 棵。</div></div>' },
+
+    { cls:'done', tag:'完成', log:'森林 F 有 3 棵树 → 答案 C', count:9, done:true,
+      html: treeBox('棵数 = 3  →  答案 C',
+        '还原验证：树1 = a(孩子 b，b 的孩子 d)；树2 = c(孩子 e、g)；树3 = f。共 7 个结点，与 T 一致。') },
+  ],
+
+  result: {
+    big: '3 棵（答案 C）',
+    html: '棵数 = 二叉树<b>根的右链长度</b>：a → c → f。左链、总结点数都不是棵数；先序+中序先老老实实重建 T 再数。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

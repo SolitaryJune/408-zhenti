@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023-20 读一个主存块的总线时间</title>
+<link rel="stylesheet" href="../assets/anim.css">
+<style>
+.tseg{ border-radius:6px; padding:7px 4px; font-size:12px; text-align:center; line-height:1.45;
+  color:#334155; transition:all .25s; }
+.segA{ background:#dbeafe; border:1.5px solid #60a5fa; }
+.segP{ background:#fef3c7; border:1.5px solid #d97706; }
+.segD{ background:#dcfce7; border:1.5px solid #16a34a; font-weight:700; }
+.tscale{ font-size:12.5px; color:#64748b; margin-top:6px; border-top:2px dashed #cbd5e1; padding-top:5px;
+  font-variant-numeric:tabular-nums; }
+.calcbox{ display:inline-block; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#334155; }
+</style>
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SCALE = 11; // 1ns = 11px
+var SEGS = [];
+(function(){
+  for (var w = 0; w < 4; w++){
+    SEGS.push({ n:'地址', v:1, c:'segA' });
+    SEGS.push({ n:'准备', v:6, c:'segP' });
+    SEGS.push({ n:'数据', v:1, c:'segD' });
+  }
+})();
+
+function tl(upToNs, note){
+  var h = '<div style="margin:8px 0">';
+  h += '<div style="display:flex;gap:2px;align-items:flex-end;min-height:46px">';
+  var acc = 0;
+  var any = false;
+  for (var i = 0; i < SEGS.length && acc < upToNs; i++){
+    var s = SEGS[i];
+    if (acc + s.v > upToNs) break;
+    h += '<div class="tseg ' + s.c + '" style="width:' + (s.v * SCALE) + 'px">' + s.n + '<br>' + s.v + 'ns</div>';
+    acc += s.v;
+    any = true;
+  }
+  if (!any) h += '<div style="font-size:13px;color:#94a3b8">（时间轴尚未开始）</div>';
+  h += '</div>';
+  if (any) h += '<div class="tscale" style="width:' + (upToNs * SCALE) + 'px">0ns → 累计 <b>' + upToNs + 'ns</b></div>';
+  if (note) h += '<div style="font-size:13.5px;color:#334155;margin-top:8px">' + note + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function tip(t){
+  return '<div class="calcbox">' + t + '</div>';
+}
+
+var snaps = [
+  { cls:'step', tag:'审题', count:0,
+    log:'64 位总线=8B/次；块 32B → 4 个 64 位数据；1GHz → 周期 1ns；不支持突发。',
+    html: tip('总线 <b>64 位 = 8B</b>，块 <b>32B = 8B × 4</b> → 要传 <b>4 个 64 位数据</b>。<br>时钟 <code>1GHz</code> → 周期 = <code>1ns</code>：传一次地址、传一个数据各占 1ns；主存准备一个 64 位数据要 <b>6ns</b>。<br><b>不支持突发传送</b> → 每个数据都要独立走一遍「地址 → 准备 → 数据」。') + tl(0) },
+  { cls:'step', tag:'第 1 个·传地址', count:1, ribbon:{k:1, ok:true},
+    log:'传地址 1ns → 累计 1ns。',
+    html: tl(1, '每个 64 位数据的传送都是独立事务：先发地址（1ns）。') },
+  { cls:'shift', tag:'第 1 个·主存准备', count:7, ribbon:{k:1, ok:true},
+    log:'主存准备 6ns → 累计 7ns。',
+    html: tl(7, '主存准备一个 64 位数据需要 6ns（琥珀段）。') },
+  { cls:'ok', tag:'第 1 个·传数据', count:8, ribbon:{k:1, ok:true},
+    log:'传数据 1ns → 第 1 个 64 位数据完成，累计 8ns。',
+    html: tl(8, '第 1 轮完整事务：<code>1 + 6 + 1 = 8ns</code>。') },
+  { cls:'ok', tag:'第 2 个', count:16, ribbon:{k:2, ok:true},
+    log:'第 2 个数据再走一遍 1+6+1 → 累计 16ns。',
+    html: tl(16, '不支持突发 → 第 2 个数据也要重新发地址、重新准备：又花 8ns。') },
+  { cls:'ok', tag:'第 3 个', count:24, ribbon:{k:3, ok:true},
+    log:'第 3 个数据 → 累计 24ns。',
+    html: tl(24, '第 3 轮事务 +8ns。') },
+  { cls:'ok', tag:'第 4 个', count:32, ribbon:{k:4, ok:true},
+    log:'第 4 个数据 → 累计 32ns，整个块读完。',
+    html: tl(32, '总计 <code>4 × (1 + 6 + 1) = 32ns</code>。') },
+  { cls:'step', tag:'干扰项', count:32,
+    log:'A=只算一次事务；B=当成了突发传送；C=漏掉部分数据传输段。',
+    html: tip('<b>选项辨析：</b><br>' +
+      'A <code>8ns</code>：只算了 1 个数据的事务；<br>' +
+      'B <code>11ns</code>：错把流程当成<b>突发传送</b>（<code>1 + 6 + 4×1</code>，一次地址连续收 4 个数据）；<br>' +
+      'C <code>26ns</code>：如 <code>1 + 4×6 + 1</code>，漏掉了中间几次数据传送的 1ns；<br>' +
+      'D <code>32ns</code>：<b>4 次独立事务，正确</b>。') + tl(32) },
+  { cls:'done', tag:'结论', count:32, done:true,
+    log:'4 × (1+6+1) = 32ns → 答案 D。',
+    html: tip('<b>结论</b>：不支持突发传送，4 个 64 位数据各走一遍「地址 1ns + 准备 6ns + 数据 1ns」→ <b>32ns</b> → 答案 <b>D</b>。') },
+];
+
+AW.init({
+  title: '2023-20 · 读一个主存块的总线时间',
+  subtitle: '64 位总线 · 1GHz · 主存准备 6ns/个 · 块 32B（4 个数据）· 不支持突发传送',
+  counterLabel: '累计时间',
+  ribbonTitle: '第 n 个 64 位数据（✓ 传完）',
+  intro: '点击「▶ 播放」逐段累加总线时间轴。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（32ns）',
+    html: '块 32B = 4 × 64 位。不支持突发 → 每个数据独立事务 <code>地址 1ns + 准备 6ns + 数据 1ns = 8ns</code>，共 <code>4×8 = 32ns</code>。若当突发传送会错选 11ns。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

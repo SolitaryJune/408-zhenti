@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-39 算法动画：四次挥手最短时间线</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     2022-39：C 主动关闭，最短口径下 C/S 进入 CLOSED 的时刻推演
+     外壳与控件全部由 assets/anim-engine.js 提供。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 每步状态：C/S 泳道状态、点亮到第几条报文、时间轴高亮段、当前时刻
+var MSGS = [
+  { text: '① C → S：FIN（t = 0 发出，25 ms 到达）', from: 'C' },
+  { text: '② S → C：ACK + FIN（S 收到 FIN 后立即发出，50 ms 到达 C）', from: 'S' },
+  { text: '③ C → S：最后一个 ACK（t = 50 ms 发出，75 ms 到达 S）', from: 'C' },
+];
+// 时间轴分段（宽度为视觉示意，2MSL 段不成比例）
+var SEGS = [
+  { w: '12%', label: '① FIN 上路 0→25ms', color: '#dbeafe' },
+  { w: '12%', label: '② ACK+FIN 回程 25→50ms', color: '#dcfce7' },
+  { w: '12%', label: '③ 最后 ACK 50→75ms', color: '#fef3c7' },
+  { w: '56%', label: 'TIME_WAIT：2MSL = 1600ms（示意不成比例）', color: '#fee2e2' },
+];
+var TICKS = ['0', '25', '50', '75', '1650 ms'];
+
+// sn 字段：cSt/sSt 泳道文本与颜色、msg 已点亮报文数、seg 高亮段、cur 时刻(ms)
+var STEPS = [
+  { cls:'step',  tag:'起点', log:'数据传输结束，C 主动请求断开连接。计时起点 t = 0：C 发出 FIN 段。',
+    cSt:['ESTABLISHED', '#e2e8f0', '#334155'], sSt:['ESTABLISHED', '#e2e8f0', '#334155'],
+    msg:0, seg:-1, cur:0 },
+  { cls:'step',  tag:'第 1 次挥手', log:'t = 0：C 发出 FIN → 进入 FIN_WAIT-1，等待 S 的确认。',
+    cSt:['FIN_WAIT-1', '#dbeafe', '#1d4ed8'], sSt:['ESTABLISHED', '#e2e8f0', '#334155'],
+    msg:1, seg:0, cur:0 },
+  { cls:'shift', tag:'半个 RTT', log:'t = 25 ms：S 收到 FIN。最短口径：CLOSE_WAIT 期间无数据可传 → S 立即回 ACK 并同时发出自己的 FIN，进入 LAST_ACK（四次挥手压缩成三次报文）。',
+    cSt:['FIN_WAIT-1', '#dbeafe', '#1d4ed8'], sSt:['LAST_ACK', '#fef3c7', '#92400e'],
+    msg:2, seg:1, cur:25 },
+  { cls:'shift', tag:'1 个 RTT', log:'t = 50 ms：C 收到 ACK + FIN，回最后一个 ACK → 进入 TIME_WAIT，启动 2MSL = 2 × 800 = 1600 ms 定时器。',
+    cSt:['TIME_WAIT（2MSL 计时）', '#fef3c7', '#92400e'], sSt:['LAST_ACK', '#fef3c7', '#92400e'],
+    msg:3, seg:2, cur:50 },
+  { cls:'ok',    tag:'S 关闭完成', log:'t = 75 ms：S 收到最后一个 ACK → 进入 CLOSED。S 耗时 = 0.5 RTT + 1 RTT = 1.5 RTT = 75 ms。',
+    cSt:['TIME_WAIT（2MSL 计时）', '#fef3c7', '#92400e'], sSt:['CLOSED ✓', '#dcfce7', '#15803d'],
+    msg:3, seg:3, cur:75, ribbon:{k:1, ok:true} },
+  { cls:'done',  tag:'C 关闭完成', log:'t = 50 + 1600 = 1650 ms：C 的 2MSL 定时器到期 → 进入 CLOSED。C 耗时 = 1 RTT + 2MSL = 1650 ms。',
+    cSt:['CLOSED ✓', '#dcfce7', '#15803d'], sSt:['CLOSED ✓', '#dcfce7', '#15803d'],
+    msg:3, seg:3, cur:1650, ribbon:{k:2, ok:true}, done:true },
+];
+
+function laneRow(labelText, st){
+  var row = AW.el('div', '');
+  row.style.display = 'flex';
+  row.style.alignItems = 'center';
+  row.style.gap = '12px';
+  row.style.margin = '6px 0';
+  var lab = AW.el('div', '', labelText);
+  lab.style.width = '76px';
+  lab.style.fontSize = '13px';
+  lab.style.fontWeight = '700';
+  lab.style.color = '#334155';
+  lab.style.textAlign = 'right';
+  var chip = AW.el('div', '', st[0]);
+  chip.style.padding = '7px 14px';
+  chip.style.borderRadius = '10px';
+  chip.style.border = '2px solid ' + st[1];
+  chip.style.background = st[1];
+  chip.style.color = st[2];
+  chip.style.fontSize = '13.5px';
+  chip.style.fontWeight = '700';
+  row.appendChild(lab);
+  row.appendChild(chip);
+  return row;
+}
+
+AW.init({
+  title: '2022-39：四次挥手，C 与 S 何时进入 CLOSED？',
+  subtitle: 'RTT = <code>50 ms</code> · MSL = <code>800 ms</code> · C 主动关闭 · 求"至少"',
+  counterLabel: '当前时刻(ms)',
+  ribbonTitle: '关键节点（✓ 达成）',
+  intro: '点击「▶ 播放」沿时间轴推演挥手全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.style.minWidth = '640px';
+
+    this._laneC = AW.el('div', '');
+    this._laneS = AW.el('div', '');
+    inner.appendChild(this._laneC);
+    inner.appendChild(this._laneS);
+
+    // 报文列表
+    this._msgs = [];
+    MSGS.forEach(function(m){
+      var row = AW.el('div', '');
+      row.style.margin = '5px 0 5px 88px';
+      row.style.padding = '7px 12px';
+      row.style.borderRadius = '10px';
+      row.style.border = '1px solid #e2e8f0';
+      row.style.background = '#f8fafc';
+      row.style.color = '#94a3b8';
+      row.style.fontSize = '13.5px';
+      row.style.transition = 'all .3s';
+      row.textContent = m.text;
+      inner.appendChild(row);
+      this._msgs.push(row);
+    }, this);
+
+    // 时间轴
+    var axis = AW.el('div', '');
+    axis.style.margin = '16px 88px 0 88px';
+    var segRow = AW.el('div', '');
+    segRow.style.display = 'flex';
+    segRow.style.height = '26px';
+    segRow.style.borderRadius = '8px';
+    segRow.style.overflow = 'hidden';
+    segRow.style.border = '1px solid #e2e8f0';
+    this._segs = [];
+    SEGS.forEach(function(s){
+      var seg = AW.el('div', '', s.label);
+      seg.style.width = s.w;
+      seg.style.background = '#f1f5f9';
+      seg.style.color = '#94a3b8';
+      seg.style.fontSize = '11px';
+      seg.style.display = 'flex';
+      seg.style.alignItems = 'center';
+      seg.style.justifyContent = 'center';
+      seg.style.whiteSpace = 'nowrap';
+      seg.style.overflow = 'hidden';
+      seg.style.transition = 'all .3s';
+      segRow.appendChild(seg);
+      this._segs.push(seg);
+    }, this);
+    axis.appendChild(segRow);
+    var tickRow = AW.el('div', '');
+    tickRow.style.display = 'flex';
+    tickRow.style.justifyContent = 'space-between';
+    tickRow.style.fontSize = '12px';
+    tickRow.style.color = '#64748b';
+    tickRow.style.fontFamily = 'monospace';
+    tickRow.style.fontWeight = '700';
+    TICKS.forEach(function(t){
+      var sp = AW.el('div', '', t);
+      tickRow.appendChild(sp);
+    });
+    axis.appendChild(tickRow);
+    inner.appendChild(axis);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    this._laneC.innerHTML = '';
+    this._laneS.innerHTML = '';
+    this._laneC.appendChild(laneRow('客户 C', sn.cSt));
+    this._laneS.appendChild(laneRow('服务器 S', sn.sSt));
+    var self = this;
+    MSGS.forEach(function(m, j){
+      var row = self._msgs[j];
+      var on = j < sn.msg;
+      row.style.color = on ? '#334155' : '#94a3b8';
+      row.style.background = on ? (m.from === 'C' ? '#eff6ff' : '#f0fdf4') : '#f8fafc';
+      row.style.borderColor = on ? (m.from === 'C' ? '#93c5fd' : '#86efac') : '#e2e8f0';
+      row.style.fontWeight = on ? '700' : '400';
+    });
+    this._segs.forEach(function(seg, j){
+      var on = j === sn.seg;
+      seg.style.background = on ? SEGS[j].color : '#f1f5f9';
+      seg.style.color = on ? '#334155' : '#94a3b8';
+      seg.style.fontWeight = on ? '700' : '400';
+    });
+  },
+
+  snaps: STEPS,
+
+  result: {
+    big: 'C 1650 ms · S 75 ms（选 D）',
+    html: '最短口径下 S 的 ACK 与 FIN 一同发出：C = 1 RTT + 2MSL = 50 + 1600 = <b>1650 ms</b>；S = 0.5 RTT + 1 RTT = 1.5 RTT = <b>75 ms</b>。记忆点：<b>主动关闭方必须 TIME_WAIT 等 2MSL</b>；被动方收到最后 ACK 即关门。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009-32 · 打开 I/O 设备用的标识</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析类：设备独立性（答案 A 逻辑设备名）
+     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>题眼：<b>程序员</b>用系统调用打开 I/O 设备用什么标识？指向考点：<b>设备独立性（设备无关性）</b>——用户程序应与具体物理设备解耦。</p>' },
+  { title: 'A. 逻辑设备名 —— 对',
+    cls: 'good',
+    body: '<p>用户程序用<b>逻辑设备名</b>申请设备，由系统的<b>设备独立性软件</b>通过逻辑设备表映射到物理设备。设备更换或重定向时<b>程序无需修改</b> → 合理。</p>' },
+  { title: 'B. 物理设备名 —— 错',
+    cls: 'bad',
+    body: '<p>物理设备名直接指向具体硬件。若程序直接使用它，设备一换程序就失效 → 违背设备独立性，排除。</p>' },
+  { title: 'C. 主设备号 —— 错',
+    cls: 'bad',
+    body: '<p>主设备号标识<b>设备驱动程序/控制器类型</b>，是内核内部使用的编号，不面向程序员，排除。</p>' },
+  { title: 'D. 从设备号 —— 错',
+    cls: 'bad',
+    body: '<p>从设备号区分<b>同类设备中的具体哪一台</b>，同样是系统内部的物理标识，排除。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>A</b>。记忆锚点：<b>用户用逻辑名，系统用物理名</b>——逻辑设备名由设备独立性软件负责映射。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2009-32 · 程序员打开 I/O 设备用的标识',
+  subtitle: '考点：设备独立性 · 逻辑设备名 vs 物理设备名',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：<b>设备独立性</b>：程序员用<b>逻辑设备名</b>，设备独立性软件查逻辑设备表映射到物理设备；好处是设备坏了换同类设备程序不用改、便于重定向与共享。物理设备名与主/从设备号都是系统内部的标识。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

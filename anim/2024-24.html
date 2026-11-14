@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024-24 · 终止进程的操作</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     概念辨析动画：终止进程必做动作 vs 可选策略（答案 A）
+     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    tag: '审题',
+    log: '找「不一定执行」的动作：必做流程之外的可选策略就是答案',
+    body: '<p>题眼：<b>「不一定执行」</b>。终止进程的固定流程是：找到 PCB → 置终止态 → 回收资源 → 释放 PCB；凡流程之外的「可选策略」就是答案。</p>' },
+  { title: '标准终止流程',
+    cls: 'key',
+    tag: '流程',
+    log: '找到 PCB → 回收全部资源 → 最后释放 PCB',
+    body: '<p><b>标准终止流程</b>：① 按标识符找到 PCB，若在执行则立即终止，置为终止态；② 回收其占用的全部资源——内存、设备、文件等；③ 最后<b>释放 PCB</b>（PCB 是进程存在的唯一标志，必须最后释放）。</p>' },
+  { title: '逐项判定 B',
+    cls: 'good',
+    tag: 'B 判定',
+    log: '回收设备：归还全部资源的固定动作，必做',
+    body: '<p>B「回收进程占用的设备」：<b>必做</b>。终止进程时系统收回它占用的全部资源（内存、设备、文件等），归还给系统。</p>',
+    ribbon: { k: 2, ok: true } },
+  { title: '逐项判定 C',
+    cls: 'good',
+    tag: 'C 判定',
+    log: '释放 PCB：进程存在的唯一标志必须撤销，必做',
+    body: '<p>C「释放进程控制块」：<b>必做</b>。资源回收完若不释放 PCB，系统里仍残留该进程的记录，终止就没有完成。</p>',
+    ribbon: { k: 3, ok: true } },
+  { title: '逐项判定 D',
+    cls: 'good',
+    tag: 'D 判定',
+    log: '回收内存：最基本的资源回收，必做',
+    body: '<p>D「回收为进程分配的内存」：<b>必做</b>。地址空间是最基本的资源，终止时必须回收。</p>',
+    ribbon: { k: 4, ok: true } },
+  { title: '逐项判定 A',
+    cls: 'bad',
+    tag: 'A 判定',
+    log: '终止子进程：仅级联终止策略下才做，不一定执行，当选',
+    body: '<p>A「终止子进程」：<b>不一定执行</b>。仅当系统采用「级联终止」策略（父进程终止时连同其子孙进程一起终止）才会执行；有的系统允许子进程继续运行。<b>本题选 A</b>。</p>',
+    ribbon: { k: 1, ok: false } },
+  { title: '结论',
+    cls: 'good',
+    tag: '结论',
+    log: '回收设备/内存、释放 PCB 必做；终止子进程取决于策略',
+    body: '<p>答案选 <b>A</b>。记忆锚点：<b>回收设备/内存、释放 PCB 是固定动作；是否终止子进程取决于系统策略</b>。</p>' },
+];
+
+var CLS_MAP = { good: 'ok', bad: 'miss', key: 'shift' };
+
+var snaps = STEPS.map(function(s, i){
+  var sn = {
+    cls: i === STEPS.length - 1 ? 'done' : (CLS_MAP[s.cls] || 'step'),
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1
+  };
+  if(s.ribbon) sn.ribbon = s.ribbon;
+  return sn;
+});
+
+AW.init({
+  title: '终止进程：哪些操作是必做，哪些不一定',
+  subtitle: '考点：<code>资源回收 + PCB 释放</code> 必做 · <code>级联终止子进程</code> 是可选策略',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 必做 / ✗ 不一定执行）',
+  snaps: snaps,
+  result: {
+    big: '答案 A',
+    html: '<b>不一定执行的是「终止子进程」。</b>终止进程时必做：回收内存、设备等全部资源，最后释放 PCB。<br>记忆锚点：<b>「父死子必亡」只是级联终止策略，并非所有系统的规则</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

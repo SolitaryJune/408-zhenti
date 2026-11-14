@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-11 k 路归并趟数 d 的影响因素 · 动画</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：写出趟数公式',
+    cls: 'key',
+    body: '<p>设初始归并段有 r 个，k 路归并一趟最多把段数缩小为原来的 1/k（向上取整）。从 r 个段归并到 1 个段所需趟数：<code>d = ⌈log k r⌉</code>。<b>d 只由 k 和 r 两个量决定</b>——这就是判断三条叙述的标尺。</p>' },
+  { title: 'I. 增大 k 可能减小 d —— 对',
+    cls: 'good',
+    body: '<p>对数底越大值越小：r = 100 时，k=4 → d=4，k=10 → d=2，k=25 → d=2。增大 k 的确<b>可能</b>减小 d（也可能不变，如 r=8 时 k 从 2 到 4 都是 3 趟）。I 的措辞「可能」恰如其分，<b>正确</b>。代价是每个归并趟要同时比较 k 路选最小，这是后续讨论的权衡点。</p>' },
+  { title: 'II. 初始归并段个数不影响 d —— 错',
+    cls: 'bad',
+    body: '<p>r 正是公式里的自变量：r 越大，<code>log k r</code> 越大，趟数越多。例如 r=8、k=2 → d=3；r=16、k=2 → d=4。<b>II 错误</b>。</p>' },
+  { title: 'III. 内存限制了初始归并段的最大长度 —— 错',
+    cls: 'bad',
+    body: '<p>「内存装不下就生成不了长段」只适用于用<b>普通内部排序</b>生成初始段。而生成初始段可以用<b>置换-选择排序</b>：输出一个记录就腾出空间、立刻从输入文件换入下一个记录，工作区始终不空。于是初始段长可以<b>超过内存容量</b>（平均约为工作区大小的 2 倍）——内存大小并不构成段长的硬性上限。<b>III 错误</b>。</p>' },
+  { title: '三个因素小结',
+    cls: '',
+    body: '<p>影响趟数 d 的：① 归并路数 k（增大可能减小 d）；② 初始归并段个数 r（由记录总数与段长共同决定）。<b>不</b>限制段长的：③ 内存大小（置换-选择排序可造出超长段，从而还能反过来减少 r、减少 d）。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>只有 I 正确，答案选 <b style="font-size:16px">A</b>。记忆锚点：<code>d = ⌈log k r⌉；置换-选择让段长突破内存容量</code>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2026-11 · k 路归并趟数 d：三条叙述谁对',
+  subtitle: '考点：<code>外部排序 · d = ⌈log k r⌉ · 置换-选择排序</code> · 逐条判定',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐条判定 I、II、III。',
+  snaps: snaps,
+  result: {
+    big: '答案 A（仅 I 正确）',
+    html: '趟数公式 <code>d = ⌈log k r⌉</code>：增大 k 可能减小 d（I 对）；d 随 r 增大而增大（II 错）；用<b>置换-选择排序</b>生成初始段时边输出边换入，段长可超过内存工作区（III 错）。选 <b>A</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

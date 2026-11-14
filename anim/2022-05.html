@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022-05 哈夫曼树 T1 与定长编码树 T2</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两棵树长什么样',
+    cls: 'key',
+    body: '<p>T1 = <b>哈夫曼编码树</b>：n 个字符作叶，频次小的离根远、频次大的离根近；无度为 1 的结点，结点数恰为 <b>2n − 1</b>。T2 = <b>定长编码树</b>：所有字符码长相同 ⇒ 表示字符的结点全部处于<b>同一层</b>。</p>' },
+  { title: 'A：结点数相同？',
+    cls: 'bad',
+    body: '<p>T1 恒为 2n − 1；T2 形状不唯一：n=3 时定长码长 2，树上 6～7 个结点都有可能 ⇒ 不一定相等。<b>A 错</b></p>' },
+  { title: 'B：T1 一定更高？',
+    cls: 'bad',
+    body: '<p>T1 是含 n 个叶的二叉树 ⇒ 高度至少 ⌈log2 n⌉；T2 的高度恰好可取 ⌈log2 n⌉。n=3、频次 {1,1,10} 时：10 的码长为 1，其余为 2，T1 高度 2，与 T2 <b>相等</b> ⇒ 「一定大于」不成立。<b>B 错</b></p>' },
+  { title: 'C：频次不同必不同层？',
+    cls: 'bad',
+    body: '<p>反例：频次 {2, 2, 3, 3}——合并 2+2=4、3+3=6，4 与 6 同为根的孩子 ⇒ 四个字符<b>都在第 2 层</b>，频次却有 2 有 3。<b>C 错</b></p>' },
+  { title: 'D：T2 中频次不同同层？',
+    cls: 'good',
+    body: '<p>定长编码的码长与频次无关，所有字符的编码长度相同 ⇒ 在 T2 中必然处于<b>同一层</b>。<b>D 对</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案 <b>D</b>。记忆锚点：哈夫曼树「频次定深浅」但不保证不同频次不同层；定长树「码长相同 ⇒ 同层」，与频次无关。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哈夫曼树 T1 与定长编码树 T2 的对比（2022-05）',
+  subtitle: '考点：哈夫曼树性质 2n−1 · 定长编码 · 「一定 / 可能」命题的判定',
+  intro: '点击「▶ 播放」逐项推演 A～D。',
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '定长编码码长相同 ⇒ 频次不同的字符在 T2 中必同层。A：结点数 2n−1 只对哈夫曼树成立；B：n=3 时两树可同高；C：频次 {2,2,3,3} 反例——四字符同层。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

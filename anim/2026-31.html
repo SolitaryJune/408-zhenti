@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026-31 驱动程序的职责与 I/O 控制方式</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：找"错误"项',
+    cls: 'key',
+    body: '<p>驱动程序 = 直接<b>操纵设备控制器</b>的底层软件：向上衔接设备独立性软件，向下对硬件发命令。先明确它的标准职责，再逐项找错。</p>' },
+  { title: 'A：包含启动设备的代码——正确',
+    cls: 'good',
+    ribbon: { k: 1, ok: true },
+    body: '<p>发出启动命令、让设备开始工作是驱动程序的核心任务之一（设备独立性软件不直接碰硬件，启动设备交给驱动）。<b>√ 说法正确</b></p>' },
+  { title: 'B：包含一组读/写设备的代码——正确',
+    cls: 'good',
+    ribbon: { k: 2, ok: true },
+    body: '<p>针对具体设备特性的读/写控制代码（时序、寄存器操作）都封装在驱动中。<b>√ 说法正确</b></p>' },
+  { title: 'C：驱动与内核之间定义统一接口——正确',
+    cls: 'good',
+    ribbon: { k: 3, ok: true },
+    body: '<p>设备种类千差万别，但设备独立性软件不能为每种设备各写一套调用逻辑 → 系统<b>规定内核与驱动之间统一的（标准）接口</b>，上层才能以同样方式调用各种设备——这正是设备独立性的实现基础。<b>√ 说法正确</b></p>' },
+  { title: 'D：块设备与字符设备采用相同 I/O 控制方式——错误',
+    cls: 'bad',
+    ribbon: { k: 4, ok: false },
+    body: '<p><b>块设备</b>：成块传送（如 4 KB），常用 <b>DMA 方式</b>（一块传完才中断一次）；<b>字符设备</b>：按字节传送，常用<b>中断驱动方式</b>（逐字节中断）。数据单位与速度特征不同 → 控制方式必然不同。<b>× 说法错误</b></p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>错误的是 <b>D</b>。记忆锚点：<b>统一的是"驱动与内核的接口"，不统一的是"底层 I/O 控制方式"</b>——两句话别混。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var o = {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+  if (s.ribbon) o.ribbon = s.ribbon;
+  return o;
+});
+
+AW.init({
+  title: '2026-31 · 驱动程序：哪句叙述错了',
+  subtitle: '考点：<code>驱动的职责 · 统一接口 · DMA 与中断驱动</code> · 四句叙述逐项判断',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判断（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  snaps: snaps,
+  result: {
+    big: '答案 D（错误的叙述）',
+    html: '记忆锚点：<b>块设备 → DMA 方式；字符设备 → 中断驱动方式</b>。与内核"接口统一"（C 对）不等于底层控制方式相同（D 错）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

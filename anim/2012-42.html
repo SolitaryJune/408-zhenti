@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-42 求两链表共同后缀起始位置</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<!-- ============================================================
+     算法/过程类：先对齐、再同步，双指针找共享后缀起点
+============================================================= -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 含头结点的格子序列
+var R1 = ['头','l','o','a','d','i','n','g'];   // len1 = 7（不含头）
+var R2 = ['头','b','e','i','n','g'];           // len2 = 5（不含头）
+
+var row1, row2;
+
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'aw-scroll');
+  var lbl1 = AW.el('div', 'aw-row-label', '<b>str1「loading」</b>（len1 = 7）· 蓝 p 为移动指针');
+  row1 = AW.el('div', 'aw-cells');
+  var lbl2 = AW.el('div', 'aw-row-label', '<b>str2「being」</b>（len2 = 5）· 蓝 q 为移动指针 · 绿=共享后缀 i→n→g');
+  row2 = AW.el('div', 'aw-cells');
+  wrap.appendChild(lbl1); wrap.appendChild(row1);
+  wrap.appendChild(lbl2); wrap.appendChild(row2);
+  stage.appendChild(wrap);
+}
+
+function rowClass(sn, chars, pIdx, suffixFrom){
+  return chars.map(function(ch, i){
+    if (i === 0) return 'dim';                 // 头结点
+    if (sn.meet && i === pIdx) return 'hit';   // 相遇结点
+    if (i === pIdx) return 'ok';               // 指针所在
+    if (suffixFrom != null && sn.showSuffix && i >= suffixFrom) return 'ok'; // 共享后缀
+    if (sn.dimTo != null && i < sn.dimTo && i > 0) return 'dim';  // 已越过的前缀
+    return '';
+  });
+}
+
+function render(stage, sn){
+  row1.innerHTML = '';
+  var pm1 = {};
+  if (sn.p >= 0) pm1[sn.p + 1] = 'p';
+  row1.appendChild(AW.cellRow(R1, rowClass(sn, R1, sn.p, 5), pm1));
+  row2.innerHTML = '';
+  var pm2 = {};
+  if (sn.q >= 0) pm2[sn.q + 1] = 'q';
+  row2.appendChild(AW.cellRow(R2, rowClass(sn, R2, sn.q, 3), pm2));
+}
+
+AW.init({
+  title: '找两个单链表的共同后缀起始位置',
+  subtitle: '例：<code>loading</code> 与 <code>being</code> 共享后缀 <code>ing</code> · 带头结点单链表 · 先对齐再同步',
+  counterLabel: '同步移动步数',
+  ribbonTitle: '同步比较（✓ 同一结点 / ✗ 不同结点）',
+  intro: '点击「▶ 播放」演示：数长度 → 长表先走差值 → 同步后移比指针。',
+
+  build: build,
+  render: render,
+
+  snaps: [
+    { cls:'shift', tag:'开始', log:'两个单词的链表在字符 i 处汇合，共享后缀 i→n→g。单链表不能从后往前找，只能让两指针「到表尾等距」后再同步后移。p、q 都从各自头结点出发。',
+      p:0, q:0, count:0 },
+    { cls:'step', tag:'数长度', log:'先各遍历一遍（跳过头结点）：len1 = 7（l o a d i n g），len2 = 5（b e i n g）。',
+      p:0, q:0, count:0 },
+    { cls:'shift', tag:'尾部对齐', log:'len1 − len2 = 2：p 先走 2 步到 o。此时 p、q 到表尾的距离相等（各还差 5 个结点）——对齐完成，共享后缀 i n g 已到同一起跑线。',
+      p:2, q:0, showSuffix:true, count:0 },
+    { cls:'step', tag:'同步 ①', log:'p、q 同步后移一步：p 到 a，q 到 b——不是同一个结点，继续。',
+      p:3, q:1, showSuffix:true, count:1, ribbon:{k:1, ok:false} },
+    { cls:'step', tag:'同步 ②', log:'再同步一步：p 到 d，q 到 e——仍不是同一个结点，继续。',
+      p:4, q:2, showSuffix:true, count:2, ribbon:{k:2, ok:false} },
+    { cls:'ok', tag:'相遇 ✓', log:'第三步同步：p、q 同时到达字符 i 的结点——同一个结点！它就是共同后缀的起始位置（题目中的 p 所指）。',
+      p:5, q:3, showSuffix:true, meet:true, count:3, ribbon:{k:3, ok:true} },
+    { cls:'step', tag:'复杂度', log:'复杂度：求长度两遍遍历 O(len1+len2)，对齐与同步至多 O(max(len1,len2)) ⇒ 总计 O(len1+len2)。（双重循环逐结点比对是 O(len1×len2)，不满足「时间尽可能高效」。）',
+      p:5, q:3, showSuffix:true, meet:true, count:3 },
+    { cls:'done', tag:'结论', log:'算法：数长度 → 长表指针先走差值对齐 → 同步后移比较「指针」是否相同。本例相遇于字符 i 结点，时间复杂度 O(len1+len2)。',
+      p:5, q:3, showSuffix:true, meet:true, count:3, done:true },
+  ],
+
+  result: {
+    big: '相遇于 i · O(len1+len2)',
+    html: 'len1=7、len2=5，p 先走 2 步对齐，再与 q 同步后移，第 3 步同时到达字符 <code>i</code> 的结点——共同后缀起始位置。<br>两个易错点：长度计数要<b>跳过头结点</b>；同步时比较的是<b>结点指针相等（p==q）</b>，不是字符值。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2025-45 三人植树的同步互斥设计</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 每个快照：sv=[position,pit,tree,mutex]，hi=本步净变化的信号量下标，actor=0甲/1乙/2丙/-1，
+   prog=[挖坑,放苗,填土,浇水] 累计次数 */
+var SNAP = [
+  { sv: [3, 0, 0, 1], hi: [],     actor: -1, prog: [0, 0, 0, 0] },
+  { sv: [2, 1, 0, 1], hi: [0, 1], actor: 0,  prog: [1, 0, 0, 0] },
+  { sv: [3, 0, 0, 1], hi: [0, 1], actor: 1,  prog: [1, 1, 0, 0] },
+  { sv: [3, 0, 1, 1], hi: [2, 3], actor: 1,  prog: [1, 1, 1, 0] },
+  { sv: [2, 1, 1, 1], hi: [0, 1], actor: 0,  prog: [2, 1, 1, 0] },
+  { sv: [2, 1, 0, 1], hi: [2],    actor: 2,  prog: [2, 1, 1, 1] },
+  { sv: [2, 0, 0, 0], hi: [1, 3], actor: -1, prog: [3, 2, 1, 1] },
+  { sv: [2, 0, 1, 1], hi: [2, 3], actor: 1,  prog: [3, 2, 2, 1] },
+  { sv: [2, 0, 1, 1], hi: [],     actor: -1, prog: [3, 2, 2, 1] },
+  { sv: [2, 0, 1, 1], hi: [],     actor: -1, prog: [3, 2, 2, 1] }
+];
+
+var SEM_NAMES = ['position', 'pit', 'tree', 'mutex'];
+var semBox = [], semPtr = [], perBox = [], progEl;
+var AMBER = 'border-color:#d97706;background:#fef3c7';
+
+function paint(i) {
+  var s = SNAP[i], j;
+  for (j = 0; j < 4; j++) {
+    semBox[j].textContent = String(s.sv[j]);
+    if (s.hi.indexOf(j) >= 0) {
+      semBox[j].className = 'aw-box';
+      semBox[j].setAttribute('style', AMBER);
+    } else {
+      semBox[j].className = 'aw-box';
+      semBox[j].setAttribute('style', '');
+    }
+    semPtr[j].textContent = s.hi.indexOf(j) >= 0 ? '变化' : '';
+  }
+  for (j = 0; j < 3; j++) {
+    perBox[j].className = 'aw-box' + (s.actor === j ? ' hit' : '');
+  }
+  progEl.innerHTML = '已完成：挖坑 <b>' + s.prog[0] + '</b> · 放苗 <b>' + s.prog[1] +
+    '</b> · 填土 <b>' + s.prog[2] + '</b> · 浇水 <b>' + s.prog[3] + '</b>';
+}
+
+AW.init({
+  title: '三人植树：用信号量描述同步与互斥（2025-45）',
+  subtitle: '流程：甲挖坑 → 乙放苗 → 乙填土 → 丙浇水 · 铁锹一把（甲乙共用）· 水桶一把（仅丙用）· <b>树坑数量小于 3 甲才能挖</b>',
+  counterLabel: '演示步',
+  intro: '点击「▶ 播放」，观察信号量如何驱动三人配合。',
+  build: function (stage) {
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>信号量</b>（琥珀＝本步变化）：<code>position</code> 可挖坑名额 · <code>pit</code> 空坑待放苗 · <code>tree</code> 待浇水苗 · <code>mutex</code> 铁锹互斥'));
+    var srow = AW.el('div', 'aw-cells');
+    for (var j = 0; j < 4; j++) {
+      var col = AW.el('div', 'aw-col');
+      var ptr = AW.el('div', 'aw-ptr', '');
+      var box = AW.el('div', 'aw-box', '');
+      var ix = AW.el('div', 'aw-idx', SEM_NAMES[j]);
+      col.appendChild(ptr); col.appendChild(box); col.appendChild(ix);
+      srow.appendChild(col);
+      semBox.push(box); semPtr.push(ptr);
+    }
+    inner.appendChild(srow);
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>三人</b>（高亮＝本步主角）'));
+    var prow = AW.el('div', 'aw-cells');
+    var persons = ['甲（挖坑）', '乙（放苗/填土）', '丙（浇水）'];
+    for (j = 0; j < 3; j++) {
+      var col2 = AW.el('div', 'aw-col');
+      var ptr2 = AW.el('div', 'aw-ptr', '');
+      var box2 = AW.el('div', 'aw-box', ['甲', '乙', '丙'][j]);
+      box2.style.width = '88px';
+      var ix2 = AW.el('div', 'aw-idx', persons[j]);
+      col2.appendChild(ptr2); col2.appendChild(box2); col2.appendChild(ix2);
+      prow.appendChild(col2);
+      perBox.push(box2);
+    }
+    inner.appendChild(prow);
+    progEl = AW.el('div', 'aw-row-label', '');
+    inner.appendChild(progEl);
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+    paint(0);
+  },
+  snaps: [
+    { cls: 'step', tag: '初始', log: '初始：position=3（树坑名额 3 个）、pit=0、tree=0、mutex=1（铁锹可用）。甲、乙、丙进入各自循环' },
+    { cls: 'ok', tag: '甲挖坑①', log: '甲：wait(position) 3→2（空坑 0 小于 3，允许挖）；wait(mutex) 取铁锹、挖坑、signal(mutex) 还铁锹；signal(pit) 0→1 通知乙：有坑了' },
+    { cls: 'ok', tag: '乙放苗①', log: '乙：wait(pit) 1→0 取得空坑；放树苗；signal(position) 2→3——树苗已入坑，它不再是空"树坑"，名额归还，甲可继续挖' },
+    { cls: 'ok', tag: '乙填土①', log: '乙：wait(mutex) 取铁锹、填土、signal(mutex) 还铁锹；signal(tree) 0→1 通知丙：有树苗待浇水' },
+    { cls: 'ok', tag: '甲挖坑②', log: '甲：wait(position) 3→2；wait(mutex) 取铁锹、挖坑②、signal(mutex)；signal(pit) 0→1。此刻乙不需要铁锹，申请顺利通过' },
+    { cls: 'ok', tag: '丙浇水①', log: '丙：wait(tree) 1→0；浇水。水桶只有丙使用、无竞争，不需要信号量' },
+    { cls: 'shift', tag: '互斥演示', log: '互斥演示：甲持铁锹挖坑③（mutex=0），乙放好树苗②、signal(position) 后执行 wait(mutex) 被<b>阻塞</b>——必须等甲 signal(mutex) 归还铁锹。挖坑与填土因共用一把铁锹而互斥' },
+    { cls: 'ok', tag: '唤醒填土②', log: '甲 signal(mutex) 0→1，乙被唤醒完成填土②并还锹，signal(tree) 0→1 通知丙。铁锹的互斥保证挖坑与填土不会同时进行' },
+    { cls: 'step', tag: '约束演示', log: '再看 position：本轮甲已挖 3 坑、乙只归还 2 次（放苗②），position=2。若甲继续挖到 position=0，再 wait(position) 就会阻塞，直到乙放苗 signal(position)——"树坑数量小于 3 时甲才可以挖"由此保证' },
+    { cls: 'done', tag: '完成', log: '汇总：position=3 可挖坑名额 · pit=0 甲→乙同步 · tree=0 乙→丙同步 · mutex=1 铁锹互斥；水桶仅丙使用不设信号量——共 4 个信号量，代码与参考答案一致', done: true }
+  ],
+  render: function (stage, sn, i) { paint(i); },
+  result: {
+    big: '4 个信号量（与参考答案一致）',
+    html: '<b>position=3</b> 可挖坑名额（树坑数小于 3 才能挖）· <b>pit=0</b> 甲→乙同步（坑挖好）· <b>tree=0</b> 乙→丙同步（苗填好）· <b>mutex=1</b> 铁锹互斥。<br>甲：wait(position)→wait(mutex)→挖坑→signal(mutex)→signal(pit)；乙：wait(pit)→放树苗→signal(position)→wait(mutex)→填土→signal(mutex)→signal(tree)；丙：wait(tree)→浇水。水桶仅丙使用，不设信号量。'
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<script>/* aw-ok */</script>
+</body>
+</html>

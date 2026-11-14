@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2012-39 动画 · 子网广播地址推演</title>
+<link rel="stylesheet" href="../assets/anim.css">
+</head>
+<body>
+<div class="aw"></div>
+<script src="../assets/anim-engine.js"></script>
+<script>
+/* ================== 题目专属区域（只改这里） ================== */
+var ipBitsEl, maskBitsEl, andBitsEl, orBitsEl, orRowEl, netRowEl, bcRowEl, fxEl;
+
+var IP3 = '01001101';    // 77
+var MASK3 = '11111100';  // 252
+var AND3 = '01001100';   // 76
+var OR3 = '01001111';    // 79
+var MASKCLS = ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'dim', 'dim'];
+var ANDCLS = ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'dim', 'dim'];
+var ORCLS = ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'hit', 'hit'];
+var QCLS = ['dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim', 'dim'];
+
+function bitRowEl(bits, classes){
+  var row = AW.el('div', 'aw-cells');
+  for (var i = 0; i < bits.length; i++){
+    var col = AW.el('div', 'aw-col');
+    col.appendChild(AW.el('div', 'aw-box' + (classes && classes[i] ? ' ' + classes[i] : ''), bits[i]));
+    col.appendChild(AW.el('div', 'aw-idx', 'b' + (7 - i)));
+    row.appendChild(col);
+  }
+  return row;
+}
+
+// 每一步的舞台状态
+var STATES = [
+  { ipcls: ['','','','','','','',''],
+    and: '????????', andcls: QCLS, or: false,
+    net: ['180','80','?','?'], netcls: ['dim','dim','dim','dim'],
+    bc: ['?','?','?','?'], bccls: ['dim','dim','dim','dim'],
+    fx: '第三字节最关键：掩码 252 不是 255，网络边界落在第三字节内部。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: '????????', andcls: QCLS, or: false,
+    net: ['180','80','?','?'], netcls: ['dim','dim','dim','dim'],
+    bc: ['?','?','?','?'], bccls: ['dim','dim','dim','dim'],
+    fx: 'IP 第三字节 77 = 01001101，掩码第三字节 252 = 11111100 → 网络位 22 位，主机位 10 位。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: false,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['?','?','?','?'], bccls: ['dim','dim','dim','dim'],
+    fx: '按位与：01001101 ∧ 11111100 = 01001100 = <b>76</b>；第四字节 55 ∧ 0 = 0 → 网络地址 180.80.76.0。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: false,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['?','?','?','?'], bccls: ['dim','dim','dim','dim'],
+    fx: '主机位 = 32 − 22 = <b>10 位</b>（第三字节低 2 位 + 第四字节 8 位）；广播地址 = 主机位全部置 1。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: true,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['180','80','79','255'], bccls: ['','','hit','hit'],
+    fx: '第三字节 01001100 ∨ 00000011 = 01001111 = <b>79</b>，第四字节全 1 = 255 → 广播地址 180.80.79.255。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: true,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['180','80','79','255'], bccls: ['','','hit','hit'],
+    fx: '排除 A：180.80.76.0 主机位全 0，是<b>网络地址</b>，不是广播。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: true,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['180','80','79','255'], bccls: ['','','hit','hit'],
+    fx: '排除 B：180.80.76.255 第三字节仍是 76，低 2 位主机位没有全 1，只是普通单播地址。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: true,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['180','80','79','255'], bccls: ['','','hit','hit'],
+    fx: '排除 C：180.80.77.255 同理，主机位未全 1。' },
+  { ipcls: ['','','','','','','hit','hit'],
+    and: AND3, andcls: ANDCLS, or: true,
+    net: ['180','80','76','0'], netcls: ['','','ok','ok'],
+    bc: ['180','80','79','255'], bccls: ['','','hit','hit'],
+    fx: '广播地址 = <b>180.80.79.255</b>，答案选 <b>D</b>。' },
+];
+
+AW.init({
+  title: '子网广播地址推演（2012·39）',
+  subtitle: 'IP = <code>180.80.77.55</code> · 掩码 = <code>255.255.252.0</code> · 广播 = 主机位全 1',
+  counterLabel: '已推演',
+  ribbonTitle: '选项（✓ 正确 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步推演：二进制对齐 → 按位与 → 主机位全 1 → 排除干扰项。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>已知</b>：IP 180.80.77.55 · 掩码 255.255.252.0（第三字节 252 = 11111100）'));
+
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>第三字节按位对齐</b>（绿 = 网络位，淡 = 主机位）'));
+    ipBitsEl = AW.el('div', '');
+    ipBitsEl.appendChild(bitRowEl(IP3, STATES[0].ipcls));
+    inner.appendChild(ipBitsEl);
+    maskBitsEl = AW.el('div', '');
+    maskBitsEl.appendChild(bitRowEl(MASK3, MASKCLS));
+    inner.appendChild(maskBitsEl);
+    andBitsEl = AW.el('div', '');
+    andBitsEl.appendChild(bitRowEl('????????', QCLS));
+    inner.appendChild(andBitsEl);
+
+    orBitsEl = AW.el('div', '');
+    orBitsEl.style.display = 'none';
+    orBitsEl.appendChild(AW.el('div', 'aw-row-label',
+      '<b>主机位全 1</b>：01001100 ∨ 00000011 = 01001111 (= 79)'));
+    orRowEl = AW.el('div', '');
+    orBitsEl.appendChild(orRowEl);
+    inner.appendChild(orBitsEl);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>网络地址</b>（IP ∧ 掩码）'));
+    netRowEl = AW.el('div', '');
+    inner.appendChild(netRowEl);
+
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>广播地址</b>（主机位全 1）'));
+    bcRowEl = AW.el('div', '');
+    inner.appendChild(bcRowEl);
+
+    fxEl = AW.el('div', 'aw-row-label', STATES[0].fx);
+    fxEl.style.marginTop = '12px';
+    inner.appendChild(fxEl);
+
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '开始',     log: 'IP 180.80.77.55，掩码 255.255.252.0：第三字节 252 ≠ 255，网络边界落在第三字节内部', count: 0 },
+    { cls: 'shift', tag: '写二进制', log: '第三字节：IP 77 = 01001101，掩码 252 = 11111100；前 22 位是网络位，主机位 10 位', count: 1 },
+    { cls: 'ok',    tag: '按位与',   log: '01001101 ∧ 11111100 = 01001100 = 76；55 ∧ 0 = 0 → 网络地址 180.80.76.0', count: 2 },
+    { cls: 'step',  tag: '主机位',   log: '主机位 = 32 − 22 = 10 位（第三字节低 2 位 + 第四字节 8 位）；广播 = 主机位全置 1', count: 3 },
+    { cls: 'ok',    tag: '广播地址', log: '第三字节 01001100 ∨ 00000011 = 01001111 = 79，第四字节 = 255 → 广播地址 180.80.79.255', count: 4 },
+    { cls: 'miss',  tag: '排除 A',   log: 'A 180.80.76.0：主机位全 0，是网络地址不是广播 ✗', count: 5, ribbon: { k: 1, ok: false } },
+    { cls: 'miss',  tag: '排除 B',   log: 'B 180.80.76.255：第三字节仍是 76，主机位没有全 1，只是普通单播地址 ✗', count: 6, ribbon: { k: 2, ok: false } },
+    { cls: 'miss',  tag: '排除 C',   log: 'C 180.80.77.255：同理主机位未全 1 ✗', count: 7, ribbon: { k: 3, ok: false } },
+    { cls: 'done',  tag: '选 D',     log: '广播地址 = 180.80.79.255 → 选 D', count: 8, ribbon: { k: 4, ok: true }, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    var st = STATES[i] || STATES[0];
+    ipBitsEl.innerHTML = '';
+    ipBitsEl.appendChild(bitRowEl(IP3, st.ipcls));
+    maskBitsEl.innerHTML = '';
+    maskBitsEl.appendChild(bitRowEl(MASK3, MASKCLS));
+    andBitsEl.innerHTML = '';
+    andBitsEl.appendChild(bitRowEl(st.and, st.andcls));
+    if (st.or){
+      orBitsEl.style.display = '';
+      orRowEl.innerHTML = '';
+      orRowEl.appendChild(bitRowEl(OR3, ORCLS));
+    } else {
+      orBitsEl.style.display = 'none';
+    }
+    netRowEl.innerHTML = '';
+    netRowEl.appendChild(AW.cellRow(st.net, st.netcls));
+    bcRowEl.innerHTML = '';
+    bcRowEl.appendChild(AW.cellRow(st.bc, st.bccls));
+    fxEl.innerHTML = st.fx;
+  },
+
+  result: {
+    big: '180.80.79.255（选 D）',
+    html: '掩码 252 → 前缀 /22，网络地址 <code>180.80.76.0</code>；主机位 10 位全置 1 → 广播地址 <code>180.80.79.255</code>。A 是网络地址；B、C 的主机位没有全 1，都是普通单播地址。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+</body>
+</html>

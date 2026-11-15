@@ -918,19 +918,34 @@ while (n &gt;= (x + 1) * (x + 1))
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：基址寻址 + 补码符号扩展 + 大端存放</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：基址寻址里的补码符号扩展与大端存放</h2>
 <p>答案：<strong>D</strong>（EFFF FF15H）。</p>
-<h3>第一步：算有效地址 EA</h3>
-<p>形式地址 FF12H 用补码表示：最高位为 1，是负数，真值 = FF12H − 10000H = −EEH（即 −238）。基址寻址 EA = (BR) + A，参加 32 位加法前必须把 16 位补码<strong>符号扩展</strong>：</p>
-<p>FFFF FF12H + F000 0000H = 1_EFFF FF12H → 丢弃超出 32 位的进位，得 EA = <strong>EFFF FF12H</strong>。</p>
-<p>（若误把 FF12H 当无符号数做零扩展，会得 F000 FF12H，正是干扰项 A。）</p>
-<h3>第二步：按大端方式摆放 4 个字节</h3>
-<p>操作数 1234 FF00H 共 4 字节，大端方式 = 最高有效字节放最低地址：</p>
-<table><thead><tr><th>字节</th><th>12</th><th>34</th><th>FF</th><th>00</th></tr></thead><tbody><tr><td>地址</td><td>EFFF FF12H</td><td>EFFF FF13H</td><td>EFFF FF14H</td><td>EFFF FF15H</td></tr><tr><td>角色</td><td>MSB</td><td></td><td></td><td>LSB</td></tr></tbody></table>
-<p>LSB 是 00H，所在地址 = EA + 3 = <strong>EFFF FF15H</strong>。</p>
+<h3>第 0 步：先把 FF12H 这个数"读对"——为什么是负数、为什么减 10000H</h3>
+<p>形式地址 FF12H 是 <strong>16 位补码</strong>。补码不是另一种数制，它是<strong>模运算下的记数方式</strong>：16 位一共 65536 个状态（0000H~FFFFH），把这个环从中间掰开——最高位为 0（0000H~7FFFH）表示 0 ~ +32767；<strong>最高位为 1（8000H~FFFFH）表示 −32768 ~ −1</strong>。</p>
+<p>所以判断就一句话：<strong>最高位为 1 → 负数；真值 = 无符号解释值 − 65536</strong>。</p>
+<p>FF12H 按无符号读是 65298，是负数，真值 = 65298 − 65536 = <strong>−238 = −EEH</strong>。</p>
+<p><strong>为什么"减 10000H"是合法的？</strong> 这正是补码的定义：位串 FF12H 代表 −238，是因为 −238 ≡ 65298 (mod 65536)。从位串求真值，减一次模即可。</p>
+<p><strong>"取反加一"同样对，还能互相印证</strong>：FF12H 取反得 00EDH，加 1 得 00EEH = 238 → 真值 −238。两条路结果必然一致——"取反加一"与"减模"在数学上是同一件事，选顺手的用。</p>
+<h3>第 1 步：为什么要符号扩展——32 位加法器不吃 16 位输入</h3>
+<p>EA = (BR) + A，BR = F000 0000H 是 <strong>32 位</strong>的，加法在 32 位加法器里做，−238 必须先写成 <strong>32 位补码</strong>：FFFF FF12H（高 16 位全补 1，低 16 位照抄）。</p>
+<p>规则：<strong>补码扩展 = 左边补符号位</strong>——负数补 1，正数补 0。</p>
+<p><strong>为什么补符号位数值不变？</strong> 直觉：给一个负补码数往左多写一串 1，它"欠的账"没变。数学上：FF12H ≡ −238 (mod 2¹⁶)，FFFF FF12H ≡ −238 (mod 2³²)——同一个负数在更大模下的化身。</p>
+<p><strong>反例正是干扰项 A</strong>：若补 0（零扩展），FF12H 变成 0000 FF12H = <strong>+65298</strong>，数值从 −238 变成 +65298，EA 就算成 F000 FF12H 了。</p>
+<p>（正数为什么补 0 没问题？正数没有"欠账"，左边加 0 不改变值——所以规则统一写成"补符号位"。）</p>
+<h3>第 2 步：算 EA——进位为什么可以扔</h3>
+<pre><code>  F000 0000H
++ FFFF FF12H
+= 1 EFFF FF12H   ← 第 33 位的进位</code></pre>
+<p>32 位机器只有 32 位地址线，第 33 位的 1 自然丢弃——<strong>模 2³² 运算本来就允许丢进位</strong>，丢掉 2³² 不影响 32 位内的余数。EA = <strong>EFFF FF12H</strong>。</p>
+<h3>第 3 步：大端方式决定 LSB 在哪</h3>
+<p>操作数 1234 FF00H 共 4 字节：12（MSB，最高有效字节）、34、FF、00（LSB，最低有效字节）。</p>
+<p><strong>大端 = 最高有效字节放最低地址</strong>，从 EA 开始依次摆放：</p>
+<table><thead><tr><th>地址</th><th>EFFF FF12H</th><th>EFFF FF13H</th><th>EFFF FF14H</th><th>EFFF FF15H</th></tr></thead><tbody><tr><td>内容</td><td>12（MSB）</td><td>34</td><td>FF</td><td>00（LSB）</td></tr></tbody></table>
+<p>LSB = 00H 落在 <strong>EA + 3 = EFFF FF15H</strong>，选 <strong>D</strong>。</p>
+<p>（若是小端，LSB 在 EA 本身——正是干扰项 B 的位置。）</p>
 <h3>易错点</h3>
-<ul><li><strong>补码不做符号扩展</strong>：FF12H 是负数，必须扩展成 FFFF FF12H 再加，否则基址算错、地址尾数再对也白搭。</li><li><strong>大小端搞反</strong>：大端是"高字节（MSB）在低地址"，因此 LSB 在<strong>最高地址 EA+3</strong>，而不是 EA 本身——C 项正是把方向弄反的结果。</li></ul>
-<blockquote>记忆锚点：补码偏移先符号扩展；大端 MSB 在低地址、LSB 在 EA+3。</blockquote></div></div>
+<ul><li><strong>零扩展代替符号扩展</strong> → F000 FF12H（干扰项 A）。FF12H 是负数，高位必须补 1。</li><li><strong>大小端弄反</strong> → EFFF FF12H（干扰项 C）。大端 = MSB 在低地址，所以 LSB 在最高地址 EA+3。</li><li><strong>不明白为什么减 10000H</strong> → 补码真值 = 无符号值 − 模（最高位为 1 时）；模就是"状态总数"65536。</li></ul>
+<blockquote>记忆锚点：负补码真值 = 无符号值 − 2ⁿ；符号扩展 = 高位补符号位、数值不变；大端 = MSB 在低地址 → <strong>LSB 在 EA + 字节数 − 1</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1034,14 +1049,23 @@ while (n &gt;= (x + 1) * (x + 1))
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：一条指令的取数与执行需要哪些部件</h2>
-<p>答案：<strong>B</strong>（I、II、III）。</p>
-<h3>第一步：拆解指令功能</h3>
-<p>R[r2]←R[r1] + M[R[r0]]：第一个源操作数在寄存器 r1 中（<strong>寄存器寻址</strong>）；第二个源操作数在主存中，其地址放在寄存器 r0 中（<strong>寄存器间接寻址</strong>）；结果写回寄存器 r2。题目限定问"<strong>取数及执行</strong>"过程中用到的部件。</p>
-<h3>第二步：逐个部件判断</h3>
-<table><thead><tr><th>部件</th><th>是否需要</th><th>理由</th></tr></thead><tbody><tr><td>I 通用寄存器组</td><td>需要</td><td>r0、r1 要从中读出，结果要写入 r2</td></tr><tr><td>II ALU</td><td>需要</td><td>完成两个源操作数的加法</td></tr><tr><td>III 存储器</td><td>需要</td><td>M[R[r0]] 要访问主存才能取到</td></tr><tr><td>IV 指令译码器</td><td>不需要</td><td>译码器在译码阶段工作，不属于取数与执行过程</td></tr></tbody></table>
+<p>答案：<strong>B（I、II、III）</strong>。</p>
+<h3>第 0 步：先建立模型——一条指令的一生分五个阶段</h3>
+<p>部件题不能上来就背，先把大背景立起来：一条指令从主存里被取出，到结果落定，按顺序经过<strong>五个阶段</strong>。每个阶段，"当班"的部件不同：</p>
+<table><thead><tr><th>阶段</th><th>在干什么</th><th>谁在上班</th></tr></thead><tbody><tr><td>IF 取指</td><td>去主存把这条指令的二进制代码取出来</td><td>存储器（取的是<strong>指令</strong>）</td></tr><tr><td>ID 译码</td><td><strong>指令译码器</strong>把代码翻译成控制信号（"这是个加法，操作数在 r1、以及 r0 所指的内存里"），信号一发出，它对这条指令的任务就结束了</td><td>指令译码器</td></tr><tr><td>OF 取数</td><td>按翻译结果把两个源操作数取出来</td><td>通用寄存器组、存储器（取的是<strong>数据</strong>）</td></tr><tr><td>EX 执行</td><td>对取出来的数据做运算</td><td>ALU</td></tr><tr><td>WB 写回</td><td>结果写回目的寄存器</td><td>通用寄存器组</td></tr></tbody></table>
+<p>题目问的是"<strong>取数及执行</strong>"过程 = <strong>OF + EX 两个阶段</strong>。这个范围一划出来，答案自然浮出。</p>
+<h3>第 1 步：把这条指令翻译成"数据怎么流"</h3>
+<p>R[r2] ← R[r1] + M[R[r0]]：</p>
+<ul><li>第一个源操作数在 r1 里 → <strong>寄存器寻址</strong>：OF 阶段从通用寄存器组直接读出；</li><li>第二个源操作数在主存里、其地址放在 r0 中 → <strong>寄存器间接寻址</strong>：OF 阶段先从寄存器组读出地址，再去<strong>存储器</strong>把数据取出来（口诀：寄存器出地址、存储器出数据）；</li><li>加法在 EX 阶段由 <strong>ALU</strong> 完成；结果在 WB 写回 r2。</li></ul>
+<h3>第 2 步：I~IV 对号入座</h3>
+<table><thead><tr><th>部件</th><th>是否需要</th><th>上班阶段与理由</th></tr></thead><tbody><tr><td>I 通用寄存器组（GPRs）</td><td>✅</td><td>OF 从中读 r0、r1；WB 把结果写入 r2</td></tr><tr><td>II 算术逻辑单元（ALU）</td><td>✅</td><td>EX 完成加法</td></tr><tr><td>III 存储器</td><td>✅</td><td>OF 按 M[R[r0]] 访存取<strong>数据</strong></td></tr><tr><td>IV 指令译码器</td><td>❌</td><td>只在 <strong>ID 阶段</strong>上班；"取数及执行"时它早退场了</td></tr></tbody></table>
+<p>→ 需要 I、II、III，选 <strong>B</strong>。</p>
+<h3>为什么译码器不算（唯一排除点，值得多说一句）</h3>
+<p>译码器的任务发生在 <strong>ID 阶段</strong>：把取指阶段拿到的二进制代码翻译成具体的控制信号（解析出"这是加法、操作数在哪"）。一旦翻译完成并发出信号，译码器针对<strong>这条指令</strong>的工作就彻底结束了。</p>
+<p>OF/EX 阶段真正干活的是寄存器组、存储器和 ALU。（流水线 CPU 里译码器此刻可能忙着给<strong>下一条</strong>指令译码——但那是下一条指令的事，与本题问的这条指令的"取数及执行"无关。）</p>
 <h3>易错点</h3>
-<ul><li><strong>把 ID 算进来</strong>：题问的是"取数及执行"；指令译码发生在取指之后的译码阶段，不在其列——这是本题唯一的排除点。</li><li><strong>漏掉存储器</strong>：寄存器间接寻址的操作数在主存里，"寄存器给地址、存储器出数据"，不访存取不到操作数。</li></ul>
-<blockquote>记忆锚点：寄存器间接 = 寄存器出地址 + 存储器出数据；加法必经 ALU；译码器不算"取数及执行"部件。</blockquote></div></div>
+<ul><li><strong>把 ID 算进来</strong> → 误选 D：题限"取数及执行"，译码器不在其列——这是本题唯一排除点。</li><li><strong>漏掉存储器</strong> → 误选 A：寄存器间接寻址的操作数在主存，"寄存器给地址、存储器出数据"，不访存拿不到。</li><li><strong>把取指阶段的访存算作 III 的理由</strong> → 不对：IF 取的是指令，"取数"取的是操作数；本题 III 成立的理由是 OF 阶段取<strong>数据</strong>要访存。</li></ul>
+<blockquote>记忆锚点：指令一生 = <strong>IF → ID → OF → EX → WB</strong>；部件题先划阶段，再让部件"对号入座"；寄存器间接 = 寄存器出地址 + 存储器出数据；译码器只在 ID 上班。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

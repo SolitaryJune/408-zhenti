@@ -21,6 +21,8 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 YEARS = list(range(2009, 2027))
+ASSET_VER = "20261115a"
+
 SUBJECTS = {
     "数据结构": {"cls": "ds", "color": "#e07a2f", "bg": "#e07a2f1f"},
     "计算机组成原理": {"cls": "co", "color": "#963b32", "bg": "#963b321a"},
@@ -863,7 +865,7 @@ def page_head(title: str, rel: str, mode: str = "", year: str = "",
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{esc(title)} · 408 真题档案</title>
-<link rel="stylesheet" href="{rel}assets/style.css">
+<link rel="stylesheet" href="{rel}assets/style.css?v={ASSET_VER}">
 </head>
 <body data-mode="{mode}" data-year="{year}">
 <header class="site-header">

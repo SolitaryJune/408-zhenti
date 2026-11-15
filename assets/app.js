@@ -379,6 +379,22 @@
     if(e.key === 'ArrowLeft' && prev){ e.preventDefault(); location.href = prev.href; }
     if(e.key === 'ArrowRight' && next){ e.preventDefault(); location.href = next.href; }
   });
+
+  /* ---------- 整张模式页：单题模式智能跳到当前正在看的题 ---------- */
+  document.addEventListener('click', function(e){
+    var link = e.target.closest && e.target.closest('a.js-single-link');
+    if(!link || document.body.dataset.mode !== 'paper') return;
+    var cards = [].slice.call(document.querySelectorAll('.qcard'));
+    if(!cards.length) return;
+    var mid = window.innerHeight / 2, current = cards[0];
+    for(var i = 0; i < cards.length; i++){
+      if(cards[i].getBoundingClientRect().top <= mid) current = cards[i];
+    }
+    if(current && current.dataset.qid){
+      e.preventDefault();
+      location.href = link.getAttribute('href').replace(/question\/[^/]+\/$/, 'question/' + current.dataset.qid + '/');
+    }
+  });
 })();
 
 /* ===== 搜索页 ===== */

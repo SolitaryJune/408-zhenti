@@ -2,77 +2,208 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2024-03 中序序列里的前驱与后继</title>
+<title>2024-03 中序前驱与后继 · 二叉树结构演示动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .tsvg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .tsvg .tedge{stroke:#5a7d8c;stroke-width:2.5px;transition:stroke .35s, opacity .35s}
+  .tsvg .tedge.walk{stroke:#d97706;stroke-width:4px}
+  .tsvg .tedge.ghost{stroke:#dc2626;stroke-dasharray:6 5}
+  .tsvg .tnode circle{fill:#1b3a4b;transition:fill .3s, opacity .3s}
+  .tsvg .tnode text{fill:#fff;font-weight:800;font-size:16px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace;transition:opacity .3s}
+  .tsvg .tnode.vv circle{fill:#e63946}
+  .tsvg .tnode.hot circle{fill:#e07a2f}
+  .tsvg .tnode.ghost circle{fill:#fff;stroke:#dc2626;stroke-width:2.5px;stroke-dasharray:6 4}
+  .tsvg .tnode.ghost text{fill:#dc2626}
+  .tsvg .hidden-el{opacity:0}
+  .rowbox{display:flex;justify-content:center;margin-top:8px;min-height:76px}
+  .hformula{margin-top:8px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2024-03 中序前驱/后继（SVG 二叉树演示） ==================
+ * 题：中序序列 …,p,v,q,…，v 有两个孩子，问 p、q 的孩子情况。（答案 A：p 无右孩子，q 无左孩子）
+ * 演示树：v(L(a,p), R(q,b))，中序 a L p v q R b；p = 左子树最右，q = 右子树最左；
+ * 再用"幽灵孩子"反证：p 若有右孩子 r / q 若有左孩子 s，p、q 就不再紧邻 v。 */
+var NS = 'http://www.w3.org/2000/svg';
+var NODES = [
+  { id:'v', x:310, y:55,  main:true },
+  { id:'L', x:170, y:150 },
+  { id:'R', x:450, y:150 },
+  { id:'a', x:90,  y:245 },
+  { id:'p', x:250, y:245 },
+  { id:'q', x:370, y:245 },
+  { id:'b', x:530, y:245 },
+];
+var EDGES = [
+  ['v','L'], ['v','R'], ['L','a'], ['L','p'], ['R','q'], ['R','b'],
+];
+var GHOSTS = [
+  { id:'r', x:335, y:315, parent:'p', step:5 },
+  { id:'s', x:285, y:315, parent:'q', step:6 },
+];
+var GHOST_EDGES = [ ['p','r',5], ['q','s',6] ];
 
-function card(n, cls, title, body) {
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-    '</span>' + title + '</h4>' + body + '</div>';
-}
+/* 中序序列（第 5/6 步插入幽灵结点演示反例） */
+var SEQ = [
+  { chars:['a','L','p','v','q','R','b'], cls:['','','hit','hit','hit','',''] },
+  { chars:['a','L','p','v','q','R','b'], cls:['ok','ok','hit','','','',''] },
+  { chars:['a','L','p','v','q','R','b'], cls:['ok','ok','hit','','','',''] },
+  { chars:['a','L','p','v','q','R','b'], cls:['','','','ok','hit','ok','ok'] },
+  { chars:['a','L','p','v','q','R','b'], cls:['','','','ok','hit','ok','ok'] },
+  { chars:['a','L','p','r','v','q','R','b'], cls:['dim','dim','hit','miss','ok','','',''] },
+  { chars:['a','L','p','v','s','q','R','b'], cls:['dim','dim','dim','ok','miss','hit','ok','ok'] },
+  { chars:['a','L','p','v','q','R','b'], cls:['','','hit','hit','hit','',''] },
+];
+/* 每步：一路向右/向左的路径高亮 */
+var WALK = [
+  [],
+  [['v','L'],['L','p']],
+  [['v','L'],['L','p']],
+  [['v','R'],['R','q']],
+  [['v','R'],['R','q']],
+  [],
+  [],
+  [],
+];
+var HOTNODE = [ ['v'], [], ['p'], ['q'], [], ['r'], ['s'], [] ];
 
-var STEPS = [
-  {
-    title: '审题眼：p、q 是谁',
-    cls: 'key',
-    body: '<p>中序序列形如 <code>…, p, v, q, …</code>，且 <b>v 有两个孩子</b>。这说明 p 恰好是 v 的<b>中序前驱</b>，q 恰好是 v 的<b>中序后继</b>。要判定的就是：这样的前驱、后继各自还可能有什么孩子。</p>'
-  },
-  {
-    title: '关键定理：两个孩子时前驱/后继的位置',
-    cls: '',
-    body: '<p>结点 v 有两个孩子时：它的<b>中序前驱 = 左子树中最右边的结点</b>（从左子树根一路向右走到底）；它的<b>中序后继 = 右子树中最左边的结点</b>（从右子树根一路向左走到底）。v 的直接孩子不一定是 p、q，但 p、q 一定是这两个「极端」结点。</p>'
-  },
-  {
-    title: '分析 p：左子树最右结点',
-    cls: 'good',
-    body: '<p>p 是 v 左子树中一路向右走到底的结点。<b>如果 p 还有右孩子</b>，就该继续往右走，p 就不是最右结点、也就不是 v 的前驱 —— 矛盾。所以 <b>p 必定没有右孩子</b>（p 有没有左孩子都可能）。</p>'
-  },
-  {
-    title: '分析 q：右子树最左结点',
-    cls: 'good',
-    body: '<p>对称地，q 是 v 右子树中一路向左走到底的结点。<b>如果 q 还有左孩子</b>，就该继续往左走，q 就不是最左结点、不是 v 的后继 —— 矛盾。所以 <b>q 必定没有左孩子</b>（q 有没有右孩子都可能）。</p>'
-  },
-  {
-    title: '逐项排除',
-    cls: 'bad',
-    body: '<p><b>B</b>「q 有左孩子」：与第 4 步矛盾。<b>C</b>「p 有右孩子」、<b>D</b> 两条都违反上面两步的结论。只有 <b>A</b>「p 没有右孩子，q 没有左孩子」与两个方向的分析完全一致。</p>'
-  },
-  {
-    title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>A</b>。用小树验证：v 的左子树取 <code>a→右孩子 b</code>，中序是 <code>a, b, v</code>，前驱 b 无右孩子；右子树取 <code>c→左孩子 d</code>，中序是 <code>v, d, c</code>，后继 d 无左孩子。</p>'
-  }
+var SNAPS = [
+  { cls:'shift', tag:'题目', count:0,
+    log:'示例树：v 有两个孩子 L、R；中序序列为 a, L, p, v, q, R, b —— 恰好形如"…, p, v, q, …"。所以 p 是 v 的中序前驱、q 是 v 的中序后继。' },
+  { cls:'step', tag:'定位前驱', count:1,
+    log:'v 有两个孩子 ⟹ 前驱 = 左子树中「一路向右走到底」的结点：从左子树根 L 出发向右 → p（L 再无右延伸）。p 就是左子树的最右结点。' },
+  { cls:'ok', tag:'前驱推论', count:2,
+    log:'p 是「向右走到底」的终点：若 p 还有右孩子，就能继续向右，p 就不是最右、当不了前驱 —— 矛盾。⟹ p 必定没有右孩子（有无左孩子都可能）。' },
+  { cls:'step', tag:'定位后继', count:3,
+    log:'对称地，后继 = 右子树中「一路向左走到底」的结点：从 R 向左 → q。q 是右子树的最左结点。' },
+  { cls:'ok', tag:'后继推论', count:4,
+    log:'若 q 还有左孩子，就能继续向左，q 就不是最左、当不了后继 —— 矛盾。⟹ q 必定没有左孩子（有无右孩子都可能）。' },
+  { cls:'miss', tag:'反证 ①', count:5,
+    log:'反证：假设 p 有右孩子 r（红色虚线幽灵结点）→ 中序变成 a, L, p, r, v, … —— r 插在 p 和 v 之间，p 不再是 v 的直接前驱，与题设矛盾。' },
+  { cls:'miss', tag:'反证 ②', count:6,
+    log:'反证：假设 q 有左孩子 s → 中序变成 …, v, s, q, R, b —— s 插在 v 和 q 之间，q 不再是 v 的直接后继，矛盾。' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'p 必无右孩子、q 必无左孩子（各自的另一侧孩子可有可无）→ 选 A。口诀：前驱无右，后继无左。' },
 ];
 
-var snaps = STEPS.map(function (s, i) {
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function (x, j) {
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1
+var FORMULAS = [
+  '中序：<code>…, p, v, q, …</code> ⟹ p = v 的中序前驱，q = v 的中序后继',
+  '前驱 = 左子树<b>最右</b>结点：L → 右 → p',
+  '结论①：<code>p 没有右孩子</code>',
+  '后继 = 右子树<b>最左</b>结点：R → 左 → q',
+  '结论②：<code>q 没有左孩子</code>',
+  '若 p 有右孩子 r：中序 a,L,p,<b>r</b>,v → p 不是前驱，矛盾',
+  '若 q 有左孩子 s：中序 v,<b>s</b>,q → q 不是后继，矛盾',
+  '<b>p 无右孩子 ∧ q 无左孩子 → 选 A</b>',
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 350');
+  svg.setAttribute('class', 'tsvg');
+  var find = function(id){
+    for (var k = 0; k < NODES.length; k++) if (NODES[k].id === id) return NODES[k];
+    for (var j = 0; j < GHOSTS.length; j++) if (GHOSTS[j].id === id) return GHOSTS[j];
+    return null;
   };
-});
+  EDGES.forEach(function(e){
+    var A = find(e[0]), B = find(e[1]);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y + 20);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y - 20);
+    ln.setAttribute('class', 'tedge');
+    ln.dataset.eid = e[0] + '>' + e[1];
+    svg.appendChild(ln);
+  });
+  GHOST_EDGES.forEach(function(e){
+    var A = find(e[0]), B = find(e[1]);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y + 20);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y - 20);
+    ln.setAttribute('class', 'tedge ghost hidden-el');
+    ln.dataset.eid = e[0] + '>' + e[1];
+    ln.dataset.step = e[2];
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tnode' + (n.main ? ' vv' : ''));
+    g.dataset.nid = n.id;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 20);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  GHOSTS.forEach(function(n){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tnode ghost hidden-el');
+    g.dataset.nid = n.id;
+    g.dataset.step = n.step;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 20);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  this._svg = svg;
+  this._rowBox = AW.el('div', 'rowbox');
+  stage.appendChild(this._rowBox);
+  this._formula = AW.el('div', 'hformula');
+  stage.appendChild(this._formula);
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var walk = {};
+  (WALK[Math.min(i, WALK.length - 1)] || []).forEach(function(e){ walk[e[0] + '>' + e[1]] = true; });
+  [].forEach.call(svg.querySelectorAll('.tedge'), function(ln){
+    var base = ln.classList.contains('ghost') ? 'tedge ghost' : 'tedge';
+    if (!ln.classList.contains('ghost') && walk[ln.dataset.eid]) base += ' walk';
+    ln.setAttribute('class', base);
+    if (ln.dataset.step != null) ln.classList.toggle('hidden-el', +ln.dataset.step > i);
+  });
+  var hot = HOTNODE[Math.min(i, HOTNODE.length - 1)] || [];
+  [].forEach.call(svg.querySelectorAll('.tnode'), function(g){
+    g.classList.remove('hot');
+    if (hot.indexOf(g.dataset.nid) >= 0) g.classList.add('hot');
+    if (g.dataset.step != null) g.classList.toggle('hidden-el', +g.dataset.step > i);
+  });
+  var seq = SEQ[Math.min(i, SEQ.length - 1)];
+  this._rowBox.innerHTML = '';
+  this._rowBox.appendChild(AW.cellRow(seq.chars, seq.cls, null, 1));
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
 
 AW.init({
-  title: '中序序列 …,p,v,q,… 能推出什么（2024-03）',
-  subtitle: 'v 有两个孩子 · p 是中序前驱 · q 是中序后继',
-  intro: '点击「▶ 播放」，顺着「前驱/后继在哪」的定位规则一步步推。',
-  snaps: snaps,
+  title: '2024-03 中序序列 …,p,v,q,… · 前驱与后继的结构演示',
+  subtitle: '题：p、q、v 是二叉树 T 中的结点，v 有两个孩子，中序序列形如 <code>…, p, v, q, …</code>，问 p、q 的孩子情况？',
+  counterLabel: '推理步',
+  ribbonTitle: '推理链（✓ 已确立）',
+  intro: '点击「▶ 播放」：在真实二叉树上定位前驱/后继，再用"幽灵孩子"反证。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 A',
-    html: '记忆锚点：<b>「前驱无右，后继无左」</b>—— 前驱是左子树一路向右的终点，后继是右子树一路向左的终点，终点再往下走一格就自相矛盾。'
-  }
+    big: '答案 A（p 无右孩子，q 无左孩子）',
+    html: 'v 有两个孩子 ⟹ 前驱 = <b>左子树一路向右的终点</b>（再向右就自相矛盾）⟹ <b>p 必无右孩子</b>；后继 = <b>右子树一路向左的终点</b> ⟹ <b>q 必无左孩子</b>。<br>' +
+      '注意结论只约束"这一侧"：p 有无左孩子、q 有无右孩子都可能。若 v 只有一个孩子，前驱/后继可能沿祖先链找，本结论不成立。<br>' +
+      '记忆锚点：<code>前驱无右，后继无左</code>。',
+  },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
-<script>/* aw-ok */</script>
 </body>
 </html>

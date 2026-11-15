@@ -2,128 +2,257 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2013-07 由邻接矩阵求各顶点的度</title>
+<title>2013-07 由邻接矩阵求各顶点的度 · 矩阵+图对照</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .deg-svg{width:100%;max-width:560px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .notrans *{transition:none!important}
+  .deg-svg .dedge{stroke:#5a7d8c;stroke-width:2.5px;fill:none;transition:opacity .4s, stroke .3s}
+  .deg-svg .dedge.hot{stroke:#e07a2f;stroke-width:4px}
+  .deg-svg .dvertex circle{fill:#1b3a4b;transition:fill .3s}
+  .deg-svg .dvertex text.vname{fill:#fff;font-weight:800;font-size:15px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .deg-svg .dvertex text.vdeg{font-size:12px;font-weight:800;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace;fill:#334155}
+  .deg-svg .dvertex.done circle{fill:#16a34a}
+  .deg-svg .dvertex.done text.vdeg{fill:#15803d}
+  .aw-box.rowhot{background:#fef3c7;border-color:#d97706;color:#92400e}
+  .aw-box.one{background:#dbeafe;border-color:#2563eb;color:#1d4ed8}
+  .aw-box.oneC{background:#ede9fe;border-color:#8b5cf6;color:#6d28d9}
+  .matwrap{margin-top:12px;display:flex;flex-direction:column;align-items:center}
+  .matrow{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .matlbl{width:70px;font-size:13px;font-weight:700;color:#334155;font-family:Menlo,monospace;text-align:right}
+  .sumbadge{width:92px;font-size:12.5px;font-weight:800;color:#2563eb;font-family:Menlo,monospace;
+    opacity:0;transition:opacity .4s}
+  .sumbadge.show{opacity:1}
+  .matcap{font-size:12px;color:#94a3b8;margin-top:2px}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2013-07 邻接矩阵 → 各顶点的度（cellRow 矩阵 + SVG 有向图） ==================
+ * A 不对称 → 有向图。出度 = 行和 (2,2,1,1)，入度 = 列和 (1,2,1,2)，度 = (3,4,2,3) → 选 C。 */
 
 var M = [
   [0, 1, 0, 1],
   [0, 0, 1, 1],
   [0, 1, 0, 0],
-  [1, 0, 0, 0]
+  [1, 0, 0, 0],
+];
+var ROWSUM = [2, 2, 1, 1], COLSUM = [1, 2, 1, 2], DEG = [3, 4, 2, 3];
+var VPOS = { 1:{x:130,y:65}, 2:{x:430,y:65}, 3:{x:430,y:255}, 4:{x:130,y:255} };
+var DEDGES = {
+  '1-2': { d:'line', x1:152, y1:65,  x2:408, y2:65 },
+  '1-4': { d:'line', x1:130, y1:87,  x2:130, y2:233 },
+  '2-3': { d:'line', x1:430, y1:87,  x2:430, y2:233 },
+  '2-4': { d:'line', x1:410, y1:78,  x2:150, y2:242 },
+  '3-2': { d:'path', p:'M 452 233 C 505 200, 505 120, 452 89' },
+  '4-1': { d:'path', p:'M 108 233 C 55 200, 55 120, 108 87' },
+};
+/* 每步可见/新出现的弧 */
+var ESTEPS = [
+  { vis:[], hot:[] },
+  { vis:['1-2','1-4'], hot:['1-2','1-4'] },
+  { vis:['1-2','1-4','2-3','2-4'], hot:['2-3','2-4'] },
+  { vis:['1-2','1-4','2-3','2-4','3-2','4-1'], hot:['3-2','4-1'] },
+  { vis:['1-2','1-4','2-3','2-4','3-2','4-1'], hot:[] },
+  { vis:['1-2','1-4','2-3','2-4','3-2','4-1'], hot:[] },
+  { vis:['1-2','1-4','2-3','2-4','3-2','4-1'], hot:[] },
+  { vis:['1-2','1-4','2-3','2-4','3-2','4-1'], hot:[] },
+];
+/* 矩阵单元与顶点徽章的每步状态 */
+var CELL_MODE = ['plain', 'row1', 'row2', 'row34', 'ones-row', 'ones-col', 'ones-final', 'ones-final'];
+var BADGES = [
+  ['', '', '', ''],
+  ['', '', '', ''],
+  ['', '', '', ''],
+  ['', '', '', ''],
+  ['出 2', '出 2', '出 1', '出 1'],
+  ['出2·入1', '出2·入2', '出1·入1', '出1·入2'],
+  ['度 = 3', '度 = 4', '度 = 2', '度 = 3'],
+  ['度 = 3', '度 = 4', '度 = 2', '度 = 3'],
+];
+var FORMULAS = [
+  '检查对称性：A[1][2] = 1 而 A[2][1] = 0 → <b>不对称，有向图</b>；度 = 出度 + 入度',
+  '第 1 行 0+1+0+1 = 2 → v1 的出度 = 2（弧 v1→v2、v1→v4）',
+  '第 2 行 0+0+1+1 = 2 → v2 的出度 = 2',
+  '第 3 行和 = 1、第 4 行和 = 1 → 图补全，共 <code>6</code> 条弧',
+  '出度 = <b>行和</b>：v1=2, v2=2, v3=1, v4=1',
+  '入度 = <b>列和</b>：v1=1, v2=2, v3=1, v4=2',
+  '度 = 出 + 入：<code>3, 4, 2, 3</code> · 自检：度数和 12 = 2×弧数 6 ✓',
+  '各顶点的度依次为 <b>3, 4, 2, 3</b> → 选 C',
 ];
 
-// 高亮：row / col（1 基）；cmpCells = [[r,c],...] 对比格
-function matHtml(hiRow, hiCol, cmpCells){
-  var h = '<table style="border-collapse:collapse;margin:8px auto;font-family:Menlo,monospace;font-size:14px">';
-  h += '<tr><td style="padding:3px 12px;background:#f1f5f9;border:1px solid #e2e8f0"></td>';
-  for (var j = 0; j < 4; j++){
-    h += '<td style="padding:3px 12px;background:#f1f5f9;border:1px solid #e2e8f0;text-align:center">到' + (j + 1) + '</td>';
+function build(stage){
+  stage.innerHTML = '';
+  /* 左：矩阵（cellRow 网格） */
+  var self = this;
+  var matWrap = AW.el('div', 'matwrap');
+  var capTop = AW.el('div', 'matcap', '邻接矩阵 A（格下数字 = 列号 j，即"到 vj"）');
+  matWrap.appendChild(capTop);
+  this._cells = []; this._rowSums = [];
+  for (var r = 0; r < 4; r++){
+    var rowWrap = AW.el('div', 'matrow');
+    var lbl = AW.el('div', 'matlbl', '从 v' + (r + 1) + ' →');
+    var row = AW.cellRow(M[r].map(String), ['', '', '', ''], null, 1);
+    var sum = AW.el('div', 'sumbadge', '行和 = ' + ROWSUM[r]);
+    rowWrap.appendChild(lbl);
+    rowWrap.appendChild(row);
+    rowWrap.appendChild(sum);
+    matWrap.appendChild(rowWrap);
+    var cells = [];
+    [].forEach.call(row.children, function(col){
+      cells.push(col.children[1]);
+    });
+    this._cells.push(cells);
+    this._rowSums.push(sum);
   }
-  h += '<td style="padding:3px 12px;background:#f1f5f9;border:1px solid #e2e8f0">行和=出度</td></tr>';
-  for (var i = 0; i < 4; i++){
-    h += '<tr><td style="padding:3px 12px;background:#f1f5f9;border:1px solid #e2e8f0">从' + (i + 1) + '</td>';
-    var rs = 0;
-    for (var j = 0; j < 4; j++){
-      var bg = '#fff';
-      if (cmpCells && hasCell(cmpCells, i + 1, j + 1)) bg = '#fef3c7';
-      else if (hiRow === i + 1) bg = '#dcfce7';
-      else if (hiCol === j + 1) bg = '#dbeafe';
-      if (hiRow === i + 1) rs += M[i][j];
-      h += '<td style="padding:3px 12px;border:1px solid #e2e8f0;text-align:center;background:' + bg + ';font-weight:700">' + M[i][j] + '</td>';
+  /* 列和行（步 5 起显示） */
+  var colWrap = AW.el('div', 'matrow');
+  var colLbl = AW.el('div', 'matlbl', '列和 →');
+  var colRow = AW.cellRow(COLSUM.map(String), ['ok', 'ok', 'ok', 'ok'], null, 1);
+  colWrap.appendChild(colLbl);
+  colWrap.appendChild(colRow);
+  colWrap.appendChild(AW.el('div', 'sumbadge', ''));
+  this._colRowWrap = colWrap;
+  matWrap.appendChild(colWrap);
+  var capBottom = AW.el('div', 'matcap', '列和 = 入度（蓝行）；行和 = 出度');
+  matWrap.appendChild(capBottom);
+  stage.appendChild(matWrap);
+  /* 右下：有向图 SVG */
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 560 330');
+  svg.setAttribute('class', 'deg-svg');
+  var defs = document.createElementNS(svgNS, 'defs');
+  var marker = document.createElementNS(svgNS, 'marker');
+  marker.setAttribute('id', 'digArrow');
+  marker.setAttribute('viewBox', '0 0 10 10');
+  marker.setAttribute('refX', 8); marker.setAttribute('refY', 5);
+  marker.setAttribute('markerWidth', 7); marker.setAttribute('markerHeight', 7);
+  marker.setAttribute('orient', 'auto-start-reverse');
+  var mp = document.createElementNS(svgNS, 'path');
+  mp.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+  mp.setAttribute('fill', '#5a7d8c');
+  marker.appendChild(mp);
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+  this._edges = {}; this._vdeg = {}; this._vcircle = {};
+  Object.keys(DEDGES).forEach(function(key){
+    var e = DEDGES[key];
+    var el;
+    if (e.d === 'line'){
+      el = document.createElementNS(svgNS, 'line');
+      el.setAttribute('x1', e.x1); el.setAttribute('y1', e.y1);
+      el.setAttribute('x2', e.x2); el.setAttribute('y2', e.y2);
+    } else {
+      el = document.createElementNS(svgNS, 'path');
+      el.setAttribute('d', e.p);
     }
-    h += '<td style="padding:3px 12px;border:1px solid #e2e8f0;text-align:center;background:#f8faf8;font-weight:700">'
-       + (hiRow === i + 1 ? rs : '&nbsp;') + '</td></tr>';
-  }
-  if (hiCol){
-    h += '<tr><td style="padding:3px 12px;background:#f1f5f9;border:1px solid #e2e8f0">列和=入度</td>';
-    for (var j2 = 0; j2 < 4; j2++){
-      var s = 0;
-      for (var i2 = 0; i2 < 4; i2++) s += M[i2][j2];
-      var bg2 = hiCol === j2 + 1 ? '#dbeafe' : '#fff';
-      h += '<td style="padding:3px 12px;border:1px solid #e2e8f0;text-align:center;background:' + bg2 + ';font-weight:700;color:#1d4ed8">'
-         + (hiCol === j2 + 1 ? s : '&nbsp;') + '</td>';
+    el.setAttribute('marker-end', 'url(#digArrow)');
+    el.setAttribute('class', 'dedge');
+    el.setAttribute('opacity', '0');
+    this._edges[key] = el;
+    svg.appendChild(el);
+  }, this);
+  Object.keys(VPOS).forEach(function(id){
+    var p = VPOS[id];
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'dvertex');
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 22);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('class', 'vname'); t.setAttribute('x', p.x); t.setAttribute('y', p.y);
+    t.textContent = 'v' + id;
+    var d = document.createElementNS(svgNS, 'text');
+    d.setAttribute('class', 'vdeg');
+    d.setAttribute('x', p.x); d.setAttribute('y', p.y + 40);
+    g.appendChild(c); g.appendChild(t); g.appendChild(d);
+    this._vdeg[id] = d;
+    this._vcircle[id] = g;
+    svg.appendChild(g);
+  }, this);
+  stage.appendChild(svg);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._formulaBox = formulaBox;
+}
+
+function cellCls(r, c, val, mode){
+  if (mode === 'row1'){ return r === 0 ? (val ? 'rowhot one' : 'rowhot') : ''; }
+  if (mode === 'row2'){ return r === 1 ? (val ? 'rowhot one' : 'rowhot') : ''; }
+  if (mode === 'row34'){ return r >= 2 ? (val ? 'rowhot one' : 'rowhot') : ''; }
+  if (mode === 'ones-row'){ return val ? 'one' : 'dim'; }
+  if (mode === 'ones-col'){ return val ? 'oneC' : 'dim'; }
+  if (mode === 'ones-final'){ return val ? 'one' : ''; }
+  return '';
+}
+
+function render(stage, sn, i){
+  var self = this;
+  var es = ESTEPS[Math.min(i, ESTEPS.length - 1)];
+  var mode = CELL_MODE[Math.min(i, CELL_MODE.length - 1)];
+  var done = i >= 6;
+  for (var r = 0; r < 4; r++){
+    for (var c = 0; c < 4; c++){
+      var cls = cellCls(r, c, M[r][c], mode);
+      this._cells[r][c].className = 'aw-box' + (cls ? ' ' + cls : '');
     }
-    h += '<td style="border:1px solid #e2e8f0;background:#fff"></td></tr>';
+    this._rowSums[r].classList.toggle('show', i >= 4);
   }
-  return h + '</table>';
-}
-function hasCell(cells, r, c){
-  for (var i = 0; i < cells.length; i++){
-    if (cells[i][0] === r && cells[i][1] === c) return true;
-  }
-  return false;
-}
-function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
-function card(cls, title, body){
-  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
-}
-function degRow(deg){
-  var h = '<div class="aw-cells" style="justify-content:center">';
-  for (var i = 0; i < 4; i++){
-    h += '<div class="aw-col"><div class="aw-ptr">v' + (i + 1) + '</div><div class="aw-box ' + (deg[i] ? 'hit' : '') + '" style="width:46px">' + (deg[i] || '·') + '</div></div>';
-  }
-  return h + '</div>';
+  this._colRowWrap.style.display = (i >= 5 && i <= 6) ? 'flex' : 'none';
+  Object.keys(this._edges).forEach(function(key){
+    var el = self._edges[key];
+    var vis = es.vis.indexOf(key) >= 0;
+    el.setAttribute('opacity', vis ? '1' : '0');
+    el.setAttribute('class', 'dedge' + (es.hot.indexOf(key) >= 0 ? ' hot' : ''));
+  });
+  var badges = BADGES[Math.min(i, BADGES.length - 1)];
+  Object.keys(VPOS).forEach(function(id, k){
+    self._vdeg[id].textContent = badges[k];
+    self._vcircle[id].classList.toggle('done', done);
+  });
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
 }
 
-var LOGS = [
-  '审题：给出 4×4 邻接矩阵 A，求各顶点的度。先判断图的类型',
-  '检查对称性：A[1][2] = 1 而 A[2][1] = 0（琥珀格）→ 矩阵不对称，这是【有向图】',
-  '顶点 1 的出度 = 第 1 行的和 = 0+1+0+1 = 2（绿行）',
-  '顶点 1 的入度 = 第 1 列的和 = 1（蓝列）→ 度 = 出度 + 入度 = 2 + 1 = 3',
-  '顶点 2：行和 = 0+0+1+1 = 2，列和 = 1+0+1+0 = 2 → 度 = 4',
-  '顶点 3：行和 = 1，列和 = 1 → 度 = 2',
-  '顶点 4：行和 = 1，列和 = 1+1+0+0 = 2 → 度 = 3',
-  '汇总：度依次为 3, 4, 2, 3。自检：矩阵中 1 的个数 = 6 条弧，度数之和 3+4+2+3 = 12 = 2×6 ✓ → 选 C'
+var SNAPS = [
+  { cls:'shift', tag:'审题 · 判型', count:0,
+    log:'4×4 邻接矩阵 A。检查对称性：A[1][2] = 1 而 A[2][1] = 0 → 矩阵不对称，这是【有向图】。顶点的度 = 出度 + 入度 = 行和 + 列和。' },
+  { cls:'ok', tag:'第 1 行 → v1 出边', count:1,
+    log:'第 1 行 0,1,0,1：v1 有两条出弧 v1→v2、v1→v4（橙色新弧）。' },
+  { cls:'ok', tag:'第 2 行 → v2 出边', count:2,
+    log:'第 2 行 0,0,1,1：v2→v3、v2→v4。' },
+  { cls:'ok', tag:'第 3、4 行 → 图补全', count:3,
+    log:'第 3 行 0,1,0,0 → v3→v2；第 4 行 1,0,0,0 → v4→v1。矩阵中共 6 个 1 → 6 条弧（v2 与 v3 之间是两条方向相反的弧）。' },
+  { cls:'step', tag:'行和 = 出度', count:4,
+    log:'出度 = 行之和：v1 = 0+1+0+1 = 2，v2 = 2，v3 = 0+1+0+0 = 1，v4 = 1+0+0+0 = 1 → 出度 (2, 2, 1, 1)。' },
+  { cls:'step', tag:'列和 = 入度', count:5,
+    log:'入度 = 列之和：第 1 列 1，第 2 列 1+0+1+0 = 2，第 3 列 1，第 4 列 1+1+0+0 = 2 → 入度 (1, 2, 1, 2)。' },
+  { cls:'ok', tag:'度 = 出 + 入', count:6,
+    log:'逐点相加：v1 = 2+1 = 3，v2 = 2+2 = 4，v3 = 1+1 = 2，v4 = 1+2 = 3。自检：度数之和 3+4+2+3 = 12 = 2×弧数 6 ✓' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'各顶点的度依次为 3, 4, 2, 3 → 选 C。' },
 ];
-var TAGS = ['审题', '判型：有向图', 'v1 出度 = 2', 'v1 度 = 3', 'v2 度 = 4', 'v3 度 = 2', 'v4 度 = 3', '完成'];
-var CLS  = ['step', 'shift', 'ok', 'ok', 'ok', 'ok', 'ok', 'done'];
-var HI   = [
-  {},
-  { cmp: [[1,2],[2,1]] },
-  { row: 1 },
-  { row: 1, col: 1 },
-  { row: 2, col: 2 },
-  { row: 3, col: 3 },
-  { row: 4, col: 4 },
-  {}
-];
-var DEG = [ [], [1], [1], [1,4], [1,4,2], [1,4,2,3], [1,4,2,3], [1,4,2,3] ];
-
-var snaps = [];
-for (var i = 0; i < 8; i++){
-  var hi = HI[i];
-  var h = matHtml(hi.row, hi.col, hi.cmp);
-  if (i >= 2){
-    h += rowLabel('已求出的度（顺序 v1 → v4）');
-    h += degRow(DEG[i]);
-  }
-  h += card(i === 1 ? 'key' : (i === 7 ? 'good' : ''), TAGS[i], '<p>' + LOGS[i] + '</p>');
-  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
-  if (i >= 2 && i <= 7) sn.ribbon = { k: i - 1, ok: true }; // 四个顶点（步2~5 逐顶点+自检）
-  if (i === 7) sn.done = true;
-  snaps.push(sn);
-}
 
 AW.init({
-  title: '由邻接矩阵求各顶点的度（2013-07）',
-  subtitle: '矩阵 <code>A</code> 不对称 → 有向图 · 度 = 行和（出度）+ 列和（入度）',
-  counterLabel: '已算顶点数',
-  ribbonTitle: '计算进度（✓ 完成一步）',
-  intro: '点击「▶ 播放」逐步计算每个顶点的度。',
-  snaps: snaps,
+  title: '2013-07 由邻接矩阵求各顶点的度',
+  subtitle: '矩阵 <code>A</code> 不对称 → 有向图 · <code>度 = 行和（出度）+ 列和（入度）</code> · 左矩阵右图对照着看',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」：先按行画弧补全有向图，再逐行逐列数度。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C：3, 4, 2, 3',
-    html: '矩阵不对称 → <b>有向图</b>；度 = <b>行和（出度）+ 列和（入度）</b>：v1 = 2+1 = 3，v2 = 2+2 = 4，v3 = 1+1 = 2，v4 = 1+2 = 3。<br>记忆点：<b>非对称矩阵按无向图算（只看行和）会得 2,2,1,1——正是选项 B 的陷阱</b>；自检：度数之和 = 2×弧数。'
-  }
+    html: '矩阵不对称 → <b>有向图</b>：出度 = 行和 (2,2,1,1)，入度 = 列和 (1,2,1,2) → 度 = <b>(3, 4, 2, 3)</b>。<br>' +
+      '陷阱：把不对称矩阵当无向图只看行和会得 (2,2,1,1) —— 正是选项 B；自检利器：<code>度数之和 = 2 × 弧数</code>（12 = 2×6）。',
+  },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

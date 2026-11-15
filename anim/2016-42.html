@@ -2,62 +2,204 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2016-42 正则 k 叉树的叶结点数与结点数上下界</title>
+<title>2016-42 正则 k 叉树 · 构树数数演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .ktree-svg{width:100%;max-width:760px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .ktree-svg .kedge{stroke:#5a7d8c;stroke-width:2.5px;transition:stroke .3s, opacity .4s}
+  .ktree-svg .kedge.hot{stroke:#e07a2f;stroke-width:4px}
+  .ktree-svg .knode circle{fill:#1b3a4b;transition:fill .3s, opacity .4s}
+  .ktree-svg .knode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:fill .3s, opacity .4s}
+  .ktree-svg .knode.leaf circle{fill:#16a34a}
+  .ktree-svg .knode.hot circle{fill:#e07a2f}
+  .ktree-svg text.klabel{font-size:13.5px;font-weight:700;fill:#334155;text-anchor:middle}
+  .ktree-svg .hidden-el{opacity:0}
+  .ktree-svg .dim-el{opacity:.25}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域 ================== */
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
-}
+/* ================== 2016-42 正则 k 叉树（SVG 构树演示） ==================
+ * 题：正则 k 叉树（每个非叶结点恰有 k 个孩子）。
+ *   (1) m 个非叶结点时叶结点多少？→ (k−1)m + 1
+ *   (2) 高度 h 时结点最多 / 最少？→ 最多 (k^h−1)/(k−1)，最少 1+(h−1)k
+ * 演示：取 k=3 实际构树——树A（m=2，叶 5 个；也正是 h=3 的最少结点树 7 个），
+ *       树B（h=3 每层放满，13 个）。逐边逐层数完再一般化。 */
 
-var STEPS = [
-  { title: '第(1)问 · 思路：从边入手',
-    cls: 'key',
-    body: '<p>“正则 k 叉树”= 每个非叶结点<b>恰好 k 个孩子</b>。抓住树的恒等式：<b>边数 = 结点数 − 1</b>；而每条边都由某个非叶结点发出 → 有 m 个非叶结点时，总边数 = <code>k×m</code>。</p>' },
-  { title: '第(1)问 · 推导',
-    cls: 'good',
-    body: '<p>总结点数 = 边数 + 1 = <code>k×m + 1</code>；叶结点数 = 总结点数 − 非叶结点数 = <code>k×m + 1 − m</code> = <b>(k−1)×m + 1</b>。</p>' },
-  { title: '第(1)问 · 验证',
-    cls: 'key',
-    body: '<p>代入 k=3、m=2：根有 3 个孩子，其中 1 个孩子又有 3 个孩子 → 叶结点 2+3 = 5，恰为 (3−1)×2+1 = 5 ✓。</p>' },
-  { title: '第(2)问 · 最多：每层放满',
-    cls: 'good',
-    body: '<p>高度 h（单结点树 h=1）。结点最多 = 每层都放满：第 j 层最多 k<sup>j−1</sup> 个 → 总数 = <code>1 + k + k^2 + … + k^(h−1)</code>，等比求和 = <b>(k^h − 1)/(k − 1)</b>。</p>' },
-  { title: '第(2)问 · 最少：单链延伸',
-    cls: 'good',
-    body: '<p>高度要达到 h，必须有一条从根往下共 h−1 条边的路径；正则性要求路径上每个非叶结点都凑满 k 个孩子。要省结点，就只让<b>一条链</b>延伸，其余孩子全当叶子 → 除根外每层恰 k 个：总数 = <b>1 + (h−1)×k</b>。</p>' },
-  { title: '第(2)问 · 验证',
-    cls: 'key',
-    body: '<p>代入 k=3、h=3：最少 = 1 + 2×3 = 7（根 1 个 + 第二层 3 个 + 第三层 3 个，只有一条链延伸）；最多 = (27−1)/2 = 13（1+3+9）✓。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>（1）叶结点 = <b>(k−1)m + 1</b>；（2）最多 = <b>(k^h − 1)/(k − 1)</b>，最少 = <b>1 + (h−1)k</b>。记忆锚点：<b>边计数</b>（每个非叶结点发 k 条边）＋“满则最多、单链延伸则最少”。</p>' },
+var NODES = [
+  /* 树A：k=3 正则，m=2，共 7 结点（= h 3 的最少结点树） */
+  { id:'r', x:160, y:55,  leaf:false, step:0, g:'A' },
+  { id:'a', x:95,  y:155, leaf:true,  step:0, g:'A' },
+  { id:'b', x:160, y:155, leaf:false, step:0, g:'A' },
+  { id:'c', x:225, y:155, leaf:true,  step:0, g:'A' },
+  { id:'d', x:115, y:255, leaf:true,  step:0, g:'A' },
+  { id:'e', x:160, y:255, leaf:true,  step:0, g:'A' },
+  { id:'f', x:205, y:255, leaf:true,  step:0, g:'A' },
+  /* 树B：k=3、h=3 每层放满，共 13 结点 */
+  { id:'R',  x:520, y:40,  leaf:false, step:4, g:'B' },
+  { id:'L',  x:355, y:130, leaf:false, step:4, g:'B' },
+  { id:'M',  x:520, y:130, leaf:false, step:4, g:'B' },
+  { id:'Rt', x:685, y:130, leaf:false, step:4, g:'B' },
+  { id:'l1', x:300, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l2', x:355, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l3', x:410, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l4', x:465, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l5', x:520, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l6', x:575, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l7', x:630, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l8', x:685, y:240, leaf:true,  step:4, g:'B' },
+  { id:'l9', x:740, y:240, leaf:true,  step:4, g:'B' },
+];
+var EDGES = [
+  { id:'r-a', a:'r', b:'a', step:0, g:'A' },
+  { id:'r-b', a:'r', b:'b', step:0, g:'A' },
+  { id:'r-c', a:'r', b:'c', step:0, g:'A' },
+  { id:'b-d', a:'b', b:'d', step:0, g:'A' },
+  { id:'b-e', a:'b', b:'e', step:0, g:'A' },
+  { id:'b-f', a:'b', b:'f', step:0, g:'A' },
+  { id:'R-L',  a:'R',  b:'L',  step:4, g:'B' },
+  { id:'R-M',  a:'R',  b:'M',  step:4, g:'B' },
+  { id:'R-Rt', a:'R',  b:'Rt', step:4, g:'B' },
+  { id:'L-l1', a:'L',  b:'l1', step:4, g:'B' },
+  { id:'L-l2', a:'L',  b:'l2', step:4, g:'B' },
+  { id:'L-l3', a:'L',  b:'l3', step:4, g:'B' },
+  { id:'M-l4', a:'M',  b:'l4', step:4, g:'B' },
+  { id:'M-l5', a:'M',  b:'l5', step:4, g:'B' },
+  { id:'M-l6', a:'M',  b:'l6', step:4, g:'B' },
+  { id:'Rt-l7', a:'Rt', b:'l7', step:4, g:'B' },
+  { id:'Rt-l8', a:'Rt', b:'l8', step:4, g:'B' },
+  { id:'Rt-l9', a:'Rt', b:'l9', step:4, g:'B' },
+];
+var ALL_A_EDGES = ['r-a','r-b','r-c','b-d','b-e','b-f'];
+var ALL_B_EDGES = ['R-L','R-M','R-Rt','L-l1','L-l2','L-l3','M-l4','M-l5','M-l6','Rt-l7','Rt-l8','Rt-l9'];
+var LABELS = [
+  { x:160, y:300, t:'树A：k=3 正则，m=2（非叶 r、b）· 也正是 h=3 的最少结点树', step:0, g:'A' },
+  { x:520, y:300, t:'树B：k=3、h=3 每层放满（1+3+9 = 13）', step:4, g:'B' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function nodeById(id){
+  for(var i = 0; i < NODES.length; i++){ if(NODES[i].id === id) return NODES[i]; }
+  return null;
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'第(1)问', count:0, hotN:['r','b'], hotE:[],
+    log:'正则 k 叉树：每个非叶结点恰好有 k 个孩子。取 k=3 实际构一棵（左下树A）：r 与 b 是非叶（m = 2，深蓝），a、c、d、e、f 是叶（绿色）。',
+    formula:'正则 k 叉树：非叶结点恰有 k 个孩子' },
+  { cls:'step', tag:'数边', count:1, hotN:['r','b'], hotE:ALL_A_EDGES,
+    log:'每个非叶结点发出 k = 3 条边 → m 个非叶共发出 k·m = 6 条边（与恒等式吻合：7 个结点恰有 6 条边）。',
+    formula:'边数 = k·m = 3×2 = 6' },
+  { cls:'ok', tag:'数叶', count:2, hotN:['a','c','d','e','f'], hotE:[], ribbon:{k:1, ok:true},
+    log:'结点数 = 边数 + 1 = 7；叶结点 = 总结点 − 非叶 = 7 − 2 = 5。代入公式：(k−1)m + 1 = 2×2 + 1 = 5 ✓。',
+    formula:'叶结点 = (k−1)m + 1 = 5' },
+  { cls:'step', tag:'第(1)问结论', count:3, hotN:[], hotE:[],
+    log:'一般化：边 = k·m → 总结点 = k·m + 1 → 叶 = k·m + 1 − m = (k−1)m + 1。第(1)问得证。',
+    formula:'叶结点数 = (k−1)m + 1' },
+  { cls:'shift', tag:'第(2)问 · 最多', count:4, hotN:[], hotE:[], showB:true,
+    log:'第(2)问：高度 h 固定时结点最多 → 每一层都放满（满 k 叉树）。右下画出 k = 3、h = 3 的满树（树B现身）。',
+    formula:'最多：每层放满' },
+  { cls:'ok', tag:'逐层求和', count:5, hotN:['R','L','M','Rt'], hotE:ALL_B_EDGES, ribbon:{k:2, ok:true},
+    log:'第 i 层有 k^(i−1) 个结点：1 + 3 + 9 = 13。一般：Σ(j=1..h) k^(j−1) = (k^h − 1)/(k − 1)；k=3、h=3 时 (27−1)/2 = 13 ✓。',
+    formula:'最多 = (k^h − 1)/(k − 1) = 13' },
+  { cls:'step', tag:'第(2)问 · 最少', count:6, hotN:['r','b','d','e','f'], hotE:['r-b','b-d','b-e','b-f'], dimB:true,
+    log:'结点最少时：第 1 层只有根，其余 h−1 层每层只放 1 个非叶结点的 k 个孩子（一条非叶链撑起高度，橙色）——正是左边的树A：1 + (h−1)·k = 1 + 2×3 = 7 ✓。',
+    formula:'最少 = 1 + (h−1)k = 7' },
+  { cls:'ok', tag:'推导确认', count:7, hotN:['r','b'], hotE:['r-b'], dimB:true,
+    log:'推导：要达到高度 h，第 2…h 层每层至少要有 1 个非叶结点往下延伸，而它的孩子恰好 k 个 → 最少 1 + (h−1)·k。介于最少与最多之间的任何正则 k 叉树都可构造。',
+    formula:'最多 (k^h−1)/(k−1)　·　最少 1+(h−1)k' },
+  { cls:'done', tag:'完成', count:8, hotN:[], hotE:[], dimB:true, done:true, ribbon:{k:3, ok:true},
+    log:'三问答案：(1) 叶结点 (k−1)m + 1；(2) 最多 (k^h − 1)/(k − 1)，最少 1 + (h−1)k。',
+    formula:'完成' },
+];
+
+var svg, formulaBox;
+function build(stage){
+  stage.innerHTML = '';
+  var NS = 'http://www.w3.org/2000/svg';
+  svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 800 320');
+  svg.setAttribute('class', 'ktree-svg');
+  EDGES.forEach(function(e){
+    var A = nodeById(e.a), B = nodeById(e.b);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'kedge hidden-el');
+    ln.dataset.id = e.id;
+    ln.dataset.step = e.step;
+    ln.dataset.g = e.g;
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'knode ' + (n.leaf ? 'leaf' : 'internal') + ' hidden-el');
+    g.dataset.id = n.id;
+    g.dataset.step = n.step;
+    g.dataset.g = n.g;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 16);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  LABELS.forEach(function(lb){
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', lb.x); t.setAttribute('y', lb.y);
+    t.setAttribute('class', 'klabel hidden-el');
+    t.dataset.step = lb.step;
+    t.dataset.g = lb.g;
+    t.textContent = lb.t;
+    svg.appendChild(t);
+  });
+  stage.appendChild(svg);
+  formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+}
+
+function render(stage, sn){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(elm){
+    elm.classList.toggle('hidden-el', +elm.dataset.step > sn.count);
+  });
+  var hotN = sn.hotN || [], hotE = sn.hotE || [];
+  [].forEach.call(svg.querySelectorAll('.knode'), function(g){
+    g.classList.remove('hot', 'dim-el');
+    if(hotN.indexOf(g.dataset.id) >= 0) g.classList.add('hot');
+    if(sn.dimB && g.dataset.g === 'B') g.classList.add('dim-el');
+  });
+  [].forEach.call(svg.querySelectorAll('.kedge'), function(ln){
+    ln.classList.remove('hot', 'dim-el');
+    if(hotE.indexOf(ln.dataset.id) >= 0) ln.classList.add('hot');
+    if(sn.dimB && ln.dataset.g === 'B') ln.classList.add('dim-el');
+  });
+  [].forEach.call(svg.querySelectorAll('text.klabel'), function(t){
+    t.classList.remove('dim-el');
+    if(sn.dimB && t.dataset.g === 'B') t.classList.add('dim-el');
+  });
+  formulaBox.innerHTML = sn.formula || '';
+}
 
 AW.init({
-  title: '2016·正则 k 叉树：叶结点数与结点数的最多/最少',
-  subtitle: '每问先给框架再填细节 · 边计数法贯穿全题',
-  intro: '点击「▶ 播放」逐步展开推导链。',
-  snaps: snaps,
+  title: '2016-42 · 正则 k 叉树：叶结点数与结点数上下界',
+  subtitle: '示例取 k=3 实际构树：m=2 验证叶数 5；h=3 验证最多 13、最少 7，再一般化',
+  counterLabel: '推进步',
+  ribbonTitle: '三问进度（✓ 完成）',
+  intro: '点击「▶ 播放」：构一棵正则三叉树数叶 → 画满树数最多 → 找非叶链数最少。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '叶 (k−1)m+1 · 最多 (k^h−1)/(k−1) · 最少 1+(h−1)k',
-    html: '第(1)问：边数 = k×m → 总结点 = km+1 → 叶 = (k−1)m+1。第(2)问：最多是<b>满 k 叉树</b>（等比求和）；最少是<b>一条链延伸、每层补满 k 个</b>。易错：最少情形不能拉成每层 1 个的单链，那违反正则性。',
+    big: '(k−1)m+1 · (k^h−1)/(k−1) · 1+(h−1)k',
+    html: '(1) 每个非叶发 k 条边 → 边 = k·m → 总结点 = k·m + 1 → 叶结点 = <b>(k−1)m + 1</b>。' +
+      '(2) 高度 h 时：最多 = 每层放满 <b>(k^h − 1)/(k − 1)</b>；最少 = 一条非叶链撑起高度 <b>1 + (h−1)·k</b>。' +
+      '记忆锚点：<code>边数 = k×非叶数；满树求等比和，单链数层数</code>。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

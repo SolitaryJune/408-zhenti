@@ -2,85 +2,229 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2020-42 前缀编码的二叉树保存、译码与判定动画</title>
+<title>2020-42 前缀编码 · 二叉树保存/译码/判定 动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .ptsvg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .ptsvg .pedge line{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s, stroke .3s, stroke-width .3s}
+  .ptsvg .pedge .elabel{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;fill:#334155;transition:opacity .4s}
+  .ptsvg .pnode circle{transition:opacity .4s, fill .3s, stroke .3s}
+  .ptsvg .pnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:16px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:opacity .4s}
+  .ptsvg .pnode.leaf circle{fill:#16a34a}
+  .ptsvg .pnode.internal circle{fill:#1b3a4b}
+  .ptsvg .pnode.hot circle{fill:#e07a2f}
+  .ptsvg .pnode.bad circle{fill:#dc2626}
+  .ptsvg .hidden-el{opacity:0}
+  .prow{display:flex;gap:26px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:12px}
+  .pblock{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px}
+  .pblock .pt{font-size:12.5px;font-weight:700;color:#64748b;margin-bottom:8px}
+  .pcode{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .pcode span{background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:8px;padding:3px 9px;transition:all .3s}
+  .pcode span.on{background:#dcfce7;border-color:#16a34a;color:#14532d}
+  .pout{margin-top:10px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
+  .pout b{color:#15803d}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     2020-42 概念/过程题：前缀特性的不等长编码——二叉树保存、译码、判定
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2020-42 前缀特性编码（二叉树 SVG + 译码走位） ==================
+ * 大题三问：1）用什么数据结构保存前缀编码？ 2）怎么译码？ 3）怎么判定前缀特性？
+ * 演示：自拟字符集 {a,b,c,d}，编码 a=0, b=10, c=110, d=111——
+ *   先逐个编码"建树检查"，再拿 0/1 串 10110111 实际译码，最后演示两种违规情形。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+var NODES = [
+  { id:'R',  x:300, y:42,  kind:'internal', ch:'',  step:1 },
+  { id:'a',  x:200, y:140, kind:'leaf',     ch:'a', step:2 },
+  { id:'X',  x:400, y:140, kind:'internal', ch:'',  step:3 },
+  { id:'b',  x:330, y:240, kind:'leaf',     ch:'b', step:3 },
+  { id:'Y',  x:470, y:240, kind:'internal', ch:'',  step:4 },
+  { id:'c',  x:410, y:340, kind:'leaf',     ch:'c', step:4 },
+  { id:'d',  x:530, y:340, kind:'leaf',     ch:'d', step:4 },
+];
+var EDGES = [
+  { a:'R', b:'a', lab:'0', lx:240, ly:92,  step:2 },
+  { a:'R', b:'X', lab:'1', lx:360, ly:92,  step:3 },
+  { a:'X', b:'b', lab:'0', lx:355, ly:192, step:3 },
+  { a:'X', b:'Y', lab:'1', lx:445, ly:192, step:4 },
+  { a:'Y', b:'c', lab:'0', lx:430, ly:292, step:4 },
+  { a:'Y', b:'d', lab:'1', lx:510, ly:292, step:4 },
+];
+var BITS = ['1','0','1','1','0','1','1','1'];   // 译码示例串 → b c d
 
-var STEPS = [
-  { title: '问 1：选什么数据结构？—— 二叉树',
-    cls: 'key',
-    body: '<p>前缀特性：任一字符的编码都不是其他字符编码的前缀。把每个编码看成<b>从根到叶的一条 0/1 路径</b>：</p>' +
-          '<ul><li>左分支记 <code>0</code>，右分支记 <code>1</code>；</li><li><b>字符只保存在叶结点</b>上。</li></ul>' +
-          '<p>于是"保存编码表"就等于保存这棵二叉树。</p>' },
-  { title: '问 1：为什么天然满足前缀特性',
-    cls: 'good',
-    body: '<p>字符只在<b>叶子</b>上：从根到某个叶子的路径，不可能恰好是到另一个叶子路径的<b>开头一段</b>（那段的中途结点只存放指针，不存放字符）。</p>' +
-          '<p>所以"任一编码不是其他编码的前缀"由结构自动保证。</p>' },
-  { title: '问 2：译码过程（0/1 串 → 字符串）',
-    cls: 'key',
-    body: '<p>四步循环：</p>' +
-          '<ol><li>从<b>根结点</b>出发，读 0/1 串的当前位；</li>' +
-          '<li>该位为 <code>0</code> 走左孩子，为 <code>1</code> 走右孩子；</li>' +
-          '<li>到达<b>叶结点</b>：输出叶上的字符，然后<b>回到根</b>；</li>' +
-          '<li>重复上述过程，直到 0/1 串读完。</li></ol>' +
-          '<p>根到叶路径唯一 → 译码结果唯一。</p>' },
-  { title: '问 3：判定前缀特性 = 边建树边检查',
-    cls: 'step',
-    body: '<p>判定过程同时就是<b>构建二叉树</b>的过程：初始只有根结点，左右指针均为空。</p>' +
-          '<p>逐个读入编码 <code>C</code>，按 C 的每一位沿相应分支向下走，<b>遇到空指针就创建新结点</b>。</p>' },
-  { title: '问 3：两种违规情形（任一出现即无前缀特性）',
-    cls: 'bad',
-    body: '<p><b>情形① 撞叶</b>：还没扫描完 <code>C</code> 就到达了一个已有叶结点——说明某个已有编码是 <code>C</code> 的前缀。</p>' +
-          '<p><b>情形② 空转</b>：扫描完 <code>C</code> 时一个新结点都没创建——说明 <code>C</code> 走的全是旧路，<code>C</code> 是某个已有编码的前缀。</p>' +
-          '<p>两种情形都表明不具有前缀特性。</p>' },
-  { title: '问 3：通过条件',
-    cls: 'good',
-    body: '<p>只有<b>在处理 <code>C</code> 的最后一位时创建了新叶结点</b>，<code>C</code> 才与已有编码互不为前缀——通过检查，继续处理下一个编码。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>1）用<b>二叉树</b>保存编码（左 0 右 1、字符在叶）；2）译码从根出发按位走分支、到叶输出字符后回根；3）判定 = 建树过程：撞叶或空转即无前缀特性，<b>全部编码都在最后一位新建叶结点</b>才具有前缀特性。</p>' +
-          '<p>记忆锚点：<b>编码在叶、译码走根到叶、判定边建树边查"撞叶/空转"</b>。</p>' },
+// 每步渲染参数：okNodes/goodPath(绿) badPath(红) bitCls(8位的状态) ptr(当前位指针) out(已译出)
+var REND = [
+  { goodPath:[], badPath:[] },
+  { goodPath:['R'], badPath:[] },
+  { goodPath:['R','a','E:R-a'], badPath:[] },
+  { goodPath:['X','b','E:R-X','E:X-b'], badPath:[] },
+  { goodPath:['Y','c','d','E:X-Y','E:Y-c','E:Y-d'], badPath:[] },
+  { goodPath:['a','b','c','d'], badPath:[] },
+  { goodPath:['R'], badPath:[], showBits:'dim' },
+  { goodPath:['R','X','b','E:R-X','E:X-b'], badPath:[], showBits:[0,1], ptr:2, out:'b' },
+  { goodPath:['R','X','Y','c','E:X-Y','E:Y-c'], badPath:[], showBits:[0,1,2,3,4], ptr:5, out:'b　c' },
+  { goodPath:['R','X','Y','d','E:X-Y','E:Y-d'], badPath:[], showBits:[0,1,2,3,4,5,6,7], ptr:-1, out:'b　c　d' },
+  { goodPath:[], badPath:['R','X','b','E:R-X','E:X-b'], showBits:[0,1], ptr:2, ptrLab:'✗ 停在叶 b', bad:true, out:'（违规演示）' },
+  { goodPath:[], badPath:['R','X','Y','c','E:R-X','E:X-Y','E:Y-c'], showBits:[0,1,2,3], ptr:4, ptrLab:'还有位没读', bad:true, out:'（违规演示）' },
+  { goodPath:['a','b','c','d'], badPath:[] },
+];
+var SNAPS = [
+  { cls:'step', tag:'三问', count:0,
+    log:'题目三问：1）什么数据结构适宜保存前缀编码？2）怎么从 0/1 串译码？3）怎么判定一组编码是否具有前缀特性？下面用字符集 {a, b, c, d}（编码 0、10、110、111）把三问全部演示一遍。' },
+  { cls:'ok', tag:'问 1 · 结构', count:1,
+    log:'问 1：用<b>二叉树</b>保存——左分支记 0、右分支记 1，每个编码对应一条从根到叶的路径，<b>字符只存放在叶结点</b>。先立一个根。' },
+  { cls:'ok', tag:'检查 a = 0', count:2,
+    log:'读入编码 a = 0：从根沿 0 走，遇空指针创建新结点——<b>在最后一位新建了叶 a</b> ✓ 通过。' },
+  { cls:'ok', tag:'检查 b = 10', count:3,
+    log:'读入编码 b = 10：第 1 位 1 新建内结点 X，第 2 位 0 新建<b>叶 b</b> ✓。注意：编码只允许终止在叶子上。' },
+  { cls:'ok', tag:'检查 c = 110、d = 111', count:4,
+    log:'读入 c = 110（经 X 新建内结点 Y 和叶 c）、d = 111（新建叶 d）✓。四个编码全部通过检查。' },
+  { cls:'step', tag:'树完成', count:4,
+    log:'保存结构建成：编码表 a=0、b=10、c=110、d=111。前缀特性由结构自动保证——<b>字符都在叶子上，任何编码不可能是另一个编码路径的开头一段</b>。' },
+  { cls:'step', tag:'问 2 · 译码', count:4,
+    log:'问 2：拿 0/1 串 <b>10110111</b> 实际译码。四步循环：从根出发 → 读一位走对应分支（0 左 1 右）→ 到叶输出字符并<b>回到根</b> → 重复到串尾。' },
+  { cls:'ok', tag:'译出 b', count:4,
+    log:'读 1 走右到 X，读 0 到<b>叶 b</b> → 输出 b，回到根。已消费前 2 位。' },
+  { cls:'ok', tag:'译出 c', count:4,
+    log:'接着读 1、1、0：到<b>叶 c</b> → 输出 c，回根。已消费 5 位。' },
+  { cls:'ok', tag:'译出 d', count:4,
+    log:'读 1、1、1：到<b>叶 d</b> → 输出 d，串读完。译码结果 = <b>bcd</b>。根到叶路径唯一 → 译码结果唯一。' },
+  { cls:'miss', tag:'问 3 · 违规 ①', count:4, ribbon:{k:1, ok:false},
+    log:'问 3 判定 = 建树过程。<b>违规①</b>：若某字符 e 的编码是 "10"——扫完 10 正好停在已有<b>叶 b</b> 上，<b>一个新结点都没创建</b> → 说明 10 已是 b 的编码，不具前缀特性 ✗。' },
+  { cls:'miss', tag:'问 3 · 违规 ②', count:4, ribbon:{k:2, ok:false},
+    log:'<b>违规②</b>：若某字符 e 的编码是 "1101"——扫到第 3 位就<b>撞上已有叶 c</b>，还没扫完 → 说明 110 是 1101 的前缀，不具前缀特性 ✗。' },
+  { cls:'done', tag:'结论', count:4, done:true,
+    log:'三问齐了：1）二叉树（左 0 右 1、字符在叶）；2）从根按位走、到叶输出并回根；3）逐编码建树，只有"最后一位新建叶"才通过 → 本例通过，具前缀特性。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    count: i + 1,
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 640 385');
+  svg.setAttribute('class', 'ptsvg');
+  var byId = {};
+  NODES.forEach(function(n){ byId[n.id] = n; });
+  EDGES.forEach(function(e){
+    var A = byId[e.a], B = byId[e.b];
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'pedge hidden-el');
+    g.dataset.id = 'E:' + e.a + '-' + e.b;
+    g.dataset.step = e.step;
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    g.appendChild(ln);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', e.lx); t.setAttribute('y', e.ly);
+    t.setAttribute('class', 'elabel');
+    t.textContent = e.lab;
+    g.appendChild(t);
+    svg.appendChild(g);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'pnode ' + n.kind + ' hidden-el');
+    g.dataset.id = n.id;
+    g.dataset.step = n.step;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.ch || '';
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  var row = AW.el('div', 'prow');
+  var blk1 = AW.el('div', 'pblock', '<div class="pt">编码表（0 → 左，1 → 右）</div>');
+  var codeBox = AW.el('div', 'pcode');
+  [['a','0'],['b','10'],['c','110'],['d','111']].forEach(function(p){
+    codeBox.appendChild(AW.el('span', '', p[0] + ' = ' + p[1]));
+  });
+  blk1.appendChild(codeBox);
+  var blk2 = AW.el('div', 'pblock', '<div class="pt">待译码 0/1 串：10110111</div>');
+  var stripHolder = AW.el('div', '');
+  stripHolder.style.minHeight = '78px';
+  blk2.appendChild(stripHolder);
+  row.appendChild(blk1); row.appendChild(blk2);
+  stage.appendChild(row);
+  var out = AW.el('div', 'pout');
+  stage.appendChild(out);
+  this._svg = svg; this._strip = stripHolder; this._out = out; this._codeBox = codeBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var rd = REND[Math.min(i, REND.length - 1)];
+  var good = {}, bad = {};
+  rd.goodPath.forEach(function(id){ good[id] = 1; });
+  rd.badPath.forEach(function(id){ bad[id] = 1; });
+  [].forEach.call(svg.querySelectorAll('.pnode, .pedge'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+    el.classList.remove('hot', 'bad');
+    if(good[el.dataset.id] || bad[el.dataset.id]){
+      var isNode = el.classList.contains('pnode');
+      el.classList.add(bad[el.dataset.id] ? 'bad' : 'hot');
+      if(!isNode){
+        el.querySelector('line').style.stroke = bad[el.dataset.id] ? '#dc2626' : '#16a34a';
+        el.querySelector('line').style.strokeWidth = '4px';
+      }
+    } else if(el.classList.contains('pedge')){
+      el.querySelector('line').style.stroke = '';
+      el.querySelector('line').style.strokeWidth = '';
+    }
+  });
+  // 编码表高亮（译码时逐字符点亮）
+  var litMap = { 'b':['b'], 'b　c':['b','c'], 'b　c　d':['b','c','d'] };
+  var lit = litMap[rd.out] || (i >= 5 && i !== 10 && i !== 11 ? ['a','b','c','d'] : []);
+  [].forEach.call(this._codeBox.children, function(sp, k){
+    sp.className = (i >= 5 && lit.indexOf(['a','b','c','d'][k]) >= 0) ? 'on' : '';
+  });
+  // 0/1 串格子
+  var bits = rd.showBits;
+  var classes, ptrMap = null;
+  if(bits === 'dim'){
+    classes = BITS.map(function(){ return 'dim'; });
+  } else if(bits){
+    classes = BITS.map(function(_, k){
+      if(bits.indexOf(k) >= 0) return rd.bad ? 'miss' : 'ok';
+      if(k === rd.ptr) return 'hit';
+      return '';
+    });
+    if(rd.ptr >= 0){
+      ptrMap = {};
+      ptrMap[rd.ptr + 1] = rd.ptrLab || '▼ 读';
+    }
+  } else {
+    classes = BITS.map(function(){ return ''; });
+  }
+  this._strip.innerHTML = '';
+  this._strip.appendChild(AW.cellRow(BITS, classes, ptrMap, 1));
+  this._out.innerHTML = rd.out ? ('已译出：' + (i === 9 ? '<b>bcd</b> ✓ 译码完成' : rd.out)) : '';
+}
 
 AW.init({
-  title: '前缀编码：二叉树保存、译码与前缀特性判定',
-  subtitle: '考点：前缀特性 · 编码树（左 0 右 1、字符在叶）· 三问逐个展开',
+  title: '2020-42 前缀编码：二叉树保存 · 译码 · 前缀特性判定',
+  subtitle: '示例字符集 {a,b,c,d}，编码 <code>a=0　b=10　c=110　d=111</code>：边读编码边建树（左 0 右 1、字符在叶），再用 0/1 串实际译码，最后演示两种违规情形',
   counterLabel: '进度',
-  intro: '点击「▶ 播放」按问展开推理链。',
-  snaps: snaps,
+  ribbonTitle: '违规情形（✗ 出现即无前缀特性）',
+  intro: '点击「▶ 播放」：先建树过检查，再译码 10110111，再看两种违规。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '二叉树（字符在叶）',
-    html: '<b>三问要点：</b>1）用二叉树保存——左分支 0、右分支 1，叶结点存字符，前缀特性由结构自动保证；2）译码从根出发按位走分支，到叶输出字符并<b>回到根</b>，重复到串读完；3）判定即建树——没扫完就<b>撞上已有叶</b>（别人是 C 的前缀）或扫完却<b>没新建结点</b>（C 是别人的前缀）都无前缀特性，只有最后一位新建了叶结点才通过。',
+    big: '1) 二叉树　2) 从根按位走、到叶输出　3) 建树时查“撞叶/空转”',
+    html: '<b>1）数据结构</b>：二叉树——左分支 0、右分支 1，叶结点保存字符；字符只在叶子上，前缀特性由结构自动保证。<br>' +
+      '<b>2）译码</b>：从根出发逐位读 0/1 串，0 走左、1 走右；到叶输出字符并回到根，重复到串尾。示例 10110111 → <b>bcd</b>。<br>' +
+      '<b>3）判定</b>：判定过程就是建树过程——初始只有根，逐个编码沿位下走、空指针处建新结点：<b>没扫完就撞上已有叶</b>（已有编码是 C 的前缀）或<b>扫完却一个新结点都没建</b>（C 是已有编码的前缀）→ 不具前缀特性；<b>只有最后一位新建了叶结点</b>才通过，全部通过即具有前缀特性。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
+<script>/* aw-ok */</script>
 </body>
 </html>

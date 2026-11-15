@@ -2,142 +2,212 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2013-09 AOE 网：加快哪些活动能缩短工期</title>
+<title>2013-09 AOE 网关键路径 · 加快哪些活动能缩短工期</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .aoe-svg{width:100%;max-width:720px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .aoe-svg .edge line{stroke:#5a7d8c;stroke-width:2.2px;transition:stroke .3s,opacity .4s}
+  .aoe-svg .edge text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:14px;
+    fill:#33566b;text-anchor:middle;transition:opacity .4s,fill .3s}
+  .aoe-svg .edge.hot line{stroke:#e07a2f;stroke-width:3.6px}
+  .aoe-svg .edge.hot text{fill:#b45309}
+  .aoe-svg .enode circle{fill:#1b3a4b;transition:opacity .4s}
+  .aoe-svg .enode.src circle{fill:#2563eb}
+  .aoe-svg .enode.dst circle{fill:#e63946}
+  .aoe-svg .enode text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:15px;
+    fill:#fff;text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .aoe-svg .pov{fill:none;stroke-width:9px;stroke-linecap:round;stroke-linejoin:round;
+    transition:stroke-opacity .35s}
+  .hidden-el{opacity:0}
+  .hve{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .hve .vchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 12px;font-weight:800;font-family:"SF Mono",Menlo,monospace;font-size:13.5px;
+    transition:opacity .4s}
+  .hve .vchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#b45309}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9;min-height:28px}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2013-09 AOE 网关键路径动画（SVG） ==================
+ * 题图：结点 1~6；活动 a=3(1→2) b=8(1→3) c=9(2→4) d=4(3→2) e=6(2→5) f=10(3→5) g=6(4→6) h=9(5→6)
+ * 演示：求 ve → 工期 27 → 三条关键路径 → 逐项检验"加快哪组活动能覆盖全部关键路径"。答案 C（f 和 d）。 */
 
-// 活动表：a(1→2,3) b(1→3,8) c(2→4,9) d(3→2,4) e(2→5,6) f(3→5,10) g(4→6,6) h(5→6,9)
-var ACTS = [
-  ['a', '1→2', 3], ['b', '1→3', 8], ['c', '2→4', 9], ['d', '3→2', 4],
-  ['e', '2→5', 6], ['f', '3→5', 10], ['g', '4→6', 6], ['h', '5→6', 9]
+var NPOS = { '1':[60,168], '2':[250,60], '3':[250,262], '4':[452,60], '5':[452,262], '6':[645,168] };
+var EDGES = [
+  { id:'a', s:'1', t:'2', w:3,  lx:122, ly:92  },
+  { id:'b', s:'1', t:'3', w:8,  lx:122, ly:236 },
+  { id:'c', s:'2', t:'4', w:9,  lx:351, ly:38  },
+  { id:'d', s:'3', t:'2', w:4,  lx:220, ly:166 },
+  { id:'e', s:'2', t:'5', w:6,  lx:378, ly:150 },
+  { id:'f', s:'3', t:'5', w:10, lx:351, ly:288 },
+  { id:'g', s:'4', t:'6', w:6,  lx:582, ly:92  },
+  { id:'h', s:'5', t:'6', w:9,  lx:582, ly:236 }
+];
+var PATHS = [
+  { p:1, seq:['1','3','2','4','6'], color:'#dc2626' },
+  { p:2, seq:['1','3','2','5','6'], color:'#7c3aed' },
+  { p:3, seq:['1','3','5','6'],     color:'#d97706' }
+];
+var VENAMES = ['v1','v2','v3','v4','v5','v6'];
+
+var SNAPS = [
+  { cls:'step', tag:'审题', count:0,
+    log:'AOE 网：结点 1~6 是事件，a~h 是 8 个活动（边上数字 = 活动所需天数）。工程工期 = 关键路径（最长路径）的长度。先显出全部事件结点。',
+    showP:[], fx:'' },
+  { cls:'step', tag:'活动边', count:1,
+    log:'按题图连出 8 条有向活动边：a=3(1→2)、b=8(1→3)、c=9(2→4)、d=4(3→2)、e=6(2→5)、f=10(3→5)、g=6(4→6)、h=9(5→6)。',
+    hotEdges:[], showP:[], fx:'8 个活动 a~h 全部就位' },
+  { cls:'ok', tag:'ve(1)、ve(3)', count:2, veMap:{1:0,3:8}, hotVe:['1','3'], hotEdges:['b'],
+    log:'求事件最早发生时间 ve：ve(1)=0（源点）；ve(3)=ve(1)+b=0+8=8。',
+    showP:[], fx:'ve(1)=0　；　ve(3)=ve(1)+b = 0+8 = <code>8</code>' },
+  { cls:'ok', tag:'ve(2)=12', count:3, veMap:{1:0,2:12,3:8}, hotVe:['2'], hotEdges:['a','d'],
+    log:'ve(2)=max(沿 a: 0+3, 沿 d: 8+4)=12 —— 取最大值，因为事件 2 要等 a、d 都完成。',
+    showP:[], fx:'ve(2)=max(0+3, 8+4) = <code>12</code>' },
+  { cls:'ok', tag:'ve(4)、ve(5)', count:4, veMap:{1:0,2:12,3:8,4:21,5:18}, hotVe:['4','5'], hotEdges:['c','e','f'],
+    log:'ve(4)=ve(2)+c=12+9=21；ve(5)=max(沿 e: 12+6, 沿 f: 8+10)=max(18,18)=18。',
+    showP:[], fx:'ve(4)=<code>21</code>　；　ve(5)=max(12+6, 8+10) = <code>18</code>' },
+  { cls:'ok', tag:'工期 27', count:5, veMap:{1:0,2:12,3:8,4:21,5:18,6:27}, hotVe:['6'], hotEdges:['g','h'],
+    log:'ve(6)=max(沿 g: 21+6, 沿 h: 18+9)=max(27,27)=27 → 工程工期 = 27。',
+    showP:[], fx:'ve(6)=max(21+6, 18+9) = <code>27</code> → 工期 = 27' },
+  { cls:'shift', tag:'关键路径 P1', count:6, veMap:{1:0,2:12,3:8,4:21,5:18,6:27},
+    log:'长度等于工期 27 的路径就是关键路径。第一条：P1 = 1→3→2→4→6，即活动 b-d-c-g。',
+    hotEdges:[], showP:[1], fx:'P1：b+d+c+g = 8+4+9+6 = <code>27</code> ✓' },
+  { cls:'shift', tag:'关键路径 P2', count:7, veMap:{1:0,2:12,3:8,4:21,5:18,6:27},
+    log:'第二条：P2 = 1→3→2→5→6，即活动 b-d-e-h。',
+    hotEdges:[], showP:[1,2], fx:'P2：b+d+e+h = 8+4+6+9 = <code>27</code> ✓' },
+  { cls:'shift', tag:'关键路径 P3', count:8, veMap:{1:0,2:12,3:8,4:21,5:18,6:27},
+    log:'第三条：P3 = 1→3→5→6，即活动 b-f-h——这条不经过结点 2，最容易漏看！',
+    hotEdges:[], showP:[1,2,3], fx:'P3：b+f+h = 8+10+9 = <code>27</code> ✓（极易漏看！）' },
+  { cls:'step', tag:'判定条件', count:9, veMap:{1:0,2:12,3:8,4:21,5:18,6:27},
+    log:'判定条件：要缩短工期，被同时加快的活动必须覆盖【每一条】关键路径——只要还有一条关键路径原封不动，它就仍是瓶颈。逐项检验四个选项。',
+    hotEdges:[], showP:[1,2,3], fx:'缩短工期 ⟺ 加快的活动覆盖全部 3 条关键路径' },
+  { cls:'miss', tag:'A（c 和 e）✗', count:10, veMap:{1:0,2:12,3:8,4:21,5:18,6:27}, hotEdges:['c','e'], showP:[1,2,3], missP:[3],
+    log:'检验 A（同时加快 c 和 e）：c 在 P1 上、e 在 P2 上，但 P3 上既没有 c 也没有 e → P3 仍长 27，工期不变。',
+    fx:'c∈P1、e∈P2，P3 无 c/e → P3 仍 27 ✗', ribbon:{k:1, ok:false} },
+  { cls:'miss', tag:'B（d 和 c）✗', count:11, veMap:{1:0,2:12,3:8,4:21,5:18,6:27}, hotEdges:['d','c'], showP:[1,2,3], missP:[3],
+    log:'检验 B（同时加快 d 和 c）：d 只在 P1、P2 上，P3（1→3→5→6）不含 d → P3 仍长 27，工期不变。',
+    fx:'d∈P1/P2，P3 无 d → P3 仍 27 ✗', ribbon:{k:2, ok:false} },
+  { cls:'miss', tag:'D（f 和 h）✗', count:12, veMap:{1:0,2:12,3:8,4:21,5:18,6:27}, hotEdges:['f','h'], showP:[1,2,3], missP:[1,2],
+    log:'检验 D（同时加快 f 和 h）：f、h 都只在 P3 上，P1、P2 原封不动 → 工期仍为 27。',
+    fx:'f、h 只在 P3 → P1/P2 仍 27 ✗', ribbon:{k:3, ok:false} },
+  { cls:'ok', tag:'C（f 和 d）✓', count:13, veMap:{1:0,2:12,3:8,4:21,5:18,6:27}, hotEdges:['f','d'], showP:[1,2,3], missP:[],
+    log:'检验 C（同时加快 f 和 d）：f 覆盖 P3，d 同时覆盖 P1 与 P2 → 三条关键路径全部被覆盖！各加快 1 天验证：P1=8+3+9+6=26，P2=8+3+6+9=26，P3=8+9+9=26，工期缩短为 26。',
+    fx:'f 覆盖 P3；d 覆盖 P1、P2 → 三条全缩短，27 → <code>26</code> ✓', ribbon:{k:4, ok:true} },
+  { cls:'done', done:true, tag:'完成', count:14, veMap:{1:0,2:12,3:8,4:21,5:18,6:27}, hotEdges:[], showP:[1,2,3], missP:[],
+    log:'结论：同时加快 f 和 d 就能缩短工程工期 → 选 C。',
+    fx:'答案 C：加快 <code>f 和 d</code>' }
 ];
 
-function actTable(hiKeys){
-  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:13px">';
-  h += '<tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">活动</th>'
-     + '<th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">有向边</th>'
-     + '<th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">工期</th></tr>';
-  for (var i = 0; i < ACTS.length; i++){
-    var hit = hiKeys && hiKeys[ACTS[i][0]];
-    h += '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;background:'
-       + (hit ? '#dcfce7' : '#fff') + ';font-weight:700">' + ACTS[i][0] + '</td>'
-       + '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">' + ACTS[i][1] + '</td>'
-       + '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">' + ACTS[i][2] + '</td></tr>';
-  }
-  return h + '</table>';
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 700 322');
+  svg.setAttribute('class', 'aoe-svg');
+  var defs = document.createElementNS(svgNS, 'defs');
+  defs.innerHTML = '<marker id="arrw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#5a7d8c"/></marker>';
+  svg.appendChild(defs);
+  // 关键路径半透明覆盖层（画在最底层）
+  PATHS.forEach(function(p){
+    var pts = p.seq.map(function(id){ return NPOS[id].join(','); }).join(' ');
+    var pl = document.createElementNS(svgNS, 'polyline');
+    pl.setAttribute('points', pts);
+    pl.setAttribute('class', 'pov hidden-el');
+    pl.setAttribute('stroke', p.color);
+    pl.dataset.p = p.p;
+    svg.appendChild(pl);
+  });
+  // 有向活动边
+  EDGES.forEach(function(e){
+    var A = NPOS[e.s], B = NPOS[e.t];
+    var dx = B[0]-A[0], dy = B[1]-A[1], L = Math.sqrt(dx*dx+dy*dy);
+    var ux = dx/L, uy = dy/L, trim = 29;
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'edge hidden-el');
+    g.dataset.id = e.id; g.dataset.step = 1;
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A[0]+ux*trim); ln.setAttribute('y1', A[1]+uy*trim);
+    ln.setAttribute('x2', B[0]-ux*trim); ln.setAttribute('y2', B[1]-uy*trim);
+    ln.setAttribute('marker-end', 'url(#arrw)');
+    var tx = document.createElementNS(svgNS, 'text');
+    tx.setAttribute('x', e.lx); tx.setAttribute('y', e.ly);
+    tx.textContent = e.id + '=' + e.w;
+    g.appendChild(ln); g.appendChild(tx);
+    svg.appendChild(g);
+  });
+  // 事件结点
+  Object.keys(NPOS).forEach(function(id){
+    var pos = NPOS[id];
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'enode' + (id === '1' ? ' src' : id === '6' ? ' dst' : '') + ' hidden-el');
+    g.dataset.step = 0;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', pos[0]); c.setAttribute('cy', pos[1]); c.setAttribute('r', 23);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', pos[0]); t.setAttribute('y', pos[1]);
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  var veBox = AW.el('div', 'hve');
+  VENAMES.forEach(function(v){
+    var ch = AW.el('span', 'vchip hidden-el', v + ' = ·');
+    ch.dataset.v = v.slice(1);
+    veBox.appendChild(ch);
+  });
+  stage.appendChild(veBox);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._veBox = veBox; this._formula = formulaBox;
 }
 
-// ve 表：v1..v6（hiArr = 本步新算出的事件编号数组）
-function veTable(ve, hiArr){
-  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:13px">';
-  h += '<tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">事件</th>';
-  for (var i = 1; i <= 6; i++) h += '<th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">v' + i + '</th>';
-  h += '</tr><tr><td style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">ve</td>';
-  for (var i = 1; i <= 6; i++){
-    var isHi = hiArr && hiArr.indexOf(i) >= 0;
-    h += '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;background:'
-       + (isHi ? '#fef3c7' : '#fff') + ';font-weight:700;color:#1d4ed8">'
-       + (ve && ve[i] != null ? ve[i] : '·') + '</td>';
-  }
-  return h + '</tr></table>';
-}
-
-function pathsHtml(hiPath){
-  var P = [
-    ['P1', '1→3→2→4→6', 'b, d, c, g', 27],
-    ['P2', '1→3→2→5→6', 'b, d, e, h', 27],
-    ['P3', '1→3→5→6', 'b, f, h', 27]
-  ];
-  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:13px">';
-  h += '<tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">路径</th>'
-     + '<th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">顶点序列</th>'
-     + '<th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">活动</th>'
-     + '<th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">长度</th></tr>';
-  for (var i = 0; i < P.length; i++){
-    var hit = hiPath === P[i][0];
-    h += '<tr><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;background:'
-       + (hit ? '#fef3c7' : '#fff') + ';font-weight:700">' + P[i][0] + '</td>'
-       + '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">' + P[i][1] + '</td>'
-       + '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;font-family:Menlo,monospace">' + P[i][2] + '</td>'
-       + '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">' + P[i][3] + '</td></tr>';
-  }
-  return h + '</table>';
-}
-
-function card(cls, title, body){
-  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
-}
-
-// ve 逐步
-var VE = [
-  {},
-  {1: 0, 3: 8},
-  {1: 0, 3: 8, 2: 12},
-  {1: 0, 3: 8, 2: 12, 4: 21, 5: 18},
-  {1: 0, 3: 8, 2: 12, 4: 21, 5: 18, 6: 27}
-];
-var VEHI = [[], [1, 3], [2], [4, 5], [6]];
-
-var LOGS = [
-  '审题：AOE 网含 8 个活动 a~h。缩短工期的条件：被加快的活动必须覆盖【每一条】关键路径',
-  '求最早发生时间：ve(1)=0；ve(3)=ve(1)+b=8',
-  've(2)=max(a: 0+3, d: 8+4)=12（d 指向 2，c/e 从 2 出发要等 ve(2)）',
-  've(4)=ve(2)+c=21；ve(5)=max(e: 12+6, f: 8+10)=max(18,18)=18',
-  've(6)=max(g: 21+6, h: 18+9)=max(27,27)=27 → 工期 27',
-  '找关键路径：长度为 27 的路径有三条——P1: b-d-c-g、P2: b-d-e-h、P3: b-f-h（P3 极易漏看！）',
-  '检验 A（c 和 e）：c 在 P1、e 在 P2，但 P3 上没有 c 也没有 e → P3 仍长 27，工期不变 ✗',
-  '检验 B（d 和 c）：d 在 P1、P2 上，但 P3（1→3→5→6）不含 d → P3 仍长 27，工期不变 ✗',
-  '检验 D（f 和 h）：f、h 都只在 P3 上，P1、P2 不动 → 工期仍 27 ✗',
-  '检验 C（f 和 d）：f 覆盖 P3，d 同时覆盖 P1 与 P2 → 三条关键路径全部缩短 → 工期缩短为 26 ✓（各减 1 天验证：P1=8+3+9+6=26，P2=8+3+6+9=26，P3=8+9+9=26）',
-  '结论：同时加快 f 和 d 就能缩短工程工期 → 选 C'
-];
-var TAGS = ['审题', 've(1)(3)', 've(2)=12', 've(4)(5)', 've(6)=27 工期', '三条关键路径',
-            'A ✗', 'B ✗', 'D ✗', 'C ✓', '完成'];
-var CLS  = ['step', 'step', 'ok', 'ok', 'ok', 'shift', 'miss', 'miss', 'miss', 'ok', 'done'];
-var HIKEY = [null, null, null, null, null, null,
-             {c:1, e:1}, {d:1, c:1}, {f:1, h:1}, {f:1, d:1}, null];
-var HIPATH = [null, null, null, null, null, 'P1', 'P3', 'P3', 'P1', null, null];
-
-var snaps = [];
-for (var i = 0; i <= 10; i++){
-  var h = '';
-  if (i === 0){
-    h += actTable() + card('key', '题意与判定条件',
-      '<p>AOE 网表示一项含 8 个活动的工程。关键路径的长度 = 工期。要缩短工期，被同时加快的活动必须<b>覆盖每一条关键路径</b>——只要还有一条关键路径没人加快，它就仍是瓶颈。</p>');
-  } else if (i <= 4){
-    h += actTable() + veTable(VE[i], VEHI[i]);
-  } else if (i === 5){
-    h += pathsHtml(HIPATH[i]) + card('key', TAGS[i], '<p>' + LOGS[i] + '</p>');
-  } else if (i <= 9){
-    h += actTable(HIKEY[i]) + pathsHtml(HIPATH[i]) + card(i === 9 ? 'good' : 'bad', TAGS[i], '<p>' + LOGS[i] + '</p>');
-  } else {
-    h += actTable({f:1, d:1}) + pathsHtml() + card('good', TAGS[i], '<p>' + LOGS[i] + '</p>');
-  }
-  var sn = { cls: CLS[i], tag: TAGS[i], log: LOGS[i], count: i, html: h };
-  if (i >= 6 && i <= 9) sn.ribbon = { k: i - 5, ok: i === 9 };
-  if (i === 10) sn.done = true;
-  snaps.push(sn);
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge'), function(el){
+    el.classList.toggle('hot', (sn.hotEdges || []).indexOf(el.dataset.id) >= 0);
+  });
+  [].forEach.call(svg.querySelectorAll('.pov'), function(el){
+    var p = +el.dataset.p;
+    var shown = (sn.showP || []).indexOf(p) >= 0;
+    var miss = (sn.missP || []).indexOf(p) >= 0;
+    el.classList.toggle('hidden-el', !shown);
+    el.setAttribute('stroke-opacity', miss ? 0.9 : ((sn.missP || []).length ? 0.15 : 0.38));
+    el.setAttribute('stroke-dasharray', miss ? '7 5' : 'none');
+  });
+  [].forEach.call(this._veBox.querySelectorAll('.vchip'), function(ch){
+    var k = ch.dataset.v;
+    var val = sn.veMap ? sn.veMap[k] : null;
+    ch.classList.toggle('hidden-el', val == null);
+    ch.classList.toggle('hot', (sn.hotVe || []).indexOf(k) >= 0);
+    if (val != null) ch.textContent = 've(' + k + ') = ' + val;
+  });
+  this._formula.innerHTML = sn.fx || '';
 }
 
 AW.init({
-  title: 'AOE 网：加快哪些活动才能缩短工期（2013-09）',
-  subtitle: '工期 27 · 关键路径三条 <code>b-d-c-g / b-d-e-h / b-f-h</code> · 加快活动须覆盖全部关键路径',
+  title: '2013-09　AOE 网：加快哪些活动才能缩短工期',
+  subtitle: '工期 27 · 关键路径三条 <code>b-d-c-g / b-d-e-h / b-f-h</code> · 加快的活动须覆盖全部关键路径',
   counterLabel: '推理步',
   ribbonTitle: '选项检验（✓ 能缩短 / ✗ 不能）',
-  intro: '点击「▶ 播放」先算工期与关键路径，再逐项检验选项。',
-  snaps: snaps,
+  intro: '点击「▶ 播放」：先求各事件最早发生时间与工期，找出三条关键路径，再逐项检验选项。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C：f 和 d',
-    html: '三条关键路径：<b>b-d-c-g、b-d-e-h、b-f-h</b>。f 覆盖 P3，d 同时覆盖 P1、P2——同时加快 f 和 d，三条路径全部缩短（各减 1 天则工期 27 → 26）。<br>记忆点：<b>加快活动必须"雨露均沾"每条关键路径</b>；漏看 P3（1→3→5→6）就会误选 A 或 B。'
+    html: '三条关键路径：<b>b-d-c-g、b-d-e-h、b-f-h</b>（长度都是 27）。f 覆盖 P3，d 同时覆盖 P1、P2——同时加快 f 和 d，三条关键路径全部缩短，工期 27 → 26。<br>' +
+      '记忆锚点：<b>加快的活动必须"雨露均沾"每一条关键路径</b>；漏看 P3（1→3→5→6）就会误选 A 或 B。'
   }
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

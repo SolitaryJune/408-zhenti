@@ -2,75 +2,190 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2015-02 动画 · 先序 a,b,c,d 的二叉树个数</title>
+<title>2015-02 先序 a,b,c,d 的二叉树个数 · 14 棵树形枚举</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .cat-panel{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:10px 12px;margin-bottom:10px}
+  .cat-panel h4{font-size:13.5px;color:#334155;margin-bottom:8px}
+  .cat-panel h4 code{background:#e2e8f0;padding:1px 6px;border-radius:6px;font-family:Menlo,monospace;font-size:12.5px}
+  .cat-row{display:flex;flex-wrap:wrap;gap:6px}
+  .cat-mini{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:4px 2px 0}
+  .cat-mini svg{display:block}
+  .cat-mini text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:11px;text-anchor:middle;dominant-baseline:central}
+  .cat-mini line{stroke:#5a7d8c;stroke-width:1.8px}
+  .cat-mini .empty{font-size:12px;color:#94a3b8;font-weight:700;padding:20px 14px;display:inline-block}
+  .hidden-el{display:none}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9;min-height:28px}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2015-02 卡特兰计数动画（SVG 枚举 14 棵树形） ==================
+ * 题：先序序列为 a,b,c,d 的不同二叉树个数？（答案 B = 14 = 卡特兰数 C(4)）
+ * 演示：先序固定 → 标号唯一 → 数树形。先枚举 f(1)~f(3)，再按"根 a 的左子树结点数 i=0,1,2,3"
+ *       分四组画全部 14 棵 4 结点树形：f(4)=f0·f3+f1·f2+f2·f1+f3·f0=5+2+2+5=14。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼：先序固定 → 数的是"树形"',
-    cls: 'key',
-    body: '<p>先序序列固定为 <code>a,b,c,d</code>：任意给定一个 4 结点的树形，按先序次序依次填入 a、b、c、d，标号方式<b>唯一</b>。' +
-          '所以"不同的二叉树个数" = <b>4 个结点的二叉树形态数</b>。考点指向：卡特兰计数。</p>' },
-  { title: '建立递推：按左右子树划分',
-    cls: '',
-    body: '<p>设 f(n) 为 n 个结点的二叉树形态数。根占 1 个结点，左子树 i 个、右子树 n−1−i 个：</p>' +
-          '<p><code>f(n) = f(0)·f(n−1) + f(1)·f(n−2) + … + f(n−1)·f(0)</code>，边界 <code>f(0)=1</code>（空树也算 1 种）。</p>' },
-  { title: '从小到大算 f(1)~f(4)',
-    cls: '',
-    body: '<table style="border-collapse:collapse;font-size:13.5px;margin-top:4px">' +
-          '<tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">n</th>' +
-          '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">0</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td>' +
-          '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">2</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">3</td>' +
-          '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center"><b>4</b></td></tr>' +
-          '<tr><th style="border:1px solid #e2e8f0;padding:3px 10px;background:#f1f5f9">f(n)</th>' +
-          '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">1</td>' +
-          '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">2</td><td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center">5</td>' +
-          '<td style="border:1px solid #e2e8f0;padding:3px 10px;text-align:center;color:#15803d"><b>14</b></td></tr></table>' +
-          '<p style="margin-top:6px">f(4) = f0·f3 + f1·f2 + f2·f1 + f3·f0 = 5 + 2 + 2 + 5 = <b>14</b>。</p>' },
-  { title: '卡特兰数公式复核',
-    cls: '',
-    body: '<p>n 个结点的二叉树形态数就是卡特兰数：<code>f(n) = C(2n, n) / (n+1)</code>。' +
-          '代入 n=4：<code>C(8,4)/5 = 70/5 = 14</code>，与递推结果一致。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>B（14 个）</b>。记忆锚点：先序固定 → 每种树形唯一对应一棵树 → 形态数 = 卡特兰数 C(2n,n)/(n+1)，n=4 时为 14。' +
-          '干扰项 15/16 来自"忘记 f(0)=1"或混入其他计数对象。</p>' },
+function N(l, r){ return { l:l || null, r:r || null }; }
+var LEAF = N(null, null);
+var SH2 = [ N(LEAF, null), N(null, LEAF) ];               // 2 结点 2 形态
+var SH3 = [                                               // 3 结点 5 形态
+  N(LEAF, LEAF),
+  N(N(LEAF, null), null),
+  N(N(null, LEAF), null),
+  N(null, N(LEAF, null)),
+  N(null, N(null, LEAF))
+];
+var DEMOS = [
+  { step:2, title:'f(1) = f(0)·f(0) = 1 棵', trees:[LEAF], labels:['a'] },
+  { step:3, title:'f(2) = f(0)·f(1) + f(1)·f(0) = 2 棵', trees:SH2, labels:['a','b'] },
+  { step:4, title:'f(3) = f(0)·f(2) + f(1)·f(1) + f(2)·f(0) = 5 棵', trees:SH3, labels:['a','b','c'] }
+];
+var GROUPS = [
+  { step:5, title:'i=0：根 a 无左子树，右子树取 b,c,d 的 5 种树形 → f(0)·f(3) = 1×5',
+    trees:SH3.map(function(s){ return N(null, s); }), labels:['a','b','c','d'] },
+  { step:6, title:'i=1：左子树 1 个结点（b），右子树取 c,d 的 2 种树形 → f(1)·f(2) = 1×2',
+    trees:SH2.map(function(s){ return N(LEAF, s); }), labels:['a','b','c','d'] },
+  { step:7, title:'i=2：左子树取 b,c 的 2 种树形，右子树 1 个结点（d）→ f(2)·f(1) = 2×1',
+    trees:SH2.map(function(s){ return N(s, LEAF); }), labels:['a','b','c','d'] },
+  { step:8, title:'i=3：左子树取 b,c,d 的 5 种树形，根 a 无右子树 → f(3)·f(0) = 5×1',
+    trees:SH3.map(function(s){ return N(s, null); }), labels:['a','b','c','d'] }
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var SNAPS = [
+  { cls:'step', tag:'审题', count:0,
+    log:'先序序列固定为 a,b,c,d：任意给一个 4 结点的树形，按先序次序依次填入 a、b、c、d，标号方式<b>唯一</b>。所以题目 = 数 4 个结点的二叉树<b>形态</b>数。',
+    fx:'先序固定 → 标号唯一 → 数树形' },
+  { cls:'step', tag:'递推式', count:0,
+    log:'设 f(n) 为 n 个结点的二叉树形态数。根占 1 个结点，左子树 i 个、右子树 n−1−i 个：f(n) = Σ f(i)·f(n−1−i)，边界 f(0)=1（空树也算 1 种）。先从小 n 枚举验证，再枚举 f(4)。',
+    fx:'f(n) = f(0)f(n−1) + f(1)f(n−2) + … + f(n−1)f(0)，f(0)=1' },
+  { cls:'ok', tag:'f(1) = 1', count:1,
+    log:'n=1：只能是一棵孤结点树。',
+    fx:'f(1) = f(0)·f(0) = <code>1</code>' },
+  { cls:'ok', tag:'f(2) = 2', count:3,
+    log:'n=2：b 做 a 的左孩子，或做右孩子，共 2 种。',
+    fx:'f(2) = f(0)f(1) + f(1)f(0) = <code>2</code>' },
+  { cls:'ok', tag:'f(3) = 5', count:8,
+    log:'n=3：左 0 右 2 有 2 种、左 1 右 1 有 1 种、左 2 右 0 有 2 种，共 5 种——和卡特兰数 C(3)=5 一致。',
+    fx:'f(3) = f(0)f(2)+f(1)f(1)+f(2)f(0) = 2+1+2 = <code>5</code>' },
+  { cls:'shift', tag:'f(4)：i=0 组', count:13,
+    log:'f(4) 分四种情况按"根 a 的左子树结点数 i"枚举。i=0：a 没有左子树，右子树是 b,c,d 组成的 3 结点树（5 种形态）→ 贡献 f(0)·f(3) = 5 棵。',
+    fx:'f(4) = 1×5 = <code>5</code>' },
+  { cls:'shift', tag:'f(4)：i=1 组', count:15,
+    log:'i=1：左子树是单结点 b（1 种），右子树是 c,d 的 2 结点树（2 种）→ 贡献 f(1)·f(2) = 2 棵。',
+    fx:'5 + 1×2 = <code>7</code>' },
+  { cls:'shift', tag:'f(4)：i=2 组', count:17,
+    log:'i=2：左子树是 b,c 的 2 结点树（2 种），右子树是单结点 d → 贡献 f(2)·f(1) = 2 棵。',
+    fx:'7 + 2×1 = <code>9</code>' },
+  { cls:'shift', tag:'f(4)：i=3 组', count:22,
+    log:'i=3：左子树是 b,c,d 的 3 结点树（5 种），a 没有右子树 → 贡献 f(3)·f(0) = 5 棵。四组合计 5+2+2+5 = 14 棵，一棵不多一棵不少。',
+    fx:'9 + 5×1 = <code>14</code> ✓（5+2+2+5）' },
+  { cls:'ok', tag:'卡特兰验证', count:22,
+    log:'n 个结点的二叉树形态数就是卡特兰数：f(n) = C(2n,n)/(n+1)。代入 n=4：C(8,4)/5 = 70/5 = 14，两种算法一致。',
+    fx:'C(2n,n)/(n+1) = C(8,4)/5 = <code>14</code>' },
+  { cls:'done', done:true, tag:'完成', count:22,
+    log:'结论：先序为 a,b,c,d 的不同二叉树共 14 棵 → 选 B。记忆锚点：先序固定 → 每种树形唯一对应一棵树 → 答案 = 卡特兰数 C(2n,n)/(n+1)。',
+    fx:'答案 B：<code>14</code> 棵' }
+];
+
+// 迷你树形 SVG：按中序定位 x、按深度定位 y，按先序填标号
+function miniSVG(tree, labels){
+  var slots = 0, maxD = 0;
+  (function inorder(t, d){
+    if (!t) return;
+    maxD = Math.max(maxD, d);
+    inorder(t.l, d + 1);
+    t._x = slots++;
+    t._d = d;
+    inorder(t.r, d + 1);
+  })(tree, 0);
+  var li = 0;
+  (function preorder(t){
+    if (!t) return;
+    t._lb = labels[li++];
+    preorder(t.l); preorder(t.r);
+  })(tree);
+  var slotW = 34, lvlH = 30, padL = 16, padT = 17;
+  var w = padL * 2 + (slots - 1) * slotW + 26;
+  var h = padT * 2 + maxD * lvlH + 8;
+  var parts = [];
+  (function draw(t, d){
+    if (!t) return;
+    var x = padL + 13 + t._x * slotW, y = padT + t._d * lvlH;
+    if (t.l){
+      var lx = padL + 13 + t.l._x * slotW, ly = padT + t.l._d * lvlH;
+      parts.push('<line x1="' + x + '" y1="' + y + '" x2="' + lx + '" y2="' + ly + '"/>');
+      draw(t.l, d + 1);
+    }
+    if (t.r){
+      var rx = padL + 13 + t.r._x * slotW, ry = padT + t.r._d * lvlH;
+      parts.push('<line x1="' + x + '" y1="' + y + '" x2="' + rx + '" y2="' + ry + '"/>');
+      draw(t.r, d + 1);
+    }
+    parts.push('<circle cx="' + x + '" cy="' + y + '" r="11" fill="#16a34a"/>');
+    parts.push('<text x="' + x + '" y="' + y + '" fill="#fff">' + t._lb + '</text>');
+  })(tree, 0);
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + parts.join('') + '</svg>';
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var panel1 = AW.el('div', 'cat-panel');
+  panel1.appendChild(AW.el('h4', '', '小规模枚举（验证递推）：<code>f(0)=1</code>（空树）→ <code>f(1)=1</code> → <code>f(2)=2</code> → <code>f(3)=5</code>'));
+  var row1 = AW.el('div', 'cat-row');
+  DEMOS.forEach(function(d){
+    var blk = AW.el('div', 'hidden-el');
+    blk.dataset.step = d.step;
+    blk.style.cssText = 'border-right:1px dashed #cbd5e1;padding-right:8px';
+    blk.appendChild(AW.el('div', '', '<span style="font-size:11.5px;color:#64748b;font-weight:700">' + d.title + '</span>'));
+    var r = AW.el('div', 'cat-row');
+    d.trees.forEach(function(t){ r.appendChild(AW.el('div', 'cat-mini', miniSVG(t, d.labels))); });
+    blk.appendChild(r);
+    row1.appendChild(blk);
+  });
+  panel1.appendChild(row1);
+  stage.appendChild(panel1);
+  var panel2 = AW.el('div', 'cat-panel');
+  panel2.appendChild(AW.el('h4', '', 'f(4) 全枚举：按<code>左子树结点数 i</code> 分四组，共 <code>5+2+2+5 = 14</code> 棵（先序都是 a,b,c,d）'));
+  GROUPS.forEach(function(g){
+    var blk = AW.el('div', 'hidden-el');
+    blk.dataset.step = g.step;
+    blk.appendChild(AW.el('div', '', '<span style="font-size:11.5px;color:#64748b;font-weight:700">' + g.title + '</span>'));
+    var r = AW.el('div', 'cat-row');
+    g.trees.forEach(function(t){ r.appendChild(AW.el('div', 'cat-mini', miniSVG(t, g.labels))); });
+    blk.appendChild(r);
+    panel2.appendChild(blk);
+  });
+  stage.appendChild(panel2);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._formula = formulaBox;
+}
+
+function render(stage, sn, i){
+  [].forEach.call(stage.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  this._formula.innerHTML = sn.fx || '';
+}
 
 AW.init({
-  title: '2015-02 · 先序为 a,b,c,d 的不同二叉树个数',
-  subtitle: '考点：树形计数（卡特兰数） · 先序固定 → 标号唯一 → 数形态',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2015-02　先序为 a,b,c,d 的不同二叉树个数',
+  subtitle: '考点：树形计数（卡特兰数）· 先序固定 → 标号唯一 → 数 4 结点形态 · 全部 14 棵画给你看',
+  counterLabel: '已枚举树形',
+  intro: '点击「▶ 播放」：先用小规模枚举验证递推，再把 14 棵树形分四组全部画出来。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: 'B · 14 个',
-    html: '记忆锚点：<b>n 个结点的二叉树形态数 = 卡特兰数 C(2n,n)/(n+1)</b>，本题先序固定所以标号不放大计数，' +
-          'f(4) = 14。易错：递推时漏掉 f(0)=1，会得出 15/16 等错误值。',
-  },
+    big: '14 棵 · 选 B',
+    html: '先序固定 → 标号方式唯一 → 答案 = 4 结点二叉树形态数 = 卡特兰数：<br>' +
+      'f(4) = f(0)f(3)+f(1)f(2)+f(2)f(1)+f(3)f(0) = 5+2+2+5 = <b>14</b> = C(8,4)/5。<br>' +
+      '易错：递推时漏掉 f(0)=1（空树），会得出 13/15 等错误值而误选 A 或 C。记忆锚点：<code>n 个结点的二叉树形态数 = C(2n,n)/(n+1)</code>。'
+  }
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

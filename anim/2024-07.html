@@ -2,77 +2,203 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2024-07 二叉搜索树里子树 T 的取值范围</title>
+<title>2024-07 BST 子树 T 的取值范围 · 结构演示动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .tsvg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .tsvg .tedge{stroke:#5a7d8c;stroke-width:2.5px;transition:stroke .35s}
+  .tsvg .tedge.path{stroke:#d97706;stroke-width:4.5px}
+  .tsvg .tnode circle{fill:#1b3a4b;transition:fill .3s}
+  .tsvg .tnode text.k{fill:#fff;font-weight:800;font-size:17px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .tsvg .tnode text.val{fill:#94a3b8;font-size:12px;font-weight:800;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace}
+  .tsvg .tnode.hot circle{fill:#e07a2f}
+  .tsvg .tri{fill:#e2e8f0;stroke:#5a7d8c;stroke-width:2px;transition:fill .3s}
+  .tsvg .tri.hot{fill:#fde68a}
+  .tsvg .tri text{fill:#475569;font-weight:800;font-size:13px;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace}
+  .tsvg .tri text.big{font-size:19px;fill:#1b3a4b}
+  .tsvg .tri.tT.hot{fill:#bbf7d0}
+  .tsvg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
-
-function card(n, cls, title, body) {
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-    '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  {
-    title: '审题眼：认清树形',
-    cls: 'key',
-    body: '<p>题 7 图的结构：k1 是根；<b>k2 是 k1 的右孩子</b>；<b>k3 是 k2 的左孩子</b>；<b>子树 T 是 k3 的右子树</b>。T 中任一结点的关键字 x 要同时受这条路径上所有祖先的约束。</p>'
-  },
-  {
-    title: 'BST 约束的传递规则',
-    cls: '',
-    body: '<p>二叉搜索树：左子树所有关键字 &lt; 根 &lt; 右子树所有关键字。走到子树里，约束会<b>累积</b>：T 在某结点的右子树里 ⇒ x &gt; 该结点关键字；T 在某结点的左子树里 ⇒ x &lt; 该结点关键字。</p>'
-  },
-  {
-    title: '沿路径逐站收集约束',
-    cls: '',
-    body: '<p>k1 →(右) k2：T 在 k1 的右子树里 ⇒ <code>x &gt; k1</code>。<br/>k2 →(左) k3：T 在 k2 的左子树里 ⇒ <code>x &lt; k2</code>。<br/>k3 →(右) T：T 在 k3 的右子树里 ⇒ <code>x &gt; k3</code>。</p>'
-  },
-  {
-    title: '合并约束，取最紧的一对',
-    cls: '',
-    body: '<p>下界取最大：x &gt; k1 且 x &gt; k3。因为 k3 在 k1 的右子树里必有 k3 &gt; k1，所以更紧的下界是 <code>k3</code>。上界只有 <code>k2</code>。合起来：<code>k3 &lt; x &lt; k2</code>（它自动包含 x &gt; k1）。</p>'
-  },
-  {
-    title: '逐项排除',
-    cls: 'bad',
-    body: '<p><b>A</b> <code>x &lt; k1</code>：方向反了，T 在 k1 的右子树里。<b>B</b> <code>x &gt; k2</code>：T 在 k2 的左子树里，应小于 k2。<b>C</b> <code>k1 &lt; x &lt; k3</code>：x 与 k3 的关系是 x &gt; k3，这个区间整个装错了。</p>'
-  },
-  {
-    title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>D</b>（k3 &lt; x &lt; k2）。代入数字自检：设 k1=20、k2=50、k3=30，T 挂在 k3 右边，T 中关键字必须 &gt;30 且 &lt;50（同时自然 &gt;20），比如 40。</p>'
-  }
+/* ================== 2024-07 BST 子树取值范围（SVG 演示） ==================
+ * 题 7 图：k1 为根；k2 是 k1 的右孩子；k3 是 k2 的左孩子；T 是 k3 的右子树。
+ * 答：k3 < x < k2（选 D）。取数字 k1=20、k2=50、k3=30，沿路径逐站收集约束后取最紧。 */
+var NS = 'http://www.w3.org/2000/svg';
+var NODES = [
+  { id:'k1', x:300, y:60,  val:20 },
+  { id:'k2', x:460, y:150, val:50 },
+  { id:'k3', x:390, y:255, val:30 },
+];
+var TRIS = [
+  { id:'P', pts:'150,110 85,240 215,240', label:'值 < 20',  lx:150, ly:205, x:150, y:110 },
+  { id:'Q', pts:'540,195 480,320 600,320', label:'值 > 50', lx:540, ly:285, x:540, y:195 },
+  { id:'S', pts:'270,300 205,425 335,425', label:'25、28',  lx:270, ly:390, x:270, y:300 },
+  { id:'T', pts:'475,300 410,425 540,425', label:'T',       lx:475, ly:378, big:true, x:475, y:300 },
+];
+var TEDGES = [
+  ['k1','P'], ['k1','k2'], ['k2','k3'], ['k2','Q'], ['k3','S'], ['k3','T'],
+];
+/* 每步高亮的路径边 + 热点 + 三角形 */
+var STEP_STATE = [
+  { path:[], hot:[], tri:[] },
+  { path:['k1>k2'], hot:['k1'], tri:[] },
+  { path:['k1>k2','k2>k3'], hot:['k2'], tri:[] },
+  { path:['k1>k2','k2>k3','k3>T'], hot:['k3'], tri:['T'] },
+  { path:['k1>k2','k2>k3','k3>T'], hot:['k3'], tri:['T'] },
+  { path:['k1>k2','k2>k3','k3>T'], hot:[], tri:['T'] },
+  { path:['k1>k2','k2>k3','k3>T'], hot:[], tri:['T'] },
+];
+/* T 中的检验值（第 5 步起显示） */
+var TVALS = [
+  { id:'T1', x:443, y:412, t:'35' },
+  { id:'T2', x:475, y:412, t:'40' },
+  { id:'T3', x:507, y:412, t:'45' },
 ];
 
-var snaps = STEPS.map(function (s, i) {
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function (x, j) {
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1
+var SNAPS = [
+  { cls:'shift', tag:'认清树形', count:0,
+    log:'题 7 图：k1 是根，k2 是 k1 的右孩子，k3 是 k2 的左孩子，子树 T 是 k3 的右子树。代入数字 k1=20、k2=50、k3=30。BST 传递规则：T 在某结点的右子树 ⟹ x＞它；在左子树 ⟹ x＜它。' },
+  { cls:'ok', tag:'约束 ①', count:1,
+    log:'T 挂在 k1 的右子树里 ⟹ x > k1（即 x > 20）。口诀：右转抬下界。' },
+  { cls:'ok', tag:'约束 ②', count:2,
+    log:'T 又在 k2 的左子树里 ⟹ x < k2（即 x < 50）。口诀：左转压上界。' },
+  { cls:'ok', tag:'约束 ③', count:3,
+    log:'T 还在 k3 的右子树里 ⟹ x > k3（即 x > 30）。路径上共收集到 3 条约束：x>20、x<50、x>30。' },
+  { cls:'step', tag:'合并取最紧', count:4,
+    log:'下界取较大者：k3 与 k1 中，k3 本就在 k1 的右子树里 ⟹ k3>k1，更紧的下界是 k3=30；上界只有 k2=50。合起来：k3 < x < k2（自动涵盖 x>k1）。' },
+  { cls:'step', tag:'代入检验', count:5,
+    log:'T 中放 35、40、45 检验：都满足 30<x<50 ✓。若按选项 C 的 20<x<30，40 就被排除 —— 明显矛盾，C 错；A 方向反、B 把上下界弄反。' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'T 中关键字满足 k3 < x < k2 → 选 D。口诀：右转抬下界、左转压上界，最紧约束赢。' },
+];
+
+var FORMULAS = [
+  'k1=20、k2=50、k3=30 · T 是 k3 的右子树',
+  '① T 在 k1 <b>右</b>子树 ⟹ <code>x &gt; 20</code>',
+  '② T 在 k2 <b>左</b>子树 ⟹ <code>x &lt; 50</code>',
+  '③ T 在 k3 <b>右</b>子树 ⟹ <code>x &gt; 30</code>',
+  '下界 max(20,30)=<code>30</code>，上界 <code>50</code> ⟹ 30 &lt; x &lt; 50',
+  '检验：35、40、45 ∈ (30,50) ✓；C 的 (20,30) 装不下 40 ✗',
+  '<b>k3 &lt; x &lt; k2 → 选 D</b>',
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 445');
+  svg.setAttribute('class', 'tsvg');
+  var findN = function(id){
+    for (var i = 0; i < NODES.length; i++) if (NODES[i].id === id) return NODES[i];
+    return null;
   };
-});
+  var findT = function(id){
+    for (var j = 0; j < TRIS.length; j++) if (TRIS[j].id === id) return TRIS[j];
+    return null;
+  };
+  TEDGES.forEach(function(e){
+    var A = findN(e[0]) || findT(e[0]);
+    var B = findN(e[1]) || findT(e[1]);
+    var a = { x:A.x, y:A.y + (A.val != null ? 22 : 8) };
+    var b = { x:B.x, y:B.y - (B.val != null ? 22 : 8) };
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+    ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+    ln.setAttribute('class', 'tedge');
+    ln.dataset.eid = e[0] + '>' + e[1];
+    svg.appendChild(ln);
+  });
+  TRIS.forEach(function(t){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tri' + (t.big ? ' tT' : ''));
+    g.dataset.tid = t.id;
+    var p = document.createElementNS(NS, 'polygon');
+    p.setAttribute('points', t.pts);
+    g.appendChild(p);
+    var tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', t.lx); tx.setAttribute('y', t.ly);
+    if (t.big) tx.setAttribute('class', 'big');
+    tx.textContent = t.label;
+    g.appendChild(tx);
+    svg.appendChild(g);
+  });
+  TVALS.forEach(function(v){
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', v.x); t.setAttribute('y', v.y);
+    t.setAttribute('class', 'hidden-el');
+    t.setAttribute('style', 'font:800 14px JetBrains Mono,Menlo,monospace;fill:#15803d;text-anchor:middle');
+    t.dataset.tvid = v.id;
+    t.textContent = v.t;
+    svg.appendChild(t);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tnode');
+    g.dataset.nid = n.id;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 22);
+    var t1 = document.createElementNS(NS, 'text');
+    t1.setAttribute('x', n.x); t1.setAttribute('y', n.y - 4);
+    t1.setAttribute('class', 'k');
+    var SUB = { k1:'k₁', k2:'k₂', k3:'k₃' };
+    t1.textContent = SUB[n.id];
+    var t2 = document.createElementNS(NS, 'text');
+    t2.setAttribute('x', n.x); t2.setAttribute('y', n.y + 12);
+    t2.setAttribute('class', 'val');
+    t2.textContent = '=' + n.val;
+    g.appendChild(c); g.appendChild(t1); g.appendChild(t2);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  this._svg = svg;
+  this._formula = AW.el('div', 'hformula');
+  stage.appendChild(this._formula);
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var st = STEP_STATE[Math.min(i, STEP_STATE.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.tedge'), function(ln){
+    var cls = 'tedge' + (st.path.indexOf(ln.dataset.eid) >= 0 ? ' path' : '');
+    ln.setAttribute('class', cls);
+  });
+  [].forEach.call(svg.querySelectorAll('.tnode'), function(g){
+    g.classList.toggle('hot', st.hot.indexOf(g.dataset.nid) >= 0);
+  });
+  [].forEach.call(svg.querySelectorAll('.tri'), function(g){
+    g.classList.toggle('hot', st.tri.indexOf(g.dataset.tid) >= 0);
+  });
+  [].forEach.call(svg.querySelectorAll('[data-tvid]'), function(t){
+    t.classList.toggle('hidden-el', i < 5);
+  });
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
 
 AW.init({
-  title: '子树 T 中的关键字 x 满足什么（2024-07）',
-  subtitle: 'k1 根 · k2 是 k1 右孩子 · k3 是 k2 左孩子 · T 是 k3 的右子树',
-  intro: '点击「▶ 播放」，沿查找路径逐站收集上下界。',
-  snaps: snaps,
+  title: '2024-07 二叉搜索树：子树 T 中关键字 x 的范围',
+  subtitle: '题 7 图：k1 为根 · k2 是 k1 的<b>右</b>孩子 · k3 是 k2 的<b>左</b>孩子 · T 是 k3 的<b>右</b>子树<br>取数字 <code>k1=20、k2=50、k3=30</code> 沿路径逐站收集约束',
+  counterLabel: '已收集约束',
+  ribbonTitle: '约束链（✓ 已收集）',
+  intro: '点击「▶ 播放」：沿 k1→k2→k3→T 一路收集上下界，再合并取最紧。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 D',
-    html: '记忆锚点：<b>右转抬下界、左转压上界</b>，把路径上的约束全部收集后取最紧的一对。T 的约束链：x&gt;k1、x&gt;k3、x&lt;k2 ⇒ <b>k3 &lt; x &lt; k2</b>。'
-  }
+    big: 'k3 < x < k2（选 D）',
+    html: 'BST 约束沿路径累积：T 在 k1 右子树 ⟹ x&gt;k1；在 k2 左子树 ⟹ x&lt;k2；在 k3 右子树 ⟹ x&gt;k3。<br>' +
+      '合并取最紧：下界 max(k1,k3)=<b>k3</b>（k3 本就在 k1 右子树 ⟹ k3&gt;k1），上界 <b>k2</b> ⟹ <code>k3 &lt; x &lt; k2</code>。<br>' +
+      '代入自检：k1=20、k2=50、k3=30，T 中放 40 ✓；按 C 的 20&lt;x&lt;30 则 40 出局 ✗。记忆锚点：<code>右转抬下界、左转压上界</code>。',
+  },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
-<script>/* aw-ok */</script>
 </body>
 </html>

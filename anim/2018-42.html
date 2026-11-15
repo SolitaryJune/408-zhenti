@@ -2,94 +2,219 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2018-42 光通信骨干网：MST 与 TTL</title>
+<title>2018-42 光通信骨干网 · Kruskal 求 MST 与 TTL 判定</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .mst-svg{width:100%;max-width:880px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .mst-svg .medge{transition:stroke .35s, stroke-width .35s}
+  .mst-svg .mnode circle{transition:fill .3s, stroke .3s}
+  .mst-svg .mnode text{font-weight:800;font-size:16px;text-anchor:middle;dominant-baseline:central}
+  .mst-svg .mnode .city{fill:#0f172a}
+  .mcost{margin-top:8px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
+  .mcost code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+  .mttl{margin-top:12px}
+  .mttl .cap{font-size:13px;color:#64748b;margin-bottom:4px}
+  .mttl .row{display:flex;gap:4px;width:max-content}
+  .mttl .col{width:52px;display:flex;flex-direction:column;align-items:center}
+  .mttl .ptr{height:20px;font-size:11.5px;font-weight:700;color:#2563eb;white-space:nowrap}
+  .mttl .box{width:52px;height:34px;border:2px solid #cbd5e1;border-radius:9px;display:flex;
+    align-items:center;justify-content:center;font-weight:800;font-size:15px;background:#fff;
+    font-family:"SF Mono",Menlo,monospace}
+  .mttl .box.ok{background:#dcfce7;border-color:#16a34a;color:#14532d}
+  .mttl .box.hit{background:#16a34a;border-color:#16a34a;color:#fff}
+  .mttl .box.miss{background:#fee2e2;border-color:#dc2626;color:#b91c1c}
+  .mttl .box.dim{opacity:.45}
+  .mttl .hop{margin-top:3px;font-size:11px;color:#94a3b8;font-family:monospace}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2018-42 光通信骨干网（SVG） ==================
+ * 问(1)：8 城市 12 条备选边 → Kruskal 逐步选边求 MST，桥边二选一 → 两棵 MST，总费用均 16；
+ * 问(2)：邻接矩阵/邻接表 + Prim/Kruskal；
+ * 问(3)：TTL=5 的分组 H1(TL) → H2(BJ)：方案 2 一跳可达 ✓，方案 1 五跳在 XA 处 TTL 归零被丢弃 ✗。 */
 
-// 12 条备选边（按权升序展示）：[端点1, 端点2, 权]
-var EDGE = [
-  ['XA','BJ',2], ['XA','WH',2], ['TL','JN',2], ['QD','JN',2], ['QD','NJ',2],
-  ['BJ','TL',3], ['WH','BJ',3], ['WH','QD',3], ['CS','QD',3], ['JN','NJ',3],
-  ['BJ','JN',4], ['WH','CS',4],
+var NP = { XA:[90,70], BJ:[400,70], TL:[760,70], WH:[120,330], JN:[770,330], CS:[110,500], QD:[440,500], NJ:[790,500] };
+// [端点1, 端点2, 权, 标签x, 标签y]
+var EDGES = [
+  ['XA','BJ', 2, 245, 58],   // 0
+  ['XA','WH', 2, 78, 200],   // 1
+  ['TL','JN', 2, 798, 200],  // 2
+  ['QD','JN', 2, 605, 415],  // 3
+  ['QD','NJ', 2, 615, 488],  // 4
+  ['BJ','TL', 3, 580, 58],   // 5
+  ['WH','BJ', 3, 260, 200],  // 6
+  ['WH','QD', 3, 280, 418],  // 7
+  ['CS','QD', 3, 275, 488],  // 8
+  ['JN','NJ', 3, 812, 415],  // 9
+  ['BJ','JN', 4, 585, 205],  // 10
+  ['WH','CS', 4, 88, 418],   // 11
 ];
 
-// status: 0 未考虑(dim) 1 候选(普通) 2 选入(ok) 3 舍去(miss)
-function edgeTable(status){
-  var h = '<table style="border-collapse:collapse;margin:6px auto;font-size:12.5px">';
-  h += '<tr>';
-  EDGE.forEach(function(e, i){
-    var bg = '#f8fafc', fg = '#334155', bd = '#cbd5e1';
-    if(status[i] === 2){ bg = '#dcfce7'; bd = '#22c55e'; fg = '#14532d'; }
-    else if(status[i] === 3){ bg = '#fee2e2'; bd = '#ef4444'; fg = '#b91c1c'; }
-    else if(status[i] === 0){ bg = '#f1f5f9'; fg = '#94a3b8'; }
-    else if(status[i] === 1){ bg = '#fef3c7'; bd = '#f59e0b'; fg = '#92400e'; }
-    h += '<td style="border:1px solid ' + bd + ';background:' + bg + ';color:' + fg +
-         ';padding:3px 7px;margin:1px">' + e[0] + '–' + e[1] + '<br><b>' + e[2] + '</b></td>';
+function edgeSet(list){
+  var m = {};
+  if (list) for (var i = 0; i < list.length; i++) m[list[i]] = 1;
+  return m;
+}
+function sumSel(sel){
+  var s = 0;
+  (sel || []).forEach(function(i){ s += EDGES[i][2]; });
+  return s;
+}
+
+var snaps = [
+  { cls:'step',  tag:'审题', sel:[], count:0,
+    log:'8 个城市、12 条备选边（5 条权 2、5 条权 3、2 条权 4）。连通 8 个城市至少要 7 条边 → 最经济方案 = 最小生成树。用 Kruskal：按权从小到大选边，成环则舍。' },
+  { cls:'ok',    tag:'选 XA–BJ(2)', sel:[0], count:1, ribbon:{k:1, ok:true},
+    log:'最小的权是 2：XA–BJ 两端不在同一块 → 选入（第 1 条）。' },
+  { cls:'ok',    tag:'选 XA–WH(2)', sel:[0,1], count:2, ribbon:{k:2, ok:true},
+    log:'XA–WH(2) 也不成环 → 选入。左侧块 {XA, BJ, WH} 成形。' },
+  { cls:'ok',    tag:'选 TL–JN(2)', sel:[0,1,2], count:3, ribbon:{k:3, ok:true},
+    log:'TL–JN(2) → 选入，右侧块开始生长。' },
+  { cls:'ok',    tag:'选 QD–JN(2)', sel:[0,1,2,3], count:4, ribbon:{k:4, ok:true},
+    log:'QD–JN(2) → {TL, JN, QD}。' },
+  { cls:'ok',    tag:'选 QD–NJ(2)', sel:[0,1,2,3,4], count:5, ribbon:{k:5, ok:true},
+    log:'QD–NJ(2) → {TL, JN, QD, NJ}。权 2 的 5 条边全部选入，图分成互不连通的两大块。' },
+  { cls:'ok',    tag:'桥边 BJ–TL(3)', sel:[0,1,2,3,4,5], count:6, ribbon:{k:6, ok:true},
+    log:'权 3 的 BJ–TL 恰好是连接两大块的桥 → 选入。7 个城市连通，只差 CS。' },
+  { cls:'miss',  tag:'成环舍去 ×2', sel:[0,1,2,3,4,5], rej:[6,7], count:6,
+    log:'WH–BJ(3)、WH–QD(3)：两端已在同一块 → 成环，舍去。注意：WH–QD 马上会"复活"——它是另一棵 MST 的桥边。' },
+  { cls:'ok',    tag:'接入 CS · 树成', sel:[0,1,2,3,4,5,8], rej:[6,7], count:7, ribbon:{k:7, ok:true},
+    log:'CS–QD(3) 把最后一个城市 CS 接入 → 7 条边齐，最小生成树建成！总费用 = 2×5 + 3 + 3 = <b>16</b>。' },
+  { cls:'shift', tag:'收尾三边', sel:[0,1,2,3,4,5,8], rej:[6,7,9], skip:[10,11], count:7,
+    log:'JN–NJ(3) 成环舍去；BJ–JN(4)、WH–CS(4) 比已选桥边贵且树已连通，不需要。' },
+  { cls:'step',  tag:'两种方案', sel:[0,1,2,3,4,7,8], rej:[6,9], skip:[5,10,11], count:7,
+    log:'桥接两大块的权 3 边有两条：BJ–TL 和 WH–QD（BJ–JN 权 4 太贵）。换桥 → <b>第二棵 MST</b>：XA–BJ、XA–WH、WH–QD、TL–JN、QD–JN、QD–NJ、CS–QD。两棵 MST 总费用都是 16 → 共两种最经济方案。' },
+  { cls:'step',  tag:'问(2) 存储/算法', sel:[0,1,2,3,4,5,8], rej:[6,7,9], skip:[10,11], count:7,
+    log:'题图是无向带权图 → 邻接矩阵（对称矩阵）或邻接表均可存储；求最小生成树 → Prim（每次加点）或 Kruskal（每次加边）。' },
+  { cls:'ok',    tag:'问(3) 方案 2 可达', sel:[0,1,2,3,4,5,8], rej:[6,7,9], skip:[10,11], path:[5], count:7,
+    ttl:{ cap:'方案 2（桥边 BJ–TL）：H1 连在 TL，H2 连在 BJ —— TTL=5，主机发出时不减、路由器「转发」时才减 1',
+      cities:['TL','BJ'], ttls:['转发后 4','收到→交付 ✓'], cls:['ok','hit'] },
+    log:'方案 2 中 TL 与 BJ 相邻：TL 路由器转发 TTL 5→4，BJ 路由器收到即交付 H2 → <b>H2 可以收到 ✓</b>。' },
+  { cls:'miss',  tag:'问(3) 方案 1 丢弃', sel:[0,1,2,3,4,7,8], rej:[6,9], skip:[5,10,11], path:[2,3,7,1,0], count:7,
+    ttl:{ cap:'方案 1（桥边 WH–QD）：TL→JN→QD→WH→XA→BJ 共 5 跳 —— 每转发一次减 1',
+      cities:['TL','JN','QD','WH','XA','BJ'], ttls:['转发后 4','转发后 3','转发后 2','转发后 1','转发后 0 ✗丢弃','收不到'], cls:['ok','ok','ok','ok','miss','dim'] },
+    log:'方案 1 中 TL→JN→QD→WH→XA→BJ 共 5 跳，转发 5 次：4→3→2→1→<b>0</b> —— TTL 在 XA 归零，分组被丢弃 → <b>H2 收不到 ✗</b>。' },
+  { cls:'done',  tag:'完成', sel:[0,1,2,3,4,5,8], rej:[6,9], skip:[10,11], alt:[7], count:7, done:true,
+    log:'结论：(1) 两棵 MST（桥边 BJ–TL 或 WH–QD 二选一），总费用均 16；(2) 邻接矩阵/邻接表 + Prim/Kruskal；(3) 方案 2 可送达、方案 1 在 XA 处 TTL=0 被丢弃。' },
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var wrap = AW.el('div', 'aw-scroll');
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 880 560');
+  svg.setAttribute('class', 'mst-svg');
+  function el2(tag, attrs){
+    var e = document.createElementNS(svgNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  EDGES.forEach(function(e, i){
+    var a = NP[e[0]], b = NP[e[1]];
+    var dx = b[0]-a[0], dy = b[1]-a[1], len = Math.sqrt(dx*dx + dy*dy);
+    var ux = dx/len, uy = dy/len, r = 30;
+    var ln = el2('line', { x1:a[0]+ux*r, y1:a[1]+uy*r, x2:b[0]-ux*r, y2:b[1]-uy*r,
+      stroke:'#cbd5e1', 'stroke-width':2 });
+    ln.setAttribute('class', 'medge');
+    ln.id = 'me' + i;
+    svg.appendChild(ln);
+    var lab = el2('text', { x:e[3], y:e[4], 'text-anchor':'middle', 'font-size':15,
+      'font-weight':700, fill:'#475569' });
+    lab.textContent = e[2];
+    lab.id = 'ml' + i;
+    svg.appendChild(lab);
   });
-  h += '</tr></table>';
-  return h;
+  for (var name in NP){
+    var p = NP[name];
+    var g = el2('g', {});
+    g.setAttribute('class', 'mnode');
+    var c = el2('circle', { cx:p[0], cy:p[1], r:30, fill:'#ffffff', stroke:'#64748b', 'stroke-width':2.5 });
+    c.id = 'mn' + name;
+    var t = el2('text', { x:p[0], y:p[1] });
+    t.textContent = name;
+    t.setAttribute('class', 'city');
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  }
+  wrap.appendChild(svg);
+  stage.appendChild(wrap);
+  var costLine = AW.el('div', 'mcost');
+  stage.appendChild(costLine);
+  var ttlBox = AW.el('div', 'mttl');
+  stage.appendChild(ttlBox);
+  this._costLine = costLine; this._ttlBox = ttlBox;
 }
 
-function note(text, color){
-  return '<div style="text-align:center;font-size:13.5px;color:' + (color || '#334155') + ';margin-top:6px">' + text + '</div>';
+function render(stage, sn, i){
+  var sel = edgeSet(sn.sel), rej = edgeSet(sn.rej), skip = edgeSet(sn.skip);
+  var path = edgeSet(sn.path), alt = edgeSet(sn.alt);
+  EDGES.forEach(function(e, k){
+    var col = '#cbd5e1', w = 2, labCol = '#475569';
+    if (skip[k]){ col = '#e2e8f0'; labCol = '#cbd5e1'; }
+    if (rej[k]){ col = '#dc2626'; w = 2.5; labCol = '#dc2626'; }
+    if (sel[k]){ col = '#16a34a'; w = 3.5; labCol = '#15803d'; }
+    if (alt[k]){ col = '#d97706'; w = 3.5; labCol = '#92400e'; }
+    if (path[k]){ col = '#2563eb'; w = 4; labCol = '#1d4ed8'; }
+    var ln = document.getElementById('me' + k);
+    ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', w);
+    document.getElementById('ml' + k).setAttribute('fill', labCol);
+  });
+  var touched = {};
+  (sn.sel || []).concat(sn.path || [], sn.alt || []).forEach(function(k){
+    touched[EDGES[k][0]] = 1; touched[EDGES[k][1]] = 1;
+  });
+  for (var name in NP){
+    var c = document.getElementById('mn' + name);
+    if (touched[name]){
+      c.setAttribute('fill', '#dcfce7'); c.setAttribute('stroke', '#16a34a');
+    } else {
+      c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#64748b');
+    }
+  }
+  // 费用行
+  var n = (sn.sel || []).length;
+  var html = '已选 <b>' + n + '</b> / 7 条边 · 当前费用 <code>' + sumSel(sn.sel) + '</code>';
+  if (sn.path) html += ' · <span style="color:#1d4ed8">蓝色 = TTL 转发路径</span>';
+  else if (sn.alt) html += ' · <span style="color:#92400e">琥珀 = 另一棵 MST 的桥边 WH–QD</span>';
+  this._costLine.innerHTML = html;
+  // TTL 演算行
+  var box = this._ttlBox;
+  box.innerHTML = '';
+  if (sn.ttl){
+    box.appendChild(AW.el('div', 'cap', sn.ttl.cap));
+    var row = AW.el('div', 'row');
+    sn.ttl.cities.forEach(function(city, k){
+      var col = AW.el('div', 'col');
+      col.appendChild(AW.el('div', 'ptr', sn.ttl.ttls[k]));
+      col.appendChild(AW.el('div', 'box ' + sn.ttl.cls[k], city));
+      col.appendChild(AW.el('div', 'hop', '第' + (k + 1) + '跳'));
+      row.appendChild(col);
+    });
+    box.appendChild(row);
+  }
 }
-
-function mstCard(title, edges, w){
-  var h = '<div style="display:inline-block;border:1.5px solid #22c55e;border-radius:8px;background:#f6fef9;padding:8px 14px;margin:6px 10px;vertical-align:top">';
-  h += '<div style="font-weight:700;color:#15803d;margin-bottom:4px">' + title + '</div>';
-  h += '<div style="font-size:12.5px;color:#334155;line-height:1.9">' + edges + '</div>';
-  h += '<div style="font-size:13px;color:#14532d;margin-top:4px"><b>总费用 ' + w + '</b></div>';
-  h += '</div>';
-  return h;
-}
-
-function st(all){ return EDGE.map(function(_, i){ return all.indexOf(i) >= 0 ? 2 : 0; }); }
 
 AW.init({
-  title: '2018·综合题 42 光通信骨干网：最经济方案与 TTL',
-  subtitle: '8 城市 12 条备选边 · 连通需 7 条边 · 求最小生成树 · 再判 TTL=5 能否送达',
+  title: '2018-42 光通信骨干网：最经济方案（MST）与 TTL 判定',
+  subtitle: '8 城市 12 条备选边 · Kruskal 逐步选边 · 桥边二选一得两棵 MST（总费用均 16）· TTL=5 能否送达',
   counterLabel: '已选边数',
-  intro: '点击「▶ 播放」，按 Kruskal 流程选边，再分方案讨论 TTL。',
-
-  snaps: [
-    { cls:'step', tag:'审题', log:'8 个城市要连通：至少 7 条边；最经济 = 最小生成树', count:0,
-      html: edgeTable(st([])) + note('边权：五条 2、五条 3、两条 4 —— Kruskal 思路：按权从小到大选，成环则舍') },
-    { cls:'shift', tag:'权 2 全选', log:'权 2 的 5 条边互不成环，全部选入：{XA,BJ,WH} 与 {TL,JN,QD,NJ} 两大块', count:5,
-      html: edgeTable(st([0,1,2,3,4])) + note('XA–BJ、XA–WH 连成 {XA,BJ,WH}；TL–JN、QD–JN、QD–NJ 连成 {TL,JN,QD,NJ}') },
-    { cls:'ok', tag:'桥边 BJ–TL', log:'权 3 的 BJ–TL 恰好连接两大块 → 选入（第 6 条边）', count:6,
-      html: edgeTable(st([0,1,2,3,4,5])) + note('BJ–TL(3)：把 8 个城市中的 7 个连为一体') },
-    { cls:'miss', tag:'成环舍去', log:'WH–BJ(3)、WH–QD(3) 两端已连通 → 成环舍去', count:6,
-      html: edgeTable([2,2,2,2,2,2,3,3,0,0,0,0]) + note('注意：WH–QD 是「另一棵 MST 的桥边」，成环只对当前已选集合而言') },
-    { cls:'ok', tag:'接入 CS', log:'CS–QD(3) 把最后一个城市 CS 接入 → 7 条边齐，树成！', count:7,
-      html: edgeTable([2,2,2,2,2,2,3,3,2,0,0,0]) + note('剩余：JN–NJ(3) 成环舍、BJ–JN(4)、WH–CS(4) 不需要 → 总费用 2+2+2+2+2+3+3 = <b>16</b>', '#15803d') },
-    { cls:'shift', tag:'两种方案', log:'桥接两大块的权 3 边有 BJ–TL 和 WH–QD 两条 → 两棵 MST，总费用均 16', count:7,
-      html: mstCard('方案 1（桥边 WH–QD）', 'XA–BJ(2)、XA–WH(2)、WH–QD(3)、QD–CS(3)、QD–JN(2)、QD–NJ(2)、TL–JN(2)', 16) +
-            mstCard('方案 2（桥边 BJ–TL）', 'XA–BJ(2)、XA–WH(2)、BJ–TL(3)、TL–JN(2)、JN–QD(2)、QD–NJ(2)、QD–CS(3)', 16) },
-    { cls:'step', tag:'问 (2)', log:'存储结构：邻接矩阵 / 邻接表均可；求 MST 算法：Prim / Kruskal', count:7,
-      html: note('无向带权图 → 邻接矩阵（对称）或邻接表；最小生成树 → Prim（加点）或 Kruskal（加边）', '#1d4ed8') },
-    { cls:'ok', tag:'问 (3) 方案 2', log:'方案 2 中 TL 与 BJ 相邻：TL 转发后 TTL=4，BJ 路由器交付 H2 → 可以收到', count:7,
-      html: mstCard('方案 2 的 TL → BJ', 'TL → BJ：1 跳<br>TTL：5 →（TL 转发）4 → BJ 收到交付 H2', '✓ 可达') +
-            note('路由器转发时才减 1：H1 发出时 TTL=5 未减', '#15803d') },
-    { cls:'miss', tag:'问 (3) 方案 1', log:'方案 1 中 TL→JN→QD→WH→XA→BJ 共 5 跳：TTL 5→4→3→2→1→0，XA 处归零被丢弃 → 收不到', count:7,
-      html: mstCard('方案 1 的 TL → BJ', 'TL → JN → QD → WH → XA → BJ：5 跳<br>TTL：5 →4（TL）→3（JN）→2（QD）→1（WH）→<b>0（XA 丢弃）</b>', '✗ 不可达') +
-            note('TTL 减为 0 的数据报被路由器丢弃，永远到不了 BJ 路由器', '#b91c1c') },
-    { cls:'done', tag:'完成', log:'两种 MST 总费用均 16；方案 2 可送达、方案 1 在 XA 处 TTL=0 被丢弃', count:7, done:true,
-      html: mstCard('方案 1（桥边 WH–QD）', '总费用 16', '✗ H2 收不到') +
-            mstCard('方案 2（桥边 BJ–TL）', '总费用 16', '✓ H2 可收到') +
-            note('问(1) 两方案各 16；问(2) 邻接矩阵/邻接表 + Prim/Kruskal；问(3) 方案 2 可达、方案 1 不可达') },
-  ],
-
+  ribbonTitle: '已选边（✓ 选入）',
+  intro: '点击「▶ 播放」按 Kruskal 流程看最小生成树怎么长出来，再分方案追踪 TTL。',
+  build: build,
+  render: render,
+  snaps: snaps,
   result: {
-    big: '两方案均 16；方案 2 可达',
-    html: '权 2 的 5 条边全选，桥边 <b>BJ–TL 或 WH–QD</b> 二选一（另加 CS–QD）→ <b>两棵最小生成树，总费用均 16</b>。存储用邻接矩阵/邻接表，算法 Prim/Kruskal。TTL=5：<b>方案 2</b> TL 与 BJ 相邻可送达；<b>方案 1</b> 路径 5 跳，TTL 在 XA 路由器归零被丢弃，H2 收不到。记忆锚点：<b>路由器转发时 TTL 减 1，减到 0 即丢弃</b>。',
+    big: '两棵 MST 均为 16；方案 2 可达、方案 1 被丢弃',
+    html: '问(1)：权 2 的 5 条边全选，桥边 <b>BJ–TL 或 WH–QD 二选一</b>，再加 CS–QD(3) → 两棵最小生成树，总费用均为 <b>16</b>。' +
+      '问(2)：存储用<b>邻接矩阵或邻接表</b>，算法 <b>Prim 或 Kruskal</b>。' +
+      '问(3)：TTL 只在路由器<b>转发</b>时减 1：方案 2 一跳转发（5→4）即交付 <b>✓</b>；方案 1 五跳 4→3→2→1→<b>0</b>，在 XA 归零被丢弃 <b>✗</b>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

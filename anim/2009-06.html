@@ -2,77 +2,181 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2009-06 动画 · 森林转二叉树后的关系判定</title>
+<title>2009-06 森林 → 二叉树转换 · 祖孙关系检验动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .dual{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .panel{flex:1 1 380px;max-width:470px;min-width:300px}
+  .ptitle{font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;text-align:center}
+  .fsvg{width:100%;display:block;background:#f8fafc;border:1px solid #1b3a4b38;border-radius:12px}
+  .fsvg .tedge{stroke:#94a3b8;stroke-width:2.5px;transition:opacity .4s, stroke .3s, stroke-width .3s}
+  .fsvg .tedge.lithot{stroke:#d97706;stroke-width:4px}
+  .fsvg .tedge.litok{stroke:#16a34a;stroke-width:4px}
+  .fsvg .tnode circle{fill:#ffffff;stroke:#334155;stroke-width:2.5px;transition:opacity .4s, fill .3s, stroke .3s}
+  .fsvg .tnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central;fill:#0f172a;transition:opacity .4s, fill .3s}
+  .fsvg .tnode.hotn circle{fill:#e07a2f;stroke:#b45309}
+  .fsvg .tnode.hotn text{fill:#fff}
+  .fsvg .tnode.okn circle{fill:#16a34a;stroke:#15803d}
+  .fsvg .tnode.okn text{fill:#fff}
+  .fsvg .tnode.badn circle{fill:#e63946;stroke:#b91c1c}
+  .fsvg .tnode.badn text{fill:#fff}
+  .fsvg .hidden-el{opacity:0}
+  .fsvg .elab{font-size:12px;font-weight:700;fill:#64748b;font-family:PingFang SC,sans-serif}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/推理链类：左孩子右兄弟规则下的组合枚举
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2009-06 森林→二叉树转换动画（SVG 双面板） ==================
+ * 题：二叉树中 u 是 v 的父结点的父结点（u 是 v 的"二叉树祖父"），
+ *     森林中 u、v 可能的关系：I 父子 / II 兄弟 / III u 的父与 v 的父是兄弟？（答案 B：I 和 II）
+ * 演示：左面板画出一座示例森林，右面板按「左孩子·右兄弟」转换成二叉树；
+ *       再取 4 组具体结点对（对应 4 种左右孩子组合）逐一检验 I/II/III。 */
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+var NS = 'http://www.w3.org/2000/svg';
+var FOREST = {
+  nodes:{ A:[90,45], B:[40,140], C:[100,140], D:[160,140], E:[40,235], F:[75,235], G:[130,235], D1:[160,235], H:[255,45] },
+  edges:[['A','B'], ['A','C'], ['A','D'], ['B','E'], ['C','F'], ['C','G'], ['D','D1']],
+};
+// 二叉树：边 [父, 子, 左/右]
+var BIN = {
+  nodes:{ A:[235,40], B:[135,110], H:[335,110], E:[70,180], C:[200,180], F:[140,250], D:[260,250], G:[195,320], D1:[210,320] },
+  edges:[['A','B','左'], ['A','H','右'], ['B','E','左'], ['B','C','右'], ['C','F','左'], ['C','D','右'], ['F','G','右'], ['D','D1','左']],
+};
+// 每个检验步的高亮集合：f=森林结点, fe=森林边, b=二叉树结点, be=二叉树边, verd=判决
+var ST = {
+  3:{ f:['A','B','E'],       fe:['B-E','A-B'],           b:['A','B','E'],    be:['B-E','A-B'],   verd:'' },
+  4:{ f:['A','B','C'],       fe:['A-B','A-C'],           b:['A','B','C'],    be:['B-C','A-B'],   verd:'ok' },
+  5:{ f:['A','B','C','D'],   fe:['A-B','A-C','A-D'],     b:['B','C','D'],    be:['C-D','B-C'],   verd:'ok' },
+  6:{ f:['A','C','D','D1'],  fe:['A-C','A-D','D-D1'],    b:['C','D','D1'],   be:['D-D1','C-D'],  verd:'miss' },
+};
+
+function mkSvg(w, h, cls){
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+  svg.setAttribute('class', cls);
+  return svg;
+}
+function addNodes(svg, pos, store, step){
+  Object.keys(pos).forEach(function(id){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tnode hidden-el');
+    g.dataset.step = step; g.dataset.id = id;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', pos[id][0]); c.setAttribute('cy', pos[id][1]); c.setAttribute('r', 21);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', pos[id][0]); t.setAttribute('y', pos[id][1]);
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    store[id] = g;
+  });
+}
+function addEdges(svg, edges, pos, store, step, withLabel){
+  edges.forEach(function(e){
+    var g = document.createElementNS(withLabel ? 'g' : NS, withLabel ? 'g' : 'line');
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', pos[e[0]][0]); ln.setAttribute('y1', pos[e[0]][1]);
+    ln.setAttribute('x2', pos[e[1]][0]); ln.setAttribute('y2', pos[e[1]][1]);
+    g.appendChild(ln);
+    if(withLabel){
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', (pos[e[0]][0] + pos[e[1]][0]) / 2 + (e[2] === '左' ? -13 : 13));
+      t.setAttribute('y', (pos[e[0]][1] + pos[e[1]][1]) / 2 - 8);
+      t.setAttribute('class', 'elab');
+      t.setAttribute('text-anchor', 'middle');
+      t.textContent = e[2];
+      g.appendChild(t);
+    }
+    g.setAttribute('class', 'tedge hidden-el');
+    g.dataset.step = step; g.dataset.id = e[0] + '-' + e[1];
+    svg.appendChild(g);
+    store[e[0] + '-' + e[1]] = g;
+  });
 }
 
-// 推理链：每一步的完整内容（引擎按步数截取显示）
-var STEPS = [
-  { title: '审题眼：转换规则',
-    cls: 'key',
-    body: '<p>森林 → 二叉树的规则是「<b>左孩子、右兄弟</b>」：二叉树中某结点的<b>左孩子</b>是它在森林里的第一个孩子，<b>右孩子</b>是它的下一个兄弟。设 v 在二叉树中的父结点为 <code>w</code>，而 w 的父结点是 <code>u</code>——题给条件即 u 是 v 的二叉树「祖父」。</p>' },
-  { title: '组合枚举：4 种位置',
-    cls: 'step',
-    body: '<p>v 可能是 w 的<b>左孩子</b>或<b>右孩子</b>，w 也可能是 u 的左孩子或右孩子，共 <code>4</code> 种组合，逐一翻译回森林查关系。</p>' },
-  { title: '组合一：左·左',
-    cls: 'step',
-    body: '<p>v 是 w 的<b>左</b>孩子、w 是 u 的<b>左</b>孩子：森林里 v 是 w 的第一个孩子、w 是 u 的第一个孩子 → u 是 v 的<b>祖父</b>，三种关系都不满足。</p>' },
-  { title: '组合二：右·左 → I 可能',
-    cls: 'good',
-    body: '<p>v 是 w 的<b>右</b>孩子（v 是 w 的下一兄弟）、w 是 u 的<b>左</b>孩子：w 与 v 同为 u 的孩子 → <b>I. 父子关系，可能</b>。✓</p>' },
-  { title: '组合三：右·右 → II 可能',
-    cls: 'good',
-    body: '<p>w 是 u 的<b>右</b>孩子（w 是 u 的下一兄弟）、v 是 w 的<b>右</b>孩子：u、w、v 是同父的三兄弟 → <b>II. 兄弟关系，可能</b>。✓</p>' },
-  { title: '组合四：右孩子下再挂左 → III 不可能',
-    cls: 'bad',
-    body: '<p>w 是 u 的<b>右</b>孩子、v 是 w 的<b>左</b>孩子：u 与 w 是兄弟，v 是 w 的孩子 → u 与 v 是伯侄。查 III：u 的父结点与 v 的父结点（w）是<b>父子</b>而非兄弟 → III 不成立。✗</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>I、II 都有合法组合；III 任何组合都推不出——v 的父结点要么就是 w 本身（与 u 的父结点是父子），要么与 u 的父结点是同一结点（同一人谈不上互为兄弟）。答案选 <b>B（I 和 II）</b>。</p>' },
-  { title: '记忆锚点',
-    cls: 'key',
-    body: '<p>「右孩子 = 兄弟」是钥匙：v 挂在右边就往<b>同层</b>想（兄弟 → 进而与 u 成父子），挂在左边就往<b>下一层</b>想；III 要跨两层仍保持兄弟链，翻译回去必然变成父子。</p>' },
+function build(stage){
+  stage.innerHTML = '';
+  var dual = AW.el('div', 'dual');
+  var p1 = AW.el('div', 'panel', '<div class="ptitle">原森林（树1：A 及其子孙　树2：H）</div>');
+  var p2 = AW.el('div', 'panel', '<div class="ptitle">转换后的二叉树（左孩子 · 右兄弟）</div>');
+  var svgF = mkSvg(320, 290, 'fsvg');
+  var svgB = mkSvg(470, 370, 'fsvg');
+  this._fE = {}; this._fN = {}; this._bE = {}; this._bN = {};
+  addEdges(svgF, FOREST.edges, FOREST.nodes, this._fE, 1, false);
+  addNodes(svgF, FOREST.nodes, this._fN, 1);
+  addEdges(svgB, BIN.edges, BIN.nodes, this._bE, 2, true);
+  addNodes(svgB, BIN.nodes, this._bN, 2);
+  p1.appendChild(svgF); p2.appendChild(svgB);
+  dual.appendChild(p1); dual.appendChild(p2);
+  stage.appendChild(dual);
+  this._svgF = svgF; this._svgB = svgB;
+}
+
+function apply(svg, nodes, edges, st, verd){
+  [].forEach.call(svg.querySelectorAll('.tnode, .tedge'), function(el){
+    el.classList.remove('hotn', 'okn', 'badn', 'lithot', 'litok');
+  });
+  if(!st) return;
+  nodes.forEach(function(id){
+    var el = null;
+    [].forEach.call(svg.querySelectorAll('.tnode'), function(g){ if(g.dataset.id === id) el = g; });
+    if(el) el.classList.add(verd === 'ok' ? 'okn' : (verd === 'miss' ? 'badn' : 'hotn'));
+  });
+  edges.forEach(function(id){
+    var el = null;
+    [].forEach.call(svg.querySelectorAll('.tedge'), function(g){ if(g.dataset.id === id) el = g; });
+    if(el) el.classList.add(verd === 'ok' ? 'litok' : 'lithot');
+  });
+}
+
+function render(stage, sn, i){
+  [].forEach.call(this._svgF.querySelectorAll('.tnode, .tedge'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(this._svgB.querySelectorAll('.tnode, .tedge'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  var st = sn.st || null, verd = st ? st.verd : '';
+  apply(this._svgF, st ? st.f : [], st ? st.fe : [], st, verd);
+  apply(this._svgB, st ? st.b : [], st ? st.be : [], st, verd);
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'开始', count:0,
+    log:'森林 → 二叉树的规则是「左孩子 · 右兄弟」：左孩子 = 原来的第一个孩子，右孩子 = 下一个兄弟。题给条件：二叉树中 u 是 v 的父结点的父结点——问 u、v 在原森林中可能是什么关系。下面画一座具体森林逐一检验。' },
+  { cls:'step', tag:'画出森林', count:1,
+    log:'示例森林：树1 根 A，孩子 B、C、D；B 的孩子 E；C 的孩子 F、G；D 的孩子 D1；树2 单结点 H。' },
+  { cls:'ok', tag:'转换', count:2,
+    log:'转成二叉树：A 左=B（第一个孩子）、A 右=H（下一棵树的根）；B 左=E、B 右=C（C 是 B 的弟弟）；C 左=F、C 右=D；F 右=G、D 左=D1。边上的「左/右」就是翻译回森林的钥匙。' },
+  { cls:'step', tag:'组合一：左·左', count:3, st:ST[3],
+    log:'取对 (u=A, v=E)：二叉树中 E 的父是 B、B 的父是 A。E 是 B 的左孩子（第一个孩子）、B 是 A 的左孩子 → 森林里 A 是 E 的祖父。父子？兄弟？都不是——先看一个"什么都不是"的组合。' },
+  { cls:'ok', tag:'组合二：右·左 → I 成立', count:4, st:ST[4], ribbon:{k:1, ok:true},
+    log:'取对 (u=A, v=C)：C 是 B 的右孩子（= B 的弟弟），B 是 A 的左孩子 → 森林里 C 与 B 同为 A 的孩子 → A 是 C 的父亲。I. 父子关系，可能 ✓' },
+  { cls:'ok', tag:'组合三：右·右 → II 成立', count:5, st:ST[5], ribbon:{k:2, ok:true},
+    log:'取对 (u=B, v=D)：D 是 C 的右孩子（弟弟）、C 是 B 的右孩子（弟弟）→ 森林里 B、C、D 是同父三兄弟 → B 与 D 是兄弟。II. 兄弟关系，可能 ✓' },
+  { cls:'miss', tag:'组合四：左·右 → III 不成立', count:6, st:ST[6], ribbon:{k:3, ok:false},
+    log:'取对 (u=C, v=D1)：D1 是 D 的左孩子（D 的第一个孩子）、D 是 C 的右孩子（C 的弟弟）→ 森林里 D1 是 D 的孩子，C 与 D 是兄弟（C 与 D1 是伯侄）。查 III：C 的父结点 A 与 D1 的父结点 D 是「父子」而非兄弟 → III 不成立 ✗' },
+  { cls:'shift', tag:'III 为何总不成立', count:6,
+    log:'一般地，v 的森林父结点只有两种落点：① v 是 w 的左孩子 → v 的父 = w，此时 u 的父与 w 是「父子」；② v 是 w 的右孩子 → v 的父 = u 自己。「父与子」「自己与自己」都成不了兄弟 → III 任何组合都推不出。' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'I、II 均有合法组合，III 永远不成立 → 答案选 B（I 和 II）。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    count: i + 1,
-    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
-
 AW.init({
-  title: '森林转二叉树：u 是 v 的「祖父」，森林里可能是什么关系？',
-  subtitle: '考点：左孩子右兄弟 · 4 种位置组合逐一翻译回森林（2009-06）',
-  counterLabel: '推理进度',
-  ribbonTitle: '推理步骤（✓ 成立 / ✗ 排除）',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2009-06 森林 → 二叉树转换 · 祖孙关系检验动画',
+  subtitle: '题：二叉树中 u 是 v 的父结点的父结点，森林中 u、v 可能的关系？规则 <code>左孩子 = 第一个孩子，右孩子 = 下一兄弟</code>——画出森林与转换结果，用具体结点对逐一检验 I / II / III。',
+  counterLabel: '检验步',
+  ribbonTitle: '关系检验（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」，先看森林怎么转成二叉树，再用 4 组结点对逐一检验。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 B（I 和 II）',
-    html: '记忆锚点：组合「右·左」给出<b>父子</b>（I），组合「右·右」给出<b>兄弟</b>（II）；「左·左」是普通祖孙，而 III 要求 u 的父结点与 v 的父结点互为兄弟，对照四种组合全都不成立。',
+    html: '「右孩子 = 下一兄弟」是钥匙：v 是 w 的右孩子 → v 与 w 同父，w 是 u 的左孩子时 u 就是 v 的父亲（<b>I</b>）；w 也是右孩子时 u、w、v 三兄弟（<b>II</b>）。而 v 的森林父结点要么是 w（与 u 的父是父子）、要么就是 u 自己——都成不了兄弟 → <b>III 永远不成立</b>。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

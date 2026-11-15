@@ -2,74 +2,191 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2011-06 树转二叉树 · 无右孩子结点数推理动画</title>
+<title>2011-06 树转二叉树 · 无右孩子结点数（结构演示）</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .ft-svg{width:100%;max-width:780px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .ft-svg .edge{stroke:#5a7d8c;stroke-width:2.5px}
+  .ft-svg .edge.newedge{stroke:#e07a2f;stroke-dasharray:5 4}
+  .ft-svg .node circle{fill:#1b3a4b;stroke:#1b3a4b;stroke-width:2.5px;transition:fill .35s, stroke .35s}
+  .ft-svg .node text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:fill .35s}
+  .ft-svg .node.leaf circle{fill:#16a34a;stroke:#14532d}
+  .ft-svg .node.norp circle{fill:#e63946;stroke:#7f1d1d}
+  .ft-svg .node.hot circle{fill:#d97706;stroke:#92400e}
+  .ft-svg .hidden-el{opacity:0}
+  .ft-svg .side-lbl{font-size:12px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;
+    text-anchor:middle;fill:#2563eb}
+  .ft-svg .panel-lbl{font-size:14px;font-weight:800;fill:#334155;text-anchor:middle}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2011-06 树→二叉树：无右孩子的结点（SVG 双树对照） ==================
+ * 题：2011 个结点的树、叶 116，对应二叉树中无右孩子的结点数？（答案 D = 1896）
+ * 演示：7 结点小树（叶 4）做孩子-兄弟转换 → 数出"无右孩子"= 非叶数 + 1 → 代入求解。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-// 小样例：根 + 三个孩子 A B C，A 的两个孩子 a1 a2 → 转换后的二叉树
-function demoTree(){
-  var box = function(v, color){
-    return '<div class="aw-box" style="width:40px;height:32px;font-size:13px;' +
-           (color ? 'border-color:' + color + ';color:' + color : '') + '">' + v + '</div>';
-  };
-  var h = '<div style="display:inline-block;text-align:center;vertical-align:middle;margin:4px 12px 0 0;font-size:12.5px;color:#94a3b8">';
-  h += '<div style="display:flex;justify-content:center">' + box('根', '#d97706') + '</div>';
-  h += '<div style="display:flex;justify-content:center;gap:96px;margin-top:10px">' + box('A') + box('B') + '</div>';
-  h += '<div style="display:flex;justify-content:center;gap:36px;margin-top:10px">' + box('a1') + box('a2') + box('C') + '</div>';
-  h += '<div style="margin-top:6px">左=第一个孩子 · 右=右兄弟（琥珀=无右孩子）</div>';
-  return h + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼', cls: 'key',
-    body: '<p>树有 <b>2011</b> 个结点、<b>116</b> 个叶结点，求对应二叉树中<b>无右孩子</b>的结点数。转换规则（孩子-兄弟表示法）：<b>左指针 = 第一个孩子，右指针 = 右兄弟</b>。</p>' },
-  { title: '翻译问题', cls: '',
-    body: '<p>「二叉树中无右孩子」⟺「该结点在原树中<b>没有右兄弟</b>」。于是问题变成：原树里谁没有右兄弟？</p>' },
-  { title: '谁没有右兄弟：①根', cls: 'key',
-    body: '<p><b>根结点</b>全树唯一、永远没有兄弟，转换后必然无右孩子——这一类只有 <b>1</b> 个，最容易被漏数。</p>' },
-  { title: '谁没有右兄弟：②每个分支结点的最后一个孩子', cls: 'key',
-    body: '<p>分支结点的孩子们排成一条兄弟链（第一个孩子 → 二弟 → 三弟 → …），链上只有<b>末尾那个</b>没有右兄弟。每个分支结点恰贡献 1 个，共 <b>2011 − 116 = 1895</b> 个。</p>' },
-  { title: '小样例验证规律', cls: '',
-    body: '<p>' + demoTree() + '<span style="display:inline-block;vertical-align:top;font-size:14px;line-height:2.1">根+3 孩子，A 再带 a1、a2：共 6 结点、4 叶、2 个分支结点。无右孩子的是 <b>根、C、a2</b> 共 3 个 = 分支结点 2 + 根 1，与本题同构 ✓<br>A、B、a1 都有右兄弟（右孩子）✗</span></p>' },
-  { title: '汇总计算', cls: 'good',
-    body: '<p>两类不重叠（根没有父结点，不在任何兄弟链上）：<b>1895 + 1 = 1896</b> 个。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>无右孩子的结点 <b>1896</b> 个，答案选 <b>D</b>。记忆锚点：<b>无右孩子 = 根 + 每个分支结点的最后一个孩子</b>。</p>' },
+/* 原树 */
+var TNODES = [
+  { id:'R', x:150, y:50,  step:0, leaf:false },
+  { id:'A', x:80,  y:140, step:0, leaf:false },
+  { id:'B', x:150, y:140, step:0, leaf:true  },
+  { id:'C', x:220, y:140, step:0, leaf:false },
+  { id:'D', x:45,  y:230, step:0, leaf:true  },
+  { id:'E', x:115, y:230, step:0, leaf:true  },
+  { id:'F', x:220, y:230, step:0, leaf:true  },
+];
+var TEDGES = [
+  { a:'R', b:'A', step:0 }, { a:'R', b:'B', step:0 }, { a:'R', b:'C', step:0 },
+  { a:'A', b:'D', step:0 }, { a:'A', b:'E', step:0 }, { a:'C', b:'F', step:0 },
+];
+/* 对应二叉树（孩子-兄弟）：左=第一个孩子，右=下一个兄弟 */
+var BNODES = [
+  { id:'R', x:620, y:50,  step:1, leaf:false },
+  { id:'A', x:545, y:140, step:1, leaf:false },
+  { id:'D', x:475, y:230, step:2, leaf:false },
+  { id:'E', x:525, y:320, step:2, leaf:true  },
+  { id:'B', x:615, y:230, step:3, leaf:false },
+  { id:'C', x:685, y:320, step:3, leaf:false },
+  { id:'F', x:625, y:410, step:3, leaf:true  },
+];
+var BEDGES = [
+  { a:'R', b:'A', step:1, lbl:'孩', lx:572, ly:88 },
+  { a:'A', b:'D', step:2, lbl:'孩', lx:500, ly:178 },
+  { a:'D', b:'E', step:2, lbl:'兄', lx:522, ly:268 },
+  { a:'A', b:'B', step:3, lbl:'兄', lx:600, ly:178 },
+  { a:'B', b:'C', step:3, lbl:'兄', lx:672, ly:268 },
+  { a:'C', b:'F', step:3, lbl:'孩', lx:632, ly:358 },
+];
+var FORMULAS = [
+  '题：树有 <code>2011</code> 个结点、叶 116，对应二叉树中<b>无右孩子</b>的结点有几个？先用 7 结点小树做实验',
+  '规则：<b>左指针挂第一个孩子，右指针挂下一个兄弟</b>。根 R 转换后只有左孩子 A',
+  'A 的孩子链 D→E：A 左挂 D，D 右挂 E（兄弟）',
+  '兄弟链继续：A 右挂 B，B 右挂 C（兄弟），C 左挂孩子 F —— 转换完成',
+  '数一数：无右孩子的是 <b>R、E、C、F</b>（红色）共 4 个',
+  '对应回原树：R（根没有兄弟）＋ C、E、F（每个分支结点的<b>最后一个孩子</b>）',
+  '规律：每个非叶结点贡献 1 个「最后孩子」，根再贡献 1 ⇒ 无右孩子数 = <code>非叶数 + 1</code>。验证：(7−4)+1 = 4 ✓',
+  '代入：非叶 = 2011 − 116 = <b>1895</b> ⇒ 无右孩子 = 1895 + 1 = <code class="kf">1896</code>',
+  '无右孩子 <b>1896</b> 个（选 D）',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
-    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 780 455');
+  svg.setAttribute('class', 'ft-svg');
+  var mk = function(txt, x, y, cls){
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y);
+    t.setAttribute('class', cls); t.textContent = txt;
+    return t;
   };
-});
+  svg.appendChild(mk('原树（7 结点 · 叶 4）', 150, 20, 'panel-lbl'));
+  svg.appendChild(mk('对应二叉树（孩子-兄弟）', 600, 20, 'panel-lbl'));
+  TEDGES.forEach(function(e){
+    var A = null, B = null;
+    TNODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'edge');
+    svg.appendChild(ln);
+  });
+  BNODES.forEach(function(n){ n._ref = 'b'; });
+  TNODES.forEach(function(n){ n._ref = 't'; });
+  BEDGES.forEach(function(e){
+    var A = null, B = null;
+    BNODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'edge newedge hidden-el');
+    ln.dataset.step = e.step;
+    svg.appendChild(ln);
+    var t = mk(e.lbl, e.lx, e.ly, 'side-lbl hidden-el');
+    t.dataset.step = e.step;
+    svg.appendChild(t);
+  });
+  TNODES.concat(BNODES).forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node' + (n.leaf ? ' leaf' : '') + (n._ref === 'b' ? ' hidden-el' : ''));
+    g.dataset.id = n.id; g.dataset.side = n._ref; g.dataset.step = n.step;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 19);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('.node'), function(el){
+    if (el.dataset.side === 'b'){
+      el.classList.toggle('hidden-el', +el.dataset.step > i);
+    }
+    el.classList.remove('norp', 'hot');
+    if (i >= 4 && ['R','E','C','F'].indexOf(el.dataset.id) >= 0){
+      if (el.dataset.side === 'b') el.classList.add('norp');
+      else el.classList.add('hot');           /* 原树中对应的「最后孩子 / 根」 */
+    }
+  });
+  [].forEach.call(svg.querySelectorAll('.edge.newedge'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.side-lbl'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'树有 2011 个结点、叶 116 个。树转二叉树用「孩子-兄弟」表示法，转换后数无右孩子的结点 —— 先用 7 结点（叶 4）的小树做实验。' },
+  { cls:'step', tag:'转换 ①', count:1,
+    log:'规则：左指针 = 第一个孩子，右指针 = 下一个兄弟。根 R 只有左孩子 A（R 没有兄弟，右指针空！）。' },
+  { cls:'step', tag:'转换 ②', count:2,
+    log:'A 的孩子是 D、E：A 的左指针挂 D，D 的右指针挂兄弟 E。' },
+  { cls:'step', tag:'转换 ③', count:3,
+    log:'兄弟链继续串：A 的右指针挂 B，B 的右指针挂 C（都是 R 的孩子），C 的左指针挂它的孩子 F。转换完成。' },
+  { cls:'ok', tag:'标出无右孩子', count:4,
+    log:'数一数：二叉树中无右孩子的是 R、E、C、F，共 4 个（红色）。有右孩子的 A、B、D 都挂在某条兄弟链中间。' },
+  { cls:'shift', tag:'回到原树', count:5,
+    log:'看原树（橙色）：R 是根、天生没有兄弟；C、E、F 分别是各兄弟链的「最后一个孩子」。规律浮出水面。' },
+  { cls:'ok', tag:'提炼规律', count:6,
+    log:'每个分支结点（非叶）的孩子链末尾恰有 1 个「最后孩子」，加上没有兄弟的根 ⇒ 无右孩子数 = 非叶结点数 + 1。小树验证：(7−4)+1 = 4 ✓' },
+  { cls:'ok', tag:'代入求解', count:7,
+    log:'原树分支结点 = 2011 − 116 = 1895 个 ⇒ 无右孩子结点 = 1895 + 1 = 1896。' },
+  { cls:'done', tag:'完成', count:8, done:true,
+    log:'无右孩子的结点 1896 个，选 D。' },
+];
 
 AW.init({
-  title: '2011-06 · 树转二叉树：无右孩子的结点有多少个？',
-  subtitle: '2011 结点、116 叶 · 转换规则 <code>左=第一个孩子 · 右=右兄弟</code>',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2011-06 · 树转二叉树后，无右孩子的结点有几个？',
+  subtitle: '2011 个结点 · 叶 116 · 孩子-兄弟表示法：<code>左 = 第一个孩子，右 = 下一个兄弟</code>',
+  counterLabel: '转换步',
+  intro: '点击「▶ 播放」：看小树如何变成二叉树、无右孩子的结点是谁，再推广到 2011 个结点。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D · 1896 个',
-    html: '无右孩子 ⟺ 原树中无右兄弟：根 1 个 + 每个分支结点的最后一个孩子共 2011 − 116 = <b>1895</b> 个，合计 <b>1896</b>。漏掉根就错选 C；拿叶结点数 116 去凑会掉进 A/B 的坑——叶结点也可能有右兄弟。',
+    html: '孩子-兄弟转换后，<b>无右孩子 ⇔ 原树中没有下一个兄弟</b>：即每个非叶结点的最后一个孩子 + 无兄弟的根。<br>' +
+      '非叶结点 = 2011 − 116 = 1895 ⇒ 无右孩子 = 1895 + 1 = <b>1896</b>。记忆锚点：<code>无右孩子数 = 非叶结点数 + 1</code>（A 的 115、B 的 116 是把叶数直接搬过去的陷阱）。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

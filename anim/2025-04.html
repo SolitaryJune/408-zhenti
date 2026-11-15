@@ -2,66 +2,210 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2025-04 森林与二叉树概念动画</title>
+<title>2025-04 森林与二叉树 · 转换结构演示动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .fsvg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .fsvg .fedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .35s, stroke .35s, stroke-dasharray .35s}
+  .fsvg .fedge.sib{stroke:#7c3aed;stroke-dasharray:7 5}
+  .fsvg .fedge.cut{stroke:#dc2626;stroke-dasharray:4 5;opacity:.4}
+  .fsvg .fedge.bin{stroke:#16a34a;stroke-width:3.5px}
+  .fsvg .fnode circle{fill:#1b3a4b;transition:fill .3s}
+  .fsvg .fnode text{fill:#fff;font-weight:800;font-size:16px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .fsvg .fnode.hot circle{fill:#e07a2f}
+  .fsvg .band-label{font-size:14.5px;font-weight:800;fill:#1b3a4b}
+  .fsvg .band-note{font-size:12px;fill:#64748b}
+  .fsvg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2025-04 森林 ⇄ 二叉树（SVG 转换演示） ==================
+ * 题：四个说法哪个正确。答案 B：任何森林一定能转化成一棵二叉树。
+ * 演示：森林 {A(B,C), D(E)} 按「左孩子、右兄弟」三步转成二叉树；再用三个小反例图否定 A/C/D。 */
+var NS = 'http://www.w3.org/2000/svg';
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-// 推理链：每一步的完整内容（引擎按步数截取显示）
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>四个说法覆盖二叉树性质与森林转化。策略：能举反例的<b>错</b>，有定理支撑的<b>对</b>，逐项排查。</p>' },
-  { title: '选项 A：完全二叉树不存在度为 1 的结点',
-    cls: 'bad',
-    body: '<p><b>错</b>。反例：n=2 的完全二叉树（根 + 左孩子），根的度就是 1。一般地，完全二叉树结点数 n 为<b>偶数</b>时，恰有一个"只有左孩子"的度 1 结点；"不存在度 1 结点"是<b>满二叉树</b>的特征。</p>' },
-  { title: '选项 B：任何一个森林一定能转化成一棵二叉树',
-    cls: 'good',
-    body: '<p><b>对</b>。孩子-兄弟（左孩子、右兄弟）表示法：各树根视为兄弟连成右链，树内同样处理——任何森林（含空森林）都唯一对应一棵二叉树，且去掉根的右链即可还原。这是标准定理。</p>' },
-  { title: '选项 C：二叉树的分支结点个数比叶结点个数少',
-    cls: 'bad',
-    body: '<p><b>错</b>。恒等式 n0 = n2 + 1 只保证"叶 = 度2 + 1"；分支结点 = n1 + n2 = n0 + n1 − 1，只要 n1 ≥ 1 就<b>不少于</b>叶结点。反例：一条左单链，叶 1 个、分支一堆。</p>' },
-  { title: '选项 D：表达式树的根中保存的是最先计算的运算符',
-    cls: 'bad',
-    body: '<p><b>错</b>。方向记反了：叶子是操作数，<b>越靠近根越后计算</b>，根保存的是<b>最后</b>计算的运算符（如根为 +，说明整个表达式最后才做这次加法）。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>B</b>。记忆锚点：<b>任何森林 ⇄ 一棵二叉树（左孩子右兄弟）</b>；完全二叉树 n 为偶数时有 1 个度 1 结点；表达式树根 = 最后计算的运算符。</p>' },
+/* 主舞台结点：森林坐标 f → 二叉树坐标 b（第 3 步起用 b） */
+var NODES = {
+  A: { f:[140,80],  b:[280,60],  hot:[0,1,2] },
+  B: { f:[60,180],  b:[160,160], hot:[3] },
+  C: { f:[220,180], b:[220,260], hot:[3] },
+  D: { f:[430,80],  b:[420,160], hot:[1,2,3] },
+  E: { f:[430,180], b:[340,260], hot:[3] },
+};
+/* 边：id、端点、各步类别（'' 普通 / 'sib' 兄弟虚线 / 'cut' 被抹 / 'bin' 二叉树边） */
+var EDGES = [
+  { id:'AB', a:'A', b:'B', cls:['','','','bin','bin','bin','bin','bin'] },
+  { id:'AC', a:'A', b:'C', cls:['','sib','cut','','','','',''] },
+  { id:'BC', a:'B', b:'C', cls:['','sib','sib','bin','bin','bin','bin','bin'] },
+  { id:'AD', a:'A', b:'D', cls:['','sib','sib','bin','bin','bin','bin','bin'] },
+  { id:'DE', a:'D', b:'E', cls:['','','','bin','bin','bin','bin','bin'] },
+];
+/* 三个反例小展台（静态，按步显现） */
+var BANDS = [
+  { step:4, ly:350, noteY:368,
+    label:'反例 A：n=2 的完全二叉树 —— 根只有左孩子，度为 1',
+    note:'完全二叉树 n 为偶数时恰有 1 个度 1 结点 →「不存在度 1 结点」错',
+    nodes:[[320,420],[240,480]], edges:[[0,1]], labels:['根','子'] },
+  { step:5, ly:540, noteY:558,
+    label:'反例 C：左单链二叉树（3 个结点）—— 分支结点不比叶结点少',
+    note:'n₀ = n₂ + 1：此树 n₀=1、n₂=0、n₁=2 → 分支 2 个 ＞ 叶 1 个 → 错',
+    nodes:[[320,610],[240,668],[160,726]], edges:[[0,1],[1,2]], labels:['分支','分支','叶'] },
+  { step:6, ly:806, noteY:824,
+    label:'反例 D：表达式树 (a×b + c) —— 根保存的是最后计算的运算符',
+    note:'叶是操作数，越靠近根越后算：先算 a×b，根 + 最后算 →「最先计算的」错',
+    nodes:[[320,880],[240,938],[400,938],[480,996],[320,996]], edges:[[0,1],[0,2],[2,3],[2,4]], labels:['+','a','×','b','c'] },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var SNAPS = [
+  { cls:'shift', tag:'森林', count:0,
+    log:'森林 F 有两棵树：T₁ 是 A 带两个孩子 B、C（B 为长子）；T₂ 是 D 带孩子 E。转换口诀：左孩子、右兄弟；各棵树的根视为兄弟。' },
+  { cls:'ok', tag:'加线', count:1,
+    log:'加线（紫色虚线）：把同一双亲的兄弟连起来 —— B—C；两棵树的根 A、D 也视为兄弟 —— A—D。' },
+  { cls:'shift', tag:'抹线', count:2,
+    log:'抹线：每个双亲只保留与「第一个孩子」的连线 —— A 的长子是 B，抹掉 A—C（红色虚线）；D 的长子是 E，D—E 保留。' },
+  { cls:'ok', tag:'旋转成形', count:3,
+    log:'把横平的兄弟链顺转 45°：得到二叉树 A（左孩子 B，右孩子 D；B 的右孩子 C；D 的左孩子 E）。任何森林都能按此规则唯一转化 ⟹ B 对 ✓' },
+  { cls:'miss', tag:'反例 A', count:4,
+    log:'A 错：n=2 的完全二叉树（根 + 左孩子）里根的度就是 1 —— 完全二叉树可以有度 1 结点（n 为偶数时恰 1 个）；"没有度 1 结点"是满二叉树的特征。' },
+  { cls:'miss', tag:'反例 C', count:5,
+    log:'C 错：n₀ = n₂ + 1 只管度 2 结点。左单链二叉树 n₀=1、n₁=2、n₂=0，分支结点 2 个反而比叶 1 个多 ——「分支比叶少」不成立。' },
+  { cls:'miss', tag:'反例 D', count:6,
+    log:'D 错：表达式树叶是操作数，越靠近根越后计算。a×b + c：先算 ×（深处），根 + 最后才算 —— 根保存的是最后计算的运算符。' },
+  { cls:'done', tag:'汇总', count:6, done:true,
+    log:'B 对：任何森林（含空森林）都能按「左孩子、右兄弟」唯一转化为一棵二叉树，且去掉根的右链可还原 ⟹ 答案 B。' },
+];
+
+var FORMULAS = [
+  '森林 F = { T₁: A(B,C)，T₂: D(E) }',
+  '加线：兄弟连线 B—C、A—D（根视为兄弟）',
+  '抹线：只留长子连线 —— 抹掉 A—C',
+  '结果：A(左B，右D)、B(右C)、D(左E) ⟹ <code>B ✓</code>',
+  'A 错：完全二叉树可有 1 个度 1 结点（n 为偶数时）',
+  'C 错：n₀ = n₂+1 ⟹ 分支 = n₁+n₂ 可比叶多',
+  'D 错：表达式树根 = <b>最后</b>计算的运算符',
+  '<b>答案 B：任何森林 ⇄ 一棵二叉树（左孩子右兄弟）</b>',
+];
+
+function pos(n, i){ return i <= 2 ? n.f : n.b; }
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 1020');
+  svg.setAttribute('class', 'fsvg');
+  var cap = document.createElementNS(NS, 'text');
+  cap.setAttribute('x', 310); cap.setAttribute('y', 30);
+  cap.setAttribute('class', 'band-label'); cap.setAttribute('text-anchor', 'middle');
+  cap.textContent = '森林 → 二叉树：左孩子 · 右兄弟';
+  svg.appendChild(cap);
+  /* 主舞台边（坐标随步更新，故在 render 里重画属性；这里先建元素） */
+  this._edgeLayer = document.createElementNS(NS, 'g');
+  svg.appendChild(this._edgeLayer);
+  this._edgeEls = {};
+  /* 反例展台 */
+  BANDS.forEach(function(bd){
+    var g = document.createElementNS(NS, 'g');
+    g.dataset.step = bd.step;
+    var t1 = document.createElementNS(NS, 'text');
+    t1.setAttribute('x', 16); t1.setAttribute('y', bd.ly);
+    t1.setAttribute('class', 'band-label');
+    t1.textContent = bd.label;
+    var t2 = document.createElementNS(NS, 'text');
+    t2.setAttribute('x', 16); t2.setAttribute('y', bd.noteY);
+    t2.setAttribute('class', 'band-note');
+    t2.textContent = bd.note;
+    g.appendChild(t1); g.appendChild(t2);
+    bd.edges.forEach(function(e){
+      var A = bd.nodes[e[0]], B = bd.nodes[e[1]];
+      var ln = document.createElementNS(NS, 'line');
+      ln.setAttribute('x1', A[0]); ln.setAttribute('y1', A[1] + 16);
+      ln.setAttribute('x2', B[0]); ln.setAttribute('y2', B[1] - 16);
+      ln.setAttribute('stroke', '#5a7d8c'); ln.setAttribute('stroke-width', '2.5');
+      g.appendChild(ln);
+    });
+    bd.nodes.forEach(function(n, ni){
+      var ng = document.createElementNS(NS, 'g');
+      ng.setAttribute('class', 'fnode');
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', n[0]); c.setAttribute('cy', n[1]); c.setAttribute('r', 18);
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', n[0]); t.setAttribute('y', n[1]);
+      t.textContent = bd.labels[ni];
+      ng.appendChild(c); ng.appendChild(t);
+      g.appendChild(ng);
+    });
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  this._svg = svg;
+  this._formula = AW.el('div', 'hformula');
+  stage.appendChild(this._formula);
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  /* 反例展台显隐（前 4 步收起下方展台，避免大片空白） */
+  [].forEach.call(svg.querySelectorAll('g[data-step]'), function(g){
+    g.classList.toggle('hidden-el', +g.dataset.step > i);
+  });
+  svg.setAttribute('viewBox', i <= 3 ? '0 0 620 310' : '0 0 620 1020');
+  /* 主舞台：结点位置与状态（每步重建，数量少） */
+  if (!this._mainLayer){
+    this._mainLayer = document.createElementNS(NS, 'g');
+    svg.insertBefore(this._mainLayer, svg.querySelector('g[data-step]'));
+  }
+  this._mainLayer.innerHTML = '';
+  Object.keys(NODES).forEach(function(id){
+    var n = NODES[id];
+    var p = pos(n, i);
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'fnode main' + (n.hot.indexOf(i) >= 0 ? ' hot' : ''));
+    g.dataset.nid = id;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r', 20);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', p[0]); t.setAttribute('y', p[1]);
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    this._mainLayer.appendChild(g);
+  }, this);
+  /* 主舞台边：每步重建（数量少，代价可忽略） */
+  this._edgeLayer.innerHTML = '';
+  EDGES.forEach(function(e){
+    var cls = e.cls[Math.min(i, e.cls.length - 1)];
+    if (!cls) return;
+    var A = pos(NODES[e.a], i), B = pos(NODES[e.b], i);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', A[0]); ln.setAttribute('y1', A[1] + 20);
+    ln.setAttribute('x2', B[0]); ln.setAttribute('y2', B[1] - 20);
+    ln.setAttribute('class', 'fedge ' + cls);
+    this._edgeLayer.appendChild(ln);
+  }, this);
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
 
 AW.init({
-  title: '森林与二叉树：四个说法逐项排查',
-  subtitle: '考点：树/森林 ⇄ 二叉树转化 · 二叉树性质 · 表达式树 · 选项逐项推演',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2025-04 森林与二叉树 · 转换结构演示动画',
+  subtitle: '题：下列关于森林与二叉树的说法正确的是？<br>A 完全二叉树无度 1 结点　B 任何森林一定能转化成一棵二叉树　C 分支结点比叶少　D 表达式树根是最先计算的运算符',
+  counterLabel: '演示步',
+  ribbonTitle: '选项判定（✓ 成立 / ✗ 有反例）',
+  intro: '点击「▶ 播放」：亲眼看森林按「左孩子、右兄弟」变成二叉树，再用三个小反例图排除 A/C/D。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 B',
-    html: '记忆锚点：<b>左孩子右兄弟</b>——任何森林都能唯一转化为一棵二叉树。<br>干扰项来源：A 把满二叉树的性质安到完全二叉树上；C 忽略 n1 ≥ 1 的情形；D 把表达式树的计算顺序记反。',
+    html: '<b>任何森林都能按「左孩子、右兄弟」规则唯一转化为一棵二叉树</b>（各树根视为兄弟连成右链），去掉根的右链即可还原 —— 过程可逆，B 对。<br>' +
+      '反例锚点：A —— n 为偶数的完全二叉树恰有 1 个度 1 结点（"无度 1"是满二叉树）；C —— 左单链 n₀=1、n₁=2，分支 2 &gt; 叶 1；D —— 表达式树<b>越靠根越后算</b>，根是最后计算的运算符。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

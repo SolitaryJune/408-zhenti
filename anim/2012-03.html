@@ -2,74 +2,173 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2012-03 前序+后序确定根的孩子</title>
+<title>2012-03 前序+后序确定根的孩子 · 结构演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bt-svg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bt-svg .edge{stroke:#5a7d8c;stroke-width:2.5px}
+  .bt-svg .node circle{fill:#1b3a4b;stroke:#1b3a4b;stroke-width:2.5px;transition:fill .35s}
+  .bt-svg .node text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:16px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff}
+  .bt-svg .node.hot circle{fill:#e07a2f;stroke:#9a3412}
+  .bt-svg .node.hidden-el{opacity:0}
+  .seq-label{font-size:13px;color:#64748b;margin:10px 0 4px}
+  .seq-label b{color:#334155}
+  .seq-wrap{display:flex;justify-content:center}
+  .hformula{margin-top:12px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/推理链类：前序+后序 → 根的孩子
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2012-03 前序+后序 → 根的孩子（SVG + 序列指针） ==================
+ * 题：前序 a,e,b,d,c、后序 b,c,d,e,a，根结点的孩子？（答案 A：只有 e）
+ * 演示：前序第 2 个 = e 且后序倒数第 2 = e ⇒ a 若有两个孩子则矛盾 ⇒ 只有唯一孩子 e。 */
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>前序 <code>a e b d c</code>，后序 <code>b c d e a</code>。考点：<b>前序＋后序能确定树的什么</b>——根必确定；根的孩子个数要靠「左右孩子判别规则」推理。</p>' },
-  { title: '先定根',
-    cls: 'good',
-    body: '<p>前序第一个元素 = 后序最后一个元素 = 根：<b>根是 a</b>，两个序列互相印证。</p>' },
-  { title: '孩子判别规则',
-    cls: 'key',
-    body: '<p>若根有<b>两个孩子</b>：前序中紧跟根的是<b>左孩子</b>（左子树先访问）；后序中紧贴根的是<b>右孩子</b>（右子树最后访问完）。两者应是<b>不同</b>的结点。</p>' },
-  { title: '套用规则 → 矛盾',
-    cls: 'bad',
-    body: '<p>本题：前序中 a 后面是 <code>e</code>（左孩子候选）；后序中 a 前面也是 <code>e</code>（右孩子候选）。左、右都指向 e ⇒ <b>矛盾</b> ⇒ 根 a <b>只有一个孩子</b>。</p>' },
-  { title: '确认唯一孩子是 e',
-    cls: 'good',
-    body: '<p>只有一个孩子时，它既紧排前序根后、又紧排后序根前——就是 <b>e</b>。顺势再推：e 的子树满足前序 <code>e b d c</code> / 后序 <code>b c d e</code>，同样规则可得 e 的孩子是 b，结构自洽。</p>' },
-  { title: '逐项排除',
-    cls: 'bad',
-    body: '<p>B「有 e、b」：b 排在前序 e 之后，是 <b>e 的孩子</b>，不是 a 的孩子。</p>' +
-          '<p>C「有 e、c」：c 在更深层，同理不是 a 的孩子。</p>' +
-          '<p>D「无法确定」：前序＋后序虽一般不能唯一确定整棵树，但本题「独生子」情形下根的孩子<b>完全可确定</b>。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>A（只有 e）</b>。口诀：<b>前序找左、后序找右；两者重合 ⇒ 独生子。</b></p>' },
+/* 各阶段结点坐标（5 结点链，孩子可左可右）与可见性 */
+var NODE_IDS = ['a', 'e', 'b', 'd', 'c'];
+var VIEWS = [
+  { pos:{}, vis:[] },
+  { pos:{a:[310,45]}, vis:['a'], hot:['a'] },
+  { pos:{a:[310,45]}, vis:['a'], hot:['a'] },
+  { pos:{a:[310,45]}, vis:['a'], hot:['a'] },
+  { pos:{a:[310,45], e:[310,115]}, vis:['a','e'], hot:['e'] },
+  { pos:{a:[310,45], e:[310,115], b:[310,185]}, vis:['a','e','b'], hot:['b'] },
+  { pos:{a:[310,45], e:[310,115], b:[310,185], d:[310,255], c:[310,325]}, vis:['a','e','b','d','c'], hot:['d','c'] },
+  { pos:{a:[310,45], e:[240,115], b:[170,185], d:[100,255], c:[30,325]}, vis:['a','e','b','d','c'], hot:[] },
+  { pos:{a:[310,45], e:[240,115], b:[170,185], d:[100,255], c:[30,325]}, vis:['a','e','b','d','c'], hot:['e'] },
+];
+var EDGE_VIS = [ false, false, false, false, true, true, true, true, true ];
+/* 序列行配色：[前序5格, 后序5格] + 指针 */
+var ROWVIEW = [
+  { pre:['dim','dim','dim','dim','dim'], post:['dim','dim','dim','dim','dim'], pptr:{}, qptr:{} },
+  { pre:['hit','','','',''], post:['','','','','hit'], pptr:{1:'前序第1个=根'}, qptr:{5:'后序最后=根'} },
+  { pre:['','hit','','',''], post:['','','','hit',''], pptr:{2:'前序第2个'}, qptr:{4:'后序倒数第2'} },
+  { pre:['','hit','','',''], post:['','','','hit',''], pptr:{2:'若有两个孩子：这是左子树的根'}, qptr:{4:'而这应是右子树最后访问的点'} },
+  { pre:['','hit','','',''], post:['','','','hit',''], pptr:{}, qptr:{} },
+  { pre:['','hit','','',''], post:['','','','hit',''], pptr:{}, qptr:{} },
+  { pre:['','','','',''], post:['','','','',''], pptr:{}, qptr:{} },
+  { pre:['','','','',''], post:['','','','',''], pptr:{}, qptr:{} },
+  { pre:['','hit','','',''], post:['','','','hit',''], pptr:{2:'孩子关系由序列定死'}, qptr:{4:'与左右挂法无关'} },
+];
+var FORMULAS = [
+  '题：前序 = a,e,b,d,c；后序 = b,c,d,e,a。问根 a 的孩子',
+  '定根：前序第一个 = <code>a</code>，后序最后一个也 = a ✓',
+  '对比关键位：前序第 2 个 = <code>e</code>，后序倒数第 2 个 = <code>e</code> —— 是同一个结点！',
+  '若 a 有两个孩子：前序第 2 个应是<b>左</b>子树的根，后序倒数第 2 个应在<b>右</b>子树里 —— 两个位置分属两棵不相交的子树，不可能是同一个 e ⇒ 矛盾',
+  '∴ a 不可能有两个孩子，也先证不出零个（前序有 e 跟随）⇒ a 只有<b>唯一孩子 e</b>',
+  '递归看 e 的子树：前序 e 之后 3 个（b,d,c）＝ 后序 e 之前 3 个（b,c,d）⇒ 同理 e 只有唯一孩子 b',
+  'b→d→c 同理 —— 整棵树是链 a−e−b−d−c，孩子关系全部确定',
+  '但每个孩子挂左还是挂右不定（图中全挂左只是其中一种）⇒ 中序不唯一，<b>根的孩子</b>却是确定的',
+  '根的孩子 = 只有 <b>e</b>（选 A）',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 360');
+  svg.setAttribute('class', 'bt-svg');
+  for (var k = 0; k < 4; k++){
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('class', 'edge hidden-el');
+    ln.dataset.idx = k;
+    svg.appendChild(ln);
+  }
+  NODE_IDS.forEach(function(id){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node hidden-el');
+    g.dataset.id = id;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('r', 21);
+    var t = document.createElementNS(svgNS, 'text');
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  var preBox = AW.el('div', 'seq-wrap');
+  var postBox = AW.el('div', 'seq-wrap');
+  stage.appendChild(AW.el('div', 'seq-label', '<b>前序遍历</b>：a, e, b, d, c'));
+  stage.appendChild(preBox);
+  stage.appendChild(AW.el('div', 'seq-label', '<b>后序遍历</b>：b, c, d, e, a'));
+  stage.appendChild(postBox);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._preBox = preBox; this._postBox = postBox; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var v = VIEWS[Math.min(i, VIEWS.length - 1)];
+  var chainPos = ['a','e','b','d','c'].map(function(id){ return v.pos[id]; });
+  [].forEach.call(svg.querySelectorAll('.node'), function(el){
+    var id = el.dataset.id, p = v.pos[id];
+    if (p){
+      el.querySelector('circle').setAttribute('cx', p[0]);
+      el.querySelector('circle').setAttribute('cy', p[1]);
+      var t = el.querySelector('text');
+      t.setAttribute('x', p[0]); t.setAttribute('y', p[1]);
+    }
+    el.classList.toggle('hidden-el', v.vis.indexOf(id) < 0);
+    el.classList.remove('hot');
+    if (v.hot.indexOf(id) >= 0) el.classList.add('hot');
+  });
+  [].forEach.call(svg.querySelectorAll('.edge'), function(el, k){
+    var A = chainPos[k], B = chainPos[k + 1];
+    if (A && B && EDGE_VIS[Math.min(i, EDGE_VIS.length - 1)]){
+      el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]);
+      el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
+    }
+    el.classList.toggle('hidden-el', !(A && B && EDGE_VIS[Math.min(i, EDGE_VIS.length - 1)]));
+  });
+  var rv = ROWVIEW[Math.min(i, ROWVIEW.length - 1)];
+  this._preBox.innerHTML = '';
+  this._preBox.appendChild(AW.cellRow(['a','e','b','d','c'], rv.pre, rv.pptr));
+  this._postBox.innerHTML = '';
+  this._postBox.appendChild(AW.cellRow(['b','c','d','e','a'], rv.post, rv.qptr));
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'前序 a,e,b,d,c、后序 b,c,d,e,a。问：根结点 a 的孩子是谁？用「关键位对比」来锁定。' },
+  { cls:'ok', tag:'定根', count:1,
+    log:'前序第一个就是根：a；后序最后一个也是 a，互相印证。' },
+  { cls:'step', tag:'关键位对比', count:2,
+    log:'前序第 2 个是 e，后序倒数第 2 个也是 e —— 两个关键位置指向同一个结点！' },
+  { cls:'miss', tag:'两个孩子？矛盾', count:3,
+    log:'反设 a 有两个孩子：前序第 2 个必是左子树的根；后序倒数第 2 个必是右子树里最后访问的结点。左右子树不相交，这两处不可能是同一个 e ⇒ a 不可能有两个孩子。' },
+  { cls:'ok', tag:'唯一孩子 e', count:4,
+    log:'前序中 e 紧跟 a，说明 e 这个孩子存在且唯一 ⇒ 根 a 只有孩子 e（本题所问已解决）。' },
+  { cls:'step', tag:'递归推进', count:5,
+    log:'继续看 e 的子树：前序 e 后面 3 个 = b,d,c；后序 e 前面 3 个 = b,c,d。同样道理，e 只有唯一孩子 b。' },
+  { cls:'ok', tag:'整树是链', count:6,
+    log:'b→d、d→c 同理逐层唯一 ⇒ 整棵树是链 a−e−b−d−c，孩子关系完全确定。' },
+  { cls:'shift', tag:'左右仍不定', count:7,
+    log:'注意：每个孩子挂左还是挂右没有信息决定（图中是全挂左的一种）。中序序列会随挂法变，但「谁是谁的孩子」不变。' },
+  { cls:'done', tag:'完成', count:8, done:true,
+    log:'根结点只有孩子 e，选 A。' },
+];
 
 AW.init({
-  title: '由前序＋后序序列确定根的孩子',
-  subtitle: '前序 <code>a e b d c</code> · 后序 <code>b c d e a</code> · 推理链逐项展开',
+  title: '2012-03 · 前序 a,e,b,d,c ＋ 后序 b,c,d,e,a，根的孩子是？',
+  subtitle: '考点：前序＋后序可确定每个结点的<b>孩子数</b> · 关键位对比：<code>前序第2个 vs 后序倒数第2个</code>',
   counterLabel: '推理步',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  intro: '点击「▶ 播放」：先定位根，再对比两个序列的关键位置，推出 a 只有一个孩子 e。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 A · 只有 e',
-    html: '前序根后第一个 = e（左孩子候选），后序根前最后一个也是 e（右孩子候选）——两者重合 ⇒ 根只有一个孩子 e。<br>干扰项 B 里的 <code>b</code> 其实是 <b>e 的孩子</b>；D 的「无法确定」忽略了「独生子」这一无歧义情形。',
+    big: '答案 A · 根只有孩子 e',
+    html: '前序第 2 个（=e）与后序倒数第 2 个（=e）重合 ⇒ 若 a 有两个孩子，这两处应分属左、右两棵不相交的子树，矛盾 ⇒ ' +
+      '<b>a 只有唯一孩子 e</b>。继续递归得整树为链 a−e−b−d−c（左右挂法不定、中序不定，孩子关系确定）。<br>' +
+      '记忆锚点：<code>前序第2个 ＝ 后序倒数第2个 ⇒ 根只有一个孩子</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

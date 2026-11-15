@@ -2,71 +2,170 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2013-06 BST 删除 v 再插入 v：T1 与 T3 相同吗</title>
+<title>2013-06 BST 删除 v 再插入 v · T1 与 T3 相同吗</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bst-svg{width:100%;max-width:560px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .notrans *{transition:none!important}
+  .bst-svg .tnode{transition:transform .55s cubic-bezier(.22,.8,.3,1), opacity .4s}
+  .bst-svg .tnode circle{fill:#1b3a4b;transition:fill .3s}
+  .bst-svg .tnode text{fill:#fff;font-weight:800;font-size:15px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .bst-svg .tnode.hit circle{fill:#16a34a}
+  .bst-svg .tnode.bad circle{fill:#dc2626}
+  .bst-svg .tnode.bad{opacity:.3}
+  .bst-svg .tnode.rot circle{fill:#d97706}
+  .bst-svg .tnode.vmark circle{fill:#e63946}
+  .bst-svg .tnode.dim{opacity:.4}
+  .bst-svg .tedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s}
+  .bst-svg .treelabel{font-size:13px;font-weight:800;fill:#1b3a4b;text-anchor:middle;
+    font-family:"PingFang SC",sans-serif}
+  .bst-svg .pathcap{font-size:11px;font-weight:700;fill:#e07a2f;text-anchor:middle}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 模板：anim_concept_template.html（概念/分析类），只改 AW.init 区域 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2013-06 BST 删 v 再插 v（SVG 结构演示） ==================
+ * 实验一（v 是叶）：T1 = 5(3,8)，删 3 再插 3 → 完全复原 → Ⅱ 对、Ⅰ 错。
+ * 实验二（v 不是叶）：T1' = 5(3(1,4),8)，删 3（后继 4 顶位）再插 3 → 3 落到 1 的右下 → Ⅲ 对、Ⅳ 错。选 C。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
-}
-
-// v 只有一个孩子的删除-再插入小例子
-var EG =
-'<pre style="background:#f8fafc;padding:12px;border-radius:10px;font-family:Menlo,monospace;font-size:14px;line-height:1.55;margin-top:8px">'
-+ 'T1:    v(根)         T2:    c(根)        T3:    c(根)\n'
-+ '      /                     \\\\                  \\\\\n'
-+ '    c                        v                  v\n'
-+ '(v 是分支结点)         (删 v：c 顶位)     (插 v：只能成叶)\n'
-+ '</pre>'
-+ '<p style="font-size:12.5px;color:#64748b">T1 中 v 有孩子；T3 中 v 成了叶 → 同一关键字的孩子数不同 → T3 ≠ T1。</p>';
-
-var STEPS = [
-  { title: '审题眼', cls: 'key',
-    body: '<p>T1 删除结点 v 得 T2，再把 v 插回 T2 得 T3。问 T1 与 T3 的关系——关键看两点：<b>删除怎么改变树形</b>、<b>插入落在什么位置</b>。分"v 是叶 / 不是叶"两种情形讨论。</p>' },
-  { title: '情形一：v 是叶结点', cls: '',
-    body: '<p>BST 删除叶结点 = <b>直接摘除</b>，其余结点纹丝不动。再插回 v：从根按关键字一路比较，比较路径与原来完全一致，必然走到原来那个空位——v 回到原位、仍是叶。</p>' },
-  { title: '情形一结论：T3 = T1', cls: 'good',
-    body: '<p>v 是叶时删除再插入<b>完全复原</b> → <b>Ⅱ「若 v 是叶则 T1 与 T3 相同」正确</b>；Ⅰ「若 v 是叶则不同」错误。</p>' },
-  { title: '情形二：v 不是叶结点', cls: '',
-    body: '<p>v 有孩子，删除必须"找人顶位"：只有一个孩子 → 孩子直接顶替 v；有两个孩子 → 用 v 的<b>中序前驱（或后继）</b>替补，再递归删除替补结点。无论哪种，v 原来的位置被别人占据，<b>树形已经改变</b>。</p>' },
-  { title: '小例子（v 只有一个孩子）', cls: '',
-    body: EG },
-  { title: '情形二结论：T3 ≠ T1', cls: 'good',
-    body: '<p>再插入 v 时，新结点只能落在<b>空指针处，必然是叶</b>。而 T1 中 v 是有孩子的分支结点——同一个关键字，孩子数都不同，两棵树不可能相同 → <b>Ⅲ「若 v 不是叶则 T1 与 T3 不同」正确</b>；Ⅳ 错误。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>正确的是 <b>Ⅱ、Ⅲ</b>，选 <b>C</b>。</p>'
-        + '<p>记忆锚点：<b>叶结点删了再插会复原；带孩子的结点删除时树形已动，插回的 v 只能当叶，回不到原位。</b></p>' }
+/* 每步：结点位置（[x,y]，null = 不显示）+ 边 + 配色 + 顶部标签 */
+var LAYOUTS = [
+  { pos:{5:[240,75], 3:[160,165], 8:[320,165], 1:null, 4:null},
+    edges:['5-3','5-8'], cls:{3:'vmark'}, cap:'实验一 · T₁（v = 3，叶）', bf:{} },     // 0
+  { pos:{5:[240,75], 3:[160,165], 8:[320,165], 1:null, 4:null},
+    edges:['5-8'], cls:{3:'bad'}, cap:'实验一 · T₂（删除叶 3）', bf:{} },               // 1
+  { pos:{5:[240,75], 3:[160,165], 8:[320,165], 1:null, 4:null},
+    edges:['5-3','5-8'], cls:{3:'hit'}, cap:'实验一 · T₃（插回 3）= T₁', bf:{} },      // 2
+  { pos:{5:[240,75], 3:[150,165], 8:[330,165], 1:[100,255], 4:[200,255]},
+    edges:['5-3','5-8','3-1','3-4'], cls:{3:'vmark'}, cap:'实验二 · T₁′（v = 3，分支结点）', bf:{} }, // 3
+  { pos:{5:[240,75], 3:[40,340], 8:[330,165], 1:[100,255], 4:[150,165]},
+    edges:['5-8','5-4','4-1'], cls:{3:'bad',4:'rot'},
+    cap:'实验二 · T₂′（后继 4 顶替 3）',
+    bf:{4:'后继顶位'} },                                                                // 4
+  { pos:{5:[240,75], 3:[200,335], 8:[330,165], 1:[100,255], 4:[150,165]},
+    edges:['5-8','5-4','4-1','1-3'], cls:{3:'hit'},
+    cap:'实验二 · T₃′（插回 3）≠ T₁′',
+    bf:{3:'只能当叶'} },                                                                // 5
+  { pos:{5:[240,75], 3:[200,335], 8:[330,165], 1:[100,255], 4:[150,165]},
+    edges:['5-8','5-4','4-1','1-3'], cls:{3:'hit'},
+    cap:'结论：Ⅱ、Ⅲ 正确 → 选 C',
+    bf:{} },                                                                            // 6
+];
+var FORMULAS = [
+  '实验一：<code>T₁ = 5(3, 8)</code>，取叶结点 v = 3（红标）',
+  '删叶 = 直接摘除，其余结点纹丝不动',
+  '插回 3：3 &lt; 5 → 左走 → 恰好落回原空位 → <code>T₃ = T₁</code>',
+  '实验二：<code>T₁′ = 5(3(1,4), 8)</code>，v = 3 有两个孩子',
+  '双子删除：中序后继 4 顶替 3 的位置 → <code>T₂′ = 5(4(1,), 8)</code>',
+  '插回 3：3&lt;5→左，3&lt;4→左，3&gt;1→右 → 挂到 1 的右下 → <code>T₃′ ≠ T₁′</code>',
+  'Ⅱ、Ⅲ 正确 → <b>选 C</b>',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 480 400');
+  svg.setAttribute('class', 'bst-svg');
+  this._edges = {}; this._nodes = {};
+  ['5-3', '5-8', '3-1', '3-4', '5-4', '4-1', '1-3'].forEach(function(key){
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('class', 'tedge');
+    ln.setAttribute('visibility', 'hidden');
+    this._edges[key] = ln;
+    svg.appendChild(ln);
+  }, this);
+  var IDS = ['5', '3', '8', '1', '4'];
+  IDS.forEach(function(id){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'tnode');
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', 0); c.setAttribute('cy', 0); c.setAttribute('r', 20);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', 0); t.setAttribute('y', 0);
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    g.setAttribute('visibility', 'hidden');
+    this._nodes[id] = { g:g, note:null };
+    svg.appendChild(g);
+  }, this);
+  var cap = document.createElementNS(svgNS, 'text');
+  cap.setAttribute('x', 240); cap.setAttribute('y', 26);
+  cap.setAttribute('class', 'treelabel');
+  this._cap = cap;
+  svg.appendChild(cap);
+  stage.appendChild(svg);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var self = this;
+  var lay = LAYOUTS[Math.min(i, LAYOUTS.length - 1)];
+  this._cap.textContent = lay.cap;
+  Object.keys(this._nodes).forEach(function(id){
+    var nd = self._nodes[id];
+    var p = lay.pos[id];
+    if (!p){ nd.g.setAttribute('visibility', 'hidden'); return; }
+    nd.g.setAttribute('visibility', 'visible');
+    nd.g.style.transform = 'translate(' + p[0] + 'px,' + p[1] + 'px)';
+    nd.g.setAttribute('class', 'tnode' + (lay.cls[id] ? ' ' + lay.cls[id] : ''));
+  });
+  var active = {};
+  lay.edges.forEach(function(k){ active[k] = true; });
+  Object.keys(this._edges).forEach(function(key){
+    var ln = self._edges[key];
+    if (!active[key]){ ln.setAttribute('visibility', 'hidden'); return; }
+    var ids = key.split('-');
+    var A = lay.pos[ids[0]], B = lay.pos[ids[1]];
+    if (!A || !B){ ln.setAttribute('visibility', 'hidden'); return; }
+    ln.setAttribute('visibility', 'visible');
+    ln.setAttribute('x1', A[0]); ln.setAttribute('y1', A[1] + 20);
+    ln.setAttribute('x2', B[0]); ln.setAttribute('y2', B[1] - 20);
+  });
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'step', tag:'实验一 · v 是叶', count:0,
+    log:'T₁ = 5(3, 8)，取叶结点 v = 3（红标）。问题：删 3 得 T₂，再插 3 得 T₃，T₃ 与 T₁ 相同吗？' },
+  { cls:'miss', tag:'删除叶 3', count:1,
+    log:'BST 删除叶结点 = 直接摘除，其余结点纹丝不动 → T₂ = 5(, 8)（3 变灰消失）。' },
+  { cls:'ok', tag:'插回 3 → 复原', count:2, ribbon:{k:1, ok:true},
+    log:'重新插入 3：从根比较，3 < 5 → 左走 → 恰好落回原来的空位 → T₃ = 5(3, 8)，与 T₁ 完全相同 → 论断 Ⅱ「v 是叶则相同」对 ✓，Ⅰ 错 ✗' },
+  { cls:'step', tag:'实验二 · v 不是叶', count:3,
+    log:'换 T₁′ = 5(3(1, 4), 8)，v = 3 是分支结点（有两个孩子）。' },
+  { cls:'shift', tag:'删除 3（双子）', count:4,
+    log:'删除双子结点 3：用中序后继 4 顶替其位置 → T₂′ = 5(4(1,), 8)（3 被扔到角落，4 琥珀上移补位）。树形已经改变！' },
+  { cls:'ok', tag:'插回 3 → 变叶', count:5, ribbon:{k:2, ok:true},
+    log:'重新插入 3：3 < 5 → 左；3 < 4 → 左；3 > 1 → 右 → 3 挂到 1 的右下成为叶：T₃′ = 5(4(1(,3)), 8)，与 T₁′ 不同（v 从分支结点变成了叶）→ 论断 Ⅲ「v 不是叶则不同」对 ✓，Ⅳ 错 ✗' },
+  { cls:'done', tag:'完成', count:5, done:true,
+    log:'正确的是 Ⅱ、Ⅲ → 选 C。' },
+];
 
 AW.init({
-  title: '二叉排序树：删 v 再插 v，T1 与 T3 相同吗（2013-06）',
-  subtitle: '删除 T1 中的 v 得 T2 · 插入 v 得 T3 · 判断 Ⅰ~Ⅳ 四个命题',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2013-06 二叉排序树：删 v 再插 v，T₁ 与 T₃ 相同吗',
+  subtitle: 'T₁ 删除 v → T₂；T₂ 插入 v → T₃。两组真实 BST 实验：v 为叶 / v 不为叶',
+  counterLabel: '实验步',
+  ribbonTitle: '结论判定（✓）',
+  intro: '点击「▶ 播放」：两组实验各演示「删除 → 插回」全过程，结点会真实移动（绿 = 插回的 v，琥珀 = 顶位的后继）。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C：仅 Ⅱ、Ⅲ',
-    html: 'v 是叶：删除 = 直接摘，插回走原路回原位 → <b>T3 = T1</b>（Ⅱ 对）。<br>v 不是叶：删除要"顶位"，树形已变；插回的 v 只能是叶，与 T1 中有孩子的 v 矛盾 → <b>T3 ≠ T1</b>（Ⅲ 对）。故选 <b>C</b>。'
-  }
+    html: 'v 是叶：删除 = 直接摘除，插回时按原比较路径走回原空位 → <b>T₃ = T₁</b>（Ⅱ 对）。<br>' +
+      'v 不是叶：删除必须"找人顶位"（单孩 → 孩子顶替；双孩 → 中序前驱/后继顶替），树形已变；插回的 v 只能落在空指针处、<b>必然是叶</b>，而 T₁ 中 v 有孩子 → <b>T₃ ≠ T₁</b>（Ⅲ 对）。<br>' +
+      '记忆锚点：<code>叶删除不留痕迹；分支结点一删树形就动，插回的 v 回不到原位</code>。',
+  },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

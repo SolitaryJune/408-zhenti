@@ -2,56 +2,171 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2017-07 动画：握手定理求最少顶点数</title>
+<title>2017-07 度数与最少顶点数 · 构图验证动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .gsvg{width:100%;max-width:760px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .gsvg .gedge{stroke:#8fa5b0;stroke-width:2.2px;transition:opacity .4s, stroke .3s}
+  .gsvg .gnode circle{fill:#fff;stroke:#1b3a4b;stroke-width:2.5px;transition:opacity .4s, fill .3s}
+  .gsvg .gnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#1b3a4b;transition:opacity .4s}
+  .gsvg .gnode.hot circle{fill:#e07a2f;stroke:#e07a2f}
+  .gsvg .gnode.hot text{fill:#fff}
+  .gsvg .gnode.full circle{fill:#16a34a;stroke:#16a34a}
+  .gsvg .gnode.full text{fill:#fff}
+  .gsvg .deg{font-family:JetBrains Mono,Menlo,monospace;font-size:12.5px;font-weight:700;
+    text-anchor:middle;fill:#64748b;transition:opacity .4s, fill .3s}
+  .gsvg .deg.full{fill:#16a34a}
+  .gsvg .hidden-el{opacity:0}
+  .gformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .gformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 2017-07 度数守恒推理（概念/推理链类） -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+/* ================== 2017-07 图的度数与最少顶点数（构图验证 SVG） ==================
+ * 题：无向图 16 条边，3 个度4顶点、4 个度3顶点、其余顶点度均 <3，顶点数至少多少？（答案 B：11）
+ * 演示：握手定理算出剩余度数 8 → 下界 11 → 真画出一张 11 顶点 16 边的图验证可行。 */
 
-var STEPS = [
-  { title: '审题眼', cls: 'key',
-    body: '<p>无向图 G：16 条边；度为 4 的顶点 3 个，度为 3 的顶点 4 个，其余顶点的度均小于 3。求顶点数<b>至少</b>多少——方向：让其余顶点的度数<b>尽量大</b>，顶点才尽量少。</p>' },
-  { title: '第一步：握手定理（度数守恒）', cls: 'key',
-    body: '<p>无向图所有顶点的度数之和 = 2 × 边数：<code>Σdeg = 2 × 16 = 32</code>。每条边给两个端点各贡献 1 度。</p>' },
-  { title: '第二步：已知顶点占用的度数', cls: 'step',
-    body: '<p>3 个 4 度顶点：3 × 4 = 12；4 个 3 度顶点：4 × 3 = 12；合计 <b>24</b>。剩余 <code>32 − 24 = 8</code> 度，由「度 &lt; 3」的其余顶点承担。</p>' },
-  { title: '第三步：剩余顶点顶格取 2 度', cls: 'good',
-    body: '<p>要顶点最少，每个剩余顶点度数顶格取 2 → <code>8 ÷ 2 = 4</code> 个。总顶点数 = 3 + 4 + 4 = <b>11</b>。（度序列 4,4,4,3,3,3,3,2,2,2,2 可以画出 16 条边的图，11 可以取到。）</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>顶点数至少 <b>11</b> → 选 <b>B</b>。</p>' },
+var NODES = [
+  { id:'A', x:390, y:115, d:4, core:true, step:0 },
+  { id:'B', x:560, y:155, d:4, core:true, step:0 },
+  { id:'C', x:640, y:290, d:4, core:true, step:0 },
+  { id:'D', x:510, y:395, d:3, core:true, step:0 },
+  { id:'E', x:270, y:395, d:3, core:true, step:0 },
+  { id:'F', x:140, y:290, d:3, core:true, step:0 },
+  { id:'G', x:220, y:155, d:3, core:true, step:0 },
+  { id:'H', x:505, y:55,  d:2, step:3 },
+  { id:'I', x:705, y:395, d:2, step:3 },
+  { id:'J', x:75,  y:395, d:2, step:3 },
+  { id:'K', x:275, y:55,  d:2, step:3 },
+];
+var EDGES = [
+  { a:'H', b:'A', step:4 }, { a:'H', b:'B', step:4 },
+  { a:'I', b:'C', step:4 }, { a:'I', b:'D', step:4 },
+  { a:'J', b:'E', step:4 }, { a:'J', b:'F', step:4 },
+  { a:'K', b:'G', step:4 }, { a:'K', b:'A', step:4 },
+  { a:'A', b:'B', step:5 }, { a:'A', b:'C', step:5 },
+  { a:'B', b:'C', step:5 }, { a:'C', b:'D', step:5 },
+  { a:'D', b:'E', step:5 }, { a:'E', b:'F', step:5 },
+  { a:'F', b:'G', step:5 }, { a:'G', b:'B', step:5 },
+];
+var SNAPS = [
+  { cls:'shift', tag:'握手定理', count:0,
+    log:'已知：16 条边、3 个度 4 顶点、4 个度 3 顶点、其余顶点度均 <3。握手定理：所有顶点度数之和 = 2×边数 = 32。' },
+  { cls:'step', tag:'扣已知', count:1,
+    log:'3 个度 4 顶点 + 4 个度 3 顶点已占去 3×4 + 4×3 = 24 度，剩余度数 = 32 − 24 = 8，要由「度 <3」的其他顶点承担。' },
+  { cls:'step', tag:'压下界', count:2,
+    log:'要顶点最少，就让其余顶点度数尽量大：每个最多 2 度 → 至少还要 ⌈8/2⌉ = 4 个顶点 → 顶点数 ≥ 3 + 4 + 4 = 11。下界能不能取到？真画一张图验证。' },
+  { cls:'ok', tag:'补 4 个顶点', count:3,
+    log:'补入 4 个「度 ≤2」顶点 H、I、J、K —— 数量恰好达到下界 11，每个要贡献 2 度。' },
+  { cls:'ok', tag:'挂 8 条边', count:4,
+    log:'给 H、I、J、K 各接 2 条边（挂到 A~G 上）：度数徽章开始累计。' },
+  { cls:'ok', tag:'连核心 8 条边', count:5,
+    log:'再连核心 8 条边：A–B、A–C 与六边形环 B–C–D–E–F–G–B。16 条边齐了。' },
+  { cls:'step', tag:'核对度数', count:6,
+    log:'核对：A=B=C=4 ✓，D=E=F=G=3 ✓，H=I=J=K=2 ✓，度数和 32 = 2×16 ✓ —— 11 个顶点、16 条边的图真实存在，下界可达！' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'反证 10 不行：除已知 7 个顶点外只剩 3 个，最多补 3×2 = 6 度 < 8。顶点数至少 11，选 B。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svgEl, formulaBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 780 450');
+  svg.setAttribute('class', 'gsvg');
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'gedge hidden-el');
+    ln.dataset.step = e.step;
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'gnode hidden-el');
+    g.dataset.id = n.id; g.dataset.step = n.step; g.dataset.d = n.d;
+    if (n.core) g.dataset.core = '1';
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 22);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    var dg = document.createElementNS(svgNS, 'text');
+    dg.setAttribute('x', n.x); dg.setAttribute('y', n.y + 38);
+    dg.setAttribute('class', 'deg hidden-el');
+    dg.dataset.id = n.id; dg.dataset.step = n.step;
+    svg.appendChild(dg);
+  });
+  stage.appendChild(svg);
+  formulaBox = AW.el('div', 'gformula');
+  stage.appendChild(formulaBox);
+  svgEl = svg;
+}
+
+/* 某步时顶点 v 已连出的边数 */
+function degAt(id, i){
+  var d = 0;
+  EDGES.forEach(function(e){ if (e.step <= i && (e.a === id || e.b === id)) d++; });
+  return d;
+}
+
+function render(stage, sn, i){
+  var svg = svgEl;
+  [].forEach.call(svg.querySelectorAll('.gnode, .gedge, .deg'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+    el.classList.remove('hot', 'full');
+  });
+  [].forEach.call(svg.querySelectorAll('.gnode'), function(el){
+    var id = el.dataset.id, target = +el.dataset.d;
+    if (i === 3 && !el.dataset.core) el.classList.add('hot');         // 新补的 4 个顶点
+    if (i >= 6 && degAt(id, i) === target) el.classList.add('full');  // 核对通过
+  });
+  [].forEach.call(svg.querySelectorAll('.deg'), function(el){
+    var id = el.dataset.id, target = 0;
+    NODES.forEach(function(n){ if (n.id === id) target = n.d; });
+    if (i < 4 && target === 2) { el.textContent = '度≤2'; return; }
+    el.textContent = '度 ' + degAt(id, i) + (degAt(id, i) === target && i >= 6 ? ' ✓' : '');
+    if (i >= 6 && degAt(id, i) === target) el.classList.add('full');
+  });
+  var formulas = [
+    'Σ度 = 2 × 16 = <code>32</code>',
+    '3×4 + 4×3 = 24　→　剩余度数 = 32 − 24 = <code>8</code>',
+    '每个剩余顶点度 ≤2　→　至少再要 ⌈8/2⌉ = 4 个　→　顶点数 ≥ <code>3+4+4 = 11</code>',
+    '补入 4 个度 2 顶点 H、I、J、K（共 11 个）',
+    '挂边：H–A H–B · I–C I–D · J–E J–F · K–G K–A（8 条）',
+    '核心边：A–B、A–C + 六元环 B–C–D–E–F–G–B（8 条）→ 共 16 条 ✓',
+    '度数核对：3 个 4 + 4 个 3 + 4 个 2 = 32 = 2×16 ✓　下界 11 可达',
+    '顶点数至少 <b>11</b>（选 B）',
+  ];
+  formulaBox.innerHTML = formulas[Math.min(i, formulas.length - 1)] || '';
+}
 
 AW.init({
-  title: '2017-07　握手定理：度数和守恒求最少顶点',
-  subtitle: '考点：<code>图的基本概念 · 度与边数关系</code> · Σ度 = 2E',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2017-07　度数限制下的最少顶点数',
+  subtitle: '考点：<code>图的基本概念 · 握手定理</code> · 16 条边，3 个度4、4 个度3、其余度<3 → 顶点至少几个？',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」：先用握手定理压出下界 11，再真画一张 11 顶点 16 边的图验证可行。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 B（11 个）',
-    html: '记忆锚点：<b>Σ度 = 2E = 32</b>。「至少」型问题 = 剩余度数分配越满越好：每个剩余顶点顶格 2 度 → 8 ÷ 2 = 4 个。若把剩余顶点按 1 度算会错得 15（干扰项 D）。',
+    big: '顶点至少 11（选 B）',
+    html: '握手定理 Σ度 = 2E = 32；已知 7 个顶点占 24 度，剩 8 度由「度<3」顶点承担，每个最多 2 度 → 至少 4 个 → 下界 <b>3+4+4 = 11</b>。<br>' +
+      '演示中画出的图（A=B=C=4，D=E=F=G=3，H=I=J=K=2）证明 11 可达，故最少 <b>11</b> 个。锚点：度数和必为偶数（=2×边数），「最少顶点」类题先压下界、再构造可达。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

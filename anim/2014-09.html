@@ -2,68 +2,150 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2014-09 4阶B树结点数动画</title>
+<title>2014-09 15 个关键字的 4 阶 B 树 · 含关键字结点最多几个</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bmax-svg{width:100%;max-width:720px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bmax-svg .bnode rect{transition:opacity .4s}
+  .bmax-svg .bnode.internal rect{fill:#1b3a4b}
+  .bmax-svg .bnode.leaf rect{fill:#16a34a}
+  .bmax-svg .bnode text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:14px;
+    fill:#fff;text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .bmax-svg line{stroke:#5a7d8c;stroke-width:2px;transition:opacity .4s}
+  .bmax-svg .note{font-size:12px;fill:#64748b;text-anchor:middle;transition:opacity .4s}
+  .hidden-el{opacity:0}
+  .bstats{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .bstats .schip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-size:13.5px}
+  .bstats .schip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#b45309}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9;min-height:28px}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 概念/推理链类：4阶B树关键字上下限 → 结点数最大值 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2014-09 4 阶 B 树结点数上限动画（SVG 逐层生长） ==================
+ * 题：15 个关键字的 4 阶 B 树，含关键字的结点个数最多是多少？（答案 D = 15）
+ * 演示：想结点多 → 每结点只装 1 个关键字、挂 2 棵子树 → 逐层 1+2+4+8 = 15 个结点恰好装下 15 个关键字。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼：4 阶 B 树的限制',
-    cls: 'key',
-    body: '<p>m 阶 B 树：每结点<b>至多 m 棵子树（m-1 个关键字）</b>；非根结点<b>至少 ⌈m/2⌉ 棵子树（⌈m/2⌉-1 个关键字）</b>；根至少 2 棵子树。m=4 → 每个结点关键字数都在 <b>1～3</b> 之间。</p>' },
-  { title: '问"最多"该怎么想',
-    cls: '',
-    body: '<p>15 个关键字是固定的，<b>每个结点装得越少，需要的结点越多</b>。所以上限 = 15 ÷ 每结点最少关键字数。</p>' },
-  { title: '非根结点最少 1 个关键字',
-    cls: '',
-    body: '<p>⌈4/2⌉-1 = <b>1</b>：非根结点至少 2 棵子树，即最少 1 个关键字（根也至少 1 个）。</p>' },
-  { title: '相除得 15 个结点',
-    cls: 'good',
-    body: '<p>15 个关键字 × 每结点 1 个 → <b>15 个结点</b>。此时每个结点 2 棵子树，15 个结点排成满二叉树形态（1+2+4+8=15，16 个失败叶同层），2 棵子树满足"非根至少 2、至多 4"→ 结构<b>合法</b>。</p>' },
-  { title: '反向验证：最少是 5',
-    cls: '',
-    body: '<p>反方向：每结点装满 3 个关键字 → ⌈15/3⌉ = <b>5 个结点</b>。选项 A 正是这个"最少值"陷阱——题目问的是<b>最多</b>。</p>' },
-  { title: '逐项排错',
-    cls: 'bad',
-    body: '<p><b>A（5）</b>：关键字装满时的最少结点数，方向反了。<b>B（6）</b>、<b>C（10）</b>：无对应规则的乱凑（B+ 树叶子存关键字等概念错套到 B 树上——B 树的失败叶不含关键字）。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>D：15 个</b>。记忆锚点：关键字固定时，结点数上限 = 关键字数 ÷ 每结点关键字下限（⌈m/2⌉-1）。</p>' },
+// 满二叉树形态（每结点 1 个关键字、2 棵子树），关键字按中序 1~15 填入
+var LEVELS = [
+  { step:2, ys:35,  xs:[339],                    keys:[8] },
+  { step:3, ys:105, xs:[197,481],                keys:[4,12] },
+  { step:4, ys:175, xs:[126,268,410,552],        keys:[2,6,10,14] },
+  { step:5, ys:245, xs:[90,161,232,303,374,445,516,587],
+            keys:[1,3,5,7,9,11,13,15] }
+];
+// 每层的父子边：[父层号, 父下标, 子下标]
+var EDGES_BY_LVL = [
+  { step:3, pairs:[[0,0,0],[0,0,1]] },
+  { step:4, pairs:[[1,0,0],[1,0,1],[1,1,2],[1,1,3]] },
+  { step:5, pairs:[[2,0,0],[2,0,1],[2,1,2],[2,1,3],[2,2,4],[2,2,5],[2,3,6],[2,3,7]] }
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var SNAPS = [
+  { cls:'step', tag:'审题', count:0, nodes:0, keys:0,
+    log:'4 阶 B 树：每结点最多 4 棵子树（3 个关键字）；非根结点最少 ⌈4/2⌉ = 2 棵子树（1 个关键字）；根最少 2 棵子树。现在 15 个关键字固定，问：含关键字的结点最多几个？',
+    fx:'4 阶：每结点关键字数 ∈ [1, 3]' },
+  { cls:'step', tag:'思路', count:0, nodes:0, keys:0,
+    log:'关键字总数固定，想结点多 → 每个结点就要装得少：让每个结点（含根）都只装 1 个关键字、只挂 2 棵子树。下面逐层搭出这棵"最瘦"的 4 阶 B 树。',
+    fx:'非根下限：⌈4/2⌉−1 = <code>1</code> 个关键字' },
+  { cls:'shift', tag:'第 1 层', count:1, nodes:1, keys:1,
+    log:'第 1 层：根 1 个结点，装 1 个关键字（下限）。'
+  },
+  { cls:'shift', tag:'第 2 层', count:3, nodes:3, keys:3,
+    log:'根有 1 个关键字 → 恰好 2 棵子树：第 2 层 2 个结点，各装 1 个关键字（关键字按 B 树有序：左小右大）。'
+  },
+  { cls:'shift', tag:'第 3 层', count:7, nodes:7, keys:7,
+    log:'第 2 层每个结点又是 1 个关键字、2 棵子树 → 第 3 层 4 个结点。照此生长，每层结点数翻倍。'
+  },
+  { cls:'ok', tag:'第 4 层（叶层）', count:15, nodes:15, keys:15,
+    log:'第 4 层 8 个叶结点各装 1 个关键字：合计结点 1+2+4+8 = 15 个，关键字恰好也是 15 个——正好用完，一个不剩！'
+  },
+  { cls:'ok', tag:'合法性 ✓', count:15, nodes:15, keys:15,
+    log:'合法性检查：每结点 1 个关键字 ∈ [1,3] ✓；内部结点 2 棵子树 ∈ [2,4] ✓；所有失败结点都在第 5 层之下同一层 ✓ → 这是一棵合法的 4 阶 B 树，15 就是结点数上限。',
+    fx:'结点数 = 关键字数 = <code>15</code>（上限达成）' },
+  { cls:'shift', tag:'反向对比', count:15, nodes:15, keys:15,
+    log:'反方向：若每结点装满 3 个关键字，⌈15/3⌉ = 5 个结点——那是"最少"。选项 A 的 5 正是这个陷阱；B（6）、C（10）则没有规则依据。',
+    fx:'最多 <code>15</code> 个 ⟷ 最少 5 个（选项 A 的陷阱）' },
+  { cls:'done', done:true, tag:'完成', count:15, nodes:15, keys:15,
+    log:'结论：15 个关键字最多可分布在 15 个结点中 → 选 D。',
+    fx:'答案 D：<code>15</code> 个结点' }
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 680 300');
+  svg.setAttribute('class', 'bmax-svg');
+  function el(name, attrs, txt){
+    var n = document.createElementNS(svgNS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+  EDGES_BY_LVL.forEach(function(lvl){
+    lvl.pairs.forEach(function(pr){
+      var pl = LEVELS[pr[0]], cl = LEVELS[pr[0] + 1];
+      var ln = el('line', { x1:pl.xs[pr[1]], y1:pl.ys + 15, x2:cl.xs[pr[2]], y2:cl.ys - 15 });
+      ln.dataset.step = lvl.step;
+      svg.appendChild(ln);
+    });
+  });
+  LEVELS.forEach(function(lvl){
+    lvl.xs.forEach(function(x, j){
+      var isLeaf = (lvl.step === 5);
+      var g = el('g', { 'class':'bnode ' + (isLeaf ? 'leaf' : 'internal') + ' hidden-el' });
+      g.dataset.step = lvl.step;
+      g.appendChild(el('rect', { x:x-17, y:lvl.ys-15, width:34, height:30, rx:7 }));
+      g.appendChild(el('text', { x:x, y:lvl.ys }, String(lvl.keys[j])));
+      svg.appendChild(g);
+    });
+  });
+  var note = el('text', { x:340, y:291, 'class':'note hidden-el' },
+    '每个叶结点再往下的空指针 → 失败结点：不含关键字、不计入（须同层）');
+  note.dataset.step = 5;
+  svg.appendChild(note);
+  stage.appendChild(svg);
+  var stats = AW.el('div', 'bstats');
+  var c1 = AW.el('span', 'schip', '结点数：0');
+  var c2 = AW.el('span', 'schip', '关键字数：0');
+  stats.appendChild(c1); stats.appendChild(c2);
+  stage.appendChild(stats);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._c1 = c1; this._c2 = c2; this._formula = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  this._c1.textContent = '结点数：' + sn.nodes;
+  this._c2.textContent = '关键字数：' + sn.keys;
+  this._c2.classList.toggle('hot', sn.keys === 15);
+  this._formula.innerHTML = sn.fx || '';
+}
 
 AW.init({
-  title: '2014-09　15 个关键字的 4 阶 B 树：结点最多几个',
-  subtitle: '4 阶：每结点 1～3 个关键字 · 想结点多 → 每结点装得少',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2014-09　15 个关键字的 4 阶 B 树：含关键字的结点最多几个',
+  subtitle: '4 阶：每结点 1~3 个关键字 · 关键字固定 → 每结点装得越少，结点越多',
+  counterLabel: '结点数',
+  intro: '点击「▶ 播放」逐层搭出"最瘦"的 4 阶 B 树，看 15 个关键字怎么摊进最多的结点。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D：15 个',
-    html: '每结点最少 1 个关键字（非根至少 ⌈4/2⌉=2 棵子树）→ 15 ÷ 1 = <b>15 个结点</b>，构成满二叉树形态、每结点 2 棵子树，合法。<br>陷阱：A 的 5 是"每结点装满 3 个"时的<b>最少</b>结点数。',
-  },
+    html: '每个结点（含根）都只装 <b>1</b> 个关键字、挂 2 棵子树 → 树呈满二叉树形态：1+2+4+8 = <b>15</b> 个结点恰好装 15 个关键字，且满足 4 阶 B 树全部约束（每结点关键字 1∈[1,3]、子树 2∈[2,4]、失败结点同层）。<br>' +
+      '记忆锚点：<code>关键字固定时，结点数上限 = 关键字数 ÷ 每结点关键字下限（⌈m/2⌉−1）</code>；选项 A 的 5 是"每结点装满 3 个"时的最少值。'
+  }
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

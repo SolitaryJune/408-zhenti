@@ -2,60 +2,140 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2010-05 树的叶结点计数 · 推理动画</title>
+<title>2010-05 度为 4 的树 · 叶结点计数动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .deg-svg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px;transition:opacity .5s}
+  .deg-svg .tedge{stroke:#94a3b8;stroke-width:2.5px;transition:stroke .3s, stroke-width .3s}
+  .deg-svg .tedge.lithot{stroke:#d97706;stroke-width:4.5px}
+  .deg-svg .tnode circle{fill:#ffffff;stroke:#334155;stroke-width:2.5px;transition:fill .3s, stroke .3s}
+  .deg-svg .tnode text.nm{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#0f172a;transition:fill .3s}
+  .deg-svg .tnode.leafn circle{fill:#16a34a;stroke:#15803d}
+  .deg-svg .tnode.leafn text.nm{fill:#fff}
+  .deg-svg .dbadge{font-size:12.5px;font-weight:800;fill:#64748b;font-family:PingFang SC,sans-serif;text-anchor:middle}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2010-05 叶结点计数动画（SVG 示例树 + 公式区） ==================
+ * 题：度为 4 的树有 20 个度4、10 个度3、1 个度2、10 个度1 结点，叶结点多少？（答案 B=82）
+ * 演示：先画一棵小示例树，逐条边点亮验证「度数和 = 边数 = 结点数 − 1」并数出叶子，
+ *       再把同一套流程套到题设数字上：122 条边 → 123 结点 → 82 叶。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+var NS = 'http://www.w3.org/2000/svg';
+var NODES = [
+  { id:'R',  x:300, y:50,  deg:4 },
+  { id:'A',  x:140, y:150, deg:2 },
+  { id:'B',  x:240, y:150, deg:1 },
+  { id:'C',  x:340, y:150, deg:0 },
+  { id:'D',  x:440, y:150, deg:0 },
+  { id:'A1', x:90,  y:250, deg:0 },
+  { id:'A2', x:190, y:250, deg:0 },
+  { id:'B1', x:240, y:250, deg:0 },
+];
+var EDGES = [ ['R','A'], ['R','B'], ['R','C'], ['R','D'], ['A','A1'], ['A','A2'], ['B','B1'] ];
+var NMAP = {};
+NODES.forEach(function(n){ NMAP[n.id] = n; });
+var LEAVES = ['C','D','A1','A2','B1'];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 320');
+  svg.setAttribute('class', 'deg-svg');
+  EDGES.forEach(function(e){
+    var a = NMAP[e[0]], b = NMAP[e[1]];
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+    ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+    ln.setAttribute('class', 'tedge');
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tnode');
+    g.dataset.id = n.id;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.setAttribute('class', 'nm');
+    t.textContent = n.id;
+    var d = document.createElementNS(NS, 'text');
+    d.setAttribute('x', n.x); d.setAttribute('y', n.y + 37);
+    d.setAttribute('class', 'dbadge');
+    d.textContent = '度' + n.deg;
+    g.appendChild(c); g.appendChild(t); g.appendChild(d);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  var formula = AW.el('div', 'hformula');
+  stage.appendChild(formula);
+  this._svg = svg; this._formula = formula;
 }
 
-var STEPS = [
-  { title: '审题眼：两张账单', cls: 'key',
-    body: '<p>度为 4 的树 T：20 个度 4、10 个度 3、1 个度 2、10 个度 1 的结点，求<b>叶结点（度 0）个数</b>。核心公式只有一个：<b>所有结点的度数之和 = 边数 = 结点数 − 1</b>。</p>' },
-  { title: '第一步：度数求和得边数', cls: '',
-    body: '<p>每条边在双亲一侧记 1 度，所以度数总和就是边数：</p>' +
-          '<p style="font-size:16px"><b>20×4 + 10×3 + 1×2 + 10×1 = 80 + 30 + 2 + 10 = <span style="color:#92400e">122</span> 条边</b></p>' },
-  { title: '第二步：边数加 1 得结点数', cls: '',
-    body: '<p>除根以外，每个结点头顶恰有一条来自双亲的边 → <b>结点数 = 边数 + 1 = 123</b>。</p>' },
-  { title: '第三步：减去全部非叶结点', cls: '',
-    body: '<p>度 1、2、3、4 的结点都不是叶子，共 20 + 10 + 1 + 10 = <b>41</b> 个；<br>' +
-          '叶结点 = 123 − 41 = <b style="color:#16a34a;font-size:17px">82</b>。</p>' },
-  { title: '验算：设叶结点为 x', cls: 'good',
-    body: '<p>度数之和 = 结点数 − 1，即 <b>122 = (41 + x) − 1</b>，解得 <b>x = 82</b>，与上面一致。</p>' +
-          '<p>这正是通式：n0（叶）= 1 + Σ(度−1)×ni = 1 + 3×20 + 2×10 + 1×1 + 0×10 = 82。</p>' },
-  { title: '结论与易错对照', cls: 'good',
-    body: '<p>答案选 <b style="font-size:16px">B（82 个）</b>。干扰项：41 是非叶结点数（选 A 的来源）；漏掉「边数+1」或漏减度 1 结点会凑出别的数字。</p>' +
-          '<p>记忆锚点：<b>度数和 = 边数 = 结点数 − 1</b>，三个量知二求三。</p>' },
+var FORMULAS = [
+  '核心公式：<code>度数和 = 边数 = 结点数 − 1</code>',
+  '示例树：n₄=1、n₂=1、n₁=1、n₀=?（每个结点已标度数）',
+  '度数和 = 4 + 2 + 1 + 0 = <code>7</code> = 边数 7 条',
+  '结点数 = 边数 + 1 = <code>8</code>（根头顶无边）',
+  '叶 = 8 − 3(非叶) = <code>5</code>　通式 n₀ = 1 + Σ(度−1)·nᵢ',
+  '题设：20×4 + 10×3 + 1×2 + 10×1 = <code>122</code> = 边数',
+  '结点数 = 123；非叶 = 41 → 叶 = 123 − 41 = <code>82</code>',
+  '验算 n₀ = 1 + 3×20 + 2×10 + 1×1 + 0×10 = <code>82</code> ✓',
+  '叶结点 = <b>82</b>（选 B）',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function render(stage, sn, i){
+  var svg = this._svg;
+  svg.style.opacity = (i >= 5 && i <= 7) ? '0.35' : '1';   // 讲题设数字时把示例树调暗
+  [].forEach.call(svg.querySelectorAll('.tedge'), function(el){
+    el.classList.toggle('lithot', i === 2 || i === 3);
+  });
+  [].forEach.call(svg.querySelectorAll('.tnode'), function(el){
+    el.classList.toggle('leafn', i >= 4 && LEAVES.indexOf(el.dataset.id) >= 0);
+  });
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'开始', count:0,
+    log:'度为 4 的树 T：20 个度 4、10 个度 3、1 个度 2、10 个度 1 的结点，求叶结点（度 0）个数。核心公式只有一条：所有结点的度数之和 = 边数 = 结点数 − 1。先用一棵小示例树把原理画出来。' },
+  { cls:'step', tag:'示例树', count:1,
+    log:'画一棵小树：根 R 有 4 个孩子 A、B、C、D；A 有 2 个孩子；B 有 1 个孩子。每个结点标上度数——它就是一棵"度为 4 的树"的缩影。' },
+  { cls:'ok', tag:'度数和 = 边数', count:2,
+    log:'逐条边看（橙色）：每条边都在父结点头上记 1 度 → 度数之和 = 4+2+1+0×5 = 7，恰好等于边数 7 条。' },
+  { cls:'step', tag:'边数 + 1 = 结点数', count:3,
+    log:'除根以外，每个结点头顶恰有一条来自双亲的边 → 结点数 = 边数 + 1 = 8。' },
+  { cls:'good', tag:'数出叶子', count:4,
+    log:'非叶结点（度 ≥ 1）只有 R、A、B 共 3 个 → 叶 = 8 − 3 = 5（绿色）。通式：n₀ = 1 + Σ(度−1)×nᵢ = 1 + 3×1 + 1×1 + 0×1 = 5 ✓' },
+  { cls:'shift', tag:'回到题设', count:5,
+    log:'同一套流程套到题目数字上（示例树调暗）：度数之和 = 20×4 + 10×3 + 1×2 + 10×1 = 122 → 边数 = 122。' },
+  { cls:'step', tag:'结点数与非叶', count:6,
+    log:'结点数 = 122 + 1 = 123；非叶结点 = 20 + 10 + 1 + 10 = 41 → 叶结点 = 123 − 41 = 82。' },
+  { cls:'good', tag:'验算', count:7,
+    log:'通式验算：n₀ = 1 + 3×20 + 2×10 + 1×1 + 0×10 = 82，两条路结果一致 ✓' },
+  { cls:'done', tag:'完成', count:8, done:true,
+    log:'树 T 的叶结点共 82 个，选 B。' },
+];
 
 AW.init({
-  title: '2010-05 · 度为 4 的树有多少叶结点',
-  subtitle: '20 个度4 + 10 个度3 + 1 个度2 + 10 个度1 · 核心式 <code>度数和 = 边数 = 结点数 − 1</code>',
-  counterLabel: '推理步',
-  intro: '点击「▶ 播放」按三步算出叶结点数。',
-  snaps: snaps,
+  title: '2010-05 度为 4 的树 · 叶结点计数动画',
+  subtitle: '题：度为 4 的树 T 有 <code>20</code> 个度4、<code>10</code> 个度3、<code>1</code> 个度2、<code>10</code> 个度1 结点，叶结点多少？核心式 <code>度数和 = 边数 = 结点数 − 1</code>——先在示例树上验证原理再解题。',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」，先看示例树如何数出叶子，再套用到题设数字。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '82 个（答案 B）',
-    html: '度数和 = 122 = 边数 → 结点数 123 → 减去 41 个非叶结点 = <b>82</b>。验算通式：n0 = 1 + Σ(度−1)×ni。易错：漏减度 1 的 10 个结点、或忘了边数要 +1（根）。',
+    big: '82 个（选 B）',
+    html: '度数和 = 20×4 + 10×3 + 1×2 + 10×1 = <code>122</code> = 边数 → 结点数 = 123 → 减去 41 个非叶结点 = <b>82</b>。验算通式：n₀ = 1 + Σ(度−1)×nᵢ = 1 + 3×20 + 2×10 + 1×1 = 82。易错：漏减 10 个度 1 结点、或忘了「边数要 +1」计上根。干扰项 41 恰是非叶结点数。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

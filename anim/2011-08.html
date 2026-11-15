@@ -2,78 +2,247 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2011-08 图的三条论断辨析 · 动画</title>
+<title>2011-08 图的三条论断 · 结构演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .g-svg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .g-svg .edge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s, stroke .35s}
+  .g-svg .edge.dim-edge{opacity:.25}
+  .g-svg .edge.bad-edge{stroke:#dc2626;stroke-width:3px}
+  .g-svg .node circle{fill:#1b3a4b;stroke:#1b3a4b;stroke-width:2.5px;transition:fill .35s}
+  .g-svg .node text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff}
+  .g-svg .node.out circle{fill:#16a34a;stroke:#14532d}
+  .g-svg .node.stuck circle{fill:#dc2626;stroke:#7f1d1d}
+  .g-svg .badge{font-size:17px;font-weight:800;text-anchor:middle;fill:#15803d;
+    font-family:JetBrains Mono,Menlo,monospace;transition:opacity .4s}
+  .g-svg .hidden-el{opacity:0}
+  .g-svg .panel-lbl{font-size:13.5px;font-weight:800;fill:#334155;text-anchor:middle}
+  .vrow{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .vchip{border:2px solid #cbd5e1;background:#f1f5f9;color:#94a3b8;border-radius:999px;
+    padding:5px 16px;font-weight:800;font-size:14px;transition:all .3s}
+  .vchip.no{border-color:#dc2626;background:#fee2e2;color:#b91c1c}
+  .vchip.yes{border-color:#16a34a;background:#dcfce7;color:#15803d}
+  .toporow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;justify-content:center;
+    min-height:36px}
+  .tchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:14px}
+  .tchip.hot{background:#dcfce7;border-color:#16a34a;color:#15803d}
+  .indeg{margin-top:8px;text-align:center;font-size:14px;font-weight:700;color:#334155;
+    font-family:JetBrains Mono,Menlo,monospace}
+  .cmp{display:flex;gap:26px;justify-content:center;align-items:flex-start;margin-top:12px;flex-wrap:wrap}
+  .cmp .blk{border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;background:#fff}
+  .cmp h5{font-size:13px;color:#334155;margin-bottom:8px;text-align:center}
+  .mx{display:grid;grid-template-columns:repeat(5,18px);gap:3px}
+  .mx span{width:18px;height:18px;border-radius:4px;background:#f1f5f9;border:1px solid #e2e8f0;
+    display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;
+    font-family:Menlo,monospace}
+  .mx span.one{background:#dcfce7;border-color:#16a34a;color:#15803d;font-weight:800}
+  .mx span.hotp{background:#fde68a;border-color:#d97706;color:#92400e;font-weight:800}
+  .alst{font-family:Menlo,monospace;font-size:13px;line-height:2;color:#334155}
+  .alst b{background:#1b3a4b;color:#fff;border-radius:6px;padding:1px 7px;font-weight:800}
+  .alst i{background:#dcfce7;color:#15803d;border-radius:6px;padding:1px 7px;font-style:normal;font-weight:800}
+  .cmpnote{margin-top:8px;text-align:center;font-size:14px;font-weight:800;color:#b91c1c}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2011-08 图的三条论断（SVG + 面板结构演示） ==================
+ * Ⅰ 回路是简单路径？ Ⅱ 稀疏图用邻接矩阵更省？ Ⅲ 有拓扑序列 ⇔ 无回路？
+ * 演示：G₁ 回路中顶点重复 → Ⅰ错；5 结点稀疏图 25 格 vs 9 单元 → Ⅱ错；
+ *       G₂ 拓扑排序成功、G₁ 卡住 → Ⅲ对。答案 C（仅Ⅲ）。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+var G1 = [
+  { id:'X', x:130, y:65 },
+  { id:'Y', x:60,  y:190 },
+  { id:'Z', x:200, y:190 },
+];
+var G1E = [ ['X','Y'], ['Y','Z'], ['Z','X'] ];
+var G2 = [
+  { id:'1', x:520, y:55  },
+  { id:'2', x:430, y:155 },
+  { id:'3', x:610, y:155 },
+  { id:'4', x:520, y:235 },
+];
+var G2E = [ ['1','2'], ['1','3'], ['2','4'], ['3','4'] ];
+/* G₂ 结点输出徽标：①…④ 位置在结点右上角 */
+var BADGE_POS = { '1':[542,40], '2':[452,140], '3':[632,140], '4':[542,220] };
+var BADGE_ORDER = { '1':'①', '2':'②', '3':'③', '4':'④' };
 
-// 回路示意：v1 → v2 → v1（首尾重复）
-function cycleDemo(){
-  var b = function(v){ return '<div class="aw-box" style="width:36px;height:30px;font-size:13px">' + v + '</div>'; };
-  return '<div style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin:2px 0">' +
-         b('v1') + '<span>→</span>' + b('v2') + '<span>→</span>' + b('v1') +
-         '<span style="font-size:12.5px;color:#94a3b8;margin-left:6px">首尾都是 v1，顶点重复</span></div>';
-}
-
-// 空间对比小表
-function spaceTable(){
-  return '<table style="border-collapse:collapse;font-size:13px;margin-top:6px">' +
-    '<tr><th style="border:1px solid #cbd5e1;padding:4px 10px;background:#f1f5f9">存储</th>' +
-    '<th style="border:1px solid #cbd5e1;padding:4px 10px;background:#f1f5f9">空间</th>' +
-    '<th style="border:1px solid #cbd5e1;padding:4px 10px;background:#f1f5f9">稀疏图（e ≪ n²）</th></tr>' +
-    '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px">邻接矩阵</td>' +
-    '<td style="border:1px solid #cbd5e1;padding:4px 10px">O(n²) 个元素</td>' +
-    '<td style="border:1px solid #cbd5e1;padding:4px 10px;color:#b91c1c"><b>大量 ∞/0 死重，费空间</b></td></tr>' +
-    '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px">邻接表</td>' +
-    '<td style="border:1px solid #cbd5e1;padding:4px 10px">O(n + e)</td>' +
-    '<td style="border:1px solid #cbd5e1;padding:4px 10px;color:#15803d"><b>只存实际边，省空间</b></td></tr></table>';
-}
-
-var STEPS = [
-  { title: '审题眼：三条论断独立判断', cls: 'key',
-    body: '<p>Ⅰ 回路与简单路径 · Ⅱ 稀疏图的存储选择 · Ⅲ 拓扑序列与回路的关系。互不牵连，逐条判断后再组合选项。</p>' },
-  { title: 'Ⅰ：回路是简单路径？——错', cls: 'bad',
-    body: '<p>简单路径要求序列中<b>顶点不重复</b>。回路首尾相接：' + cycleDemo() + ' v1 重复出现，所以回路不是简单路径。只能说回路是「简单<b>回路</b>」（除首尾外不重复）。</p>' },
-  { title: 'Ⅱ：稀疏图用邻接矩阵更省空间？——错', cls: 'bad',
-    body: '<p>说反了。' + spaceTable() + ' 稀疏图 e ≪ n²，<b>邻接表</b>才省空间；邻接矩阵适合<b>稠密图</b>。</p>' },
-  { title: 'Ⅲ：存在拓扑序列 ⟹ 无回路？——对', cls: 'good',
-    body: '<p>拓扑排序每步取一个<b>入度为 0</b> 的顶点。若图有环，环上顶点入度永远不为 0，排序必然中途卡死、得不到全部顶点的序列。所以：<b>存在拓扑序列 ⟺ 图无环（DAG）</b>，Ⅲ 正确。</p>' },
-  { title: '组合选项', cls: 'good',
-    body: '<p>Ⅰ 错、Ⅱ 错、Ⅲ 对 ⇒ <b>仅Ⅲ</b>正确，答案选 <b>C</b>。</p>' },
+var VERDICTS = [   /* 每步后 Ⅰ/Ⅱ/Ⅲ 的判定：'' 未定 */
+  ['','',''], ['no','',''], ['no','no',''], ['no','no',''], ['no','no',''],
+  ['no','no','yes'], ['no','no','yes'], ['no','no','yes'], ['no','no','yes'],
+];
+var TOPO = [       /* 每步拓扑序列 chips */
+  ['…'], ['…'], ['…'], ['①'], ['①','②','③'], ['①','②','③','④'],
+  ['输出 0 个，卡住！'], ['拓扑序列存在 ⇔ 无回路'], ['结论：选 C（仅Ⅲ）'],
+];
+var INDEG = [
+  '', '',
+  'G₂ 各点入度：①:0　②:1　③:1　④:2　（入度 0 的才能输出）',
+  '输出① 并删其出边 ⇒ ②:0　③:0　④:2　（② ③ 同时解锁！）',
+  '输出② ③ ⇒ ④:0　—— 注意 ② ③ 顺序可交换，序列本就不唯一',
+  '输出④ ⇒ 全部输出，拓扑序列 ①②③④（或 ①③②④）⇒ G₂ 无回路',
+  'G₁ 各点入度：X:1　Y:1　Z:1　—— 没有入度 0 的点，一步都走不动',
+  '', '',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
-    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 680 270');
+  svg.setAttribute('class', 'g-svg');
+  var defs = document.createElementNS(svgNS, 'defs');
+  defs.innerHTML = '<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" ' +
+    'markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5a7d8c"/></marker>';
+  svg.appendChild(defs);
+  var lbl1 = document.createElementNS(svgNS, 'text');
+  lbl1.setAttribute('x', 130); lbl1.setAttribute('y', 28);
+  lbl1.setAttribute('class', 'panel-lbl'); lbl1.textContent = 'G₁（带回路）';
+  svg.appendChild(lbl1);
+  var lbl2 = document.createElementNS(svgNS, 'text');
+  lbl2.setAttribute('x', 520); lbl2.setAttribute('y', 28);
+  lbl2.setAttribute('class', 'panel-lbl'); lbl2.textContent = 'G₂（无环有向图）';
+  svg.appendChild(lbl2);
+  var allE = [];
+  G1E.forEach(function(p){ allE.push({ p:p, g:1 }); });
+  G2E.forEach(function(p){ allE.push({ p:p, g:2 }); });
+  allE.forEach(function(e, k){
+    var set = e.g === 1 ? G1 : G2;
+    var A = null, B = null;
+    set.forEach(function(n){ if (n.id === e.p[0]) A = n; if (n.id === e.p[1]) B = n; });
+    var dx = B.x - A.x, dy = B.y - A.y, d = Math.sqrt(dx*dx + dy*dy);
+    var r = 19, off = r + 3;
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x + dx/d*off); ln.setAttribute('y1', A.y + dy/d*off);
+    ln.setAttribute('x2', B.x - dx/d*off); ln.setAttribute('y2', B.y - dy/d*off);
+    ln.setAttribute('class', 'edge');
+    ln.setAttribute('marker-end', 'url(#arw)');
+    ln.dataset.g = e.g; ln.dataset.from = e.p[0]; ln.dataset.to = e.p[1];
+    ln.dataset.k = k;
+    svg.appendChild(ln);
+  });
+  G1.concat(G2).forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node');
+    g.dataset.id = n.id; g.dataset.g = (G1.indexOf(n) >= 0 ? '1' : '2');
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 18);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  /* G₂ 输出顺序徽标 ①②③④ */
+  Object.keys(BADGE_POS).forEach(function(id){
+    var b = document.createElementNS(svgNS, 'text');
+    b.setAttribute('x', BADGE_POS[id][0]); b.setAttribute('y', BADGE_POS[id][1]);
+    b.setAttribute('class', 'badge hidden-el');
+    b.dataset.id = id;
+    b.textContent = BADGE_ORDER[id];
+    svg.appendChild(b);
+  });
+  stage.appendChild(svg);
+  var verdictBox = AW.el('div', 'vrow');
+  verdictBox.innerHTML = '<span class="vchip" data-v="0">Ⅰ</span>' +
+    '<span class="vchip" data-v="1">Ⅱ</span><span class="vchip" data-v="2">Ⅲ</span>';
+  stage.appendChild(verdictBox);
+  var topoBox = AW.el('div', 'toporow');
+  stage.appendChild(topoBox);
+  var indegBox = AW.el('div', 'indeg');
+  stage.appendChild(indegBox);
+  var cmpBox = AW.el('div', 'cmp');
+  var mx = '<div class="blk"><h5>邻接矩阵（n=5，稀疏 e=4）</h5><div class="mx" id="mxGrid">';
+  for (var r = 0; r < 5; r++) for (var c2 = 0; c2 < 5; c2++){
+    var one = ((r === 0 && c2 === 1) || (r === 1 && c2 === 2) || (r === 2 && c2 === 3) || (r === 3 && c2 === 4));
+    mx += '<span' + (one ? ' class="one"' : '') + '>' + (one ? '1' : '0') + '</span>';
+  }
+  mx += '</div><div style="text-align:center;font-size:12.5px;color:#64748b;margin-top:6px">n² = 25 格</div></div>';
+  var al = '<div class="blk"><h5>邻接表（同一图）</h5><div class="alst">' +
+    '<b>1</b>→<i>2</i>∧　<b>2</b>→<i>3</i>∧　<b>3</b>→<i>4</i>∧　<b>4</b>→<i>5</i>∧　<b>5</b>→∧</div>' +
+    '<div style="text-align:center;font-size:12.5px;color:#64748b;margin-top:6px">5 头结点 + 4 弧结点 = 9 单元</div></div>';
+  cmpBox.innerHTML = mx + al + '<div class="cmpnote" style="flex-basis:100%">稀疏图 e≪n²：9 单元 ≪ 25 格 ⇒ 邻接表更省，Ⅱ 错</div>';
+  stage.appendChild(cmpBox);
+  this._svg = svg; this._verdictBox = verdictBox; this._topoBox = topoBox;
+  this._indegBox = indegBox; this._cmpBox = cmpBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('.node'), function(el){
+    el.classList.remove('out', 'stuck');
+    if (el.dataset.g === '2' && i >= 3 && ['1','2','3','4'].indexOf(el.dataset.id) >= 0){
+      var all = (i >= 5) ? ['1','2','3','4'] : (i >= 4 ? ['1','2','3'] : ['1']);
+      if (all.indexOf(el.dataset.id) >= 0) el.classList.add('out');
+    }
+    if (el.dataset.g === '1' && i >= 6) el.classList.add('stuck');
+  });
+  [].forEach.call(svg.querySelectorAll('.badge'), function(el){
+    var id = el.dataset.id;
+    var shown = (id === '1' && i >= 3) || ((id === '2' || id === '3') && i >= 4) || (id === '4' && i >= 5);
+    el.classList.toggle('hidden-el', !shown);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge'), function(el){
+    el.classList.remove('dim-edge', 'bad-edge');
+    if (el.dataset.g === '2' && i >= 4 && (el.dataset.from === '1' ||
+        (i >= 5 && (el.dataset.from === '2' || el.dataset.from === '3')))) el.classList.add('dim-edge');
+    if (el.dataset.g === '1' && i >= 6) el.classList.add('bad-edge');
+  });
+  var vd = VERDICTS[Math.min(i, VERDICTS.length - 1)];
+  [].forEach.call(this._verdictBox.querySelectorAll('.vchip'), function(el, k){
+    el.className = 'vchip' + (vd[k] ? ' ' + vd[k] : '');
+  });
+  var tp = TOPO[Math.min(i, TOPO.length - 1)];
+  this._topoBox.innerHTML = '<span style="font-size:13px;color:#64748b;font-weight:700">拓扑输出：</span>' +
+    tp.map(function(c){ return '<span class="tchip' + (i >= 3 && i <= 5 ? ' hot' : '') + '">' + c + '</span>'; }).join('');
+  var ind = INDEG[Math.min(i, INDEG.length - 1)];
+  this._indegBox.textContent = ind || '';
+  this._indegBox.style.display = ind ? 'block' : 'none';
+  this._cmpBox.style.display = (i === 2) ? 'flex' : 'none';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'三条论断：Ⅰ 回路是简单路径；Ⅱ 稀疏图用邻接矩阵比邻接表省空间；Ⅲ 有向图存在拓扑序列 ⇒ 无回路。逐条用图实验检验。' },
+  { cls:'miss', tag:'Ⅰ：回路 ≠ 简单路径', count:1,
+    log:'看 G₁：X→Y→Z→X 是回路，路径序列中 X 出现了两次。简单路径要求顶点不重复；允许首尾相同的叫「简单回路」。∴ Ⅰ 错。' },
+  { cls:'miss', tag:'Ⅱ：稀疏图该用邻接表', count:2,
+    log:'取 5 结点、4 条弧的稀疏图：邻接矩阵要 5×5 = 25 格（绝大多数是 0）；邻接表只要 5 个头结点 + 4 个弧结点 = 9 单元。表更省 ⇒ Ⅱ 错。' },
+  { cls:'ok', tag:'Ⅲ：G₂ 拓扑 ①', count:3,
+    log:'对 G₂ 跑 Kahn 算法：入度 0 的只有 ① ⇒ 先输出 ①，并删去它的两条出边。' },
+  { cls:'ok', tag:'Ⅲ：G₂ 拓扑 ②③', count:4,
+    log:'② ③ 的入度同时变 0，一起解锁 ⇒ 输出 ② ③（谁先都行）。' },
+  { cls:'ok', tag:'Ⅲ：G₂ 拓扑 ④', count:5,
+    log:'④ 入度变 0 ⇒ 输出 ④。n 个点全部输出，算法顺利结束 ⇒ G₂ 是无环图，拓扑序列存在（①②③④ 或 ①③②④）。' },
+  { cls:'ok', tag:'Ⅲ：G₁ 卡住反证', count:6,
+    log:'再看带回路的 G₁：每个点入度都是 1，没有入度 0 的点 ⇒ 一步都输出不了。有回路 ⇔ 拓扑排序必然卡死 ⇒ 「存在拓扑序列 ⇒ 无回路」成立，Ⅲ 对。' },
+  { cls:'step', tag:'汇总', count:7,
+    log:'Ⅰ 错（回路顶点重复）、Ⅱ 错（稀疏图邻接表省）、Ⅲ 对（拓扑存在 ⇔ 无环）。只有 Ⅲ 正确。' },
+  { cls:'done', tag:'完成', count:8, done:true,
+    log:'正确的是仅Ⅲ，选 C。' },
+];
 
 AW.init({
-  title: '2011-08 · 图的三条论断：哪条对？',
-  subtitle: 'Ⅰ 回路 vs 简单路径 · Ⅱ 稀疏图存储 · Ⅲ 拓扑序列 ⟺ 无环',
-  intro: '点击「▶ 播放」逐条辨析。',
-  snaps: snaps,
+  title: '2011-08 · 回路 / 稀疏图存储 / 拓扑序列，哪条对？',
+  subtitle: 'Ⅰ 回路是简单路径？　Ⅱ 稀疏图邻接矩阵更省？　Ⅲ 有拓扑序列 ⇒ 无回路？　· 逐条画图验证',
+  counterLabel: '检验步',
+  intro: '点击「▶ 播放」：用带环的 G₁、无环的 G₂ 和一张稀疏图，逐条检验三句论断。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C · 仅Ⅲ正确',
-    html: '回路首尾顶点重复，不是<b>简单路径</b>（Ⅰ错）；稀疏图省空间要靠<b>邻接表</b>，邻接矩阵适合稠密图（Ⅱ错）；<b>有向图无环 ⟺ 存在拓扑序列</b>，有环则拓扑排序必卡死（Ⅲ对）。记忆点：回路 ≠ 简单路径，稀疏→邻接表，拓扑→无环。',
+    html: 'Ⅰ 错：回路中起点会重复出现，不满足「简单路径顶点不重复」（允许首尾相同的是<b>简单回路</b>）。' +
+      'Ⅱ 错：稀疏图 e≪n²，邻接表 O(n+e) 个单元远比矩阵 O(n²) 省。<br>' +
+      'Ⅲ 对：拓扑排序能输出全部顶点 ⇔ 图无回路（有环则中途必无入度 0 的点而卡死）。' +
+      '记忆锚点：<code>拓扑序列存在 ⇔ 有向图无环（AOV 网有效）</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

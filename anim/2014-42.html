@@ -2,142 +2,224 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2014-42 OSPF 最短路径动画</title>
+<title>2014-42 OSPF 链路状态图 · Dijkstra 最短路径</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .dij-svg{width:100%;max-width:700px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .dij-svg .rnode circle{fill:#1b3a4b;transition:fill .3s,opacity .4s}
+  .dij-svg .rnode text,.dij-svg .nnode text{font-family:"SF Mono",Menlo,monospace;font-weight:800;
+    fill:#fff;text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .dij-svg .rnode text{font-size:14px}
+  .dij-svg .nnode rect{fill:#0891b2;transition:fill .3s,opacity .4s}
+  .dij-svg .nnode text{font-size:10.5px}
+  .dij-svg .rnode.fix circle,.dij-svg .nnode.fix rect{fill:#16a34a}
+  .dij-svg .rnode.hot circle,.dij-svg .nnode.hot rect{fill:#e07a2f}
+  .dij-svg .dlabel{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:13px;
+    fill:#1d4ed8;text-anchor:middle;transition:opacity .4s}
+  .dij-svg .dedge line{stroke:#5a7d8c;stroke-width:2.2px;transition:stroke .3s,opacity .4s}
+  .dij-svg .dedge text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:13px;
+    fill:#33566b;text-anchor:middle;transition:opacity .4s}
+  .dij-svg .dedge.tree line{stroke:#16a34a;stroke-width:3.6px}
+  .dij-svg .dedge.relax line{stroke:#e07a2f;stroke-width:3.6px}
+  .dij-svg .dedge.rej line{stroke:#cbd5e1;stroke-dasharray:5 5}
+  .hidden-el{opacity:0}
+  .djchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .djchips .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 11px;font-weight:800;font-family:"SF Mono",Menlo,monospace;font-size:12.5px;transition:opacity .4s}
+  .djchips .qchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#b45309}
+  .djchips .qchip.fix{background:#16a34a1f;border-color:#16a34a;color:#15803d}
+  .dij-cap{text-align:center;font-size:12px;color:#94a3b8;margin-top:6px}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9;min-height:28px}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 算法/过程类：Dijkstra 从 R1 求到各子网最短路径（拓扑与费用全部取自题42表/图） -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2014-42 Dijkstra 动画（SVG 拓扑图） ==================
+ * 题42图拓扑：路由器 R1~R4 + 直连子网 N1=192.1.1.0/24、N5=192.1.5.0/24、N6=192.1.6.0/24、N7=192.1.7.0/24
+ * 链路：R1-R2=3、R1-R3=2、R2-R4=4、R3-R4=6；各路由器到直连子网=1。
+ * 演示：从 R1 执行 Dijkstra，逐个定案，得四个子网费用 1/3/4/8。 */
 
-// 结点表：N1=192.1.1.0/24, N5=192.1.5.0/24, N6=192.1.6.0/24, N7=192.1.7.0/24, R2, R3, R4
-var NAMES = ['192.1.1.0/24', '192.1.5.0/24', '192.1.6.0/24', '192.1.7.0/24', 'R2', 'R3', 'R4'];
-var INF = '∞';
+var NODES = [
+  { id:'R1', kind:'r', x:210, y:80,  label:'R1' },
+  { id:'R2', kind:'r', x:490, y:80,  label:'R2' },
+  { id:'R3', kind:'r', x:210, y:260, label:'R3' },
+  { id:'R4', kind:'r', x:490, y:260, label:'R4' },
+  { id:'N1', kind:'n', x:65,  y:80,  label:'192.1.1.0/24' },
+  { id:'N6', kind:'n', x:635, y:80,  label:'192.1.6.0/24' },
+  { id:'N5', kind:'n', x:65,  y:260, label:'192.1.5.0/24' },
+  { id:'N7', kind:'n', x:635, y:260, label:'192.1.7.0/24' }
+];
+var EDGES = [
+  { id:'e1',  s:'N1', t:'R1', w:1, lx:137, ly:64 },
+  { id:'e12', s:'R1', t:'R2', w:3, lx:350, ly:64 },
+  { id:'e13', s:'R1', t:'R3', w:2, lx:188, ly:172 },
+  { id:'e26', s:'R2', t:'N6', w:1, lx:562, ly:64 },
+  { id:'e24', s:'R2', t:'R4', w:4, lx:512, ly:172 },
+  { id:'e35', s:'R3', t:'N5', w:1, lx:137, ly:244 },
+  { id:'e34', s:'R3', t:'R4', w:6, lx:350, ly:244 },
+  { id:'e47', s:'R4', t:'N7', w:1, lx:562, ly:244 }
+];
+var CHIPS = ['N1','N5','N6','N7','R2','R3','R4'];
 
-// 每个快照：7 个行 {d:距离, p:路径, st:''|'fixed'|'new'|'pick'}；extra 中的字段（ribbon/done）并入快照顶层
-function mk(rows, log, cls, tag, extra){
-  var s = { rows: rows, log: log, cls: cls || 'step', tag: tag };
-  if (extra){ Object.keys(extra).forEach(function(k){ s[k] = extra[k]; }); }
-  return s;
-}
-
-var snaps = [
-  mk(
-    [{d:'1',p:'R1 直接',st:''},{d:INF,p:'',st:''},{d:INF,p:'',st:''},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:''},{d:'2',p:'R1-R3',st:''},{d:INF,p:'',st:''}],
-    '初始：按题42表，R1 直连得到 192.1.1.0/24 费用 1、到 R3 链路费用 2、到 R2 链路费用 3，其余 ∞（边：R1-R2:3、R1-R3:2、R2-R4:4、R3-R4:6、各路由器到子网:1）',
-    'step', '初始化'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'pick'},{d:INF,p:'',st:''},{d:INF,p:'',st:''},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:''},{d:'2',p:'R1-R3',st:''},{d:INF,p:'',st:''}],
-    '选距离最小者：192.1.1.0/24（1）→ 定案：直接到达，费用 1',
-    'ok', '定 N1', { ribbon:{k:1, ok:true} }),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:INF,p:'',st:''},{d:INF,p:'',st:''},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:''},{d:'2',p:'R1-R3',st:'pick'},{d:INF,p:'',st:''}],
-    '再选最小：R3（2）→ 定案，准备从 R3 松弛它的邻居',
-    'ok', '定 R3'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'new'},{d:INF,p:'',st:''},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:''},{d:'2',p:'R1-R3',st:'fixed'},{d:'8',p:'R1-R3-R4',st:'new'}],
-    '经 R3 松弛：到子网 N5 = 2+1 = 3；到 R4 = 2+6 = 8（琥珀=本轮更新）',
-    'shift', '经 R3 松弛'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'pick'},{d:INF,p:'',st:''},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:''},{d:'2',p:'R1-R3',st:'fixed'},{d:'8',p:'R1-R3-R4',st:''}],
-    '最小距离 3：选定 192.1.5.0/24 → 路径 R1-R3-192.1.5.0/24，费用 3',
-    'ok', '定 N5', { ribbon:{k:2, ok:true} }),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:INF,p:'',st:''},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:'pick'},{d:'2',p:'R1-R3',st:'fixed'},{d:'8',p:'R1-R3-R4',st:''}],
-    '另一并列最小：R2（3）→ 定案，准备从 R2 松弛',
-    'ok', '定 R2'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:'4',p:'R1-R2-192.1.6.0/24',st:'new'},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:'fixed'},{d:'2',p:'R1-R3',st:'fixed'},{d:'7',p:'R1-R2-R4',st:'new'}],
-    '经 R2 松弛：N6 = 3+1 = 4；R4 = 3+4 = 7，比原来经 R3 的 8 更小 → 更新为 7（走 R1-R2-R4）',
-    'shift', '经 R2 松弛'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:'4',p:'R1-R2-192.1.6.0/24',st:'pick'},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:'fixed'},{d:'2',p:'R1-R3',st:'fixed'},{d:'7',p:'R1-R2-R4',st:''}],
-    '最小距离 4：选定 192.1.6.0/24 → 路径 R1-R2-192.1.6.0/24，费用 4',
-    'ok', '定 N6', { ribbon:{k:3, ok:true} }),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:'4',p:'R1-R2-192.1.6.0/24',st:'fixed'},{d:INF,p:'',st:''},
-     {d:'3',p:'R1-R2',st:'fixed'},{d:'2',p:'R1-R3',st:'fixed'},{d:'7',p:'R1-R2-R4',st:'pick'}],
-    '选定 R4（7）→ 定案，准备从 R4 松弛',
-    'ok', '定 R4'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:'4',p:'R1-R2-192.1.6.0/24',st:'fixed'},{d:'8',p:'R1-R2-R4-192.1.7.0/24',st:'new'},
-     {d:'3',p:'R1-R2',st:'fixed'},{d:'2',p:'R1-R3',st:'fixed'},{d:'7',p:'R1-R2-R4',st:'fixed'}],
-    '经 R4 松弛：到子网 N7 = 7+1 = 8（注意另一条路 R1-R3-R4-N7 = 2+6+1 = 9 更大，不走）',
-    'shift', '经 R4 松弛'),
-  mk(
-    [{d:'1',p:'R1 直接',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:'4',p:'R1-R2-192.1.6.0/24',st:'fixed'},{d:'8',p:'R1-R2-R4-192.1.7.0/24',st:'pick'},
-     {d:'3',p:'R1-R2',st:'fixed'},{d:'2',p:'R1-R3',st:'fixed'},{d:'7',p:'R1-R2-R4',st:'fixed'}],
-    '选定 192.1.7.0/24（8）→ 四个子网全部定案',
-    'ok', '定 N7', { ribbon:{k:4, ok:true} }),
-  mk(
-    [{d:'1',p:'直接到达',st:'fixed'},{d:'3',p:'R1-R3-192.1.5.0/24',st:'fixed'},{d:'4',p:'R1-R2-192.1.6.0/24',st:'fixed'},{d:'8',p:'R1-R2-R4-192.1.7.0/24',st:'fixed'},
-     {d:'3',p:'R1-R2',st:'fixed'},{d:'2',p:'R1-R3',st:'fixed'},{d:'7',p:'R1-R2-R4',st:'fixed'}],
-    'Dijkstra 结束：R1 到 192.1.1.0/24、192.1.5.0/24、192.1.6.0/24、192.1.7.0/24 的最短费用分别为 1、3、4、8，与参考答案一致',
-    'done', '完成', { done:true })
+var SNAPS = [
+  { cls:'step', tag:'拓扑', count:0, dist:{},
+    log:'题42图拓扑：路由器 R1~R4 与 4 个直连子网 N1=192.1.1.0/24、N5=192.1.5.0/24、N6=192.1.6.0/24、N7=192.1.7.0/24。链路费用：R1-R2=3、R1-R3=2、R2-R4=4、R3-R4=6；路由器到直连子网费用 1。第 1 问：网络可抽象为图（无向图）。',
+    fx:'逻辑结构：图（无向图）· 求单源最短路径' },
+  { cls:'ok', tag:'定 R1（起点）', count:1, dist:{R1:0,N1:1,R3:2,R2:3}, fixed:['R1'],
+    relax:['e1','e13','e12'], hot:['N1','R3','R2'],
+    log:'Dijkstra 从 R1 出发：d(R1)=0；用 R1 松弛邻居：d(N1)=1（直连）、d(R3)=2、d(R2)=3，其余 ∞。',
+    fx:'d(R1)=0 → d(N1)=1、d(R3)=2、d(R2)=3' },
+  { cls:'ok', tag:'定 N1', count:2, dist:{R1:0,N1:1,R3:2,R2:3}, fixed:['R1','N1'], tree:['e1'],
+    log:'最小距离 1：子网 192.1.1.0/24 定案——直接到达，费用 1。',
+    fx:'d(N1)=<code>1</code> → 直接到达', ribbon:{k:1, ok:true} },
+  { cls:'ok', tag:'定 R3', count:3, dist:{R1:0,N1:1,R3:2,R2:3}, fixed:['R1','N1','R3'], tree:['e1','e13'],
+    log:'次小距离 2：R3 定案，路径 R1-R3。',
+    fx:'d(R3)=<code>2</code> → 路径 R1-R3' },
+  { cls:'shift', tag:'经 R3 松弛', count:3, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:8},
+    fixed:['R1','N1','R3'], tree:['e1','e13'], relax:['e35','e34'], hot:['N5','R4'],
+    log:'用 R3 松弛它的邻居：d(N5)=2+1=3；d(R4)=2+6=8（暂定走 R1-R3-R4）。',
+    fx:'d(N5)=<code>3</code>　；　d(R4)=2+6=<code>8</code>（暂）' },
+  { cls:'ok', tag:'定 N5', count:4, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:8},
+    fixed:['R1','N1','R3','N5'], tree:['e1','e13','e35'],
+    log:'最小距离 3：子网 192.1.5.0/24 定案——路径 R1-R3-192.1.5.0/24，费用 3。',
+    fx:'d(N5)=<code>3</code> → R1-R3-192.1.5.0/24', ribbon:{k:2, ok:true} },
+  { cls:'ok', tag:'定 R2', count:5, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:8},
+    fixed:['R1','N1','R3','N5','R2'], tree:['e1','e13','e35','e12'],
+    log:'并列最小 3：R2 定案，路径 R1-R2。',
+    fx:'d(R2)=<code>3</code> → 路径 R1-R2' },
+  { cls:'shift', tag:'经 R2 松弛', count:5, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:7,N6:4},
+    fixed:['R1','N1','R3','N5','R2'], tree:['e1','e13','e35','e12'],
+    relax:['e26','e24'], rej:['e34'], hot:['N6','R4'],
+    log:'用 R2 松弛：d(N6)=3+1=4；d(R4)=min(旧 8, 3+4)=<b>7</b>——比经 R3 的 8 更小，更新！旧路 R1-R3-R4 作废（变灰虚线）。',
+    fx:'d(N6)=<code>4</code>　；　d(R4)=min(8, 3+4)=<code>7</code>（更新！）' },
+  { cls:'ok', tag:'定 N6', count:6, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:7,N6:4},
+    fixed:['R1','N1','R3','N5','R2','N6'], tree:['e1','e13','e35','e12','e26'], rej:['e34'],
+    log:'最小距离 4：子网 192.1.6.0/24 定案——路径 R1-R2-192.1.6.0/24，费用 4。',
+    fx:'d(N6)=<code>4</code> → R1-R2-192.1.6.0/24', ribbon:{k:3, ok:true} },
+  { cls:'ok', tag:'定 R4', count:7, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:7,N6:4},
+    fixed:['R1','N1','R3','N5','R2','N6','R4'], tree:['e1','e13','e35','e12','e26','e24'], rej:['e34'],
+    log:'d(R4)=7 定案，路径 R1-R2-R4（不是经 R3 的 8）。',
+    fx:'d(R4)=<code>7</code> → 路径 R1-R2-R4' },
+  { cls:'shift', tag:'经 R4 松弛', count:7, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:7,N6:4,N7:8},
+    fixed:['R1','N1','R3','N5','R2','N6','R4'], tree:['e1','e13','e35','e12','e26','e24'], rej:['e34'],
+    relax:['e47'], hot:['N7'],
+    log:'用 R4 松弛：d(N7)=7+1=8。另一条路 R1-R3-R4-N7=2+6+1=9 更大，不走。',
+    fx:'d(N7)=7+1=<code>8</code>（另一路 9，弃）' },
+  { cls:'ok', tag:'定 N7', count:8, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:7,N6:4,N7:8},
+    fixed:['R1','N1','R3','N5','R2','N6','R4','N7'],
+    tree:['e1','e13','e35','e12','e26','e24','e47'], rej:['e34'],
+    log:'最小距离 8：子网 192.1.7.0/24 定案——路径 R1-R2-R4-192.1.7.0/24，费用 8。全部结点定案。',
+    fx:'d(N7)=<code>8</code> → R1-R2-R4-192.1.7.0/24', ribbon:{k:4, ok:true} },
+  { cls:'done', done:true, tag:'完成', count:8, dist:{R1:0,N1:1,R3:2,R2:3,N5:3,R4:7,N6:4,N7:8},
+    fixed:['R1','N1','R3','N5','R2','N6','R4','N7'],
+    tree:['e1','e13','e35','e12','e26','e24','e47'], rej:['e34'],
+    log:'Dijkstra 结束。第 3 问答案：192.1.1.0/24 → 直接到达，费用 1；192.1.5.0/24 → R1-R3，费用 3；192.1.6.0/24 → R1-R2，费用 4；192.1.7.0/24 → R1-R2-R4，费用 8。（第 2 问：用「表头结点 + 弧结点」的邻接链表保存 LSI，弧结点用 Flag 区分 Link/Net，见参考答案代码。）',
+    fx:'四个子网费用：<code>1 / 3 / 4 / 8</code>' }
 ];
 
-// 每步已定案的顶点数（含路由器），供计数 chip 显示
-var FIXED_COUNTS = [0, 1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 7];
-snaps.forEach(function(s, j){ s.count = FIXED_COUNTS[j]; });
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 700 322');
+  svg.setAttribute('class', 'dij-svg');
+  function el(name, attrs, txt){
+    var n = document.createElementNS(svgNS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.s) A = n; if (n.id === e.t) B = n; });
+    var g = el('g', { 'class':'dedge hidden-el' });
+    g.dataset.id = e.id; g.dataset.step = 0;
+    g.appendChild(el('line', { x1:A.x, y1:A.y, x2:B.x, y2:B.y }));
+    g.appendChild(el('text', { x:e.lx, y:e.ly }, String(e.w)));
+    svg.appendChild(g);
+  });
+  NODES.forEach(function(n){
+    var g = el('g', { 'class':(n.kind === 'r' ? 'rnode' : 'nnode') + ' hidden-el' });
+    g.dataset.id = n.id; g.dataset.step = 0;
+    if (n.kind === 'r'){
+      g.appendChild(el('circle', { cx:n.x, cy:n.y, r:24 }));
+      g.appendChild(el('text', { x:n.x, y:n.y }, n.label));
+    } else {
+      g.appendChild(el('rect', { x:n.x-46, y:n.y-17, width:92, height:34, rx:10 }));
+      g.appendChild(el('text', { x:n.x, y:n.y }, n.label));
+    }
+    svg.appendChild(g);
+    var dl = el('text', { x:n.x, y:n.y - (n.kind === 'r' ? 36 : 30), 'class':'dlabel hidden-el' }, '∞');
+    dl.dataset.d = n.id;
+    svg.appendChild(dl);
+  });
+  stage.appendChild(svg);
+  var cap = AW.el('div', 'dij-cap', 'N1=192.1.1.0/24　N5=192.1.5.0/24　N6=192.1.6.0/24　N7=192.1.7.0/24 · 绿=最短路树边 · 琥珀=本轮松弛 · 灰虚=作废');
+  stage.appendChild(cap);
+  var chips = AW.el('div', 'djchips');
+  CHIPS.forEach(function(id){
+    var ch = AW.el('span', 'qchip hidden-el', id + ' ∞');
+    ch.dataset.id = id;
+    chips.appendChild(ch);
+  });
+  stage.appendChild(chips);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._chips = chips; this._formula = formulaBox;
+}
 
-function rowHtml(r, name){
-  var bg = '#ffffff', color = '#334155', mark = '';
-  if (r.st === 'pick'){ bg = '#dcfce7'; mark = ' ✓'; color = '#14532d'; }
-  else if (r.st === 'fixed'){ bg = '#f0fdf4'; color = '#14532d'; }
-  else if (r.st === 'new'){ bg = '#fef3c7'; color = '#92400e'; }
-  else if (r.d === INF){ color = '#94a3b8'; }
-  return '<tr style="background:' + bg + '"><td style="text-align:left">' + name + '</td>' +
-         '<td style="font-weight:700;color:' + color + '">' + r.d + '</td>' +
-         '<td style="text-align:left;font-family:monospace;font-size:12px;color:' + color + '">' + r.p + '</td></tr>';
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.rnode,.nnode'), function(g){
+    var id = g.dataset.id;
+    var isFix = (sn.fixed || []).indexOf(id) >= 0;
+    var isHot = (sn.hot || []).indexOf(id) >= 0;
+    g.classList.toggle('fix', isFix);
+    g.classList.toggle('hot', !isFix && isHot);
+  });
+  [].forEach.call(svg.querySelectorAll('.dlabel'), function(dl){
+    var v = sn.dist ? sn.dist[dl.dataset.d] : null;
+    dl.textContent = v != null ? ('d=' + v) : '∞';
+  });
+  [].forEach.call(svg.querySelectorAll('.dedge'), function(g){
+    var id = g.dataset.id;
+    g.classList.toggle('tree', (sn.tree || []).indexOf(id) >= 0);
+    g.classList.toggle('relax', (sn.relax || []).indexOf(id) >= 0);
+    g.classList.toggle('rej', (sn.rej || []).indexOf(id) >= 0);
+  });
+  [].forEach.call(this._chips.querySelectorAll('.qchip'), function(ch){
+    var id = ch.dataset.id;
+    var v = sn.dist ? sn.dist[id] : null;
+    ch.classList.toggle('hidden-el', v == null);
+    if (v != null) ch.textContent = id + ' ' + v;
+    ch.classList.toggle('fix', (sn.fixed || []).indexOf(id) >= 0);
+    ch.classList.toggle('hot', (sn.hot || []).indexOf(id) >= 0 && (sn.fixed || []).indexOf(id) < 0);
+  });
+  this._formula.innerHTML = sn.fx || '';
 }
 
 AW.init({
-  title: '2014-42　Dijkstra 求 R1 到各子网的最短路径',
-  subtitle: '拓扑（题42图）：R1-R2 费 3 · R1-R3 费 2 · R2-R4 费 4 · R3-R4 费 6 · 各路由器到直连子网费 1',
+  title: '2014-42　Dijkstra：R1 到各子网的最短路径与费用',
+  subtitle: '拓扑取自题42表/图 · R1-R2=3 · R1-R3=2 · R2-R4=4 · R3-R4=6 · 路由器→直连子网=1',
   counterLabel: '已定案',
   ribbonTitle: '子网定案次序（✓ 最短费用）',
-  intro: '点击「▶ 播放」逐步执行 Dijkstra。',
-  build: function(stage){
-    stage.innerHTML = '';
-    var wrap = AW.el('div', 'aw-scroll');
-    this._extra = AW.el('div', 'aw-row-label', '');
-    var holder = AW.el('div', '');
-    holder.id = 'djTable';
-    wrap.appendChild(this._extra);
-    wrap.appendChild(holder);
-    stage.appendChild(wrap);
-    this._holder = holder;
-  },
-  render: function(stage, sn, i){
-    var html = '<table style="border-collapse:collapse;min-width:560px;font-size:13.5px">' +
-      '<thead><tr><th style="background:#f1f5f9;border:1px solid #e2e8f0;padding:6px 12px;text-align:left">结点</th>' +
-      '<th style="background:#f1f5f9;border:1px solid #e2e8f0;padding:6px 12px">最短距离</th>' +
-      '<th style="background:#f1f5f9;border:1px solid #e2e8f0;padding:6px 12px;text-align:left">路径</th></tr></thead><tbody>';
-    NAMES.forEach(function(n, j){ html += rowHtml(sn.rows[j], n); });
-    html += '</tbody></table>' +
-      '<p style="font-size:12px;color:#64748b;margin-top:8px">绿=已定案　深绿✓=本轮选定　琥珀=本轮松弛更新　∞=尚未可达</p>';
-    this._holder.innerHTML = html;
-    this._extra.innerHTML = sn.cls === 'done'
-      ? '<b>结论（答案表）</b>：192.1.1.0/24 → 直接到达，费用 1　|　192.1.5.0/24 → R1-R3，费用 3　|　192.1.6.0/24 → R1-R2，费用 4　|　192.1.7.0/24 → R1-R2-R4，费用 8'
-      : '';
-  },
-  snaps: snaps,
+  intro: '点击「▶ 播放」从 R1 逐步执行 Dijkstra，看最短路树怎么长出来。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '1 / 3 / 4 / 8',
-    html: 'R1 到四个子网的最短费用：<code>192.1.1.0/24</code> 直接到达 <b>1</b>；<code>192.1.5.0/24</code> 经 R1-R3 <b>3</b>；<code>192.1.6.0/24</code> 经 R1-R2 <b>4</b>；<code>192.1.7.0/24</code> 经 R1-R2-R4 <b>8</b>（另一路 R1-R3-R4 为 9，舍弃）。',
-  },
+    big: '费用 1 / 3 / 4 / 8',
+    html: '（1）网络抽象为<b>图（无向图）</b>。<br>（2）用<b>邻接链表</b>保存 LSI：表头结点存 RouterID，弧结点用 <code>Flag</code> 区分 Link（ID/IP/Metric）与 Net（Prefix/Metric），定义见参考答案代码。<br>' +
+      '（3）R1 到各子网：<code>192.1.1.0/24</code> 直接到达 <b>1</b>；<code>192.1.5.0/24</code> 经 R1-R3 <b>3</b>；<code>192.1.6.0/24</code> 经 R1-R2 <b>4</b>；<code>192.1.7.0/24</code> 经 R1-R2-R4 <b>8</b>（经 R3 为 9，舍弃）。'
+  }
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

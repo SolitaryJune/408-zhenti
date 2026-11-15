@@ -2,69 +2,199 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2012-08 最小生成树四命题判断</title>
+<title>2012-08 最小生成树性质 · 图上演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .mst-svg{width:100%;max-width:640px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .notrans *{transition:none!important}
+  .mst-svg .gedge{stroke:#94a3b8;stroke-width:2.5px;transition:stroke .35s,stroke-width .35s,opacity .35s}
+  .mst-svg .gedge.k{stroke:#d97706;stroke-width:4.5px}
+  .mst-svg .gedge.g{stroke:#16a34a;stroke-width:4.5px}
+  .mst-svg .gedge.b{stroke:#2563eb;stroke-width:4.5px}
+  .mst-svg .gedge.hot{stroke:#dc2626;stroke-width:4.5px;stroke-dasharray:7 4}
+  .mst-svg .gedge.skip{stroke:#cbd5e1;stroke-width:2px;opacity:.35}
+  .mst-svg .wlabel{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    fill:#334155;text-anchor:middle;paint-order:stroke;stroke:#f8fafc;stroke-width:4px;transition:fill .3s}
+  .mst-svg .wlabel.k{fill:#d97706}.mst-svg .wlabel.g{fill:#16a34a}
+  .mst-svg .wlabel.b{fill:#2563eb}.mst-svg .wlabel.hot{fill:#dc2626}.mst-svg .wlabel.skip{fill:#cbd5e1}
+  .mst-svg .gnode circle{fill:#1b3a4b;transition:fill .3s}
+  .mst-svg .gnode text{fill:#fff;font-weight:800;font-size:15px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .mst-svg .gnode.start circle{fill:#e63946}
+  .stmts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+  .stmts .schip{border:1.5px solid #cbd5e1;border-radius:999px;padding:4px 12px;font-size:13px;
+    font-weight:700;color:#64748b;background:#fff;transition:all .3s}
+  .stmts .schip.ok{border-color:#16a34a;color:#15803d;background:#dcfce7}
+  .stmts .schip.miss{border-color:#dc2626;color:#b91c1c;background:#fee2e2}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/辨析类：MST 四命题逐项判断
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2012-08 最小生成树性质（SVG 图上演示） ==================
+ * 题：Ⅰ 代价唯一 Ⅱ 最小权边必在所有 MST 中 Ⅲ Prim 不同起点必同 Ⅳ Prim 与 Kruskal 总不同。
+ * 答案 A（仅 Ⅰ 正确）。演示：故意选一个"权值并列"的最小反例图逐条验证。 */
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>四个命题围绕两件事：<b>代价（权值和）唯一性</b> 与 <b>树形态唯一性</b>。核心结论先记住：<b>MST 代价必唯一，形态未必唯一</b>（有权值相同的边时）。</p>' },
-  { title: '命题 I：代价唯一 ✓',
-    cls: 'good',
-    body: '<p>I「最小生成树的代价唯一」：<b>对</b>。无论选到哪棵 MST，n−1 条边的权值和都相同——代价唯一性与形态唯一性是两回事。</p>' },
-  { title: '命题 II：最小边必在 ✗',
-    cls: 'bad',
-    body: '<p>II「所有权值最小的边一定出现在所有 MST 中」：<b>错</b>。反例：三角形三边权值全为 1，任取两条边都是 MST——任何一条「权值最小的边」都可以缺席某棵 MST。</p>' },
-  { title: '命题 III：Prim 起点无关 ✗',
-    cls: 'bad',
-    body: '<p>III「Prim 从不同顶点开始得到的结果一定相同」：<b>错</b>。存在并列权值的边时，不同起点贪心顺序不同，可能长出<b>不同形态</b>的 MST（代价仍相等）。</p>' },
-  { title: '命题 IV：两算法总不同 ✗',
-    cls: 'bad',
-    body: '<p>IV「Prim 与 Kruskal 得到的 MST 总不相同」：<b>错</b>。当 MST 唯一（如各边权互不相同）时，两个算法得到的就是<b>同一棵</b>树。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>只有 I 正确 ⇒ 答案选 <b>A（仅 I）</b>。锚点：<b>代价唯一 ⇏ 形态唯一</b>；「一定 / 总不」这类绝对化表述在 MST 判断题里几乎都是坑。</p>' },
+var POS = { a:{x:170,y:55}, b:{x:75,y:185}, c:{x:270,y:185}, d:{x:365,y:275} };
+var EDGES = [
+  { id:'ab', p:'a', q:'b', w:'1', lx:95,  ly:106 },
+  { id:'ac', p:'a', q:'c', w:'1', lx:245, ly:106 },
+  { id:'bc', p:'b', q:'c', w:'1', lx:172, ly:170 },
+  { id:'cd', p:'c', q:'d', w:'2', lx:348, ly:214 },
+];
+/* 每步各边的样式：'' 普通 / k 克鲁斯卡尔(琥珀) / g Prim绿 / b Prim蓝 / hot 检验红 / skip 弃用 */
+var ESTEPS = [
+  { ab:'',    ac:'',    bc:'',    cd:''    },
+  { ab:'k',   ac:'',    bc:'',    cd:''    },
+  { ab:'k',   ac:'k',   bc:'skip',cd:''    },
+  { ab:'k',   ac:'k',   bc:'skip',cd:'k'   },
+  { ab:'hot', ac:'hot', bc:'hot', cd:''    },
+  { ab:'g',   ac:'',    bc:'',    cd:''    },
+  { ab:'g',   ac:'',    bc:'g',   cd:''    },
+  { ab:'g',   ac:'',    bc:'g',   cd:'g'   },
+  { ab:'',    ac:'b',   bc:'b',   cd:'b'   },
+  { ab:'k',   ac:'k',   bc:'',    cd:'k'   },
+  { ab:'k',   ac:'k',   bc:'skip',cd:'k'   },
+];
+/* 起点（红色标记的顶点） */
+var STARTS = [null, null, null, null, null, 'a', 'a', 'a', 'c', null, null];
+/* 四个论断的状态：'' 未判 / ok / miss */
+var STMT_STEPS = [
+  ['', '', '', ''],
+  ['', '', '', ''],
+  ['', '', '', ''],
+  ['ok', '', '', ''],
+  ['ok', 'miss', '', ''],
+  ['ok', 'miss', '', ''],
+  ['ok', 'miss', '', ''],
+  ['ok', 'miss', '', ''],
+  ['ok', 'miss', 'miss', ''],
+  ['ok', 'miss', 'miss', 'miss'],
+  ['ok', 'miss', 'miss', 'miss'],
+];
+var STMTS = ['Ⅰ 代价唯一', 'Ⅱ 最小边必全出现', 'Ⅲ Prim 异起点必同', 'Ⅳ 两算法总不同'];
+var FORMULAS = [
+  '',
+  '克鲁斯卡尔：按权从小到大取边，先取 <code>a-b(1)</code>',
+  '再取 <code>a-c(1)</code>；<code>b-c(1)</code> 两端已连通 → 成回路，舍弃',
+  'MST = {a-b, a-c, c-d}，代价 = 1+1+2 = <code>4</code>',
+  '三条权 1 边并列最小，树里只能放 2 条 → 必有最小边缺席',
+  '普里姆从 <code>a</code> 出发：候选 a-b(1)、a-c(1) 并列 → 取 a-b',
+  '再取 <code>b-c(1)</code>',
+  'MST₁ = {a-b, b-c, c-d}，代价 <code>4</code>',
+  '换从 <code>c</code> 出发：MST₂ = {a-c, b-c, c-d}，代价也是 4',
+  '克鲁斯卡尔结果（琥珀）可以是某次 Prim 的结果',
+  '只有 Ⅰ 正确 → <b>选 A</b>',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 440 320');
+  svg.setAttribute('class', 'mst-svg');
+  this._edges = {}; this._wls = {}; this._nodes = {};
+  EDGES.forEach(function(e){
+    var P = POS[e.p], Q = POS[e.q];
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', P.x); ln.setAttribute('y1', P.y);
+    ln.setAttribute('x2', Q.x); ln.setAttribute('y2', Q.y);
+    ln.setAttribute('class', 'gedge');
+    this._edges[e.id] = ln;
+    svg.appendChild(ln);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', e.lx); t.setAttribute('y', e.ly);
+    t.setAttribute('class', 'wlabel');
+    t.textContent = e.w;
+    this._wls[e.id] = t;
+    svg.appendChild(t);
+  }, this);
+  Object.keys(POS).forEach(function(k){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'gnode');
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', POS[k].x); c.setAttribute('cy', POS[k].y); c.setAttribute('r', 20);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', POS[k].x); t.setAttribute('y', POS[k].y);
+    t.textContent = k;
+    g.appendChild(c); g.appendChild(t);
+    this._nodes[k] = g;
+    svg.appendChild(g);
+  }, this);
+  stage.appendChild(svg);
+  var stmtBox = AW.el('div', 'stmts');
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(stmtBox);
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._stmtBox = stmtBox; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var self = this;
+  var st = ESTEPS[Math.min(i, ESTEPS.length - 1)];
+  EDGES.forEach(function(e){
+    self._edges[e.id].setAttribute('class', 'gedge' + (st[e.id] ? ' ' + st[e.id] : ''));
+    self._wls[e.id].setAttribute('class', 'wlabel' + (st[e.id] ? ' ' + st[e.id] : ''));
+  });
+  Object.keys(POS).forEach(function(k){
+    self._nodes[k].classList.toggle('start', STARTS[Math.min(i, STARTS.length - 1)] === k);
+  });
+  var ss = STMT_STEPS[Math.min(i, STMT_STEPS.length - 1)];
+  this._stmtBox.innerHTML = STMTS.map(function(s, j){
+    var c = 'schip' + (ss[j] ? ' ' + ss[j] : '');
+    var mark = ss[j] === 'ok' ? ' ✓' : (ss[j] === 'miss' ? ' ✗' : ' …');
+    return '<span class="' + c + '">' + s + mark + '</span>';
+  }).join('');
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'反例图', count:0,
+    log:'故意选一个带"权值并列"的图：4 个顶点、4 条边，权 1、1、1、2。三条边并列最小权 —— 四个论断的对错全藏在这个细节里。' },
+  { cls:'ok', tag:'克鲁斯卡尔 ①', count:0,
+    log:'克鲁斯卡尔按权从小到大取边：权 1 的三条并列，任取一条，比如 a-b。（tie 怎么选不影响结论）' },
+  { cls:'shift', tag:'克鲁斯卡尔 ②', count:0,
+    log:'再取 a-c(1)。此时 b-c(1) 的两端已在同一连通块（a-b-c 成回路）→ 舍弃。' },
+  { cls:'ok', tag:'Ⅰ · 代价唯一 ✓', count:1, ribbon:{k:1, ok:true},
+    log:'最后取 c-d(2)，得 MST = {a-b, a-c, c-d}，代价 1+1+2 = 4。无论并列权怎么取舍，代价恒为 4 → 论断 Ⅰ「代价唯一」正确 ✓' },
+  { cls:'miss', tag:'Ⅱ · 检验最小边 ✗', count:2, ribbon:{k:2, ok:false},
+    log:'权值最小的边有三条（a-b、a-c、b-c 都是权 1），但 a、b、c 三点间树只能容纳 2 条边 → 必有某条最小权边缺席某些最小生成树 → Ⅱ 错误 ✗' },
+  { cls:'ok', tag:'普里姆·从 a', count:2,
+    log:'普里姆从 a 出发：候选 a-b(1)、a-c(1) 并列最小，取 a-b（红点 = 起点）。' },
+  { cls:'ok', tag:'普里姆·长出 b-c', count:2,
+    log:'再取 b-c(1)。' },
+  { cls:'ok', tag:'MST₁ 完成', count:2,
+    log:'取 c-d(2) → MST₁ = {a-b, b-c, c-d}，代价 4。' },
+  { cls:'shift', tag:'Ⅲ · 换起点 ✗', count:3, ribbon:{k:3, ok:false},
+    log:'换从 c 出发（并列边另作选择）：得 MST₂ = {a-c, b-c, c-d}，代价同样是 4，但树与 MST₁ 不同 → Ⅲ「一定相同」错误 ✗' },
+  { cls:'shift', tag:'Ⅳ · 两算法 ✗', count:4, ribbon:{k:4, ok:false},
+    log:'克鲁斯卡尔的结果 {a-b, a-c, c-d}（琥珀）恰好可以是某次普里姆（从 a 出发先取 a-c）的结果 → 两算法可能相同 → Ⅳ「总不相同」错误 ✗' },
+  { cls:'done', tag:'完成', count:4, done:true,
+    log:'综上：只有 Ⅰ 正确 → 选 A。' },
+];
 
 AW.init({
-  title: '最小生成树：四个命题逐项判断',
-  subtitle: '命题 I 代价唯一 · II 最小边必在 · III Prim 起点无关 · IV 两算法总不同',
-  counterLabel: '推理步',
-  intro: '点击「▶ 播放」逐项判断，注意区分「代价唯一」与「形态唯一」。',
-  snaps: snaps,
+  title: '2012-08 最小生成树性质 · 图上演示',
+  subtitle: '四个论断逐一检验。示例图（自拟最小反例）：边 <code>a-b(1)、a-c(1)、b-c(1)、c-d(2)</code> —— 故意让最小权并列出现。',
+  counterLabel: '已判论断',
+  ribbonTitle: '论断判定（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」：先用克鲁斯卡尔建一棵 MST，再逐条检验四个论断。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 A · 仅 I',
-    html: 'MST 的<b>代价必唯一</b>，但<b>形态未必唯一</b>——II（并列最小边可缺席）、III（Prim 不同起点）、IV（唯一时两算法同解）都栽在「形态唯一性」上。<br>反例模型：三边形三边等权，任取两条边都是 MST。',
+    big: '答案 A：仅 Ⅰ 正确',
+    html: 'Ⅰ ✓ 最小生成树的<b>代价（权和）唯一</b>，即使树形不唯一。<br>' +
+      'Ⅱ ✗ 最小权边若<b>并列多条</b>，任一棵 MST 只能取其中一部分 → 未必出现在"所有"MST 中（最小权边唯一时才必定出现）。<br>' +
+      'Ⅲ ✗ 并列权时 Prim 从不同顶点出发可得到<b>不同的 MST</b>（代价相同）。<br>' +
+      'Ⅳ ✗ Prim 与 Kruskal 结果<b>可能相同</b>（权互不相同时两者必得到同一棵唯一 MST）。<br>' +
+      '记忆锚点：<code>权值互不相等 ⇒ MST 唯一 ⇒ 谁来算都一样；有并列权 ⇒ 树形可能不唯一，但代价不变</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

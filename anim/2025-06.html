@@ -2,64 +2,215 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2025-06 图的基本性质动画</title>
+<title>2025-06 图的基本性质 · 小图反例演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .prop-svg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .prop-svg text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+  .prop-svg .ghead{font-size:13px;font-weight:700;fill:#334155;text-anchor:middle}
+  .prop-svg .gdiv{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:5 4}
+  .prop-svg .gnote{font-size:11.5px;fill:#64748b;text-anchor:middle}
+  .prop-svg .gdeg{font-size:11px;font-weight:700;fill:#92400e;text-anchor:middle;font-family:Menlo,monospace}
+  .prop-svg .gw{font-size:11.5px;font-weight:800;fill:#1d4ed8;text-anchor:middle;font-family:Menlo,monospace}
+  .prop-svg .gcyc{font-size:12px;font-weight:800;fill:#dc2626;text-anchor:middle}
+  .prop-svg .gnode circle{fill:#fff;stroke:#334155;stroke-width:2.2;transition:opacity .4s,fill .3s,stroke .3s}
+  .prop-svg .gnode text{font-family:Menlo,monospace;font-weight:800;font-size:13px;
+    text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .prop-svg .gedge{stroke:#64748b;stroke-width:2.2;fill:none;transition:opacity .4s,stroke .3s,stroke-width .3s}
+  .prop-svg .garrow{fill:#64748b;transition:opacity .4s,fill .3s}
+  .prop-svg .edge-g.hotg .gedge{stroke:#16a34a;stroke-width:3.4}
+  .prop-svg .edge-g.hotg .garrow{fill:#16a34a}
+  .prop-svg .edge-g.hotr .gedge{stroke:#dc2626;stroke-width:3.4}
+  .prop-svg .edge-g.hotr .garrow{fill:#dc2626}
+  .prop-svg .edge-g.hota .gedge{stroke:#d97706;stroke-width:3.4}
+  .prop-svg .edge-g.hota .garrow{fill:#d97706}
+  .prop-svg .gnode.hotg circle{fill:#dcfce7;stroke:#16a34a}
+  .prop-svg .gnode.hotr circle{fill:#fee2e2;stroke:#dc2626}
+  .prop-svg .gnode.hota circle{fill:#fef3c7;stroke:#d97706}
+  .prop-svg .hidden-el{opacity:0}
+  .verdict{margin-top:10px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
+  .verdict code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
-
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+/* ================== 2025-06 图的基本性质（SVG 小图逐项演示） ==================
+ * A 有向环反例（处处入度 1）；B DAG 两种拓扑序；C 度≥2 ⇒ e≥n ⇒ 必有回路；D BFS 带权反例。答案 C。 */
+var svgNS = 'http://www.w3.org/2000/svg', RR = 16;
+function mk(t){ return document.createElementNS(svgNS, t); }
+function attr(e, o){ for (var k in o) e.setAttribute(k, o[k]); return e; }
+function svgtxt(x, y, s, cls, step){
+  var t = mk('text'); attr(t, {x:x, y:y, 'class':cls});
+  t.textContent = s; t.dataset.step = step; return t;
+}
+function nodeEl(id, x, y, s, step){
+  var g = mk('g'); g.setAttribute('class', 'gnode'); g.dataset.id = id; g.dataset.step = step;
+  var c = mk('circle'); attr(c, {cx:x, cy:y, r:RR});
+  var t = mk('text'); attr(t, {x:x, y:y}); t.textContent = s;
+  g.appendChild(c); g.appendChild(t); return g;
+}
+function edgeEl(id, A, B, step, dir){
+  var g = mk('g'); g.setAttribute('class', 'edge-g'); g.dataset.id = id; g.dataset.step = step;
+  var dx = B[0]-A[0], dy = B[1]-A[1], L = Math.sqrt(dx*dx+dy*dy), ux = dx/L, uy = dy/L;
+  if (!dir){
+    var l = mk('line');
+    attr(l, {x1:A[0]+ux*RR, y1:A[1]+uy*RR, x2:B[0]-ux*RR, y2:B[1]-uy*RR, 'class':'gedge'});
+    g.appendChild(l); return g;
+  }
+  var tipx = B[0]-ux*(RR+2), tipy = B[1]-uy*(RR+2), px = -uy, py = ux;
+  var l2 = mk('line'); attr(l2, {x1:A[0], y1:A[1], x2:tipx, y2:tipy, 'class':'gedge'});
+  var bx = tipx-ux*9, by = tipy-uy*9;
+  var ar = mk('polygon');
+  attr(ar, {points: tipx+','+tipy+' '+(bx+px*4.5)+','+(by+py*4.5)+' '+(bx-px*4.5)+','+(by-py*4.5), 'class':'garrow'});
+  g.appendChild(l2); g.appendChild(ar); return g;
 }
 
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>四个选项分别涉及：有向图的入度、拓扑序列的唯一性、无向图回路的存在性、BFS 的适用范围。思路：<b>能举反例的错，能证明的对</b>。</p>' },
-  { title: '选项 A：有向图必定存在入度为 0 的顶点',
-    cls: 'bad',
-    body: '<p><b>错</b>。反例：n 个顶点连成有向环 <code>1→2→…→n→1</code>，每个顶点入度恰为 1，没有任何入度 0 的顶点。"总有个起点"只在 DAG（拓扑排序语境）里成立。</p>' },
-  { title: '选项 B：有向无环图的拓扑有序序列存在且唯一',
-    cls: 'bad',
-    body: '<p><b>错</b>。DAG 的拓扑序列<b>一定存在</b>（无环保证），但<b>不唯一</b>：反例图 1→2、3→4，则 <code>1,2,3,4</code> 与 <code>3,4,1,2</code> 都是拓扑序列。"存在"与"唯一"是两件事。</p>' },
-  { title: '选项 C：各顶点的度均 ≥ 2 的无向图必有回路',
-    cls: 'good',
-    body: '<p><b>对</b>。设 n 点 e 边：各点度 ≥ 2 ⇒ Σdeg ≥ 2n，而 Σdeg = 2e ⇒ <b>e ≥ n</b>。若无回路，每个连通分量边数 &lt; 顶点数，全图必有 e &lt; n，矛盾。故必有回路。</p>' },
-  { title: '选项 D：可用 BFS 求带权图每一对顶点的最短路径',
-    cls: 'bad',
-    body: '<p><b>错</b>。BFS 只适用<b>无权图</b>的单源最短路：它按层扩展，先到的只是"跳数最少"。带权图边权不等时跳数少 ≠ 路径短，"每一对顶点"更要用 Dijkstra / Floyd。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>C</b>。记忆锚点：<b>无向图各点度 ≥ 2 ⇒ e ≥ n ⇒ 必有回路</b>；拓扑序列存在不唯一；BFS 只管无权图。</p>' },
+var NODES = [
+  { id:'A1', x:85,  y:150, s:'1', step:1 },
+  { id:'A2', x:170, y:90,  s:'2', step:1 },
+  { id:'A3', x:255, y:150, s:'3', step:1 },
+  { id:'B1', x:390, y:150, s:'1', step:2 },
+  { id:'B2', x:460, y:150, s:'2', step:2 },
+  { id:'B3', x:540, y:150, s:'3', step:2 },
+  { id:'B4', x:610, y:150, s:'4', step:2 },
+  { id:'C1', x:85,  y:285, s:'1', step:3 },
+  { id:'C2', x:170, y:255, s:'2', step:3 },
+  { id:'C3', x:255, y:285, s:'3', step:3 },
+  { id:'C4', x:170, y:345, s:'4', step:3 },
+  { id:'D1', x:390, y:300, s:'1', step:5 },
+  { id:'D2', x:610, y:300, s:'2', step:5 },
+  { id:'D3', x:500, y:248, s:'3', step:5 },
+];
+var EDGES = [
+  { id:'eA1', a:'A1', b:'A2', step:1, dir:1 },
+  { id:'eA2', a:'A2', b:'A3', step:1, dir:1 },
+  { id:'eA3', a:'A3', b:'A1', step:1, dir:1 },
+  { id:'eB1', a:'B1', b:'B2', step:2, dir:1 },
+  { id:'eB2', a:'B3', b:'B4', step:2, dir:1 },
+  { id:'eC1', a:'C1', b:'C2', step:3 },
+  { id:'eC2', a:'C2', b:'C3', step:3 },
+  { id:'eC3', a:'C3', b:'C4', step:3 },
+  { id:'eC4', a:'C4', b:'C1', step:3 },
+  { id:'eC5', a:'C1', b:'C3', step:3 },
+  { id:'eD1', a:'D1', b:'D3', step:5, dir:1 },
+  { id:'eD2', a:'D3', b:'D2', step:5, dir:1 },
+  { id:'eD3', a:'D1', b:'D2', step:5, dir:1 },
+];
+var EDGE_HOT = {
+  1:{eA1:'hotr', eA2:'hotr', eA3:'hotr'},
+  4:{eC1:'hotr', eC2:'hotr', eC5:'hotr'},
+  5:{eD3:'hota', eD1:'hotg', eD2:'hotg'},
+  6:{eC1:'hotr', eC2:'hotr', eC5:'hotr'},
+};
+var NODE_HOT = {
+  1:{A1:'hotr', A2:'hotr', A3:'hotr'},
+  4:{C1:'hotr', C2:'hotr', C3:'hotr'},
+  5:{D1:'hota', D2:'hota', D3:'hotg'},
+  6:{C1:'hotr', C2:'hotr', C3:'hotr'},
+};
+var VERDICTS = [
+  '四个选项各配一个最小反例 / 示例图，逐项检验：能举反例的错，能证明的对。',
+  '<b>A ✗</b>：有向环 1→2→3→1 每个顶点入度恰为 1 —— 不存在入度 0 的顶点。',
+  '<b>B ✗</b>：拓扑序列一定存在（DAG 保证），但 <code>1,2,3,4</code> 与 <code>3,4,1,2</code> 都是合法拓扑序 —— 不唯一。',
+  '<b>C ✓</b>：各点度 ≥ 2 ⇒ Σdeg ≥ 2n；又 Σdeg = 2e ⇒ <code>e ≥ n</code>（本例 e=5 ≥ n=4）。',
+  '<b>C ✓</b>：若无回路，每个连通分量都是树，边数 &lt; 点数，全图 e &lt; n，矛盾。回路 1-2-3 就在图中。',
+  '<b>D ✗</b>：BFS 按跳数扩展：到 2 号「先到」给 10；真正最短 1→3→2 = 3。带权图不能用 BFS。',
+  '只有 C 正确 → <b>选 C</b>。',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svg, verdictBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  svg = mk('svg'); attr(svg, {viewBox:'0 0 660 390', 'class':'prop-svg'});
+  // 分隔线 + 四个选项标题（第 0 步出现）
+  [[335,15,335,378],[15,210,645,210]].forEach(function(d, k){
+    var l = mk('line'); attr(l, {x1:d[0], y1:d[1], x2:d[2], y2:d[3], 'class':'gdiv'});
+    l.dataset.step = 0; svg.appendChild(l);
+  });
+  svg.appendChild(svgtxt(170, 42, 'A 有向图必定存在入度为 0 的顶点？', 'ghead', 0));
+  svg.appendChild(svgtxt(510, 42, 'B DAG 的拓扑序列存在且唯一？', 'ghead', 0));
+  svg.appendChild(svgtxt(170, 226, 'C 各顶点度均 ≥ 2 的无向图必有回路？', 'ghead', 0));
+  svg.appendChild(svgtxt(510, 226, 'D BFS 可求带权图每对顶点的最短路？', 'ghead', 0));
+  // A 组：入度标注
+  svg.appendChild(svgtxt(85, 185, '入度1', 'gdeg', 1));
+  svg.appendChild(svgtxt(170, 66, '入度1', 'gdeg', 1));
+  svg.appendChild(svgtxt(255, 185, '入度1', 'gdeg', 1));
+  // B 组：两种拓扑序
+  svg.appendChild(svgtxt(500, 190, '拓扑序① 1,2,3,4', 'gnote', 2));
+  svg.appendChild(svgtxt(500, 205, '拓扑序② 3,4,1,2', 'gnote', 2));
+  // C 组：度数标注 + 回路标注
+  svg.appendChild(svgtxt(52, 290, '度3', 'gdeg', 3));
+  svg.appendChild(svgtxt(130, 250, '度2', 'gdeg', 3));
+  svg.appendChild(svgtxt(288, 290, '度3', 'gdeg', 3));
+  svg.appendChild(svgtxt(170, 378, '度2', 'gdeg', 3));
+  svg.appendChild(svgtxt(258, 242, '回路 1-2-3', 'gcyc', 4));
+  // D 组：边权
+  svg.appendChild(svgtxt(425, 262, 'w=1', 'gw', 5));
+  svg.appendChild(svgtxt(578, 262, 'w=2', 'gw', 5));
+  svg.appendChild(svgtxt(500, 328, 'w=10', 'gw', 5));
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    svg.appendChild(edgeEl(e.id, [A.x, A.y], [B.x, B.y], e.step, e.dir));
+  });
+  NODES.forEach(function(n){ svg.appendChild(nodeEl(n.id, n.x, n.y, n.s, n.step)); });
+  stage.appendChild(svg);
+  verdictBox = AW.el('div', 'verdict', '');
+  stage.appendChild(verdictBox);
+}
+
+function render(stage, sn, i){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge-g,.gnode'), function(el){
+    el.classList.remove('hotg', 'hotr', 'hota');
+  });
+  var he = EDGE_HOT[Math.min(i, 6)] || {}, hn = NODE_HOT[Math.min(i, 6)] || {};
+  [].forEach.call(svg.querySelectorAll('.edge-g'), function(el){
+    if (he[el.dataset.id]) el.classList.add(he[el.dataset.id]);
+  });
+  [].forEach.call(svg.querySelectorAll('.gnode'), function(el){
+    if (hn[el.dataset.id]) el.classList.add(hn[el.dataset.id]);
+  });
+  verdictBox.innerHTML = VERDICTS[Math.min(i, VERDICTS.length - 1)];
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'四个选项各配一个最小图：能举反例的错，能证明的对。先看 A：有向图是否必有入度 0 的顶点？' },
+  { cls:'miss', tag:'A ✗', count:1, ribbon:{k:1, ok:false},
+    log:'反例：有向环 1→2→3→1，每个顶点入度恰为 1 —— 不存在入度 0 的顶点。"总有个起点"只在 DAG 里成立。' },
+  { cls:'miss', tag:'B ✗', count:2, ribbon:{k:2, ok:false},
+    log:'DAG 保证拓扑序列存在，但不唯一：图 1→2、3→4 中，1,2,3,4 与 3,4,1,2 都是拓扑序。' },
+  { cls:'ok', tag:'C 度数下限', count:3, ribbon:{k:3, ok:true},
+    log:'C 是对的：各点度 ≥ 2 ⇒ Σdeg ≥ 2n；又 Σdeg = 2e ⇒ e ≥ n（本例 e=5 ≥ n=4）。' },
+  { cls:'ok', tag:'C 必有回路', count:3,
+    log:'若整图无回路，每个连通分量都是树，边数 < 点数，全图 e < n，矛盾。回路 1-2-3 就藏在这张图里。' },
+  { cls:'miss', tag:'D ✗', count:4, ribbon:{k:4, ok:false},
+    log:'BFS 按跳数扩展：到 2 号"先到"走 1 条边却要 10；真正最短 1→3→2 = 3。带权图不能交给 BFS。' },
+  { cls:'done', tag:'完成', count:4, done:true,
+    log:'A、B、D 都有反例，只有 C 可证明 → 选 C。锚点：度 ≥ 2 ⇒ e ≥ n ⇒ 必有回路。' },
+];
 
 AW.init({
-  title: '图的基本概念：四个说法逐项排查',
-  subtitle: '考点：入度 · 拓扑序列 · 回路存在性 · BFS 适用边界 · 反例 + 证明推演',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2025-06 图的基本性质 · 小图反例演示',
+  subtitle: '题：下列关于图，选项正确的是。考点：<code>入度 · 拓扑序列唯一性 · 度≥2 必有回路 · BFS 适用边界</code>',
+  counterLabel: '已排查选项',
+  ribbonTitle: '选项（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」，逐个选项用最小图检验。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C',
-    html: '记忆锚点：<b>度 ≥ 2 ⇒ e ≥ n ⇒ 有环</b>。<br>干扰项来源：A 忘了有向环处处入度为 1；B 把"存在"升级成"唯一"；D 给 BFS 硬加权重。',
+    html: 'A 错：有向环处处入度 1；B 错：拓扑序列存在≠唯一；C 对：<b>各点度 ≥ 2 ⇒ e ≥ n ⇒ 必有回路</b>（无回路则 e &lt; n，矛盾）；D 错：BFS 只管无权图，带权图"跳数最少"≠"路径最短"。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

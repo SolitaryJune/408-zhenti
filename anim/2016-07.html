@@ -2,62 +2,267 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2016-07 邻接表上拓扑排序的时间复杂度</title>
+<title>2016-07 邻接表上拓扑排序的时间复杂度 · 实跑计数演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .topo-svg{display:block;background:#f8fafc;border:1px solid #1b3a4b38;border-radius:12px}
+  .topo-svg .tarc{stroke:#94a3b8;stroke-width:3px;transition:stroke .3s}
+  .topo-svg .tarc.good{stroke:#16a34a;stroke-width:4.5px}
+  .topo-svg .tarc.hot{stroke:#e07a2f;stroke-width:5px}
+  .topo-svg .tvx circle{fill:#1b3a4b;transition:fill .3s}
+  .topo-svg .tvx text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:fill .3s}
+  .topo-svg .tvx.hit circle{fill:#16a34a}
+  .topo-svg .tvx.hot circle{fill:#e07a2f}
+  .tpanel{min-width:320px;flex:1}
+  .tpanel .arow{display:flex;gap:4px;align-items:center;margin-bottom:4px}
+  .tpanel .arw{font-size:12px;color:#94a3b8;font-weight:700}
+  .tpanel .abox{width:34px;height:34px;border:2px solid #cbd5e1;border-radius:8px;display:flex;
+    align-items:center;justify-content:center;font-family:Menlo,monospace;font-weight:700;font-size:14px;background:#fff}
+  .tpanel .abox.ok{background:var(--green-bg);border-color:var(--green);color:#14532d}
+  .tpanel .abox.hit{background:var(--green);border-color:var(--green);color:#fff}
+  .chipline{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0}
+  .chipline .qlabel{font-size:12.5px;color:#64748b;font-weight:700;margin-right:2px}
+  .chipline .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:2px 10px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:13px}
+  .chipline .qchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#e07a2f}
+  .chipline .qchip.stat{background:#1b3a4b14;border-color:#1b3a4b44}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域 ================== */
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
+/* ================== 2016-07 邻接表上拓扑排序的时间复杂度（实跑计数） ==================
+ * 题：n 个顶点 e 条弧的有向图采用邻接表存储，拓扑排序的时间复杂度？（答案 B：O(n+e)）
+ * 演示：自拟最小 DAG（n=5、e=6）实跑入度法拓扑排序：
+ *       顶点侧（表头/入度/出栈）与弧侧（弧结点）各被摸几次实时计数 → 3n + 2e → O(n+e)。 */
+
+var VPOS = [
+  { id:0, x:60,  y:60  },
+  { id:1, x:210, y:50  },
+  { id:2, x:210, y:190 },
+  { id:3, x:350, y:120 },
+  { id:4, x:350, y:240 },
+];
+var ARCS = [
+  { k:'0-1', a:0, b:1 },
+  { k:'0-2', a:0, b:2 },
+  { k:'1-3', a:1, b:3 },
+  { k:'2-3', a:2, b:3 },
+  { k:'2-4', a:2, b:4 },
+  { k:'3-4', a:3, b:4 },
+];
+var ADJ = { 0:['0-1','0-2'], 1:['1-3'], 2:['2-3','2-4'], 3:['3-4'], 4:[] };
+var R = 22;
+
+var svg, arcEls = {}, vertexEls = {};
+var adjHeadEls = {}, adjArcEls = {};
+var indCells = [], stackBox, outBox, statV, statE;
+
+function seg(a, b, r){
+  var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.sqrt(dx*dx + dy*dy);
+  return { x1:a[0] + dx/L*r, y1:a[1] + dy/L*r, x2:b[0] - dx/L*r, y2:b[1] - dy/L*r };
 }
 
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>n 个顶点、e 条弧的<b>有向图</b>，采用<b>邻接表</b>存储，问拓扑排序的时间复杂度。拓扑排序用入度法：求入度 → 0 入度顶点进栈 → 弹出并松弛出边。</p>' },
-  { title: '第一步：求入度',
-    cls: 'good',
-    body: '<p>把邻接表完整扫一遍：n 个顶点表头结点各看一次 + e 条弧各看一次 → <code>O(n+e)</code>。</p>' },
-  { title: '第二步：建 0 入度栈',
-    cls: 'good',
-    body: '<p>检查 n 个顶点的入度值，把入度为 0 的压入栈（队列）→ <code>O(n)</code>。</p>' },
-  { title: '第三步：主循环',
-    cls: 'good',
-    body: '<p>每个顶点出栈恰好一次；每条弧只会在它<b>起点出栈时</b>被处理一次（终点入度减 1）→ 顶点侧 <code>O(n)</code>、弧侧 <code>O(e)</code>，合计 <code>O(n+e)</code>。</p>' },
-  { title: '三步合计',
-    cls: 'good',
-    body: '<p><code>O(n+e) + O(n) + O(n+e)</code> = <b>O(n+e)</b> → 选 <b>B</b>。</p>' },
-  { title: '干扰项从哪来',
-    cls: 'bad',
-    body: '<p><b>A（O(n)）</b>：只数顶点进出栈，漏了“每条弧都要被检查一次”；<b>C（O(n^2)）</b>：那是<b>邻接矩阵</b>存储的代价（找某顶点的出边要扫整行）；<b>D（O(ne)）</b>：算法中不存在双重嵌套扫描。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案 <b>B（O(n+e)）</b>。记忆锚点：邻接表下“顶点各一次、弧各一次”= O(n+e)；换成邻接矩阵才退化为 O(n^2)。</p>' },
+function build(stage){
+  stage.innerHTML = '';
+  var NS = 'http://www.w3.org/2000/svg';
+  var wrap = AW.el('div', 'aw-scroll');
+  var flex = AW.el('div', '');
+  flex.style.display = 'flex';
+  flex.style.gap = '18px';
+  flex.style.flexWrap = 'wrap';
+  flex.style.alignItems = 'flex-start';
+
+  svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 440 300');
+  svg.setAttribute('width', '420');
+  svg.setAttribute('height', '286');
+  svg.setAttribute('class', 'topo-svg');
+  var defs = document.createElementNS(NS, 'defs');
+  function marker(id, color){
+    var m = document.createElementNS(NS, 'marker');
+    m.setAttribute('id', id);
+    m.setAttribute('viewBox', '0 0 10 10');
+    m.setAttribute('refX', '8'); m.setAttribute('refY', '5');
+    m.setAttribute('markerWidth', '6.5'); m.setAttribute('markerHeight', '6.5');
+    m.setAttribute('orient', 'auto');
+    var p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', 'M0,0 L10,5 L0,10 z');
+    p.setAttribute('fill', color);
+    m.appendChild(p);
+    defs.appendChild(m);
+  }
+  marker('tN', '#94a3b8'); marker('tOK', '#16a34a'); marker('tHot', '#e07a2f');
+  svg.appendChild(defs);
+  ARCS.forEach(function(e){
+    var p = VPOS[e.a], q = VPOS[e.b];
+    var s = seg([p.x, p.y], [q.x, q.y], R);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', s.x1); ln.setAttribute('y1', s.y1);
+    ln.setAttribute('x2', s.x2); ln.setAttribute('y2', s.y2);
+    ln.setAttribute('class', 'tarc');
+    ln.setAttribute('marker-end', 'url(#tN)');
+    ln.dataset.k = e.k;
+    svg.appendChild(ln);
+    arcEls[e.k] = ln;
+  });
+  VPOS.forEach(function(v){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tvx');
+    g.dataset.id = String(v.id);
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', v.x); c.setAttribute('cy', v.y); c.setAttribute('r', R);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', v.x); t.setAttribute('y', v.y);
+    t.textContent = String(v.id);
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    vertexEls[String(v.id)] = g;
+  });
+  flex.appendChild(svg);
+
+  var right = AW.el('div', 'tpanel');
+  right.appendChild(AW.el('div', 'aw-row-label', '<b>邻接表</b>（表头 → 弧结点；绿=已处理 / 实绿=本步处理）'));
+  for(var v = 0; v < 5; v++){
+    var row = AW.el('div', 'arow');
+    var head = AW.el('div', 'abox', String(v));
+    head.dataset.v = String(v);
+    row.appendChild(head);
+    adjHeadEls[String(v)] = head;
+    row.appendChild(AW.el('span', 'arw', '→'));
+    if(ADJ[v].length === 0){
+      row.appendChild(AW.el('span', 'arw', '∅（无出边）'));
+    } else {
+      ADJ[v].forEach(function(k){
+        var ab = AW.el('div', 'abox', '→' + k.split('-')[1]);
+        ab.dataset.arc = k;
+        row.appendChild(ab);
+        adjArcEls[k] = ab;
+      });
+    }
+    right.appendChild(row);
+  }
+  right.appendChild(AW.el('div', 'aw-row-label', '<b>入度表</b>（? = 还没数）'));
+  var indRow = AW.el('div', 'chipline');
+  for(var v2 = 0; v2 < 5; v2++){
+    var col = AW.el('div', 'aw-col');
+    col.style.width = '34px';
+    var cell = AW.el('div', 'abox', '?');
+    cell.style.width = '34px';
+    col.appendChild(cell);
+    col.appendChild(AW.el('div', 'aw-idx', String(v2)));
+    indRow.appendChild(col);
+    indCells.push(cell);
+  }
+  right.appendChild(indRow);
+  right.appendChild(AW.el('div', 'aw-row-label', '<b>栈（入度 0 的顶点）</b>'));
+  stackBox = AW.el('div', 'chipline');
+  right.appendChild(stackBox);
+  right.appendChild(AW.el('div', 'aw-row-label', '<b>输出序列</b>'));
+  outBox = AW.el('div', '');
+  right.appendChild(outBox);
+  var statLine = AW.el('div', 'chipline');
+  statLine.style.marginTop = '8px';
+  statV = AW.el('span', 'qchip stat', '顶点侧操作 0');
+  statE = AW.el('span', 'qchip stat', '弧侧操作 0');
+  statLine.appendChild(statV);
+  statLine.appendChild(statE);
+  right.appendChild(statLine);
+
+  flex.appendChild(right);
+  wrap.appendChild(flex);
+  stage.appendChild(wrap);
+}
+
+function render(stage, sn){
+  var proc = sn.arcsProc || [], doneArc = sn.arcDone || [];
+  ARCS.forEach(function(e){
+    var ln = arcEls[e.k];
+    var cls = 'tarc', mk = 'url(#tN)';
+    if(proc.indexOf(e.k) >= 0){ cls += ' hot'; mk = 'url(#tHot)'; }
+    else if(doneArc.indexOf(e.k) >= 0){ cls += ' good'; mk = 'url(#tOK)'; }
+    ln.setAttribute('class', cls);
+    ln.setAttribute('marker-end', mk);
+  });
+  var pop = sn.pop, popDone = sn.popDone || [];
+  Object.keys(vertexEls).forEach(function(id){
+    var cls = 'tvx';
+    if(pop != null && pop === +id) cls += ' hot';
+    else if(popDone.indexOf(+id) >= 0) cls += ' hit';
+    vertexEls[id].setAttribute('class', cls);
+  });
+  Object.keys(adjHeadEls).forEach(function(id){
+    var cls = 'abox';
+    if(pop != null && pop === +id) cls += ' hit';
+    else if(popDone.indexOf(+id) >= 0) cls += ' ok';
+    adjHeadEls[id].className = cls;
+  });
+  Object.keys(adjArcEls).forEach(function(k){
+    var cls = 'abox';
+    if(proc.indexOf(k) >= 0) cls += ' hit';
+    else if(doneArc.indexOf(k) >= 0) cls += ' ok';
+    adjArcEls[k].className = cls;
+  });
+  for(var i = 0; i < 5; i++){
+    var val = sn.indeg ? String(sn.indeg[i]) : '?';
+    indCells[i].textContent = val;
+    indCells[i].className = 'abox' + (sn.dec && sn.dec.indexOf(i) >= 0 ? ' hit' : (sn.indeg ? ' ok' : ''));
+  }
+  stackBox.innerHTML = '<span class="qlabel">栈：</span>';
+  (sn.stack && sn.stack.length ? sn.stack : []).forEach(function(v){
+    var ch = AW.el('span', 'qchip', String(v));
+    if(sn.pushed && sn.pushed.indexOf(v) >= 0) ch.className = 'qchip hot';
+    stackBox.appendChild(ch);
+  });
+  if(!sn.stack || sn.stack.length === 0) stackBox.appendChild(AW.el('span', 'qlabel', '（空）'));
+  outBox.innerHTML = '';
+  if(sn.out && sn.out.length){
+    outBox.appendChild(AW.cellRow(sn.out.map(String), sn.out.map(function(){ return 'ok'; })));
+  }
+  statV.textContent = '顶点侧操作 ' + sn.vOps;
+  statE.textContent = '弧侧操作 ' + sn.eOps;
+}
+
+var SNAPS = [
+  { cls:'step', tag:'示例图', count:0, pop:null, popDone:[], arcsProc:[], arcDone:[], pushed:[], indeg:null, dec:[], stack:[], out:[], vOps:0, eOps:0,
+    log:'自拟最小 DAG：n = 5 个顶点、e = 6 条弧（下图）。拓扑排序（入度法）三步走：① 求每个顶点的入度；② 入度为 0 的进栈；③ 逐个出栈，把出边终点的入度减 1。时间账 = 表头/顶点被摸几次 + 弧结点被摸几次。' },
+  { cls:'step', tag:'邻接表', count:1, pop:null, popDone:[], arcsProc:[], arcDone:[], pushed:[], indeg:null, dec:[], stack:[], out:[], vOps:0, eOps:0,
+    log:'邻接表：n 个表头结点（右侧 5 行的深色格）挂 e 个弧结点（→格）。数清"表头摸几次、弧结点摸几次"，复杂度自然出来。' },
+  { cls:'ok', tag:'① 求入度', count:2, pop:null, popDone:[], arcsProc:[], arcDone:[], pushed:[], indeg:[0,1,1,2,2], dec:[0,1,2,3,4], stack:[], out:[], vOps:5, eOps:6, ribbon:{k:1, ok:true},
+    log:'把邻接表完整扫一遍求入度：5 个表头各看一次 + 6 个弧结点各看一次 → 顶点侧 +5、弧侧 +6，即 O(n) 与 O(e)。' },
+  { cls:'step', tag:'② 建栈', count:3, pop:null, popDone:[], arcsProc:[], arcDone:[], pushed:[0], indeg:[0,1,1,2,2], dec:[], stack:[0], out:[], vOps:10, eOps:6,
+    log:'再检查 n 个顶点的入度值，把入度为 0 的压栈：只有顶点 0 → 顶点侧 +5（共 10）、弧侧不动。这一步 O(n)。' },
+  { cls:'ok', tag:'出栈 0', count:4, pop:0, popDone:[], arcsProc:['0-1','0-2'], arcDone:['0-1','0-2'], pushed:[1,2], indeg:[0,0,0,2,2], dec:[1,2], stack:[1,2], out:[0], vOps:11, eOps:8,
+    log:'弹出 0（顶点侧 +1）：沿邻接表处理它的 2 条出边（弧侧 +2）→ 1、2 的入度减为 0，先后进栈。输出 0。' },
+  { cls:'ok', tag:'出栈 1', count:5, pop:1, popDone:[0], arcsProc:['1-3'], arcDone:['0-1','0-2','1-3'], pushed:[], indeg:[0,0,0,1,2], dec:[3], stack:[2], out:[0,1], vOps:12, eOps:9,
+    log:'弹出 1：出边 1→3，3 的入度 2→1（还没到 0，不入栈）。输出 0,1。每条弧只在起点出栈时被处理这一次。' },
+  { cls:'ok', tag:'出栈 2', count:6, pop:2, popDone:[0,1], arcsProc:['2-3','2-4'], arcDone:['0-1','0-2','1-3','2-3','2-4'], pushed:[3], indeg:[0,0,0,0,1], dec:[3,4], stack:[3], out:[0,1,2], vOps:13, eOps:11,
+    log:'弹出 2：处理 2→3（3 的入度 → 0，进栈）、2→4（4 的入度 → 1）。输出 0,1,2。' },
+  { cls:'ok', tag:'出栈 3', count:7, pop:3, popDone:[0,1,2], arcsProc:['3-4'], arcDone:['0-1','0-2','1-3','2-3','2-4','3-4'], pushed:[4], indeg:[0,0,0,0,0], dec:[4], stack:[4], out:[0,1,2,3], vOps:14, eOps:12,
+    log:'弹出 3：处理 3→4（4 的入度 → 0，进栈）。输出 0,1,2,3。' },
+  { cls:'ok', tag:'出栈 4', count:8, pop:4, popDone:[0,1,2,3], arcsProc:[], arcDone:['0-1','0-2','1-3','2-3','2-4','3-4'], pushed:[], indeg:[0,0,0,0,0], dec:[], stack:[], out:[0,1,2,3,4], vOps:15, eOps:12,
+    log:'弹出 4：无出边。输出 0,1,2,3,4 —— 拓扑序完成。每个顶点恰好出栈一次、每条弧恰好被处理一次。' },
+  { cls:'step', tag:'算总账', count:9, pop:null, popDone:[0,1,2,3,4], arcsProc:[], arcDone:['0-1','0-2','1-3','2-3','2-4','3-4'], pushed:[], indeg:[0,0,0,0,0], dec:[], stack:[], out:[0,1,2,3,4], vOps:15, eOps:12, ribbon:{k:2, ok:true},
+    log:'顶点侧：扫表头 n + 查入度建栈 n + 出栈 n = 3n 次（本例 15 = 3×5）；弧侧：求入度扫一遍 e + 出边处理 e = 2e 次（本例 12 = 2×6）。没有任何双重嵌套扫描 → O(n) + O(e) = O(n+e)。' },
+  { cls:'done', tag:'完成', count:10, pop:null, popDone:[0,1,2,3,4], arcsProc:[], arcDone:['0-1','0-2','1-3','2-3','2-4','3-4'], pushed:[], indeg:[0,0,0,0,0], dec:[], stack:[], out:[0,1,2,3,4], vOps:15, eOps:12, done:true, ribbon:{k:3, ok:true},
+    log:'答案 B：邻接表存储下拓扑排序的时间复杂度 O(n+e)。对比：换成邻接矩阵，找某顶点的出边要扫整行 n 次，同一算法退化为 O(n²)——这正是 C 选项的来历。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
-
 AW.init({
-  title: '2016·拓扑排序：邻接表存储下的时间复杂度',
-  subtitle: '有向图 n 个顶点 e 条弧 · 邻接表存储 · 入度法拓扑排序',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2016-07 · 邻接表存储下拓扑排序的时间复杂度',
+  subtitle: '自拟最小 DAG（n=5、e=6）实跑入度法拓扑排序，顶点/弧各被摸几次实时计数',
+  counterLabel: '推进步',
+  ribbonTitle: '三个阶段（✓ 完成）',
+  intro: '点击「▶ 播放」：求入度 → 建栈 → 逐个出栈，看计数器涨到 3n 与 2e。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: 'O(n+e)（选 B）',
-    html: '邻接表让“找某顶点的所有出边”只花该顶点出边数的时间 → 求入度、主循环各 O(n+e)，总复杂度 <b>O(n+e)</b>。邻接矩阵存储时同样的算法要 O(n^2)。',
+    html: '顶点侧：扫表头 n + 查入度建栈 n + 出栈 n = 3n；弧侧：求入度扫一遍 e + 每条弧在起点出栈时处理一次 e = 2e。合计 <b>O(n+e)</b>，不存在双重嵌套。' +
+      '记忆锚点：<code>邻接表 = 顶点各一次 + 弧各一次</code>；换成邻接矩阵才退化成 O(n²)。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

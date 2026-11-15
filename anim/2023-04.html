@@ -2,93 +2,199 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2023-04 · 哈夫曼树的构造与平均码长</title>
+<title>2023-04 哈夫曼编码平均码长 · 构树动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .htree-svg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .htree-svg .hedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s}
+  .htree-svg .hnode circle{transition:opacity .4s, fill .3s}
+  .htree-svg .hnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:opacity .4s}
+  .htree-svg .hnode.leaf circle{fill:#16a34a}
+  .htree-svg .hnode.internal circle{fill:#1b3a4b}
+  .htree-svg .hnode.hot circle{fill:#e07a2f}
+  .htree-svg .hnode.root circle{fill:#e63946}
+  .htree-svg .hidden-el{opacity:0}
+  .htree-svg .dim-el{opacity:.35}
+  .htree-svg .dep{font-size:12px;font-weight:800;fill:#6d28d9;text-anchor:middle}
+  .hqueue{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .hqueue .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:14px}
+  .hqueue .qchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#e07a2f}
+  .hqueue .qchip.merged{opacity:.45;text-decoration:line-through}
+  .hdepth{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;min-height:30px}
+  .hdepth .dchip{background:#ede9fe;color:#6d28d9;border:1.5px solid #c4b5fd;border-radius:999px;
+    padding:3px 11px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:13px}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2023-04 哈夫曼构树动画（SVG） ==================
+ * 题：6 个字符频次 3,4,5,6,8,10，哈夫曼编码的加权平均长度？（答案 B=2.5）
+ * 演示：构哈夫曼树 → 定码长（深度）→ WPL=90 → 平均 = 90÷36 = 2.5。 */
 
-function pairRow(label, freqs, lens, cls){
-  var h = '<div class="aw-row-label">' + label + '</div><div class="aw-cells">';
-  for (var i = 0; i < freqs.length; i++){
-    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="aw-box ' + (cls && cls[i] ? ' ' + cls[i] : '') + '">' + freqs[i] + '</div><div class="aw-idx">' + (lens ? '码长' + lens[i] : '频次') + '</div></div>';
-  }
-  return h + '</div>';
-}
-
-function stageHTML(st){
-  var h = pairRow('<b>当前森林</b>（每步合并最小的两棵，新结点以绿色标出）', st.forest, null, st.cls);
-  if (st.depths){
-    h += pairRow('各字符码长 = 树中深度（频次 → 码长）', [3,4,5,6,8,10], st.depths, ['ok','ok','ok','ok','ok','ok']);
-  }
-  if (st.calc){
-    h += '<div class="aw-row-label" style="font-size:14px;color:#0f172a">' + st.calc + '</div>';
-  }
-  return h;
-}
-
-/* 每步状态：forest=森林权值数组，cls=配色，depths=码长（出现即显示），calc=算式行 */
-var STATES = [
-  { forest:[3,4,5,6,8,10], cls:['','','','','',''],
-    calc:'初始：6 个字符的频次 3, 4, 5, 6, 8, 10，各为一棵单结点树。' },
-  { forest:[5,6,7,8,10], cls:['','','ok','',''],
-    calc:'取最小两个 3、4 合并成 7（3、4 的深度将比 8 大 1）。' },
-  { forest:[7,8,10,11], cls:['','','','ok'],
-    calc:'再取最小两个 5、6 合并成 11。' },
-  { forest:[10,11,15], cls:['','','ok'],
-    calc:'取最小两个 7、8 合并成 15（7 里含 3、4，8 单独）。' },
-  { forest:[15,21], cls:['','ok'],
-    calc:'取最小两个 10、11 合并成 21。' },
-  { forest:[36], cls:['ok'],
-    calc:'最后 15、21 合并成根 36 —— 哈夫曼树建成。' },
-  { forest:[36], cls:['ok'], depths:[3,3,3,3,2,2],
-    calc:'码长即深度：3、4、5、6 各 3 位；8、10 各 2 位。' },
-  { forest:[36], cls:['ok'], depths:[3,3,3,3,2,2],
-    calc:'WPL = 3×3 + 4×3 + 5×3 + 6×3 + 8×2 + 10×2 = 9+12+15+18+16+20 = 90。校验：非叶结点权值和 7+11+15+21+36 = 90 ✓' },
-  { forest:[36], cls:['ok'], depths:[3,3,3,3,2,2],
-    calc:'总频次 = 3+4+5+6+8+10 = 36；加权平均长度 = 90 ÷ 36 = 2.5 → 答案 B。' },
+var NODES = [
+  { id:'L3',  x:75,  y:270, w:3,  leaf:true,  step:0 },
+  { id:'L4',  x:165, y:270, w:4,  leaf:true,  step:0 },
+  { id:'L5',  x:445, y:270, w:5,  leaf:true,  step:0 },
+  { id:'L6',  x:535, y:270, w:6,  leaf:true,  step:0 },
+  { id:'L8',  x:280, y:195, w:8,  leaf:true,  step:0 },
+  { id:'L10', x:360, y:195, w:10, leaf:true,  step:0 },
+  { id:'I7',  x:120, y:195, w:7,  leaf:false, step:1 },
+  { id:'I11', x:490, y:195, w:11, leaf:false, step:2 },
+  { id:'I15', x:200, y:120, w:15, leaf:false, step:3 },
+  { id:'I21', x:420, y:120, w:21, leaf:false, step:4 },
+  { id:'R36', x:310, y:45,  w:36, leaf:false, step:5 },
+];
+var EDGES = [
+  { a:'I7',  b:'L3',  step:1 },
+  { a:'I7',  b:'L4',  step:1 },
+  { a:'I11', b:'L5',  step:2 },
+  { a:'I11', b:'L6',  step:2 },
+  { a:'I15', b:'I7',  step:3 },
+  { a:'I15', b:'L8',  step:3 },
+  { a:'I21', b:'L10', step:4 },
+  { a:'I21', b:'I11', step:4 },
+  { a:'R36', b:'I15', step:5 },
+  { a:'R36', b:'I21', step:5 },
+];
+/* 各叶结点的码长（= 深度），第 6 步起显示 */
+var DEPTH = { L3:3, L4:3, L5:3, L6:3, L8:2, L10:2 };
+var QUEUES = [
+  { chips:['3','4','5','6','8','10'], hot:[], merged:[] },
+  { chips:['5','6','7','8','10'],     hot:['7'], merged:['3','4'] },
+  { chips:['7','8','10','11'],        hot:['11'], merged:['3','4','5','6'] },
+  { chips:['10','11','15'],           hot:['15'], merged:['3','4','5','6','7','8'] },
+  { chips:['15','21'],                hot:['21'], merged:['3','4','5','6','7','8','10','11'] },
+  { chips:['36（树根）'],              hot:['36（树根）'], merged:['3','4','5','6','7','8','10','11','15','21'] },
+  { chips:['构建完成'],                hot:['构建完成'], merged:[] },
+  { chips:['WPL = 90'],               hot:['WPL = 90'], merged:[] },
+  { chips:['平均 = 2.5'],              hot:['平均 = 2.5'], merged:[] },
+];
+var SNAPS = [
+  { cls:'shift', tag:'初始森林', count:0,
+    log:'6 个字符的频次 3、4、5、6、8、10，各为一棵单结点树。哈夫曼建树规则：每步取权值最小的两棵合并。' },
+  { cls:'ok', tag:'合并 ①', count:1,
+    log:'最小两个 3、4 → 合并出新结点 7。' },
+  { cls:'ok', tag:'合并 ②', count:2,
+    log:'当前最小两个 5、6 → 合并为 11。' },
+  { cls:'ok', tag:'合并 ③', count:3,
+    log:'取 7 与 8 → 合并为 15。' },
+  { cls:'ok', tag:'合并 ④', count:4,
+    log:'取 10 与 11 → 合并为 21。' },
+  { cls:'ok', tag:'合并 ⑤', count:5,
+    log:'取 15 与 21 → 合并为 36，即树根。5 次合并（6−1）后建树完成。' },
+  { cls:'step', tag:'定码长', count:5,
+    log:'码长 = 字符在树中的深度：3、4 要穿 7、15 两层 → 3 位；5、6 穿 11、21 → 3 位；8、10 各连在 15、21 下 → 2 位。' },
+  { cls:'step', tag:'算 WPL', count:5,
+    log:'WPL = 3×3 + 4×3 + 5×3 + 6×3 + 8×2 + 10×2 = 9+12+15+18+16+20 = 90。校验：WPL = 非叶权值和 = 7+11+15+21+36 = 90 ✓' },
+  { cls:'done', tag:'求平均', count:5, done:true,
+    log:'总频次 = 3+4+5+6+8+10 = 36；加权平均长度 = WPL ÷ 总频次 = 90 ÷ 36 = 2.5 → 选 B。' },
 ];
 
-var snaps = STATES.map(function(st, i){
-  var last = i === STATES.length - 1;
-  var cntArr = [0,1,2,3,4,5,5,5,5];
-  var clsArr = ['step','ok','ok','ok','ok','shift','step','step','done'];
-  var tagArr = ['初始','合并 3+4','合并 5+6','合并 7+8','合并 10+11','成根 36','定码长','算 WPL','求平均'];
-  var logArr = [
-    '初始：6 个字符频次 3,4,5,6,8,10，各为一棵树',
-    '第 1 次合并：最小两个 3、4 → 新结点 7',
-    '第 2 次合并：5、6 → 11',
-    '第 3 次合并：7、8 → 15',
-    '第 4 次合并：10、11 → 21',
-    '第 5 次合并：15、21 → 根 36，建树完成',
-    '按树形定码长（深度）：3,4,5,6 为 3 位；8,10 为 2 位',
-    'WPL = 9+12+15+18+16+20 = 90（= 非叶权值和 7+11+15+21+36 ✓）',
-    '平均码长 = 90 ÷ 36 = 2.5 → 答案 B'
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 320');
+  svg.setAttribute('class', 'htree-svg');
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'hedge hidden-el');
+    ln.dataset.step = e.step;
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'hnode ' + (n.leaf ? 'leaf' : 'internal') + ' hidden-el');
+    g.dataset.id = n.id;
+    g.dataset.step = n.step;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.w;
+    g.appendChild(c); g.appendChild(t);
+    if (n.leaf){
+      var d = document.createElementNS(svgNS, 'text');
+      d.setAttribute('x', n.x); d.setAttribute('y', n.y + 38);
+      d.setAttribute('class', 'dep hidden-el');
+      d.dataset.step = 6;
+      d.textContent = '深度 ' + DEPTH[n.id];
+      svg.appendChild(d);
+    }
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  var queueBox = AW.el('div', 'hqueue');
+  stage.appendChild(queueBox);
+  var depthBox = AW.el('div', 'hdepth');
+  stage.appendChild(depthBox);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._queueBox = queueBox; this._depthBox = depthBox; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('.hnode, .hedge, .dep'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.hnode'), function(el){
+    el.classList.remove('hot', 'root', 'dim-el');
+    if (i >= 1 && i <= 5) {
+      var produced = ['I7','I11','I15','I21','R36'][i-1];
+      if (el.dataset.id === produced) el.classList.add('hot');
+      if (el.classList.contains('internal') && +el.dataset.step < i && el.dataset.id !== produced) el.classList.add('dim-el');
+    }
+    if (i >= 5 && el.dataset.id === 'R36') el.classList.add('root');
+  });
+  var q = QUEUES[Math.min(i, QUEUES.length - 1)];
+  this._queueBox.innerHTML = '权值队列：' + q.chips.map(function(c){
+    var cls = 'qchip' + (q.hot.indexOf(c) >= 0 ? ' hot' : '') + (q.merged.indexOf(c) >= 0 ? ' merged' : '');
+    return '<span class="' + cls + '">' + c + '</span>';
+  }).join('');
+  if (i >= 6){
+    this._depthBox.innerHTML = [3,4,5,6,8,10].map(function(w){
+      return '<span class="dchip">频次 ' + w + ' → 码长 ' + (w === 8 || w === 10 ? 2 : 3) + '</span>';
+    }).join('');
+  } else {
+    this._depthBox.innerHTML = '';
+  }
+  var formulas = [
+    '', '', '', '', '', '',
+    '码长 = 深度（根为第 0 层）',
+    'WPL = 9+12+15+18+16+20 = <code>90</code>（= 非叶权值和 7+11+15+21+36 ✓）',
+    '平均码长 = WPL ÷ 总频次 = 90 ÷ 36 = <code>2.5</code>',
   ];
-  var sn = {
-    cls: clsArr[i], tag: tagArr[i], log: logArr[i], count: cntArr[i],
-    html: stageHTML(st), done: last,
-  };
-  if (i >= 1 && i <= 5){ sn.ribbon = { k: i, ok: true }; }
-  return sn;
-});
+  this._formulaBox.innerHTML = formulas[Math.min(i, formulas.length - 1)] || '';
+}
 
 AW.init({
-  title: '2023-04 · 哈夫曼编码的加权平均长度',
-  subtitle: '6 个字符频次 <code>3, 4, 5, 6, 8, 10</code> · 平均码长 = WPL ÷ 总频次',
+  title: '2023-04 哈夫曼编码平均码长 · 构树动画',
+  subtitle: '题：6 个字符频次 <code>3, 4, 5, 6, 8, 10</code>，哈夫曼编码的加权平均长度是？<br>加权平均长度 = WPL ÷ 总频次',
   counterLabel: '已合并',
-  ribbonTitle: '合并次序（✓ 已完成一次合并）',
-  intro: '点击「▶ 播放」逐步构造哈夫曼树并计算平均码长。',
-  snaps: snaps,
+  ribbonTitle: '合并次序（✓ 完成一次合并）',
+  intro: '点击「▶ 播放」逐次合并最小权值构造哈夫曼树，再定码长、算 WPL、除以总频次。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '平均码长 = 2.5（答案 B）',
-    html: 'WPL = 3×3+4×3+5×3+6×3+8×2+10×2 = <b>90</b>，总频次 36，平均码长 90÷36 = <b>2.5</b>。校验技巧：<b>WPL = 全部非叶结点权值之和</b>（7+11+15+21+36 = 90）。易错：除数是频次和 36 而不是字符个数 6；合并必须每步取当前最小两个。',
+    big: '平均码长 = 2.5（选 B）',
+    html: '构树后各字符码长（深度）：3、4、5、6 各 <b>3</b> 位，8、10 各 <b>2</b> 位。<br>' +
+      'WPL = 3×3+4×3+5×3+6×3+8×2+10×2 = <b>90</b>（校验：非叶权值和 7+11+15+21+36 = 90 ✓）。<br>' +
+      '总频次 = 36，加权平均长度 = 90 ÷ 36 = <b>2.5</b>。易错：除数是频次总和 36，不是字符个数 6；合并必须每步取当前最小两个。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

@@ -2,66 +2,123 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2022-03 中序相邻 ⇒ 谁是 p 的中序后继</title>
+<title>2022-03 中序相邻 · 关系判定动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .mtsvg{display:block;margin:0 auto;background:#f8fafc;border:1px solid #1b3a4b38;border-radius:12px}
+  .mnote{margin-top:10px;text-align:center;font-size:14px;line-height:1.9;color:#334155}
+  .mverdict{display:inline-block;font-size:14px;font-weight:800;border-radius:999px;padding:4px 16px;margin-top:8px}
+  .mverdict.good{background:#dcfce7;color:#15803d;border:1.5px solid #16a34a}
+  .mverdict.bad{background:#fee2e2;color:#b91c1c;border:1.5px solid #dc2626}
+  .mstrip{display:flex;gap:24px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:12px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2022-03 中序相邻（每问一棵最小示例树 SVG + 中序序列格） ==================
+ * 题：p、q 在中序序列中相邻且 p 在 q 前，四种关系哪种不可能。（答案 B：仅 III）
+ * 演示：给 I~IV 各画一棵最小树，写出中序序列，看 p、q 是否真的相邻。 */
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+// 小树：nodes=[{x,y,ch,role}]，edges=[[u,v]...]，role: p(绿) q(蓝) o(深)
+function miniTree(nodes, edges, W, H){
+  var byCh = {};
+  nodes.forEach(function(n){ byCh[n.ch] = n; });
+  var s = '<svg class="mtsvg" viewBox="0 0 ' + W + ' ' + H + '" width="' + (W * 0.9) + '">';
+  edges.forEach(function(e){
+    var A = byCh[e[0]], B = byCh[e[1]];
+    s += '<line x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '" stroke="#5a7d8c" stroke-width="2.5"/>';
+  });
+  nodes.forEach(function(n){
+    var fill = n.role === 'p' ? '#16a34a' : (n.role === 'q' ? '#2563eb' : '#1b3a4b');
+    s += '<circle cx="' + n.x + '" cy="' + n.y + '" r="21" fill="' + fill + '"/>' +
+         '<text x="' + n.x + '" y="' + n.y + '" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="800" fill="#fff" font-family="JetBrains Mono,Menlo,monospace">' + n.ch + '</text>';
+  });
+  return s + '</svg>';
 }
 
-// 推理链：每一步的完整内容（引擎按步数截取显示）
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>「中序相邻、p 在前」⇔ <b>q 恰好是 p 的中序后继</b>。后继只有两个来源：① p 有右子树 → 右子树最左下的结点；② p 无右子树 → 沿双亲链向上，找到第一个「p 落在其左子树里」的祖先。</p>' },
-  { title: '验证 I：q 是 p 的双亲',
-    cls: 'good',
-    body: '<p>p 是 q 的<b>左孩子</b>且没有右子树 ⇒ 中序为 …, p, q, …，相邻。<b>可能 ✓</b></p>' },
-  { title: '验证 II：q 是 p 的右孩子',
-    cls: 'good',
-    body: '<p>q 没有左孩子时，p 的中序后继就是它的右孩子 q ⇒ …, p, q, …，相邻。<b>可能 ✓</b></p>' },
-  { title: '验证 III：q 是 p 的右兄弟',
-    cls: 'bad',
-    body: '<p>中序顺序是「左子树 → 双亲 → 右子树」。q 是 p 的右兄弟 ⇒ q 排在双亲之后：…, p（的子树）, <b>双亲</b>, q, …，p 与 q 之间至少隔着双亲。<b>不可能 ✗</b></p>' },
-  { title: '验证 IV：q 是双亲的双亲',
-    cls: 'good',
-    body: '<p>构造：q 的左孩子是 r，r 的右孩子是 p（叶）⇒ 中序为 r, p, q，p 的后继恰是 q。<b>可能 ✓</b>。诀窍：从 p 往上走到 q 的途中每个中间结点（r）都「向右拐」，它们都先于 p 输出，不会插进 p、q 之间。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>I、II、IV 都可能，<b>仅 III 不可能</b> ⇒ 答案 <b>B</b>。记忆锚点：中序里紧跟 p 的是「右子树最左」，否则是向上找的第一个「左拐」祖先——<b>兄弟永远轮不到</b>。</p>' },
+function strip(seq, hotIdx, gapIdx){
+  // seq: 中序序列；hotIdx: p/q 所在下标（绿）；gapIdx: 挡在中间的下标（红）
+  var holder = AW.el('div', '');
+  var classes = seq.map(function(_, k){
+    if(k === gapIdx) return 'miss';
+    if(hotIdx.indexOf(k) >= 0) return 'hit';
+    return '';
+  });
+  holder.appendChild(AW.cellRow(seq, classes, null, 1));
+  return holder;
+}
+
+var CASES = [
+  { // I. q 是 p 的双亲
+    nodes:[ {x:130, y:45, ch:'q', role:'q'}, {x:130, y:140, ch:'p', role:'p'} ],
+    edges:[ ['q','p'] ], W:260, H:190,
+    seq:['p','q'], hotIdx:[0,1], gapIdx:-1, good:true,
+    note:'p 是 q 的<b>左孩子</b>且没有右子树：q 的中序 =「左子树, q」= p, q —— <b>相邻 ✓ 可能</b>',
+    log:'I. q 是 p 的双亲：让 p 做q 的左孩子（叶）。中序遍历 q 的子树 =「左子树 → q」，左子树只有 p → 序列 p, q，相邻。可能 ✓' },
+  { // II. q 是 p 的右孩子
+    nodes:[ {x:110, y:45, ch:'p', role:'p'}, {x:200, y:140, ch:'q', role:'q'} ],
+    edges:[ ['p','q'] ], W:260, H:190,
+    seq:['p','q'], hotIdx:[0,1], gapIdx:-1, good:true,
+    note:'q 是 p 的<b>右孩子</b>且 q 没有左孩子：p 的中序 =「p, 右子树」，右子树最先输出 q —— <b>相邻 ✓ 可能</b>',
+    log:'II. q 是 p 的右孩子：q 无左孩子时，p 的中序后继正是它的右孩子 → 序列 p, q，相邻。可能 ✓' },
+  { // III. q 是 p 的右兄弟
+    nodes:[ {x:130, y:45, ch:'F', role:'o'}, {x:60, y:140, ch:'p', role:'p'}, {x:200, y:140, ch:'q', role:'q'} ],
+    edges:[ ['F','p'], ['F','q'] ], W:260, H:190,
+    seq:['p','F','q'], hotIdx:[0,2], gapIdx:1, good:false,
+    note:'p、q 同为 F 的孩子，q 是 p 的<b>右兄弟</b>：中序 =「p, <b>F</b>, q」—— 双亲 F 挡在中间 —— <b>不可能 ✗</b>',
+    log:'III. q 是 p 的右兄弟：中序顺序是「左子树 → 双亲 → 右子树」，双亲 F 必然排在 p 之后、q 之前 → p, F, q，p 与 q 至少隔着 F，不可能相邻。不可能 ✗' },
+  { // IV. q 是 p 的双亲的双亲
+    nodes:[ {x:130, y:38, ch:'q', role:'q'}, {x:112, y:112, ch:'x', role:'o'}, {x:190, y:168, ch:'p', role:'p'} ],
+    edges:[ ['q','x'], ['x','p'] ], W:260, H:200,
+    seq:['x','p','q'], hotIdx:[1,2], gapIdx:-1, good:true,
+    note:'x 是 q 的左孩子，p 是 x 的<b>右孩子</b>（无右子树）：中序 =「x, p, q」—— <b>相邻 ✓ 可能</b>（q 是 p 的祖父）',
+    log:'IV. q 是 p 的双亲的双亲：q 的左孩子 x，x 的右孩子 p（叶）。中序 x 子树 =「x, p」，接 q → x, p, q，p 的后继恰是 q。可能 ✓' },
+];
+var SNAPS = [
+  { cls:'step', tag:'审题', count:0,
+    log:'p、q 在中序序列中相邻且 p 在前 ⇔ q 恰好是 p 的<b>中序后继</b>。后继只有两个来源：① p 的右子树的最左结点；② p 无右子树时，沿双亲链向上第一个「p 落在其左子树里」的祖先。I~IV 各画一棵最小树验证。' },
+  { cls:'ok', tag:'验证 I', count:1, ribbon:{k:1, ok:true}, case:0 },
+  { cls:'ok', tag:'验证 II', count:2, ribbon:{k:2, ok:true}, case:1 },
+  { cls:'miss', tag:'验证 III', count:3, ribbon:{k:3, ok:false}, case:2 },
+  { cls:'ok', tag:'验证 IV', count:4, ribbon:{k:4, ok:true}, case:3 },
+  { cls:'step', tag:'规律', count:4,
+    log:'规律：能成为 p 的中序后继的，只有「右子树最左」或「向上第一个左拐祖先」；<b>右兄弟永远隔着双亲</b>，轮不到它。' },
+  { cls:'done', tag:'结论', count:4, done:true,
+    log:'I、II、IV 都可能，仅 III 不可能 → 选 B。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
-
 AW.init({
-  title: '中序相邻：p 与 q 的哪种关系不可能？（2022-03）',
-  subtitle: '考点：二叉树中序遍历 · 中序后继的判定 · 逐条验证 I～IV',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2022-03 中序相邻：p 与 q 的哪种关系不可能？',
+  subtitle: 'p、q 在中序序列中<b>相邻</b>且 p 在前 —— 逐条验证 I～IV（每种关系配一棵最小示例树 + 中序序列）',
+  counterLabel: '已验证',
+  ribbonTitle: '关系判定（✓ 可能 / ✗ 不可能）',
+  intro: '点击「▶ 播放」逐条画树、写中序、判相邻。',
+  snaps: SNAPS.map(function(sn){
+    var s = { cls:sn.cls, tag:sn.tag, log:sn.log, count:sn.count };
+    if(sn.ribbon) s.ribbon = sn.ribbon;
+    if(sn.done) s.done = true;
+    if(sn.case != null){
+      var c = CASES[sn.case];
+      s.log = c.log;
+      s.html = '<div class="mstrip">' +
+        '<div style="text-align:center">' + miniTree(c.nodes, c.edges, c.W, c.H) + '</div>' +
+        '<div style="text-align:center"><div class="aw-row-label" style="text-align:center"><b>中序序列（相关部分）</b></div>' +
+        (function(){ var h = AW.el('div',''); h.style.display='flex'; h.style.justifyContent='center'; h.appendChild(strip(c.seq, c.hotIdx, c.gapIdx)); return h.innerHTML; })() +
+        '</div></div>' +
+        '<div style="text-align:center"><span class="mverdict ' + (c.good ? 'good' : 'bad') + '">' + (c.good ? '可能 ✓' : '不可能 ✗') + '</span></div>' +
+        '<div class="mnote">' + c.note + '</div>';
+    } else {
+      s.html = '<div class="mnote">把 I~IV 四个结论放在一起：I ✓　II ✓　III ✗　IV ✓ → 不可能的只有 III。</div>';
+    }
+    return s;
+  }),
   result: {
-    big: '答案 B（仅 III 不可能）',
-    html: '中序后继 = 右子树最左结点，或「向上第一个左拐祖先」。I（双亲）、II（右孩子）、IV（祖父，走右拐链）都能成为后继；III 的右兄弟必须排在双亲之后，永远与 p 隔着双亲。',
+    big: '仅 III 不可能　（选 B）',
+    html: '中序后继 = ①<b>右子树最左结点</b>（II：q 是右孩子且无左孩子）或 ②<b>向上第一个「p 在其左子树」的祖先</b>（I：双亲当左拐点；IV：祖父，途中 x 一路右拐都先于 p 输出）。III 的右兄弟在中序里必排在双亲 F 之后：… p, <b>F</b>, q …——p、q 之间至少隔着双亲，<b>不可能相邻</b>。记忆锚点：<code>中序 = 左 → 根 → 右，兄弟之间必隔根</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
 </body>

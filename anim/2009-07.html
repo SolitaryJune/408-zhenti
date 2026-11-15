@@ -2,71 +2,189 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2009-07 动画 · 无向连通图性质判断</title>
+<title>2009-07 无向连通图特性 · 反例检验动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .graph-svg{width:100%;max-width:760px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .graph-svg .gedge{stroke:#94a3b8;stroke-width:3px;transition:opacity .4s, stroke .3s, stroke-width .3s}
+  .graph-svg .gedge.lit{stroke:#d97706;stroke-width:4.5px}
+  .graph-svg .gnode circle{fill:#ffffff;stroke:#334155;stroke-width:2.5px;transition:opacity .4s}
+  .graph-svg .gnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#0f172a;transition:opacity .4s}
+  .graph-svg .gtitle{font-size:15px;font-weight:700;fill:#334155;font-family:PingFang SC,sans-serif;transition:opacity .4s}
+  .graph-svg .deglab{font-size:13px;font-weight:800;fill:#2563eb;font-family:PingFang SC,sans-serif;transition:opacity .4s}
+  .graph-svg .gcap{font-size:13.5px;font-weight:700;fill:#b45309;font-family:PingFang SC,sans-serif;transition:opacity .4s}
+  .graph-svg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/推理类：三条叙述逐条验证（证明或反例）
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2009-07 无向连通图特性检验（SVG 三图反例） ==================
+ * 题：无向连通图特性中正确的是？I 度之和为偶数 / II 边数 > n−1 / III 至少有一个度为 1 的顶点。（答案 A：只有 I）
+ * 演示：图① 逐条点亮边、累计"度和 = 2×边数"验证 I（握手定理）；
+ *       图② 5 顶点树（E = n−1）否掉 II；图③ 三角形环（全度 2）否掉 III。 */
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+var NS = 'http://www.w3.org/2000/svg';
+var V1 = { 1:[70,95], 2:[190,58], 3:[310,98], 4:[255,190], 5:[135,190] };
+var E1 = [ ['1','2',2], ['2','3',3], ['3','4',4], ['4','5',5], ['2','4',6] ];   // [a, b, 点亮步]
+var DEG1 = [ ['1','度1',34,72], ['2','度3',190,26], ['3','度2',352,78], ['4','度3',298,216], ['5','度1',96,220] ];
+var V2 = { 1:[95,310], 2:[215,310], 3:[335,310], 4:[455,310], 5:[575,310] };
+var E2 = [ ['1','2'], ['2','3'], ['3','4'], ['4','5'] ];
+var V3 = { 1:[130,450], 2:[230,450], 3:[180,412] };
+var E3 = [ ['1','2'], ['2','3'], ['1','3'] ];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 640 478');
+  svg.setAttribute('class', 'graph-svg');
+  function title(txt, x, y, step){
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y);
+    t.setAttribute('class', 'gtitle' + (step ? ' hidden-el' : ''));
+    if(step) t.dataset.step = step;
+    t.textContent = txt;
+    svg.appendChild(t);
+  }
+  function edges(list, pos, step, litList){
+    list.forEach(function(e, idx){
+      var ln = document.createElementNS(NS, 'line');
+      var a = pos[e[0]], b = pos[e[1]];
+      ln.setAttribute('x1', a[0]); ln.setAttribute('y1', a[1]);
+      ln.setAttribute('x2', b[0]); ln.setAttribute('y2', b[1]);
+      ln.setAttribute('class', 'gedge' + (step ? ' hidden-el' : ''));
+      if(step) ln.dataset.step = step;
+      if(litList) ln.dataset.lit = litList[idx][2];
+      svg.appendChild(ln);
+    });
+  }
+  function nodes(pos, step, labeled){
+    Object.keys(pos).forEach(function(id){
+      var g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'gnode' + (step ? ' hidden-el' : ''));
+      if(step) g.dataset.step = step;
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', pos[id][0]); c.setAttribute('cy', pos[id][1]); c.setAttribute('r', 20);
+      g.appendChild(c);
+      if(labeled){
+        var t = document.createElementNS(NS, 'text');
+        t.setAttribute('x', pos[id][0]); t.setAttribute('y', pos[id][1]);
+        t.textContent = id;
+        g.appendChild(t);
+      }
+      svg.appendChild(g);
+    });
+  }
+  // 图①（step 1 显现，边逐条点亮）
+  title('图① 一般连通图（5 个顶点）', 16, 28);
+  edges(E1, V1, 1, E1);
+  nodes(V1, 1, true);
+  DEG1.forEach(function(d){
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', d[2]); t.setAttribute('y', d[3]);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('class', 'deglab hidden-el');
+    t.dataset.step = 1;
+    t.textContent = d[1];
+    svg.appendChild(t);
+  });
+  // 图②（step 8）
+  title('图② 反例：5 个顶点的树（路径）—— 检验 II', 16, 268, 8);
+  edges(E2, V2, 8, null);
+  nodes(V2, 8, false);
+  var cap2 = document.createElementNS(NS, 'text');
+  cap2.setAttribute('x', 335); cap2.setAttribute('y', 352);
+  cap2.setAttribute('text-anchor', 'middle');
+  cap2.setAttribute('class', 'gcap hidden-el');
+  cap2.dataset.step = 8;
+  cap2.textContent = '边数 E = 4 = n − 1（并不"大于" n − 1）';
+  svg.appendChild(cap2);
+  // 图③（step 9）
+  title('图③ 反例：三角形环 —— 检验 III', 16, 392, 9);
+  edges(E3, V3, 9, null);
+  nodes(V3, 9, false);
+  [[95, 455], [265, 455], [226, 402]].forEach(function(d){
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', d[1]); t.setAttribute('y', d[2]);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('class', 'deglab hidden-el');
+    t.dataset.step = 9;
+    t.textContent = '度2';
+    svg.appendChild(t);
+  });
+  stage.appendChild(svg);
+  var formula = AW.el('div', 'hformula');
+  stage.appendChild(formula);
+  this._svg = svg; this._formula = formula;
 }
 
-// 推理链：每一步的完整内容（引擎按步数截取显示）
-var STEPS = [
-  { title: '审题眼：判断标准',
-    cls: 'key',
-    body: '<p>三条叙述要么给出「对所有无向连通图都成立」的理由，要么举出<b>一个反例</b>否决。注意题问的是「正确的是」，必须挑<b>恒成立</b>的。</p>' },
-  { title: '验证 I：度之和为偶数',
-    cls: 'good',
-    body: '<p>无向图每条边给两个端点<b>各贡献 1 度</b>，所以所有顶点的度之和 = <code>2 × 边数</code>，一定是偶数（握手定理，与是否连通无关）→ <b>I 恒成立</b>。✓</p>' },
-  { title: '验证 II：边数大于 n−1',
-    cls: 'bad',
-    body: '<p>反例：n 个顶点的<b>树</b>就是无向连通图，边数恰好 <code>= n − 1</code>，并不「大于」n − 1 → II 不成立。✗</p>' },
-  { title: '验证 III：存在度为 1 的顶点',
-    cls: 'bad',
-    body: '<p>反例：3 个顶点构成<b>三角形（环）</b>，每个顶点的度都是 <code>2</code>，没有任何度为 1 的顶点 → III 不成立。✗</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>只有 I 是必然性质，II、III 都能举出反例 → 答案选 <b>A（只有 I）</b>。</p>' },
-  { title: '记忆锚点',
-    cls: 'key',
-    body: '<p>度之和 = <code>2E</code>（握手定理）永远成立；「连通」只保证 <code>E ≥ n − 1</code>，不保证 <code>E &gt; n − 1</code>（树取等号）；「有度为 1 的顶点」对环、完全图都不成立。</p>' },
+var FORMULAS = [
+  '三条叙述，哪些对<b>所有</b>无向连通图恒成立？',
+  '图① 各顶点的度：1、3、2、3、1',
+  '度和累计 = <code>2</code>',
+  '度和累计 = <code>4</code>',
+  '度和累计 = <code>6</code>',
+  '度和累计 = <code>8</code>',
+  '度和 = 10 = <code>2 × 边数</code>（恒为偶数）→ I ✓',
+  'I 恒成立；II 用图②检验…',
+  'II ✗（树：E = n − 1 不大于）；III 用图③检验…',
+  'II ✗、III ✗ → 只有 I 正确',
+  '答案 = <b>A（只有 I）</b>',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    count: i + 1,
-    ribbon: { k: i + 1, ok: s.cls !== 'bad' },
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('.gedge, .gnode, .gtitle, .deglab, .gcap'), function(el){
+    if(el.dataset.step != null) el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.gedge'), function(el){
+    if(el.dataset.lit != null) el.classList.toggle('lit', i >= +el.dataset.lit);
+  });
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'开始', count:0,
+    log:'无向连通图的三条叙述——I 度之和为偶数、II 边数大于顶点数减 1、III 至少有一个度为 1 的顶点——哪些正确？方法：给得出证明的留下，举出一个反例即否决。' },
+  { cls:'ok', tag:'画图①并标度', count:0,
+    log:'画出一个一般连通图，给每个顶点标上度：度 1、3、2、3、1。下面逐条点亮边，累计"所有顶点的度之和"。' },
+  { cls:'ok', tag:'边 1-2', count:2,
+    log:'第 1 条边 1-2：一条边连着两个端点，给两端各记 1 度 → 度和累计 2。' },
+  { cls:'ok', tag:'边 2-3', count:4,
+    log:'第 2 条边 2-3：再给两端各记 1 度 → 度和累计 4。' },
+  { cls:'ok', tag:'边 3-4', count:6,
+    log:'第 3 条边 3-4 → 度和累计 6。' },
+  { cls:'ok', tag:'边 4-5', count:8,
+    log:'第 4 条边 4-5 → 度和累计 8。' },
+  { cls:'ok', tag:'边 2-4', count:10,
+    log:'第 5 条边 2-4 → 度和累计 10。5 条边，度和 = 10 = 2 × 边数，恰好偶数。' },
+  { cls:'ok', tag:'I 恒成立', count:10, ribbon:{k:1, ok:true},
+    log:'每条边都恰给两个端点各贡献 1 度，所以「度之和 = 2 × 边数」对任何无向图恒成立（握手定理），必为偶数，与是否连通无关 → I 恒成立 ✓' },
+  { cls:'miss', tag:'II 有反例', count:10, ribbon:{k:2, ok:false},
+    log:'反例（图②）：5 个顶点的树（路径）也是无向连通图，但边数 E = 4 = n − 1，并不"大于" n − 1 → II 不成立 ✗' },
+  { cls:'miss', tag:'III 有反例', count:10, ribbon:{k:3, ok:false},
+    log:'反例（图③）：3 个顶点连成三角形（环），每个顶点的度都是 2，没有任何度为 1 的顶点 → III 不成立 ✗' },
+  { cls:'done', tag:'完成', count:10, done:true,
+    log:'只有 I 正确 → 答案选 A。' },
+];
 
 AW.init({
-  title: '无向连通图，哪条性质一定成立？',
-  subtitle: '考点：握手定理 · 连通图边数下界 · 度为 1 的顶点未必存在（2009-07）',
-  counterLabel: '推理进度',
-  ribbonTitle: '推理步骤（✓ 成立 / ✗ 反例否决）',
-  intro: '点击「▶ 播放」逐条验证三个叙述。',
-  snaps: snaps,
+  title: '2009-07 无向连通图特性 · 反例检验动画',
+  subtitle: '题：无向连通图特性中正确的是？<code>I</code> 度之和为偶数 / <code>II</code> 边数 &gt; n−1 / <code>III</code> 至少有一个度为 1 的顶点——画出具体图例逐条验证。',
+  counterLabel: '度之和',
+  ribbonTitle: '叙述检验（✓ 恒成立 / ✗ 有反例）',
+  intro: '点击「▶ 播放」，先点亮图①的每条边数度数，再看两个反例。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 A（只有 I）',
-    html: '记忆锚点：度之和 = <b>2 × 边数</b> 必为偶数；树是「边数 = n − 1」的连通图（否掉 II）；三角形环「每点度数 2」（否掉 III）。',
+    html: '握手定理：每条边给两端各贡献 1 度 → <b>度之和 = 2E 恒为偶数</b>，I 恒成立。II 的反例：树（E = n − 1，取等号不"大于"）；III 的反例：三角形环（全为度 2）。注意「连通」只保证 <code>E ≥ n − 1</code>，不保证严格大于。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

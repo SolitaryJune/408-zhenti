@@ -2,71 +2,220 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2022-04 三叉树 244 个结点的最小高度</title>
+<title>2022-04 三叉树最小高度 · 逐层放满动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .tsvg{width:100%;max-width:700px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .tsvg .tedge{stroke:#c3d0d8;stroke-width:1.6px;transition:opacity .4s}
+  .tsvg .tnode circle{fill:#1b3a4b;transition:opacity .4s}
+  .tsvg .tnode text{fill:#fff;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;
+    text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .tsvg .tband rect{transition:opacity .4s}
+  .tsvg .tband text{font-weight:800;font-size:15px;text-anchor:middle;font-family:inherit;transition:opacity .4s}
+  .tsvg .tband text small{font-weight:600;font-size:12.5px}
+  .tsvg .tconn{stroke:#94a3b8;stroke-width:2px;stroke-dasharray:5 4;transition:opacity .4s}
+  .tsvg .hidden-el{opacity:0}
+  .tcum{margin-top:10px;text-align:center;font-size:15px;font-weight:800;color:#1b3a4b;line-height:1.9}
+  .tcum .warn{color:#dc2626}
+  .tcum .good{color:#16a34a}
+  .tcum code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2022-04 三叉树 244 个结点的最小高度（SVG 逐层放满） ==================
+ * 题：三叉树 T 有 244 个结点（叶结点高度为 1），求 T 的高度至少是多少。（答案 C = 6）
+ * 演示：要最矮就让每层放满——第 1~4 层真画出来，第 5、6 层画容量带，
+ *       逐层累计 1→4→13→40→121→364，卡出 244 的位置。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+var L1 = [{ x:340, y:38,  r:20, lab:'' }];
+var L2 = [146, 326, 506].map(function(x){ return { x:x, y:118, r:16, lab:'' }; });
+var L3 = (function(){
+  var xs = [];
+  [90, 270, 450].forEach(function(g){ for(var k = 0; k < 3; k++) xs.push(g + k * 56); });
+  return xs.map(function(x){ return { x:x, y:198, r:11, lab:'' }; });
+})();
+var L4 = (function(){
+  var arr = [];
+  for(var k = 0; k < 27; k++) arr.push({ x:40 + k * 23, y:278, r:5.5, lab:'' });
+  return arr;
+})();
+var BAND5 = { y:316, main:'第 5 层：放满 3⁴ = 81 个', sub:'累计 1+3+9+27+81 = 121 个' };
+var BAND6 = { y:376, main:'第 6 层：还需 244 − 121 = 123 个 ≤ 243 个空位 ✓', sub:'第 6 层放满共 243 个，累计容量 364 ≥ 244' };
 
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>244 个结点的<b>三叉树</b>（每个结点至多 3 个孩子），叶结点高度为 1 ⇒ 高度按<b>层数</b>计（叶为 1，向上逐层 +1，根的高度 = 总层数）。「高度至少」⇒ 想让树最矮，就要<b>每层都放满</b>。</p>' },
-  { title: '容量公式',
-    cls: '',
-    body: '<p>h 层三叉树最多容纳 1 + 3 + 9 + … + 3^(h−1) = <b>(3^h − 1) / 2</b> 个结点（等比数列求和）。</p>' },
-  { title: '逐层算容量',
-    cls: '',
-    body: '<ul>' +
-      '<li>h=1：最多 1 个；h=2：4 个；h=3：13 个；h=4：40 个</li>' +
-      '<li>h=5：121 个 —— <b>装不下 244</b></li>' +
-      '<li>h=6：364 个 —— <b>≥ 244，够装</b></li>' +
-      '</ul>' },
-  { title: '判定最小高度',
-    cls: 'good',
-    body: '<p>5 层最多 121 个，装不下 244 ⇒ 至少 6 层；6 层容量 364 ≥ 244，且可构造：前 5 层放满 121 个，第 6 层再放 123 个叶（第 5 层 81 个结点至多可挂 243 个孩子，足够）⇒ 最小高度 <b>6</b>。</p>' },
-  { title: '易错点',
-    cls: 'bad',
-    body: '<ul>' +
-      '<li>误用二叉树公式 2^h − 1 ≥ 244 ⇒ 得 8（选项 A 的陷阱）</li>' +
-      '<li>忽略「叶结点高度为 1」的口径少算一层 ⇒ 得 5（选项 D 的陷阱）</li>' +
-      '</ul>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>高度至少 <b>6</b>，选 <b>C</b>。记忆锚点：m 叉树 h 层最多 (m^h − 1)/(m − 1) 个结点，先算容量再卡边界。</p>' },
+var SNAPS = [
+  { cls:'step', tag:'策略', count:0,
+    log:'「高度至少」⇒ 想让树最矮，就要<b>每层都放满</b>（满三叉树）。叶结点高度记 1，高度 = 层数。h 层满三叉树容量 = 1 + 3 + … + 3^(h−1) = (3^h − 1)/2。逐层长出来数一数。' },
+  { cls:'ok', tag:'第 1 层', count:1,
+    log:'第 1 层：根，1 个结点。累计 1。' },
+  { cls:'ok', tag:'第 2 层', count:2,
+    log:'第 2 层放满：每个结点挂 3 个孩子 → 3 个。累计 1 + 3 = 4。' },
+  { cls:'ok', tag:'第 3 层', count:3,
+    log:'第 3 层放满：3 × 3 = 9 个。累计 13。' },
+  { cls:'ok', tag:'第 4 层', count:4,
+    log:'第 4 层放满：9 × 3 = 27 个。累计 40。' },
+  { cls:'miss', tag:'第 5 层', count:5, ribbon:{k:5, ok:false},
+    log:'第 5 层放满：27 × 3 = 81 个。累计 121 —— <b>121 &lt; 244，5 层全满也装不下！</b>所以高度至少不是 5。' },
+  { cls:'ok', tag:'第 6 层', count:6, ribbon:{k:6, ok:true},
+    log:'第 6 层只需再放 244 − 121 = <b>123 个</b>叶结点 ≤ 第 5 层 81 个结点最多能挂的 243 个孩子 ✓ → 6 层装得下。' },
+  { cls:'step', tag:'卡边界', count:6,
+    log:'容量序列：1, 4, 13, 40, <b>121</b>, 364。244 落在 (121, 364] ⇒ 最小高度 6。易错：误用二叉树容量 2^h − 1 ≥ 244 → 得 8（选项 A 陷阱）；忘了"叶高度为 1"的口径少算一层 → 得 5（选项 D 陷阱）。' },
+  { cls:'done', tag:'结论', count:6, done:true,
+    log:'高度至少 <b>6</b> → 选 C。' },
+];
+var CUMS = [
+  '',
+  '第 1 层 1 个　→　累计 <code>1</code>',
+  '第 2 层 3 个　→　累计 <code>4</code>',
+  '第 3 层 9 个　→　累计 <code>13</code>',
+  '第 4 层 27 个　→　累计 <code>40</code>',
+  '第 5 层 81 个　→　累计 <code>121</code>　<span class="warn">121 &lt; 244，装不下！</span>',
+  '第 6 层：放 123 个即可　→　累计 <code>244</code>（容量 <code>364</code>）　<span class="good">364 ≥ 244 ✓</span>',
+  '容量 (3^h−1)/2：<code>1, 4, 13, 40, 121, 364</code>　→　244 ∈ (121, 364] ⇒ 最小高度 <b>6</b>',
+  '最小高度 = <b>6</b>（选 C）',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 680 440');
+  svg.setAttribute('class', 'tsvg');
+  function addGroup(step, draw){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'gstep hidden-el');
+    g.dataset.step = step;
+    draw(g);
+    svg.appendChild(g);
+  }
+  // 第 1 层（根）
+  addGroup(1, function(g){
+    L1.forEach(function(n){ g.appendChild(nodeEl(n)); });
+  });
+  // 第 2 层
+  addGroup(2, function(g){
+    L2.forEach(function(n){
+      var ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', L1[0].x); ln.setAttribute('y1', L1[0].y);
+      ln.setAttribute('x2', n.x); ln.setAttribute('y2', n.y);
+      ln.setAttribute('class', 'tedge');
+      g.appendChild(ln);
+    });
+    L2.forEach(function(n){ g.appendChild(nodeEl(n)); });
+  });
+  // 第 3 层
+  addGroup(3, function(g){
+    L3.forEach(function(n, k){
+      var p = L2[Math.floor(k / 3)];
+      var ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', p.x); ln.setAttribute('y1', p.y);
+      ln.setAttribute('x2', n.x); ln.setAttribute('y2', n.y);
+      ln.setAttribute('class', 'tedge');
+      g.appendChild(ln);
+    });
+    L3.forEach(function(n){ g.appendChild(nodeEl(n)); });
+  });
+  // 第 4 层
+  addGroup(4, function(g){
+    L4.forEach(function(n, k){
+      var p = L3[Math.floor(k / 3)];
+      var ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', p.x); ln.setAttribute('y1', p.y);
+      ln.setAttribute('x2', n.x); ln.setAttribute('y2', n.y);
+      ln.setAttribute('class', 'tedge');
+      g.appendChild(ln);
+    });
+    L4.forEach(function(n){ g.appendChild(nodeEl(n)); });
+  });
+  // 第 5 层容量带
+  addGroup(5, function(g){
+    [100, 340, 580].forEach(function(x){
+      var ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', x); ln.setAttribute('y1', 286);
+      ln.setAttribute('x2', x); ln.setAttribute('y2', 316);
+      ln.setAttribute('class', 'tconn');
+      g.appendChild(ln);
+    });
+    g.appendChild(bandEl(BAND5, '#d97706'));
+  });
+  // 第 6 层容量带
+  addGroup(6, function(g){
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', 340); ln.setAttribute('y1', 364);
+    ln.setAttribute('x2', 340); ln.setAttribute('y2', 376);
+    ln.setAttribute('class', 'tconn');
+    g.appendChild(ln);
+    g.appendChild(bandEl(BAND6, '#2563eb'));
+  });
+  function nodeEl(n){
+    var g2 = document.createElementNS(svgNS, 'g');
+    g2.setAttribute('class', 'tnode');
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', n.r);
+    g2.appendChild(c);
+    if(n.lab){
+      var t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+      t.textContent = n.lab;
+      g2.appendChild(t);
+    }
+    return g2;
+  }
+  function bandEl(bd, color){
+    var g2 = document.createElementNS(svgNS, 'g');
+    g2.setAttribute('class', 'tband');
+    var r = document.createElementNS(svgNS, 'rect');
+    r.setAttribute('x', 30); r.setAttribute('y', bd.y);
+    r.setAttribute('width', 620); r.setAttribute('height', 48);
+    r.setAttribute('rx', 10);
+    r.setAttribute('fill', '#ffffff'); r.setAttribute('stroke', color);
+    r.setAttribute('stroke-width', 2); r.setAttribute('stroke-dasharray', '7 5');
+    g2.appendChild(r);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', 340); t.setAttribute('y', bd.y + 21);
+    t.setAttribute('fill', color);
+    t.textContent = bd.main;
+    g2.appendChild(t);
+    var t2 = document.createElementNS(svgNS, 'text');
+    t2.setAttribute('x', 340); t2.setAttribute('y', bd.y + 39);
+    t2.setAttribute('fill', '#64748b');
+    t2.setAttribute('font-size', '12.5');
+    t2.textContent = bd.sub;
+    g2.appendChild(t2);
+    return g2;
+  }
+  stage.appendChild(svg);
+  var cum = AW.el('div', 'tcum');
+  stage.appendChild(cum);
+  this._svg = svg; this._cum = cum;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('.gstep'), function(g){
+    g.classList.toggle('hidden-el', +g.dataset.step > i);
+  });
+  this._cum.innerHTML = CUMS[Math.min(i, CUMS.length - 1)] ||
+    'h 层放满的三叉树容量 = 1 + 3 + … + 3^(h−1) = <code>(3^h − 1) / 2</code>';
+}
 
 AW.init({
-  title: '三叉树 244 个结点，高度至少几层？（2022-04）',
-  subtitle: '考点：m 叉树的结点容量 · 高度按层数计（叶 = 1）',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2022-04 三叉树 244 个结点，高度至少几层？',
+  subtitle: '244 个结点的<b>三叉树</b>（每结点至多 3 个孩子），叶结点高度为 1 ⇒ 高度 = 层数。让每层放满才最矮：容量 <code>(3^h − 1)/2</code>',
+  counterLabel: '已放满层数',
+  ribbonTitle: '层数（✓ 装得下 / ✗ 装不下）',
+  intro: '点击「▶ 播放」逐层放满，数到 244 为止。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 C（高度至少 6）',
-    html: 'h 层三叉树最多 (3^h − 1)/2 个结点：5 层 121 &lt; 244 ≤ 364 = 6 层容量 ⇒ 至少 <b>6</b> 层。别拿二叉树的 2^h − 1 来算，也别忘了「叶高度为 1」的口径。',
+    big: '高度至少 6　（选 C）',
+    html: '满三叉树容量 (3^h − 1)/2：<b>h=5 → 121 &lt; 244（装不下）</b>；<b>h=6 → 364 ≥ 244</b>，且可构造——前 5 层放满 121 个，第 6 层再放 123 个叶（≤ 243 个空位）⇒ 最小高度 <b>6</b>。记忆锚点：<code>m 叉树 h 层最多 (m^h − 1)/(m − 1) 个结点，先算容量再卡边界</code>；别拿二叉树的 2^h − 1 去算（那是选项 A 的陷阱），也别漏掉"叶高度为 1"的口径（选项 D 的陷阱）。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
 </body>

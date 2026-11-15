@@ -2,139 +2,198 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2013-08 哪一个不是广度优先遍历序列</title>
+<title>2013-08 哪一个不是广度优先遍历序列 · 图上演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bfs-svg{width:100%;max-width:640px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .notrans *{transition:none!important}
+  .bfs-svg .gedge{stroke:#5a7d8c;stroke-width:2.5px}
+  .bfs-svg .vnode circle{fill:#1b3a4b;transition:fill .3s}
+  .bfs-svg .vnode text.vname{fill:#fff;font-weight:800;font-size:15px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .bfs-svg .vnode text.vlay{font-size:11px;font-weight:800;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace;fill:#2563eb}
+  .bfs-svg .vnode text.vord{font-size:12px;font-weight:800;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace;fill:#e07a2f}
+  .bfs-svg .vnode.seen circle{fill:#16a34a}
+  .bfs-svg .vnode.bad circle{fill:#dc2626}
+  .adj{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+  .adj .achip{border:1.5px solid #e2e8f0;border-radius:9px;padding:3px 9px;
+    font-family:Menlo,monospace;font-size:12.5px;background:#fff;color:#64748b;transition:all .3s}
+  .adj .achip b{color:#0f172a}
+  .adj .achip.start{border-color:#e63946;background:#fff5f5;color:#b91c1c}
+  .seqwrap{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 模板：anim_algo_template.html（算法/过程类），只改 AW.init 区域 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2013-08 BFS 序列判定（SVG 图 + cellRow 序列） ==================
+ * 图 G：8 顶点 9 条边 a-b a-e a-h b-c b-d c-d c-h e-f e-g。
+ * BFS 铁律：层号非降、出队即一口气访问全部未访问邻居。D 违反 → 选 D。 */
 
-var ADJ = {
-  a: ['b','e','h'], b: ['a','c','d'], c: ['b','d','h'], d: ['b','c'],
-  e: ['a','f','g'], f: ['e'], g: ['e'], h: ['a','c']
+var VPOS = {
+  a:{x:310,y:45}, b:{x:150,y:115}, e:{x:470,y:115}, c:{x:70,y:215},
+  d:{x:240,y:215}, f:{x:440,y:225}, g:{x:575,y:180}, h:{x:310,y:300},
 };
+var EDGES = [ ['a','b'], ['a','e'], ['a','h'], ['b','c'], ['b','d'], ['c','d'], ['c','h'], ['e','f'], ['e','g'] ];
+var ADJ = { a:'b, e, h', b:'a, c, d', c:'b, d, h', d:'b, c', e:'a, f, g', f:'e', g:'e', h:'a, c' };
+var VS = ['a','b','c','d','e','f','g','h'];
 
-function adjHtml(hiV){
-  var vs = ['a','b','c','d','e','f','g','h'];
-  var h = '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0">';
-  for (var i = 0; i < vs.length; i++){
-    var v = vs[i];
-    h += '<div style="border:1px solid ' + (hiV === v ? '#16a34a' : '#e2e8f0') + ';background:'
-       + (hiV === v ? '#f0fdf4' : '#fff') + ';border-radius:9px;padding:4px 9px;font-family:Menlo,monospace;font-size:12.5px">'
-       + '<b style="color:#0f172a">' + v + '</b><span style="color:#64748b">: ' + ADJ[v].join(', ') + '</span></div>';
+/* 每步：序列演示数据（lay 中 -1 = 未到达）+ 顶点状态 [层标, 次序, 是否违规] */
+var STEPS_DATA = [
+  { name:'', startV:'', seq:null,
+    vstate:{} },
+  { name:'', startV:'', seq:null,
+    vstate:{} },
+  { name:'合法示范：从 a 出发', startV:'a',
+    seq:{ list:['a','b','e','h','c','d','f','g'], lay:[0,1,1,1,2,2,2,2],
+      cls:['ok','ok','ok','ok','ok','ok','ok','ok'] },
+    vstate:{ a:['L0',1], b:['L1',2], e:['L1',3], h:['L1',4], c:['L2',5], d:['L2',6], f:['L2',7], g:['L2',8] } },
+  { name:'选项 A：从 h 出发', startV:'h',
+    seq:{ list:['h','c','a','b','d','e','g','f'], lay:[0,1,1,2,2,2,3,3],
+      cls:['ok','ok','ok','ok','ok','ok','ok','ok'] },
+    vstate:{ h:['L0',1], c:['L1',2], a:['L1',3], b:['L2',4], d:['L2',5], e:['L2',6], g:['L3',7], f:['L3',8] } },
+  { name:'选项 B：从 e 出发', startV:'e',
+    seq:{ list:['e','a','f','g','b','h','c','d'], lay:[0,1,1,1,2,2,3,3],
+      cls:['ok','ok','ok','ok','ok','ok','ok','ok'] },
+    vstate:{ e:['L0',1], a:['L1',2], f:['L1',3], g:['L1',4], b:['L2',5], h:['L2',6], c:['L3',7], d:['L3',8] } },
+  { name:'选项 C：从 d 出发', startV:'d',
+    seq:{ list:['d','b','c','a','h','e','f','g'], lay:[0,1,1,2,2,3,4,4],
+      cls:['ok','ok','ok','ok','ok','ok','ok','ok'] },
+    vstate:{ d:['L0',1], b:['L1',2], c:['L1',3], a:['L2',4], h:['L2',5], e:['L3',6], f:['L4',7], g:['L4',8] } },
+  { name:'选项 D：从 a 出发', startV:'a',
+    seq:{ list:['a','b','c','d','h','e','f','g'], lay:[0,1,2,2,1,-1,-1,-1],
+      cls:['ok','ok','miss','','miss','','',''] },
+    vstate:{ a:['L0',1], b:['L1',2], c:['L2',3,1], d:['L2',4], h:['L1',5,1], e:['L1',0], f:['L2',0], g:['L2',0] } },
+  { name:'选项 D：从 a 出发', startV:'a',
+    seq:{ list:['a','b','c','d','h','e','f','g'], lay:[0,1,2,2,1,-1,-1,-1],
+      cls:['ok','ok','miss','','miss','','',''] },
+    vstate:{ a:['L0',1], b:['L1',2], c:['L2',3,1], d:['L2',4], h:['L1',5,1], e:['L1',0], f:['L2',0], g:['L2',0] } },
+];
+var FORMULAS = [
+  '邻接表（右）：a: b,e,h ｜ b: a,c,d ｜ c: b,d,h ｜ d: b,c ｜ e: a,f,g ｜ f: e ｜ g: e ｜ h: a,c',
+  'BFS 铁律：<code>层号非降</code> + <code>出队即一口气访问全部未访问邻居</code>（同层连续出现）',
+  '示范：a(L0) → b,e,h(L1) → c,d,f,g(L2)，层号 0,1,1,1,2,2,2,2 非降 ✓',
+  'A：层号 0,1,1,2,2,2,3,3 非降，出队顺序合法 → 是 BFS ✓',
+  'B：层号 0,1,1,1,2,2,3,3 非降 → 是 BFS ✓',
+  'C：层号 0,1,1,2,2,3,4,4 非降 → 是 BFS ✓',
+  'D：c(L2) 插在 a 的邻居 e(L1)、h(L1) 之前，h 的层号又从 2 回落到 1 → 违反 FIFO 分层 ✗',
+  '不是 BFS 的只有 D → <b>选 D</b>',
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 350');
+  svg.setAttribute('class', 'bfs-svg');
+  this._nodes = {};
+  EDGES.forEach(function(e){
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', VPOS[e[0]].x); ln.setAttribute('y1', VPOS[e[0]].y);
+    ln.setAttribute('x2', VPOS[e[1]].x); ln.setAttribute('y2', VPOS[e[1]].y);
+    ln.setAttribute('class', 'gedge');
+    svg.appendChild(ln);
+  }, this);
+  VS.forEach(function(k){
+    var p = VPOS[k];
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'vnode');
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 20);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('class', 'vname'); t.setAttribute('x', p.x); t.setAttribute('y', p.y);
+    t.textContent = k;
+    var lay = document.createElementNS(svgNS, 'text');
+    lay.setAttribute('class', 'vlay'); lay.setAttribute('x', p.x); lay.setAttribute('y', p.y + 36);
+    var ord = document.createElementNS(svgNS, 'text');
+    ord.setAttribute('class', 'vord'); ord.setAttribute('x', p.x); ord.setAttribute('y', p.y - 30);
+    g.appendChild(c); g.appendChild(t); g.appendChild(lay); g.appendChild(ord);
+    this._nodes[k] = { g:g, lay:lay, ord:ord };
+    svg.appendChild(g);
+  }, this);
+  stage.appendChild(svg);
+  var adjBox = AW.el('div', 'adj');
+  stage.appendChild(adjBox);
+  var seqWrap = AW.el('div', 'seqwrap');
+  stage.appendChild(seqWrap);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._adjBox = adjBox; this._seqWrap = seqWrap; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var self = this;
+  var sd = STEPS_DATA[Math.min(i, STEPS_DATA.length - 1)];
+  VS.forEach(function(k){
+    var nd = self._nodes[k];
+    var st = sd.vstate[k];
+    nd.g.classList.toggle('seen', !!(st && st[1] && !st[2]));
+    nd.g.classList.toggle('bad', !!(st && st[2]));
+    nd.lay.textContent = st ? st[0] : '';
+    nd.ord.textContent = st && st[1] ? ('第' + st[1] + '个') : '';
+  });
+  this._adjBox.innerHTML = VS.map(function(k){
+    var cls = 'achip' + (sd.startV === k ? ' start' : '');
+    return '<span class="' + cls + '"><b>' + k + '</b>: ' + ADJ[k] + '</span>';
+  }).join('');
+  if (sd.seq){
+    var ptrMap = {};
+    sd.seq.list.forEach(function(ch, j){
+      ptrMap[j] = sd.seq.lay[j] >= 0 ? ('层' + sd.seq.lay[j]) : '？';
+    });
+    this._seqWrap.innerHTML = '';
+    var label = AW.el('div', 'aw-row-label', '<b>' + sd.name + '</b>　（格上 = 层号，格下 = 序列位置）');
+    this._seqWrap.appendChild(label);
+    this._seqWrap.appendChild(AW.cellRow(sd.seq.list, sd.seq.cls, ptrMap, 1));
+  } else {
+    this._seqWrap.innerHTML = i === 0
+      ? '<div class="aw-row-label">下图即题给无向图；每个顶点下方将标注它在当前序列中的层号。</div>'
+      : '<div class="aw-row-label">判定法：① 序列按层号非降排列；② 一个顶点出队时必须把它所有未访问邻居一口气访问完（同层、连续出现）；③ 邻接表顺序未知 → 邻居按任意顺序访问都合法。</div>';
   }
-  return h + '</div>';
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
 }
 
-// 序列格子：seq 顶点数组，lay 层号数组（-1 = 未定），badIndex 标红
-function seqRow(seq, lay, badIndex, prefixLen){
-  if (!seq.length) return '';
-  var h = '<div class="aw-cells" style="justify-content:center;margin-top:6px">';
-  for (var i = 0; i < seq.length; i++){
-    var bad = badIndex === i;
-    var done = prefixLen != null && i < prefixLen;
-    h += '<div class="aw-col"><div class="aw-ptr">' + (lay[i] >= 0 ? '层' + lay[i] : '') + '</div>'
-       + '<div class="aw-box ' + (bad ? 'miss' : (done ? 'ok' : '')) + '" style="width:40px">' + seq[i] + '</div></div>';
-  }
-  return h + '</div>';
-}
-function rowLabel(t){ return '<div class="aw-row-label"><b>' + t + '</b></div>'; }
-function card(cls, title, body){
-  return '<div class="aw-stepcard ' + cls + '" style="margin-top:10px"><h4><span class="n">•</span>' + title + '</h4>' + body + '</div>';
-}
-
-// 正确 BFS 演示（从 a）：[顶点, 层号]
-var BFS = [
-  { seq: [], lay: [] },
-  { seq: ['a'], lay: [0] },
-  { seq: ['a','b','e','h'], lay: [0,1,1,1] },
-  { seq: ['a','b','e','h','c','d'], lay: [0,1,1,1,2,2] },
-  { seq: ['a','b','e','h','c','d','f','g'], lay: [0,1,1,1,2,2,2,2] }
+var SNAPS = [
+  { cls:'shift', tag:'认图', count:0,
+    log:'题给无向图：8 个顶点、9 条边 a-b、a-e、a-h、b-c、b-d、c-d、c-h、e-f、e-g。任务：判断哪个选项【不是】广度优先遍历序列。' },
+  { cls:'step', tag:'BFS 铁律', count:1,
+    log:'BFS 按层推进：起点层 0；一个顶点出队时，必须把它所有未访问邻居一口气访问完（同层、连续出现）；序列层号必须非降。题目未给邻接表顺序 → 邻居访问顺序任意都合法，判定只看结构。' },
+  { cls:'ok', tag:'合法示范（从 a）', count:2, ribbon:{k:1, ok:true},
+    log:'从 a 出发的合法 BFS：a → b, e, h（a 的全部邻居，第 1 层整层连续）→ c, d, f, g（第 2 层）→ 层号 0,1,1,1,2,2,2,2 非降 ✓（顶点上方 = 访问次序，下方 = 层号）' },
+  { cls:'ok', tag:'检验 A ✓', count:3, ribbon:{k:2, ok:true},
+    log:'A = h, c, a, b, d, e, g, f：h 出队按序访问 c、a；c 出队访问 b、d；a 出队访问 e；e 出队访问 g、f → 层号 0,1,1,2,2,2,3,3 非降 → 是合法 BFS ✓' },
+  { cls:'ok', tag:'检验 B ✓', count:4, ribbon:{k:3, ok:true},
+    log:'B = e, a, f, g, b, h, c, d：e 出队访问 a、f、g；a 出队访问 b、h；b 出队访问 c、d → 层号 0,1,1,1,2,2,3,3 非降 → 是合法 BFS ✓' },
+  { cls:'ok', tag:'检验 C ✓', count:5, ribbon:{k:4, ok:true},
+    log:'C = d, b, c, a, h, e, f, g：d 出队访问 b、c；b 出队访问 a；c 出队访问 h；a 出队访问 e；e 出队访问 f、g → 层号 0,1,1,2,2,3,4,4 非降 → 是合法 BFS ✓' },
+  { cls:'miss', tag:'检验 D ✗', count:6, ribbon:{k:5, ok:false},
+    log:'D = a, b, c, d, h, e, f, g：a 出队时必须一口气访问完邻居 b、e、h！但 b 之后是 c（c 与 a 不相邻，属第 2 层）——e、h 还没出现就轮到第 2 层了；h 的层号又从 2 回落到 1 → 违反 FIFO 分层 → 不是 BFS ✗' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'A、B、C 都能找到合法的邻居访问顺序，只有 D 违反分层规则 → 选 D。' },
 ];
-var BFS_LOG = [
-  '',
-  '访问起点 a，层号 0；a 入队',
-  'a 出队：其全部未访问邻居 b、e、h 被一口气访问（层 1、连续出现）——这是 BFS 的硬规则',
-  'b 出队 → 访问 c、d（层 2）；e、h 暂在队列中，尚未出队',
-  'e 出队 → 访问 f、g（层 2）；随后 h、c、d、f、g 依次出队均无新顶点，遍历完成。得到一条合法 BFS 序列：a, b, e, h, c, d, f, g（层号 0,1,1,1,2,2,2,2 非降）'
-];
-
-// 四个选项：序列 + 各顶点层号（-1 = 检查到此处即崩溃）
-var OPT = [
-  { name: 'A', seq: ['h','c','a','b','d','e','g','f'], lay: [0,1,1,2,2,2,3,3], ok: true },
-  { name: 'B', seq: ['e','a','f','g','b','h','c','d'], lay: [0,1,1,1,2,2,3,3], ok: true },
-  { name: 'C', seq: ['d','b','c','a','h','e','f','g'], lay: [0,1,1,2,2,3,4,4], ok: true },
-  { name: 'D', seq: ['a','b','c','d','h','e','f','g'], lay: [0,1,2,2,-1,-1,-1,-1], ok: false, bad: 4 }
-];
-
-var LOGS = [
-  '审题：8 顶点无向图，判断哪个选项【不是】广度优先（BFS）遍历序列',
-  'BFS 铁律：序列按层号非降；起点层 0；一个顶点出队时必须把它所有未访问邻居一口气访问完（同层、连续出现）',
-  '检验 A：h, c, a, b, d, e, g, f → 层号 0,1,1,2,2,2,3,3 非降；h 出队可按序访问 c、a，c 出队访问 b、d，a 出队访问 e，e 出队访问 g、f → 合法 BFS ✓',
-  '检验 B：e, a, f, g, b, h, c, d → 层号 0,1,1,1,2,2,3,3 非降；e 出队访问 a、f、g，a 出队访问 b、h，b 出队访问 c、d → 合法 BFS ✓',
-  '检验 C：d, b, c, a, h, e, f, g → 层号 0,1,1,2,2,3,4,4 非降；d 出队访问 b、c，b 出队访问 a，c 出队访问 h，a 出队访问 e，e 出队访问 f、g → 合法 BFS ✓',
-  '检验 D：a, b, c, d, h, … → a 出队时必须一口气访问完它的全部邻居 b、e、h！但序列里 b 之后是 c（c 与 a 不相邻，属第 2 层），h 明明是 a 的邻居（层 1）却被挤到 d 之后 → 层号 0,1,2,2,1 中途回落，违反 BFS 分层 → 不是 BFS 序列 ✗',
-  '结论：A、B、C 都能找到合法的邻居访问顺序，只有 D 违反「同层连续出现」规则 → 选 D'
-];
-var TAGS = ['审题', 'BFS 规则', '检验 A ✓', '检验 B ✓', '检验 C ✓', '检验 D ✗', '完成'];
-var CLS  = ['step', 'step', 'ok', 'ok', 'ok', 'miss', 'done'];
-
-var snaps = [];
-// 步 0~1：题面 + 规则
-var h0 = card('key', '题意与图的邻接表', '<p>对下面的无向图做遍历，判断哪个选项<b>不是</b>广度优先遍历序列。邻接表（按字母序，邻居访问顺序可任选）：</p>' + adjHtml());
-snaps.push({ cls: 'step', tag: '审题', log: LOGS[0], count: 0, html: h0 });
-
-var h1 = adjHtml() + card('key', 'BFS 的分层判定法',
-  '<p>① 序列按<b>层号非降</b>排列：起点层 0，某顶点只与已访问的层 k 顶点相邻时层号为 k+1；</p>'
-  + '<p>② 一个顶点出队时，必须把它的<b>全部未访问邻居一口气访问完</b>（它们同层、连续出现）；</p>'
-  + '<p>③ 题目未规定邻接表存储顺序，每个顶点的邻居按<b>任意顺序</b>访问都算合法——判定只看结构。</p>');
-snaps.push({ cls: 'step', tag: 'BFS 规则', log: LOGS[1], count: 1, html: h1 });
-
-// 步 2~6：正确 BFS 演示
-for (var i = 2; i <= 6; i++){
-  var idx = i - 2;
-  var h = adjHtml() + rowLabel('从 a 出发的合法 BFS 演示');
-  h += seqRow(BFS[idx].seq, BFS[idx].lay, null, BFS[idx].seq.length);
-  h += card(idx >= 2 ? 'good' : '', 'BFS 演示 第' + idx + '步', '<p>' + BFS_LOG[idx] + '</p>');
-  var sn = { cls: 'ok', tag: 'BFS 演示 第' + idx + '步', log: BFS_LOG[idx] || '演示开始', count: i, html: h };
-  if (idx > 0) sn.ribbon = { k: idx, ok: true };
-  snaps.push(sn);
-}
-
-// 步 7~10：四个选项检验
-for (var oi = 0; oi < 4; oi++){
-  var o = OPT[oi];
-  var h = adjHtml(o.name === 'D' ? 'a' : '') + rowLabel('选项 ' + o.name + '：' + o.seq.join(', '));
-  h += seqRow(o.seq, o.lay, o.bad, o.seq.length);
-  var body = '<p>层号序列：<b>' + o.lay.map(function(x){ return x >= 0 ? x : '?'; }).join(', ') + '</b></p>';
-  body += '<p>' + LOGS[2 + oi].replace(/^检验 [ABCD]：[^→]*→ /, '') + '</p>';
-  h += card(o.ok ? 'good' : 'bad', '选项 ' + o.name + (o.ok ? '：合法 BFS' : '：不是 BFS'), body);
-  var sn = {
-    cls: o.ok ? 'ok' : 'miss',
-    tag: '检验 ' + o.name + (o.ok ? ' ✓' : ' ✗'),
-    log: LOGS[2 + oi] + (oi === 3 ? '　' + LOGS[6] : ''), count: 7 + oi, html: h,
-    ribbon: { k: oi + 1, ok: o.ok }
-  };
-  if (oi === 3) sn.done = true;
-  snaps.push(sn);
-}
 
 AW.init({
-  title: '哪一个不是广度优先遍历序列（2013-08）',
-  subtitle: '8 顶点无向图 · 判定法：<code>层号非降</code> + <code>出队即访问全部未访问邻居</code>',
+  title: '2013-08 哪一个不是广度优先遍历序列',
+  subtitle: '8 顶点无向图 · 判定法：<code>层号非降</code> + <code>出队即访问全部未访问邻居</code> · 红点 = 违规顶点',
   counterLabel: '检验进度',
-  ribbonTitle: '选项 / 演示步（✓ 合法 / ✗ 违反）',
-  intro: '点击「▶ 播放」先看正确 BFS，再逐项检验四个选项。',
-  snaps: snaps,
+  ribbonTitle: '选项 / 示范（✓ 合法 / ✗ 违规）',
+  intro: '点击「▶ 播放」：先看从 a 出发的合法 BFS 分层，再逐项检验四个选项。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D',
-    html: 'D = <b>a, b, c, d, h, e, f, g</b>：a 出队时必须一口气访问完邻居 <b>b、e、h</b>，但 h 被推迟到 c、d 之后出现——层号 0,1,2,2,<b>1</b> 中途回落，违反 BFS 分层规则。<br>记忆点：<b>起点的全部邻居必须紧跟起点同层连续出现</b>；D 那串更像一条 DFS 路径。A、B、C 按层号检验均合法。'
-  }
+    html: 'D = <b>a, b, c, d, h, e, f, g</b>：a 出队时必须一口气访问完邻居 <b>b、e、h</b>（同层连续出现），但 h 被推迟到 c、d 之后——层号 0,1,2,2,<b>1</b> 中途回落，违反 BFS 的先进先出分层规则。<br>' +
+      'A、B、C 的层号序列 0,1,1,2,2,2,3,3 / 0,1,1,1,2,2,3,3 / 0,1,1,2,2,3,4,4 均非降，都能由某个邻接表顺序合法产生。<br>' +
+      '记忆锚点：<code>起点的全部邻居必须紧跟起点同层连续出现；D 那串开头更像一条 DFS 路径</code>。',
+  },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

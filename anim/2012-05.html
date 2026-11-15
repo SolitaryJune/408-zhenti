@@ -2,70 +2,221 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2012-05 邻接表有向图BFS的复杂度</title>
+<title>2012-05 邻接表 BFS 复杂度 · 过账演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bg-wrap{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+  .bg-svg{width:46%;min-width:280px;display:block;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bg-svg .edge{stroke:#5a7d8c;stroke-width:2.5px;transition:stroke .3s, opacity .3s}
+  .bg-svg .edge.future{opacity:.35}
+  .bg-svg .edge.done-edge{stroke:#16a34a}
+  .bg-svg .edge.cur-edge{stroke:#e07a2f;stroke-width:4px}
+  .bg-svg .node circle{fill:#1b3a4b;stroke:#1b3a4b;stroke-width:2.5px;transition:fill .3s}
+  .bg-svg .node text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff}
+  .bg-svg .node.vis circle{fill:#16a34a;stroke:#14532d}
+  .alst{width:46%;min-width:240px}
+  .alst .al-title{font-size:13px;font-weight:800;color:#334155;margin-bottom:8px;text-align:center}
+  .alst .al-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .al-head{background:#1b3a4b;color:#fff;border-radius:8px;padding:5px 11px;font-weight:800;
+    font-family:JetBrains Mono,Menlo,monospace;font-size:13.5px}
+  .al-arrow{color:#94a3b8;font-weight:800}
+  .al-arc{background:#dcfce7;border:1.5px solid #16a34a;color:#14532d;border-radius:8px;
+    padding:5px 11px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:13.5px;
+    transition:all .3s}
+  .al-arc.done-cell{background:#f1f5f9;border-color:#cbd5e1;color:#64748b}
+  .al-arc.cur-cell{background:#fde68a;border-color:#d97706;color:#92400e;transform:scale(1.08)}
+  .al-null{color:#cbd5e1;font-weight:800}
+  .bqueue{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;justify-content:center}
+  .bqueue .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:14px}
+  .bqueue .qchip.hot{background:#fde68a;border-color:#d97706;color:#92400e}
+  .bqueue .qlbl{font-size:13px;color:#64748b;font-weight:700}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/分析推理类：BFS 复杂度拆解
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2012-05 邻接表 BFS 复杂度（SVG + 邻接表过账） ==================
+ * 题：n 个结点、e 条弧的有向图，邻接表存储，BFS 的时间复杂度？（答案 C = O(n+e)）
+ * 演示：n=4、e=5 的示例图真的跑一遍 BFS，两本账（顶点账 + 弧账）逐笔累计到 n+e=9。 */
 
-// 一张推理卡片
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼',
-    cls: 'key',
-    body: '<p>n 个结点、e 条边的<b>有向图</b>，<b>邻接表</b>存储，做<b>广度优先遍历（BFS）</b>。复杂度 = <b>访问顶点</b>的开销 ＋ <b>扫描边</b>的开销，两部分分开算。</p>' },
-  { title: '顶点部分：O(n)',
-    cls: '',
-    body: '<p>每个顶点入队、出队<b>恰好一次</b>，并做一次 visited 标记 ⇒ 共 n 次基本操作 ⇒ <b>O(n)</b>。</p>' },
-  { title: '边部分：O(e)',
-    cls: '',
-    body: '<p>顶点出队时顺它的边链表走一遍。有向图中每条弧只出现在<b>弧尾</b>顶点的链表里 ⇒ 全部链表合计恰好 <code>e</code> 个弧结点，每条弧只被扫描一次 ⇒ <b>O(e)</b>。</p>' },
-  { title: '合计',
-    cls: 'good',
-    body: '<p>O(n) ＋ O(e) = <b>O(n + e)</b>。</p>' },
-  { title: '逐项排除',
-    cls: 'bad',
-    body: '<p>B「O(e)」：漏了 O(n)——每个顶点至少访问一次；e 可能远小于 n，不能省略。</p>' +
-          '<p>D「O(ne)」：混淆存储结构——<b>邻接矩阵</b>上每个顶点出队后要扫整行 n 个单元，总量级才是 O(n²)；邻接表按需只存存在的弧。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>C（O(n+e)）</b>。对比记忆：<b>邻接表 O(n+e)，邻接矩阵 O(n²)</b>（DFS 同理）。</p>' },
+var GV = [
+  { id:'v1', x:110, y:55  },
+  { id:'v2', x:280, y:55  },
+  { id:'v3', x:280, y:195 },
+  { id:'v4', x:110, y:195 },
+];
+var GE = [
+  { arc:'a1', from:'v1', to:'v2' },
+  { arc:'a2', from:'v1', to:'v3' },
+  { arc:'a3', from:'v2', to:'v3' },
+  { arc:'a4', from:'v3', to:'v4' },
+  { arc:'a5', from:'v4', to:'v1' },
+];
+var ADJ = { v1:['v2','v3'], v2:['v3'], v3:['v4'], v4:['v1'] };
+/* 每步状态：visited / 队列 / 当前扫的弧 / 累计操作数 */
+var ST = [
+  { vis:[], q:[], cur:null, cnt:0 },
+  { vis:['v1'], q:['v1'], cur:null, cnt:1 },
+  { vis:['v1','v2'], q:['v2'], cur:'a1', cnt:3 },
+  { vis:['v1','v2','v3'], q:['v2','v3'], cur:'a2', cnt:5 },
+  { vis:['v1','v2','v3'], q:['v3'], cur:'a3', cnt:6 },
+  { vis:['v1','v2','v3','v4'], q:['v4'], cur:'a4', cnt:8 },
+  { vis:['v1','v2','v3','v4'], q:[], cur:'a5', cnt:9 },
+  { vis:['v1','v2','v3','v4'], q:[], cur:null, cnt:9 },
+  { vis:['v1','v2','v3','v4'], q:[], cur:null, cnt:9 },
+  { vis:['v1','v2','v3','v4'], q:[], cur:null, cnt:9 },
+];
+var SCANNED = [   /* 每步已扫过的弧集合 */
+  [], [], ['a1'], ['a1','a2'], ['a1','a2','a3'], ['a1','a2','a3','a4'],
+  ['a1','a2','a3','a4','a5'], ['a1','a2','a3','a4','a5'], ['a1','a2','a3','a4','a5'],
+  ['a1','a2','a3','a4','a5'],
+];
+var FORMULAS = [
+  '题：n 个顶点、e 条弧的有向图，<b>邻接表</b>存储，BFS 复杂度？示例 n=4、e=5 实跑一遍',
+  '两本账：<b>顶点账</b>（入队/出队/标记 visited）＋ <b>弧账</b>（出队后顺链表扫描）',
+  'v1 出队，扫 a1 → v2 入队并标记。顶点账 2，弧账 1，累计 3',
+  '继续扫 a2 → v3 入队并标记。顶点账 3，弧账 2，累计 5',
+  'v2 出队扫 a3：v3 已访问 → 不入队，<b>但这条弧照样被扫了一遍！</b>弧账 3',
+  'v3 出队扫 a4 → v4 入队。顶点账 3，弧账 4',
+  'v4 出队扫 a5：v1 已访问。弧账 5，队空 ⇒ 遍历结束。总计 4 + 5 = <code>9</code>',
+  '对账：每顶点恰入队出队一次 ⇒ O(n)；每条弧只存在弧尾的链表里、恰被扫一次 ⇒ O(e) ⇒ <code>O(n+e)</code>',
+  '对比：邻接矩阵 BFS 是 O(n²) —— 每出队一个顶点要扫整行 n 个单元，与 e 无关',
+  '答案 C：O(n+e)',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var wrap = AW.el('div', 'bg-wrap');
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 380 250');
+  svg.setAttribute('class', 'bg-svg');
+  var defs = document.createElementNS(svgNS, 'defs');
+  defs.innerHTML = '<marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" ' +
+    'markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5a7d8c"/></marker>';
+  svg.appendChild(defs);
+  GE.forEach(function(e){
+    var A = null, B = null;
+    GV.forEach(function(n){ if (n.id === e.from) A = n; if (n.id === e.to) B = n; });
+    var dx = B.x - A.x, dy = B.y - A.y, d = Math.sqrt(dx*dx + dy*dy);
+    var off = 21;
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x + dx/d*off); ln.setAttribute('y1', A.y + dy/d*off);
+    ln.setAttribute('x2', B.x - dx/d*off); ln.setAttribute('y2', B.y - dy/d*off);
+    ln.setAttribute('class', 'edge future');
+    ln.dataset.arc = e.arc;
+    ln.setAttribute('marker-end', 'url(#arw2)');
+    svg.appendChild(ln);
+  });
+  GV.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node');
+    g.dataset.id = n.id;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 19);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  wrap.appendChild(svg);
+  var al = AW.el('div', 'alst');
+  al.appendChild(AW.el('div', 'al-title', '邻接表（每条弧恰存 1 个弧结点）'));
+  Object.keys(ADJ).forEach(function(head){
+    var row = AW.el('div', 'al-row');
+    row.appendChild(AW.el('span', 'al-head', head));
+    row.appendChild(AW.el('span', 'al-arrow', '→'));
+    if (ADJ[head].length === 0){
+      row.appendChild(AW.el('span', 'al-null', '∧'));
+    } else {
+      ADJ[head].forEach(function(to){
+        var aid = GE.filter(function(e){ return e.from === head && e.to === to; })[0].arc;
+        var cell = AW.el('span', 'al-arc', to);
+        cell.dataset.arc = aid;
+        row.appendChild(cell);
+        row.appendChild(AW.el('span', 'al-arrow', '→'));
+      });
+      row.appendChild(AW.el('span', 'al-null', '∧'));
+    }
+    al.appendChild(row);
+  });
+  wrap.appendChild(al);
+  stage.appendChild(wrap);
+  var qBox = AW.el('div', 'bqueue');
+  stage.appendChild(qBox);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._al = al; this._qBox = qBox; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var st = ST[Math.min(i, ST.length - 1)];
+  var sc = SCANNED[Math.min(i, SCANNED.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.node'), function(el){
+    el.classList.toggle('vis', st.vis.indexOf(el.dataset.id) >= 0);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge'), function(el){
+    el.classList.remove('done-edge', 'cur-edge', 'future');
+    if (el.dataset.arc === st.cur) el.classList.add('cur-edge');
+    else if (sc.indexOf(el.dataset.arc) >= 0) el.classList.add('done-edge');
+    else el.classList.add('future');
+  });
+  [].forEach.call(this._al.querySelectorAll('.al-arc'), function(el){
+    el.classList.remove('done-cell', 'cur-cell');
+    if (el.dataset.arc === st.cur) el.classList.add('cur-cell');
+    else if (sc.indexOf(el.dataset.arc) >= 0) el.classList.add('done-cell');
+  });
+  this._qBox.innerHTML = '<span class="qlbl">队列：</span>' +
+    (st.q.length ? st.q.map(function(v){ return '<span class="qchip hot">' + v + '</span>'; }).join('')
+                 : '<span class="qchip">（空）</span>');
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'n 个顶点、e 条弧、邻接表存储的<b>有向图</b>做 BFS。示例取 n=4、e=5 实跑一遍，两本账逐笔记。' },
+  { cls:'step', tag:'起点入队', count:1,
+    log:'BFS 从 v1 开始：标记 visited、入队 ⇒ 顶点账 +1。' },
+  { cls:'ok', tag:'扫 a1', count:3,
+    log:'v1 出队（一笔顶点操作），顺它的链表走：弧 (v1,v2) ⇒ v2 未访问，入队并标记。顶点账 2、弧账 1，累计 3。' },
+  { cls:'ok', tag:'扫 a2', count:5,
+    log:'接着扫弧 (v1,v3) ⇒ v3 入队并标记。顶点账 3、弧账 2，累计 5。' },
+  { cls:'miss', tag:'扫 a3：弧照扫', count:6,
+    log:'v2 出队，扫弧 (v2,v3)：v3 已访问 → 不入队。注意：<b>即使不入队，这条弧也被扫描了一次</b>（弧结点就躺在 v2 的链表里）。弧账 3，累计 6。' },
+  { cls:'ok', tag:'扫 a4', count:8,
+    log:'v3 出队，扫弧 (v3,v4) ⇒ v4 入队。累计 8。' },
+  { cls:'ok', tag:'扫 a5，收工', count:9,
+    log:'v4 出队，扫弧 (v4,v1)：已访问。弧账 5/5，队空 ⇒ 遍历结束。总操作 = 顶点 4 + 弧 5 = 9。' },
+  { cls:'ok', tag:'对账', count:9,
+    log:'一般化：每顶点恰入队出队一次 ⇒ O(n)；每条弧只在<b>弧尾</b>的链表存一份、恰被扫一次 ⇒ O(e)。合计 O(n) + O(e) = O(n+e)。' },
+  { cls:'shift', tag:'对比矩阵', count:9,
+    log:'若用邻接矩阵：每出队一个顶点要扫整行 n 个单元 ⇒ O(n²)，与边的多少无关。两种存储结构务必分清。' },
+  { cls:'done', tag:'完成', count:9, done:true,
+    log:'邻接表 BFS 复杂度 O(n+e)，选 C。' },
+];
 
 AW.init({
-  title: '邻接表存储的有向图 BFS 复杂度',
-  subtitle: 'n 个结点 · e 条边 · 邻接表 · 广度优先遍历 · 开销两分法',
-  counterLabel: '推理步',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2012-05 · 邻接表有向图 BFS 的时间复杂度',
+  subtitle: 'n 个结点 · e 条弧 · 邻接表 · <code>顶点账 O(n) ＋ 弧账 O(e)</code> · n=4、e=5 实跑过账',
+  counterLabel: '基本操作',
+  intro: '点击「▶ 播放」：真跑一遍 BFS，看顶点账和弧账怎么一步步累加到 n+e。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C · O(n+e)',
-    html: '顶点各入队出队一次 O(n) ＋ 每条弧只在弧尾链表中被扫一次 O(e) = <b>O(n+e)</b>。<br>记住对照组：<b>邻接矩阵</b>上 BFS/DFS 是 O(n²)——选 D 的同学是把两种存储结构搞混了。',
+    html: '每个顶点入队/出队<b>恰好一次</b> ⇒ O(n)；每条弧只存在弧尾顶点的链表里，<b>恰被扫描一次</b>（目标已访问也照扫）⇒ O(e)。<br>' +
+      '合计 <b>O(n+e)</b>。对比：<code>邻接矩阵 BFS/DFS 是 O(n²)</code>（出队后扫整行）——选 D 的同学混淆了两种存储结构。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

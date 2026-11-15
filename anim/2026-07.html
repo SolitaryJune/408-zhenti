@@ -2,65 +2,206 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2026-07 路径字符串集合 S 的性质判定 · 动画</title>
+<title>2026-07 路径字符串集合 S · 小图演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .stsvg{width:100%;max-width:720px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .stsvg text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+  .stsvg .shead{font-size:13px;font-weight:700;fill:#334155;text-anchor:middle}
+  .stsvg .sdiv{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:5 4}
+  .stsvg .sedge-ch{font-size:12.5px;font-weight:800;fill:#1d4ed8;text-anchor:middle;font-family:Menlo,monospace}
+  .stsvg .sann{font-size:11.5px;font-weight:800;text-anchor:middle;font-family:Menlo,monospace}
+  .stsvg .sleg{font-size:11.5px;font-weight:700;fill:#64748b;text-anchor:start}
+  .stsvg .sann.green{fill:#15803d}
+  .stsvg .sann.amber{fill:#92400e}
+  .stsvg .sann.red{fill:#dc2626}
+  .stsvg .gnode circle{fill:#fff;stroke:#334155;stroke-width:2.2;transition:opacity .4s,fill .3s,stroke .3s}
+  .stsvg .gnode text{font-family:Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .stsvg .gnode.src circle{fill:#dcfce7;stroke:#16a34a}
+  .stsvg .gnode.mark circle{fill:#fee2e2;stroke:#dc2626}
+  .stsvg .gedge{stroke:#64748b;stroke-width:2.2;fill:none;transition:opacity .4s,stroke .3s,stroke-width .3s}
+  .stsvg .garrow{fill:#64748b;transition:opacity .4s,fill .3s}
+  .stsvg .edge-g.hotg .gedge{stroke:#16a34a;stroke-width:3.6}
+  .stsvg .edge-g.hotg .garrow{fill:#16a34a}
+  .stsvg .edge-g.hota .gedge{stroke:#d97706;stroke-width:3.6}
+  .stsvg .edge-g.hota .garrow{fill:#d97706}
+  .stsvg .hidden-el{opacity:0}
+  .stnote{margin-top:10px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
+  .stnote code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
-
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+/* ================== 2026-07 路径字符串集合 S 的四条性质（SVG 小图演示） ==================
+ * 无环例（n=4）：S={ab,ad,abc} 有穷（A✓），最长 3=n−1 取不到 n（B✗）。
+ * 有环例（n=4）：绕环得 L+t·r 可超 n（C✓）；最短 abd=3 ≤ n−1 < 2n（D✓）。答案 B。 */
+var svgNS = 'http://www.w3.org/2000/svg', RR = 18;
+function mk(t){ return document.createElementNS(svgNS, t); }
+function attr(e, o){ for (var k in o) e.setAttribute(k, o[k]); return e; }
+function svgtxt(x, y, s, cls, step){
+  var t = mk('text'); attr(t, {x:x, y:y, 'class':cls});
+  t.textContent = s; if (step != null) t.dataset.step = step; return t;
+}
+function nodeEl(id, x, y, s, kind, step){
+  var g = mk('g'); g.setAttribute('class', 'gnode' + (kind ? ' ' + kind : '')); g.dataset.step = step;
+  var c = mk('circle'); attr(c, {cx:x, cy:y, r:RR});
+  var t = mk('text'); attr(t, {x:x, y:y}); t.textContent = s;
+  g.appendChild(c); g.appendChild(t); return g;
+}
+function dedge(id, A, B, step, ctrl){
+  var g = mk('g'); g.setAttribute('class', 'edge-g'); g.dataset.id = id; g.dataset.step = step;
+  var tipx, tipy, l, bx, by, px, py;
+  if (ctrl){
+    var ex = B[0]-ctrl[0], ey = B[1]-ctrl[1], EL = Math.sqrt(ex*ex+ey*ey);
+    var ux = ex/EL, uy = ey/EL; px = -uy; py = ux;
+    tipx = B[0]-ux*(RR+2); tipy = B[1]-uy*(RR+2);
+    l = mk('path'); attr(l, {d:'M'+A[0]+' '+A[1]+' Q'+ctrl[0]+' '+ctrl[1]+' '+tipx+' '+tipy, 'class':'gedge'});
+    bx = tipx-ux*9; by = tipy-uy*9;
+  } else {
+    var dx = B[0]-A[0], dy = B[1]-A[1], L = Math.sqrt(dx*dx+dy*dy);
+    var ux = dx/L, uy = dy/L; px = -uy; py = ux;
+    tipx = B[0]-ux*(RR+2); tipy = B[1]-uy*(RR+2);
+    l = mk('line'); attr(l, {x1:A[0], y1:A[1], x2:tipx, y2:tipy, 'class':'gedge'});
+    bx = tipx-ux*9; by = tipy-uy*9;
+  }
+  var ar = mk('polygon');
+  attr(ar, {points: tipx+','+tipy+' '+(bx+px*4.5)+','+(by+py*4.5)+' '+(bx-px*4.5)+','+(by-py*4.5), 'class':'garrow'});
+  g.appendChild(l); g.appendChild(ar); return g;
 }
 
-var STEPS = [
-  { title: '审题眼：S 由什么构成',
-    cls: 'key',
-    body: '<p>S = 初始点到各标记点的有向路径上的边字符拼成的字符串集合，<b>字符串长度 = 路径的边数</b>。题设关键约束：每个顶点都落在某条「初始点 → 标记点」的路径上——它保证环上的点也能被路径经过。判定四个选项 = 判定路径长度的可能取值。</p>' },
-  { title: '无环：路径全是简单路径（判 A）',
-    cls: 'good',
-    body: '<p>G 无环时任何路径都不含重复顶点（有重复必有环）。n 个顶点的简单路径至多 n−1 条边，且这样的路径条数有限：长度只能取 1 到 n−1，条数有穷 → <b>S 是有穷集，A 正确</b>。</p>' },
-  { title: '无环：不存在长度恰为 n 的串（判 B）',
-    cls: 'bad',
-    body: '<p>长度 = 边数 ≤ n−1 &lt; n。「存在长度<b>等于</b> n 的字符串」恰好卡在边界外，永远取不到——<b>B 的断言不成立，B 就是错误的那句</b>。</p>' },
-  { title: '有环：绕环可任意加长（判 C）',
-    cls: 'good',
-    body: '<p>G 有环时，408 口径的路径允许重复经过顶点。设环长 r，环上任一点 v 由题设条件在某条「初始点 → 标记点」路径上（长 L）：在 v 处把环绕一圈接回后半段，得长 L+r 的路径；绕 t 圈得 <code>L + t·r</code>。t 增大即可超过 n → <b>存在长度大于 n 的字符串，C 正确</b>。</p>' },
-  { title: '有环：小于 2n 的串始终存在（判 D）',
-    cls: 'good',
-    body: '<p>最短的「初始点 → 标记点」路径若含重复顶点就能截短，故最短者是简单路径，长度 ≤ n−1 &lt; 2n → <b>S 中必有长度小于 2n 的字符串，D 正确</b>。有环只负责「能变长」，不剥夺「存在短串」。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>A、C、D 都对，<b>错误的是 B</b>：无环时路径长度至多 n−1，长度等于 n 的字符串不存在。记忆锚点：<code>无环限长 n−1，有环可绕任意长，最短恒为简单路径</code>。</p>' },
+var PATHS = {
+  1:{e:['g12','g23'], cls:'hotg'},
+  2:{e:['g12','g24'], cls:'hotg'},
+  3:{e:['g12','g23','g34'], cls:'hotg'},
+  4:{e:['g12','g23','g34'], cls:'hota'},
+  5:{e:['gc12','gc23','gc34'], cls:'hotg'},
+  6:{e:['gc12','gc23','gc34'], cls:'mix'},
+  7:{e:['gc12','gc23','gc34'], cls:'hota'},
+};
+var NOTES = [
+  'S = 初始点到各标记点的有向路径上边字符的拼接，<b>字符串长度 = 路径边数</b>；题设还要求每个顶点都落在某条这样的路径上（保证环上的点也能被路径经过）。图例：绿=初始点，红=标记点。',
+  '无环例：路径 1→2→3 = "ab"（长 2）→ S 收进 {ab}。',
+  '路径 1→2→4 = "ad"（长 2）→ S = {ab, ad}。',
+  '路径 1→2→3→4 = "abc"（长 3）→ S = {ab, ad, abc}，共 3 个串 → <b>A ✓：S 是有穷集</b>。',
+  '无环 ⇒ 任何路径都不含重复顶点 ⇒ 长度 ≤ n−1 = 3 < n=4：S 中<b>不存在长度等于 n 的字符串</b> → <b>B ✗，这就是错误的那句</b>。',
+  '有环例：基础路径 1→2→3→4 = "abd"，长 L=3；环 2⇄3 长 r=2（沿 c 边绕回）。题设保证 2、3 都在「初始点→标记点」路径上，绕环合法。',
+  '在环上绕 t 圈再接回后半段：长 L+t·r = 3+2t。t=1 → "abcbd" 长 5 > n=4；t 增大可任意长 → <b>C ✓：存在长度大于 n 的字符串</b>。',
+  '最短的「初始点→标记点」路径不含重复顶点（有重复就能截短），必为简单路径：abd 长 3 ≤ n−1 < 2n → <b>D ✓：存在长度小于 2n 的字符串</b>。',
+  'A、C、D 都对，<b>错误的是 B</b>。锚点：<code>无环限长 n−1（恰取不到 n）；有环可绕环任意加长；最短恒为简单路径 &lt; 2n</code>。',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svg, noteBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  svg = mk('svg'); attr(svg, {viewBox:'0 0 720 340', 'class':'stsvg'});
+  svg.appendChild(svgtxt(185, 25, '无环例（n=4）', 'shead', 0));
+  svg.appendChild(svgtxt(560, 25, '有环例（n=4）', 'shead', 0));
+  var dv = mk('line'); attr(dv, {x1:400, y1:15, x2:400, y2:330, 'class':'sdiv'});
+  dv.dataset.step = 0; svg.appendChild(dv);
+  // 图例
+  var lg1 = mk('circle'); attr(lg1, {cx:52, cy:315, r:8, fill:'#dcfce7', stroke:'#16a34a', 'stroke-width':2});
+  lg1.dataset.step = 0; svg.appendChild(lg1);
+  svg.appendChild(svgtxt(66, 319, '初始点', 'sleg', 0));
+  var lg2 = mk('circle'); attr(lg2, {cx:132, cy:315, r:8, fill:'#fee2e2', stroke:'#dc2626', 'stroke-width':2});
+  lg2.dataset.step = 0; svg.appendChild(lg2);
+  svg.appendChild(svgtxt(146, 319, '标记点', 'sleg', 0));
+  // 无环例：1→2(a) 2→3(b) 2→4(d) 3→4(c)，标记点 {3,4}
+  svg.appendChild(dedge('g12', [70,150], [180,80], 0));
+  svg.appendChild(dedge('g23', [180,80], [300,150], 0));
+  svg.appendChild(dedge('g24', [180,80], [180,220], 0));
+  svg.appendChild(dedge('g34', [300,150], [180,220], 0));
+  svg.appendChild(svgtxt(110, 105, 'a', 'sedge-ch', 0));
+  svg.appendChild(svgtxt(252, 104, 'b', 'sedge-ch', 0));
+  svg.appendChild(svgtxt(196, 148, 'd', 'sedge-ch', 0));
+  svg.appendChild(svgtxt(240, 204, 'c', 'sedge-ch', 0));
+  svg.appendChild(nodeEl('D1', 70, 150, '1', 'src', 0));
+  svg.appendChild(nodeEl('D2', 180, 80, '2', '', 0));
+  svg.appendChild(nodeEl('D3', 300, 150, '3', 'mark', 0));
+  svg.appendChild(nodeEl('D4', 180, 220, '4', 'mark', 0));
+  svg.appendChild(svgtxt(185, 265, 'S = {ab, ad, abc}', 'sann green', 3));
+  svg.appendChild(svgtxt(185, 287, '最长 = 3 = n−1 < n', 'sann red', 4));
+  // 有环例：1→2(a) 2→3(b) 3→2(c 弧) 3→4(d)，标记点 {4}
+  svg.appendChild(dedge('gc12', [450,170], [550,90], 0));
+  svg.appendChild(dedge('gc23', [550,90], [640,170], 0));
+  svg.appendChild(dedge('gc32', [640,170], [550,90], 0, [670,136]));
+  svg.appendChild(dedge('gc34', [640,170], [560,250], 0));
+  svg.appendChild(svgtxt(482, 118, 'a', 'sedge-ch', 0));
+  svg.appendChild(svgtxt(612, 120, 'b', 'sedge-ch', 0));
+  svg.appendChild(svgtxt(678, 128, 'c', 'sedge-ch', 0));
+  svg.appendChild(svgtxt(575, 215, 'd', 'sedge-ch', 0));
+  svg.appendChild(nodeEl('C1', 450, 170, '1', 'src', 0));
+  svg.appendChild(nodeEl('C2', 550, 90, '2', '', 0));
+  svg.appendChild(nodeEl('C3', 640, 170, '3', '', 0));
+  svg.appendChild(nodeEl('C4', 560, 250, '4', 'mark', 0));
+  svg.appendChild(svgtxt(560, 292, '基础路径 abd（L = 3）', 'sann green', 5));
+  svg.appendChild(svgtxt(560, 312, '绕 1 圈 → abcbd（长 5 > n）', 'sann amber', 6));
+  svg.appendChild(svgtxt(560, 332, '最短 abd = 3 ≤ n−1 < 2n', 'sann green', 7));
+  stage.appendChild(svg);
+  noteBox = AW.el('div', 'stnote', '');
+  stage.appendChild(noteBox);
+}
+
+function render(stage, sn, i){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge-g'), function(el){
+    el.classList.remove('hotg', 'hota');
+  });
+  var p = PATHS[Math.min(i, 7)];
+  if (p){
+    [].forEach.call(svg.querySelectorAll('.edge-g'), function(el){
+      if (p.e.indexOf(el.dataset.id) >= 0){
+        if (p.cls === 'mix'){ el.classList.add(el.dataset.id === 'gc23' ? 'hota' : 'hotg'); }
+        else el.classList.add(p.cls);
+      }
+    });
+  }
+  noteBox.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'S 由「初始点→标记点」路径上的边字符拼成，长度 = 边数；每个顶点都必须落在某条这样的路径上。判四个选项 = 判路径长度的可能取值。' },
+  { cls:'step', tag:'无环·路径①', count:0,
+    log:'无环例：路径 1→2→3 = "ab"（长 2），S 收进 {ab}。' },
+  { cls:'step', tag:'无环·路径②', count:0,
+    log:'路径 1→2→4 = "ad"（长 2），S = {ab, ad}。' },
+  { cls:'ok', tag:'A ✓ 有穷', count:0, ribbon:{k:1, ok:true},
+    log:'路径 1→2→3→4 = "abc"（长 3）→ S = {ab, ad, abc}。无环时路径条数有限 → S 是有穷集，A 正确。' },
+  { cls:'miss', tag:'B ✗', count:0, ribbon:{k:2, ok:false},
+    log:'无环 ⇒ 路径全是简单路径 ⇒ 长度至多 n−1 = 3 < n=4：长度恰为 n 的字符串取不到 → B 的断言不成立，B 是错误的那句。' },
+  { cls:'step', tag:'有环·基础路径', count:0,
+    log:'有环例：基础路径 1→2→3→4 = "abd"，长 L=3；环 2⇄3 长 r=2。题设保证环上的 2、3 也在某条「初始点→标记点」路径上。' },
+  { cls:'ok', tag:'C ✓ 可加长', count:0, ribbon:{k:3, ok:true},
+    log:'在环上绕 t 圈再接回后半段：长 L+t·r = 3+2t；t=1 → "abcbd" 长 5 > n=4 → 存在长度大于 n 的字符串，C 正确。' },
+  { cls:'ok', tag:'D ✓ 有短串', count:0, ribbon:{k:4, ok:true},
+    log:'最短路径必为简单路径（有重复就能截短）：abd 长 3 ≤ n−1 < 2n → 存在长度小于 2n 的字符串，D 正确。' },
+  { cls:'done', tag:'完成', count:0, done:true,
+    log:'A、C、D 都对，错误的是 B：无环时长度至多 n−1，恰取不到 n。' },
+];
 
 AW.init({
   title: '2026-07 · 字符串集合 S：哪句说错了',
-  subtitle: '有向图路径字符串 · <code>无环限长 n−1 / 有环可绕环加长</code> · 逐项推理',
-  counterLabel: '推理步',
-  intro: '点击「▶ 播放」逐步检验 A、B、C、D。',
-  snaps: snaps,
+  subtitle: '有向图路径字符串 · <code>无环限长 n−1 / 有环可绕环加长 / 最短恒为简单路径</code> · 两个最小例逐项判定',
+  counterLabel: '判定进展',
+  ribbonTitle: '选项（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」，用无环例与有环例逐项检验 A、B、C、D。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 B（该叙述错误）',
-    html: '无环时所有路径都是简单路径：n 个顶点至多 <b>n−1 条边</b>，S 有穷（A 对）但长度<b>取不到 n</b>（B 错）。有环时在路径中绕环一圈得 L+r，绕 t 圈可超 n（C 对）；最短路径恒为简单路径 ≤ n−1 &lt; 2n（D 对）。',
+    html: '无环时所有路径都是简单路径：n 个顶点至多 <b>n−1 条边</b>，S 有穷（A 对）但长度<b>恰取不到 n</b>（B 错）。<br>' +
+      '有环时在路径中绕环一圈得 L+r，绕 t 圈得 L+t·r 可超过 n（C 对）；最短路径恒为简单路径 ≤ n−1 &lt; 2n（D 对）。<br>' +
+      '关键前提：题设「每个顶点都在某条初始点到标记点的路径上」保证环上顶点既可达又能继续走到标记点，绕环拼接才合法。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

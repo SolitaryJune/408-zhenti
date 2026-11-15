@@ -2,78 +2,154 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2013-10 高度为 2 的 5 阶 B 树最少关键字数</title>
+<title>2013-10 高度为 2 的 5 阶 B 树 · 最少关键字数</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .btree-svg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .btree-svg .lvl{font-size:13px;font-weight:700;fill:#64748b}
+  .btree-svg .node-fr{fill:#fff;stroke:#1b3a4b;stroke-width:2px;rx:8}
+  .btree-svg .node-fr.ghost{stroke:#94a3b8;stroke-dasharray:5 4}
+  .btree-svg .keyc{fill:#e07a2f}
+  .btree-svg .keyc.leaf{fill:#16a34a}
+  .btree-svg .keyc.glow{animation:bt-pop .6s ease}
+  .btree-svg text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:14px;
+    fill:#fff;text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .btree-svg .note{font-size:12px;fill:#64748b;text-anchor:middle}
+  .btree-svg line{stroke:#5a7d8c;stroke-width:2.2px;transition:opacity .4s}
+  .hidden-el{opacity:0}
+  .bstat{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .bstat .schip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-size:13.5px}
+  .bstat .schip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#b45309}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9;min-height:28px}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+  @keyframes bt-pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+</style>
 </head>
 <body>
-<!-- 模板：anim_concept_template.html（概念/分析类），只改 AW.init 区域 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2013-10 高度 2 的 5 阶 B 树（SVG 构造最少形态） ==================
+ * 题：高度为 2 的 5 阶 B 树，关键字个数最少是多少？（答案 A = 5）
+ * 演示：5 阶 B 树的下限约束 → 根取 1 个关键字 → 2 棵子树 → 叶层每结点取 2 个关键字 → 合计 5。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
-}
-
-// 最少形态示意：根 1 个关键字、2 个子结点各 2 个关键字
-function minTree(){
-  var box = function(w, txt, cls){
-    return '<div class="aw-box ' + (cls || '') + '" style="width:' + w + 'px;height:40px;font-size:13px">' + txt + '</div>';
-  };
-  return '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:10px">'
-    + '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#64748b">根（第 1 层）</span>'
-    + box(120, '│ k │', 'hit') + '</div>'
-    + '<div style="color:#94a3b8;font-size:12px">↓ 1 个关键字 → 2 棵子树 ↓</div>'
-    + '<div style="display:flex;gap:28px;align-items:center">'
-    + '<span style="font-size:12px;color:#64748b">第 2 层</span>'
-    + box(120, '│ k │ k │', 'ok') + box(120, '│ k │ k │', 'ok') + '</div>'
-    + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼', cls: 'key',
-    body: '<p>求「高度为 2 的 <b>5 阶</b> B 树」最少含多少个关键字。两件事要分清：<b>5 阶决定结点关键字上下限</b>，<b>高度 2 决定层数</b>——求最少就层层取下限。</p>' },
-  { title: '5 阶 B 树的三个约束', cls: '',
-    body: '<p>① 每个结点<b>最多</b> 4 个关键字、5 棵子树；② <b>除根以外</b>每个结点<b>最少</b> ⌈5/2⌉ − 1 = <b>2 个关键字</b>（3 棵子树）；③ <b>根结点</b>最少 2 棵子树，即最少 <b>1 个关键字</b>。</p>' },
-  { title: '第 1 层（根）取下限', cls: '',
-    body: '<p>根最少 1 个关键字 → 最多 1 + 1 = 2 棵子树 → 第 2 层最少 <b>2 个结点</b>。</p>' },
-  { title: '第 2 层（叶层）取下限', cls: '',
-    body: '<p>第 2 层是叶层（失败结点不计高度、不算关键字）。每个结点最少 2 个关键字 → 2 × 2 = <b>4 个</b>。</p>' },
-  { title: '合计最少形态', cls: 'good',
-    body: minTree() + '<p>总关键字 = 1 + 2×2 = <b>5 个</b>。这就是该 B 树的最少关键字形态。</p>' },
-  { title: '逐项排除', cls: 'bad',
-    body: '<p>B（7）：把根的下限误当 2 个关键字，或把叶层下限误当 3 个关键字 ⌈5/2⌉。</p>'
-        + '<p>C（8）：介于两者之间的误算。</p>'
-        + '<p>D（14）：按「最多」算：4 + 2×5 = 14——题目问的是最少。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>最少关键字数 = 1（根）+ 2×2（两个叶层结点）= <b>5</b>，选 <b>A</b>。</p>'
-        + '<p>记忆锚点：<b>根最少 1 个关键字（2 棵子树）；非根最少 ⌈m/2⌉−1 个关键字</b>。</p>' }
+var SNAPS = [
+  { cls:'step', tag:'审题', count:0,
+    log:'高度为 2：树上只有「根（第 1 层）」和「叶层（第 2 层）」两层。5 阶 B 树：每个结点最多 5 棵子树（4 个关键字）。求"最少"→ 每一层都取下限。',
+    fx:'已知：高度 2 · 5 阶 → 每结点关键字 ∈ [下限, 4]' },
+  { cls:'step', tag:'三个下限', count:0,
+    log:'① 根结点：最少 2 棵子树 ⇔ 最少 1 个关键字；② 非根结点：最少 ⌈5/2⌉ = 3 棵子树 ⇔ 最少 ⌈5/2⌉−1 = 2 个关键字；③ 失败结点（叶结点的空指针）不含关键字、不计入高度。',
+    fx:'根最少 <code>1</code> 个关键字 · 非根最少 ⌈5/2⌉−1 = <code>2</code> 个' },
+  { cls:'shift', tag:'根取下限', count:1,
+    log:'第 1 层（根）取下限：只放 1 个关键字。它同时是最少关键字形态的根。',
+    fx:'第 1 层：根放最少 <code>1</code> 个关键字' },
+  { cls:'shift', tag:'长出 2 棵子树', count:1,
+    log:'根有 1 个关键字 → 恰好 1+1 = 2 棵子树 → 第 2 层最少 2 个结点（虚线空框）。这是叶层数量的下限，不可能更少。',
+    fx:'第 2 层结点数下限 = 1 + 1 = <code>2</code> 个' },
+  { cls:'ok', tag:'叶层取下限', count:5,
+    log:'第 2 层是叶层：每个结点取下限 ⌈5/2⌉−1 = 2 个关键字 → 2 个结点 × 2 = 4 个。它们的空指针指向失败结点（不计高度、不含关键字）。',
+    fx:'第 2 层：2 个结点 × 最少 2 个关键字 = <code>4</code> 个' },
+  { cls:'ok', tag:'合计最少 5', count:5, glow:true,
+    log:'合计：根 1 个 + 叶层 2×2 = 5 个关键字。验证合法性：根 1 个关键字∈[1,4]、2 棵子树；叶结点 2 个关键字∈[2,4]、3 棵子树（指向失败结点）→ 合法的 5 阶 B 树 ✓，且无法再少。',
+    fx:'最少关键字数 = 1 + 2×2 = <code>5</code> 个' },
+  { cls:'miss', tag:'干扰项', count:5,
+    log:'B（7）：把非根下限误记为 ⌈5/2⌉ = 3 个关键字 → 1+2×3 = 7。D（14）：把「5 阶」当成"每结点 5 个关键字"乱凑——5 阶的含义是"最多 5 棵子树"，每结点关键字最多 4 个。',
+    fx:'B=7 是下限记错 · D=14 是概念错位' },
+  { cls:'done', done:true, tag:'完成', count:5,
+    log:'结论：高度为 2 的 5 阶 B 树最少含 5 个关键字 → 选 A。',
+    fx:'答案 A：<code>5</code> 个关键字' }
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 660 252');
+  svg.setAttribute('class', 'btree-svg');
+  function el(name, attrs, txt){
+    var n = document.createElementNS(svgNS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+  // 层标签
+  var l1 = el('text', { x:20, y:62, 'class':'lvl' }, '第 1 层（根）');
+  var l2 = el('text', { x:20, y:196, 'class':'lvl' }, '第 2 层（叶层）');
+  l1.dataset.step = 0; l2.dataset.step = 0;
+  svg.appendChild(l1); svg.appendChild(l2);
+  // 边
+  [[330,76,170,153],[330,76,470,153]].forEach(function(c){
+    var ln = el('line', { x1:c[0], y1:c[1], x2:c[2], y2:c[3] });
+    ln.dataset.step = 3;
+    svg.appendChild(ln);
+  });
+  // 根：1 个关键字
+  var root = el('g', {});
+  root.dataset.step = 2;
+  root.appendChild(el('rect', { x:306, y:40, width:48, height:36, rx:8, 'class':'node-fr' }));
+  root.appendChild(el('rect', { x:310, y:44, width:40, height:28, rx:5, 'class':'keyc' }));
+  root.appendChild(el('text', { x:330, y:58 }, '50'));
+  svg.appendChild(root);
+  // 叶层空框（虚线）
+  [[127,157],[427,157]].forEach(function(p){
+    var fr = el('rect', { x:p[0], y:p[1], width:86, height:36, rx:8, 'class':'node-fr ghost' });
+    fr.dataset.step = 3;
+    svg.appendChild(fr);
+  });
+  // 叶层关键字（各 2 个）
+  var leafKeys = [[131,'20'],[171,'30'],[431,'70'],[471,'80']];
+  leafKeys.forEach(function(kc){
+    var g = el('g', {});
+    g.dataset.step = 4;
+    g.appendChild(el('rect', { x:kc[0], y:161, width:38, height:28, rx:5, 'class':'keyc leaf' }));
+    g.appendChild(el('text', { x:kc[0]+19, y:175 }, kc[1]));
+    svg.appendChild(g);
+  });
+  // 失败结点说明
+  var note = el('text', { x:330, y:234, 'class':'note' },
+    '叶结点下的空指针 → 失败结点（外部结点）：不计高度、不含关键字');
+  note.dataset.step = 4;
+  svg.appendChild(note);
+  stage.appendChild(svg);
+  var stat = AW.el('div', 'bstat');
+  var c1 = AW.el('span', 'schip', '已放关键字：0');
+  var c2 = AW.el('span', 'schip', '下限合计：1 + 2×2 = 5');
+  stat.appendChild(c1); stat.appendChild(c2);
+  stage.appendChild(stat);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._c1 = c1; this._formula = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.keyc'), function(kc){
+    kc.classList.toggle('glow', !!sn.glow);
+  });
+  this._c1.textContent = '已放关键字：' + sn.count;
+  this._formula.innerHTML = sn.fx || '';
+}
 
 AW.init({
-  title: '高度为 2 的 5 阶 B 树：最少关键字数（2013-10）',
-  subtitle: '5 阶 = 结点最多 4 个关键字 5 棵子树 · 层层取下限',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2013-10　高度为 2 的 5 阶 B 树：最少关键字数',
+  subtitle: '5 阶 = 每结点最多 5 棵子树（4 个关键字）· 求"最少"→ 每层取下限',
+  counterLabel: '已放关键字',
+  intro: '点击「▶ 播放」逐层搭出关键字最少的那棵 5 阶 B 树。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 A：5 个',
-    html: '根最少 <b>1</b> 个关键字 → 2 棵子树 → 第 2 层 2 个结点，每个最少 <b>2</b> 个关键字：1 + 2×2 = <b>5</b>。<br>对照：按「最多」算是 4 + 2×5 = 14（选项 D 的陷阱）；根下限记错会得 6、7（选项 B 附近）。'
+    html: '高度 2 → 只有根和叶层。根最少 <b>1</b> 个关键字（2 棵子树）→ 叶层最少 <b>2</b> 个结点，每个最少 ⌈5/2⌉−1 = <b>2</b> 个关键字：<br>' +
+      '最少关键字 = 1 + 2×2 = <b>5</b> 个。<br>' +
+      '对照：若求"最多"，则 4 + 5×4 = 24 个（根 4 个关键字、5 个子结点各装满 4 个）。记忆锚点：<code>根最少 1 个关键字；非根最少 ⌈m/2⌉−1 个</code>。'
   }
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

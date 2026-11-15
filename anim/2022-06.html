@@ -2,65 +2,165 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2022-06 无向图边数与连通性</title>
+<title>2022-06 无向图边数与连通性 · 反例结构动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .gsvg{width:100%;max-width:600px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .gsvg .gedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s}
+  .gsvg .gedge.miss{stroke:#dc2626;stroke-dasharray:7 5;stroke-width:2px}
+  .gsvg .gnode circle{fill:#1b3a4b;transition:opacity .4s, fill .3s}
+  .gsvg .gnode.iso circle{fill:#dc2626}
+  .gsvg .gnode text{fill:#fff;font-weight:800;font-size:12.5px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .gsvg .band-label{font-size:14.5px;font-weight:800;fill:#1b3a4b}
+  .gsvg .band-note{font-size:12px;fill:#64748b}
+  .gsvg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2022-06 无向图边数与连通性（SVG 反例演示） ==================
+ * 题：对无向图 G=(V,E)，哪项正确。答案 D：当 |V| > |E|+1 时，G 一定不连通。
+ * 演示：连通底线（生成树 n−1 条边）→ 拆一条边即断 → 逐个给出 A/B/C 的反例图。 */
+var NS = 'http://www.w3.org/2000/svg';
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼：连通的边数门槛',
-    cls: 'key',
-    body: '<p>n 个顶点的无向连通图至少需要 <b>n − 1 条边</b>（生成树）。所以 <code>|E| &lt; |V| − 1 ⇔ 必不连通</code>；但边数够多只是<b>必要</b>条件——多出的边可以全堆在局部，连通性仍不保证。</p>' },
-  { title: 'A：|V| &gt; |E| 必连通？',
-    cls: 'bad',
-    body: '<p>反例：3 个顶点只有 1 条边——|V|=3 &gt; |E|=1，第 3 个顶点孤立，图不连通。<b>A 错</b></p>' },
-  { title: 'B：|V| &lt; |E| 必连通？',
-    cls: 'bad',
-    body: '<p>反例：K4（6 条边）再添一个独立三角形（3 条边）——|V|=7 &lt; |E|=9，但有两个连通分量。<b>B 错</b></p>' },
-  { title: 'C：|E| = |V| + 1 必不连通？',
-    cls: 'bad',
-    body: '<p>反例：5 个顶点 6 条边可以连通（五边形 + 一条弦），此时恰有 |E| = |V| + 1。<b>C 错</b></p>' },
-  { title: 'D：|V| &gt; |E| + 1 必不连通？',
-    cls: 'good',
-    body: '<p>即 <code>|E| &lt; |V| − 1</code>：连生成树的边数都不够，无论怎么摆都必有顶点落在分量之外 ⇒ <b>一定不连通</b>。<b>D 对</b></p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案 <b>D</b>。记忆锚点：<code>|E| ≥ |V| − 1</code> 是连通的<b>必要条件</b>——低于它必不连通（D），达到它推不出连通（A/B/C 全靠反例否掉）。</p>' },
+/* 每个展台：step=出现步序（0 基），ly/noteY=文字行 y，nodes=[x,y,名]，edges=下标对，iso=孤立点 */
+var BANDS = [
+  { step:0, ly:38, noteY:58,
+    label:'① 连通的底线：5 个顶点的生成树 —— 恰好 4 条边，连通',
+    note:'n 个顶点要连通，至少需要 n−1 条边',
+    nodes:[[80,110,'v1'],[180,78,'v2'],[280,110,'v3'],[380,78,'v4'],[480,110,'v5']],
+    edges:[[0,1],[1,2],[2,3],[3,4]] },
+  { step:1, ly:180, noteY:200,
+    label:'② 从生成树上拿走 1 条边：只剩 3 条边 —— 立刻断成两块',
+    note:'|E|=3 < 5−1 ⟹ 必不连通（即 |V|=5 > |E|+1=4）',
+    nodes:[[80,252,'v1'],[180,220,'v2'],[280,252,'v3'],[380,220,'v4'],[480,252,'v5']],
+    edges:[[0,1],[1,2],[3,4]], missing:[2,3] },
+  { step:3, ly:322, noteY:342,
+    label:'③ 反例 A：|V|=3 > |E|=1，却不连通',
+    note:'「|V|>|E| 一定连通」被推翻：第 3 个顶点孤立',
+    nodes:[[150,398,'x'],[250,398,'y'],[350,398,'z']],
+    edges:[[0,1]], iso:[2] },
+  { step:4, ly:474, noteY:494,
+    label:'④ 反例 B：K4（6 边）+ 独立三角形（3 边）：|V|=7 < |E|=9',
+    note:'「|V|<|E| 一定连通」被推翻：边多但全堆在局部，仍有两个连通分量',
+    nodes:[[90,548,'1'],[190,548,'2'],[90,628,'3'],[190,628,'4'],[410,558,'5'],[510,558,'6'],[460,638,'7']],
+    edges:[[0,1],[0,2],[0,3],[1,2],[1,3],[2,3],[4,5],[4,6],[5,6]] },
+  { step:5, ly:700, noteY:720,
+    label:'⑤ 反例 C：四边形 + 1 条对角弦：|V|=4，|E|=5（|V| = |E|−1），却连通',
+    note:'「|V|=|E|−1 一定不连通」被推翻',
+    nodes:[[210,782,'1'],[370,782,'2'],[370,862,'3'],[210,862,'4']],
+    edges:[[0,1],[1,2],[2,3],[3,0],[0,2]] },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var SNAPS = [
+  { cls:'shift', tag:'连通底线', count:0,
+    log:'n 个顶点的无向连通图至少要 n−1 条边（生成树恰为最省边的连通方式）。先记住这条"底线"。' },
+  { cls:'miss', tag:'拆掉一条边', count:1,
+    log:'从生成树上拿走任意一条边，图立刻断开：|E| < |V|−1 ⟹ 必不连通。等价变形就是 |V| > |E|+1 —— 这正是选项 D 的条件。' },
+  { cls:'ok', tag:'锁定 D', count:2,
+    log:'D：当 |V| > |E|+1（即 |E| < |V|−1）时，边数连生成树的底线都不到，G 一定不连通 —— 必然成立。' },
+  { cls:'miss', tag:'反例 A', count:3,
+    log:'A：|V|=3 > |E|=1，第 3 个顶点孤立，图不连通 ——「一定连通」不成立。' },
+  { cls:'miss', tag:'反例 B', count:4,
+    log:'B：K4（6 条边）+ 独立三角形（3 条边），|V|=7 < |E|=9，仍有两个连通分量 —— 边多不等于连通。' },
+  { cls:'miss', tag:'反例 C', count:5,
+    log:'C：四边形加一条对角弦，|V|=4、|E|=5（即 |V|=|E|−1），图却连通 ——「一定不连通」被推翻。' },
+  { cls:'done', tag:'完成', count:5, done:true,
+    log:'边数太少可以否定连通（|E|<|V|−1 ⟹ 必不连通）；边数够多则什么都不能保证。答案 D。' },
+];
+
+var FORMULAS = [
+  '连通图：|E| ≥ |V| − 1（生成树是最"省边"的连通方式）',
+  '|E| &lt; |V| − 1 ⟹ 必不连通　⟺　<code>|V| &gt; |E| + 1</code>',
+  '<code>D</code> 成立：|V| &gt; |E|+1 ⟺ |E| &lt; |V|−1 ⟹ 一定不连通 ✓',
+  'A 错：|V| &gt; |E| 推不出连通（反例：3 个顶点 1 条边）',
+  'B 错：|V| &lt; |E| 也推不出连通（边可以局部堆叠）',
+  'C 错：|V| = |E|−1 也可能连通（四边形 + 弦）',
+  '<b>答案：D</b> —— 唯一"一定不连通"的是 |V| &gt; |E|+1',
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 560 900');
+  svg.setAttribute('class', 'gsvg');
+  BANDS.forEach(function(b){
+    var g = document.createElementNS(NS, 'g');
+    g.dataset.step = b.step;
+    var t1 = document.createElementNS(NS, 'text');
+    t1.setAttribute('x', 16); t1.setAttribute('y', b.ly);
+    t1.setAttribute('class', 'band-label');
+    t1.textContent = b.label;
+    var t2 = document.createElementNS(NS, 'text');
+    t2.setAttribute('x', 16); t2.setAttribute('y', b.noteY);
+    t2.setAttribute('class', 'band-note');
+    t2.textContent = b.note;
+    g.appendChild(t1); g.appendChild(t2);
+    if (b.missing){
+      var A0 = b.nodes[b.missing[0]], B0 = b.nodes[b.missing[1]];
+      var lm = document.createElementNS(NS, 'line');
+      lm.setAttribute('x1', A0[0]); lm.setAttribute('y1', A0[1]);
+      lm.setAttribute('x2', B0[0]); lm.setAttribute('y2', B0[1]);
+      lm.setAttribute('class', 'gedge miss');
+      g.appendChild(lm);
+    }
+    b.edges.forEach(function(e){
+      var A = b.nodes[e[0]], B = b.nodes[e[1]];
+      var ln = document.createElementNS(NS, 'line');
+      ln.setAttribute('x1', A[0]); ln.setAttribute('y1', A[1]);
+      ln.setAttribute('x2', B[0]); ln.setAttribute('y2', B[1]);
+      ln.setAttribute('class', 'gedge');
+      g.appendChild(ln);
+    });
+    b.nodes.forEach(function(n, ni){
+      var ng = document.createElementNS(NS, 'g');
+      ng.setAttribute('class', 'gnode' + ((b.iso || []).indexOf(ni) >= 0 ? ' iso' : ''));
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', n[0]); c.setAttribute('cy', n[1]); c.setAttribute('r', 17);
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', n[0]); t.setAttribute('y', n[1]);
+      t.textContent = n[2];
+      ng.appendChild(c); ng.appendChild(t);
+      g.appendChild(ng);
+    });
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  this._svg = svg;
+  this._formula = AW.el('div', 'hformula');
+  stage.appendChild(this._formula);
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('g[data-step]'), function(g){
+    g.classList.toggle('hidden-el', +g.dataset.step > i);
+  });
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
 
 AW.init({
-  title: '无向图：边数能不能决定连通性？（2022-06）',
-  subtitle: '考点：连通图至少 |V|−1 条边 · 必要条件 vs 充分条件 · 反例构造',
-  intro: '点击「▶ 播放」逐项推演 A～D。',
-  snaps: snaps,
+  title: '2022-06 无向图边数与连通性 · 反例结构动画',
+  subtitle: '题：对无向图 G=(V,E)，下列选项正确的是？关键不等式：<code>|E| &lt; |V|−1 ⟹ 必不连通</code>',
+  counterLabel: '已验证选项',
+  ribbonTitle: '选项判定（✓ 成立 / ✗ 有反例）',
+  intro: '点击「▶ 播放」：先看连通的边数底线，再逐个用真实小图推翻 A、B、C。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D',
-    html: '|E| &lt; |V| − 1 ⇒ 必不连通（生成树都要 |V|−1 条边）。反之边再多也只保证“局部热闹”：A 靠孤立点、B 靠两个分量、C 靠五边形加弦，各给一个反例即可。',
+    html: 'n 个顶点连通至少需要 <b>|V|−1</b> 条边（生成树），所以 <code>|V| &gt; |E|+1 ⟺ |E| &lt; |V|−1 ⟹ 一定不连通</code>，D 正确。<br>' +
+      '反向都不成立（边数达标只是必要条件，多出的边可以局部堆叠）：A 反例 3 点 1 边；B 反例 K4+三角形（|V|=7&lt;|E|=9 仍两个分量）；C 反例四边形加弦（|V|=|E|−1 却连通）。<br>' +
+      '记忆锚点：<code>边太少必断，边多啥都不保证</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
-<script>/* aw-ok */</script>
 </body>
 </html>

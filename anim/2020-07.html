@@ -2,120 +2,212 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2020-07 Kruskal 最小生成树选边过程动画</title>
+<title>2020-07 Kruskal 最小生成树 · 选边动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .ksvg{width:100%;max-width:660px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .ksvg .kedge line{transition:stroke .35s, opacity .35s, stroke-width .35s}
+  .ksvg .kedge .wlabel{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:16px;
+    text-anchor:middle;transition:fill .35s, opacity .35s}
+  .ksvg .kvtx circle{fill:#1b3a4b;transition:fill .3s}
+  .ksvg .kvtx text{fill:#fff;font-weight:800;font-size:15px;font-family:JetBrains Mono,Menlo,monospace;
+    text-anchor:middle;dominant-baseline:central}
+  .ksvg .kvtx.touched circle{fill:#16a34a}
+  .kechips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:12px}
+  .kechips .echip{background:#5a7d8c22;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:3px 11px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:13.5px;
+    transition:all .3s}
+  .kechips .echip small{font-weight:600;color:#64748b}
+  .kechips .echip.cur{background:#fef3c7;border-color:#d97706;color:#b45309}
+  .kechips .echip.ok{background:#dcfce7;border-color:#16a34a;color:#14532d}
+  .kechips .echip.miss{background:#fee2e2;border-color:#dc2626;color:#b91c1c;text-decoration:line-through;opacity:.8}
+  .kechips .echip.dim{opacity:.35}
+  .kcomps{margin-top:10px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .kcomps code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     2020-07 无向图 G 的 Kruskal 最小生成树：按权排序逐边考察
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2020-07 Kruskal 最小生成树（SVG 图动画） ==================
+ * 题：对无向图 G（顶点 a~f、10 条边）用 Kruskal 算法求最小生成树，
+ *     写出依次加入的边。（答案 A）
+ * 演示：边按权升序逐条考察——不成环就加入（绿）、成环舍弃（红），
+ *       连通分量逐步合并，选满 n−1 = 5 条边结束。 */
 
-// 无向图 G 的全部边（按权从小到大），与题图一致
+var VTX = [
+  { id:'a', x:90,  y:75  },
+  { id:'b', x:380, y:60  },
+  { id:'c', x:90,  y:305 },
+  { id:'d', x:380, y:305 },
+  { id:'e', x:240, y:185 },
+  { id:'f', x:565, y:175 },
+];
+// 与题图一致的 10 条边（已按权升序排列）；lx/ly 为权值标签位置
 var EDGES = [
-  { e:'b-f', w:5  },
-  { e:'b-d', w:6  },
-  { e:'d-f', w:7  },
-  { e:'a-e', w:9  },
-  { e:'c-e', w:10 },
-  { e:'b-e', w:11 },
-  { e:'a-c', w:12 },
-  { e:'e-d', w:14 },
-  { e:'c-d', w:18 },
-  { e:'a-b', w:20 },
+  { a:'b', b:'f', w:5,  lx:484, ly:98  },
+  { a:'b', b:'d', w:6,  lx:408, ly:182 },
+  { a:'d', b:'f', w:7,  lx:484, ly:258 },
+  { a:'a', b:'e', w:9,  lx:176, ly:110 },
+  { a:'c', b:'e', w:10, lx:140, ly:264 },
+  { a:'b', b:'e', w:11, lx:296, ly:104 },
+  { a:'a', b:'c', w:12, lx:60,  ly:190 },
+  { a:'d', b:'e', w:14, lx:300, ly:264 },
+  { a:'c', b:'d', w:18, lx:235, ly:336 },
+  { a:'a', b:'b', w:20, lx:235, ly:42  },
+];
+// 每步每条边的状态：cur=正在考察 / ok=加入 / miss=成环舍弃 / dim=已结束未考察 / ''=待考察
+var STATES = [
+  ['','','','','','','','','',''],
+  ['cur','','','','','','','','',''],
+  ['ok','cur','','','','','','','',''],
+  ['ok','ok','cur','','','','','','',''],
+  ['ok','ok','miss','cur','','','','','',''],
+  ['ok','ok','miss','ok','cur','','','','',''],
+  ['ok','ok','miss','ok','ok','cur','','','',''],
+  ['ok','ok','miss','ok','ok','ok','dim','dim','dim','dim'],
+];
+// 每步已在生成树中的顶点（染绿）
+var TOUCHED = [
+  {},
+  { b:1, f:1 },
+  { b:1, d:1, f:1 },
+  { b:1, d:1, f:1 },
+  { a:1, b:1, d:1, e:1, f:1 },
+  { a:1, b:1, c:1, d:1, e:1, f:1 },
+  { a:1, b:1, c:1, d:1, e:1, f:1 },
+  { a:1, b:1, c:1, d:1, e:1, f:1 },
+];
+var COMPS = [
+  '{a} {b} {c} {d} {e} {f}',
+  '{b,f} ｜ {a} {c} {d} {e}',
+  '{b,d,f} ｜ {a} {c} {e}',
+  '{b,d,f} ｜ {a} {c} {e}（舍弃后不变）',
+  '{b,d,f} ｜ {a,e} ｜ {c}',
+  '{b,d,f} ｜ {a,c,e}',
+  '{a,b,c,d,e,f}（全部连通）',
+  '{a,b,c,d,e,f}',
+];
+var SNAPS = [
+  { cls:'step', tag:'排队', count:0,
+    log:'10 条边已按权从小到大排队：5、6、7、9、10、11、12、14、18、20。Kruskal 规则：逐条考察，两端不在同一连通分量就加入，选满 n−1 = 5 条为止。' },
+  { cls:'ok', tag:'加入', count:1, ribbon:{k:1, ok:true},
+    log:'考察 (b,f) 权 5：b、f 互不连通 → 加入。分量：{b,f}。' },
+  { cls:'ok', tag:'加入', count:2, ribbon:{k:2, ok:true},
+    log:'考察 (b,d) 权 6：d 不在 {b,f} 里 → 加入。分量：{b,d,f}。' },
+  { cls:'miss', tag:'舍弃', count:3, ribbon:{k:3, ok:false},
+    log:'考察 (d,f) 权 7：d、f 已在同一分量，加入会成环 → 舍弃（它也占一个考察位，不能跳过）。' },
+  { cls:'ok', tag:'加入', count:4, ribbon:{k:4, ok:true},
+    log:'考察 (a,e) 权 9：a、e 互不连通 → 加入。分量：{b,d,f}｜{a,e}｜{c}。' },
+  { cls:'ok', tag:'加入', count:5, ribbon:{k:5, ok:true},
+    log:'考察 (c,e) 权 10：c 不在 {a,e} 里 → 加入。分量：{b,d,f}｜{a,c,e}。' },
+  { cls:'ok', tag:'加入', count:6, ribbon:{k:6, ok:true},
+    log:'考察 (b,e) 权 11：正好连通 {b,d,f} 与 {a,c,e} → 加入，选满 5 条边，算法结束。' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'依次加入：(b,f)→(b,d)→(a,e)→(c,e)→(b,e)，总权 5+6+9+10+11 = 41；权 12/14/18/20 的 4 条边不再考察 → 选 A。' },
 ];
 
-var edgeRow, noteLine;
-
-function drawEdges(cur, accepted, rejected){
-  edgeRow.innerHTML = '';
-  EDGES.forEach(function(ed, idx){
-    var col = AW.el('div', 'aw-col');
-    col.style.width = '64px';
-    var cls = '';
-    if(idx === cur){ cls = 'hit'; }
-    else if(accepted.indexOf(idx) >= 0){ cls = 'ok'; }
-    else if(rejected.indexOf(idx) >= 0){ cls = 'miss'; }
-    var b = AW.el('div', 'aw-box' + (cls ? ' ' + cls : ''), ed.e);
-    b.style.width = '64px';
-    b.style.fontSize = '14px';
-    col.appendChild(b);
-    col.appendChild(AW.el('div', 'aw-idx', '权' + ed.w));
-    edgeRow.appendChild(col);
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 640 380');
+  svg.setAttribute('class', 'ksvg');
+  var byId = {};
+  VTX.forEach(function(v){ byId[v.id] = v; });
+  // 边（线 + 权值标签）
+  EDGES.forEach(function(e, idx){
+    var A = byId[e.a], B = byId[e.b];
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'kedge');
+    g.dataset.idx = idx;
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    g.appendChild(ln);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', e.lx); t.setAttribute('y', e.ly);
+    t.setAttribute('class', 'wlabel');
+    t.textContent = e.w;
+    g.appendChild(t);
+    svg.appendChild(g);
   });
+  // 顶点
+  VTX.forEach(function(v){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'kvtx');
+    g.dataset.id = v.id;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', v.x); c.setAttribute('cy', v.y); c.setAttribute('r', 22);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', v.x); t.setAttribute('y', v.y);
+    t.textContent = v.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  // 边权排序条
+  var chips = AW.el('div', 'kechips');
+  EDGES.forEach(function(e, idx){
+    var chip = AW.el('span', 'echip', '(' + e.a + ',' + e.b + ')<small> ' + e.w + '</small>');
+    chip.dataset.idx = idx;
+    chips.appendChild(chip);
+  });
+  stage.appendChild(chips);
+  var comps = AW.el('div', 'kcomps');
+  stage.appendChild(comps);
+  this._svg = svg; this._chips = chips; this._comps = comps;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var st = STATES[Math.min(i, STATES.length - 1)];
+  var STYLE = {
+    '':    { s:'#8ba3b0', w:2.5, o:.8,  d:'',      t:'#64748b' },
+    'cur': { s:'#d97706', w:5,   o:1,   d:'',      t:'#d97706' },
+    'ok':  { s:'#16a34a', w:4.5, o:1,   d:'',      t:'#15803d' },
+    'miss':{ s:'#dc2626', w:3,   o:.8,  d:'7 5',   t:'#b91c1c' },
+    'dim': { s:'#cbd5e1', w:2.5, o:.45, d:'',      t:'#cbd5e1' },
+  };
+  [].forEach.call(svg.querySelectorAll('.kedge'), function(g){
+    var s = STYLE[st[+g.dataset.idx] || ''];
+    var ln = g.querySelector('line');
+    ln.style.stroke = s.s; ln.style.strokeWidth = s.w + 'px';
+    ln.style.strokeDasharray = s.d; ln.style.opacity = s.o;
+    g.querySelector('.wlabel').style.fill = s.t;
+  });
+  var touched = TOUCHED[Math.min(i, TOUCHED.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.kvtx'), function(g){
+    g.classList.toggle('touched', !!touched[g.dataset.id]);
+  });
+  [].forEach.call(this._chips.children, function(chip){
+    chip.className = 'echip' + (st[+chip.dataset.idx] ? ' ' + st[+chip.dataset.idx] : '');
+  });
+  var acc = [];
+  st.forEach(function(s, idx){ if(s === 'ok') acc.push('(' + EDGES[idx].a + ',' + EDGES[idx].b + ')'); });
+  var wsum = 0;
+  EDGES.forEach(function(e, idx){ if(st[idx] === 'ok') wsum += e.w; });
+  this._comps.innerHTML = '当前连通分量：<code>' + COMPS[Math.min(i, COMPS.length - 1)] + '</code>' +
+    (acc.length ? '<br>已加入：' + acc.join(' → ') + '　总权值 <code>' + wsum + '</code>' : '');
 }
 
 AW.init({
-  title: 'Kruskal 算法求最小生成树：边是怎么加进去的？',
-  subtitle: '无向图 G，6 个顶点 · <b>按权从小到大</b>考察各边，不成环就加入，选满 n−1 = 5 条边',
-  counterLabel: '已考察',
+  title: '2020-07 Kruskal 最小生成树 · 依次加边的顺序',
+  subtitle: '无向图 G（6 个顶点 · 10 条边，与题图一致）：<b>按权从小到大</b>考察每条边，不成环就加入，选满 n−1 = 5 条边即停',
+  counterLabel: '已考察边数',
   ribbonTitle: '考察序号（✓ 加入 / ✗ 成环舍弃）',
-  intro: '点击「▶ 播放」逐步考察每条边。',
-
-  build: function(stage){
-    stage.innerHTML = '';
-    var wrap = AW.el('div', 'aw-scroll');
-    var inner = AW.el('div', '');
-    inner.appendChild(AW.el('div', 'aw-row-label', '<b>边按权升序排列</b>（绿 = 已加入生成树，红 = 成环舍弃，琥珀 = 正在考察）'));
-    edgeRow = AW.el('div', 'aw-cells');
-    inner.appendChild(edgeRow);
-    noteLine = AW.el('div', 'aw-row-label', '');
-    noteLine.style.marginTop = '14px';
-    inner.appendChild(noteLine);
-    wrap.appendChild(inner);
-    stage.appendChild(wrap);
-  },
-
-  snaps: [
-    { cls:'step', tag:'排序', log:'先把 10 条边按权升序排列。n=6，需要选出 5 条边且不成环。', count:0 },
-    { cls:'ok',   tag:'加入', log:'第 1 条 (b,f) 权 5：b、f 互不连通 → 加入。分量：{b,f}。', count:1, ribbon:{k:1, ok:true} },
-    { cls:'ok',   tag:'加入', log:'第 2 条 (b,d) 权 6：d 不在 {b,f} 中 → 加入。分量：{b,d,f}。', count:2, ribbon:{k:2, ok:true} },
-    { cls:'miss', tag:'舍弃', log:'第 3 条 (d,f) 权 7：d、f 已在同一分量，加入会成环 → 舍弃。', count:3, ribbon:{k:3, ok:false} },
-    { cls:'ok',   tag:'加入', log:'第 4 条 (a,e) 权 9：a、e 尚未连通 → 加入。分量：{a,e}。', count:4, ribbon:{k:4, ok:true} },
-    { cls:'ok',   tag:'加入', log:'第 5 条 (c,e) 权 10：c 不在 {a,e} 中 → 加入。分量：{a,c,e}。', count:5, ribbon:{k:5, ok:true} },
-    { cls:'ok',   tag:'加入', log:'第 6 条 (b,e) 权 11：连通 {a,c,e} 与 {b,d,f} → 加入，6 个顶点全部连通，已选 5 条边，算法结束。', count:6, ribbon:{k:6, ok:true} },
-    { cls:'done', tag:'完成', log:'依次加入：(b,f), (b,d), (a,e), (c,e), (b,e)，总权 5+6+9+10+11 = 41 → 选 A。', count:6, done:true },
-  ],
-
-  render: function(stage, sn, i){
-    var accepted = [], rejected = [], cur = -1;
-    if(i >= 1){ accepted = [0]; }
-    if(i >= 2){ accepted = [0, 1]; }
-    if(i >= 3){ rejected = [2]; }
-    if(i >= 4){ accepted = [0, 1, 3]; }
-    if(i >= 5){ accepted = [0, 1, 3, 4]; }
-    if(i >= 6){ accepted = [0, 1, 3, 4, 5]; }
-    if(i <= 6){ cur = i - 1; }
-    drawEdges(cur, accepted, rejected);
-
-    var comps = '尚未开始';
-    if(i === 0){ comps = '每个顶点各自一个分量：{a} {b} {c} {d} {e} {f}'; }
-    else if(i === 1){ comps = '{b,f} | {a} {c} {d} {e}'; }
-    else if(i === 2){ comps = '{b,d,f} | {a} {c} {e}'; }
-    else if(i === 3){ comps = '{b,d,f} | {a} {c} {e}（(d,f) 舍弃后不变）'; }
-    else if(i === 4){ comps = '{b,d,f} | {a,e} | {c}'; }
-    else if(i === 5){ comps = '{b,d,f} | {a,c,e}'; }
-    else if(i >= 6){ comps = '{a,b,c,d,e,f}（全部连通）'; }
-
-    var picked = '';
-    if(i >= 1){
-      var names = [];
-      accepted.forEach(function(k){ names.push('(' + EDGES[k].e + ')'); });
-      picked = '<br>已加入的边：' + names.join(' → ');
-    }
-    noteLine.innerHTML = '<b>当前连通分量：</b>' + comps + picked;
-  },
-
+  intro: '点击「▶ 播放」逐条考察边，看最小生成树怎么长出来。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '(b,f), (b,d), (a,e), (c,e), (b,e)',
-    html: '<b>答案选 A。</b>Kruskal 三步：<b>按权排序 → 逐边考察（并查集判环）→ 选满 5 条边</b>。注意 (d,f)=7 排在 (a,e)=9 之前，虽成环被舍弃也占一个考察位；选项 B 的边集相同但把 (b,e)=11 提前了，违反按权加入的次序。总权值 <code>5+6+9+10+11=41</code>。',
+    big: '(b,f), (b,d), (a,e), (c,e), (b,e)　→ 选 A',
+    html: 'Kruskal 三步走：<b>边按权升序排列 → 逐边考察（两端已连通则舍弃）→ 选满 n−1 = 5 条</b>。易错点：<b>(d,f)=7</b> 排在 (a,e)=9 之前，虽因成环被舍弃也占一个考察位，不能跳过；选项 B 边集相同但把 (b,e)=11 提到 (a,e)、(c,e) 之前，违反按权次序。总权值 <code>5+6+9+10+11 = 41</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
+<script>/* aw-ok */</script>
 </body>
 </html>

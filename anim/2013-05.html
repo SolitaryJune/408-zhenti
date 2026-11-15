@@ -2,72 +2,201 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2013-05 后序线索二叉树：叶结点的右线索</title>
+<title>2013-05 后序线索二叉树 · 叶结点 X 的右线索</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .thd-svg{width:100%;max-width:600px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .notrans *{transition:none!important}
+  .thd-svg .tedge{stroke:#5a7d8c;stroke-width:2.5px}
+  .thd-svg .tnode circle{fill:#1b3a4b;transition:fill .3s}
+  .thd-svg .tnode text{fill:#fff;font-weight:800;font-size:15px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .thd-svg .tnode.x circle{fill:#16a34a}
+  .thd-svg .tnode.y circle{fill:#2563eb}
+  .thd-svg .tnode.hot circle{fill:#e07a2f}
+  .thd-svg .thread{fill:none;stroke:#e63946;stroke-width:2.5px;stroke-dasharray:7 5;
+    opacity:0;transition:opacity .45s}
+  .thd-svg .thread.show{opacity:1}
+  .thd-svg .tlabel{font-size:12px;font-weight:700;fill:#e63946;text-anchor:middle;
+    opacity:0;transition:opacity .45s}
+  .thd-svg .tlabel.show{opacity:1}
+  .thd-svg .rolecap{font-size:11px;font-weight:700;fill:#64748b;text-anchor:middle}
+  .seqwrap{margin-top:12px;display:flex;justify-content:center}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 模板：anim_concept_template.html（概念/分析类），只改 AW.init 区域 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2013-05 后序线索二叉树（SVG 结构演示） ==================
+ * 题：X 是后序线索二叉树的叶结点且存在左兄弟 Y，求 X 的右线索指向。
+ * 演示树：A(B(D(·,F), E=X), C)——X=E 是叶，其左兄弟 Y=D。
+ * 后序序列：F D E B C A。X 的左线索 → 前驱 D(=Y)；右线索 → 后继 B(=父结点)。选 A。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n + '</span>' + title + '</h4>' + body + '</div>';
-}
-
-// 反例小树（pre 等宽）：父 P，左孩子 Y（带子树），右孩子 X（叶）
-var TREE =
-'<pre style="background:#f8fafc;padding:12px;border-radius:10px;font-family:Menlo,monospace;font-size:14px;line-height:1.55;margin-top:8px">'
-+ '      父 P\n'
-+ '     /    \\\n'
-+ '   <span style="color:#2563eb;font-weight:700">Y(左孩子)</span>  <span style="color:#16a34a;font-weight:700">X(叶)</span>\n'
-+ '   /  \\\n'
-+ ' Y的左  Y的右\n'
-+ '</pre>';
-
-var STEPS = [
-  { title: '审题眼：X 的位置关系', cls: 'key',
-    body: '<p>X 是<b>叶结点</b>且存在<b>左兄弟 Y</b> → 父结点有两个孩子：<b>Y 是左孩子、X 是右孩子</b>。X 没有任何孩子，左右指针均为空，都可用于存放线索。</p>' + TREE },
-  { title: '后序规则：左右根', cls: '',
-    body: '<p>后序遍历顺序：<b>左子树 → 右子树 → 根</b>。于是 Y 整棵子树（含 Y 自己）都在 X 之前访问完，然后访问 X，最后访问父结点。</p>' },
-  { title: 'X 的前驱是谁（左线索）', cls: '',
-    body: '<p>后序中子树的根最后访问：Y 子树最后被访问的结点就是 <b>Y 本身</b>。所以 X 的<b>前驱 = 左兄弟 Y</b>，填在 X 的<b>左线索</b>里。</p>' },
-  { title: 'X 的后继是谁（右线索）', cls: 'good',
-    body: '<p>访问 X 时：父的左子树已全部访问完，X 是父的<b>最后一个孩子</b> → 下一个访问的就是<b>父结点</b>。X 的右指针为空，正好填入后继 → <b>右线索指向 X 的父结点</b>，选 A。</p>' },
-  { title: '逐项排除 B', cls: 'bad',
-    body: '<p>B（以 Y 为根的子树的最左下结点）：它是后序中 Y 子树<b>最先</b>访问的结点，在 X 之前很早就出现，绝不可能是 X 的后继。</p>' },
-  { title: '逐项排除 C、D', cls: 'bad',
-    body: '<p>C（Y 本身）：Y 是 X 的<b>前驱</b>，填的是左线索——左右颠倒。</p>'
-        + '<p>D（Y 子树的最右下结点）：后序中 Y 子树最后访问的是根 Y；最右下结点若存在必在 Y 之前访问，也在 X 之前。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>X 的右线索指向 <b>X 的父结点</b>，选 <b>A</b>。</p>'
-        + '<p>记忆锚点：<b>后序中"父的右孩子（叶）"的下一个访问者就是父结点</b>；左兄弟 Y 是它的前驱（左线索）。</p>' }
+var POS = {
+  A: { x:300, y:45 },  B: { x:180, y:140 }, C: { x:430, y:140 },
+  D: { x:100, y:235 }, E: { x:255, y:235 }, F: { x:170, y:330 },
+};
+var EDGES = [ ['A','B'], ['A','C'], ['B','D'], ['B','E'], ['D','F'] ];
+/* 后序序列格子每步的类（F D E B C A） */
+var SEQ_STEPS = [
+  ['', '', '', '', '', ''],
+  ['', '', 'hit', '', '', ''],
+  ['dim', 'hit', 'hit', 'ok', '', ''],
+  ['dim', 'hit', 'hit', 'ok', '', ''],
+  ['dim', 'hit', 'hit', 'ok', '', ''],
+  ['dim', 'hit', 'hit', 'ok', '', ''],
+  ['dim', 'hit', 'hit', 'ok', '', ''],
+  ['dim', '', 'ok', 'ok', '', ''],
+];
+var FORMULAS = [
+  'X = E（叶，绿色）· Y = D（左兄弟，蓝色）· 父结点 = B',
+  '后序（左右根）：F → D → E → B → C → A',
+  '叶结点左右指针空 → 存前驱 / 后继：E 的前驱是 D，后继是 B',
+  '左线索：E → D（前驱 = 左兄弟 Y）',
+  '右线索：E → B（后继）—— <b>恰为父结点！</b>',
+  'C 选项（指 Y）：Y 是前驱，不是后继',
+  'B/D 选项（Y 子树最左下/最右下）：后序里 Y 子树最后访问的是 Y 自己',
+  'X 的右线索指向 <b>X 的父结点</b> → 选 A',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 560 380');
+  svg.setAttribute('class', 'thd-svg');
+  var defs = document.createElementNS(svgNS, 'defs');
+  var marker = document.createElementNS(svgNS, 'marker');
+  marker.setAttribute('id', 'thdArrow');
+  marker.setAttribute('viewBox', '0 0 10 10');
+  marker.setAttribute('refX', 8); marker.setAttribute('refY', 5);
+  marker.setAttribute('markerWidth', 7); marker.setAttribute('markerHeight', 7);
+  marker.setAttribute('orient', 'auto-start-reverse');
+  var mp = document.createElementNS(svgNS, 'path');
+  mp.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+  mp.setAttribute('fill', '#e63946');
+  marker.appendChild(mp);
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+  this._edges = []; this._nodes = {};
+  EDGES.forEach(function(e){
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', POS[e[0]].x); ln.setAttribute('y1', POS[e[0]].y);
+    ln.setAttribute('x2', POS[e[1]].x); ln.setAttribute('y2', POS[e[1]].y);
+    ln.setAttribute('class', 'tedge');
+    this._edges.push(ln);
+    svg.appendChild(ln);
+  }, this);
+  /* 两条线索（虚线箭头）：E→D 左线索（步 3 出现），E→B 右线索（步 4 出现） */
+  var th1 = document.createElementNS(svgNS, 'path');
+  th1.setAttribute('d', 'M 234 252 C 190 290, 130 288, 96 254');
+  th1.setAttribute('marker-end', 'url(#thdArrow)');
+  th1.setAttribute('class', 'thread');
+  th1.dataset.show = 3;
+  var lb1 = document.createElementNS(svgNS, 'text');
+  lb1.setAttribute('x', 165); lb1.setAttribute('y', 302);
+  lb1.setAttribute('class', 'tlabel');
+  lb1.textContent = '左线索 → 前驱 D';
+  lb1.dataset.show = 3;
+  var th2 = document.createElementNS(svgNS, 'path');
+  th2.setAttribute('d', 'M 268 212 C 285 175, 270 160, 226 152');
+  th2.setAttribute('marker-end', 'url(#thdArrow)');
+  th2.setAttribute('class', 'thread');
+  th2.dataset.show = 4;
+  var lb2 = document.createElementNS(svgNS, 'text');
+  lb2.setAttribute('x', 330); lb2.setAttribute('y', 178);
+  lb2.setAttribute('class', 'tlabel');
+  lb2.textContent = '右线索 → 后继 B（父）';
+  lb2.dataset.show = 4;
+  this._threads = [th1, th2]; this._tlabels = [lb1, lb2];
+  svg.appendChild(th1); svg.appendChild(th2);
+  svg.appendChild(lb1); svg.appendChild(lb2);
+  var ROLES = { A:'根', B:'父结点', D:'Y（左兄弟）', E:'X（叶）' };
+  Object.keys(POS).forEach(function(k){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'tnode' + (k === 'E' ? ' x' : '') + (k === 'D' ? ' y' : ''));
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', POS[k].x); c.setAttribute('cy', POS[k].y); c.setAttribute('r', 20);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', POS[k].x); t.setAttribute('y', POS[k].y);
+    t.textContent = k;
+    g.appendChild(c); g.appendChild(t);
+    this._nodes[k] = g;
+    svg.appendChild(g);
+    if (ROLES[k]){
+      var cap = document.createElementNS(svgNS, 'text');
+      cap.setAttribute('x', POS[k].x);
+      cap.setAttribute('y', POS[k].y - 30);
+      cap.setAttribute('class', 'rolecap');
+      cap.textContent = ROLES[k];
+      svg.appendChild(cap);
+    }
+  }, this);
+  stage.appendChild(svg);
+  var seqWrap = AW.el('div', 'seqwrap');
+  this._seqRow = AW.cellRow(['F', 'D', 'E', 'B', 'C', 'A'], ['', '', '', '', '', ''], null, 1);
+  seqWrap.appendChild(this._seqRow);
+  stage.appendChild(seqWrap);
+  var seqCap = AW.el('div', 'aw-row-label', '<div style="text-align:center">后序遍历序列（上方为步骤、下方为序号）</div>');
+  stage.appendChild(seqCap);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var self = this;
+  var st = SEQ_STEPS[Math.min(i, SEQ_STEPS.length - 1)];
+  [].forEach.call(this._seqRow.children, function(col, j){
+    var box = col.children[1];
+    box.className = 'aw-box' + (st[j] ? ' ' + st[j] : '');
+  });
+  [].forEach.call(this._svg.querySelectorAll('.thread, .tlabel'), function(el){
+    el.classList.toggle('show', i >= +el.dataset.show);
+  });
+  this._nodes.E.classList.toggle('hot', i >= 1 && i <= 4);
+  this._formulaBox.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'认图', count:0,
+    log:'演示树：A(B(D(·,F), E), C)。题设 X = E（绿，叶结点），它存在左兄弟 Y = D（蓝）——即 X 是父结点 B 的右孩子。X 没有孩子 → 左右指针都空着，可存放线索。' },
+  { cls:'step', tag:'写后序序列', count:1,
+    log:'后序 = 左右根：先 D 的子树（F, D），再 X=E，然后父 B，再右子树 C，最后根 A → 序列 F → D → E → B → C → A（E 已高亮）。' },
+  { cls:'step', tag:'线索规则', count:2, ribbon:{k:1, ok:true},
+    log:'叶结点 E 的左、右指针均为空 → 分别存放「前驱」「后继」。序列里 E 的前一位是 D（前驱），后一位是 B（后继）。' },
+  { cls:'ok', tag:'左线索 → 前驱', count:3,
+    log:'画左线索：E → D（红色虚线①）。D 恰是左兄弟 Y —— 注意：这是<b>左</b>线索，填的是前驱。' },
+  { cls:'ok', tag:'右线索 → 后继', count:4, ribbon:{k:2, ok:true},
+    log:'画右线索：E → B（红色虚线②）。E 的后继是父结点 B！原因：E 是父的最后一个孩子且为叶，父的整棵子树遍历到 E 就结束了，下一个访问的必然是父结点。' },
+  { cls:'miss', tag:'排除 C', count:5,
+    log:'选项 C「指向左兄弟 Y」：D 是 E 的前驱（存在左线索里），不是右线索存的后继 —— 左右颠倒。' },
+  { cls:'shift', tag:'排除 B / D', count:6,
+    log:'选项 B「Y 子树的最左下结点」、D「最右下结点」：后序中 Y 子树<b>最后</b>被访问的是 Y 自己（子树根最后访问），其余结点都在 E 之前 —— 那两个位置是先序/中序线索化的找法。' },
+  { cls:'done', tag:'完成', count:7, done:true,
+    log:'X 的右线索指向 X 的父结点 → 选 A。' },
+];
 
 AW.init({
-  title: '后序线索二叉树：叶结点 X 的右线索指向谁（2013-05）',
-  subtitle: 'X 为叶 · 存在左兄弟 Y · 按后序「左右根」逐步推后继',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2013-05 后序线索二叉树：叶结点 X 的右线索',
+  subtitle: 'X 为叶且存在左兄弟 Y ⇒ X 是父的<b>右孩子</b> · 演示树 <code>A(B(D(·,F), E), C)</code>，X=E、Y=D',
+  counterLabel: '推理步',
+  ribbonTitle: '关键结论（✓）',
+  intro: '点击「▶ 播放」：先写后序序列，再逐条画出 X 的左右线索。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 A：X 的父结点',
-    html: 'X 是父的<b>右孩子（叶）</b>，后序访问完 X 后紧接着访问的就是<b>父结点</b> → 右线索指向父结点。<br>干扰项根源：<b>Y 是前驱不是后继</b>（左右线索别搞反）；Y 子树的任何结点都在 X 之前访问。'
-  }
+    html: 'X 是父的<b>右孩子（叶）</b>：后序访问完 X 后，紧接着访问的就是<b>父结点</b> → 右线索指向父结点；左线索指向左兄弟 Y（前驱）。<br>' +
+      '干扰项：C 把前驱当后继（左右颠倒）；B/D 是先序/中序的找法——后序里 Y 子树的所有结点都在 X <b>之前</b>访问，最左下/最右下都不可能是后继。<br>' +
+      '记忆锚点：<code>后序中"父的右孩子（叶）"的后继 = 父结点</code>。',
+  },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

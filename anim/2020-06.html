@@ -2,78 +2,247 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2020-06 DFS 退出递归输出 ⇒ 逆拓扑序列 动画</title>
+<title>2020-06 退出递归时输出的 DFS · 逆拓扑序列动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .dfs-svg{width:100%;max-width:560px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .dfs-svg .dedge{transition:stroke .3s, stroke-width .3s}
+  .dfs-svg .dnode circle{transition:fill .3s, stroke .3s}
+  .dfs-svg .dnode text{font-weight:800;font-size:16px;text-anchor:middle;dominant-baseline:central;
+    transition:fill .3s}
+  .dfs-svg .dnode.norm circle{fill:#ffffff;stroke:#94a3b8;stroke-width:2.5}
+  .dfs-svg .dnode.norm text{fill:#0f172a}
+  .dfs-svg .dnode.stk circle{fill:#dbeafe;stroke:#2563eb;stroke-width:3}
+  .dfs-svg .dnode.stk text{fill:#1d4ed8}
+  .dfs-svg .dnode.cur circle{fill:#e07a2f;stroke:#e07a2f;stroke-width:3}
+  .dfs-svg .dnode.cur text{fill:#fff}
+  .dfs-svg .dnode.good circle{fill:#16a34a;stroke:#16a34a;stroke-width:2.5}
+  .dfs-svg .dnode.good text{fill:#fff}
+  .dstack{margin-top:10px;text-align:center;font-size:14px;font-weight:700;color:#1b3a4b}
+  .dstack code{background:#dbeafe;padding:2px 8px;border-radius:6px;color:#1d4ed8}
+  .dseq{margin-top:10px}
+  .dseq .cap{font-size:13px;color:#64748b;margin-bottom:4px}
+  .dseq .row{display:flex;gap:4px;width:max-content}
+  .dseq .col{width:44px;display:flex;flex-direction:column;align-items:center}
+  .dseq .box{width:44px;height:44px;border:2px solid #cbd5e1;border-radius:10px;display:flex;
+    align-items:center;justify-content:center;font-weight:800;font-size:18px;background:#fff;
+    font-family:"SF Mono",Menlo,monospace}
+  .dseq .box.ok{background:#dcfce7;border-color:#16a34a;color:#14532d}
+  .dseq .box.hit{background:#16a34a;border-color:#16a34a;color:#fff;animation:aw-pop .45s ease}
+  .dseq .box.dimc{opacity:.45}
+  .dseq .idx{margin-top:4px;font-size:11px;color:#94a3b8;font-family:monospace}
+  .dchk{margin-top:10px;text-align:center;font-size:13.5px;line-height:1.8;color:#334155;
+    background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px}
+  .dchk b{color:#15803d}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     2020-06 概念/推理链：修改版 DFS（退出递归前输出）遍历 DAG 的输出序列性质
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2020-06 修改版 DFS 遍历 DAG（SVG） ==================
+ * 题：把递归 DFS 的输出语句移到「退出递归前」，遍历有向无环图 G 且输出全部顶点，
+ *     输出序列是什么？（答案 B：逆拓扑有序序列）
+ * 演示：在示例 DAG（A→B、A→C、B→D、C→D、D→E）上跑修改版 DFS，
+ *     看输出序列如何"从最深处"长出来，再逐边验证逆拓扑性质。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+var NP = { A:[80,95], B:[200,45], C:[200,145], D:[330,95], E:[450,95] };
+var EDGES = [ ['A','B'], ['A','C'], ['B','D'], ['C','D'], ['D','E'] ];
+
+function el2(svgNS, tag, attrs){
+  var e = document.createElementNS(svgNS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function arrowPts(x1, y1, x2, y2){
+  var ang = Math.atan2(y2 - y1, x2 - x1), L = 9, W = 6.5;
+  return x2 + ',' + y2 + ' ' +
+    (x2 - L*Math.cos(ang) + W*Math.sin(ang)) + ',' + (y2 - L*Math.sin(ang) - W*Math.cos(ang)) + ' ' +
+    (x2 - L*Math.cos(ang) - W*Math.sin(ang)) + ',' + (y2 - L*Math.sin(ang) + W*Math.cos(ang));
 }
 
-var STEPS = [
-  { title: '审题眼：输出时机被改了',
-    cls: 'key',
-    body: '<p>题干两个关键条件：<code>输出语句移到退出递归前</code> + <code>有向无环图 G</code>，且输出包含全部顶点。</p>' +
-          '<p>原版 DFS 在<b>第一次到达顶点</b>时输出；修改后，顶点要等<b>退出递归</b>时才输出。考点：DFS 递归完成顺序与拓扑序的关系。</p>' },
-  { title: '正常 DFS 输出的是什么',
-    cls: 'bad',
-    body: '<p>标准 DFS 在进入顶点时输出，得到的是<b>DFS 序列</b>——它取决于邻接点次序，与拓扑序没有必然关系。所以选项 D 不对：输出时机一改，就不是标准 DFS 序列了。</p>' },
-  { title: '修改后：谁先被输出？',
-    cls: 'key',
-    body: '<p>顶点 v 的输出发生在<b>它的所有邻接点递归都返回之后</b>。也就是说：当 v 被输出时，v 能直接或间接到达的顶点<b>全都已经被输出</b>。</p>' +
-          '<p>（无环保证递归不会绕回 v，v 才能安心等到最后。）</p>' },
-  { title: '对每条边 v→w 排序意味着什么',
-    cls: 'good',
-    body: '<p>取任意一条边 <code>v→w</code>：DFS 从 v 走到 w，w 先递归完、先退出 → <b>w 排在 v 前面</b>。</p>' +
-          '<p>于是整个输出序列满足：<b>每条边都从后面的顶点指向前面的顶点</b>。</p>' },
-  { title: '排除干扰项 A（拓扑序）',
-    cls: 'bad',
-    body: '<p>拓扑有序要求：对每条边 <code>v→w</code>，<b>v 排在 w 前面</b>。而我们的序列恰好相反——w 在前、v 在后。</p>' +
-          '<p>所以它是<b>逆</b>拓扑有序序列，不是拓扑有序序列，A 错。</p>' },
-  { title: '排除干扰项 C（BFS 序列）',
-    cls: 'bad',
-    body: '<p>广度优先搜索要用<b>队列</b>逐层扩展，而本题只修改了递归 DFS 的输出位置，与 BFS 无关，C 错。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>修改后的 DFS（退出递归时输出）遍历 DAG 且输出全部顶点 → 输出序列是 <b>逆拓扑有序序列</b>，选 <b>B</b>。</p>' +
-          '<p>记忆锚点：<b>DFS 退出时输出 = 逆拓扑；把退出序反过来打印 = 拓扑序</b>（这也是求拓扑序的经典实现）。</p>' },
+var snaps = [
+  { cls:'step',  tag:'读题', stack:[], out:[], count:0,
+    log:'修改版 DFS：输出语句从「进入顶点时」移到<b>「退出递归前」</b>。示例 DAG：A→B、A→C、B→D、C→D、D→E。规则预告：v 的输出要等它的所有邻接点递归都返回 → 输出 v 时，v 能到达的顶点已全部输出。从 A 开始。' },
+  { cls:'ok',    tag:'进入 A', stack:['A'], cur:'A', hot:[], out:[], count:0,
+    log:'DFS(A) 开始：先递归深入邻接点。A 暂不输出 —— 等它后面能到的顶点都出来再说。' },
+  { cls:'ok',    tag:'A→B', stack:['A','B'], cur:'B', hot:[0], out:[], count:0,
+    log:'沿 A→B 深入：DFS(B) 开始。递归栈：A → B。' },
+  { cls:'ok',    tag:'B→D', stack:['A','B','D'], cur:'D', hot:[0,2], out:[], count:0,
+    log:'沿 B→D 深入：DFS(D) 开始。递归栈：A → B → D。' },
+  { cls:'ok',    tag:'D→E', stack:['A','B','D','E'], cur:'E', hot:[0,2,4], out:[], count:0,
+    log:'沿 D→E 深入：DFS(E) 开始。E 没有出边 —— 递归到底了。' },
+  { cls:'ok',    tag:'输出 E', stack:['A','B','D'], done:[4], out:['E'], count:1, ribbon:{k:1, ok:true},
+    log:'E 无未访问邻接点 → <b>退出递归，此刻才输出 E</b>。第 1 个输出的是"最深"的顶点。序列：E。' },
+  { cls:'ok',    tag:'输出 D', stack:['A','B'], done:[4,2], out:['E','D'], count:2, ribbon:{k:2, ok:true},
+    log:'回到 D：它的邻接点 E 已处理完 → 退出递归，输出 D。序列：E D。' },
+  { cls:'ok',    tag:'输出 B', stack:['A'], done:[4,2,0], out:['E','D','B'], count:3, ribbon:{k:3, ok:true},
+    log:'回到 B：邻接点 D 已完 → 输出 B。序列：E D B。' },
+  { cls:'ok',    tag:'回 A 转 C', stack:['A','C'], cur:'C', hot:[1], done:[4,2,0], out:['E','D','B'], count:3,
+    log:'回到 A：下一个邻接点是 C → DFS(C) 开始（D 已访问过）。' },
+  { cls:'shift', tag:'C→D 已访问', stack:['A','C'], cur:'C', hot:[1], skip:[3], done:[4,2,0],
+    out:['E','D','B'], count:3,
+    log:'C→D：D 已经访问过（而且已在 E 之前输出），跳过。C 再无邻接点 → 准备退出递归。' },
+  { cls:'ok',    tag:'输出 C', stack:['A'], done:[4,2,0,1], skip:[3], out:['E','D','B','C'],
+    count:4, ribbon:{k:4, ok:true},
+    log:'退出 DFS(C) → 输出 C。序列：E D B C。注意：C 排在 D <b>之后</b> —— 恰与边 C→D 的方向相反。' },
+  { cls:'ok',    tag:'输出 A · 完毕', stack:[], done:[4,2,0,1], skip:[3], out:['E','D','B','C','A'],
+    count:5, ribbon:{k:5, ok:true},
+    log:'最后退出 DFS(A) → 输出 A。全部 5 个顶点输出完毕：<b>E D B C A</b>。' },
+  { cls:'step',  tag:'逆拓扑检验', stack:[], done:[4,2,0,1], skip:[3], out:['E','D','B','C','A'],
+    chk:'逐边验证「对每条边 v→w，w 排在 v 之前」：A→B（B 在前 ✓）· A→C（✓）· B→D（✓）· C→D（✓）· D→E（✓）—— <b>每条边都满足 → 逆拓扑有序序列</b>',
+    count:5,
+    log:'逐边验证「v→w 则 w 在 v 前」：A→B（B 在前 ✓）、A→C ✓、B→D ✓、C→D ✓、D→E ✓ —— 每条边都满足 → 输出序列是<b>逆拓扑有序序列</b>。' },
+  { cls:'shift', tag:'对比原版 DFS', stack:[], done:[4,2,0,1], skip:[3], out:['E','D','B','C','A'],
+    cmp:true,
+    chk:'若输出在「进入时」（原版 DFS）：序列 A B D E C —— 只是 DFS 序列：查 C→D，D 排在 C 前，连拓扑序都不是；查 D→E，D 排在 E 前，也不是逆拓扑序 → A、D 均不对；C（BFS）与本算法无关',
+    count:5,
+    log:'对比：若输出在「进入时」（原版 DFS），序列是 A B D E C —— 只是普通 DFS 序列：查 C→D：D 排在 C 前，<b>连拓扑序都不是</b>；查 D→E：D 排在 E 前，也不是逆拓扑序。A、D 都不对，C（BFS）与此无关。' },
+  { cls:'done',  tag:'结论', stack:[], done:[4,2,0,1], skip:[3], out:['E','D','B','C','A'],
+    chk:'结论：退出递归前输出 → 每条边 v→w 都有 w 在前 → <b>逆拓扑有序序列</b>；把退出序反过来打印 = 拓扑序（经典实现）',
+    count:5, done:true,
+    log:'输出时机在退出递归前 + 遍历 DAG + 输出全部顶点 → 输出序列是<b>逆拓扑有序序列</b> → 选 <b>B</b>。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    count: i + 1,
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var wrap = AW.el('div', 'aw-scroll');
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 530 190');
+  svg.setAttribute('class', 'dfs-svg');
+  EDGES.forEach(function(e, i){
+    var a = NP[e[0]], b = NP[e[1]];
+    var dx = b[0]-a[0], dy = b[1]-a[1], len = Math.sqrt(dx*dx + dy*dy);
+    var ux = dx/len, uy = dy/len, r = 24;
+    var sx = a[0] + ux*r, sy = a[1] + uy*r;
+    var ex = b[0] - ux*(r + 7), ey = b[1] - uy*(r + 7);
+    var ln = el2(svgNS, 'line', { x1:sx, y1:sy, x2:ex, y2:ey, stroke:'#cbd5e1', 'stroke-width':2 });
+    ln.setAttribute('class', 'dedge');
+    ln.id = 'de' + i;
+    svg.appendChild(ln);
+    var tri = el2(svgNS, 'polygon', { points:arrowPts(ex, ey, ex + ux*7, ey + uy*7), fill:'#cbd5e1' });
+    tri.id = 'dp' + i;
+    svg.appendChild(tri);
+  });
+  for (var name in NP){
+    var p = NP[name];
+    var g = el2(svgNS, 'g', {});
+    g.setAttribute('class', 'dnode norm');
+    g.id = 'dn' + name;
+    var c = el2(svgNS, 'circle', { cx:p[0], cy:p[1], r:24 });
+    var t = el2(svgNS, 'text', { x:p[0], y:p[1] });
+    t.textContent = name;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  }
+  wrap.appendChild(svg);
+  stage.appendChild(wrap);
+  var stackLine = AW.el('div', 'dstack');
+  stage.appendChild(stackLine);
+  var seqBox = AW.el('div', 'dseq');
+  seqBox.appendChild(AW.el('div', 'cap', '<b>输出序列</b>（退出递归时才输出）'));
+  var seqRow = AW.el('div', 'row');
+  seqRow.id = 'seqRow';
+  seqBox.appendChild(seqRow);
+  stage.appendChild(seqBox);
+  var cmpBox = AW.el('div', 'dseq');
+  cmpBox.id = 'cmpBox';
+  cmpBox.style.display = 'none';
+  cmpBox.appendChild(AW.el('div', 'cap', '对照：原版 DFS（<b>进入时</b>输出）的序列'));
+  var cmpRow = AW.el('div', 'row');
+  cmpRow.id = 'cmpRow';
+  cmpBox.appendChild(cmpRow);
+  stage.appendChild(cmpBox);
+  var chkLine = AW.el('div', 'dchk');
+  chkLine.style.display = 'none';
+  stage.appendChild(chkLine);
+  this._stackLine = stackLine; this._chkLine = chkLine;
+  this._cmpBox = cmpBox;
+}
+
+function edgeSet(list){
+  var m = {};
+  if (list) for (var i = 0; i < list.length; i++) m[list[i]] = 1;
+  return m;
+}
+
+function render(stage, sn, i){
+  var hot = edgeSet(sn.hot), skip = edgeSet(sn.skip), done = edgeSet(sn.done);
+  EDGES.forEach(function(e, k){
+    var col = '#cbd5e1', w = 2, dash = '';
+    if (done[k]){ col = '#16a34a'; w = 3; }
+    if (hot[k]){ col = '#d97706'; w = 3.5; }
+    if (skip[k]){ col = '#dc2626'; w = 2.5; dash = '6,4'; }
+    var ln = document.getElementById('de' + k);
+    ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', w);
+    ln.setAttribute('stroke-dasharray', dash);
+    document.getElementById('dp' + k).setAttribute('fill', col);
+  });
+  var inStack = {};
+  (sn.stack || []).forEach(function(n){ inStack[n] = 1; });
+  var outs = sn.out || [];
+  for (var name in NP){
+    var g = document.getElementById('dn' + name);
+    var cls = 'dnode ';
+    if (sn.cur === name) cls += 'cur';
+    else if (outs.indexOf(name) >= 0) cls += 'good';
+    else if (inStack[name]) cls += 'stk';
+    else cls += 'norm';
+    g.setAttribute('class', cls);
+  }
+  this._stackLine.innerHTML = sn.stack && sn.stack.length
+    ? '递归栈：<code>' + sn.stack.join(' → ') + '</code>'
+    : '递归栈：（空 —— 全部退出）';
+  // 输出序列行
+  var row = document.getElementById('seqRow');
+  var h = '';
+  if (!outs.length){
+    h = '<span style="font-size:12.5px;color:#94a3b8;align-self:center">（尚未输出，序列将随退出递归逐个长出）</span>';
+  } else {
+    outs.forEach(function(ch, k){
+      var cur = (k === outs.length - 1);
+      h += '<div class="col"><div class="box ' + (cur ? 'hit' : 'ok') + '">' + ch +
+           '</div><div class="idx">' + (k + 1) + '</div></div>';
+    });
+  }
+  row.innerHTML = h;
+  // 对照行（原版 DFS 进入时输出）
+  var cmpShow = !!sn.cmp;
+  this._cmpBox.style.display = cmpShow ? '' : 'none';
+  if (cmpShow){
+    var h2 = '';
+    ['A','B','D','E','C'].forEach(function(ch, k){
+      h2 += '<div class="col"><div class="box dimc">' + ch +
+            '</div><div class="idx">' + (k + 1) + '</div></div>';
+    });
+    document.getElementById('cmpRow').innerHTML = h2;
+  }
+  // 检验/结论行
+  if (sn.chk){
+    this._chkLine.style.display = '';
+    this._chkLine.innerHTML = sn.chk;
+  } else {
+    this._chkLine.style.display = 'none';
+  }
+}
 
 AW.init({
-  title: '退出递归才输出的 DFS，遍历 DAG 得到什么序列？',
-  subtitle: '考点：DFS 递归完成顺序 · 拓扑序与逆拓扑序 · 逐项推演',
-  counterLabel: '进度',
-  intro: '点击「▶ 播放」逐步展开推理链。',
+  title: '2020-06 退出递归时才输出的 DFS，遍历 DAG 得到什么序列？',
+  subtitle: '修改版 DFS（输出移到退出递归前）· 示例 DAG：A→B、A→C、B→D、C→D、D→E',
+  counterLabel: '已输出顶点数',
+  ribbonTitle: '输出序号',
+  intro: '点击「▶ 播放」看输出序列如何从"最深"的顶点开始长出来，再逐边验证它的拓扑性质。',
+  build: build,
+  render: render,
   snaps: snaps,
   result: {
-    big: '答案 B',
-    html: '<b>逆拓扑有序序列。</b>退出递归前输出 → 顶点输出时其所有可到达顶点均已输出 → 每条边 <code>v→w</code> 中 w 都排在 v 前面。干扰项：A 把方向想反（那才是拓扑序）；C 与队列式 BFS 无关；D 输出时机已变、不再是标准 DFS 序列。',
+    big: '答案 B（逆拓扑有序序列）',
+    html: '顶点 v 的输出发生在<b>它的所有邻接点递归都返回之后</b> → 输出 v 时，v 能到达的顶点已全部输出 → 对每条边 <code>v→w</code>，<b>w 都排在 v 前面</b>，即<b>逆拓扑有序序列</b>。' +
+      '对照：进入时输出的原版 DFS 得到的只是普通 DFS 序列（既非拓扑序也非逆拓扑序）；把退出序<b>反过来打印</b>才得到拓扑序 —— 这正是求拓扑序的经典实现。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

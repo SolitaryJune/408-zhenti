@@ -2,60 +2,149 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2011-04 完全二叉树的叶结点个数 · 推理动画</title>
+<title>2011-04 完全二叉树的叶结点个数 · 结构演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .cbt-svg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .cbt-svg .edge{stroke:#5a7d8c;stroke-width:2.5px}
+  .cbt-svg .node circle{transition:fill .35s, opacity .4s;stroke-width:2.5px;stroke:#1b3a4b}
+  .cbt-svg .node text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:16px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:fill .35s}
+  .cbt-svg .node.plain circle{fill:#94a3b8;stroke:#64748b}
+  .cbt-svg .node.bran circle{fill:#1b3a4b;stroke:#0b1f2a}
+  .cbt-svg .node.leaf circle{fill:#16a34a;stroke:#14532d}
+  .cbt-svg .node.deg1 circle{fill:#e07a2f;stroke:#9a3412}
+  .cbt-svg .deg1lbl{font-size:12px;font-weight:800;fill:#c2410c;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace;transition:opacity .4s}
+  .cbt-svg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+  .hformula .keyf{color:#e63946}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2011-04 完全二叉树叶子数（SVG 结构演示） ==================
+ * 题：完全二叉树共 768 个结点，求叶结点数。（答案 C = 384）
+ * 演示：先用 n=6 的小完全二叉树看清"编号→角色"与"n₁ 只能 0/1"，
+ *       再推广到 768：n 偶 ⇒ n₁=1 ⇒ n₀ = n₂+1 ⇒ 384。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼', cls: 'key',
-    body: '<p>完全二叉树共 <b>768</b> 个结点，求叶结点数 n₀。备好两条结论：<b>n₀ = n₂ + 1</b>（叶子 = 度 2 结点数 + 1）；完全二叉树中 n₁（度 1 结点）<b>只能取 0 或 1</b>。</p>' },
-  { title: '列方程', cls: '',
-    body: '<p>三度归一：n = n₀ + n₁ + n₂ = 768。代入 n₀ = n₂ + 1，得 <code>2·n₂ + n₁ + 1 = 768</code>。</p>' },
-  { title: '奇偶性定 n₁', cls: '',
-    body: '<p>2·n₂ + 1 恒为奇数；要凑出偶数 768，n₁ 必须 = <b>1</b>。（若 n₁ = 0，方程无整数解——这就是完全二叉树「偶数个结点必有 1 个度 1 结点」的原因。）</p>' },
-  { title: '解出 n₂ 与 n₀', cls: 'good',
-    body: '<p>n₁ = 1 ⇒ 2·n₂ = 766 ⇒ <b>n₂ = 383</b>，<b>n₀ = n₂ + 1 = 384</b>。</p>' },
-  { title: '编号法验证', cls: 'good',
-    body: '<p>完全二叉树按层编号，叶子恰为编号 <b>⌊n/2⌋+1 … n</b> 的结点：⌊768/2⌋+1 = 385，编号 385~768 全是叶子，共 <b>768 − 384 = 384</b> 个 ✓。最后一个分支结点 384 号只有左孩子（768 号），没有右孩子（769 号不存在）——正是 n₁ = 1 的样子。</p>' },
-  { title: '排除干扰项', cls: 'bad',
-    body: '<p><b>D（385）</b>：把 384 号分支结点也数成叶子，差 1；<b>A、B（257/258）</b>：奇偶判断错、方程配错凑出来的数。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>叶结点 <b>384</b> 个，答案选 <b>C</b>。记忆锚点：n 的奇偶定 n₁（偶 ⇒ n₁ = 1），再用 n₀ = n₂ + 1；或直接「叶子 = 编号 ⌊n/2⌋+1 … n」。</p>' },
+var NODES = [
+  { id:'1', x:310, y:45,  step:0 },
+  { id:'2', x:180, y:130, step:0 },
+  { id:'3', x:460, y:130, step:0 },
+  { id:'4', x:120, y:215, step:0 },
+  { id:'5', x:240, y:215, step:0 },
+  { id:'6', x:410, y:215, step:0 },   /* 6 号是 3 号的左孩子（完全二叉树形状） */
+];
+var EDGES = [
+  { a:'1', b:'2' }, { a:'1', b:'3' },
+  { a:'2', b:'4' }, { a:'2', b:'5' },
+  { a:'3', b:'6' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
-    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 265');
+  svg.setAttribute('class', 'cbt-svg');
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'edge');
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node plain');
+    g.dataset.id = n.id;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  /* 3 号结点旁的"只有左孩子"标注 */
+  var lb = document.createElementNS(svgNS, 'text');
+  lb.setAttribute('x', 520); lb.setAttribute('y', 130);
+  lb.setAttribute('class', 'deg1lbl hidden-el'); lb.dataset.step = 2;
+  lb.textContent = '3号：只有左孩子 → 度1';
+  svg.appendChild(lb);
+  stage.appendChild(svg);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('.node'), function(el){
+    el.classList.remove('bran', 'leaf', 'deg1');
+    el.classList.add('plain');
+    if (i >= 1) {                       /* 编号法定角色：≤⌊n/2⌋ 分支，>⌊n/2⌋ 叶子 */
+      var id = +el.dataset.id;
+      if (id <= 3) el.classList.add('bran'); else el.classList.add('leaf');
+    }
+    if (i >= 2 && el.dataset.id === '3') { el.classList.remove('bran'); el.classList.add('deg1'); }
+  });
+  [].forEach.call(svg.querySelectorAll('.deg1lbl'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  var formulas = [
+    '题：完全二叉树 n = <code>768</code>，求叶子数 n₀。先拿 n = 6 的小树看结构',
+    '编号法：编号 ≤ ⌊n/2⌋ 的是<b>分支结点</b>，编号 > ⌊n/2⌋ 的是<b>叶子</b>',
+    '数一数（n=6）：n₂ = 2（1、2号），n₁ = <b>1</b>（3号只有左孩子），n₀ = 3（4、5、6号）',
+    '推广：n = 768 为<b>偶数</b> ⇒ 最后一个结点是左孩子 ⇒ 它父结点只有左孩子 ⇒ <b>n₁ = 1</b>',
+    'n₀ + n₁ + n₂ = 768 且 n₀ = n₂ + 1 ⇒ 2n₂ + 2 = 768 ⇒ n₂ = 383 ⇒ <code class="keyf">n₀ = 384</code>',
+    '编号法验证：⌊768/2⌋ + 1 = 385 ⇒ 叶子 = 编号 385…768，共 <b>384</b> 个 ✓',
+    '排除：D(385) 把 384 号分支结点也数成叶子；A、B 是方程配错凑出的数',
+    'n₀ = <b>384</b>（选 C）',
+  ];
+  this._formulaBox.innerHTML = formulas[Math.min(i, formulas.length - 1)] || '';
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'完全二叉树共 768 个结点，求叶结点数。形状完全由 n 决定，先用 n=6 的小树看清结构规律。' },
+  { cls:'step', tag:'编号定角色', count:1,
+    log:'完全二叉树按层编号：编号 ≤ ⌊n/2⌋ 的是分支结点（1、2、3 号），编号 > ⌊n/2⌋ 的全是叶子（4、5、6 号）。' },
+  { cls:'step', tag:'数度数', count:2,
+    log:'1、2 号各有两个孩子（度2）；3 号只有左孩子 6 号——769 号不存在（度1）；4、5、6 号是叶子。n=6 时 n₀=3、n₁=1、n₂=2，合计 6 ✓。' },
+  { cls:'shift', tag:'奇偶定 n₁', count:3,
+    log:'推广到 768：n 是偶数 ⇒ 最后一个结点 768 号必是左孩子 ⇒ 它的父结点 384 号只有左孩子 ⇒ n₁ = 1（n 为奇数时 n₁ = 0）。' },
+  { cls:'ok', tag:'解方程', count:4,
+    log:'n₀ + n₁ + n₂ = 768，代入 n₁ = 1、n₀ = n₂ + 1：2n₂ + 2 = 768 ⇒ n₂ = 383 ⇒ n₀ = 384。' },
+  { cls:'ok', tag:'编号法验证', count:5,
+    log:'直接验证：叶子 = 编号 ⌊768/2⌋+1 = 385 … 768 的结点，共 768 − 384 = 384 个 ✓（384 号正是那个只有左孩子的结点）。' },
+  { cls:'miss', tag:'排除干扰', count:6,
+    log:'D(385)：把 384 号分支结点也数进叶子；A(257)、B(258)：n₁ 奇偶判断错、方程配错凑出的数。' },
+  { cls:'done', tag:'完成', count:7, done:true,
+    log:'叶结点 384 个，选 C。' },
+];
 
 AW.init({
   title: '2011-04 · 768 个结点的完全二叉树有多少叶子？',
-  subtitle: '考点 <code>n₀ = n₂ + 1</code> + 完全二叉树 n₁ ∈ {0, 1} · 推理链逐步展开',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  subtitle: '考点 <code>n₀ = n₂ + 1</code> ＋ 完全二叉树 n₁ ∈ {0,1} · 用 n=6 小树看清结构再推广到 768',
+  counterLabel: '演示步',
+  intro: '点击「▶ 播放」：先给小树按编号染色定位叶子，再看奇偶性如何锁定 n₁。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 C · 384 个叶子',
-    html: '2·n₂ + n₁ + 1 = 768，由奇偶性 <b>n₁ = 1</b> ⇒ n₂ = 383 ⇒ <b>n₀ = 384</b>。验证：叶子是编号 ⌊768/2⌋+1 = 385 … 768 的结点，恰好 384 个。D 的 385 是把最后的分支结点 384 号也数了进去。',
+    html: 'n = 768 是偶数 ⇒ n₁ = 1；由 n₀ = n₂ + 1 与 n₀ + n₂ = 767 解得 <b>n₂ = 383、n₀ = 384</b>。<br>' +
+      '快速验证：叶子 = 编号 ⌊n/2⌋+1 … n，即 385…768，恰好 <b>384</b> 个。记忆锚点：<code>完全二叉树叶子从 ⌊n/2⌋+1 号开始</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

@@ -2,65 +2,194 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2014-06 前缀编码判定动画</title>
+<title>2014-06 前缀编码判定 · 编码树演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .pfx-svg{width:100%;max-width:660px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .pfx-svg .cnode circle{transition:opacity .4s, fill .3s}
+  .pfx-svg .cnode.root circle{fill:#64748b}
+  .pfx-svg .cnode.internal circle{fill:#1b3a4b}
+  .pfx-svg .cnode.leaf circle{fill:#16a34a}
+  .pfx-svg .cnode.conf circle{fill:#dc2626}
+  .pfx-svg .cnode.ghost circle{fill:#fff;stroke:#dc2626;stroke-width:2.5px;stroke-dasharray:5 4}
+  .pfx-svg .cnode text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:14px;
+    fill:#fff;text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .pfx-svg .cnode.ghost text{fill:#dc2626}
+  .pfx-svg .ccode{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:12.5px;
+    fill:#15803d;text-anchor:middle;transition:opacity .4s}
+  .pfx-svg .cedge line{stroke:#5a7d8c;stroke-width:2.2px;transition:opacity .4s,stroke .3s}
+  .pfx-svg .cedge text{font-family:"SF Mono",Menlo,monospace;font-weight:800;font-size:13px;
+    fill:#33566b;text-anchor:middle;transition:opacity .4s}
+  .pfx-svg .cedge.conf line{stroke:#dc2626;stroke-width:3.6px}
+  .pfx-svg .cedge.conf text{fill:#dc2626}
+  .hidden-el{opacity:0}
+  .hchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center;min-height:34px}
+  .hchips .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:"SF Mono",Menlo,monospace;font-size:13.5px}
+  .hchips .qchip.ok{background:#16a34a1f;border-color:#16a34a;color:#15803d}
+  .hchips .qchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#b45309}
+  .hchips .qchip.bad{background:#fee2e2;border-color:#dc2626;color:#b91c1c}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9;min-height:28px}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- 概念/推理链类：逐选项两两比对找前缀冲突 -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2014-06 前缀编码判定动画（SVG 编码树） ==================
+ * 题：5 个字符 4 种编码方案，哪组不是前缀编码？（答案 D：110 是 1100 的前缀）
+ * 演示：A/B/C 快速排除 → 把 D 组码字逐个插入二叉编码树，插入 1100 时撞上叶子 110 → 冲突。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+var TNODES = [
+  { id:'root', x:330, y:40,  bit:'根', kind:'root',     step:4 },
+  { id:'A',    x:110, y:130, bit:'0',  kind:'leaf',     step:5 },
+  { id:'B',    x:460, y:130, bit:'1',  kind:'internal', step:6 },
+  { id:'C',    x:360, y:220, bit:'0',  kind:'leaf',     step:6 },
+  { id:'D',    x:560, y:220, bit:'1',  kind:'internal', step:7 },
+  { id:'E',    x:500, y:310, bit:'0',  kind:'leaf',     step:7 },
+  { id:'F',    x:620, y:310, bit:'1',  kind:'internal', step:8 },
+  { id:'H',    x:620, y:400, bit:'1',  kind:'leaf',     step:8 },
+  { id:'G',    x:500, y:400, bit:'×',  kind:'ghost',    step:9 }
+];
+var TEDGES = [
+  { id:'rA', s:'root', t:'A', lb:'0', lx:205, ly:78,  step:5 },
+  { id:'rB', s:'root', t:'B', lb:'1', lx:400, ly:78,  step:6 },
+  { id:'BC', s:'B', t:'C', lb:'0', lx:352, ly:172, step:6 },
+  { id:'BD', s:'B', t:'D', lb:'1', lx:515, ly:172, step:7 },
+  { id:'DE', s:'D', t:'E', lb:'0', lx:522, ly:264, step:7 },
+  { id:'DF', s:'D', t:'F', lb:'1', lx:598, ly:264, step:8 },
+  { id:'FH', s:'F', t:'H', lb:'1', lx:643, ly:352, step:8 },
+  { id:'Eg', s:'E', t:'G', lb:'0', lx:477, ly:352, step:9 }
+];
+var CODELBL = [
+  { x:110, y:170, t:'码字 0',    step:5 },
+  { x:360, y:260, t:'码字 100',  step:6 },
+  { x:500, y:350, t:'码字 110',  step:7 },
+  { x:620, y:440, t:'码字 1110', step:8 }
+];
+var CONFPATH = ['rB','BD','DE'];
 
-var STEPS = [
-  { title: '审题眼：什么是前缀编码',
-    cls: 'key',
-    body: '<p>前缀编码：<b>任何一个编码都不是另一个编码的前缀</b>。译码时从左往右扫描无歧义（哈夫曼编码天然满足）。判别动作：<b>两两比对</b>，找"短码 = 某长码开头"的冲突对。</p>' },
-  { title: '检查 A：01, 0000, 0001, 001, 1',
-    cls: 'good',
-    body: '<p><code>0000 / 0001 / 001</code> 都以 00 开头、互不为前缀；<code>01</code> 不是任何码的开头；以 <code>1</code> 开头的只有 <code>1</code> 自己。<b>是前缀编码</b>（排除）。</p>' },
-  { title: '检查 B：011, 000, 001, 010, 1',
-    cls: 'good',
-    body: '<p>三个 3 位码 <code>000 / 001 / 010</code> 互不为前缀；<code>011</code> 与 <code>1</code> 也不做任何码的开头。<b>是前缀编码</b>（排除）。</p>' },
-  { title: '检查 C：000, 001, 010, 011, 100',
-    cls: 'good',
-    body: '<p>五个码<b>等长</b>（都是 3 位）。长度相同则谁也做不了谁的前缀，等长编码是前缀编码的特例。<b>是前缀编码</b>（排除）。</p>' },
-  { title: '检查 D：0, 100, 110, 1110, 1100',
-    cls: 'bad',
-    body: '<p>两两比对发现冲突：<code>110</code> 恰好是 <code>1100</code> 的<b>前 3 位</b>！码流 <code>1100…</code> 会被译码器在读完 <code>110</code> 时提前断字，产生歧义。<b>不是前缀编码</b>。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>D</b>。记忆锚点：判前缀编码 = 逐对找「短码是长码前缀」；等长编码天然安全。</p>' },
+var SNAPS = [
+  { cls:'step', tag:'审题', count:0,
+    log:'前缀编码：任何一个码字都不能是另一个码字的前缀（译码才无歧义）。结构化判定法：把码字逐个插入二叉编码树——<b>码字必须全部落在叶结点上</b>。先快速检验 A、B、C 三组。',
+    fx:'判定法：码字 ⟺ 编码树的叶子' },
+  { cls:'ok', tag:'A 组 ✓', count:1,
+    log:'A 组 01, 0000, 0001, 001, 1：0 开头的码互不嵌套、以 1 开头的只有 1 自己——任何短码都不是长码的开头 → 是前缀编码。',
+    chips:[['01','ok'],['0000','ok'],['0001','ok'],['001','ok'],['1','ok']],
+    fx:'A：无前缀冲突 ✓（排除）', ribbon:{k:1, ok:true} },
+  { cls:'ok', tag:'B 组 ✓', count:2,
+    log:'B 组 011, 000, 001, 010, 1：三个 3 位码互不为前缀；码字 1 之外没有以 1 开头的码 → 是前缀编码。',
+    chips:[['011','ok'],['000','ok'],['001','ok'],['010','ok'],['1','ok']],
+    fx:'B：无前缀冲突 ✓（排除）', ribbon:{k:2, ok:true} },
+  { cls:'ok', tag:'C 组 ✓', count:3,
+    log:'C 组 000, 001, 010, 011, 100：五个码等长（都是 3 位）。等长编码谁也做不了谁的前缀 → 天然是前缀编码。',
+    chips:[['000','ok'],['001','ok'],['010','ok'],['011','ok'],['100','ok']],
+    fx:'C：等长 → 天然安全 ✓（排除）', ribbon:{k:3, ok:true} },
+  { cls:'step', tag:'D 组建树', count:4,
+    log:'D 组 0, 100, 110, 1110, 1100：用编码树检验——从只剩根的空树开始，按位逐个插入这 5 个码字。',
+    chips:[['0',''],['100',''],['110',''],['1110',''],['1100','']],
+    fx:'把 D 组码字逐个插入编码树…' },
+  { cls:'ok', tag:'插入 0', count:5,
+    log:'插入 0：从根走 0 分支，落成一片新叶子 → 码字 0 就位。',
+    chips:[['0','hot'],['100',''],['110',''],['1110',''],['1100','']],
+    fx:'已插入 1/5：0 ✓' },
+  { cls:'ok', tag:'插入 100', count:6,
+    log:'插入 100：根→1（新内结点）→0（新叶子），途中不经过任何已有码字 → 码字 100 就位。',
+    chips:[['0','ok'],['100','hot'],['110',''],['1110',''],['1100','']],
+    fx:'已插入 2/5：100 ✓' },
+  { cls:'ok', tag:'插入 110', count:7,
+    log:'插入 110：根→1→1→0，落成新叶子 → 码字 110 就位。',
+    chips:[['0','ok'],['100','ok'],['110','hot'],['1110',''],['1100','']],
+    fx:'已插入 3/5：110 ✓' },
+  { cls:'ok', tag:'插入 1110', count:8,
+    log:'插入 1110：根→1→1→1→0，落成新叶子 → 码字 1110 就位。目前 4 个码字都在叶子上。',
+    chips:[['0','ok'],['100','ok'],['110','ok'],['1110','hot'],['1100','']],
+    fx:'已插入 4/5：1110 ✓' },
+  { cls:'miss', tag:'插入 1100 冲突！', count:9, conflict:true,
+    log:'插入 1100：走 1→1→0 时已经站在码字 110 的叶子上，可后面还剩一位 0 没处放（红 ×）——<b>110 是 1100 的前缀</b>！译码器读到 110 就会提前断字，产生歧义。',
+    chips:[['0','ok'],['100','ok'],['110','bad'],['1110','ok'],['1100','bad']],
+    fx:'110 ⊏ 1100 → 冲突！不是前缀编码 ✗', ribbon:{k:4, ok:false} },
+  { cls:'done', done:true, tag:'完成', count:10, conflict:true,
+    log:'结论：D 组存在前缀冲突 → 不是前缀编码，选 D。记忆锚点：码字必须全部落在编码树的叶子上；等长编码天然安全。',
+    chips:[['0','ok'],['100','ok'],['110','bad'],['1110','ok'],['1100','bad']],
+    fx:'答案 D：110 是 1100 的前缀' }
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 680 456');
+  svg.setAttribute('class', 'pfx-svg');
+  function el(name, attrs, txt){
+    var n = document.createElementNS(svgNS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+  TEDGES.forEach(function(e){
+    var A = null, B = null;
+    TNODES.forEach(function(n){ if (n.id === e.s) A = n; if (n.id === e.t) B = n; });
+    var g = el('g', { 'class':'cedge hidden-el' });
+    g.dataset.id = e.id; g.dataset.step = e.step;
+    g.appendChild(el('line', { x1:A.x, y1:A.y, x2:B.x, y2:B.y }));
+    g.appendChild(el('text', { x:e.lx, y:e.ly }, e.lb));
+    svg.appendChild(g);
+  });
+  TNODES.forEach(function(n){
+    var g = el('g', { 'class':'cnode ' + n.kind + ' hidden-el' });
+    g.dataset.id = n.id; g.dataset.step = n.step;
+    g.appendChild(el('circle', { cx:n.x, cy:n.y, r:20 }));
+    g.appendChild(el('text', { x:n.x, y:n.y }, n.bit));
+    svg.appendChild(g);
+  });
+  CODELBL.forEach(function(c){
+    var t = el('text', { x:c.x, y:c.y, 'class':'ccode hidden-el' }, c.t);
+    t.dataset.step = c.step;
+    svg.appendChild(t);
+  });
+  stage.appendChild(svg);
+  var chips = AW.el('div', 'hchips');
+  stage.appendChild(chips);
+  var formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._chips = chips; this._formula = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.cedge'), function(el){
+    el.classList.toggle('conf', !!sn.conflict && CONFPATH.indexOf(el.dataset.id) >= 0);
+  });
+  [].forEach.call(svg.querySelectorAll('.cnode'), function(el){
+    el.classList.toggle('conf', !!sn.conflict && el.dataset.id === 'E');
+  });
+  this._chips.innerHTML = (sn.chips || []).map(function(c){
+    return '<span class="qchip' + (c[1] ? ' ' + c[1] : '') + '">' + c[0] + '</span>';
+  }).join('');
+  this._formula.innerHTML = sn.fx || '';
+}
 
 AW.init({
   title: '2014-06　哪组编码不是前缀编码',
-  subtitle: '定义：任何码字不做其他码字的前缀 · 逐项两两比对',
-  intro: '点击「▶ 播放」逐项检查。',
-  snaps: snaps,
+  subtitle: '判定法：把码字插入二叉编码树，码字必须全落在<code>叶子</code>上 · D 组用构树演示冲突',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 前缀编码 / ✗ 冲突）',
+  intro: '点击「▶ 播放」：先排除 A/B/C，再把 D 组码字逐个插进编码树看冲突。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D',
-    html: 'D 组中 <code>110</code> 是 <code>1100</code> 的前缀 → 译码歧义 → 不是前缀编码。<br>A、B 组互不为前缀；C 组等长，天然是前缀编码。',
-  },
+    html: 'D 组中 <code>110</code> 恰好是 <code>1100</code> 的前 3 位——插入 1100 时在编码树里撞上叶子 110，无法继续向下 → 译码歧义，不是前缀编码。<br>' +
+      'A、B 组逐位检验互不为前缀；C 组五个码等长，天然是前缀编码。记忆锚点：<code>前缀编码 ⟺ 码字全是编码树的叶子</code>（哈夫曼编码正满足）。'
+  }
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

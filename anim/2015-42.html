@@ -2,53 +2,70 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2015-42 动画 · 邻接矩阵 A 与 A² 的含义</title>
+<title>2015-42 邻接矩阵 A 与 A² · 图上路径计数演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .adj-svg{display:block;background:#f8fafc;border:1px solid #1b3a4b38;border-radius:12px}
+  .adj-svg .gedge{stroke:#5a7d8c;stroke-width:3px;transition:stroke .3s, opacity .4s}
+  .adj-svg .gedge.hot{stroke:#e07a2f;stroke-width:5px}
+  .adj-svg .gedge.good{stroke:#16a34a;stroke-width:5px}
+  .adj-svg .gvx circle{fill:#1b3a4b;transition:fill .3s, opacity .4s}
+  .adj-svg .gvx text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:fill .3s, opacity .4s}
+  .adj-svg .gvx.hot circle{fill:#e07a2f}
+  .adj-svg .hidden-el{opacity:0}
+  .adj-svg .dim-el{opacity:.3}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2015-42 邻接矩阵幂 = 路径计数（SVG 图 + 矩阵列） ==================
+ * 题：5 个顶点的无向图 G。① 写邻接矩阵 A；② 求 A² 并解释 0 行 3 列元素；
+ *    ③ 推广 B^m（2≤m≤n）中非零元素的含义。
+ * 演示：左侧 SVG 画出图 G，右侧逐格填 A；再在图上逐条点亮 0 到 3 的三条长 2 路径，
+ *       边点亮边在矩阵里命中 A[0][k]、A[k][3]，最后填满 A² 并推广。 */
 
-// 无向图 G（5 个顶点 0~4，7 条边：0-1,0-2,0-4,1-3,1-4,2-3,3-4）
-var A = [
-  [0,1,1,0,1],
-  [1,0,0,1,1],
-  [1,0,0,1,0],
-  [0,1,1,0,1],
-  [1,1,0,1,0],
+var VPOS = [
+  { id:0, x:70,  y:70  },
+  { id:1, x:200, y:45  },
+  { id:2, x:330, y:90  },
+  { id:3, x:270, y:240 },
+  { id:4, x:100, y:250 },
 ];
-var A2 = [
-  [3,1,0,3,1],
-  [1,3,2,1,2],
-  [0,2,2,0,2],
-  [3,1,0,3,1],
-  [1,2,2,1,3],
+var EDGES = [
+  { k:'0-1', a:0, b:1 },
+  { k:'0-2', a:0, b:2 },
+  { k:'0-4', a:0, b:4 },
+  { k:'1-3', a:1, b:3 },
+  { k:'1-4', a:1, b:4 },
+  { k:'2-3', a:2, b:3 },
+  { k:'3-4', a:3, b:4 },
 ];
-var aCells = [], bCells = [], zone = null;
+var A  = [[0,1,1,0,1],[1,0,0,1,1],[1,0,0,1,0],[0,1,1,0,1],[1,1,0,1,0]];
+var A2 = [[3,1,0,3,1],[1,3,2,1,2],[0,2,2,0,2],[3,1,0,3,1],[1,2,2,1,3]];
 
-function matTable(gridRefs, title){
+var aCells = [], bCells = [], zone = null, svg = null, edgeEls = {}, vertexEls = {};
+
+function matTable(refs, title){
   var box = AW.el('div', '');
   box.appendChild(AW.el('div', 'aw-row-label', '<b>' + title + '</b>'));
   var tbl = AW.el('div', '');
   tbl.style.display = 'grid';
-  tbl.style.gridTemplateColumns = '28px repeat(5, 44px)';
+  tbl.style.gridTemplateColumns = '26px repeat(5, 46px)';
   tbl.style.gap = '4px';
   tbl.style.width = 'max-content';
-  tbl.appendChild(AW.el('div', '', ''));   // 左上角空格
-  for(var j = 0; j < 5; j++){
-    tbl.appendChild(AW.el('div', 'aw-idx', String(j)));
-  }
+  tbl.appendChild(AW.el('div', '', ''));
+  for(var j = 0; j < 5; j++) tbl.appendChild(AW.el('div', 'aw-idx', String(j)));
   for(var i = 0; i < 5; i++){
     tbl.appendChild(AW.el('div', 'aw-idx', String(i)));
-    gridRefs.push([]);
+    refs.push([]);
     for(var j2 = 0; j2 < 5; j2++){
       var c = AW.el('div', 'aw-box dim', '');
-      c.style.width = '44px'; c.style.height = '44px';
-      c.style.fontSize = '17px';
+      c.style.width = '46px'; c.style.height = '46px'; c.style.fontSize = '17px';
       tbl.appendChild(c);
-      gridRefs[i].push(c);
+      refs[i].push(c);
     }
   }
   box.appendChild(tbl);
@@ -57,89 +74,148 @@ function matTable(gridRefs, title){
 
 function build(stage){
   stage.innerHTML = '';
-  var wrap = AW.el('div', 'aw-scroll');
-  var flex = AW.el('div', '');
-  flex.style.display = 'flex';
-  flex.style.gap = '34px';
-  flex.style.flexWrap = 'wrap';
-  flex.appendChild(matTable(aCells, '矩阵 A（邻接矩阵，对称）'));
-  flex.appendChild(matTable(bCells, '矩阵 A² = A × A'));
-  wrap.appendChild(flex);
+  var NS = 'http://www.w3.org/2000/svg';
+  svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 400 320');
+  svg.setAttribute('width', '400');
+  svg.setAttribute('height', '320');
+  svg.setAttribute('class', 'adj-svg');
+  EDGES.forEach(function(e){
+    var p = VPOS[e.a], q = VPOS[e.b];
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', p.x); ln.setAttribute('y1', p.y);
+    ln.setAttribute('x2', q.x); ln.setAttribute('y2', q.y);
+    ln.setAttribute('class', 'gedge hidden-el');
+    ln.dataset.k = e.k;
+    ln.dataset.step = 1;
+    svg.appendChild(ln);
+    edgeEls[e.k] = ln;
+  });
+  VPOS.forEach(function(v){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'gvx hidden-el');
+    g.dataset.id = String(v.id);
+    g.dataset.step = 0;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', v.x); c.setAttribute('cy', v.y); c.setAttribute('r', 22);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', v.x); t.setAttribute('y', v.y);
+    t.textContent = String(v.id);
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    vertexEls[String(v.id)] = g;
+  });
+  stage.appendChild(svg);
+
+  var right = AW.el('div', '');
+  right.style.minWidth = '300px';
+  right.appendChild(matTable(aCells, '矩阵 A（邻接矩阵，对称）'));
+  right.appendChild(matTable(bCells, '矩阵 A² = A × A'));
+  stage.appendChild(right);
+
   zone = AW.el('div', 'aw-row-label', '');
   zone.style.marginTop = '10px';
   zone.style.fontSize = '13.5px';
   zone.style.color = '#334155';
-  wrap.appendChild(zone);
-  stage.appendChild(wrap);
+  stage.appendChild(zone);
 }
 
 function render(stage, sn){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(elm){
+    elm.classList.toggle('hidden-el', +elm.dataset.step > sn.count);
+  });
+  var cur = sn.cur || [], done = [];
+  (sn.paths || []).forEach(function(p){
+    p.forEach(function(k){ if(cur.indexOf(k) < 0) done.push(k); });
+  });
+  EDGES.forEach(function(e){
+    var ln = edgeEls[e.k];
+    ln.classList.remove('hot', 'good');
+    if(cur.indexOf(e.k) >= 0) ln.classList.add('hot');
+    else if(done.indexOf(e.k) >= 0) ln.classList.add('good');
+  });
+  var hotV = {};
+  cur.forEach(function(k){
+    var ab = k.split('-');
+    hotV[ab[0]] = true; hotV[ab[1]] = true;
+  });
+  Object.keys(vertexEls).forEach(function(id){
+    vertexEls[id].classList.toggle('hot', !!hotV[id]);
+  });
+  var aHit = sn.aHit || [];
   for(var i = 0; i < 5; i++){
     for(var j = 0; j < 5; j++){
+      var key = i + ',' + j;
       var ac = aCells[i][j];
-      ac.textContent = sn.showA ? String(A[i][j]) : '';
-      ac.className = 'aw-box' + (sn.aCls && sn.aCls[i + ',' + j] ? ' ' + sn.aCls[i + ',' + j] : sn.showA ? '' : ' dim');
-      var bc = bCells[i][j];
+      var txt = sn.showA ? String(A[i][j]) : '';
+      ac.textContent = txt;
+      var cls = 'aw-box';
+      if(!txt) cls += ' dim';
+      if(sn.rowCol && (i === 0 || j === 3) && txt) cls += ' ok';
+      if(aHit.indexOf(key) >= 0) cls = 'aw-box hit';
+      ac.className = cls;
+    }
+  }
+  for(var i2 = 0; i2 < 5; i2++){
+    for(var j3 = 0; j3 < 5; j3++){
+      var bc = bCells[i2][j3];
       var bv = '';
-      if(sn.b2 === 'full') bv = String(A2[i][j]);
-      else if(sn.b2 === 'partial') bv = (i === 0 && j === 3) ? '3' : '';
+      if(sn.bMode === 'full') bv = String(A2[i2][j3]);
+      else if(sn.bMode === 'c03' && i2 === 0 && j3 === 3) bv = String(A2[0][3]);
       bc.textContent = bv;
-      var bcCls = '';
-      if(i === 0 && j === 3 && (sn.b2 === 'partial' || sn.b2 === 'full')) bcCls = 'hit';
-      bc.className = 'aw-box' + (bcCls ? ' ' + bcCls : (!bv ? ' dim' : ''));
+      bc.className = 'aw-box' + (bv ? (i2 === 0 && j3 === 3 ? ' hit' : '') : ' dim');
     }
   }
   zone.innerHTML = sn.zone || '';
 }
 
+var P1 = ['0-1','1-3'], P2 = ['0-2','2-3'], P3 = ['0-4','4-3'];
+var SNAPS = [
+  { cls:'step', tag:'第 1 问', count:0, showA:false, rowCol:false, aHit:[], paths:[], cur:[], bMode:null,
+    log:'5 个顶点的无向图 G（下图，顶点 0~4）。先把结构看清楚，再动手写矩阵。',
+    zone:'顶点已画出，下一步看边' },
+  { cls:'ok', tag:'7 条边', count:1, showA:false, rowCol:false, aHit:[], paths:[], cur:[], bMode:null,
+    log:'G 共 7 条边：0-1、0-2、0-4、1-3、1-4、2-3、3-4。无向图的邻接矩阵 A[i][j]=1 ⟺ i、j 之间有边 → A 必对称，对角线全 0。',
+    zone:'7 条边全部点亮' },
+  { cls:'ok', tag:'写出 A', count:2, showA:true, rowCol:false, aHit:[], paths:[], cur:[], bMode:null, ribbon:{k:1, ok:true},
+    log:'按行写 A：第 0 行 0 1 1 0 1；第 1 行 1 0 0 1 1；第 2 行 1 0 0 1 0；第 3 行 0 1 1 0 1；第 4 行 1 1 0 1 0。',
+    zone:'与参考答案一致 ✓（对称矩阵、对角线为 0）' },
+  { cls:'step', tag:'第 2 问 · 规则', count:3, showA:true, rowCol:true, aHit:[], paths:[], cur:[], bMode:null,
+    log:'A² = A × A：A²[0][3] = Σk A[0][k]·A[k][3] —— 每个中间顶点 k 接通一条"0→k→3"的长度为 2 的路径。矩阵里高亮第 0 行（A[0][k]）与第 3 列（A[k][3]）。',
+    zone:'要找同时满足 A[0][k]=1 且 A[k][3]=1 的 k' },
+  { cls:'ok', tag:'k=1', count:4, showA:true, rowCol:true, aHit:['0,1','1,3'], paths:[P1], cur:P1, bMode:null,
+    log:'k=1：0→1 有边、1→3 有边 → 贡献 1×1 = 1 条路径 0→1→3（图上橙色）。', zone:'累计 1 条' },
+  { cls:'ok', tag:'k=2', count:5, showA:true, rowCol:true, aHit:['0,2','2,3'], paths:[P1,P2], cur:P2, bMode:null,
+    log:'k=2：0→2 有边、2→3 有边 → 贡献 1 条路径 0→2→3。', zone:'累计 2 条' },
+  { cls:'ok', tag:'k=4', count:6, showA:true, rowCol:true, aHit:['0,4','4,3'], paths:[P1,P2,P3], cur:P3, bMode:null,
+    log:'k=4：0→4、4→3 → 贡献 1 条路径 0→4→3。k=0、3 时乘积为 0，不计。', zone:'Σ = 1 + 1 + 1 = 3' },
+  { cls:'ok', tag:'A²[0][3] = 3', count:7, showA:true, rowCol:false, aHit:[], paths:[P1,P2,P3], cur:[], bMode:'c03', ribbon:{k:2, ok:true},
+    log:'A²[0][3] = 3：顶点 0 到顶点 3 长度为 2 的路径共 3 条（图上绿色三条）。',
+    zone:'含义：0 与 3 之间长为 2 的路径条数 = 3' },
+  { cls:'ok', tag:'完整 A²', count:8, showA:true, rowCol:false, aHit:[], paths:[P1,P2,P3], cur:[], bMode:'full',
+    log:'同法逐格算出完整 A²。每个非零元素 [i][j] = i 到 j 长度为 2 的路径条数；对角线元素 = 顶点的度（例：A²[0][0] = 3 = 顶点 0 的度）。',
+    zone:'A² = ⎡3 1 0 3 1 / 1 3 2 1 2 / 0 2 2 0 2 / 3 1 0 3 1 / 1 2 2 1 3⎦ 与参考答案一致 ✓' },
+  { cls:'step', tag:'第 3 问 · 推广', count:9, showA:true, rowCol:false, aHit:[], paths:[P1,P2,P3], cur:[], bMode:'full',
+    log:'推广：n 个顶点图的邻接矩阵为 B 时，B^m（2≤m≤n）中 [i][j] 元素 = 从顶点 i 到顶点 j 长度为 m 的路径条数；元素非零 ⟺ 存在这样的路径。',
+    zone:'B^m[i][j] = i 到 j 长度为 m 的路径条数（2≤m≤n）' },
+  { cls:'done', tag:'完成', count:10, showA:true, rowCol:false, aHit:[], paths:[P1,P2,P3], cur:[], bMode:'full', done:true, ribbon:{k:3, ok:true},
+    log:'三问汇总：① A 是 7 条边对应的对称 0-1 矩阵；② A²[0][3]=3，即 0 到 3 长为 2 的路径有 3 条；③ B^m 非零元素 = 长度为 m 的路径条数。',
+    zone:'结论' },
+];
+
 AW.init({
-  title: '2015-42 · 邻接矩阵 A、A² 及其元素的含义',
+  title: '2015-42 · 邻接矩阵 A、A² 及其元素的含义：图上路径计数',
   subtitle: '5 个顶点的无向图 G（7 条边） · 考点：邻接矩阵幂 = 长度为 m 的路径计数',
   counterLabel: '推进步',
   ribbonTitle: '三个小问（✓ 完成）',
-  intro: '点击「▶ 播放」完成三问：写 A → 算 A²[0][3] → 推广到 B 的 m 次幂。',
-
+  intro: '点击「▶ 播放」：看图写 A → 在图上逐条点亮路径算 A²[0][3] → 推广到 B^m。',
   build: build,
   render: render,
-
-  snaps: [
-    { cls:'step', tag:'第 1 问',
-      log:'图 G 的 7 条边：0-1、0-2、0-4、1-3、1-4、2-3、3-4。无向图邻接矩阵 A[i][j]=1 ⟺ i、j 有边，对角线全 0，A 是对称矩阵',
-      count:0, showA:false, b2:null,
-      zone:'按行列下标 0~4 逐行填入邻接矩阵' },
-    { cls:'ok', tag:'写出 A',
-      log:'按行写出 A（左表）：第 0 行 0 1 1 0 1，第 1 行 1 0 0 1 1，第 2 行 1 0 0 1 0，第 3 行 0 1 1 0 1，第 4 行 1 1 0 1 0',
-      count:1, ribbon:{k:1, ok:true}, showA:true, b2:null,
-      zone:'A 写完：与参考答案一致 ✓（对称矩阵、对角线为 0）' },
-    { cls:'step', tag:'第 2 问：乘法规则',
-      log:'A² = A × A：A²[i][j] = Σk A[i][k]·A[k][j] —— 每个中间顶点 k 贡献一条"i→k→j"的长度为 2 的路径',
-      count:2, showA:true, b2:null,
-      aCls:{ '0,0':'ok','0,1':'ok','0,2':'ok','0,3':'ok','0,4':'ok' },
-      zone:'聚焦 A²[0][3]：需要第 0 行（作为 A[i][k]）与第 3 列（作为 A[k][j]）' },
-    { cls:'shift', tag:'计算 A²[0][3]',
-      log:'固定 i=0、j=3，对 k 求和：k=1 贡献 1×1，k=2 贡献 1×1，k=4 贡献 1×1（k=0、3 时 A[0][k]·A[k][3]=0）→ 合计 3',
-      count:3, showA:true, b2:'partial',
-      aCls:{ '0,1':'hit','0,2':'hit','0,4':'hit','1,3':'hit','2,3':'hit','4,3':'hit' },
-      zone:'A²[0][3] = 1×1 + 1×1 + 1×1 = <b>3</b>（右表已填出）' },
-    { cls:'ok', tag:'元素的含义',
-      log:'A²[0][3] = 3：顶点 0 到顶点 3 长度为 2 的路径共 3 条：0→1→3、0→2→3、0→4→3',
-      count:4, ribbon:{k:2, ok:true}, showA:true, b2:'partial',
-      aCls:{ '0,1':'hit','0,2':'hit','0,4':'hit','1,3':'hit','2,3':'hit','4,3':'hit' },
-      zone:'三条长度为 2 的路径：<b>0→1→3、0→2→3、0→4→3</b>，每个中间顶点贡献 1 条' },
-    { cls:'ok', tag:'完整 A²',
-      log:'逐格同样计算得到完整 A²（右表）；每个非零元素 [i][j] 的值 = i 到 j 长度为 2 的路径条数，对角线元素 = 对应顶点的度',
-      count:5, showA:true, b2:'full',
-      zone:'A² = ⎡3 1 0 3 1；1 3 2 1 2；0 2 2 0 2；3 1 0 3 1；1 2 2 1 3⎦ 与参考答案一致 ✓' },
-    { cls:'done', tag:'第 3 问 · 结论',
-      log:'推广：n 个顶点图的邻接矩阵为 B 时，B^m（2≤m≤n）的 [i][j] 元素 = i 到 j 长度为 m 的路径条数；非零即存在这样的路径',
-      count:6, ribbon:{k:3, ok:true}, showA:true, b2:'full', done:true,
-      zone:'<b>B^m[i][j] = 从顶点 i 到顶点 j 长度为 m 的路径条数</b>（2≤m≤n）' },
-  ],
-
+  snaps: SNAPS,
   result: {
     big: 'A²[0][3] = 3',
-    html: '三问答案：<b>① A 为 7 条边对应的对称 0-1 矩阵；② A²[0][3]=3，表示顶点 0 到 3 长度为 2 的路径有 3 条（0→1→3、0→2→3、0→4→3）；' +
-          '③ B^m 的 [i][j] 元素 = i 到 j 长度为 m 的路径条数</b>。记忆点：A²[i][i] = 顶点 i 的度。',
+    html: '三问答案：<b>① A 为 7 条边对应的对称 0-1 矩阵；② A²[0][3] = 3，表示顶点 0 到顶点 3 长度为 2 的路径共 3 条（0→1→3、0→2→3、0→4→3）；' +
+      '③ B^m 的 [i][j] 元素 = i 到 j 长度为 m 的路径条数（2≤m≤n）</b>。记忆点：A²[i][i] = 顶点 i 的度。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

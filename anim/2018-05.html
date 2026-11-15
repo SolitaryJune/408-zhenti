@@ -2,83 +2,194 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2018-05 哈夫曼树构造与编码</title>
+<title>2018-05 哈夫曼编码 · 构树动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .htree-svg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .htree-svg .hedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s}
+  .htree-svg .hnode circle{transition:opacity .4s, fill .3s}
+  .htree-svg .hnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:opacity .4s}
+  .htree-svg .hnode.leaf circle{fill:#16a34a}
+  .htree-svg .hnode.internal circle{fill:#1b3a4b}
+  .htree-svg .hnode.hot circle{fill:#e07a2f}
+  .htree-svg .hnode.root circle{fill:#e63946}
+  .htree-svg .chlabel{font-size:13px;font-weight:800;fill:#334155;text-anchor:middle;transition:opacity .4s}
+  .htree-svg .bitlabel{font-size:14px;font-weight:800;fill:#e63946;text-anchor:middle;transition:opacity .4s;
+    paint-order:stroke;stroke:#f8fafc;stroke-width:4px}
+  .htree-svg .hidden-el{opacity:0}
+  .htree-svg .dim-el{opacity:.35}
+  .hqueue{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .hqueue .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:14px}
+  .hqueue .qchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#e07a2f}
+  .hqueue .qchip.merged{opacity:.45;text-decoration:line-through}
+  .hformula{margin-top:8px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2018-05 哈夫曼构树 + 编码动画（SVG） ==================
+ * 题：字符集 {a,b,c,d,e,f} 频次 6,3,8,2,10,4，求可能的哈夫曼编码。（答案 A）
+ * 演示：从 6 个叶子逐步合并最小两权 → 成树 → 左0右1 读码 → 与四个选项比对。 */
 
-// 当前森林：字符串数组 + 类别数组（'' 普通绿框 / 'ok' 新结点 / 'hit' 即将合并）
-function forestHtml(items, cls){
-  var row = AW.el('div', 'aw-cells');
-  items.forEach(function(ch, i){
-    var col = AW.el('div', 'aw-col');
-    col.appendChild(AW.el('div', 'aw-ptr', ''));
-    col.appendChild(AW.el('div', 'aw-box' + (cls && cls[i] ? ' ' + cls[i] : ''), ch));
-    col.appendChild(AW.el('div', 'aw-idx', ''));
-    row.appendChild(col);
+var NODES = [
+  { id:'d',  x:390, y:390, w:2,  leaf:true, ch:'d', step:0 },
+  { id:'b',  x:500, y:390, w:3,  leaf:true, ch:'b', step:0 },
+  { id:'f',  x:300, y:300, w:4,  leaf:true, ch:'f', step:0 },
+  { id:'a',  x:100, y:210, w:6,  leaf:true, ch:'a', step:0 },
+  { id:'c',  x:290, y:210, w:8,  leaf:true, ch:'c', step:0 },
+  { id:'e',  x:545, y:210, w:10, leaf:true, ch:'e', step:0 },
+  { id:'M1', x:445, y:300, w:5,  leaf:false, step:1 },
+  { id:'M2', x:380, y:210, w:9,  leaf:false, step:2 },
+  { id:'M3', x:195, y:120, w:14, leaf:false, step:3 },
+  { id:'M4', x:462, y:120, w:19, leaf:false, step:4 },
+  { id:'R',  x:330, y:40,  w:33, leaf:false, step:5 },
+];
+var EDGES = [
+  { a:'M1', b:'d',  bit:'0', step:1 },
+  { a:'M1', b:'b',  bit:'1', step:1 },
+  { a:'M2', b:'f',  bit:'0', step:2 },
+  { a:'M2', b:'M1', bit:'1', step:2 },
+  { a:'M3', b:'a',  bit:'0', step:3 },
+  { a:'M3', b:'c',  bit:'1', step:3 },
+  { a:'M4', b:'M2', bit:'0', step:4 },
+  { a:'M4', b:'e',  bit:'1', step:4 },
+  { a:'R',  b:'M3', bit:'0', step:5 },
+  { a:'R',  b:'M4', bit:'1', step:5 },
+];
+var QUEUES = [
+  { chips:['2(d)','3(b)','4(f)','6(a)','8(c)','10(e)'], hot:[], merged:[] },
+  { chips:['4(f)','5','6(a)','8(c)','10(e)'],           hot:['5'], merged:['2(d)','3(b)'] },
+  { chips:['6(a)','8(c)','9','10(e)'],                  hot:['9'], merged:['2(d)','3(b)','4(f)','5'] },
+  { chips:['9','10(e)','14'],                           hot:['14'], merged:['2(d)','3(b)','4(f)','5','6(a)','8(c)'] },
+  { chips:['14','19'],                                  hot:['19'], merged:['2(d)','3(b)','4(f)','5','6(a)','8(c)','9','10(e)'] },
+  { chips:['33（树根）'],                                hot:['33（树根）'], merged:[] },
+  { chips:['编码完成'],                                  hot:['编码完成'], merged:[] },
+  { chips:['WPL = 80'],                                 hot:['WPL = 80'], merged:[] },
+  { chips:['答案 A'],                                   hot:['答案 A'], merged:[] },
+];
+var SNAPS = [
+  { cls:'shift', tag:'初始森林', count:0,
+    log:'6 个字符作 6 个叶子（取频次为权）：d2、b3、f4、a6、c8、e10。哈夫曼规则：每步合并权值最小的两棵。' },
+  { cls:'ok', tag:'合并 ①', count:1,
+    log:'最小两个 2(d)、3(b) → 合并出新结点 5。' },
+  { cls:'ok', tag:'合并 ②', count:2,
+    log:'当前最小：4(f) 与 5 → 合并为 9（注意 4 要跟刚生成的 5 结合）。' },
+  { cls:'ok', tag:'合并 ③', count:3,
+    log:'剩下 6(a)、8(c)、9、10(e)：最小两个 6 与 8 → 合并为 14。' },
+  { cls:'ok', tag:'合并 ④', count:4,
+    log:'9 与 10(e) → 合并为 19。' },
+  { cls:'ok', tag:'合并 ⑤', count:5,
+    log:'14 与 19 → 合并为根 33。6 个叶子共合并 5 次，树建成。' },
+  { cls:'step', tag:'左 0 右 1 读码', count:5,
+    log:'左边标 0、右边标 1，从根走到各叶子：a=00、c=01、e=11、f=100、d=1010、b=1011 —— 频次越大码越短 ✓。按 a,b,c,d,e,f 顺序：00, 1011, 01, 1010, 11, 100。' },
+  { cls:'step', tag:'比对选项', count:6,
+    log:'A 完全一致 ✓；B：a=00 是 d=000 的前缀，非前缀码 ✗；C：a=10 是 b=1011 的前缀 ✗；D：是前缀码但 b(3) 码长 2、a(6) 码长 4，WPL=86 ≠ 最优 80 ✗。' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'选 A：00, 1011, 01, 1010, 11, 100。' },
+];
+
+var svgEl, queueBox, formulaBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 660 440');
+  svg.setAttribute('class', 'htree-svg');
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'hedge hidden-el');
+    ln.dataset.step = e.step;
+    svg.appendChild(ln);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', (A.x + B.x) / 2 + (B.x >= A.x ? 10 : -10));
+    t.setAttribute('y', (A.y + B.y) / 2);
+    t.setAttribute('class', 'bitlabel hidden-el');
+    t.dataset.step = 6;
+    t.textContent = e.bit;
+    svg.appendChild(t);
   });
-  return row.outerHTML;
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'hnode ' + (n.leaf ? 'leaf' : 'internal') + ' hidden-el');
+    g.dataset.id = n.id;
+    g.dataset.step = n.step;
+    g.dataset.leaf = n.leaf ? '1' : '0';
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.w;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    if (n.leaf){
+      var ch = document.createElementNS(svgNS, 'text');
+      ch.setAttribute('x', n.x); ch.setAttribute('y', n.y + 36);
+      ch.setAttribute('class', 'chlabel hidden-el');
+      ch.dataset.step = n.step;
+      ch.textContent = n.ch + '（' + n.w + '）';
+      svg.appendChild(ch);
+    }
+  });
+  stage.appendChild(svg);
+  queueBox = AW.el('div', 'hqueue');
+  stage.appendChild(queueBox);
+  formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+  svgEl = svg;
 }
 
-function codeTable(){
-  var rows = [
-    ['a=6', '2', '00'], ['b=3', '4', '1011'], ['c=8', '2', '01'],
-    ['d=2', '4', '1010'], ['e=10', '2', '11'], ['f=4', '3', '100'],
-  ];
-  var h = '<table style="border-collapse:collapse;margin:8px auto;font-size:13.5px">';
-  h += '<tr><th style="border:1px solid #cbd5e1;padding:3px 10px;background:#f1f5f9">字符（权）</th>' +
-       '<th style="border:1px solid #cbd5e1;padding:3px 10px;background:#f1f5f9">码长</th>' +
-       '<th style="border:1px solid #cbd5e1;padding:3px 10px;background:#f1f5f9">编码</th></tr>';
-  rows.forEach(function(r){
-    h += '<tr><td style="border:1px solid #cbd5e1;padding:3px 10px">' + r[0] + '</td>' +
-         '<td style="border:1px solid #cbd5e1;padding:3px 10px">' + r[1] + '</td>' +
-         '<td style="border:1px solid #cbd5e1;padding:3px 10px"><b>' + r[2] + '</b></td></tr>';
+function render(stage, sn, i){
+  [].forEach.call(svgEl.querySelectorAll('.hnode, .hedge, .bitlabel, .chlabel'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+    el.classList.remove('hot', 'root', 'dim-el');
   });
-  h += '</table>';
-  return h;
-}
-
-function mergeLine(text){
-  return '<div style="text-align:center;font-size:13.5px;color:#334155;margin-top:8px">' + text + '</div>';
+  [].forEach.call(svgEl.querySelectorAll('.hnode'), function(el){
+    if (i >= 1 && i <= 5) {
+      var produced = ['M1','M2','M3','M4','R'][i - 1];
+      if (el.dataset.id === produced) el.classList.add('hot');
+      if (el.dataset.leaf === '0' && +el.dataset.step < i && el.dataset.id !== produced) el.classList.add('dim-el');
+    }
+    if (i >= 5 && el.dataset.id === 'R') el.classList.add('root');
+  });
+  var q = QUEUES[Math.min(i, QUEUES.length - 1)];
+  queueBox.innerHTML = '权值队列：' + q.chips.map(function(c){
+    var cls = 'qchip' + (q.hot.indexOf(c) >= 0 ? ' hot' : '') + (q.merged.indexOf(c) >= 0 ? ' merged' : '');
+    return '<span class="' + cls + '">' + c + '</span>';
+  }).join('');
+  var merges = ['① 2+3→5', '② 4+5→9', '③ 6+8→14', '④ 9+10→19', '⑤ 14+19→33'];
+  var lines = [];
+  if (i >= 1) lines.push(merges.slice(0, Math.min(i, 5)).join('　'));
+  if (i >= 6) lines.push('读码：<code>a=00</code>　<code>b=1011</code>　<code>c=01</code>　<code>d=1010</code>　<code>e=11</code>　<code>f=100</code>');
+  if (i >= 7) lines.push('WPL = 6×2+3×4+8×2+2×4+10×2+4×3 = <b>80</b>（最优，且为前缀码）');
+  if (i >= 8) lines.push('按 a,b,c,d,e,f 顺序：<b>00, 1011, 01, 1010, 11, 100</b>（选 A）');
+  formulaBox.innerHTML = lines.join('<br>');
 }
 
 AW.init({
-  title: '2018·数据结构（五） 哈夫曼树构造与编码',
-  subtitle: '权值 a=6 b=3 c=8 d=2 e=10 f=4 · 每次合并权值最小的两棵 · 左 0 右 1',
-  counterLabel: '已合并次数',
-  intro: '点击「▶ 播放」，逐步合并构造哈夫曼树并写出编码。',
-
-  snaps: [
-    { cls:'step', tag:'初始', log:'6 个权值结点：a6、b3、c8、d2、e10、f4，等成一排待合并', count:0,
-      html: forestHtml(['a6','b3','c8','d2','e10','f4']) + mergeLine('每次取当前权值<b>最小的两个</b>合并，新结点放回森林') },
-    { cls:'shift', tag:'合并 1', log:'最小的两个：d2 与 b3 → 合并出新结点 5', count:1,
-      html: forestHtml(['5','a6','c8','e10','f4'], ['ok','','','','']) + mergeLine('第 1 次合并：d2 + b3 → <b>5</b>') },
-    { cls:'shift', tag:'合并 2', log:'剩下最小的两个：f4 与新结点 5 → 合并出新结点 9', count:2,
-      html: forestHtml(['a6','c8','9','e10'], ['','','ok','']) + mergeLine('第 2 次合并：f4 + 5 → <b>9</b>（注意 4 要与刚合并出的 5 结合）') },
-    { cls:'shift', tag:'合并 3', log:'a6 与 c8 合并出新结点 14', count:3,
-      html: forestHtml(['9','e10','14'], ['','','ok']) + mergeLine('第 3 次合并：a6 + c8 → <b>14</b>') },
-    { cls:'shift', tag:'合并 4', log:'9 与 e10 合并出新结点 19', count:4,
-      html: forestHtml(['14','19'], ['','ok']) + mergeLine('第 4 次合并：9 + e10 → <b>19</b>') },
-    { cls:'shift', tag:'合并 5', log:'14 与 19 合并出根 33，哈夫曼树建成', count:5,
-      html: forestHtml(['33'], ['ok']) + mergeLine('第 5 次合并：14 + 19 → 根 <b>33</b>') },
-    { cls:'ok', tag:'编码', log:'左分支为 0、右分支为 1，从根走到各字符写出编码', count:5,
-      html: codeTable() + mergeLine('结构：33 →（14：a6、c8）｜（19：9：f4、5：d2、b3｜e10）') },
-    { cls:'ok', tag:'对照选项', log:'按 a,b,c,d,e,f 顺序：00, 1011, 01, 1010, 11, 100，与选项 A 一致', count:5,
-      html: codeTable() + mergeLine('WPL = 6×2 + 3×4 + 8×2 + 2×4 + 10×2 + 4×3 = <b>80</b>（最优）') },
-    { cls:'done', tag:'完成', log:'WPL=80 为最优且是前缀码 → 答案 A', count:5, done:true,
-      html: codeTable() + mergeLine('B 的 WPL=99、D 的 WPL=86 均非最优；C 中 a=10 是 b=1011 的前缀') },
-  ],
-
+  title: '2018-05　哈夫曼编码 · 构树动画',
+  subtitle: '题：字符 {a,b,c,d,e,f} 频次 <code>6,3,8,2,10,4</code>，哪个是可能的哈夫曼编码？—— 实际构树读码',
+  counterLabel: '合并',
+  intro: '点击「▶ 播放」逐次合并最小权值构哈夫曼树，再左 0 右 1 读出编码与选项比对。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 A',
-    html: '合并序列：2+3→5、4+5→9、6+8→14、9+10→19、14+19→33；编码 <b>00, 1011, 01, 1010, 11, 100</b>，WPL = 80 最优。记忆锚点：哈夫曼编码必为<b>前缀码</b>，且 WPL 最小——两条都验才算数。',
+    big: '答案 A　00, 1011, 01, 1010, 11, 100',
+    html: '合并序列：2+3→5、4+5→9、6+8→14、9+10→19、14+19→33；左 0 右 1 读码得 <b>a=00、b=1011、c=01、d=1010、e=11、f=100</b>，与 A 完全一致。<br>' +
+      'WPL = Σ频次×码长 = <b>80</b>（最优）。校验锚点：哈夫曼编码必须 ① 前缀码（B/C 直接违约）② 频次越大码越短（D 违约）③ WPL 最小。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

@@ -2,56 +2,179 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2017-04 动画：先序与中序序列相同的条件</title>
+<title>2017-04 先序序列=中序序列的条件 · 小树遍历演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bt-svg{width:100%;max-width:820px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bt-svg .bedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s}
+  .bt-svg .bnode circle{transition:opacity .4s, fill .3s}
+  .bt-svg .bnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:opacity .4s}
+  .bt-svg .bnode circle{fill:#1b3a4b}
+  .bt-svg .bnode.hot circle{fill:#e07a2f}
+  .bt-svg .bnode.good circle{fill:#16a34a}
+  .bt-svg .bnode.bad circle{fill:#b0b8c4}
+  .bt-svg .sidetag{font-size:12px;font-weight:700;fill:#64748b;transition:opacity .4s}
+  .bt-svg .ttitle{font-size:14.5px;font-weight:800;fill:#1b3a4b;text-anchor:middle;transition:opacity .4s}
+  .bt-svg .hidden-el{opacity:0}
+  .bt-svg .dim-el{opacity:.32}
+  .seqrows{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-width:680px;margin-left:auto;margin-right:auto}
+  .seqrow{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#334155;
+    background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:7px 12px;transition:opacity .4s}
+  .seqrow code{font-family:"SF Mono",Menlo,monospace;font-weight:800;background:#1b3a4b14;padding:1px 8px;border-radius:6px}
+  .seqrow .vd{margin-left:auto;font-weight:800}
+  .seqrow .vd.ok{color:#16a34a}
+  .seqrow .vd.miss{color:#dc2626}
+  .seqrow.hidden-el{opacity:0}
+  .seqrow.dim-el{opacity:.4}
+</style>
 </head>
 <body>
-<!-- 2017-04 先序=中序条件推理（概念/推理链类） -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+/* ================== 2017-04 先序=中序条件（三棵小树 SVG 遍历演示） ==================
+ * 题：要使非空二叉树的先序序列与中序序列相同，所有非叶结点须满足的条件？（答案 B：只有右子树）
+ * 演示：右链 / 左链 / 双孩子 三棵 3 结点小树各走一遍先序、中序，看序列何时相同。 */
 
-var STEPS = [
-  { title: '审题眼', cls: 'key',
-    body: '<p>先序 = <b>根·左·右</b>；中序 = <b>左·根·右</b>。要求两序列完全相同，等价于对每个非叶结点提出统一条件——从两种遍历「走法」的差异入手。</p>' },
-  { title: '关键推理：差异在第二位', cls: 'key',
-    body: '<p>两序列都以根开头；分歧从第二个位置开始：先序第二位是<b>左子树的根</b>，中序第二位是<b>左子树最左下的结点</b>。只要某个结点的左子树非空，这两个位置就不同。所以必须：<b>每个结点的左子树为空</b>。</p>' },
-  { title: '验证 B：右链成立', cls: 'good',
-    body: '<p>所有非叶结点只有右子树 → 整棵树是向右下的链 N1→N2→N3：先序 = <code>N1 N2 N3</code>，中序 = <code>N1 N2 N3</code>，逐位相同 ✓。</p>' },
-  { title: '排除 A / C / D', cls: 'bad',
-    body: '<p><b>A 只有左子树</b>：先序 N1 N2 N3、中序 N3 N2 N1，恰好<b>相反</b> ✗；<b>C 度均为 1</b>：度 1 结点可能只带左孩子，不保险 ✗；<b>D 度均为 2</b>：左子树非空，直接违反上一步推理 ✗。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>选 <b>B</b>——先序与中序相同 ⇔ 树无左孩子（所有非叶结点只有右子树）。</p>' },
+var NODES = [
+  { id:'N1', x:110, y:70,  tree:'t1', step:1 },
+  { id:'N2', x:180, y:140, tree:'t1', step:1 },
+  { id:'N3', x:250, y:210, tree:'t1', step:1 },
+  { id:'M1', x:450, y:70,  tree:'t2', step:2 },
+  { id:'M2', x:380, y:140, tree:'t2', step:2 },
+  { id:'M3', x:310, y:210, tree:'t2', step:2 },
+  { id:'R',  x:700, y:70,  tree:'t3', step:3 },
+  { id:'L',  x:630, y:140, tree:'t3', step:3 },
+  { id:'T',  x:770, y:140, tree:'t3', step:3 },
+];
+var EDGES = [
+  { a:'N1', b:'N2', side:'右', tree:'t1', step:1 },
+  { a:'N2', b:'N3', side:'右', tree:'t1', step:1 },
+  { a:'M1', b:'M2', side:'左', tree:'t2', step:2 },
+  { a:'M2', b:'M3', side:'左', tree:'t2', step:2 },
+  { a:'R',  b:'L',  side:'左', tree:'t3', step:3 },
+  { a:'R',  b:'T',  side:'右', tree:'t3', step:3 },
+];
+var TITLES = [
+  { t:'t1', x:180, text:'① 每个非叶结点只有右孩子', step:1 },
+  { t:'t2', x:380, text:'② 每个非叶结点只有左孩子', step:2 },
+  { t:'t3', x:700, text:'③ 有的结点左右都有', step:3 },
+];
+/* 每棵树的序列行（随对应步显现） */
+var SEQHTML = [
+  { tree:'t1', step:1, html:'<b>树①</b>　先序 <code>N1 N2 N3</code>　中序 <code>N1 N2 N3</code><span class="vd ok">逐位相同 ✓</span>' },
+  { tree:'t2', step:2, html:'<b>树②</b>　先序 <code>M1 M2 M3</code>　中序 <code>M3 M2 M1</code><span class="vd miss">恰好相反 ✗</span>' },
+  { tree:'t3', step:3, html:'<b>树③</b>　先序 <code>R L T</code>　中序 <code>L R T</code><span class="vd miss">第 2 位起错位 ✗</span>' },
+];
+var SNAPS = [
+  { cls:'shift', tag:'遍历规则', count:0,
+    log:'先序 = 根·左·右；中序 = 左·根·右。两序列都以「根」开头，分歧只会出在「左子树」——拿三棵 3 结点小树各走一遍。' },
+  { cls:'ok', tag:'树① 右链', count:1,
+    log:'每个非叶结点只有右孩子：先序 N1 N2 N3，中序 N1 N2 N3 —— 先序走到哪，中序也走到哪，逐位相同 ✓' },
+  { cls:'miss', tag:'树② 左链', count:2,
+    log:'只有左孩子：先序 M1 M2 M3（根最先），中序 M3 M2 M1（最深的最先）—— 恰好相反 ✗' },
+  { cls:'miss', tag:'树③ 双孩子', count:3,
+    log:'只要有一个结点左右子树都非空：先序 R L T，中序 L R T —— 第 2 位起就错位 ✗' },
+  { cls:'shift', tag:'归纳', count:3,
+    log:'任何一个非叶结点若含左子树，先序（先根）与中序（先左最深）就从那里错开 ⇒ 必须「所有非叶结点都只有右子树」。' },
+  { cls:'step', tag:'排除选项', count:4,
+    log:'A 只有左子树 = 树②，恰好相反 ✗；C 度均为 1：度 1 也可能带的是左孩子，不保险 ✗；D 度均为 2：左子树非空必错位 ✗。' },
+  { cls:'done', tag:'完成', count:4, done:true,
+    log:'所有非叶结点只有右子树 ⇔ 先序 = 中序 → 选 B。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svgEl, seqBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 860 260');
+  svg.setAttribute('class', 'bt-svg');
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'bedge hidden-el');
+    ln.dataset.step = e.step; ln.dataset.tree = e.tree;
+    svg.appendChild(ln);
+    // 左/右孩子小标签
+    var mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    var off = e.side === '左' ? -26 : 10;
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', mx + off); t.setAttribute('y', my - 4);
+    t.setAttribute('class', 'sidetag hidden-el');
+    t.dataset.step = e.step; t.dataset.tree = e.tree;
+    t.textContent = e.side;
+    svg.appendChild(t);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'bnode hidden-el');
+    g.dataset.id = n.id; g.dataset.step = n.step; g.dataset.tree = n.tree;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 22);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  TITLES.forEach(function(o){
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', o.x); t.setAttribute('y', 30);
+    t.setAttribute('class', 'ttitle hidden-el');
+    t.dataset.step = o.step; t.dataset.tree = o.t;
+    t.textContent = o.text;
+    svg.appendChild(t);
+  });
+  stage.appendChild(svg);
+  seqBox = AW.el('div', 'seqrows');
+  SEQHTML.forEach(function(s){
+    var d = AW.el('div', 'seqrow hidden-el', s.html);
+    d.dataset.step = s.step; d.dataset.tree = s.tree;
+    seqBox.appendChild(d);
+  });
+  stage.appendChild(seqBox);
+  svgEl = svg;
+}
+
+function render(stage, sn, i){
+  var treeOfStep = { 1:'t1', 2:'t2', 3:'t3' };
+  [].forEach.call(svgEl.querySelectorAll('.bnode, .bedge, .sidetag, .ttitle'), function(el){
+    var st = +el.dataset.step;
+    el.classList.toggle('hidden-el', st > i);
+    el.classList.remove('hot', 'good', 'bad', 'dim-el');
+    if (i >= 1 && i <= 3 && el.dataset.tree === treeOfStep[i] && el.classList.contains('bnode')) el.classList.add('hot');
+    if (i >= 4 && el.dataset.tree === 't1' && el.classList.contains('bnode')) el.classList.add('good');
+    if (i >= 4 && (el.dataset.tree === 't2' || el.dataset.tree === 't3')) el.classList.add('dim-el');
+  });
+  [].forEach.call(seqBox.querySelectorAll('.seqrow'), function(el){
+    var st = +el.dataset.step;
+    el.classList.toggle('hidden-el', st > i);
+    el.classList.remove('dim-el');
+    if (i >= 4 && el.dataset.tree !== 't1') el.classList.add('dim-el');
+  });
+}
 
 AW.init({
   title: '2017-04　先序序列 = 中序序列 的树形条件',
-  subtitle: '考点：<code>二叉树的遍历</code> · 遍历走法推理 + 小链验证',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  subtitle: '考点：<code>二叉树的遍历</code> · 三棵 3 结点小树各走一遍先序/中序，找两序列相同的充要条件',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐棵演示小树的先序与中序，看两序列何时逐位相同。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 B',
-    html: '记忆锚点：先序 = 中序 ⇔ <b>无左孩子（右链）</b>；对称地，中序 = 后序 ⇔ 无右孩子（左链）。做「两序列相同/相反」题的通用套路：拿 2～3 个结点的小链条各走一遍遍历。',
+    html: '先序 = 根·左·右，中序 = 左·根·右：只要某结点<b>有左子树</b>，两序列从第二位起就错开；左子树全空（右链）时两序列逐位相同。<br>' +
+      '故「先序 = 中序」⇔ <b>所有非叶结点只有右子树</b>。对称锚点：中序 = 后序 ⇔ 无右孩子（左链）；先序 = 后序 ⇔ 每个结点至多一个孩子。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

@@ -2,64 +2,198 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2023-06 · 权值全 1 的图如何求单源最短路径</title>
+<title>2023-06 权值全 1 图的单源最短路径 · BFS vs MST 结构动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .gsvg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .gsvg .gedge{stroke:#5a7d8c;stroke-width:2.5px;transition:stroke .35s, opacity .35s}
+  .gsvg .gedge.tbfs{stroke:#16a34a;stroke-width:4px}
+  .gsvg .gedge.tmst{stroke:#d97706;stroke-width:4px}
+  .gsvg .gedge.rej{stroke:#dc2626;stroke-dasharray:7 5;stroke-width:2px}
+  .gsvg .gnode circle{fill:#1b3a4b;transition:fill .3s}
+  .gsvg .gnode text{fill:#fff;font-weight:800;font-size:15px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace}
+  .gsvg .gnode.hot circle{fill:#e07a2f}
+  .gsvg .gnode.ok circle{fill:#16a34a}
+  .gsvg .gnode.fail circle{fill:#dc2626}
+  .gsvg .dist{font-size:12.5px;font-weight:800;fill:#2563eb;text-anchor:middle;
+    font-family:JetBrains Mono,Menlo,monospace;transition:opacity .3s}
+  .gsvg .dist.bad{fill:#dc2626}
+  .gsvg .cap{font-size:13px;font-weight:800;fill:#1b3a4b}
+  .gsvg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+  .legend{display:flex;gap:14px;justify-content:center;margin-top:8px;font-size:12.5px;color:#475569;flex-wrap:wrap}
+  .legend i{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:4px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2023-06 BFS vs MST（SVG 结构演示） ==================
+ * 题：无向连通图各边权均为 1，哪个算法一定能求出从某顶点到其余各顶点的最短路径？
+ * 答：仅 III（BFS）→ 选 B。演示：同一个五边形图上跑 BFS、Kruskal、Prim，对比"树上距离"与真实最短距离。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+var NS = 'http://www.w3.org/2000/svg';
+var VS = { s:[310,70,'s'], a:[130,175,'a'], b:[215,330,'b'], c:[405,330,'c'], d:[490,175,'d'] };
+var ES = [ ['s','a'], ['s','d'], ['a','b'], ['b','c'], ['c','d'] ];
+/* 真实最短距离（= BFS 层数） */
+var TRUE_D = { s:0, a:1, b:2, c:2, d:1 };
 
-var STEPS = [
-  { title: '审题眼：两个关键条件',
-    cls: 'key',
-    body: '<p>条件一：无向连通图 G 的<b>各边权值均为 1</b>——路径长度 = 边数。条件二：要从「某顶点」到「其余各顶点」都最短——这是<b>单源最短路径</b>问题。候选算法：I. Prim、II. Kruskal、III. BFS。</p>' },
-  { title: 'I. Prim 算法：求的是最小生成树',
-    cls: 'bad',
-    body: '<p>Prim 从某顶点出发长出<b>最小生成树（MST）</b>：目标是用总权值最小的 n−1 条边连通全图。MST 管<b>总造价</b>，不管<b>单源距离</b>——MST 上的路径未必是两顶点间的最短路径。I <b>不一定</b>能求出最短路径。</p>' },
-  { title: '反例：权全 1 时 MST 也可能不是 SPT',
-    cls: 'bad',
-    body: '<p>五顶点 s、a、b、t，边 s–a、s–b、a–b、a–t、b–t（权全 1）。Kruskal/Prim 可能生成树 {s–a, a–b, b–t}：树上 s 到 t 要 <b>3</b> 条边；而真实最短路径 s–a–t 只要 <b>2</b> 条边。可见即使权全 1，MST 也不等于最短路径树（SPT）。</p>' },
-  { title: 'II. Kruskal 算法：同样是 MST',
-    cls: 'bad',
-    body: '<p>Kruskal 按边权从小到大全局选 n−1 条不成环的边，构造的还是<b>最小生成树</b>，与「某顶点到各顶点的距离」无关。II 也<b>不一定</b>。</p>' },
-  { title: 'III. BFS：按层扩展恰好按边数递增',
-    cls: 'good',
-    body: '<p>BFS 从源点出发：先访问距离 1 的顶点，再访问距离 2 的……第 k 层顶点的边数恰为 k。<b>权全 1 时边数最少 = 路径最短</b>，每个顶点首次被访问时的路径即最短路径。III <b>一定</b>能求出。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>只有 III 一定可行，答案选 <b>B</b>（仅 III）。记忆锚点：<b>MST 管「总造价」，SPT 管「单源距离」</b>；无权（全 1 权）图的最短路径 = BFS。</p>' },
+/* 每步：边的着色 + 顶点状态 + 距离徽标（MST 步显示"树上距离"，✗=与真实不符） */
+var EDGE_STATE = [
+  {},
+  { sa:'tbfs', sd:'tbfs' },
+  { sa:'tbfs', sd:'tbfs', ab:'tbfs', cd:'tbfs' },
+  { ab:'tmst', bc:'tmst', cd:'tmst', sd:'tmst', sa:'rej' },
+  { ab:'tmst', bc:'tmst', cd:'tmst', sd:'tmst', sa:'rej' },
+  { sa:'tmst', ab:'tmst', bc:'tmst', sd:'tmst', cd:'rej' },
+  { sa:'tmst', ab:'tmst', bc:'tmst', sd:'tmst', cd:'rej' },
+  { sa:'tbfs', sd:'tbfs', ab:'tbfs', cd:'tbfs' },
+];
+var VSTATE = [
+  {},
+  { a:'hot', d:'hot' },
+  { a:'ok', d:'ok', b:'hot', c:'hot' },
+  {},
+  { a:'fail', b:'fail' },
+  {},
+  { c:'fail' },
+  { a:'ok', d:'ok', b:'ok', c:'ok' },
+];
+var DIST = [
+  {},
+  { a:'1', d:'1' },
+  { a:'1', b:'2', c:'2', d:'1' },
+  { a:'1', b:'2', c:'2', d:'1' },
+  { a:'4 ✗(真1)', b:'3 ✗(真2)', c:'2', d:'1' },
+  { a:'1', b:'2', c:'2', d:'1' },
+  { a:'1', b:'2', c:'3 ✗(真2)', d:'1' },
+  { a:'1', b:'2', c:'2', d:'1' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var SNAPS = [
+  { cls:'shift', tag:'题目', count:0,
+    log:'无向连通图 G 各边权均为 1：路径长度 = 边数。问：哪个算法一定能求出从源点 s 到其余各顶点的最短路径？候选：I. Prim　II. Kruskal　III. BFS。' },
+  { cls:'ok', tag:'BFS 第 1 层', count:1,
+    log:'BFS 从 s 出发，先访问距离 1 层：a、d（边 s–a、s–d 变绿）。权全 1 ⟹ 第 k 层顶点的距离恰为 k。' },
+  { cls:'ok', tag:'BFS 第 2 层', count:2,
+    log:'再扩展出第 2 层：b、c。每个顶点「首次被访问」时的层数就是最短距离 —— BFS 一定成功（III ✓）。' },
+  { cls:'shift', tag:'Kruskal 选边', count:3,
+    log:'Kruskal 按权从小到大选不成环的边（权全 1，按字典序 a–b、b–c、c–d、d–s）：选满 n−1=4 条后停止，s–a 被弃（橙=树边，红虚=被弃）。总权值 4 确实最小 —— 但它求的是生成树。' },
+  { cls:'miss', tag:'Kruskal 检验', count:4,
+    log:'在这棵生成树上数边数：s 到 a 要绕 4 条边（真实最短只要 1）、到 b 要 3 条（真实 2）。MST 最小化总权值，不保证单源距离 —— Kruskal 失败（II ✗）。' },
+  { cls:'shift', tag:'Prim 选边', count:5,
+    log:'Prim 从 s 出发每次挑权最小的横跨边（同权按字典序）：s–a、a–b、b–c、s–d，总权值 4 同样最小 —— 还是生成树。' },
+  { cls:'miss', tag:'Prim 检验', count:6,
+    log:'树上 s→c 要 3 条边（走 s–d–c 真实只需 2 条）。Prim 同样只管总造价 —— 失败（I ✗）。' },
+  { cls:'done', tag:'完成', count:6, done:true,
+    log:'权全 1 时最短路径 = 最少边数，BFS 按层扩展必得最短；Prim/Kruskal 管总造价、不管单源距离。答案 B（仅 III）。' },
+];
+
+var FORMULAS = [
+  '目标：s 到其余各顶点的<b>最短路径</b>（权全 1 ⟺ 最少边数）',
+  '第 1 层：dist(a)=1，dist(d)=1',
+  '第 2 层：dist(b)=2，dist(c)=2 —— BFS 首达即最短 → <code>III ✓</code>',
+  'Kruskal 生成树：总权值 = 4 = n−1（最小 ✓，但目标不是距离）',
+  '树上 s→a = 4 条边 ≠ 真实 1 ✗ → <code>II ✗</code>',
+  'Prim 生成树：总权值 = 4（也是最小 ✓）',
+  '树上 s→c = 3 条边 ≠ 真实 2 ✗ → <code>I ✗</code>',
+  '<b>仅 III 一定行 → 答案 B</b>（MST 管总造价，BFS 管单源距离）',
+];
+
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 400');
+  svg.setAttribute('class', 'gsvg');
+  var cap = document.createElementNS(NS, 'text');
+  cap.setAttribute('x', 310); cap.setAttribute('y', 32);
+  cap.setAttribute('class', 'cap'); cap.setAttribute('text-anchor', 'middle');
+  cap.textContent = '五顶点反例图 · 各边权值均为 1 · 源点 s';
+  svg.appendChild(cap);
+  ES.forEach(function(e){
+    var A = VS[e[0]], B = VS[e[1]];
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', A[0]); ln.setAttribute('y1', A[1]);
+    ln.setAttribute('x2', B[0]); ln.setAttribute('y2', B[1]);
+    ln.setAttribute('class', 'gedge');
+    ln.dataset.eid = e[0] + e[1];
+    svg.appendChild(ln);
+  });
+  Object.keys(VS).forEach(function(k){
+    var v = VS[k];
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'gnode');
+    g.dataset.vid = k;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', v[0]); c.setAttribute('cy', v[1]); c.setAttribute('r', 22);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', v[0]); t.setAttribute('y', v[1]);
+    t.textContent = v[2];
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    var d = document.createElementNS(NS, 'text');
+    d.setAttribute('x', v[0] + (k === 's' ? -46 : 44)); d.setAttribute('y', v[1] - (k === 's' ? 0 : 26));
+    d.setAttribute('class', 'dist hidden-el');
+    d.dataset.did = k;
+    svg.appendChild(d);
+  });
+  stage.appendChild(svg);
+  var lg = AW.el('div', 'legend',
+    '<span><i style="background:#16a34a"></i>BFS 树边</span>' +
+    '<span><i style="background:#d97706"></i>生成树边</span>' +
+    '<span><i style="background:#dc2626"></i>被弃的边</span>' +
+    '<span><i style="background:#1b3a4b"></i>未使用</span>');
+  stage.appendChild(lg);
+  this._svg = svg;
+  this._formula = AW.el('div', 'hformula');
+  stage.appendChild(this._formula);
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var es = EDGE_STATE[Math.min(i, EDGE_STATE.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.gedge'), function(ln){
+    var st = es[ln.dataset.eid] || '';
+    ln.classList.remove('tbfs', 'tmst', 'rej');
+    if (st) ln.classList.add(st);
+  });
+  var vs = VSTATE[Math.min(i, VSTATE.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.gnode'), function(g){
+    g.classList.remove('hot', 'ok', 'fail');
+    var st = vs[g.dataset.vid];
+    if (st) g.classList.add(st);
+  });
+  var ds = DIST[Math.min(i, DIST.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.dist'), function(d){
+    var txt = ds[d.dataset.did];
+    if (txt == null){ d.classList.add('hidden-el'); return; }
+    d.classList.remove('hidden-el');
+    d.classList.toggle('bad', txt.indexOf('✗') >= 0);
+    d.textContent = d.dataset.did + '：' + txt;
+  });
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
 
 AW.init({
-  title: '2023-06 · 哪个算法一定求得出权全 1 图的单源最短路径？',
-  subtitle: 'I. Prim　II. Kruskal　III. 广度优先搜索 · 边权均为 1',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2023-06 权值全 1 图的单源最短路径 · BFS vs MST',
+  subtitle: '题：无向连通图各边权值均为 1，一定能求出从某顶点到其余各顶点最短路径的是？<br>I. Prim　II. Kruskal　III. 广度优先搜索',
+  counterLabel: '演示步',
+  ribbonTitle: '检验点（✓ 成立 / ✗ 失败）',
+  intro: '点击「▶ 播放」：在同一个图上先跑 BFS，再跑 Kruskal、Prim，对比"树上距离"和真实最短距离。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 B（仅 III）',
-    html: 'Prim / Kruskal 构造<b>最小生成树</b>，MST ≠ 最短路径树（反例：s–a、s–b、a–b、a–t、b–t 权全 1，MST 上 s→t 走 3 条边，最短只要 2 条）。<b>BFS 按层扩展</b>，权全 1 时首次到达即最短，一定可行。记忆锚点：<b>无权图最短路用 BFS；MST 管总造价，不管单源距离</b>。',
+    html: '权全 1 时「路径最短 = 边数最少」，<b>BFS 按层扩展，每个顶点首次被访问时的层数就是最短距离</b>，一定可行（III ✓）。<br>' +
+      'Prim / Kruskal 构造的是<b>最小生成树</b>：只保证 n−1 条边的总权值最小，不保证单源距离 —— 演示图中 Kruskal 树上 s→a 绕 4 条边（真实 1）、Prim 树上 s→c 绕 3 条边（真实 2），都失败。<br>' +
+      '记忆锚点：<code>MST 管「总造价」，SPT 管「单源距离」；无权图最短路用 BFS</code>。若边权任意则要改用 Dijkstra。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

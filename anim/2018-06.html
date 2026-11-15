@@ -2,67 +2,197 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2018-06 二叉排序树的大小关系</title>
+<title>2018-06 二叉排序树大小关系 · 定序动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bsvg{width:100%;max-width:760px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bsvg .bedge{stroke:#5a7d8c;stroke-width:2.5px}
+  .bsvg .sidetag{font-size:13px;font-weight:800;fill:#e63946;text-anchor:middle}
+  .bsvg .bnode circle{fill:#1b3a4b;transition:fill .3s}
+  .bsvg .bnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff}
+  .bsvg .bnode.hot circle{fill:#e07a2f}
+  .bsvg .ann{font-size:13px;font-weight:700;fill:#0f172a;transition:opacity .4s}
+  .bsvg .hidden-el{opacity:0}
+  .chain{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px;flex-wrap:wrap;min-height:40px}
+  .chain .cchip{background:#1b3a4b;color:#fff;border-radius:10px;padding:6px 14px;font-weight:800;
+    font-family:JetBrains Mono,Menlo,monospace;font-size:15px;transition:opacity .4s, background .3s}
+  .chain .cchip.newhot{background:#e07a2f}
+  .chain .clt{font-weight:800;color:#64748b;font-size:16px}
+  .chain .cchip.hidden-el{opacity:0}
+  .opts{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-width:640px;margin-left:auto;margin-right:auto}
+  .opts .orow{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#334155;
+    background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:7px 12px;transition:opacity .4s}
+  .opts .orow code{font-family:"SF Mono",Menlo,monospace;font-weight:800;background:#1b3a4b14;padding:1px 8px;border-radius:6px}
+  .opts .orow .vd{margin-left:auto;font-weight:800}
+  .opts .orow .vd.ok{color:#16a34a}
+  .opts .orow .vd.miss{color:#dc2626}
+  .opts .orow.good{border-color:#16a34a;background:#f6fef9}
+  .opts .orow.hidden-el{opacity:0}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/推理链类题目动画：BST 中序定序推理链
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2018-06 BST 大小关系推导（SVG 树 + 排序链） ==================
+ * 题：图中 BST 一条之字链 x1—x2—x3—x4—x5，元素大小关系？（答案 C：x3<x5<x4）
+ * 演示：按 BST 性质逐个结点定界，把排序链 x1<x3<x5<x4<x2 一步步搭出来，再核对选项。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼：中序遍历即升序',
-    cls: 'key',
-    body: '<p>二叉排序树的定义：左子树所有结点 &lt; 根 &lt; 右子树所有结点（递归成立）。因此 <b>中序遍历（左·根·右）得到严格递增序列</b>——求大小关系就是求中序序列，不必逐对猜。</p>' },
-  { title: '从图读出树形',
-    cls: 'key',
-    body: '<p>按层高与横向位置：最高处 <code>x1</code> 是根；<code>x2</code> 在其右下 → x1 的<b>右</b>孩子；<code>x3</code> 在 x2 左下 → x2 的<b>左</b>孩子；<code>x4</code> 在 x3 右下 → x3 的<b>右</b>孩子；<code>x5</code> 在 x4 左下 → x4 的<b>左</b>孩子。整棵树是一条之字形链。</p>' },
-  { title: '中序遍历',
-    cls: 'good',
-    body: '<p>左·根·右走一遍：x1（根，无左子树）→ x2 的左子树出 x3 → x3 的右子树里先 x4 的左孩子 <b>x5</b>、再 <b>x4</b> → 最后 x2。<br>中序序列：<code>x1, x3, x5, x4, x2</code><br>即 <b>x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2</b></p>' },
-  { title: '排除 A、B',
-    cls: 'bad',
-    body: '<p>A <code>x1&lt;x2&lt;x5</code>：x5 在 x2 的子树里，而 x5 最终落在 x2 左子树一侧的深处——x5 &lt; x2，错。<br>B <code>x1&lt;x4&lt;x5</code>：x5 是 x4 的<b>左</b>孩子，x5 &lt; x4，错。</p>' },
-  { title: '排除 D、确认 C',
-    cls: 'good',
-    body: '<p>D <code>x4&lt;x3&lt;x5</code>：x4 在 x3 的右子树，x3 &lt; x4，错。<br>C <code>x3&lt;x5&lt;x4</code>：x5 是 x4 左孩子（x5 &lt; x4）且在 x3 右子树（x3 &lt; x5），与排序完全一致 ✓</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>C</b>。记忆锚点：<b>BST 的大小关系一律用中序序列裁决</b>——先写出完整中序，再逐条核对选项；祖先—后代的大小关系由「在谁的左/右子树里」决定。</p>' },
+var NODES = [
+  { id:'x1', x:210, y:45,  step:0 },
+  { id:'x2', x:345, y:135, step:0 },
+  { id:'x3', x:260, y:225, step:0 },
+  { id:'x4', x:360, y:315, step:0 },
+  { id:'x5', x:280, y:400, step:0 },
+];
+var EDGES = [
+  { a:'x1', b:'x2', side:'右', step:0 },
+  { a:'x2', b:'x3', side:'左', step:0 },
+  { a:'x3', b:'x4', side:'右', step:0 },
+  { a:'x4', b:'x5', side:'左', step:0 },
+];
+/* 结点旁的定界标注：随推导步显现 */
+var ANNS = [
+  { id:'x2', step:1, dx:36, dy:0,  text:'＞x1，子树全比它小 ⇒ 最大' },
+  { id:'x3', step:1, dx:36, dy:0,  text:'＞x1（在 x1 右子树内），＜x2' },
+  { id:'x4', step:2, dx:36, dy:0,  text:'x3＜x4＜x2' },
+  { id:'x5', step:3, dx:36, dy:0,  text:'x3＜x5＜x4' },
+  { id:'x1', step:4, dx:-36, dy:0, text:'最小', anchor:'end' },
+];
+/* 每步的排序链（新插入的结点高亮） */
+var CHAINS = [
+  [],
+  { order:['x1','x3','x2'], hot:'x3' },
+  { order:['x1','x3','x4','x2'], hot:'x4' },
+  { order:['x1','x3','x5','x4','x2'], hot:'x5' },
+  { order:['x1','x3','x5','x4','x2'], hot:null },
+  { order:['x1','x3','x5','x4','x2'], hot:null },
+  { order:['x1','x3','x5','x4','x2'], hot:null },
+];
+var OPTS = [
+  { html:'<b>A</b>　<code>x1&lt;x2&lt;x5</code><span class="vd miss">✗　x5 在 x2 左子树深处，x5&lt;x2（x2 才是最大）</span>' },
+  { html:'<b>B</b>　<code>x1&lt;x4&lt;x5</code><span class="vd miss">✗　x5 是 x4 的左孩子，x5&lt;x4</span>' },
+  { html:'<b>C</b>　<code>x3&lt;x5&lt;x4</code><span class="vd ok">✓　与推导链完全一致</span>', good:true },
+  { html:'<b>D</b>　<code>x4&lt;x3&lt;x5</code><span class="vd miss">✗　x4 在 x3 右子树，x3&lt;x4，方向全反</span>' },
+];
+var SNAPS = [
+  { cls:'shift', tag:'读树形', count:0,
+    log:'BST 性质：左子树 < 根 < 右子树（递归成立）。按图中位置读树：x1 为根，x2 是 x1 的右孩子，x3 是 x2 的左孩子，x4 是 x3 的右孩子，x5 是 x4 的左孩子 —— 一条之字链。' },
+  { cls:'ok', tag:'定 x2 / x3', count:1,
+    log:'x2 在 x1 右子树 → x1 < x2；x3 在 x2 左子树 → x3 < x2；x3 又在 x1 右子树内 → x1 < x3。排序链：x1 < x3 < x2。' },
+  { cls:'ok', tag:'定 x4', count:2,
+    log:'x4 是 x3 的右孩子 → x3 < x4；x4 仍在 x2 的左子树里 → x4 < x2。排序链：x1 < x3 < x4 < x2。' },
+  { cls:'ok', tag:'定 x5', count:3,
+    log:'x5 是 x4 的左孩子 → x5 < x4；x5 在 x3 的右子树内 → x3 < x5。插进链中：x1 < x3 < x5 < x4 < x2。' },
+  { cls:'shift', tag:'全序', count:3,
+    log:'五个结点的大小关系全部定死：x1 < x3 < x5 < x4 < x2 —— 这恰是 BST 的中序序列（BST 中序必递增）。' },
+  { cls:'step', tag:'比对选项', count:4,
+    log:'A ✗（x5 < x2）；B ✗（x5 < x4）；C ✓（与链一致）；D ✗（x3 < x4，方向反）。' },
+  { cls:'done', tag:'完成', count:4, done:true,
+    log:'选 C：x3 < x5 < x4。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svgEl, chainBox, optsBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 760 460');
+  svg.setAttribute('class', 'bsvg');
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'bedge');
+    svg.appendChild(ln);
+    var t = document.createElementNS(svgNS, 'text');
+    var off = e.side === '左' ? -24 : 24;
+    t.setAttribute('x', (A.x + B.x) / 2 + off);
+    t.setAttribute('y', (A.y + B.y) / 2);
+    t.setAttribute('class', 'sidetag');
+    t.textContent = e.side;
+    svg.appendChild(t);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'bnode');
+    g.dataset.id = n.id;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 26);
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = n.id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  ANNS.forEach(function(a){
+    var n = null;
+    NODES.forEach(function(o){ if (o.id === a.id) n = o; });
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', n.x + a.dx); t.setAttribute('y', n.y + a.dy);
+    t.setAttribute('class', 'ann hidden-el');
+    if (a.anchor) t.setAttribute('text-anchor', a.anchor);
+    t.dataset.step = a.step;
+    t.textContent = a.text;
+    svg.appendChild(t);
+  });
+  stage.appendChild(svg);
+  chainBox = AW.el('div', 'chain');
+  stage.appendChild(chainBox);
+  optsBox = AW.el('div', 'opts');
+  OPTS.forEach(function(o, k){
+    var d = AW.el('div', 'orow hidden-el' + (o.good ? ' good' : ''), o.html);
+    d.dataset.idx = k;
+    optsBox.appendChild(d);
+  });
+  stage.appendChild(optsBox);
+  svgEl = svg;
+}
+
+function render(stage, sn, i){
+  [].forEach.call(svgEl.querySelectorAll('.ann'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svgEl.querySelectorAll('.bnode'), function(el){
+    el.classList.remove('hot');
+    var c = CHAINS[Math.min(i, CHAINS.length - 1)];
+    if (c && c.hot === el.dataset.id) el.classList.add('hot');
+  });
+  var c = CHAINS[Math.min(i, CHAINS.length - 1)];
+  if (c && c.order){
+    chainBox.innerHTML = c.order.map(function(id){
+      var cls = 'cchip hidden-el' + (c.hot === id ? ' newhot' : '');
+      return '<span class="' + cls + '">' + id + '</span>';
+    }).join('<span class="clt">&lt;</span>');
+    // 新出现之前的链结点保持可见（只让本步新增的闪一下）
+    [].forEach.call(chainBox.querySelectorAll('.cchip'), function(el){ el.classList.remove('hidden-el'); });
+  } else {
+    chainBox.innerHTML = '';
+  }
+  [].forEach.call(optsBox.querySelectorAll('.orow'), function(el){
+    el.classList.toggle('hidden-el', i < 5);
+  });
+}
 
 AW.init({
-  title: '2018·数据结构（六） 二叉排序树中谁大谁小',
-  subtitle: 'BST 一条之字形链：x1—x2—x3—x4—x5 · 用中序遍历定序',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2018-06　二叉排序树：谁比谁大？',
+  subtitle: '考点：<code>树形查找 · BST 性质</code> · 之字链 x1—x2—x3—x4—x5（右、左、右、左），逐结点定界排链',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」：按 BST 性质逐个结点定界，把排序链一步步搭出来，再核对四个选项。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 C',
-    html: '中序序列 <b>x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2</b>，唯一正确的选项是 C <code>x3&lt;x5&lt;x4</code>。记忆锚点：BST + 大小关系 → <b>先求中序，再核对</b>；x5 在 x2 左子树里所以 x5 &lt; x2，A 因此必错。',
+    big: '答案 C　x3 < x5 < x4',
+    html: '完整定序链：<b>x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2</b>（即该 BST 的中序序列）。<br>' +
+      '锚点：BST 的大小关系用<b>中序序列</b>一锤定音；祖先—后代的大小由「落在谁的左/右子树」决定 —— x5 在 x2 左子树 ⇒ x5 &lt; x2（A 必错）。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

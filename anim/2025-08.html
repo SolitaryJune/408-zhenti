@@ -2,85 +2,184 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2025-08 4阶B树形态计数动画</title>
+<title>2025-08 4 阶 B 树形态枚举 · 构形动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bsvg{width:100%;max-width:680px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bsvg text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+  .bsvg .bhead{font-size:12.5px;font-weight:700;fill:#334155;text-anchor:middle}
+  .bsvg .blab{font-size:11px;font-weight:700;fill:#64748b;text-anchor:middle;font-family:Menlo,monospace}
+  .bsvg .bnode rect{transition:opacity .4s,stroke .3s}
+  .bsvg .bnode .slot{fill:#1b3a4b;transition:opacity .4s}
+  .bsvg .bnode.root rect{fill:#fef3c7;stroke:#d97706;stroke-width:2}
+  .bsvg .bnode.inner rect{fill:#ede9fe;stroke:#7c3aed;stroke-width:2}
+  .bsvg .bnode.leaf rect{fill:#dcfce7;stroke:#16a34a;stroke-width:2}
+  .bsvg .bedge{stroke:#5a7d8c;stroke-width:2;transition:opacity .4s}
+  .bsvg .bnode.hot rect{stroke:#e07a2f;stroke-width:3.5}
+  .bsvg .hidden-el{opacity:0}
+  .bnote{margin-top:10px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
+  .bnote code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2025-08 7 个关键字的 4 阶 B 树形态枚举（SVG） ==================
+ * 树高2：根1键(3,3)=1种；根2键 6 种（叶子分布有序）；根3键(1,1,1,1)=1种；树高3 全取下限=1种。合计 9 种，选 C。 */
+var svgNS = 'http://www.w3.org/2000/svg';
+function mk(t){ return document.createElementNS(svgNS, t); }
+function attr(e, o){ for (var k in o) e.setAttribute(k, o[k]); return e; }
 
-// 画一棵小树：rootKeys 根关键字个数，rows 为下层结点的关键字个数
-function treeHtml(rootKeys, rows){
-  var h = '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin:10px 0 4px">';
-  h += '<div class="aw-box" style="width:auto;min-width:52px;padding:0 10px;border-color:#d97706;background:#fef3c7;color:#92400e">根 ' + rootKeys + ' 关键字</div>';
-  if (rows && rows.length){
-    h += '<div class="aw-cells">';
-    for (var i = 0; i < rows.length; i++){
-      h += '<div class="aw-box" style="width:auto;min-width:44px;padding:0 8px">' + rows[i] + '关键字</div>';
-    }
-    h += '</div>';
+// 画一个 B 树结点：中心 (x,y)，k 个关键字槽
+function bnode(parent, x, y, k, kind, step){
+  var g = mk('g'); g.setAttribute('class', 'bnode ' + kind); g.dataset.step = step;
+  var w = k * 13 + 10, h = 21;
+  var r = mk('rect'); attr(r, {x:x-w/2, y:y-h/2, width:w, height:h, rx:4});
+  g.appendChild(r);
+  for (var i = 0; i < k; i++){
+    var s = mk('rect'); attr(s, {x:x-k*13/2+i*13+1, y:y-5.5, width:11, height:11, rx:2, 'class':'slot'});
+    g.appendChild(s);
   }
-  h += '</div>';
-  return h;
+  parent.appendChild(g); return g;
 }
-// 三层树：根 → 2 个内部结点 → 4 个叶子
-function tree3Html(){
-  var h = '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin:10px 0 4px">';
-  h += '<div class="aw-box" style="width:auto;min-width:52px;padding:0 10px;border-color:#d97706;background:#fef3c7;color:#92400e">根 1 关键字</div>';
-  h += '<div class="aw-cells"><div class="aw-box" style="width:auto;padding:0 8px">内部 1 关键字</div><div class="aw-box" style="width:auto;padding:0 8px">内部 1 关键字</div></div>';
-  h += '<div class="aw-cells"><div class="aw-box ok">1</div><div class="aw-box ok">1</div><div class="aw-box ok">1</div><div class="aw-box ok">1</div></div>';
-  h += '<div style="font-size:12px;color:#64748b">4 个叶子各装 1 个关键字（绿框），恰好用满 7 个</div>';
-  h += '</div>';
-  return h;
+function bedge(parent, x1, y1, x2, y2, step){
+  var l = mk('line'); attr(l, {x1:x1, y1:y1, x2:x2, y2:y2, 'class':'bedge'});
+  l.dataset.step = step; parent.appendChild(l);
 }
-function textHtml(t){
-  return '<div class="aw-stepcard key"><h4>' + t + '</h4></div>';
+function btxt(parent, x, y, s, cls, step){
+  var t = mk('text'); attr(t, {x:x, y:y, 'class':cls});
+  t.textContent = s; t.dataset.step = step; parent.appendChild(t);
 }
+// 画一棵两层树：根 rootKeys 个关键字，leaves 为各叶关键字数（有序）
+function twoLevelTree(parent, spec){
+  var g = mk('g'); g.setAttribute('class', 'bt'); g.dataset.id = spec.id; g.dataset.step = spec.step;
+  var leafY = spec.y + 45, n = spec.leaves.length;
+  var gap = n === 2 ? 70 : (n === 3 ? 90 : 80);
+  bnode(g, spec.x, spec.y, spec.root, 'root', spec.step);
+  spec.leaves.forEach(function(k, i){
+    var lx = spec.x + (i - (n-1)/2) * gap;
+    bedge(g, spec.x, spec.y + 10, lx, leafY - 10, spec.step);
+    bnode(g, lx, leafY, k, 'leaf', spec.step);
+  });
+  btxt(g, spec.x, leafY + 30, spec.lab, 'blab', spec.step);
+  parent.appendChild(g);
+}
+// 三层树：根 1 键 → 2 个内部各 1 键 → 4 叶各 1 键
+function threeLevelTree(parent, spec){
+  var g = mk('g'); g.setAttribute('class', 'bt'); g.dataset.id = spec.id; g.dataset.step = spec.step;
+  var x = spec.x, y = spec.y;
+  bnode(g, x, y, 1, 'root', spec.step);
+  var inX = [x-100, x+100], inY = y + 45;
+  inX.forEach(function(ix, i){ bedge(g, x, y+10, ix, inY-10, spec.step); bnode(g, ix, inY, 1, 'inner', spec.step); });
+  var lfX = [x-150, x-50, x+50, x+150], lfY = inY + 40;
+  lfX.forEach(function(lx, i){
+    bedge(g, inX[i < 2 ? 0 : 1], inY+10, lx, lfY-10, spec.step);
+    bnode(g, lx, lfY, 1, 'leaf', spec.step);
+  });
+  btxt(g, x, lfY + 28, spec.lab, 'blab', spec.step);
+  parent.appendChild(g);
+}
+
+var TREES2 = [
+  { id:'t21',  root:1, leaves:[3,3],       x:110, y:60,  step:1, lab:'(3,3)｜第 1 种' },
+  { id:'t22a', root:2, leaves:[1,1,3],     x:110, y:180, step:2, lab:'(1,1,3)｜第 2 种' },
+  { id:'t22b', root:2, leaves:[1,2,2],     x:340, y:180, step:3, lab:'(1,2,2)｜第 3 种' },
+  { id:'t22c', root:2, leaves:[1,3,1],     x:570, y:180, step:4, lab:'(1,3,1)｜第 4 种' },
+  { id:'t22d', root:2, leaves:[2,1,2],     x:110, y:290, step:5, lab:'(2,1,2)｜第 5 种' },
+  { id:'t22e', root:2, leaves:[2,2,1],     x:340, y:290, step:6, lab:'(2,2,1)｜第 6 种' },
+  { id:'t22f', root:2, leaves:[3,1,1],     x:570, y:290, step:7, lab:'(3,1,1)｜第 7 种' },
+  { id:'t23',  root:3, leaves:[1,1,1,1],   x:545, y:60,  step:8, lab:'(1,1,1,1)｜第 8 种' },
+];
+var HOT_TREE = { 1:'t21', 2:'t22a', 3:'t22b', 4:'t22c', 5:'t22d', 6:'t22e', 7:'t22f', 8:'t23', 9:'t3' };
+var NOTES = [
+  '4 阶 B 树：每结点 ≤ 3 个关键字；非根结点 ≥ 1 个；根（非叶）≥ 2 棵子树；所有叶子同层。7 个关键字 → 树高只能 2 或 3。',
+  '树高 2 · 根 1 关键字：2 个叶子共装 6 个，各 1~3 个 → 只能 (3,3) → <b>1 种</b>（累计 1）。',
+  '根 2 关键字 → 3 个叶子共装 5 个：(1,1,3) → 第 2 种（累计 2）。',
+  '(1,2,2) → 第 3 种（累计 3）。',
+  '(1,3,1) → 第 4 种（累计 4）。',
+  '(2,1,2) → 第 5 种（累计 5）。',
+  '(2,2,1) → 第 6 种（累计 6）。',
+  '(3,1,1) → 第 7 种（累计 7）。注意叶子分布<b>有序</b>：各叶装的个数不同就是不同的 B 树。',
+  '根 3 关键字 → 4 个叶子共装 4 个，各 ≥ 1 → 只能 (1,1,1,1) → 第 8 种（累计 8）。',
+  '树高 3：根 1 + 2 个内部各 1 + 4 叶各 1 = 7，恰好用满、再多必超 → 第 9 种（累计 9）。',
+  '树高 2 共 8 种 + 树高 3 共 1 种 = <b>9 种 → 选 C</b>。',
+];
+
+var svg, noteBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  svg = mk('svg'); attr(svg, {viewBox:'0 0 680 535', 'class':'bsvg'});
+  // 分区标题（第 0 步）
+  btxt(svg, 110, 26, '树高 2 · 根 1 个关键字', 'bhead', 0);
+  btxt(svg, 545, 26, '树高 2 · 根 3 个关键字', 'bhead', 0);
+  btxt(svg, 340, 152, '树高 2 · 根 2 个关键字 → 6 种（叶子分布有序）', 'bhead', 0);
+  btxt(svg, 340, 380, '树高 3 · 全取下限恰好 7 个关键字 → 1 种', 'bhead', 0);
+  TREES2.forEach(function(t){ twoLevelTree(svg, t); });
+  threeLevelTree(svg, { id:'t3', x:340, y:412, step:9, lab:'(根1+内部2×1+叶4×1)｜第 9 种' });
+  stage.appendChild(svg);
+  noteBox = AW.el('div', 'bnote', '');
+  stage.appendChild(noteBox);
+}
+
+function render(stage, sn, i){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.bnode'), function(el){
+    el.classList.remove('hot');
+  });
+  var hot = HOT_TREE[Math.min(i, 9)];
+  if (hot){
+    [].forEach.call(svg.querySelectorAll('g.bt'), function(bt){
+      if (bt.dataset.id === hot){
+        [].forEach.call(bt.querySelectorAll('.bnode'), function(bn){ bn.classList.add('hot'); });
+      }
+    });
+  }
+  noteBox.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'规则', count:0,
+    log:'4 阶 B 树：每结点至多 3 个关键字、非根至少 1 个、根非叶至少 2 棵子树、叶子同层。7 个关键字树高只能是 2 或 3，逐类枚举。' },
+  { cls:'step', tag:'根 1 关键字', count:1,
+    log:'树高 2：根 1 个关键字 → 2 个叶子共装 6 个，每个叶子 1~3 个 → 只能 (3,3)，第 1 种。' },
+  { cls:'step', tag:'根 2 关键字 ①', count:2,
+    log:'根 2 个 → 3 个叶子共装 5 个：(1,1,3) —— 第 2 种。' },
+  { cls:'step', tag:'根 2 关键字 ②', count:3,
+    log:'(1,2,2) —— 第 3 种。' },
+  { cls:'step', tag:'根 2 关键字 ③', count:4,
+    log:'(1,3,1) —— 第 4 种。' },
+  { cls:'step', tag:'根 2 关键字 ④', count:5,
+    log:'(2,1,2) —— 第 5 种。' },
+  { cls:'step', tag:'根 2 关键字 ⑤', count:6,
+    log:'(2,2,1) —— 第 6 种。' },
+  { cls:'ok', tag:'根 2 关键字 ⑥', count:7,
+    log:'(3,1,1) —— 第 7 种。6 种排布齐了：叶子分布有序，各叶个数不同即不同的树。' },
+  { cls:'step', tag:'根 3 关键字', count:8,
+    log:'根 3 个 → 4 个叶子共装 4 个，每个至少 1 个 → 只能 (1,1,1,1)，第 8 种。' },
+  { cls:'ok', tag:'树高 3', count:9,
+    log:'三层树最少要：根 1 + 2 个内部各 1 + 4 个叶各 1 = 7 个，恰好用满、再多放必超 → 第 9 种。' },
+  { cls:'done', tag:'完成', count:9, done:true,
+    log:'合计 1 + 6 + 1 + 1 = 9 种 → 选 C。' },
+];
 
 AW.init({
-  title: '7 个关键字能构成多少种不同的 4 阶 B 树？',
-  subtitle: '4 阶：每结点 ≤ 3 个关键字、非根 ≥ 1 个、根非叶 ≥ 2 棵子树、叶子同层 · 按树高与根关键字分类枚举',
+  title: '2025-08 · 7 个关键字能构成多少种不同的 4 阶 B 树',
+  subtitle: '4 阶：每结点 ≤ 3 个关键字、非根 ≥ 1 个、根非叶 ≥ 2 棵子树、叶子同层 · 按<code>树高 × 根关键字数 × 叶子分布（有序）</code>枚举',
   counterLabel: '累计种数',
-  intro: '点击「▶ 播放」逐类枚举所有树形。',
-
-  snaps: [
-    { cls:'shift', tag:'规则', log:'4 阶 B 树：结点 ≤ 3 个关键字、非根 ≥ 1 个、根非叶 ≥ 2 棵子树、叶子同层。7 个关键字树高只能是 2 或 3', count:0,
-      html:'' },
-    { cls:'step', tag:'树高2·根1关键字', log:'根 1 个关键字 → 2 个叶子，叶子共 6 个关键字、每个 1~3 个：只能 (3,3) → 1 种', count:1 },
-    { cls:'step', tag:'树高2·根2关键字', log:'根 2 个 → 3 个叶子共 5 个关键字：(1,1,3),(1,2,2),(1,3,1),(2,1,2),(2,2,1),(3,1,1) → 6 种', count:7 },
-    { cls:'step', tag:'树高2·根3关键字', log:'根 3 个 → 4 个叶子共 4 个关键字：只能 (1,1,1,1) → 1 种', count:8 },
-    { cls:'step', tag:'树高3', log:'三层树最少要根 1 + 内部 2×1 + 叶子 4×1 = 7 个，恰好用满 → 1 种', count:9 },
-    { cls:'done', tag:'完成', log:'1 + 6 + 1 + 1 = 9 种 → 答案 C', count:9, done:true },
-  ],
-
-  render: function(stage, sn, i){
-    if (i === 0){
-      stage.innerHTML = textHtml('4 阶 B 树的约束：每结点至多 3 个关键字；非根结点至少 1 个关键字；根结点（非叶）至少 2 棵子树；所有叶子在同一层。7 个关键字：树高为 2 或 3，下面逐类枚举。');
-    } else if (i === 1){
-      stage.innerHTML = treeHtml(1, [3, 3]) +
-        '<div class="aw-row-label">两个叶子各装 3 个关键字（共 1+6=7 个）✓。注意叶子分布有序，(2,4) 之类违反上限，不算。</div>';
-    } else if (i === 2){
-      stage.innerHTML = treeHtml(2, [1, 1, 3]) +
-        '<div class="aw-row-label">示意 (1,1,3) 一种；全部排布：(1,1,3)、(1,2,2)、(1,3,1)、(2,1,2)、(2,2,1)、(3,1,1) —— 共 <b>6</b> 种。</div>';
-    } else if (i === 3){
-      stage.innerHTML = treeHtml(3, [1, 1, 1, 1]) +
-        '<div class="aw-row-label">4 个叶子共装 4 个关键字，每个至少 1 个 → 只能 (1,1,1,1) 一种。</div>';
-    } else if (i === 4){
-      stage.innerHTML = tree3Html() +
-        '<div class="aw-row-label">三层树的下限之和恰好 = 7，再多放任何关键字都超出，故只有 1 种。</div>';
-    } else {
-      stage.innerHTML = '<div class="aw-stepcard good"><h4>合计</h4><p>树高 2：1 + 6 + 1 = 8 种；树高 3：1 种。<br><b>共 9 种，选 C。</b></p></div>';
-    }
-  },
-
+  intro: '点击「▶ 播放」，逐类把 9 种树形画出来。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '9 种',
-    html: '分类口径：<b>根的关键字个数 × 叶子关键字分布（有序）</b>。<br>树高 2：根 1 关键字 1 种、根 2 关键字 6 种、根 3 关键字 1 种；树高 3：全部取下限恰好 7 个，1 种。合计 <b>9 种</b>，选 <b>C</b>。',
+    big: '9 种（选 C）',
+    html: '分类口径：<b>树高 × 根关键字个数 × 叶子关键字分布（有序）</b>。<br>树高 2：根 1 关键字 (3,3) 共 1 种；根 2 关键字 (1,1,3)(1,2,2)(1,3,1)(2,1,2)(2,2,1)(3,1,1) 共 6 种；根 3 关键字 (1,1,1,1) 共 1 种。树高 3：全取下限恰好 7 个，1 种。合计 <b>9 种</b>。<br>易错：把叶子分布当无序（漏 5 种）；漏掉三层树（1 种恰好撑得起 7 个关键字）。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

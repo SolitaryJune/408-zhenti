@@ -2,173 +2,267 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2025-42 AOE 网关键路径动画</title>
+<title>2025-42 AOE 网 · 关键路径与时间余量</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .aoe-svg{width:100%;max-width:700px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .aoe-svg text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+  .aoe-svg .gw{font-size:12px;font-weight:800;fill:#1d4ed8;text-anchor:middle;font-family:Menlo,monospace}
+  .aoe-svg .evb{font-size:11px;font-weight:800;fill:#15803d;text-anchor:middle;font-family:Menlo,monospace}
+  .aoe-svg .vlb{font-size:11px;font-weight:800;fill:#b45309;text-anchor:middle;font-family:Menlo,monospace}
+  .aoe-svg .ann{font-size:12.5px;font-weight:800;text-anchor:middle}
+  .aoe-svg .ann.red{fill:#dc2626}
+  .aoe-svg .ann.amber{fill:#92400e}
+  .aoe-svg .gnode circle{fill:#fff;stroke:#334155;stroke-width:2.4;transition:opacity .4s,fill .3s,stroke .3s}
+  .aoe-svg .gnode text{font-family:Menlo,monospace;font-weight:800;font-size:16px;
+    text-anchor:middle;dominant-baseline:central;transition:opacity .4s}
+  .aoe-svg .gedge{stroke:#64748b;stroke-width:2.4;transition:opacity .4s,stroke .3s,stroke-width .3s}
+  .aoe-svg .garrow{fill:#64748b;transition:opacity .4s,fill .3s}
+  .aoe-svg .edge-g.crit .gedge{stroke:#dc2626;stroke-width:4}
+  .aoe-svg .edge-g.crit .garrow{fill:#dc2626}
+  .aoe-svg .edge-g.hotg .gedge{stroke:#16a34a;stroke-width:3.6}
+  .aoe-svg .edge-g.hotg .garrow{fill:#16a34a}
+  .aoe-svg .edge-g.hota .gedge{stroke:#d97706;stroke-width:3.6}
+  .aoe-svg .edge-g.hota .garrow{fill:#d97706}
+  .aoe-svg .gnode.veok circle{fill:#dcfce7;stroke:#16a34a}
+  .aoe-svg .gnode.vlok circle{fill:#fef3c7;stroke:#d97706}
+  .aoe-svg .gnode.hotg circle{fill:#16a34a}
+  .aoe-svg .gnode.hota circle{fill:#fde68a}
+  .aoe-svg .gnode.critn circle{fill:#fee2e2;stroke:#dc2626;stroke-width:3.4}
+  .aoe-svg .hidden-el{opacity:0}
+  .aobanner{margin:0 0 8px;font-size:14px;font-weight:700;color:#1b3a4b;line-height:1.8;
+    background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:8px 12px}
+  .aotab{border-collapse:collapse;font-size:12.5px;font-family:Menlo,Menlo,monospace;margin:2px 4px 10px}
+  .aotab th{background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 8px;font-weight:700}
+  .aotab td{border:1px solid #cbd5e1;padding:3px 8px;text-align:center}
+  .aotab td.okc{background:#dcfce7}
+  .aotab td.okc2{background:#fef3c7}
+  .aotab td.cur{background:#16a34a;color:#fff;font-weight:800}
+  .aotab td.cura{background:#fde68a;font-weight:800}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2025-42 AOE 网关键路径（SVG 正推/逆推/余量演示） ==================
+ * 题图：事件 1..7（源点1、汇点5），活动 a:1→3(2) b:1→2(5) c:3→6(1) d:1→4(3) e:3→4(3)
+ * f:4→2(4) g:4→6(1) h:6→7(1) j:4→5(1) k:2→5(2) m:4→7(4) n:7→5(3)。答案：工期12；关键 a,e,m,n。 */
+var svgNS = 'http://www.w3.org/2000/svg', RR = 22;
+function mk(t){ return document.createElementNS(svgNS, t); }
+function attr(e, o){ for (var k in o) e.setAttribute(k, o[k]); return e; }
+function svgtxt(x, y, s, cls, step){
+  var t = mk('text'); attr(t, {x:x, y:y, 'class':cls});
+  t.textContent = s; if (step != null) t.dataset.step = step; return t;
+}
+function nodeEl(id, x, y, s, step){
+  var g = mk('g'); g.setAttribute('class', 'gnode'); g.dataset.id = id; g.dataset.step = step;
+  var c = mk('circle'); attr(c, {cx:x, cy:y, r:RR});
+  var t = mk('text'); attr(t, {x:x, y:y}); t.textContent = s;
+  g.appendChild(c); g.appendChild(t); return g;
+}
+function edgeEl(id, A, B, step){
+  var g = mk('g'); g.setAttribute('class', 'edge-g'); g.dataset.id = id; g.dataset.step = step;
+  var dx = B[0]-A[0], dy = B[1]-A[1], L = Math.sqrt(dx*dx+dy*dy), ux = dx/L, uy = dy/L, px = -uy, py = ux;
+  var tipx = B[0]-ux*(RR+2), tipy = B[1]-uy*(RR+2);
+  var l = mk('line'); attr(l, {x1:A[0], y1:A[1], x2:tipx, y2:tipy, 'class':'gedge'});
+  var bx = tipx-ux*9, by = tipy-uy*9;
+  var ar = mk('polygon');
+  attr(ar, {points: tipx+','+tipy+' '+(bx+px*4.5)+','+(by+py*4.5)+' '+(bx-px*4.5)+','+(by-py*4.5), 'class':'garrow'});
+  g.appendChild(l); g.appendChild(ar); return g;
+}
 
-// 题图数据：事件 1..7（源点 1、汇点 5），12 个活动
+var NODES = [
+  { id:'N1', x:90,  y:200, s:'1' }, { id:'N2', x:470, y:90,  s:'2' },
+  { id:'N3', x:200, y:110, s:'3' }, { id:'N4', x:330, y:200, s:'4' },
+  { id:'N5', x:600, y:200, s:'5' }, { id:'N6', x:200, y:300, s:'6' },
+  { id:'N7', x:470, y:310, s:'7' },
+];
+var EDGES = [
+  { id:'a', a:'N1', b:'N3' }, { id:'b', a:'N1', b:'N2' }, { id:'c', a:'N3', b:'N6' },
+  { id:'d', a:'N1', b:'N4' }, { id:'e', a:'N3', b:'N4' }, { id:'f', a:'N4', b:'N2' },
+  { id:'g', a:'N4', b:'N6' }, { id:'h', a:'N6', b:'N7' }, { id:'j', a:'N4', b:'N5' },
+  { id:'k', a:'N2', b:'N5' }, { id:'m', a:'N4', b:'N7' }, { id:'n', a:'N7', b:'N5' },
+];
+// ve/vl 徽标（上/下避让弧线）：[ve坐标, vl坐标]
+var BADGE = {
+  N1:[[90,232],[90,246]], N2:[[470,34],[470,48]],  N3:[[200,56],[200,70]],
+  N4:[[330,150],[330,164]], N5:[[600,230],[600,244]], N6:[[200,328],[200,342]],
+  N7:[[470,338],[470,352]],
+};
 var VE = {1:0, 2:9, 3:2, 4:5, 5:12, 6:6, 7:9};
 var VL = {1:0, 2:10, 3:2, 4:5, 5:12, 6:8, 7:9};
-// 活动：名称、弧、持续时间、最早开始 ee、最迟开始 el、余量
-var ACTS = [
-  ['a', '1→3', 2, 0, 0, 0],
-  ['b', '1→2', 5, 0, 5, 5],
-  ['c', '3→6', 1, 2, 7, 5],
-  ['d', '1→4', 3, 0, 2, 2],
-  ['e', '3→4', 3, 2, 2, 0],
-  ['f', '4→2', 4, 5, 6, 1],
-  ['g', '4→6', 1, 5, 7, 2],
-  ['h', '6→7', 1, 6, 8, 2],
-  ['j', '4→5', 1, 5, 11, 6],
-  ['k', '2→5', 2, 9, 10, 1],
-  ['m', '4→7', 4, 5, 5, 0],
-  ['n', '7→5', 3, 9, 9, 0],
+var VE_STEP = {1:1, 3:1, 4:1, 6:2, 2:2, 7:2, 5:3};
+var CUR_VE = {1:['1','3','4'], 2:['6','2','7'], 3:['5']};
+var EDGE_HOT = {
+  5:{a:'crit', e:'crit', m:'crit', n:'crit'},
+  6:{a:'crit', e:'crit', m:'crit', n:'crit', b:'hotg', d:'hotg', c:'hotg'},
+  7:{a:'crit', e:'crit', m:'crit', n:'crit', j:'hota'},
+  8:{a:'crit', e:'crit', m:'crit', n:'crit', b:'hota', k:'hotg'},
+  9:{a:'crit', e:'crit', m:'crit', n:'crit', k:'hota'},
+  10:{a:'crit', e:'crit', m:'crit', n:'crit'},
+};
+var NODE_HOT = {
+  1:{N1:'hotg', N3:'hotg', N4:'hotg'},
+  2:{N1:'veok', N3:'veok', N4:'veok', N6:'hotg', N2:'hotg', N7:'hotg'},
+  3:{N1:'veok', N3:'veok', N4:'veok', N6:'veok', N2:'veok', N7:'veok', N5:'hotg'},
+  4:{N1:'vlok', N2:'vlok', N3:'vlok', N4:'vlok', N5:'vlok', N6:'vlok', N7:'vlok'},
+  5:{N1:'critn', N3:'critn', N4:'critn', N7:'critn', N5:'critn'},
+  6:{N1:'critn', N3:'critn', N4:'critn', N7:'critn', N5:'critn', N2:'hotg', N6:'hotg'},
+  7:{N1:'critn', N3:'critn', N4:'critn', N7:'critn', N5:'critn'},
+  8:{N1:'critn', N3:'critn', N4:'critn', N7:'critn', N5:'critn', N2:'hota'},
+  9:{N1:'critn', N3:'critn', N4:'critn', N7:'critn', N5:'critn', N2:'hota'},
+  10:{N1:'critn', N3:'critn', N4:'critn', N7:'critn', N5:'critn'},
+};
+var ACT_HI = {6:['b','d','c'], 7:['j'], 8:['b','k'], 9:['k']};
+var BANNERS = [
+  '源点 1（工程开始）→ 汇点 5（工程结束），12 个活动。规则：<b>ve 正推取 max</b>，<b>vl 逆推取 min</b>，活动余量 = 弧头 vl − 持续时间 − 弧尾 ve。',
+  '正推 ve①：ve(1)=0 → ve(3)=0+a=2 → ve(4)=max(0+d=3, 2+e=5)=<b>5</b>',
+  '正推 ve②：ve(6)=max(2+c=3, 5+g=6)=<b>6</b>；ve(2)=max(0+b=5, 5+f=9)=<b>9</b>；ve(7)=max(6+h=7, 5+m=9)=<b>9</b>',
+  '正推 ve③：ve(5)=max(9+k=11, 5+j=6, 9+n=12)=<b>12</b> → 最短工期 12',
+  '逆推 vl（vl(5)=12）：vl(7)=12−n=9；vl(2)=12−k=10；vl(6)=9−h=8；vl(4)=min(10−f=6, 12−j=11, 9−m=5, 8−g=7)=<b>5</b>；vl(3)=min(5−e=2, 8−c=7)=2；vl(1)=0',
+  '(1) 活动余量 = 弧头 vl − 弧长 − 弧尾 ve：a、e、m、n 余量 0 → <b>关键活动</b>；关键路径 1→3→4→7→5 = 2+3+4+3 = 12',
+  '(2) e 的可能时段 [最早 2, 最迟完成 2+3=5]：b [0,10]、d [0,5]、c [2,8] 都与之重叠 → 可能同时进行：<b>b、d、c</b>（f/g/m 最早 5 才开始，a 最迟 2 就得完成）',
+  '(3) 余量最大：j = 11 − 5 = <b>6</b>（b、c 各 5）→ 活动 j，余量 6',
+  '(4)① b 拖到时刻 6 才开工：不延期须 ve(2) ≤ 12−k=10，即 b 最迟 10 完成 → 6 + d_b ≤ 10 → <b>d_b ≤ 4</b>',
+  '(4)② 若 b 仍持续 5（11 才完成，ve(2)=11）：须 11 + k ≤ 12 → <b>k 由 2 压缩为 1</b>（f 已不决定 ve(2)，压它没用）',
+  '全部解决：工期 <b>12</b>；关键活动 <b>a、e、m、n</b>；与 e 同时进行 <b>b、d、c</b>；余量最大 <b>j（6）</b>；b 晚开工则缩到 4 或把 k 压成 1',
 ];
-var TD = 'border:1px solid #cbd5e1;padding:3px 9px;text-align:center;font-size:13px;font-family:Menlo,monospace';
+var ACTS = [
+  ['a','1→3',2,0,0,0], ['b','1→2',5,0,5,5], ['c','3→6',1,2,7,5], ['d','1→4',3,0,2,2],
+  ['e','3→4',3,2,2,0], ['f','4→2',4,5,6,1], ['g','4→6',1,5,7,2], ['h','6→7',1,6,8,2],
+  ['j','4→5',1,5,11,6], ['k','2→5',2,9,10,1], ['m','4→7',4,5,5,0], ['n','7→5',3,9,9,0],
+];
 
-function evTableHtml(veKnown, vlKnown, hiVe, hiVl, hiVlRow){
-  var evs = [1,2,3,4,5,6,7];
-  var h = '<table style="border-collapse:collapse;margin-top:8px">';
-  h += '<tr><th style="' + TD + ';background:#f1f5f9">事件</th>';
-  evs.forEach(function(e){ h += '<th style="' + TD + ';background:#f1f5f9">' + e + '</th>'; });
-  h += '</tr><tr><th style="' + TD + ';background:#f1f5f9">最早 ve</th>';
-  evs.forEach(function(e){
-    var known = veKnown[e] != null;
-    var bg = '#fff', color = '#0f172a';
-    if (known && hiVe && hiVe.indexOf(e) >= 0){ bg = '#16a34a'; color = '#fff'; }
-    else if (known){ bg = '#dcfce7'; }
-    h += '<td style="' + TD + ';background:' + bg + ';color:' + color + '">' + (known ? veKnown[e] : '—') + '</td>';
+var svg, bannerBox, tableBox;
+
+function build(stage){
+  stage.innerHTML = '';
+  svg = mk('svg'); attr(svg, {viewBox:'0 0 700 400', 'class':'aoe-svg'});
+  EDGES.forEach(function(e){
+    var A = null, B = null;
+    NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
+    svg.appendChild(edgeEl(e.id, [A.x, A.y], [B.x, B.y], 0));
   });
-  h += '</tr><tr><th style="' + TD + ';background:#f1f5f9">最迟 vl</th>';
-  evs.forEach(function(e){
-    var known = vlKnown[e] != null;
-    var bg = '#fff', color = '#0f172a';
-    if (known && (hiVlRow || (hiVl && hiVl.indexOf(e) >= 0))){ bg = '#16a34a'; color = '#fff'; }
-    else if (known){ bg = '#dcfce7'; }
-    h += '<td style="' + TD + ';background:' + bg + ';color:' + color + '">' + (known ? vlKnown[e] : '—') + '</td>';
+  // 弧标注（活动名=持续时间），随图第 0 步出现
+  [['a=2',118,152],['b=5',400,102],['c=1',216,215],['d=3',210,188],['e=3',285,178],
+   ['f=4',395,138],['g=1',258,268],['h=1',330,322],['j=1',460,215],['k=2',535,133],
+   ['m=4',395,268],['n=3',540,268]].forEach(function(w){
+    svg.appendChild(svgtxt(w[1], w[2], w[0], 'gw', 0));
   });
-  h += '</tr></table>';
-  return h;
+  NODES.forEach(function(n){ svg.appendChild(nodeEl(n.id, n.x, n.y, n.s, 0)); });
+  // ve / vl 徽标
+  Object.keys(BADGE).forEach(function(nid){
+    var nd = null; NODES.forEach(function(n){ if (n.id === nid) nd = n; });
+    svg.appendChild(svgtxt(BADGE[nid][0][0], BADGE[nid][0][1], 've=' + VE[+nid.slice(1)], 'evb', VE_STEP[+nid.slice(1)]));
+    svg.appendChild(svgtxt(BADGE[nid][1][0], BADGE[nid][1][1], 'vl=' + VL[+nid.slice(1)], 'vlb', 4));
+  });
+  // 过程标注
+  var ann1 = svgtxt(600, 158, '工期 = 12', 'ann red', 3);
+  var ann2 = svgtxt(350, 28, '关键路径 1→3→4→7→5', 'ann red', 5);
+  var ann3 = svgtxt(350, 60, 'b 拖到 6 才开工 → d_b ≤ 4', 'ann amber', 8);
+  var ann4 = svgtxt(628, 148, 'k：2 → 1', 'ann amber', 9);
+  [ann1, ann2, ann3, ann4].forEach(function(a){ svg.appendChild(a); });
+  stage.appendChild(svg);
+  bannerBox = AW.el('div', 'aobanner', '');
+  tableBox = AW.el('div', 'aw-scroll', '');
+  stage.appendChild(bannerBox);
+  stage.appendChild(tableBox);
 }
 
-function actTableHtml(showSlack, hiNames){
-  var h = '<table style="border-collapse:collapse;margin-top:10px">';
-  h += '<tr>';
-  ['活动','弧','持续','最早开始','最迟开始'].forEach(function(t){
-    h += '<th style="' + TD + ';background:#f1f5f9">' + t + '</th>';
+function evTableHtml(i){
+  var evs = [1,2,3,4,5,6,7];
+  var curVe = CUR_VE[i] || [];
+  var h = '<table class="aotab"><tr><th>事件</th>';
+  evs.forEach(function(e){ h += '<th>' + e + '</th>'; });
+  h += '</tr><tr><th>ve</th>';
+  evs.forEach(function(e){
+    var known = i >= VE_STEP[e];
+    var cls = 'aoc' + (curVe.indexOf(String(e)) >= 0 ? ' cur' : (known ? ' okc' : ''));
+    h += '<td class="' + cls + '">' + (known ? VE[e] : '—') + '</td>';
   });
-  h += '<th style="' + TD + ';background:#f1f5f9">余量</th></tr>';
+  h += '</tr><tr><th>vl</th>';
+  evs.forEach(function(e){
+    var known = i >= 4;
+    var cls = 'aoc' + (i === 4 ? ' cura' : (known ? ' okc2' : ''));
+    h += '<td class="' + cls + '">' + (known ? VL[e] : '—') + '</td>';
+  });
+  return h + '</tr></table>';
+}
+function actTableHtml(i){
+  var hi = ACT_HI[i] || [];
+  var h = '<table class="aotab"><tr><th>活动</th><th>弧</th><th>持续</th><th>最早开始</th><th>最迟开始</th><th>余量</th></tr>';
   ACTS.forEach(function(a){
-    var key = showSlack && a[5] === 0;
-    var bg = key ? '#dcfce7' : '#fff';
-    var weight = key ? ';font-weight:700' : '';
-    if (hiNames && hiNames.indexOf(a[0]) >= 0){ bg = '#fef3c7'; }
+    var cls = 'aoc' + (i >= 5 && a[5] === 0 ? ' okc' : '') + (hi.indexOf(a[0]) >= 0 ? ' cura' : '');
     h += '<tr>';
-    for (var c = 0; c < 5; c++){
-      h += '<td style="' + TD + weight + ';background:' + bg + '">' + a[c] + '</td>';
-    }
-    h += '<td style="' + TD + weight + ';background:' + bg + '">' + (showSlack ? a[5] : '—') + '</td>';
+    for (var c = 0; c < 6; c++){ h += '<td class="' + cls + '">' + a[c] + '</td>'; }
     h += '</tr>';
   });
-  h += '</table>';
-  return h;
+  return h + '</table>';
 }
 
-function bannerHtml(text, cls){
-  var border = cls === 'good' ? '#16a34a' : '#d97706';
-  var bg = cls === 'good' ? '#f6fef9' : '#fffbeb';
-  return '<div style="border:2px solid ' + border + ';background:' + bg +
-    ';border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.7;margin-bottom:6px">' + text + '</div>';
+function render(stage, sn, i){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge-g,.gnode'), function(el){
+    el.classList.remove('crit', 'hotg', 'hota', 'veok', 'vlok', 'critn');
+  });
+  var he = EDGE_HOT[Math.min(i, 10)] || {}, hn = NODE_HOT[Math.min(i, 10)] || {};
+  [].forEach.call(svg.querySelectorAll('.edge-g'), function(el){
+    if (he[el.dataset.id]) el.classList.add(he[el.dataset.id]);
+  });
+  [].forEach.call(svg.querySelectorAll('.gnode'), function(el){
+    if (hn[el.dataset.id]) el.classList.add(hn[el.dataset.id]);
+  });
+  bannerBox.innerHTML = BANNERS[Math.min(i, BANNERS.length - 1)];
+  var h = evTableHtml(i);
+  if (i >= 5) h += actTableHtml(i);
+  tableBox.innerHTML = h;
 }
 
-function edgeHtml(){
-  return '<div style="font-size:12px;color:#64748b;line-height:1.9;margin-top:10px">题图边表：' +
-    'a:1→3(2)　b:1→2(5)　c:3→6(1)　d:1→4(3)　e:3→4(3)　f:4→2(4)　g:4→6(1)　h:6→7(1)　' +
-    'j:4→5(1)　k:2→5(2)　m:4→7(4)　n:7→5(3)</div>';
-}
-
-function summaryHtml(){
-  return '<div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">' +
-    bannerHtml('(1) 最短完成时间 = <b>12</b>；关键活动 = <b>a、e、m、n</b>（关键路径 1→3→4→7→5，2+3+4+3=12）', 'good') +
-    bannerHtml('(2) 与 e 同时进行的活动可能为 <b>b、d、c</b>（e 时段 [2,5]，b [0,10]、d [0,5]、c [2,8] 与之重叠）', 'good') +
-    bannerHtml('(3) 时间余量最大的活动是 <b>j</b>，余量 = <b>6</b>（11 − 5）', 'good') +
-    bannerHtml('(4) b 时刻 6 开工：持续时间最多 <b>4</b>；若 b 仍为 5，则把 <b>k 由 2 压缩为 1</b>', 'good') +
-    '</div>';
-}
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'AOE 网：源点 1、汇点 5，12 个活动（弧上标活动名=持续时间）。先正推事件最早时间 ve，再逆推最迟时间 vl，最后算活动余量。' },
+  { cls:'step', tag:'正推 ve·上', count:1,
+    log:'ve(1)=0；ve(3)=ve(1)+a=2；ve(4)=max(ve(1)+d=3, ve(3)+e=5)=5。' },
+  { cls:'step', tag:'正推 ve·下', count:2,
+    log:'ve(6)=max(2+1, 5+1)=6；ve(2)=max(0+5, 5+4)=9；ve(7)=max(6+1, 5+4)=9。' },
+  { cls:'ok', tag:'工期 12', count:3,
+    log:'汇点：ve(5)=max(9+k=11, 5+j=6, 9+n=12)=12 → 最短工期 12（问 1 前半）。' },
+  { cls:'shift', tag:'逆推 vl', count:4,
+    log:'vl(5)=12；vl(7)=9；vl(2)=10；vl(6)=8；vl(4)=min(6,11,5,7)=5；vl(3)=min(2,7)=2；vl(1)=0。' },
+  { cls:'ok', tag:'问(1) 关键活动', count:5,
+    log:'活动余量 = 弧头 vl − 弧长 − 弧尾 ve，为 0 者即关键活动：a、e、m、n（关键路径 1→3→4→7→5，2+3+4+3=12）。' },
+  { cls:'shift', tag:'问(2) 并行活动', count:6,
+    log:'e 的可能执行时段 [2,5]；b [0,10]、d [0,5]、c [2,8] 与之重叠 → 可能与 e 同时进行：b、d、c。' },
+  { cls:'shift', tag:'问(3) 余量最大', count:7,
+    log:'查余量列：j = 11 − 5 = 6 最大（b、c 各 5）→ 活动 j，余量 6。' },
+  { cls:'shift', tag:'问(4)①', count:8,
+    log:'b 时刻 6 才开工：不延期须 ve(2)+k ≤ 12，即 b 最迟 10 完成 → 6 + d_b ≤ 10 → b 的持续时间最多 4。' },
+  { cls:'shift', tag:'问(4)②', count:9,
+    log:'若 b 仍为 5（11 完成，ve(2)=11）：须 11+k ≤ 12 → k ≤ 1 → 把 k 由 2 压缩为 1（k 有 1 的余量，不会引出新矛盾；压 f 无用）。' },
+  { cls:'done', tag:'完成', count:10, done:true,
+    log:'四问齐了：工期 12；关键活动 a、e、m、n；同时进行 b、d、c；余量最大 j（6）；b 最多 4 或把 k 压成 1。' },
+];
 
 AW.init({
-  title: 'AOE 网：关键路径 · 并行活动 · 时间余量',
-  subtitle: '12 个活动、7 个事件（源点 1、汇点 5）· 正推 ve → 逆推 vl → 活动余量 → 逐问解答',
-  counterLabel: '推理步',
-  intro: '点击「▶ 播放」先求 ve / vl，再逐问解答。',
-
-  snaps: [
-    { cls:'shift', tag:'审题', log:'AOE 网如题图：源点 1、汇点 5，12 个活动。先正推事件最早时间 ve，再逆推最迟时间 vl', count:0 },
-    { cls:'step', tag:'正推 ve·上', log:'ve(1)=0；ve(3)=ve(1)+a=2；ve(4)=max(ve(1)+d=3, ve(3)+e=5)=5', count:1 },
-    { cls:'step', tag:'正推 ve·下', log:'ve(6)=max(ve(3)+c=3, ve(4)+g=6)=6；ve(2)=max(ve(1)+b=5, ve(4)+f=9)=9；ve(7)=max(ve(6)+h=7, ve(4)+m=9)=9', count:2 },
-    { cls:'ok', tag:'工期 12', log:'ve(5)=max(ve(2)+k=11, ve(4)+j=6, ve(7)+n=12)=12 → 最短工期 12（问 1 前半）', count:3 },
-    { cls:'step', tag:'逆推 vl', log:'vl(5)=12；vl(7)=12−n=9；vl(2)=12−k=10；vl(6)=vl(7)−h=8；vl(4)=min(6,11,5,7)=5；vl(3)=min(vl(4)−e=2, vl(6)−c=7)=2；vl(1)=0', count:4 },
-    { cls:'ok', tag:'问(1)答', log:'活动余量 = 最迟开始 − 最早开始，为 0 者：a、e、m、n（关键路径 1→3→4→7→5，2+3+4+3=12）', count:5 },
-    { cls:'shift', tag:'问(2)', log:'e 的可能时段 [2,5]；b [0,10]、d [0,5]、c [2,8] 与之重叠；f/g/m 最早 5 才开始、a 最迟 2 完成 → 可能同时进行：b、d、c', count:6 },
-    { cls:'shift', tag:'问(3)', log:'余量最大：j = 11 − 5 = 6（其次 b、c 各 5）→ 活动 j，余量 6', count:7 },
-    { cls:'shift', tag:'问(4)·①', log:'b 时刻 6 才开工：须 ve(2)+k ≤ 12，即 b 最迟 10 完成 → 6+d_b ≤ 10 → b 持续时间最多 4', count:8 },
-    { cls:'shift', tag:'问(4)·②', log:'若 b 仍为 5（11 完成，ve(2)=11）：需 11+k ≤ 12 → k ≤ 1，把 k 由 2 压缩为 1（压 f 无用，ve(2) 已由 b 决定）', count:9 },
-    { cls:'done', tag:'完成', log:'四问齐了：工期 12 / 关键活动 a,e,m,n；同时进行 b,d,c；余量最大 j（6）；b 最多 4 或把 k 压成 1', count:10, done:true },
-  ],
-
-  render: function(stage, sn, i){
-    var h = '';
-    if (i === 0){
-      h += bannerHtml('源点 1（工程开始）→ 汇点 5（工程结束）。<b>ve 正推取 max</b>（所有入边就绪），<b>vl 逆推取 min</b>（不拖累后继）。活动余量 = 弧头 vl − 持续时间 − 弧尾 ve。', 'key') + edgeHtml();
-    } else if (i === 1){
-      h += bannerHtml('正推最早时间（取 max）：ve(1)=0 → ve(3)=0+2=2 → ve(4)=max(0+3, 2+3)=<b>5</b>');
-      h += evTableHtml({1:0,3:2,4:5}, {}, [1,3,4], null, false);
-    } else if (i === 2){
-      h += bannerHtml('继续正推：ve(6)=max(2+1, 5+1)=<b>6</b>；ve(2)=max(0+5, 5+4)=<b>9</b>；ve(7)=max(6+1, 5+4)=<b>9</b>');
-      h += evTableHtml(VE, {}, [6,2,7], null, false);
-    } else if (i === 3){
-      h += bannerHtml('汇点：ve(5)=max(9+2, 5+1, 9+3)=<b>12</b> → <b>最短工期 12</b>', 'good');
-      h += evTableHtml(VE, {}, [5], null, false);
-    } else if (i === 4){
-      h += bannerHtml('逆推最迟时间（取 min）：vl(5)=12；vl(7)=9；vl(2)=10；vl(6)=8；vl(4)=min(10−4, 12−1, 9−4, 8−1)=<b>5</b>；vl(3)=min(5−3, 8−1)=<b>2</b>；vl(1)=0');
-      h += evTableHtml(VE, VL, null, null, true);
-    } else if (i === 5){
-      h += bannerHtml('(1) 最短完成时间 <b>12</b>；余量 0 的关键活动：<b>a、e、m、n</b>（绿行，关键路径 1→3→4→7→5）', 'good');
-      h += evTableHtml(VE, VL, null, null, false);
-      h += actTableHtml(true, null);
-    } else if (i === 6){
-      h += bannerHtml('(2) e 的可能执行时段 = [最早开始 2, 最迟完成 2+3=5]。b [0,10]、d [0,5]、c [2,8] 与其重叠 → <b>b、d、c</b>；f/g/m 最早 5 才开始，a 最迟 2 完成', 'key');
-      h += evTableHtml(VE, VL, null, null, false);
-      h += actTableHtml(true, ['b','d','c']);
-    } else if (i === 7){
-      h += bannerHtml('(3) 逐行看余量列：j = 11 − 5 = <b>6</b> 最大（b、c 各 5）→ <b>活动 j，余量 6</b>', 'key');
-      h += evTableHtml(VE, VL, null, null, false);
-      h += actTableHtml(true, ['j']);
-    } else if (i === 8){
-      h += bannerHtml('(4)① b 改在时刻 6 开始：不延期须 ve(2) ≤ 12−k=10，即 b 最迟 10 完成 → 6 + d_b ≤ 10 → <b>d_b ≤ 4</b>', 'key');
-      h += evTableHtml(VE, VL, null, null, false);
-      h += actTableHtml(true, ['b','k']);
-    } else if (i === 9){
-      h += bannerHtml('(4)② b 仍为 5 → 11 完成，ve(2)=11：须 11 + k ≤ 12 → <b>k 由 2 压缩为 1</b>（f 已不决定 ve(2)，压它没用）', 'key');
-      h += evTableHtml(VE, VL, null, null, false);
-      h += actTableHtml(true, ['k']);
-    } else {
-      h += summaryHtml();
-    }
-    stage.innerHTML = '<div class="aw-scroll">' + h + '</div>';
-  },
-
+  title: '2025-42 · AOE 网：关键路径 · 并行活动 · 时间余量',
+  subtitle: '12 个活动、7 个事件（源点 1、汇点 5）· <code>正推 ve 取 max → 逆推 vl 取 min → 活动余量 = 弧头 vl − 弧长 − 弧尾 ve</code>',
+  counterLabel: '求解步',
+  intro: '点击「▶ 播放」，在题图上正推 ve、逆推 vl，再逐问解答。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '工期 12',
-    html: '(1) 最短完成时间 <b>12</b>，关键活动 <b>a、e、m、n</b>；(2) 与 e 可能同时进行：<b>b、d、c</b>；(3) 余量最大 <b>j，余量 6</b>；(4) b 持续时间最多 <b>4</b>，或把 <b>k 由 2 压缩为 1</b>。<br>方法锚点：ve 正推取 max → vl 逆推取 min → 活动余量 = 弧头 vl − 弧长 − 弧尾 ve。',
+    big: '最短工期 12（关键 a、e、m、n）',
+    html: '(1) ve(5)=12 → 最短工期 <b>12</b>；余量 0 的关键活动 <b>a、e、m、n</b>（路径 1→3→4→7→5，2+3+4+3=12）。<br>' +
+      '(2) e 时段 [2,5]，与 b [0,10]、d [0,5]、c [2,8] 重叠 → <b>b、d、c</b>。<br>' +
+      '(3) 余量最大 <b>j = 11−5 = 6</b>。<br>' +
+      '(4) b 拖到 6 开工：d_b ≤ 12−k−6 = <b>4</b>；若 b 仍为 5，则把 <b>k 由 2 压缩为 1</b>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

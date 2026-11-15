@@ -2,68 +2,246 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2026-06 邻接表求入度的时间复杂度 · 动画</title>
+<title>2026-06 邻接表求入度 · 扫描动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .alsvg{width:100%;max-width:760px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .alsvg text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+  .alsvg .ahead{font-size:13px;font-weight:700;fill:#334155;text-anchor:middle}
+  .alsvg .anote{font-size:11.5px;font-weight:700;fill:#b45309;text-anchor:middle}
+  .alsvg .vlab{font-size:12px;font-weight:800;fill:#d97706;text-anchor:middle}
+  .alsvg .nullt{font-size:12px;fill:#94a3b8;font-family:Menlo,monospace}
+  .alsvg .gnode circle{fill:#fff;stroke:#334155;stroke-width:2.2;transition:fill .3s,stroke .3s}
+  .alsvg .gnode text{font-family:Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central}
+  .alsvg .gedge{stroke:#64748b;stroke-width:2.2;fill:none;transition:stroke .3s,stroke-width .3s}
+  .alsvg .garrow{fill:#64748b;transition:fill .3s}
+  .alsvg .edge-g.hotg .gedge{stroke:#16a34a;stroke-width:3.6}
+  .alsvg .edge-g.hotg .garrow{fill:#16a34a}
+  .alsvg .edge-g.hota .gedge{stroke:#d97706;stroke-width:3.6}
+  .alsvg .edge-g.hota .garrow{fill:#d97706}
+  .alsvg .gnode.hotg circle{fill:#16a34a}
+  .alsvg .gnode.hotg text{fill:#fff}
+  .alsvg .gnode.hota circle{fill:#fde68a}
+  .alsvg .gnode.target circle{fill:#fef3c7;stroke:#d97706;stroke-width:3}
+  .alsvg .vring{fill:none;stroke:#d97706;stroke-width:2;stroke-dasharray:5 4}
+  .alsvg .headbox rect{fill:#e2e8f0;stroke:#64748b;stroke-width:1.8;transition:fill .3s,stroke .3s}
+  .alsvg .headbox text{font-family:Menlo,monospace;font-weight:800;font-size:13px;
+    text-anchor:middle;dominant-baseline:central;fill:#334155}
+  .alsvg .headbox.rowhot rect{fill:#16a34a;stroke:#15803d}
+  .alsvg .headbox.rowhot text{fill:#fff}
+  .alsvg .enode rect{fill:#fff;stroke:#64748b;stroke-width:1.8;transition:fill .3s,stroke .3s,opacity .4s}
+  .alsvg .enode text{font-family:Menlo,monospace;font-weight:800;font-size:13px;
+    text-anchor:middle;dominant-baseline:central;fill:#334155}
+  .alsvg .enode .ck{font-size:13px;font-weight:800;text-anchor:middle;fill:#64748b;opacity:0;transition:opacity .3s}
+  .alsvg .enode.ckd rect{fill:#f1f5f9;stroke:#cbd5e1}
+  .alsvg .enode.ckd .ck{opacity:1}
+  .alsvg .enode.mt rect{fill:#fde68a;stroke:#d97706;stroke-width:2.4}
+  .alsvg .enode.mt .ck{opacity:1;fill:#15803d}
+  .alsvg .ptr-ln{stroke:#64748b;stroke-width:1.8;transition:opacity .4s}
+  .alsvg .ptr-ar{fill:#64748b;transition:opacity .4s}
+  .alsvg .hidden-el{opacity:0}
+  .alnote{margin-top:10px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
+  .alnote code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
-
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+/* ================== 2026-06 邻接表上求有向图顶点入度（SVG 扫描演示） ==================
+ * 自拟最小例：V={0,1,2,3}，E={0→1,0→2,1→2,3→2,2→3}，|V|=4、|E|=5，求 v=2 的入度。
+ * 邻接表每行存弧尾的出边 → 数入度须扫全部 |V| 个表头 + |E| 个边结点 = O(|V|+|E|) = O(max(|V|,|E|))，选 D。 */
+var svgNS = 'http://www.w3.org/2000/svg';
+function mk(t){ return document.createElementNS(svgNS, t); }
+function attr(e, o){ for (var k in o) e.setAttribute(k, o[k]); return e; }
+function svgtxt(x, y, s, cls, step){
+  var t = mk('text'); attr(t, {x:x, y:y, 'class':cls});
+  t.textContent = s; if (step != null) t.dataset.step = step; return t;
+}
+var RR = 20;
+function nodeEl(id, x, y, s, target){
+  var g = mk('g'); g.setAttribute('class', 'gnode' + (target ? ' target' : '')); g.dataset.id = id;
+  var c = mk('circle'); attr(c, {cx:x, cy:y, r:RR});
+  var t = mk('text'); attr(t, {x:x, y:y}); t.textContent = s;
+  g.appendChild(c); g.appendChild(t); return g;
+}
+function dedge(id, A, B, ctrl){
+  var g = mk('g'); g.setAttribute('class', 'edge-g'); g.dataset.id = id;
+  var dx, dy, tipx, tipy, l, ar, bx, by, px, py, ux, uy;
+  if (ctrl){
+    var ex = B[0]-ctrl[0], ey = B[1]-ctrl[1], EL = Math.sqrt(ex*ex+ey*ey);
+    ux = ex/EL; uy = ey/EL; px = -uy; py = ux;
+    tipx = B[0]-ux*(RR+2); tipy = B[1]-uy*(RR+2);
+    l = mk('path'); attr(l, {d:'M'+A[0]+' '+A[1]+' Q'+ctrl[0]+' '+ctrl[1]+' '+tipx+' '+tipy, 'class':'gedge', fill:'none'});
+    bx = tipx-ux*9; by = tipy-uy*9;
+  } else {
+    var dx2 = B[0]-A[0], dy2 = B[1]-A[1], L = Math.sqrt(dx2*dx2+dy2*dy2);
+    ux = dx2/L; uy = dy2/L; px = -uy; py = ux;
+    tipx = B[0]-ux*(RR+2); tipy = B[1]-uy*(RR+2);
+    l = mk('line'); attr(l, {x1:A[0], y1:A[1], x2:tipx, y2:tipy, 'class':'gedge'});
+    bx = tipx-ux*9; by = tipy-uy*9;
+  }
+  ar = mk('polygon');
+  attr(ar, {points: tipx+','+tipy+' '+(bx+px*4.5)+','+(by+py*4.5)+' '+(bx-px*4.5)+','+(by-py*4.5), 'class':'garrow'});
+  g.appendChild(l); g.appendChild(ar); return g;
+}
+function arrowRight(x1, x2, y, step){
+  var g = mk('g'); if (step != null) g.dataset.step = step;
+  var l = mk('line'); attr(l, {x1:x1, y1:y, x2:x2-6, y2:y, 'class':'ptr-ln'});
+  var ar = mk('polygon');
+  attr(ar, {points:(x2)+','+y+' '+(x2-7)+','+(y-4)+' '+(x2-7)+','+(y+4), 'class':'ptr-ar'});
+  g.appendChild(l); g.appendChild(ar); return g;
 }
 
-var STEPS = [
-  { title: '审题眼：邻接表里存的是谁',
-    cls: 'key',
-    body: '<p>有向图的邻接表为每个顶点挂一条边表，边表结点记录的是<b>以该顶点为弧尾的出边</b>。所以：出度 = 数自家边表，很便宜；而顶点 v 的入边（以 v 为弧头）<b>分散在所有其他顶点的边表里</b>。考点：<code>求入度的时间复杂度</code>。</p>' },
-  { title: '出度 vs 入度：一局部一全局',
-    cls: '',
-    body: '<p>出度：只看 v 自己的边表，O(出度) 完成。<br>入度：v 的入边藏在别人的边表中，没有任何局部信息，只能<b>全局扫一遍</b>去找所有指向 v 的弧结点。</p>' },
-  { title: '数入度必须扫什么',
-    cls: '',
-    body: '<p>要统计多少条边指向 v，只能把 |V| 个顶点的边表逐个看过去：<br>① |V| 个边表的<b>表头结点</b>都要访问——边表为空的顶点也得看一眼，|V| 项省不掉；<br>② 全部 |E| 个<b>边结点</b>都可能被检查——判断它是否指向 v。<br>合计 <code>O(|V| + |E|)</code>。</p>' },
-  { title: 'O(|V|+|E|) 就是选项 D',
-    cls: 'good',
-    body: '<p><code>O(|V|+|E|) = O(max(|V|,|E|))</code>：两个量都可能出现且取大者，正对应 <b>D</b> 选项。</p>' },
-  { title: '排除 A、B、C',
-    cls: 'bad',
-    body: '<p><b>A（O(|V|)）</b>：只够把顶点表走一遍，藏在边表里的入边没数到。<br><b>B（O(min(|V|,|E|))）</b>：两项都必须付出，取不到「小」的那一个。<br><b>C（O(|E|)）</b>：|E| 可能远小于 |V|（顶点多边少的稀疏图），空边表的表头开销省不掉。</p>' },
-  { title: '对照记忆：别的存储法呢',
-    cls: 'key',
-    body: '<p><b>逆邻接表</b>：存的是入边，求入度变成数自家边表，很快。<br><b>邻接矩阵</b>：入度 = 扫 v 对应的一整列，O(|V|)。<br>这正是「存储结构决定操作代价」的经典对比。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>邻接表存出边，入度分散在别人的边表里，必须扫全部表头和边结点：<code>O(|V|+|E|) = O(max(|V|,|E|))</code>，答案选 <b style="font-size:16px">D</b>。</p>' },
+// 邻接表数据：每行 = 顶点 → 出边目标序列
+var ROWS = [
+  { v:0, targets:[1,2] },
+  { v:1, targets:[2] },
+  { v:2, targets:[3] },   // v 自身：只有 1 条出边
+  { v:3, targets:[2] },
+];
+var STEP_ROW = {1:2, 2:0, 3:1, 4:2, 5:3};
+var CHECKED = {
+  2:['EN01','EN02'], 3:['EN01','EN02','EN12'],
+  4:['EN01','EN02','EN12','EN23'],
+  5:['EN01','EN02','EN12','EN23','EN32'],
+  6:['EN01','EN02','EN12','EN23','EN32'], 7:['EN01','EN02','EN12','EN23','EN32'],
+};
+var MATCHED = {
+  2:['EN02'], 3:['EN02','EN12'], 4:['EN02','EN12'],
+  5:['EN02','EN12','EN32'], 6:['EN02','EN12','EN32'], 7:['EN02','EN12','EN32'],
+};
+var GEDGE_HOT = {
+  1:{g23:'hotg'}, 2:{g02:'hotg'}, 3:{g12:'hotg'}, 4:{g23:'hota'},
+  5:{g32:'hotg'}, 6:{g02:'hotg', g12:'hotg', g32:'hotg'}, 7:{g02:'hotg', g12:'hotg', g32:'hotg'},
+};
+var NODE_HOT = {2:{N0:'hotg'}, 4:{N2:'hota'}};
+var NOTES = [
+  '邻接表为每个顶点挂一条边表，边结点记的是<b>以该顶点为弧尾的出边</b>。求出度 = 数自家边表；而 v 的入边全在<b>别人</b>的边表里。目标：数出 v=2 的入度。',
+  '先看便宜的：v 的出度只看自家边表（1 个边结点 2→3）→ 出度 = 1，一眼数完。入度可没这待遇。',
+  '扫表头 0 的边表：0→1 不是（弧头是 1），0→2 ✓ 是入边 → 计数 1。',
+  '扫表头 1 的边表：1→2 ✓ 是入边 → 计数 2。',
+  '扫表头 2 的边表：2→3 不是入边（它是 v 的出边）→ 计数仍 2。注意：就算边表为空，表头也得看一眼。',
+  '扫表头 3 的边表：3→2 ✓ 是入边 → 计数 3。入度(v=2) = 3（入边 0→2、1→2、3→2）。',
+  '核算：|V| = 4 个表头全部访问过（空边表也躲不掉）+ |E| = 5 个边结点全部检查过 → <code>O(|V| + |E|)</code> = <code>O(max(|V|,|E|))</code>。',
+  '<b>选 D</b>。O(|V|) 只走表头数不到入边；O(|E|) 省不掉空表头的 |V| 开销；O(min) 两项都得付。对照：逆邻接表存入边才便宜；邻接矩阵扫一列 O(|V|)。',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svg, noteBox, edgeNodes = {};
+
+function build(stage){
+  stage.innerHTML = '';
+  svg = mk('svg'); attr(svg, {viewBox:'0 0 760 290', 'class':'alsvg'});
+  svg.appendChild(svgtxt(150, 28, '有向图 G（|V|=4，|E|=5）', 'ahead', 0));
+  svg.appendChild(svgtxt(520, 28, '邻接表（每行挂「弧尾的出边」）', 'ahead', 0));
+  // 有向图
+  svg.appendChild(dedge('g01', [80,85], [210,78]));
+  svg.appendChild(dedge('g02', [80,85], [140,190]));
+  svg.appendChild(dedge('g12', [210,78], [140,190]));
+  svg.appendChild(dedge('g32', [240,195], [140,190]));
+  svg.appendChild(dedge('g23', [140,190], [240,195], [182,232]));
+  var ring = mk('circle'); attr(ring, {cx:140, cy:190, r:26, 'class':'vring'});
+  ring.dataset.step = 0; svg.appendChild(ring);
+  svg.appendChild(svgtxt(120, 238, '求 v=2 的入度', 'vlab', 0));
+  [['N0',80,85,'0',false], ['N1',210,78,'1',false], ['N2',140,190,'2',true], ['N3',240,195,'3',false]]
+    .forEach(function(n){ svg.appendChild(nodeEl(n[0], n[1], n[2], n[3], n[4])); });
+  // 邻接表
+  ROWS.forEach(function(row, ri){
+    var y = 60 + ri * 62;
+    var hg = mk('g'); hg.setAttribute('class', 'headbox'); hg.dataset.row = ri;
+    var r = mk('rect'); attr(r, {x:300, y:y-13, width:44, height:26, rx:5});
+    hg.appendChild(r);
+    var tv = svgtxt(322, y, String(row.v));
+    hg.appendChild(tv);
+    svg.appendChild(hg);
+    var prevRight = 344;
+    row.targets.forEach(function(tg, ei){
+      svg.appendChild(arrowRight(prevRight, prevRight + 38, y, 0));
+      var nx = prevRight + 38 + 24;
+      var eg = mk('g'); eg.setAttribute('class', 'enode');
+      eg.dataset.id = 'EN' + row.v + tg; eg.dataset.row = ri;
+      var er = mk('rect'); attr(er, {x:nx-23, y:y-13, width:46, height:26, rx:5});
+      eg.appendChild(er);
+      var et = svgtxt(nx, y, '→' + tg);
+      eg.appendChild(et);
+      var ck = svgtxt(nx, y - 20, '✓', 'ck');
+      eg.appendChild(ck);
+      svg.appendChild(eg);
+      edgeNodes['EN' + row.v + tg] = eg;
+      prevRight = nx + 23;
+    });
+    svg.appendChild(svgtxt(prevRight + 24, y, '∅', 'nullt', 0));
+    if (row.v === 2) svg.appendChild(svgtxt(285, y + 4, 'v', 'anote', 0));
+  });
+  stage.appendChild(svg);
+  noteBox = AW.el('div', 'alnote', '');
+  stage.appendChild(noteBox);
+}
+
+function render(stage, sn, i){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.step > i);
+  });
+  [].forEach.call(svg.querySelectorAll('.edge-g,.gnode'), function(el){
+    el.classList.remove('hotg', 'hota');
+  });
+  var gh = GEDGE_HOT[Math.min(i, 7)] || {}, nh = NODE_HOT[Math.min(i, 7)] || {};
+  [].forEach.call(svg.querySelectorAll('.edge-g'), function(el){
+    if (gh[el.dataset.id]) el.classList.add(gh[el.dataset.id]);
+  });
+  [].forEach.call(svg.querySelectorAll('.gnode'), function(el){
+    if (nh[el.dataset.id]) el.classList.add(nh[el.dataset.id]);
+  });
+  var hotRow = STEP_ROW[i];
+  [].forEach.call(svg.querySelectorAll('.headbox'), function(el){
+    el.classList.toggle('rowhot', hotRow != null && +el.dataset.row === hotRow);
+  });
+  var ckd = {}, mt = {};
+  (CHECKED[i] || []).forEach(function(id){ ckd[id] = 1; });
+  (MATCHED[i] || []).forEach(function(id){ mt[id] = 1; });
+  Object.keys(edgeNodes).forEach(function(id){
+    var el = edgeNodes[id];
+    el.classList.toggle('ckd', !!ckd[id]);
+    el.classList.toggle('mt', !!mt[id]);
+  });
+  noteBox.innerHTML = NOTES[Math.min(i, NOTES.length - 1)];
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'邻接表的边表记录弧尾的出边：出度局部可数，入度却分散在所有顶点的边表中。例：|V|=4、|E|=5，求 v=2 的入度。' },
+  { cls:'step', tag:'出度对比', count:0,
+    log:'v 的出度只看自家边表：1 个边结点（2→3）→ 出度 1。入度没有这种局部信息。' },
+  { cls:'step', tag:'扫表头 0', count:2,
+    log:'顶点 0 的边表：0→1 ✗、0→2 ✓（入边）→ 计数 1。' },
+  { cls:'step', tag:'扫表头 1', count:3,
+    log:'顶点 1 的边表：1→2 ✓（入边）→ 计数 2。' },
+  { cls:'step', tag:'扫表头 2', count:4,
+    log:'顶点 2 的边表：2→3 ✗（这是出边）→ 计数仍 2。边表哪怕为空，表头也必须访问——|V| 这一项省不掉。' },
+  { cls:'ok', tag:'扫表头 3', count:5,
+    log:'顶点 3 的边表：3→2 ✓（入边）→ 计数 3。入度(v=2) = 3，扫描结束。' },
+  { cls:'shift', tag:'复杂度核算', count:5,
+    log:'共访问 4 个表头（|V| 项）+ 检查 5 个边结点（|E| 项）→ O(|V|+|E|) = O(max(|V|,|E|))，正是选项 D。' },
+  { cls:'done', tag:'完成', count:5, done:true,
+    log:'选 D。A 只够走表头；C 省不掉空边表的表头开销；B 取不到"小"的那一项。逆邻接表求入度才便宜；邻接矩阵扫一列 O(|V|)。' },
+];
 
 AW.init({
   title: '2026-06 · 邻接表上有向图求入度要多久',
-  subtitle: '考点：<code>邻接表存出边 → 入度必须全局扫</code> · 推理链逐项展开',
-  counterLabel: '推理步',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  subtitle: '考点：<code>邻接表存出边 → 入度分散在所有边表 → 全扫 O(|V|+|E|) = O(max(|V|,|E|))</code>（最小例 |V|=4、|E|=5，求 v=2 的入度）',
+  counterLabel: '已检查边结点',
+  intro: '点击「▶ 播放」，看着邻接表被逐行扫一遍来数入度。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D（O(max(|V|,|E|))）',
-    html: '邻接表的边表记录<b>弧尾的出边</b>：出度局部可数，入度却分散在所有顶点的边表中——|V| 个表头与 |E| 个边结点都要扫，<code>O(|V|+|E|)=O(max(|V|,|E|))</code>。逆邻接表才让入度变便宜；邻接矩阵扫一列为 O(|V|)。',
+    html: '邻接表只记<b>出边</b>：v 的入边藏在别人的边表里，只能把 |V| 个表头全部访问（空边表也躲不掉）、|E| 个边结点全部检查 → ' +
+      '<code>O(|V|+|E|) = O(max(|V|,|E|))</code>。<br>对比：<b>逆邻接表</b>存入边，求入度才变成数自家边表；<b>邻接矩阵</b>求入度扫 v 对应的一整列，O(|V|)。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

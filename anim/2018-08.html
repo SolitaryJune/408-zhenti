@@ -2,64 +2,170 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2018-08 3阶B树最少关键字数</title>
+<title>2018-08 3阶B树最少关键字数 · 逐层构树动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .btree-svg{width:100%;max-width:860px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .btree-svg .bedge{stroke:#9fb0bd;stroke-width:2px;transition:opacity .4s}
+  .btree-svg .bnode rect{transition:opacity .4s, fill .3s, stroke .3s}
+  .btree-svg .bnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central;transition:opacity .4s, fill .3s}
+  .btree-svg .bnode.root rect{fill:#1b3a4b}
+  .btree-svg .bnode.root text{fill:#fff}
+  .btree-svg .bnode.normal rect{fill:#ffffff;stroke:#94a3b8;stroke-width:2}
+  .btree-svg .bnode.normal text{fill:#334155}
+  .btree-svg .bnode.hot rect{fill:#e07a2f;stroke:#e07a2f}
+  .btree-svg .bnode.hot text{fill:#fff}
+  .btree-svg .bnode.counted rect{fill:#16a34a;stroke:#16a34a}
+  .btree-svg .bnode.counted text{fill:#fff}
+  .btree-svg .hidden-el{opacity:0}
+  .blayer{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .blayer .lchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:14px;
+    transition:opacity .4s}
+  .blayer .lchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#e07a2f}
+  .blayer .lchip.total{background:#16a34a1f;border-color:#16a34a;color:#15803d}
+  .blayer .hidden-el{opacity:0}
+  .bformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .bformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
-<!-- ============================================================
-     概念/推理链类题目动画：B 树下限逐层推算
-============================================================= -->
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2018-08 3阶B树逐层构树动画（SVG） ==================
+ * 题：高度为 5 的 3 阶 B 树，含有的关键字个数至少是多少？（答案 B = 31）
+ * 演示：让每个结点都取下限（1 个关键字、2 棵子树），逐层长出 1、2、4、8、16
+ *       个结点的"最瘦"B 树，再清点关键字总数 = 31。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
+var LV = [1, 2, 4, 8, 16];          // 每层最少结点数
+var YS = [58, 140, 222, 304, 386];  // 各层 y 坐标
+var RW = 42, RH = 26;               // 结点矩形宽高
+
+// 层序坐标：底层 16 个结点等距 50，上层取两孩子的中点
+function nodeX(l, i){
+  var span = Math.pow(2, 4 - l);
+  return 40 + 50 * (span * i + (span - 1) / 2);
 }
 
-var STEPS = [
-  { title: '审题眼：3 阶 B 树的下限',
-    cls: 'key',
-    body: '<p>m 阶 B 树：根结点最少 <b>2 棵子树、1 个关键字</b>；非根结点最少 ⌈m/2⌉ = ⌈3/2⌉ = <b>2 棵子树、1 个关键字</b>（最多 3 棵子树、2 个关键字）。求「至少」→ 每个结点都取下限：1 关键字、2 子树。</p>' },
-  { title: '每层结点数翻倍',
-    cls: 'key',
-    body: '<p>每个结点最少 2 棵子树 → 第 1 层 1 个结点，第 2 层最少 2 个，第 3 层最少 4 个，第 4 层最少 8 个，第 5 层最少 16 个。高度 5 = 5 层结点（第 5 层为叶结点层，其上一层终端结点含关键字）。</p>' },
-  { title: '逐层求和',
-    cls: 'good',
-    body: '<p>每层结点都只放 1 个关键字（最少情形）：<br><code>1 + 2 + 4 + 8 + 16 = 31</code></p>' },
-  { title: '逐项解剖干扰项',
-    cls: 'bad',
-    body: '<p>A <code>15</code>：1+2+4+8 只算 4 层——把「高度 5」当成 4 层关键字结点，少算一层。<br>C <code>62</code>：2×31，误以为每结点至少 2 个关键字。<br>D <code>242</code>：按满树算（结点 1,3,9,27,81、每结点 2 关键字），那是「最多」不是「至少」。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>B</b>（31）。记忆锚点：<b>最少关键字 = 逐层结点数 ×2 翻倍之和</b>；最多才用满树公式。</p>' },
+var snaps = [
+  { cls:'step',  tag:'审题', lv:1, count:1,
+    log:'3 阶 B 树规则：根结点最少 2 棵子树、1 个关键字；非根结点最少 ⌈3/2⌉ = 2 棵子树、1 个关键字（最多 3 棵子树、2 个关键字）。求「至少」→ 让每个结点都取下限。根结点先就位（放 1 个关键字）。' },
+  { cls:'shift', tag:'翻倍规律', lv:1, count:1,
+    log:'每个结点最少 2 棵子树 → 下一层结点数 = 上一层 × 2。于是各层结点数只能是 1、2、4、8、16 —— 逐层翻倍。' },
+  { cls:'ok',    tag:'第 2 层', lv:2, count:2,
+    log:'第 2 层：2 个结点，每个只放 1 个关键字。' },
+  { cls:'ok',    tag:'第 3 层', lv:3, count:3,
+    log:'第 3 层：4 个结点。' },
+  { cls:'ok',    tag:'第 4 层', lv:4, count:4,
+    log:'第 4 层：8 个结点。' },
+  { cls:'ok',    tag:'第 5 层', lv:5, count:5,
+    log:'第 5 层：16 个结点 —— 高度 5 的 B 树长成（第 5 层即最下面的结点层）。"最瘦"的树：每层结点都取最少、每结点都只放 1 个关键字。' },
+  { cls:'step',  tag:'清点关键字', lv:5, count:5, green:true,
+    log:'逐层清点关键字（每结点 1 个）：1 + 2 + 4 + 8 + 16 = <b>31</b> 个。' },
+  { cls:'shift', tag:'解剖干扰项', lv:5, count:5, green:true,
+    log:'A 15：只算了 1+2+4+8，把高度 5 当 4 层，少算一层；C 62：误以为每结点至少 2 个关键字（3 阶树非根结点最少只有 1 个）；D 242：按满树结点 ×2 算的，那是「最多」不是「至少」。' },
+  { cls:'done',  tag:'完成', lv:5, count:5, green:true, done:true,
+    log:'高度 5 的 3 阶 B 树至少含 31 个关键字 → 选 B。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 830 420');
+  svg.setAttribute('class', 'btree-svg');
+  // 先画边（子结点层显现时一起亮）
+  for (var l = 0; l < 4; l++){
+    for (var i = 0; i < LV[l]; i++){
+      for (var c = 0; c < 2; c++){
+        var ln = document.createElementNS(svgNS, 'line');
+        ln.setAttribute('x1', nodeX(l, i)); ln.setAttribute('y1', YS[l] + RH / 2);
+        ln.setAttribute('x2', nodeX(l + 1, 2 * i + c)); ln.setAttribute('y2', YS[l + 1] - RH / 2);
+        ln.setAttribute('class', 'bedge hidden-el');
+        ln.dataset.lv = l + 1;
+        svg.appendChild(ln);
+      }
+    }
+  }
+  // 再画结点
+  for (var lv = 0; lv < 5; lv++){
+    for (var j = 0; j < LV[lv]; j++){
+      var g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'bnode ' + (lv === 0 ? 'root' : 'normal') + ' hidden-el');
+      g.dataset.lv = lv;
+      var r = document.createElementNS(svgNS, 'rect');
+      r.setAttribute('x', nodeX(lv, j) - RW / 2); r.setAttribute('y', YS[lv] - RH / 2);
+      r.setAttribute('width', RW); r.setAttribute('height', RH); r.setAttribute('rx', 7);
+      var t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', nodeX(lv, j)); t.setAttribute('y', YS[lv]);
+      t.textContent = '1';
+      g.appendChild(r); g.appendChild(t);
+      svg.appendChild(g);
+    }
+  }
+  stage.appendChild(svg);
+  var layerBox = AW.el('div', 'blayer');
+  for (var k = 0; k < 5; k++){
+    var chip = AW.el('span', 'lchip hidden-el', '第' + (k + 1) + '层 ×' + LV[k]);
+    chip.id = 'lvchip' + k;
+    layerBox.appendChild(chip);
+  }
+  var total = AW.el('span', 'lchip total hidden-el', '合计 31 个关键字');
+  total.id = 'lvtotal';
+  layerBox.appendChild(total);
+  stage.appendChild(layerBox);
+  var formulaBox = AW.el('div', 'bformula');
+  stage.appendChild(formulaBox);
+  this._svg = svg; this._formulaBox = formulaBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var lv = sn.lv;
+  [].forEach.call(svg.querySelectorAll('.bnode, .bedge'), function(el){
+    el.classList.toggle('hidden-el', +el.dataset.lv >= lv);
+  });
+  [].forEach.call(svg.querySelectorAll('.bnode'), function(el){
+    el.classList.remove('hot', 'counted');
+    var l = +el.dataset.lv;
+    if (!sn.green && sn.lv >= 2 && l === sn.lv - 1) el.classList.add('hot');
+    if (sn.green) el.classList.add('counted');
+  });
+  for (var k = 0; k < 5; k++){
+    var chip = document.getElementById('lvchip' + k);
+    chip.classList.toggle('hidden-el', k >= sn.lv);
+    chip.classList.toggle('hot', !sn.green && sn.lv >= 2 && k === sn.lv - 1);
+  }
+  document.getElementById('lvtotal').classList.toggle('hidden-el', !sn.green);
+  var formulas = [
+    '每个结点都取下限：<code>1 个关键字 · 2 棵子树</code>',
+    '下一层结点数 = 上一层 × <code>2</code>',
+    '1 + 2 + 4 + 8 + 16 = <code>31</code>',
+    'A 15 少一层 · C 62 误设 2 关键字 · D 242 是「最多」',
+    '公式：<code>2·⌈m/2⌉<sup>h−1</sup> − 1 = 2×2⁴ − 1 = 31</code>（选 B）',
+  ];
+  var fi = i <= 1 ? 0 : (i <= 5 ? 1 : (i === 6 ? 2 : (i === 7 ? 3 : 4)));
+  this._formulaBox.innerHTML = formulas[fi];
+}
 
 AW.init({
-  title: '2018·数据结构（八） 高度为 5 的 3 阶 B 树，关键字至少多少个',
-  subtitle: '3 阶 B 树 · 高度 5 · 求「至少」含有的关键字个数',
-  intro: '点击「▶ 播放」逐步展开推理链。',
+  title: '2018-08 高度为 5 的 3 阶 B 树，关键字至少多少个',
+  subtitle: '3 阶 B 树 · 高度 5 · 求「至少」——把每个结点都压到下限，构一棵"最瘦"的树',
+  counterLabel: '已显现层数',
+  intro: '点击「▶ 播放」看 3 阶 B 树在"每结点取下限"约束下逐层长出来，再清点关键字。',
+  build: build,
+  render: render,
   snaps: snaps,
   result: {
-    big: '答案 B（31）',
-    html: '最少情形下每个结点 1 个关键字、2 棵子树，五层结点数 <b>1、2、4、8、16</b>，关键字共 <b>31</b> 个。15 只算 4 层，62 误设每结点 2 关键字，242 是满树的「最多」。',
+    big: '答案 B（31 个）',
+    html: '3 阶 B 树：根最少 2 棵子树、1 个关键字；非根最少 ⌈3/2⌉ = 2 棵子树、1 个关键字。' +
+      '高度 5 → 各层结点数 <b>1、2、4、8、16</b>，每结点 1 个关键字，合计 <b>1+2+4+8+16 = 31</b>。' +
+      '公式：<code>2·⌈m/2⌉<sup>h−1</sup> − 1</code>。干扰项：15 少一层、62 误设每结点 2 关键字、242 是满树的「最多」。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

@@ -2,89 +2,223 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2016-06 哪一个不是深度优先搜索序列</title>
+<title>2016-06 哪一个不是深度优先搜索序列 · 有向图走查演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .dfs-svg{width:100%;max-width:560px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .dfs-svg .darc{stroke:#94a3b8;stroke-width:3px;transition:stroke .3s}
+  .dfs-svg .darc.good{stroke:#16a34a;stroke-width:5px}
+  .dfs-svg .ghost{stroke:#dc2626;stroke-width:3px;stroke-dasharray:7 5;fill:none}
+  .dfs-svg .gnode circle{fill:#ffffff;stroke:#334155;stroke-width:2.5;transition:fill .3s}
+  .dfs-svg .gnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:15px;
+    text-anchor:middle;dominant-baseline:central;fill:#0f172a;transition:fill .3s}
+  .dfs-svg .gnode.hit circle{fill:#16a34a;stroke:#15803d}
+  .dfs-svg .gnode.hit text{fill:#fff}
+  .dfs-svg .gnode.hot circle{fill:#e07a2f;stroke:#c56117}
+  .dfs-svg .gnode.hot text{fill:#fff}
+  .dfs-svg .gnode.bad circle{fill:#dc2626;stroke:#b91c1c}
+  .dfs-svg .gnode.bad text{fill:#fff}
+  .dfs-svg .adjnote{font-size:13px;font-weight:700;fill:#64748b;text-anchor:middle}
+  .dfs-svg .ghostnote{font-size:13.5px;font-weight:800;fill:#dc2626;text-anchor:middle}
+  .seqbox{display:flex;justify-content:center;margin-top:12px}
+  .seqnote{text-align:center;font-size:13.5px;color:#334155;font-weight:700;margin-top:8px;min-height:20px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域 ================== */
-var ADJ = [
-  ['V1','V2, V3, V5'],
-  ['V2','V5'],
-  ['V3','V2'],
-  ['V4','V3'],
-  ['V5','V4']
+/* ================== 2016-06 DFS 序列走查（SVG 有向图 + 序列格） ==================
+ * 题：有向图 V1→V2,V1→V3,V1→V5,V2→V5,V3→V2,V5→V4,V4→V3，哪个不是从 V1 出发的 DFS 序列？（答案 D）
+ * 演示：画出有向图；A/B/C 三个合法序列逐弧点亮走通；D 在 V2→V3 处断链（红色虚线弧不存在）。 */
+
+var VS = { V1:[300,180], V2:[200,60], V3:[200,300], V4:[390,300], V5:[390,60] };
+var ARCS = [
+  { k:'a12', a:'V1', b:'V2' },
+  { k:'a13', a:'V1', b:'V3' },
+  { k:'a15', a:'V1', b:'V5' },
+  { k:'a25', a:'V2', b:'V5' },
+  { k:'a32', a:'V3', b:'V2' },
+  { k:'a54', a:'V5', b:'V4' },
+  { k:'a43', a:'V4', b:'V3' },
+];
+var R = 24;
+
+function seg(a, b, r){
+  var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.sqrt(dx*dx + dy*dy);
+  return { x1:a[0] + dx/L*r, y1:a[1] + dy/L*r, x2:b[0] - dx/L*r, y2:b[1] - dy/L*r };
+}
+function toward(p, q, r){
+  var dx = q[0] - p[0], dy = q[1] - p[1], L = Math.sqrt(dx*dx + dy*dy);
+  return [p[0] + dx/L*r, p[1] + dy/L*r];
+}
+
+var seqBox = null, noteBox = null, svg = null, arcEls = {}, vertexEls = {}, ghostEl = null;
+
+function build(stage){
+  stage.innerHTML = '';
+  var NS = 'http://www.w3.org/2000/svg';
+  svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 480 350');
+  svg.setAttribute('class', 'dfs-svg');
+  var defs = document.createElementNS(NS, 'defs');
+  function marker(id, color){
+    var m = document.createElementNS(NS, 'marker');
+    m.setAttribute('id', id);
+    m.setAttribute('viewBox', '0 0 10 10');
+    m.setAttribute('refX', '8'); m.setAttribute('refY', '5');
+    m.setAttribute('markerWidth', '6.5'); m.setAttribute('markerHeight', '6.5');
+    m.setAttribute('orient', 'auto');
+    var p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', 'M0,0 L10,5 L0,10 z');
+    p.setAttribute('fill', color);
+    m.appendChild(p);
+    defs.appendChild(m);
+  }
+  marker('arrN', '#94a3b8');
+  marker('arrOK', '#16a34a');
+  marker('arrBad', '#dc2626');
+  svg.appendChild(defs);
+
+  ARCS.forEach(function(e){
+    var s = seg(VS[e.a], VS[e.b], R);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', s.x1); ln.setAttribute('y1', s.y1);
+    ln.setAttribute('x2', s.x2); ln.setAttribute('y2', s.y2);
+    ln.setAttribute('class', 'darc');
+    ln.setAttribute('marker-end', 'url(#arrN)');
+    ln.dataset.k = e.k;
+    svg.appendChild(ln);
+    arcEls[e.k] = ln;
+  });
+
+  /* 不存在的弧 V2→V3：红色虚线（弯曲避开 V3→V2 那条真弧） */
+  var c0 = [120, 180];
+  var gs = toward(VS.V2, c0, R), ge = toward(VS.V3, c0, R);
+  var gp = document.createElementNS(NS, 'path');
+  gp.setAttribute('d', 'M' + gs[0] + ',' + gs[1] + ' Q' + c0[0] + ',' + c0[1] + ' ' + ge[0] + ',' + ge[1]);
+  gp.setAttribute('class', 'ghost hidden-el');
+  gp.setAttribute('marker-end', 'url(#arrBad)');
+  svg.appendChild(gp);
+  ghostEl = gp;
+  var gn = document.createElementNS(NS, 'text');
+  gn.setAttribute('x', 105); gn.setAttribute('y', 180);
+  gn.setAttribute('class', 'ghostnote hidden-el');
+  gn.textContent = '✗';
+  gn.dataset.step = 99;
+  svg.appendChild(gn);
+  ghostEl._note = gn;
+
+  Object.keys(VS).forEach(function(id){
+    var p = VS[id];
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'gnode hidden-el');
+    g.dataset.id = id;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r', R);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', p[0]); t.setAttribute('y', p[1]);
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+    vertexEls[id] = g;
+  });
+
+  var adj = document.createElementNS(NS, 'text');
+  adj.setAttribute('x', 240); adj.setAttribute('y', 338);
+  adj.setAttribute('class', 'adjnote');
+  adj.textContent = '出边：V1→V2,V3,V5　·　V2→V5　·　V3→V2　·　V4→V3　·　V5→V4';
+  svg.appendChild(adj);
+  stage.appendChild(svg);
+
+  seqBox = AW.el('div', 'seqbox');
+  stage.appendChild(seqBox);
+  noteBox = AW.el('div', 'seqnote');
+  stage.appendChild(noteBox);
+}
+
+function render(stage, sn){
+  var used = sn.arcs || [];
+  ARCS.forEach(function(e){
+    var ln = arcEls[e.k];
+    ln.setAttribute('class', 'darc' + (used.indexOf(e.k) >= 0 ? ' good' : ''));
+    ln.setAttribute('marker-end', used.indexOf(e.k) >= 0 ? 'url(#arrOK)' : 'url(#arrN)');
+  });
+  var vis = sn.visited || [], hotV = sn.hotV || null, badV = sn.badV || [];
+  Object.keys(vertexEls).forEach(function(id){
+    var g = vertexEls[id];
+    var cls = 'gnode hidden-el';
+    if(badV.indexOf(id) >= 0) cls += ' bad';
+    else if(hotV === id) cls += ' hot';
+    else if(vis.indexOf(id) >= 0) cls += ' hit';
+    g.setAttribute('class', cls);
+  });
+  ghostEl.classList.toggle('hidden-el', !sn.ghost);
+  ghostEl._note.classList.toggle('hidden-el', !sn.ghost);
+
+  seqBox.innerHTML = '';
+  if(sn.seq){
+    var classes = [];
+    for(var i = 0; i < sn.seq.length; i++){
+      if(i < sn.okCount) classes.push('ok');
+      else if(sn.ghost && i === sn.okCount) classes.push('miss');
+      else classes.push('');
+    }
+    var ptr = null;
+    if(sn.ghost && sn.okCount < sn.seq.length){
+      ptr = {}; ptr[sn.okCount + 1] = '断 ✗';
+    }
+    seqBox.appendChild(AW.cellRow(sn.seq, classes, ptr));
+  }
+  noteBox.innerHTML = sn.note || '';
+}
+
+var OPT_A = ['V1','V5','V4','V3','V2'];
+var OPT_B = ['V1','V3','V2','V5','V4'];
+var OPT_C = ['V1','V2','V5','V4','V3'];
+var OPT_D = ['V1','V2','V3','V4','V5'];
+
+var SNAPS = [
+  { cls:'step', tag:'读图', count:0, arcs:[], visited:[], seq:null, okCount:0, ghost:false,
+    log:'有向图共 7 条弧：V1→V2、V1→V3、V1→V5、V2→V5、V3→V2、V5→V4、V4→V3。DFS 从 V1 出发，规则：每一步只能沿"当前顶点的出边"走向未访问顶点，四面无路才回溯。',
+    note:'先把图和出边看清楚' },
+  { cls:'ok', tag:'验 A ✓', count:1, arcs:['a15','a54','a43','a32'], visited:OPT_A, hotV:'V2', seq:OPT_A, okCount:5, ghost:false, ribbon:{k:1, ok:true},
+    log:'选项 A：V1→V5 ✓（V1 的出边）→ V4 ✓（V5→V4）→ V3 ✓（V4→V3）→ V2 ✓（V3→V2），步步沿出边推进，是合法的 DFS 序列。',
+    note:'A：V1→V5→V4→V3→V2 全程有边 ✓' },
+  { cls:'ok', tag:'验 B ✓', count:2, arcs:['a13','a32','a25','a54'], visited:OPT_B, hotV:'V4', seq:OPT_B, okCount:5, ghost:false, ribbon:{k:2, ok:true},
+    log:'选项 B：V1→V3 ✓ → V2 ✓（V3→V2）→ V5 ✓（V2→V5）→ V4 ✓（V5→V4），合法。',
+    note:'B：V1→V3→V2→V5→V4 全程有边 ✓' },
+  { cls:'ok', tag:'验 C ✓', count:3, arcs:['a12','a25','a54','a43'], visited:OPT_C, hotV:'V3', seq:OPT_C, okCount:5, ghost:false, ribbon:{k:3, ok:true},
+    log:'选项 C：V1→V2 ✓ → V5 ✓（V2→V5）→ V4 ✓（V5→V4）→ V3 ✓（V4→V3），合法。',
+    note:'C：V1→V2→V5→V4→V3 全程有边 ✓' },
+  { cls:'step', tag:'验 D · 起步', count:4, arcs:['a12'], visited:['V1','V2'], hotV:'V2', seq:OPT_D, okCount:2, ghost:false,
+    log:'选项 D：第 1 步 V1→V2 ✓（沿出边）。第 2 步要访问 V3 —— 查一查 V2 的出边表。',
+    note:'D：V1→V2 ✓，下一步要 V3？' },
+  { cls:'miss', tag:'D 断链 ✗', count:5, arcs:['a12'], visited:['V1','V2'], hotV:null, badV:['V3'], seq:OPT_D, okCount:2, ghost:true, ribbon:{k:4, ok:false},
+    log:'V2 的出边只有 V2→V5，根本没有 V2→V3 这条弧（红色虚线 ✗）。DFS 不允许"跳步"——D 在第 2 步断链。',
+    note:'D：V2→V3 ✗ 这条弧不存在！' },
+  { cls:'step', tag:'补证', count:6, arcs:['a12'], visited:['V1','V2'], badV:['V3'], seq:OPT_D, okCount:2, ghost:true,
+    log:'再看 V3：指向它的弧只有 V1→V3 和 V4→V3，而 V4 必须等 V5→V4 之后才可能被访问 —— 所以 V1、V2 之后只能去 V5，那正是选项 C 的走法。D 走不通。',
+    note:'V3 只能从 V1 或 V4 进入' },
+  { cls:'done', tag:'完成', count:7, arcs:['a12'], visited:['V1','V2'], badV:['V3'], seq:OPT_D, okCount:2, ghost:true, done:true,
+    log:'四个序列中只有 D 出现"沿不存在的弧跳步"→ 不是深度优先搜索序列，选 D。',
+    note:'答案：D' },
 ];
 
-function seqRow(seq, okCount, note){
-  var h = '<div class="aw-cells" style="justify-content:center">';
-  seq.forEach(function(s, i){
-    var c = 'aw-box';
-    if(i < okCount){ c += ' ok'; }
-    else if(i === okCount){ c += ' miss'; }
-    h += '<div class="aw-col"><div class="aw-ptr"></div><div class="' + c + '">' + s + '</div><div class="aw-idx">' + (i + 1) + '</div></div>';
-  });
-  h += '</div>';
-  if(note){ h += '<p style="text-align:center;font-size:13px;color:#334155;margin-top:8px">' + note + '</p>'; }
-  return h;
-}
-
-function adjTbl(hl){
-  var h = '<div style="width:max-content;margin:0 auto"><table style="border-collapse:collapse;font-size:14px">';
-  h += '<tr><th style="border:1px solid #cbd5e1;background:#f1f5f9;padding:6px 18px">顶点</th><th style="border:1px solid #cbd5e1;background:#f1f5f9;padding:6px 18px">能直接到达（出边）</th></tr>';
-  ADJ.forEach(function(r, i){
-    var bg = '#ffffff', fw = '400', fc = '#334155';
-    if(hl && hl.r === i){ bg = hl.good ? '#dcfce7' : '#fee2e2'; fw = '700'; fc = hl.good ? '#14532d' : '#b91c1c'; }
-    h += '<tr><td style="border:1px solid #cbd5e1;padding:6px 18px;text-align:center;background:' + bg + ';font-weight:' + fw + ';color:' + fc + '">' + r[0] + '</td>' +
-         '<td style="border:1px solid #cbd5e1;padding:6px 18px;text-align:center;background:' + bg + ';font-weight:' + fw + ';color:' + fc + '">' + r[1] + '</td></tr>';
-  });
-  h += '</table>';
-  if(hl && hl.seq){ h += '<div style="margin-top:14px">' + seqRow(hl.seq, hl.seqOk, hl.note) + '</div>'; }
-  h += '</div>';
-  return h;
-}
-
 AW.init({
-  title: '2016·有向图：哪一个不是从 V1 出发的 DFS 序列？',
-  subtitle: 'DFS 规则：下一步只能沿<b>当前顶点的出边</b>走向未访问顶点 · 走投无路才回溯',
-  counterLabel: '步数',
-  intro: '点击「▶ 播放」：先读懂邻接表，再逐项检验四个候选序列。',
-
-  snaps: [
-    { cls:'step', tag:'开始', count:0,
-      log:'有向图，从 V1 出发做深度优先搜索。规则：每访问一个顶点，下一步只能沿它的出边去一个尚未访问的邻接点；无路可走才回溯。',
-      html: adjTbl(null) },
-    { cls:'step', tag:'读图', count:1,
-      log:'读出邻接表：V1 出发直达 V2、V3、V5；V2 只出 V5；V3 只出 V2；V4 只出 V3；V5 只出 V4。',
-      html: adjTbl(null) },
-    { cls:'step', tag:'验D·第一步', count:2,
-      log:'检验 D（V1, V2, V3, V4, V5）：第 1 步 V1 → V2 ✓，V1 的出边里有 V2。',
-      html: adjTbl({r:0, good:true, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'V1 → V2 ✓'}) },
-    { cls:'miss', tag:'验D·断链', count:3,
-      log:'第 2 步该从 V2 走：V2 唯一的出边是 V2→V5，而 V3 不是 V2 的邻接点——DFS 不可能从 V2 直接访问 V3 ✗。',
-      html: adjTbl({r:1, good:false, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'V2 → V3 ✗ 没有这条边！'}) },
-    { cls:'step', tag:'补证', count:4,
-      log:'V3 只能从 V1 或 V4 进入，而 V4 必须等 V5→V4 之后；所以 V1、V2 之后只能去 V5——那正是选项 C 的走法。D 走不通。',
-      html: adjTbl({r:1, good:false, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'D 不是 DFS 序列'}) },
-    { cls:'ok', tag:'验A', count:5,
-      log:'检验 A（V1, V5, V4, V3, V2）：V1→V5 ✓ → V4 ✓（V5→V4）→ V3 ✓（V4→V3）→ V2 ✓（V3→V2），步步有边，合法。',
-      html: adjTbl({seq:['V1','V5','V4','V3','V2'], seqOk:5, note:'A 合法 ✓'}) },
-    { cls:'ok', tag:'验B', count:6,
-      log:'检验 B（V1, V3, V2, V5, V4）：V1→V3 ✓ → V2 ✓（V3→V2）→ V5 ✓（V2→V5）→ V4 ✓（V5→V4），合法。',
-      html: adjTbl({seq:['V1','V3','V2','V5','V4'], seqOk:5, note:'B 合法 ✓'}) },
-    { cls:'ok', tag:'验C', count:7,
-      log:'检验 C（V1, V2, V5, V4, V3）：V1→V2 ✓ → V5 ✓（V2→V5）→ V4 ✓（V5→V4）→ V3 ✓（V4→V3），合法。',
-      html: adjTbl({seq:['V1','V2','V5','V4','V3'], seqOk:5, note:'C 合法 ✓'}) },
-    { cls:'done', tag:'结论', count:8, done:true,
-      log:'四个序列中只有 D 在 V2→V3 处断链 → 不是深度优先搜索序列，选 D。',
-      html: adjTbl({r:1, good:false, seq:['V1','V2','V3','V4','V5'], seqOk:2, note:'答案：D'}) },
-  ],
-
+  title: '2016-06 · 哪一个不是从 V1 出发的深度优先搜索序列？',
+  subtitle: 'DFS 规则：每步沿当前顶点的出边走向未访问顶点，无路可走才回溯 · 在图上逐弧走查',
+  counterLabel: '推进步',
+  ribbonTitle: '选项判定（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」：A/B/C 逐弧走通，D 在 V2→V3 处断链。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D',
-    html: 'DFS 铁律：下一步必须沿<b>当前顶点的出边</b>走向未访问顶点，不能“跳”。D 中 V2 没有指向 V3 的边（出边只有 V2→V5），第 2 步就断了。另注意方向：图里是 V3→V2、V5→V4，看反就会误判。',
+    html: 'DFS 铁律：下一步必须沿<b>当前顶点的出边</b>走到未访问顶点。D 中 V2→V3 这条弧不存在（V2 的出边只有 V2→V5），第 2 步即断链；A、B、C 都能沿出边一路走通。' +
+      '注意方向：<code>V3→V2、V5→V4</code> 是有向弧，看反容易误判。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

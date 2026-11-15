@@ -2,69 +2,212 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2015-04 动画 · 中序降序 AVL 树的性质判断</title>
+<title>2015-04 中序降序 AVL 树 · 结构演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bst-svg{width:100%;max-width:780px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bst-svg .tedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .4s}
+  .bst-svg .tnode circle{fill:#1b3a4b;transition:opacity .4s, fill .3s}
+  .bst-svg .tnode text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:14px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:opacity .4s}
+  .bst-svg .tnode.leaf circle{fill:#16a34a}
+  .bst-svg .tnode.hot circle{fill:#e07a2f}
+  .bst-svg .tnode.badhot circle{fill:#dc2626}
+  .bst-svg text.svgnote{font-size:13.5px;font-weight:700;fill:#334155}
+  .bst-svg text.svgnote.warn{fill:#dc2626}
+  .bst-svg .hidden-el{opacity:0}
+  .bst-svg .dim-el{opacity:.3}
+  .seqline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .seqline .qlabel{font-size:13px;color:#64748b;font-weight:700}
+  .seqline .qchip{background:#5a7d8c26;color:#1b3a4b;border:1.5px solid #5a7d8c66;border-radius:999px;
+    padding:4px 13px;font-weight:800;font-family:JetBrains Mono,Menlo,monospace;font-size:14px;transition:opacity .4s}
+  .seqline .qchip.hot{background:#e07a2f1f;border-color:#e07a2f;color:#e07a2f}
+  .seqline .qchip.hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2015-04 中序降序 AVL 树（SVG 结构演示） ==================
+ * 题：无重复关键字的 AVL 树，中序遍历为降序序列，问哪项正确。（答案 D）
+ * 演示：先在示例镜像 BST 上走中序（降序），再用三棵具体小树否决 A/B/C（含 AVL 双旋），
+ *       最后沿最左链证明 D。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼：中序降序 → 镜像 BST',
-    cls: 'key',
-    body: '<p>中序遍历（左→根→右）得到<b>降序</b>序列，说明这是"镜像"的二叉排序树：' +
-          '对任一结点，<b>左子树所有结点 &gt; 根 &gt; 右子树所有结点</b>；且是 AVL 树，任一结点左右子树高度差不超过 1。' +
-          '四个选项逐一举反例或证明。</p>' },
-  { title: '选项 A：根的度一定为 2？',
-    cls: 'bad',
-    body: '<p>度 = 孩子数。树上只有 <b>1 个结点</b>时根的度为 0；<b>2 个结点</b>时度为 1，都满足题设。' +
-          '"一定为 2"不成立。A 错。</p>' },
-  { title: '选项 B：最小元素一定是叶结点？',
-    cls: 'bad',
-    body: '<p>最小元沿<b>最右链</b>走：它必无右孩子（否则右子树还有更小的），但<b>可以有左孩子</b>（左孩子比它大，不违反性质）。' +
-          '反例：根 10、右孩子 5、5 的左孩子 7 → 中序 10,7,5 降序 ✓，最小元 5 带着左孩子 7，不是叶。B 错。</p>' },
-  { title: '选项 C：最后插入的元素一定是叶结点？',
-    cls: 'bad',
-    body: '<p>新结点插入时确实是叶，但 <b>AVL 失衡会旋转</b>，新结点可能被顶上去。反例：空树依次插入 3、1、2 → ' +
-          '3 处发生 LR 失衡，双旋后 2 成为根，<b>最后插入的 2 带着两个孩子 1 和 3</b>，不是叶。C 错。</p>' },
-  { title: '选项 D：最大元素一定无左子树？',
-    cls: 'good',
-    body: '<p>最大元沿<b>最左链</b>走：若它还有左孩子，左子树里全是比它大的元素，与"它最大"矛盾 → ' +
-          '<b>左子树必不存在</b>；右孩子可有可无（右子树全是更小的元素）。命题恒成立。D 对。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>答案选 <b>D</b>。记忆锚点：降序 BST 中，<b>最右链末端（最小元）必无右孩子，最左链末端（最大元）必无左孩子</b>；' +
-          '"无左子树"≠"是叶"，D 的表述更弱所以恒真，而 C 被 AVL 旋转否决。</p>' },
+var NODES = [
+  /* 示例镜像 AVL 树：中序 9,7,5,3,1 降序（左子树存更大元素） */
+  { id:'N5',  x:390, y:70,  v:5,  leaf:false, step:0, g:'T0' },
+  { id:'N7',  x:320, y:140, v:7,  leaf:false, step:0, g:'T0' },
+  { id:'N3',  x:460, y:140, v:3,  leaf:false, step:0, g:'T0' },
+  { id:'N9',  x:255, y:210, v:9,  leaf:true,  step:0, g:'T0' },
+  { id:'N1',  x:525, y:210, v:1,  leaf:true,  step:0, g:'T0' },
+  /* A 反例：两结点树，根的度 = 1 */
+  { id:'A5',  x:120, y:390, v:5,  leaf:false, step:2, g:'' },
+  { id:'A3',  x:185, y:460, v:3,  leaf:true,  step:2, g:'' },
+  /* B 反例：中序 30,10,7,5 降序且 AVL 平衡，最小元 5 带左孩子 7 */
+  { id:'B10', x:335, y:390, v:10, leaf:false, step:3, g:'' },
+  { id:'B30', x:268, y:460, v:30, leaf:true,  step:3, g:'' },
+  { id:'B5',  x:402, y:460, v:5,  leaf:false, step:3, g:'' },
+  { id:'B7',  x:358, y:525, v:7,  leaf:true,  step:3, g:'' },
+  /* C 反例（旋转前）：依次插入 3,1,2 后失衡 */
+  { id:'C3',  x:530, y:390, v:3,  leaf:false, step:4, g:'' },
+  { id:'C1',  x:595, y:460, v:1,  leaf:false, step:4, g:'' },
+  { id:'C2',  x:560, y:525, v:2,  leaf:true,  step:4, g:'' },
+  /* C 反例（双旋后）：2 成为根，度 = 2 */
+  { id:'D2',  x:710, y:390, v:2,  leaf:false, step:5, g:'' },
+  { id:'D3',  x:648, y:460, v:3,  leaf:true,  step:5, g:'' },
+  { id:'D1',  x:762, y:460, v:1,  leaf:true,  step:5, g:'' },
+];
+var EDGES = [
+  { a:'N5', b:'N7', step:0, g:'T0' },
+  { a:'N5', b:'N3', step:0, g:'T0' },
+  { a:'N7', b:'N9', step:0, g:'T0' },
+  { a:'N3', b:'N1', step:0, g:'T0' },
+  { a:'A5', b:'A3', step:2, g:'' },
+  { a:'B10', b:'B30', step:3, g:'' },
+  { a:'B10', b:'B5',  step:3, g:'' },
+  { a:'B5',  b:'B7',  step:3, g:'' },
+  { a:'C3', b:'C1', step:4, g:'' },
+  { a:'C1', b:'C2', step:4, g:'' },
+  { a:'D2', b:'D3', step:5, g:'' },
+  { a:'D2', b:'D1', step:5, g:'' },
+];
+var NOTES = [
+  { x:152, y:356, t:'两结点：根的度 = 1', step:2, warn:false },
+  { x:335, y:572, t:'最小元 5 带左孩子 7 → 非叶', step:3, warn:false },
+  { x:562, y:356, t:'插入 3,1,2 后失衡', step:4, warn:true },
+  { x:645, y:338, t:'双旋 ⟶', step:5, warn:false },
+  { x:160, y:262, t:'最大元 9：无左孩子 ✓', step:6, warn:false },
+];
+var SNAPS = [
+  { cls:'shift', tag:'示例树', count:0, chips:0, hotChip:-1, hot:[], badhot:[], dimTop:false,
+    formula:'镜像 BST：左子树 ＞ 根 ＞ 右子树（中序 = 降序）',
+    log:'示例：5 个结点的镜像二叉排序树（左子树存更大的元素），且满足 AVL 平衡。题设"中序遍历为降序"说的就是这种结构。' },
+  { cls:'ok', tag:'中序降序', count:1, chips:5, hotChip:0, hot:['N9'], badhot:[], dimTop:false,
+    formula:'中序（左→根→右）= 9 → 7 → 5 → 3 → 1　降序 ✓',
+    log:'中序遍历得 9 → 7 → 5 → 3 → 1，降序 ✓。最左端的 9 是最大元（沿最左链 5→7→9 走到头），最右端的 1 是最小元。' },
+  { cls:'miss', tag:'A ✗', count:2, chips:5, hotChip:-1, hot:[], badhot:[], dimTop:true, ribbon:{k:1, ok:false},
+    formula:'A ✗：根的度可为 1（两结点）甚至 0（单结点）',
+    log:'选项 A：反例——下方这棵两结点小树，根 5 只有右孩子 3，度为 1；单结点树根的度甚至是 0。"根的度一定为 2"不成立。' },
+  { cls:'miss', tag:'B ✗', count:3, chips:5, hotChip:-1, hot:['B5','B7'], badhot:[], dimTop:true, ribbon:{k:2, ok:false},
+    formula:'B ✗：最小元必无右孩子，但可有左孩子',
+    log:'选项 B：反例——中序 30,10,7,5 降序 ✓ 且 AVL 平衡。最小元是 5，但它带着左孩子 7（左子树元素都比 5 大，不违反镜像性质）→ 最小元不一定是叶。' },
+  { cls:'step', tag:'C · 失衡', count:4, chips:5, hotChip:-1, hot:[], badhot:['C3'], dimTop:true,
+    formula:'C：新结点插入时是叶——但失衡会旋转……',
+    log:'选项 C：空树依次插入 3、1、2（小的往右走）→ 3 的右孩子 1、1 的左孩子 2。插入瞬间 2 确实是叶，但此刻 3 已失衡（标红）。' },
+  { cls:'miss', tag:'C ✗', count:5, chips:5, hotChip:-1, hot:['D2'], badhot:[], dimTop:true, ribbon:{k:3, ok:false},
+    formula:'C ✗：双旋后最后插入的 2 成为根（度 2，非叶）',
+    log:'双旋调整（先右旋 1、再左旋 3）后：2 成为根，带着两个孩子 3 和 1 —— 最后插入的 2 不再是叶。C 不成立。' },
+  { cls:'ok', tag:'D · 最左链', count:6, chips:5, hotChip:0, hot:['N9'], badhot:[], dimTop:false,
+    formula:'D ✓：最大元若还有左孩子 → 左子树全是更大元素 → 矛盾',
+    log:'选项 D：最大元沿最左链走（示例 5→7→9）。若它还有左孩子，左子树里全是比它更大的元素，与"它最大"矛盾 → 左子树必不存在。' },
+  { cls:'ok', tag:'D ✓', count:7, chips:5, hotChip:-1, hot:['N9'], badhot:[], dimTop:false, ribbon:{k:4, ok:true},
+    formula:'D ✓：最大元必无左子树；右孩子可有可无',
+    log:'最大元的右孩子可有可无（右子树全是更小元素）。注意"无左子树"≠"是叶"：D 的表述更弱，恰好恒真；B 的"是叶"更强，已被反例否决。' },
+  { cls:'done', tag:'完成', count:8, chips:5, hotChip:-1, hot:['N9'], badhot:[], dimTop:false, done:true,
+    formula:'答案 D：树中最大元素一定无左子树',
+    log:'答案：D。' },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+var svg, chipEls = [], formulaBox;
+function nodeById(id){
+  for(var i = 0; i < NODES.length; i++){ if(NODES[i].id === id) return NODES[i]; }
+  return null;
+}
+
+function build(stage){
+  stage.innerHTML = '';
+  var NS = 'http://www.w3.org/2000/svg';
+  svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 800 595');
+  svg.setAttribute('class', 'bst-svg');
+  EDGES.forEach(function(e){
+    var A = nodeById(e.a), B = nodeById(e.b);
+    var ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
+    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
+    ln.setAttribute('class', 'tedge hidden-el');
+    ln.dataset.step = e.step;
+    ln.dataset.g = e.g;
+    svg.appendChild(ln);
+  });
+  NODES.forEach(function(n){
+    var g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'tnode ' + (n.leaf ? 'leaf' : 'internal') + ' hidden-el');
+    g.dataset.id = n.id;
+    g.dataset.step = n.step;
+    g.dataset.g = n.g;
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 17);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
+    t.textContent = String(n.v);
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  NOTES.forEach(function(nt){
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', nt.x); t.setAttribute('y', nt.y);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('class', 'svgnote' + (nt.warn ? ' warn' : '') + ' hidden-el');
+    t.dataset.step = nt.step;
+    t.textContent = nt.t;
+    svg.appendChild(t);
+  });
+  stage.appendChild(svg);
+
+  var seq = AW.el('div', 'seqline');
+  seq.appendChild(AW.el('span', 'qlabel', '中序遍历：'));
+  ['9','7','5','3','1'].forEach(function(s){
+    var ch = AW.el('span', 'qchip hidden-el', s);
+    seq.appendChild(ch);
+    chipEls.push(ch);
+  });
+  stage.appendChild(seq);
+  formulaBox = AW.el('div', 'hformula');
+  stage.appendChild(formulaBox);
+}
+
+function render(stage, sn){
+  [].forEach.call(svg.querySelectorAll('[data-step]'), function(elm){
+    elm.classList.toggle('hidden-el', +elm.dataset.step > sn.count);
+  });
+  var hotSet = sn.hot || [], badSet = sn.badhot || [];
+  [].forEach.call(svg.querySelectorAll('.tnode'), function(g){
+    g.classList.remove('hot', 'badhot', 'dim-el');
+    var id = g.dataset.id;
+    if(hotSet.indexOf(id) >= 0) g.classList.add('hot');
+    if(badSet.indexOf(id) >= 0) g.classList.add('badhot');
+    if(sn.dimTop && g.dataset.g === 'T0' && hotSet.indexOf(id) < 0) g.classList.add('dim-el');
+  });
+  [].forEach.call(svg.querySelectorAll('.tedge'), function(ln){
+    ln.classList.remove('dim-el');
+    if(sn.dimTop && ln.dataset.g === 'T0') ln.classList.add('dim-el');
+  });
+  chipEls.forEach(function(c, k){
+    c.classList.toggle('hidden-el', k >= sn.chips);
+    c.classList.toggle('hot', k === sn.hotChip);
+    if(sn.dimTop && sn.hotChip < 0) c.classList.add('dim-el'); else c.classList.remove('dim-el');
+  });
+  formulaBox.innerHTML = sn.formula || '';
+}
 
 AW.init({
-  title: '2015-04 · 中序遍历为降序序列的 AVL 树',
-  subtitle: '考点：镜像 BST 性质 + AVL 旋转 · 逐项举反例 / 证明',
-  intro: '点击「▶ 播放」逐步展开推理链。',
-  snaps: snaps,
+  title: '2015-04 · 中序遍历为降序序列的 AVL 树：结构演示',
+  subtitle: '题：无重复关键字的 AVL 树，中序遍历为降序序列，四个选项逐项在具体小树上验证',
+  counterLabel: '推进步',
+  ribbonTitle: '选项判定（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」：先在示例树上走中序，再用三棵反例树否决 A/B/C，最后沿最左链证明 D。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
     big: '答案 D',
-    html: '记忆锚点：降序 BST 中<b>最大元在最左链末端、必无左子树</b>（右孩子可有可无）。' +
-          'A 被"单结点/两结点"否决，B 被"最小元可带左孩子"否决，C 被"AVL 旋转把新结点顶成内结点"否决。',
+    html: '镜像 BST（中序降序）中：<b>最大元沿最左链，必无左子树</b>（右孩子可有可无）；最小元沿最右链，必无右孩子但可有左孩子（B 错）。' +
+      '根的度可为 0 或 1（A 错）；AVL 旋转会把最后插入的结点顶成内结点（C 错）。记忆锚点：<code>最左链末端无左孩子，最右链末端无右孩子</code>。',
   },
 });
 /* ================== 题目专属区域结束 ================== */

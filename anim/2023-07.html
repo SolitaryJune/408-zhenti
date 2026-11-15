@@ -2,64 +2,238 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2023-07 · B 树四条性质逐条判断</title>
+<title>2023-07 B 树插入·删除·查找 · 结构演示动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bsvg{width:100%;max-width:640px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bsvg .bedge{stroke:#5a7d8c;stroke-width:2.5px;transition:opacity .35s}
+  .bsvg .bnode rect{transition:opacity .35s;stroke-width:2px}
+  .bsvg .bnode rect.root{fill:#e63946}
+  .bsvg .bnode rect.internal{fill:#1b3a4b}
+  .bsvg .bnode rect.terminal{fill:#16a34a}
+  .bsvg .bnode rect.empty{fill:#fff;stroke:#94a3b8;stroke-dasharray:6 4}
+  .bsvg .bnode rect.hot{stroke:#e07a2f;stroke-width:4px}
+  .bsvg .bnode text{fill:#fff;font-weight:800;font-size:16px;text-anchor:middle;
+    dominant-baseline:central;font-family:JetBrains Mono,Menlo,monospace;transition:opacity .35s}
+  .bsvg .bnode rect.empty ~ text{fill:#94a3b8}
+  .bsvg .bnode.newborn{animation:aw-pop .5s ease}
+  .bsvg .bnode.gone{opacity:0}
+  .bsvg .fly{font-size:13.5px;font-weight:800;fill:#d97706;text-anchor:middle;transition:opacity .3s}
+  .bsvg .cap{font-size:13px;font-weight:800;fill:#1b3a4b}
+  .bsvg .hidden-el{opacity:0}
+  .hformula{margin-top:10px;text-align:center;font-size:15px;font-weight:700;color:#1b3a4b;line-height:1.9}
+  .hformula code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2023-07 B 树结构演示（SVG，3 阶 B 树示例） ==================
+ * 题：非空 B 树四条叙述：I 插入可能增高 II 删除必变终端结点 III 查找必到叶 IV 新关键字最终在叶。
+ * 答：仅 I、II 正确 → 选 B。演示：在 3 阶 B 树（每结点至多 2 个关键字）上查找/插入/删除。
+ * 注：B 树的「叶结点」指最底层失败结点（空指针），含关键字的最低层叫终端结点。 */
+var NS = 'http://www.w3.org/2000/svg';
+var NW = 46;                       // 单个关键字格宽
+function nodeW(keys){ return Math.max(keys.length, 1) * NW + 14; }
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
+/* 每个状态：nodes={id:{k:[关键字],x,y}}，edges=[父,子]，hot=操作焦点，fly=上移/下移提示 */
+var STATES = [
+  { nodes:{ R:{k:['20'],x:310,y:70}, N10:{k:['10'],x:150,y:200}, N30:{k:['30'],x:470,y:200} },
+    edges:[['R','N10'],['R','N30']], hot:'R', fly:null },
+  { nodes:{ R:{k:['20'],x:310,y:70}, N10:{k:['10'],x:150,y:200}, N30:{k:['30'],x:470,y:200} },
+    edges:[['R','N10'],['R','N30']], hot:'R', fly:null },
+  { nodes:{ R:{k:['20'],x:310,y:70}, N10:{k:['10'],x:150,y:200}, N30:{k:['25','30'],x:470,y:200} },
+    edges:[['R','N10'],['R','N30']], hot:'N30', fly:null },
+  { nodes:{ R:{k:['20','28'],x:310,y:70}, N10:{k:['10'],x:130,y:200}, N25:{k:['25'],x:280,y:200}, N30:{k:['30'],x:450,y:200} },
+    edges:[['R','N10'],['R','N25'],['R','N30']], hot:'N30', fly:{t:'28 上移 ↟', x:310, y:135} },
+  { nodes:{ R:{k:['20','28'],x:310,y:70}, N10:{k:['10'],x:130,y:200}, N25:{k:['25'],x:280,y:200}, N30:{k:['30','35'],x:450,y:200} },
+    edges:[['R','N10'],['R','N25'],['R','N30']], hot:'N30', fly:null },
+  { nodes:{ R:{k:['28'],x:310,y:70}, N20:{k:['20'],x:150,y:180}, N35:{k:['35'],x:470,y:180},
+            N10:{k:['10'],x:60,y:310}, N25:{k:['25'],x:180,y:310}, N30:{k:['30'],x:380,y:310}, N40:{k:['40'],x:520,y:310} },
+    edges:[['R','N20'],['R','N35'],['N20','N10'],['N20','N25'],['N35','N30'],['N35','N40']],
+    hot:'R', fly:{t:'28 上移成新根 ↟ 树高 +1', x:310, y:130} },
+  { nodes:{ R:{k:['28'],x:310,y:70}, N20:{k:['20'],x:150,y:180}, N35:{k:['35'],x:470,y:180},
+            N10:{k:['10'],x:60,y:310}, N25:{k:['25'],x:180,y:310}, N30:{k:['30'],x:380,y:310}, N40:{k:['40'],x:520,y:310} },
+    edges:[['R','N20'],['R','N35'],['N20','N10'],['N20','N25'],['N35','N30'],['N35','N40']],
+    hot:'N35', fly:null },
+  { nodes:{ R:{k:['28'],x:310,y:70}, N20:{k:['20'],x:150,y:180}, N35:{k:['35'],x:470,y:180},
+            N10:{k:['10'],x:60,y:310}, N25:{k:['25'],x:180,y:310}, N30:{k:['30'],x:380,y:310}, N40:{k:[],x:520,y:310} },
+    edges:[['R','N20'],['R','N35'],['N20','N10'],['N20','N25'],['N35','N30'],['N35','N40']],
+    hot:'N40', fly:{t:'40 被删 → 结点变空', x:520, y:260} },
+  { nodes:{ R:{k:['28'],x:310,y:70}, N20:{k:['20'],x:150,y:180}, N35:{k:[],x:470,y:180},
+            N10:{k:['10'],x:60,y:310}, N25:{k:['25'],x:180,y:310}, N30:{k:['30','35'],x:380,y:310} },
+    edges:[['R','N20'],['R','N35'],['N20','N10'],['N20','N25'],['N35','N30']],
+    hot:'N30', fly:{t:'父键 35 下来与 30 合并 ↧', x:425, y:250} },
+  { nodes:{ N20:{k:['20','28'],x:310,y:70}, N10:{k:['10'],x:140,y:200}, N25:{k:['25'],x:280,y:200}, N30:{k:['30','35'],x:460,y:200} },
+    edges:[['N20','N10'],['N20','N25'],['N20','N30']],
+    hot:'N20', fly:{t:'根键 28 下来合并 → 根退役 · 树高 −1', x:310, y:135} },
+  { nodes:{ N20:{k:['20','28'],x:310,y:70}, N10:{k:['10'],x:140,y:200}, N25:{k:['25'],x:280,y:200}, N30:{k:['30','35'],x:460,y:200} },
+    edges:[['N20','N10'],['N20','N25'],['N20','N30']],
+    hot:null, fly:null },
+];
+/* 各结点诞生步序（诞生时弹出动画） */
+var BORN = { R:0, N10:0, N30:0, N25:3, N20:5, N35:5, N40:5 };
 
-var STEPS = [
-  { title: '审题眼：B 树与 B+ 树的根本区别',
-    cls: 'key',
-    body: '<p>B 树：关键字分布在<b>所有结点</b>上，查找可中途命中；插入先落终端结点、溢出分裂上移。B+ 树：关键字全在叶、查找必到叶。四条叙述要用这套规则逐条检验。</p>' },
-  { title: 'I. 插入可能增加树的高度 —— 对',
-    cls: 'good',
-    body: '<p>插入先落进终端结点；关键字超上限就<b>分裂</b>、中间关键字上移到父结点。分裂若一路传到根，就<b>新建根结点</b>，树高 +1。平时多数插入不增高，所以是「<b>可能</b>」增高——说法准确。</p>' },
-  { title: 'II. 删除一定导致叶（终端）结点变化 —— 对',
-    cls: 'good',
-    body: '<p>删终端结点关键字：终端结点直接变。删<b>非终端结点</b>关键字：必须拿它的<b>前驱/后继</b>（一定在终端结点里）替换过来再删——终端结点同样变了。借位、合并也都在终端结点之间发生。任何情形终端结点都变，「一定」成立。</p>' },
-  { title: 'III. 查找某关键字总是要查找到叶结点 —— 错',
-    cls: 'bad',
-    body: '<p>B 树关键字遍布各层，<b>途中命中即停</b>；只有查找失败（或找插入位置）才走到终端结点。「必到叶」是 <b>B+ 树</b>的特征，张冠李戴。</p>' },
-  { title: 'IV. 插入的新关键字最终位于叶结点中 —— 错',
-    cls: 'bad',
-    body: '<p>新关键字确实先进终端结点，但分裂会把部分关键字<b>上移</b>到父结点甚至根——最终位置<b>未必</b>在叶。同样是 B+ 树才有的性质。</p>' },
-  { title: '结论',
-    cls: 'good',
-    body: '<p>对的是 I、II，答案选 <b>B</b>（仅 I、II）。记忆锚点：<b>B 树查找可半路停、插入会上浮；B+ 树一切必到叶</b>。</p>' },
+var SNAPS = [
+  { cls:'shift', tag:'初始树', count:0,
+    log:'以 3 阶 B 树为示例（每结点至多 2 个关键字、至少 1 个）。初始两层：根 [20]、终端结点 [10]、[30]。注意：B 树的「叶结点」指最底层失败结点，含关键字的最低层叫终端结点。' },
+  { cls:'miss', tag:'查 III', count:1,
+    log:'查找 20：在根结点就命中，立即停止 —— 根本不用走到最下层 → III「总是要查找到叶结点」错。（关键字遍布所有结点、中途命中即停；必到叶是 B+ 树。）' },
+  { cls:'ok', tag:'插入 25', count:2,
+    log:'插入 25：25>20 走右子树，落入终端结点 [30] → 变 [25,30]，未溢出。多数插入不分裂、不改变树高 —— 所以 I 只能说「可能」增高。' },
+  { cls:'shift', tag:'插入 28·分裂', count:3,
+    log:'插入 28：[25,28,30] 溢出（3 阶至多 2 个关键字）→ 中间关键字 28 上移到根 → 根变 [20,28]。' },
+  { cls:'ok', tag:'插入 35', count:4,
+    log:'插入 35：35>28 走最右子树 → [30,35]，未溢出。' },
+  { cls:'ok', tag:'插入 40·连裂到根', count:5,
+    log:'插入 40：[30,35,40] 溢出 → 35 上移；根 [20,28,35] 又溢出 → 28 上移成新根。分裂传到根 = 新建根，树高 2→3 → I「插入可能增加树高」对 ✓' },
+  { cls:'miss', tag:'查 IV', count:6,
+    log:'检查 35 的去向：插入时确实先落终端结点，但分裂让它一路上移成了内部结点 —— 新关键字最终位置未必在"叶" → IV 错。' },
+  { cls:'miss', tag:'删除 40', count:7,
+    log:'删除：删终端结点 [40] 的 40 → 变空、低于下限。向兄弟 [30] 借？[30] 只有 1 个关键字（恰为下限）借不到 → 只能合并。' },
+  { cls:'shift', tag:'合并·上传 ①', count:8,
+    log:'合并：[30] + 父键 35 + 空结点 → [30,35]；父结点 [35] 变空。删除的"动作"全部发生在终端结点层。' },
+  { cls:'step', tag:'合并·上传 ②', count:9,
+    log:'[35] 空后与兄弟 [20] 合并：[20] + 根键 28 + 子树 → [20,28]；根 [28] 变空退役，树高 3→2。无论删哪一层的键，最终都要牵动终端结点 → II「删除一定导致叶（终端）结点变化」对 ✓' },
+  { cls:'done', tag:'汇总', count:9, done:true,
+    log:'I ✓（分裂传到根才增高，只是"可能"）；II ✓（删除最终都落在终端结点）；III ✗（中途命中即停）；IV ✗（分裂会上移）。答案 B（仅 I、II）。' },
+];
+/* 序号带：四条叙述的判定结果（III✗ / I✓ / IV✗ / II✓） */
+[{ idx:1, ok:false }, { idx:5, ok:true }, { idx:6, ok:false }, { idx:9, ok:true }].forEach(function(r, j){
+  SNAPS[r.idx].ribbon = { k: j + 1, ok: r.ok };
+});
+
+var FORMULAS = [
+  '3 阶 B 树：每结点 <code>≤ 2 个关键字</code>；「叶结点」= 失败结点，最低含键层 = 终端结点',
+  '查找 20：根结点命中即停 → <code>III ✗</code>',
+  '插入 25：落终端结点，多数插入不增高 → I 是「<code>可能</code>」',
+  '[25,28,30] 溢出 → 中间键 28 上移',
+  '插入 35：无溢出',
+  '根 [20,28,35] 溢出 → 28 上移为新根，树高 2→3 → <code>I ✓</code>',
+  '35 被分裂顶成内部结点 → 新键最终未必在叶 → <code>IV ✗</code>',
+  '删 40 → 终端结点变空 → 借不到 → 合并',
+  '[30]+35 → [30,35]，[35] 变空',
+  '[20]+28+子树 → [20,28]，根退役、树高 −1 → <code>II ✓</code>',
+  '<b>I ✓　II ✓　III ✗　IV ✗ → 答案 B</b>',
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : 'step',
-    tag: '第 ' + (i + 1) + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 380');
+  svg.setAttribute('class', 'bsvg');
+  var cap = document.createElementNS(NS, 'text');
+  cap.setAttribute('x', 310); cap.setAttribute('y', 28);
+  cap.setAttribute('class', 'cap'); cap.setAttribute('text-anchor', 'middle');
+  cap.textContent = '3 阶 B 树示例（每结点至多 2 个关键字）';
+  svg.appendChild(cap);
+  this._edgeLayer = document.createElementNS(NS, 'g');
+  this._nodeLayer = document.createElementNS(NS, 'g');
+  svg.appendChild(this._edgeLayer);
+  svg.appendChild(this._nodeLayer);
+  var fly = document.createElementNS(NS, 'text');
+  fly.setAttribute('class', 'fly hidden-el');
+  svg.appendChild(fly);
+  stage.appendChild(svg);
+  this._svg = svg; this._fly = fly;
+  this._edgeEls = {}; this._nodeEls = {};
+  this._formula = AW.el('div', 'hformula');
+  stage.appendChild(this._formula);
+}
+
+function drawNode(st, id, hot){
+  var n = st.nodes[id];
+  var el = this._nodeEls[id];
+  if (!el){
+    el = document.createElementNS(NS, 'g');
+    el.setAttribute('class', 'bnode');
+    el.dataset.id = id;
+    this._nodeEls[id] = el;
+    this._nodeLayer.appendChild(el);
+  }
+  var hasKids = st.edges.some(function(e){ return e[0] === id; });
+  var isRoot = !st.edges.some(function(e){ return e[1] === id; });
+  var empty = n.k.length === 0;
+  var w = nodeW(n.k);
+  var rect = el.querySelector('rect');
+  if (!rect){
+    rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('height', 40); rect.setAttribute('rx', 10);
+    el.appendChild(rect);
+    var txt = document.createElementNS(NS, 'text');
+    el.appendChild(txt);
+  }
+  rect.setAttribute('x', n.x - w/2); rect.setAttribute('y', n.y - 20);
+  rect.setAttribute('width', w);
+  rect.setAttribute('class', (empty ? 'empty' : isRoot ? 'root' : hasKids ? 'internal' : 'terminal') + (hot === id ? ' hot' : ''));
+  var txt = el.querySelector('text');
+  txt.setAttribute('x', n.x); txt.setAttribute('y', n.y);
+  txt.textContent = empty ? '空' : n.k.join('  ');
+  el.classList.remove('gone', 'newborn');
+  if (empty || !st.nodes[id]) el.classList.add('gone');
+  if (+BORN[id] === this._cur) el.classList.add('newborn');
+}
+
+function render(stage, sn, i){
+  this._cur = i;
+  var st = STATES[Math.min(i, STATES.length - 1)];
+  var svg = this._svg;
+  /* 边：按当前状态增删 */
+  var want = {};
+  st.edges.forEach(function(e){
+    var key = e[0] + '>' + e[1];
+    want[key] = true;
+    var P = st.nodes[e[0]], C = st.nodes[e[1]];
+    var ln = this._edgeEls[key];
+    if (!ln){
+      ln = document.createElementNS(NS, 'line');
+      ln.setAttribute('class', 'bedge');
+      this._edgeLayer.appendChild(ln);
+      this._edgeEls[key] = ln;
+    }
+    ln.setAttribute('x1', P.x); ln.setAttribute('y1', P.y + 22);
+    ln.setAttribute('x2', C.x); ln.setAttribute('y2', C.y - 22);
+  }, this);
+  Object.keys(this._edgeEls).forEach(function(key){
+    this._edgeEls[key].style.opacity = want[key] ? 1 : 0;
+  }, this);
+  /* 结点 */
+  Object.keys(st.nodes).forEach(function(id){
+    drawNode.call(this, st, id, st.hot);
+  }, this);
+  Object.keys(this._nodeEls).forEach(function(id){
+    if (!st.nodes[id]) this._nodeEls[id].classList.add('gone');
+  }, this);
+  /* 上移/下移提示 */
+  if (st.fly){
+    this._fly.setAttribute('x', st.fly.x); this._fly.setAttribute('y', st.fly.y);
+    this._fly.textContent = st.fly.t;
+    this._fly.classList.remove('hidden-el');
+  } else {
+    this._fly.classList.add('hidden-el');
+  }
+  this._formula.innerHTML = FORMULAS[Math.min(i, FORMULAS.length - 1)];
+}
 
 AW.init({
-  title: '2023-07 · 非空 B 树的四条叙述哪条对？',
-  subtitle: 'I 插入可能增高　II 删除必变终端结点　III 查找必到叶　IV 新关键字最终在叶',
-  intro: '点击「▶ 播放」逐条推演。',
-  snaps: snaps,
+  title: '2023-07 非空 B 树四条叙述 · 结构演示动画',
+  subtitle: 'I 插入可能增高　II 删除必变终端结点　III 查找必到叶　IV 新关键字最终在叶<br>以 <code>3 阶 B 树</code>（每结点至多 2 关键字）真实演示插入分裂、删除合并、查找命中',
+  counterLabel: '操作步',
+  ribbonTitle: '四条叙述（✓ 正确 / ✗ 错误）',
+  intro: '点击「▶ 播放」：先查 20（看 III），再连插 25/28/35/40（看 I、IV），最后删 40（看 II）。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 B（仅 I、II）',
-    html: 'I 对：分裂传到根时<b>新建根、树高 +1</b>（只是可能）。II 对：删终端结点直接变，删非终端结点要用<b>终端结点里的前驱/后继替换</b>，终端结点必变。III、IV 错：「必到叶」「新关键字留在叶」是 <b>B+ 树</b>的性质，B 树途中命中即停、分裂会上移关键字。',
+    big: '答案 B（仅 I、II 正确）',
+    html: '<b>I ✓</b>：插入溢出分裂，中间键上移；分裂传到根就新建根、树高 +1（平时多数插入不增高，所以是「可能」）。<br>' +
+      '<b>II ✓</b>：删终端结点直接变；删非终端键要用终端结点里的前驱/后继替换，借位合并也都发生在终端层 —— 终端结点必变。<br>' +
+      '<b>III ✗ IV ✗</b>：B 树关键字遍布各层、中途命中即停；分裂会把新关键字顶到上层 ——「必到叶」是 <code>B+ 树</code>的性质。<br>' +
+      '记忆锚点：<code>B 树查找可半路停、插入会上浮；B+ 树一切必到叶</code>。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

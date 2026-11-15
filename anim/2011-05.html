@@ -2,75 +2,177 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>2011-05 前序+后序下不可能的中序 · 逐项还原动画</title>
+<title>2011-05 前序+后序推中序 · 树形枚举演示</title>
 <link rel="stylesheet" href="../assets/anim.css">
+<style>
+  .bt-svg{width:100%;max-width:620px;display:block;margin:0 auto;background:#f8fafc;
+    border:1px solid #1b3a4b38;border-radius:12px}
+  .bt-svg .edge{stroke:#5a7d8c;stroke-width:2.5px}
+  .bt-svg .edge.bad{stroke:#dc2626}
+  .bt-svg .node circle{fill:#1b3a4b;stroke-width:2.5px;stroke:#1b3a4b;transition:fill .35s}
+  .bt-svg .node text{font-family:JetBrains Mono,Menlo,monospace;font-weight:800;font-size:16px;
+    text-anchor:middle;dominant-baseline:central;fill:#fff;transition:fill .35s}
+  .bt-svg .node.hot circle{fill:#e07a2f;stroke:#9a3412}
+  .bt-svg .node.bad circle{fill:#dc2626;stroke:#7f1d1d}
+  .bt-svg .hidden-el{opacity:0}
+  .seq-label{font-size:13px;color:#64748b;margin:10px 0 4px}
+  .seq-label b{color:#334155}
+  .seq-wrap{display:flex;justify-content:center}
+</style>
 </head>
 <body>
 <div class="aw"></div>
 <script src="../assets/anim-engine.js"></script>
 <script>
-/* ================== 题目专属区域（只改这里） ================== */
+/* ================== 2011-05 前序+后序 → 中序（SVG 形态枚举） ==================
+ * 题：前序 1,2,3,4、后序 4,3,2,1，中序不可能是？（答案 C = 3,2,4,1）
+ * 演示：两序列互为逆序 ⇒ 每个结点至多一个孩子（链），但每步孩子可左可右；
+ *       枚举三种可行形态的中序，再反证 C 对应的树与后序矛盾。 */
 
-function card(n, cls, title, body){
-  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
-         '</span>' + title + '</h4>' + body + '</div>';
-}
-
-// 四层小斜链：labels 逐层结点值，positions 为每层在第几列（0..8），能画出左斜/右斜
-function chainTree(labels, positions){
-  var h = '<div style="display:inline-block;vertical-align:middle;margin:0 10px">';
-  for (var i = 0; i < 4; i++){
-    h += '<div style="display:flex;justify-content:center">';
-    for (var s = 0; s < 9; s++){
-      h += (s === positions[i])
-        ? '<div class="aw-box" style="width:34px;height:30px;font-size:13px;margin:0 1px">' + labels[i] + '</div>'
-        : '<div style="width:34px;margin:0 1px"></div>';
-    }
-    h += '</div>';
-  }
-  return h + '</div>';
-}
-
-var STEPS = [
-  { title: '审题眼：两个序列给出什么', cls: 'key',
-    body: '<p>前序 <code>1,2,3,4</code>，后序 <code>4,3,2,1</code>。前序首 = 后序尾 ⇒ <b>根是 1</b>。剩余结点 {2,3,4} 在前序里紧跟根、在后序里紧贴根，但这两序<b>分不出左右子树</b>——划分要靠中序，这正是中序不唯一、本题有解的原因。</p>' },
-  { title: '检验方法', cls: '',
-    body: '<p>对每个候选中序：先用中序把 {2,3,4} 按 1 的左右分堆，再用「<b>前序定根、中序分左右、后序验形</b>」逐层还原；哪一步与给定的前序/后序对不上，该中序就不可能。</p>' },
-  { title: 'A：1,2,3,4 —— 可能', cls: 'good',
-    body: '<p>1 无左子树，右子树 {2,3,4}：根 2，中序拆出左空、右 {3,4} —— 右斜链 ' + chainTree(['1','2','3','4'], [4,5,6,7]) + '。中序 1,2,3,4 ✓，后序恰为 4,3,2 ✓。</p>' },
-  { title: 'B：2,3,4,1 —— 可能', cls: 'good',
-    body: '<p>{2,3,4} 全在 1 的<b>左</b>子树，其根为 2；中序拆出左空、右 {3,4} —— ' + chainTree(['1','2','3','4'], [4,3,4,5]) + '（1 的左孩子 2，再向右下斜）。中序 2,3,4,1 ✓，后序 4,3,2 ✓。</p>' },
-  { title: 'C：3,2,4,1 —— 矛盾！', cls: 'bad',
-    body: '<p>左子树 {2,3,4} 根为 2，中序 <code>3,2,4</code> 拆出<b>左 {3}、右 {4}</b>；这样一来该子树的后序必须是 <code>3,4,2</code>（左子树后序、右子树后序、根）。但题目给的后序是 <code>4,3,2</code> —— <b>对不上，不可能</b>。</p>' },
-  { title: 'D：4,3,2,1 —— 可能', cls: 'good',
-    body: '<p>{2,3,4} 全在左：2 的左子树 {3,4}、3 的左孩子 4 —— 左斜链 ' + chainTree(['1','2','3','4'], [4,3,2,1]) + '。中序恰为 4,3,2,1 ✓。</p>' },
-  { title: '结论', cls: 'good',
-    body: '<p>A、B、D 都能还原出与两序吻合的二叉树；只有 <b>C</b> 的后序验形失败。答案选 <b>C</b>。记忆锚点：前序定根、中序分左右、<b>后序验形</b>——三序齐全才下结论。</p>' },
+/* 各阶段：结点坐标 / 边(父,子) / 可见结点 / 高亮 / 是否矛盾树 */
+var VIEWS = [
+  /* 0 审题 */ { pos:{1:[310,45]}, edges:[], vis:['1'], hot:[], bad:false },
+  /* 1 定根 */ { pos:{1:[310,45]}, edges:[], vis:['1'], hot:['1'], bad:false },
+  /* 2 唯一孩子 */ { pos:{1:[310,45], 2:[310,115]}, edges:[[1,2]], vis:['1','2'], hot:['1','2'], bad:false },
+  /* 3 整树是链 */ { pos:{1:[310,45], 2:[310,115], 3:[310,185], 4:[310,255]}, edges:[[1,2],[2,3],[3,4]],
+                    vis:['1','2','3','4'], hot:['2','3','4'], bad:false },
+  /* 4 全右链 */ { pos:{1:[310,45], 2:[395,115], 3:[480,185], 4:[565,255]}, edges:[[1,2],[2,3],[3,4]],
+                    vis:['1','2','3','4'], hot:[], bad:false },
+  /* 5 全左链 */ { pos:{1:[310,45], 2:[225,115], 3:[140,185], 4:[55,255]}, edges:[[1,2],[2,3],[3,4]],
+                    vis:['1','2','3','4'], hot:[], bad:false },
+  /* 6 1右+左链 */ { pos:{1:[310,45], 2:[395,115], 3:[315,185], 4:[235,255]}, edges:[[1,2],[2,3],[3,4]],
+                    vis:['1','2','3','4'], hot:[], bad:false },
+  /* 7 反推C树形 */ { pos:{1:[310,45], 2:[395,115], 3:[315,185], 4:[475,185]}, edges:[[1,2],[2,3],[2,4]],
+                    vis:['1','2','3','4'], hot:['2'], bad:false },
+  /* 8 后序矛盾 */ { pos:{1:[310,45], 2:[395,115], 3:[315,185], 4:[475,185]}, edges:[[1,2],[2,3],[2,4]],
+                    vis:['1','2','3','4'], hot:['2','3','4'], bad:true },
+  /* 9 完成 */ { pos:{1:[310,45], 2:[395,115], 3:[315,185], 4:[475,185]}, edges:[[1,2],[2,3],[2,4]],
+                    vis:['1','2','3','4'], hot:[], bad:true },
+];
+/* 中序展示行：每阶段 4 个字符 + 配色 */
+var INORDERS = [
+  { c:['？','？','？','？'], cls:['dim','dim','dim','dim'] },
+  { c:['？','？','？','？'], cls:['dim','dim','dim','dim'] },
+  { c:['？','？','？','？'], cls:['dim','dim','dim','dim'] },
+  { c:['？','？','？','？'], cls:['dim','dim','dim','dim'] },
+  { c:['1','2','3','4'], cls:['hit','hit','hit','hit'] },
+  { c:['4','3','2','1'], cls:['hit','hit','hit','hit'] },
+  { c:['2','3','4','1'], cls:['hit','hit','hit','hit'] },
+  { c:['3','2','4','1'], cls:['miss','miss','miss','miss'] },
+  { c:['3','2','4','1'], cls:['miss','miss','miss','miss'] },
+  { c:['3','2','4','1'], cls:['miss','miss','miss','miss'] },
 ];
 
-var snaps = STEPS.map(function(s, i){
-  return {
-    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'key' ? 'shift' : 'step'),
-    tag: '第 ' + (i + 1) + '/' + STEPS.length + ' 步',
-    log: s.title,
-    html: STEPS.slice(0, i + 1).map(function(x, j){
-      return card(j + 1, x.cls, x.title, x.body);
-    }).join(''),
-    done: i === STEPS.length - 1,
-  };
-});
+function build(stage){
+  stage.innerHTML = '';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 620 300');
+  svg.setAttribute('class', 'bt-svg');
+  for (var k = 0; k < 3; k++){
+    var ln = document.createElementNS(svgNS, 'line');
+    ln.setAttribute('class', 'edge hidden-el');
+    ln.dataset.idx = k;
+    svg.appendChild(ln);
+  }
+  ['1','2','3','4'].forEach(function(id){
+    var g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node hidden-el');
+    g.dataset.id = id;
+    var c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('r', 21);
+    var t = document.createElementNS(svgNS, 'text');
+    t.textContent = id;
+    g.appendChild(c); g.appendChild(t);
+    svg.appendChild(g);
+  });
+  stage.appendChild(svg);
+  /* 前序 / 后序 / 中序 三行 */
+  var preBox = AW.el('div', 'seq-wrap');
+  var postBox = AW.el('div', 'seq-wrap');
+  var inBox = AW.el('div', 'seq-wrap');
+  stage.appendChild(AW.el('div', 'seq-label', '<b>前序遍历</b>（题给，固定）：'));
+  stage.appendChild(preBox);
+  stage.appendChild(AW.el('div', 'seq-label', '<b>后序遍历</b>（题给，固定）：'));
+  stage.appendChild(postBox);
+  stage.appendChild(AW.el('div', 'seq-label', '<b>中序遍历</b>（随树形变化）：'));
+  stage.appendChild(inBox);
+  this._svg = svg; this._preBox = preBox; this._postBox = postBox; this._inBox = inBox;
+}
+
+function render(stage, sn, i){
+  var svg = this._svg;
+  var v = VIEWS[Math.min(i, VIEWS.length - 1)];
+  [].forEach.call(svg.querySelectorAll('.node'), function(el){
+    var id = el.dataset.id;
+    var p = v.pos[id];
+    if (p){
+      el.querySelector('circle').setAttribute('cx', p[0]);
+      el.querySelector('circle').setAttribute('cy', p[1]);
+      var t = el.querySelector('text');
+      t.setAttribute('x', p[0]); t.setAttribute('y', p[1]);
+    }
+    el.classList.toggle('hidden-el', v.vis.indexOf(id) < 0);
+    el.classList.remove('hot', 'bad');
+    if (v.hot.indexOf(id) >= 0) el.classList.add(v.bad ? 'bad' : 'hot');
+  });
+  [].forEach.call(svg.querySelectorAll('.edge'), function(el, k){
+    var e = v.edges[k];
+    if (e){
+      var A = v.pos[e[0]], B = v.pos[e[1]];
+      el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]);
+      el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
+    }
+    el.classList.toggle('hidden-el', !e);
+    el.classList.toggle('bad', !!v.bad);
+  });
+  this._preBox.innerHTML = '';
+  this._preBox.appendChild(AW.cellRow(['1','2','3','4'], ['hit','','',''], null));
+  this._postBox.innerHTML = '';
+  this._postBox.appendChild(AW.cellRow(['4','3','2','1'], ['hit','','',''], null));
+  var io = INORDERS[Math.min(i, INORDERS.length - 1)];
+  this._inBox.innerHTML = '';
+  this._inBox.appendChild(AW.cellRow(io.c, io.cls, null));
+}
+
+var SNAPS = [
+  { cls:'shift', tag:'审题', count:0,
+    log:'前序 1,2,3,4、后序 4,3,2,1。注意：两序列恰好互为逆序！先定位根，再逐层判断孩子。' },
+  { cls:'ok', tag:'定根', count:1,
+    log:'前序第一个 = 根：1；后序最后一个也是 1，互相印证。根是 1。' },
+  { cls:'ok', tag:'判孩子数', count:2,
+    log:'关键：前序第 2 个是 2（若 1 有两个孩子，它是左子树的根）；后序倒数第 2 也是 2（若 1 有两个孩子，它是右子树最后访问的结点）。左右子树不相交，2 不能同时在两边 ⇒ 1 只有唯一孩子 2。' },
+  { cls:'step', tag:'整树是链', count:3,
+    log:'同理 2 只有唯一孩子 3，3 只有唯一孩子 4 —— 整棵树是一条链。但每个孩子的挂法可左可右，树形不唯一 ⇒ 中序不唯一，逐个形态检验。' },
+  { cls:'ok', tag:'形态① 全右', count:4,
+    log:'孩子全挂右边：中序（左-根-右）= 1,2,3,4 —— 选项 A 可能，排除。' },
+  { cls:'ok', tag:'形态② 全左', count:5,
+    log:'孩子全挂左边：中序 = 4,3,2,1 —— 选项 D 可能，排除。' },
+  { cls:'ok', tag:'形态③ 混合', count:6,
+    log:'1 的孩子挂右、以下全挂左：中序 = 2,3,4,1 —— 选项 B 可能，排除。' },
+  { cls:'miss', tag:'检验 C', count:7,
+    log:'若中序 = 3,2,4,1：1 排最后 ⇒ 1 只有右孩子 2；2 排在 3、4 之间 ⇒ 3 是 2 的左孩子、4 是 2 的右孩子 ⇒ 结点 2 有两个孩子！' },
+  { cls:'miss', tag:'后序矛盾', count:8,
+    log:'画出来验证：这棵树前序 = 1,2,3,4 ✓，但后序 = 3,4,2,1 ≠ 4,3,2,1 ✗，与题给后序矛盾 ⇒ C 不可能。' },
+  { cls:'done', tag:'完成', count:9, done:true,
+    log:'中序不可能是 3,2,4,1，选 C。' },
+];
 
 AW.init({
-  title: '2011-05 · 前序 1,2,3,4 / 后序 4,3,2,1：哪个中序不可能？',
-  subtitle: '方法 <code>前序定根 · 中序分左右 · 后序验形</code> · 四个选项逐项还原',
-  intro: '点击「▶ 播放」逐个选项还原验证。',
-  snaps: snaps,
+  title: '2011-05 · 前序 1,2,3,4 ＋ 后序 4,3,2,1，中序不会是？',
+  subtitle: '考点：前序＋后序<b>不能唯一确定二叉树</b>，但能确定每个结点的孩子数 · 逐形态枚举中序',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」：先证明整棵树是链，再摆出各种左右形态看中序，最后反证 C。',
+  build: build,
+  render: render,
+  snaps: SNAPS,
   result: {
-    big: '答案 C（3,2,4,1 不可能）',
-    html: 'C 把左子树拆成左 {3}、右 {4}，其后序必须是 3,4,2，与给定后序 4,3,2 矛盾。A/B/D 分别对应右斜链、左挂右斜链、左斜链，都能吻合。前序+后序<b>不能唯一确定</b>有度 1 结点的二叉树，所以中序有多个可能——题目只要求挑出「不可能」的那个。',
+    big: '答案 C · 3,2,4,1 不可能',
+    html: '前序与后序互为逆序 ⇒ 每个结点至多一个孩子（链）。A、B、D 都能由某种左右挂法实现；而中序 3,2,4,1 ' +
+      '要求结点 2 有两个孩子（左 3、右 4），这棵树的后序变为 3,4,2,1，与题给矛盾。<br>' +
+      '记忆锚点：<code>前序＋后序只能定「谁是谁的孩子」，定不了左右</code>；仅当每个结点至多一个孩子时树形才被定死。',
   },
 });
-/* ================== 题目专属区域结束 ================== */
 </script>
 </body>
 </html>

@@ -38,7 +38,6 @@
 var W = 1400;
 var ROWY = [35, 115, 195, 275, 355, 440, 525];
 var RAD  = [26, 22, 19, 16, 14, 12, 10];
-var NS = 'http://www.w3.org/2000/svg';
 var TOTAL = 111;
 
 var NODES = [];   // {n, x, y, r, step, leaf, ghost}
@@ -66,37 +65,22 @@ var NMAP = {};
 NODES.forEach(function(nd){ NMAP[nd.n] = nd; });
 
 function build(stage){
-  stage.innerHTML = '';
-  var svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 1400 548');
-  svg.setAttribute('class', 'cbt-svg');
+  var h = '<svg viewBox="0 0 1400 548" class="cbt-svg">';
   var layNames = ['第1层','第2层','第3层','第4层','第5层','第6层','第7层'];
   layNames.forEach(function(s, k){
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', 8); t.setAttribute('y', ROWY[k] + 5);
-    t.setAttribute('class', 'laylab');
-    t.textContent = s;
-    svg.appendChild(t);
+    h += '<text x="8" y="' + (ROWY[k] + 5) + '" class="laylab">' + s + '</text>';
   });
   EDGES.forEach(function(e){
     var P = NMAP[e.parent], C = NMAP[e.child];
-    var ln = document.createElementNS(NS, 'line');
-    ln.setAttribute('x1', P.x); ln.setAttribute('y1', P.y);
-    ln.setAttribute('x2', C.x); ln.setAttribute('y2', C.y);
-    ln.setAttribute('class', 'tedge hidden-el' + (e.ghost ? ' ghost-el' : ''));
-    ln.dataset.step = e.step;
-    svg.appendChild(ln);
+    h += '<line x1="' + P.x + '" y1="' + P.y + '" x2="' + C.x + '" y2="' + C.y + '"' +
+         ' class="tedge hidden-el' + (e.ghost ? ' ghost-el' : '') + '" data-step="' + e.step + '"/>';
   });
   NODES.forEach(function(nd){
-    var g = document.createElementNS(NS, 'g');
-    g.setAttribute('class', 'tnode hidden-el' + (nd.ghost ? ' ghost-el' : ''));
-    g.dataset.step = nd.step; g.dataset.n = nd.n;
-    var c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', nd.r);
-    g.appendChild(c);
-    svg.appendChild(g);
+    h += '<g class="tnode hidden-el' + (nd.ghost ? ' ghost-el' : '') + '" data-step="' + nd.step + '" data-n="' + nd.n + '">' +
+         '<circle cx="' + nd.x + '" cy="' + nd.y + '" r="' + nd.r + '"/></g>';
   });
-  stage.appendChild(svg);
+  h += '</svg>';
+  stage.innerHTML = h;
   var legend = AW.el('div', 'clegend',
     '<span class="lg lg-leaf">绿色 = 叶结点（第 6 层末尾 8 个）</span>' +
     '<span class="lg lg-grow">橙色 = 还能生长的结点</span>' +
@@ -104,7 +88,7 @@ function build(stage){
   var formula = AW.el('div', 'hformula');
   stage.appendChild(legend);
   stage.appendChild(formula);
-  this._svg = svg; this._formula = formula;
+  this._svg = stage.querySelector('.cbt-svg'); this._formula = formula;
 }
 
 var FORMULAS = [

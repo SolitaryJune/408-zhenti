@@ -59,34 +59,22 @@ var CAPS = {
 };
 
 function build(stage){
-  stage.innerHTML = '';
-  var NS = 'http://www.w3.org/2000/svg';
-  var svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 990 430');
-  svg.setAttribute('class', 'avl-svg');
+  var h = '<svg viewBox="0 0 990 430" class="avl-svg">';
   TREES.forEach(function(t){
     t.nmap = {};
     t.nodes.forEach(function(n){ t.nmap[n.id] = n; });
     t.edges.forEach(function(e){
       var p = t.nmap[e[0]], c = t.nmap[e[1]];
-      var ln = document.createElementNS(NS, 'line');
-      ln.setAttribute('x1', p.x); ln.setAttribute('y1', p.y);
-      ln.setAttribute('x2', c.x); ln.setAttribute('y2', c.y);
-      ln.setAttribute('class', 'tedge hidden-el');
-      ln.dataset.step = t.step;
-      svg.appendChild(ln);
+      h += '<line x1="' + p.x + '" y1="' + p.y + '" x2="' + c.x + '" y2="' + c.y + '"' +
+           ' class="tedge hidden-el" data-step="' + t.step + '"/>';
     });
     t.nodes.forEach(function(n){
-      var g = document.createElementNS(NS, 'g');
-      g.setAttribute('class', 'tnode hidden-el');
-      g.dataset.step = t.step; g.dataset.tree = t.key; g.dataset.id = n.id;
-      var c = document.createElementNS(NS, 'circle');
-      c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 20);
-      g.appendChild(c);
-      svg.appendChild(g);
+      h += '<g class="tnode hidden-el" data-step="' + t.step + '" data-tree="' + t.key + '" data-id="' + n.id + '">' +
+           '<circle cx="' + n.x + '" cy="' + n.y + '" r="20"/></g>';
     });
   });
-  stage.appendChild(svg);
+  h += '</svg>';
+  stage.innerHTML = h;
   var caps = AW.el('div', 'vcaps');
   ['A','B','C','D'].forEach(function(k){
     var d = AW.el('div', 'vcap', '<b>选项 ' + k + '</b>待检查');
@@ -94,7 +82,7 @@ function build(stage){
     caps.appendChild(d);
   });
   stage.appendChild(caps);
-  this._svg = svg; this._caps = caps;
+  this._svg = stage.querySelector('.avl-svg'); this._caps = caps;
 }
 
 function render(stage, sn, i){

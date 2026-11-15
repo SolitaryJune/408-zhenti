@@ -28,7 +28,6 @@
  * 演示：先画一棵小示例树，逐条边点亮验证「度数和 = 边数 = 结点数 − 1」并数出叶子，
  *       再把同一套流程套到题设数字上：122 条边 → 123 结点 → 82 叶。 */
 
-var NS = 'http://www.w3.org/2000/svg';
 var NODES = [
   { id:'R',  x:300, y:50,  deg:4 },
   { id:'A',  x:140, y:150, deg:2 },
@@ -45,39 +44,22 @@ NODES.forEach(function(n){ NMAP[n.id] = n; });
 var LEAVES = ['C','D','A1','A2','B1'];
 
 function build(stage){
-  stage.innerHTML = '';
-  var svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 620 320');
-  svg.setAttribute('class', 'deg-svg');
+  var h = '<svg viewBox="0 0 620 320" class="deg-svg">';
   EDGES.forEach(function(e){
     var a = NMAP[e[0]], b = NMAP[e[1]];
-    var ln = document.createElementNS(NS, 'line');
-    ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
-    ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
-    ln.setAttribute('class', 'tedge');
-    svg.appendChild(ln);
+    h += '<line x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" class="tedge"/>';
   });
   NODES.forEach(function(n){
-    var g = document.createElementNS(NS, 'g');
-    g.setAttribute('class', 'tnode');
-    g.dataset.id = n.id;
-    var c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
-    t.setAttribute('class', 'nm');
-    t.textContent = n.id;
-    var d = document.createElementNS(NS, 'text');
-    d.setAttribute('x', n.x); d.setAttribute('y', n.y + 37);
-    d.setAttribute('class', 'dbadge');
-    d.textContent = '度' + n.deg;
-    g.appendChild(c); g.appendChild(t); g.appendChild(d);
-    svg.appendChild(g);
+    h += '<g class="tnode" data-id="' + n.id + '">' +
+         '<circle cx="' + n.x + '" cy="' + n.y + '" r="21"/>' +
+         '<text x="' + n.x + '" y="' + n.y + '" class="nm">' + n.id + '</text>' +
+         '<text x="' + n.x + '" y="' + (n.y + 37) + '" class="dbadge">度' + n.deg + '</text></g>';
   });
-  stage.appendChild(svg);
+  h += '</svg>';
+  stage.innerHTML = h;
   var formula = AW.el('div', 'hformula');
   stage.appendChild(formula);
-  this._svg = svg; this._formula = formula;
+  this._svg = stage.querySelector('.deg-svg'); this._formula = formula;
 }
 
 var FORMULAS = [

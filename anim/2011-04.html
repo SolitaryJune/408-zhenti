@@ -47,42 +47,24 @@ var EDGES = [
 ];
 
 function build(stage){
-  stage.innerHTML = '';
-  var svgNS = 'http://www.w3.org/2000/svg';
-  var svg = document.createElementNS(svgNS, 'svg');
-  svg.setAttribute('viewBox', '0 0 620 265');
-  svg.setAttribute('class', 'cbt-svg');
+  var h = '<svg viewBox="0 0 620 265" class="cbt-svg">';
   EDGES.forEach(function(e){
     var A = null, B = null;
     NODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
-    var ln = document.createElementNS(svgNS, 'line');
-    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
-    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
-    ln.setAttribute('class', 'edge');
-    svg.appendChild(ln);
+    h += '<line x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '" class="edge"/>';
   });
   NODES.forEach(function(n){
-    var g = document.createElementNS(svgNS, 'g');
-    g.setAttribute('class', 'node plain');
-    g.dataset.id = n.id;
-    var c = document.createElementNS(svgNS, 'circle');
-    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 21);
-    var t = document.createElementNS(svgNS, 'text');
-    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
-    t.textContent = n.id;
-    g.appendChild(c); g.appendChild(t);
-    svg.appendChild(g);
+    h += '<g class="node plain" data-id="' + n.id + '">' +
+         '<circle cx="' + n.x + '" cy="' + n.y + '" r="21"/>' +
+         '<text x="' + n.x + '" y="' + n.y + '">' + n.id + '</text></g>';
   });
   /* 3 号结点旁的"只有左孩子"标注 */
-  var lb = document.createElementNS(svgNS, 'text');
-  lb.setAttribute('x', 520); lb.setAttribute('y', 130);
-  lb.setAttribute('class', 'deg1lbl hidden-el'); lb.dataset.step = 2;
-  lb.textContent = '3号：只有左孩子 → 度1';
-  svg.appendChild(lb);
-  stage.appendChild(svg);
+  h += '<text x="520" y="130" class="deg1lbl hidden-el" data-step="2">3号：只有左孩子 → 度1</text>';
+  h += '</svg>';
+  stage.innerHTML = h;
   var formulaBox = AW.el('div', 'hformula');
   stage.appendChild(formulaBox);
-  this._svg = svg; this._formulaBox = formulaBox;
+  this._svg = stage.querySelector('.cbt-svg'); this._formulaBox = formulaBox;
 }
 
 function render(stage, sn, i){

@@ -29,7 +29,6 @@
  * 演示：图① 逐条点亮边、累计"度和 = 2×边数"验证 I（握手定理）；
  *       图② 5 顶点树（E = n−1）否掉 II；图③ 三角形环（全度 2）否掉 III。 */
 
-var NS = 'http://www.w3.org/2000/svg';
 var V1 = { 1:[70,95], 2:[190,58], 3:[310,98], 4:[255,190], 5:[135,190] };
 var E1 = [ ['1','2',2], ['2','3',3], ['3','4',4], ['4','5',5], ['2','4',6] ];   // [a, b, 点亮步]
 var DEG1 = [ ['1','度1',34,72], ['2','度3',190,26], ['3','度2',352,78], ['4','度3',298,216], ['5','度1',96,220] ];
@@ -39,45 +38,26 @@ var V3 = { 1:[130,450], 2:[230,450], 3:[180,412] };
 var E3 = [ ['1','2'], ['2','3'], ['1','3'] ];
 
 function build(stage){
-  stage.innerHTML = '';
-  var svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 640 478');
-  svg.setAttribute('class', 'graph-svg');
+  var h = '<svg viewBox="0 0 640 478" class="graph-svg">';
   function title(txt, x, y, step){
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', x); t.setAttribute('y', y);
-    t.setAttribute('class', 'gtitle' + (step ? ' hidden-el' : ''));
-    if(step) t.dataset.step = step;
-    t.textContent = txt;
-    svg.appendChild(t);
+    h += '<text x="' + x + '" y="' + y + '" class="gtitle' + (step ? ' hidden-el' : '') + '"' +
+         (step ? ' data-step="' + step + '"' : '') + '>' + txt + '</text>';
   }
   function edges(list, pos, step, litList){
     list.forEach(function(e, idx){
-      var ln = document.createElementNS(NS, 'line');
       var a = pos[e[0]], b = pos[e[1]];
-      ln.setAttribute('x1', a[0]); ln.setAttribute('y1', a[1]);
-      ln.setAttribute('x2', b[0]); ln.setAttribute('y2', b[1]);
-      ln.setAttribute('class', 'gedge' + (step ? ' hidden-el' : ''));
-      if(step) ln.dataset.step = step;
-      if(litList) ln.dataset.lit = litList[idx][2];
-      svg.appendChild(ln);
+      h += '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '"' +
+           ' class="gedge' + (step ? ' hidden-el' : '') + '"' +
+           (step ? ' data-step="' + step + '"' : '') +
+           (litList ? ' data-lit="' + litList[idx][2] + '"' : '') + '/>';
     });
   }
   function nodes(pos, step, labeled){
     Object.keys(pos).forEach(function(id){
-      var g = document.createElementNS(NS, 'g');
-      g.setAttribute('class', 'gnode' + (step ? ' hidden-el' : ''));
-      if(step) g.dataset.step = step;
-      var c = document.createElementNS(NS, 'circle');
-      c.setAttribute('cx', pos[id][0]); c.setAttribute('cy', pos[id][1]); c.setAttribute('r', 20);
-      g.appendChild(c);
-      if(labeled){
-        var t = document.createElementNS(NS, 'text');
-        t.setAttribute('x', pos[id][0]); t.setAttribute('y', pos[id][1]);
-        t.textContent = id;
-        g.appendChild(t);
-      }
-      svg.appendChild(g);
+      h += '<g class="gnode' + (step ? ' hidden-el' : '') + '"' + (step ? ' data-step="' + step + '"' : '') + '>' +
+           '<circle cx="' + pos[id][0] + '" cy="' + pos[id][1] + '" r="20"/>';
+      if(labeled) h += '<text x="' + pos[id][0] + '" y="' + pos[id][1] + '">' + id + '</text>';
+      h += '</g>';
     });
   }
   // 图①（step 1 显现，边逐条点亮）
@@ -85,42 +65,25 @@ function build(stage){
   edges(E1, V1, 1, E1);
   nodes(V1, 1, true);
   DEG1.forEach(function(d){
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', d[2]); t.setAttribute('y', d[3]);
-    t.setAttribute('text-anchor', 'middle');
-    t.setAttribute('class', 'deglab hidden-el');
-    t.dataset.step = 1;
-    t.textContent = d[1];
-    svg.appendChild(t);
+    h += '<text x="' + d[2] + '" y="' + d[3] + '" text-anchor="middle" class="deglab hidden-el" data-step="1">' + d[1] + '</text>';
   });
   // 图②（step 8）
   title('图② 反例：5 个顶点的树（路径）—— 检验 II', 16, 268, 8);
   edges(E2, V2, 8, null);
   nodes(V2, 8, false);
-  var cap2 = document.createElementNS(NS, 'text');
-  cap2.setAttribute('x', 335); cap2.setAttribute('y', 352);
-  cap2.setAttribute('text-anchor', 'middle');
-  cap2.setAttribute('class', 'gcap hidden-el');
-  cap2.dataset.step = 8;
-  cap2.textContent = '边数 E = 4 = n − 1（并不"大于" n − 1）';
-  svg.appendChild(cap2);
+  h += '<text x="335" y="352" text-anchor="middle" class="gcap hidden-el" data-step="8">边数 E = 4 = n − 1（并不"大于" n − 1）</text>';
   // 图③（step 9）
   title('图③ 反例：三角形环 —— 检验 III', 16, 392, 9);
   edges(E3, V3, 9, null);
   nodes(V3, 9, false);
   [[95, 455], [265, 455], [226, 402]].forEach(function(d){
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', d[1]); t.setAttribute('y', d[2]);
-    t.setAttribute('text-anchor', 'middle');
-    t.setAttribute('class', 'deglab hidden-el');
-    t.dataset.step = 9;
-    t.textContent = '度2';
-    svg.appendChild(t);
+    h += '<text x="' + d[1] + '" y="' + d[2] + '" text-anchor="middle" class="deglab hidden-el" data-step="9">度2</text>';
   });
-  stage.appendChild(svg);
+  h += '</svg>';
+  stage.innerHTML = h;
   var formula = AW.el('div', 'hformula');
   stage.appendChild(formula);
-  this._svg = svg; this._formula = formula;
+  this._svg = stage.querySelector('.graph-svg'); this._formula = formula;
 }
 
 var FORMULAS = [

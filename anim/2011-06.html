@@ -76,59 +76,37 @@ var FORMULAS = [
 ];
 
 function build(stage){
-  stage.innerHTML = '';
-  var svgNS = 'http://www.w3.org/2000/svg';
-  var svg = document.createElementNS(svgNS, 'svg');
-  svg.setAttribute('viewBox', '0 0 780 455');
-  svg.setAttribute('class', 'ft-svg');
-  var mk = function(txt, x, y, cls){
-    var t = document.createElementNS(svgNS, 'text');
-    t.setAttribute('x', x); t.setAttribute('y', y);
-    t.setAttribute('class', cls); t.textContent = txt;
-    return t;
+  var mk = function(txt, x, y, cls, extra){
+    return '<text x="' + x + '" y="' + y + '" class="' + cls + '"' + (extra || '') + '>' + txt + '</text>';
   };
-  svg.appendChild(mk('原树（7 结点 · 叶 4）', 150, 20, 'panel-lbl'));
-  svg.appendChild(mk('对应二叉树（孩子-兄弟）', 600, 20, 'panel-lbl'));
+  var h = '<svg viewBox="0 0 780 455" class="ft-svg">';
+  h += mk('原树（7 结点 · 叶 4）', 150, 20, 'panel-lbl');
+  h += mk('对应二叉树（孩子-兄弟）', 600, 20, 'panel-lbl');
   TEDGES.forEach(function(e){
     var A = null, B = null;
     TNODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
-    var ln = document.createElementNS(svgNS, 'line');
-    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
-    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
-    ln.setAttribute('class', 'edge');
-    svg.appendChild(ln);
+    h += '<line x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '" class="edge"/>';
   });
   BNODES.forEach(function(n){ n._ref = 'b'; });
   TNODES.forEach(function(n){ n._ref = 't'; });
   BEDGES.forEach(function(e){
     var A = null, B = null;
     BNODES.forEach(function(n){ if (n.id === e.a) A = n; if (n.id === e.b) B = n; });
-    var ln = document.createElementNS(svgNS, 'line');
-    ln.setAttribute('x1', A.x); ln.setAttribute('y1', A.y);
-    ln.setAttribute('x2', B.x); ln.setAttribute('y2', B.y);
-    ln.setAttribute('class', 'edge newedge hidden-el');
-    ln.dataset.step = e.step;
-    svg.appendChild(ln);
-    var t = mk(e.lbl, e.lx, e.ly, 'side-lbl hidden-el');
-    t.dataset.step = e.step;
-    svg.appendChild(t);
+    h += '<line x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '"' +
+         ' class="edge newedge hidden-el" data-step="' + e.step + '"/>';
+    h += mk(e.lbl, e.lx, e.ly, 'side-lbl hidden-el', ' data-step="' + e.step + '"');
   });
   TNODES.concat(BNODES).forEach(function(n){
-    var g = document.createElementNS(svgNS, 'g');
-    g.setAttribute('class', 'node' + (n.leaf ? ' leaf' : '') + (n._ref === 'b' ? ' hidden-el' : ''));
-    g.dataset.id = n.id; g.dataset.side = n._ref; g.dataset.step = n.step;
-    var c = document.createElementNS(svgNS, 'circle');
-    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 19);
-    var t = document.createElementNS(svgNS, 'text');
-    t.setAttribute('x', n.x); t.setAttribute('y', n.y);
-    t.textContent = n.id;
-    g.appendChild(c); g.appendChild(t);
-    svg.appendChild(g);
+    h += '<g class="node' + (n.leaf ? ' leaf' : '') + (n._ref === 'b' ? ' hidden-el' : '') + '"' +
+         ' data-id="' + n.id + '" data-side="' + n._ref + '" data-step="' + n.step + '">' +
+         '<circle cx="' + n.x + '" cy="' + n.y + '" r="19"/>' +
+         '<text x="' + n.x + '" y="' + n.y + '">' + n.id + '</text></g>';
   });
-  stage.appendChild(svg);
+  h += '</svg>';
+  stage.innerHTML = h;
   var formulaBox = AW.el('div', 'hformula');
   stage.appendChild(formulaBox);
-  this._svg = svg; this._formulaBox = formulaBox;
+  this._svg = stage.querySelector('.ft-svg'); this._formulaBox = formulaBox;
 }
 
 function render(stage, sn, i){

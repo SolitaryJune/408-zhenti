@@ -35,7 +35,6 @@
  * 演示：左面板画出一座示例森林，右面板按「左孩子·右兄弟」转换成二叉树；
  *       再取 4 组具体结点对（对应 4 种左右孩子组合）逐一检验 I/II/III。 */
 
-var NS = 'http://www.w3.org/2000/svg';
 var FOREST = {
   nodes:{ A:[90,45], B:[40,140], C:[100,140], D:[160,140], E:[40,235], F:[75,235], G:[130,235], D1:[160,235], H:[255,45] },
   edges:[['A','B'], ['A','C'], ['A','D'], ['B','E'], ['C','F'], ['C','G'], ['D','D1']],
@@ -53,66 +52,50 @@ var ST = {
   6:{ f:['A','C','D','D1'],  fe:['A-C','A-D','D-D1'],    b:['C','D','D1'],   be:['D-D1','C-D'],  verd:'miss' },
 };
 
-function mkSvg(w, h, cls){
-  var svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-  svg.setAttribute('class', cls);
-  return svg;
-}
-function addNodes(svg, pos, store, step){
+function nodesHtml(pos, step){
+  var h = '';
   Object.keys(pos).forEach(function(id){
-    var g = document.createElementNS(NS, 'g');
-    g.setAttribute('class', 'tnode hidden-el');
-    g.dataset.step = step; g.dataset.id = id;
-    var c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', pos[id][0]); c.setAttribute('cy', pos[id][1]); c.setAttribute('r', 21);
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', pos[id][0]); t.setAttribute('y', pos[id][1]);
-    t.textContent = id;
-    g.appendChild(c); g.appendChild(t);
-    svg.appendChild(g);
-    store[id] = g;
+    h += '<g class="tnode hidden-el" data-step="' + step + '" data-id="' + id + '">' +
+         '<circle cx="' + pos[id][0] + '" cy="' + pos[id][1] + '" r="21"/>' +
+         '<text x="' + pos[id][0] + '" y="' + pos[id][1] + '">' + id + '</text></g>';
   });
+  return h;
 }
-function addEdges(svg, edges, pos, store, step, withLabel){
+function edgesHtml(edges, pos, step, withLabel){
+  var h = '';
   edges.forEach(function(e){
-    var g = document.createElementNS(withLabel ? 'g' : NS, withLabel ? 'g' : 'line');
-    var ln = document.createElementNS(NS, 'line');
-    ln.setAttribute('x1', pos[e[0]][0]); ln.setAttribute('y1', pos[e[0]][1]);
-    ln.setAttribute('x2', pos[e[1]][0]); ln.setAttribute('y2', pos[e[1]][1]);
-    g.appendChild(ln);
+    var a = pos[e[0]], b = pos[e[1]];
     if(withLabel){
-      var t = document.createElementNS(NS, 'text');
-      t.setAttribute('x', (pos[e[0]][0] + pos[e[1]][0]) / 2 + (e[2] === '左' ? -13 : 13));
-      t.setAttribute('y', (pos[e[0]][1] + pos[e[1]][1]) / 2 - 8);
-      t.setAttribute('class', 'elab');
-      t.setAttribute('text-anchor', 'middle');
-      t.textContent = e[2];
-      g.appendChild(t);
+      h += '<g class="tedge hidden-el" data-step="' + step + '" data-id="' + e[0] + '-' + e[1] + '">' +
+           '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '"/>' +
+           '<text class="elab" text-anchor="middle" x="' + ((a[0] + b[0]) / 2 + (e[2] === '左' ? -13 : 13)) +
+           '" y="' + ((a[1] + b[1]) / 2 - 8) + '">' + e[2] + '</text></g>';
+    } else {
+      h += '<line class="tedge hidden-el" data-step="' + step + '" data-id="' + e[0] + '-' + e[1] + '"' +
+           ' x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '"/>';
     }
-    g.setAttribute('class', 'tedge hidden-el');
-    g.dataset.step = step; g.dataset.id = e[0] + '-' + e[1];
-    svg.appendChild(g);
-    store[e[0] + '-' + e[1]] = g;
   });
+  return h;
 }
 
 function build(stage){
-  stage.innerHTML = '';
+  var p1 = AW.el('div', 'panel',
+    '<div class="ptitle">原森林（树1：A 及其子孙　树2：H）</div>' +
+    '<svg viewBox="0 0 320 290" class="fsvg">' +
+    edgesHtml(FOREST.edges, FOREST.nodes, 1, false) +
+    nodesHtml(FOREST.nodes, 1) +
+    '</svg>');
+  var p2 = AW.el('div', 'panel',
+    '<div class="ptitle">转换后的二叉树（左孩子 · 右兄弟）</div>' +
+    '<svg viewBox="0 0 470 370" class="fsvg">' +
+    edgesHtml(BIN.edges, BIN.nodes, 2, true) +
+    nodesHtml(BIN.nodes, 2) +
+    '</svg>');
   var dual = AW.el('div', 'dual');
-  var p1 = AW.el('div', 'panel', '<div class="ptitle">原森林（树1：A 及其子孙　树2：H）</div>');
-  var p2 = AW.el('div', 'panel', '<div class="ptitle">转换后的二叉树（左孩子 · 右兄弟）</div>');
-  var svgF = mkSvg(320, 290, 'fsvg');
-  var svgB = mkSvg(470, 370, 'fsvg');
-  this._fE = {}; this._fN = {}; this._bE = {}; this._bN = {};
-  addEdges(svgF, FOREST.edges, FOREST.nodes, this._fE, 1, false);
-  addNodes(svgF, FOREST.nodes, this._fN, 1);
-  addEdges(svgB, BIN.edges, BIN.nodes, this._bE, 2, true);
-  addNodes(svgB, BIN.nodes, this._bN, 2);
-  p1.appendChild(svgF); p2.appendChild(svgB);
   dual.appendChild(p1); dual.appendChild(p2);
+  stage.innerHTML = '';
   stage.appendChild(dual);
-  this._svgF = svgF; this._svgB = svgB;
+  this._svgF = p1.querySelector('.fsvg'); this._svgB = p2.querySelector('.fsvg');
 }
 
 function apply(svg, nodes, edges, st, verd){

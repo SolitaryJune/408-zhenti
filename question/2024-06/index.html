@@ -102,18 +102,21 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：KMP 修正 next 后的最大滑动距离</h2>
-<h3>第一步：先求教材版 next</h3>
-<p>模式串 S = <code>aabaab</code>（j = 1..6），next[1] = 0，next[j] = S[1..j−1] 最长相等前后缀长度 + 1：</p>
+<p>答案：<strong>A（最长滑动 5）</strong>。</p>
+<h3>第一步：先立机制——失配后模式串怎么滑</h3>
+<p>KMP 匹配到主串字符与 S[j] 失配时，<strong>主串指针不动</strong>，模式串指针 j 回退到 next[j]，相当于模式串向右滑动 j − next[j] 格（回退后模式串的第 next[j] 位对准主串刚才失配的位置）。所以本题的全部逻辑是：先求 next → 修正为 nextval → 取 j − nextval[j] 的最大值。</p>
+<p>next[j] 的来历：已匹配部分 S[1..j−1] 中「真前缀 = 真后缀」的最长长度 + 1——失配后，模式串开头那段恰好与主串中刚扫过部分的后缀相等，可以直接续上，不必回退主串。</p>
+<h3>第二步：求教材版 next</h3>
 <table><thead><tr><th>j</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>S[j]</td><td>a</td><td>a</td><td>b</td><td>a</td><td>a</td><td>b</td></tr><tr><td>next[j]</td><td>0</td><td>1</td><td>2</td><td>1</td><td>2</td><td>3</td></tr></tbody></table>
-<h3>第二步：修正为 nextval</h3>
-<p>修正规则：若 S[j] 与 S[next[j]] 相等，则 nextval[j] = nextval[next[j]]（跳过那次必然失配的比较）；否则 nextval[j] = next[j]。</p>
+<h3>第三步：修正为 nextval——为什么可以跳传</h3>
+<p>修正针对的是「回退后注定失配」的比较：主串当前字符 c 已知 <strong>c ≠ S[j]</strong>；若恰好 S[next[j]] == S[j]，则回退后拿 c 与 S[next[j]] 比，结果必然还是失配——这次比较动手前就注定失败，跳过它不损失任何匹配机会。于是规则：若 S[j] == S[next[j]]，令 nextval[j] = nextval[next[j]]（接着往前跳）；否则 nextval[j] = next[j]。</p>
 <table><thead><tr><th>j</th><th>判断</th><th>nextval[j]</th></tr></thead><tbody><tr><td>2</td><td>S[2]=a = S[1]=a</td><td>nextval[1] = <strong>0</strong></td></tr><tr><td>3</td><td>S[3]=b ≠ S[2]=a</td><td>next[3] = <strong>2</strong></td></tr><tr><td>4</td><td>S[4]=a = S[1]=a</td><td>nextval[1] = <strong>0</strong></td></tr><tr><td>5</td><td>S[5]=a = S[2]=a</td><td>nextval[2] = <strong>0</strong></td></tr><tr><td>6</td><td>S[6]=b = S[3]=b</td><td>nextval[3] = <strong>2</strong></td></tr></tbody></table>
 <p>得 nextval = <code>0, 0, 2, 0, 0, 2</code>。</p>
-<h3>第三步：算滑动距离取最大</h3>
-<p>在 S[j] 处失配时右滑 j − nextval[j] 格（nextval=0 即滑 j 格，从主串下一字符重新比）：1, 2, 1, 4, <strong>5</strong>, 4。最大值在 j = 5 处，为 <strong>5</strong>，答案选 <strong>A</strong>。</p>
+<h3>第四步：算滑动距离取最大</h3>
+<p>在 S[j] 处失配时右滑 j − nextval[j] 格（nextval=0 即滑 j 格，从主串下一字符重新比）：1, 2, 1, 4, <strong>5</strong>, 4。最大值在 j = 5 处，为 <strong>5</strong>，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>直接用 next 求</strong>：用未修正的 next 算滑动，j−next[j] 的最大值是 4（j=4 或 j=6），误选 B/D。</li><li><strong>next 表求错</strong>：next[j] 看的是 S[1..j−1] 而不是 S[1..j]，j=3 处易错。</li><li><strong>修正规则记反</strong>：相等才跳传 nextval[next[j]]，不相等时保留 next[j]。</li></ul>
-<blockquote>一句话结论：nextval = 0,0,2,0,0,2，滑动 = j − nextval[j]，最大 5，选 A。</blockquote></div></div>
+<blockquote>记忆锚点：nextval = 0,0,2,0,0,2，滑动 = j − nextval[j]，最大 5，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

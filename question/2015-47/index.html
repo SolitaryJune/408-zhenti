@@ -107,21 +107,21 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：DHCP 地址池、ARP 广播帧与网关配置错误（9 分大题）</h2>
-<p><strong>三问结论先行</strong>：① 地址池 <code>111.123.15.5 ～ 111.123.15.254</code>，Discover 报文源 IP <code>0.0.0.0</code>、目的 IP <code>255.255.255.255</code>；② 第一个以太网帧（ARP 请求）目的 MAC <code>FF-FF-FF-FF-FF-FF</code>，承载 IP 分组的帧目的 MAC <code>00-a1-a1-a1-a1-a1</code>；③ 主机 1 能访问 WWW 服务器，<strong>不能</strong>访问 Internet（默认网关配错）。</p>
-<p>拓扑要点：交换机一侧接 WWW 服务器（111.123.15.3/24）、DHCP 服务器（111.123.15.2/24，MAC 00-b1-b1-b1-b1-b1）、主机 1（111.123.15.4/24）与主机 2～N（DHCP 动态获取），另一侧接路由器内网接口（111.123.15.1/24，MAC 00-a1-a1-a1-a1-a1），路由器外侧是 Internet。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：DHCP 地址池、ARP 广播帧与网关配置错误</h2>
+<h3>第 0 步：先读图立机制——三个角色、三条规则</h3>
+<p>拓扑（题图）：以太网交换机一侧接 WWW 服务器（111.123.15.3/24）、DHCP 服务器（111.123.15.2/24，MAC 00-b1-b1-b1-b1-b1）、主机 1（111.123.15.4/24）与主机 2～N（DHCP 动态获取），另一侧接路由器内网接口（111.123.15.1/24，MAC 00-a1-a1-a1-a1-a1），路由器外侧是 Internet。本题三问各对应一条通信规则：</p>
+<ul><li><strong>DHCP 规则</strong>：主机 2 还没有 IP 时，Discover 报文只能"源 IP 全 0、目的 IP 全 1"在本网广播——不知道自己是谁，也不知道服务器在哪；</li><li><strong>ARP/帧规则</strong>：以太网帧的目的 MAC 只认<strong>同一网段内的下一跳</strong>——跨网段时帧 MAC 写网关接口的 MAC，IP 分组头里的目的 IP 保持最终目的地不变；</li><li><strong>交付规则</strong>：主机用子网掩码判断目的是否同网段——同网段直接交付（不经过网关），跨网段才交给（正确的）默认网关。</li></ul>
 <h3>第 1）问：DHCP 地址池与 Discover 的 IP 封装</h3>
-<p>答题框架：先圈出静态占用的地址，剩下才是动态池；Discover 在主机还没有 IP 时只能「全 0 源、全 1 目的」广播。</p>
-<ul><li>静态占用：路由器 .1、DHCP 服务器 .2、WWW 服务器 .3、主机 1 .4；<code>.0</code> 是网络地址、<code>.255</code> 是广播地址，都不能分配。</li><li><strong>可动态分配的最大范围：111.123.15.5 ～ 111.123.15.254</strong>。</li><li>主机 2 此刻没有 IP → 源 IP 填 <strong>0.0.0.0</strong>；也不知道 DHCP 服务器在哪 → 对本网广播，目的 IP <strong>255.255.255.255</strong>。</li></ul>
+<p>先圈死不能分配的地址：<code>.0</code> 主机号全 0 是<strong>网络地址</strong>、<code>.255</code> 主机号全 1 是<strong>广播地址</strong>，都不能当单播地址用；静态占用的 <code>.1</code>（路由器内网口）、<code>.2</code>（DHCP 服务器）、<code>.3</code>（WWW 服务器）、<code>.4</code>（主机 1）已配置。剩下的才是动态池：</p>
+<ul><li><strong>可动态分配的最大范围：111.123.15.5 ～ 111.123.15.254</strong>。</li><li>Discover 的封装为什么是"全 0 源 + 全 1 目的"：主机 2 此刻没有 IP → 源 IP 填 <strong>0.0.0.0</strong>（"我还不知道我是谁"）；也不知道 DHCP 服务器在哪 → 只能对本网广播，目的 IP <strong>255.255.255.255</strong>（"请本网所有主机都听我说"）。</li></ul>
 <h3>第 2）问：两个「目的 MAC 地址」</h3>
-<p>答题框架：ARP 表为空 ⇒ 第一个帧是广播的 ARP 请求；真正传数据的帧按「下一跳」封装 MAC。</p>
-<ul><li>要把分组发往 Internet，下一跳是默认网关（路由器内网口 111.123.15.1），而 ARP 表为空 → 第一个帧就是 <strong>ARP 请求广播帧</strong>，目的 MAC = <strong>FF-FF-FF-FF-FF-FF</strong>。</li><li>学到网关 MAC 后，封装发往 Internet 的 IP 分组的以太网帧，目的 MAC = 下一跳的 MAC = <strong>00-a1-a1-a1-a1-a1</strong>（路由器内网接口）。注意：帧里的目的 MAC 写网关，IP 分组头里的目的 IP 仍是 Internet 上那台服务器。</li></ul>
+<p>关键机制：<strong>以太网帧必须有目的 MAC 才能发出去，而 ARP 表为空 → 第一个帧只能是广播的 ARP 请求</strong>。</p>
+<ul><li>主机 2 访问 Internet，目的 IP 不在本子网 → 下一跳是默认网关（路由器内网口 111.123.15.1）；ARP 表空，不知道网关 MAC → 先发 <strong>ARP 请求广播帧</strong>，目的 MAC = <strong>FF-FF-FF-FF-FF-FF</strong>（问全网"谁是 111.123.15.1"）。</li><li>学到网关 MAC 后再发数据：封装发往 Internet 的 IP 分组的以太网帧，目的 MAC = <strong>下一跳的 MAC</strong> = <strong>00-a1-a1-a1-a1-a1</strong>（路由器内网接口）。<strong>为什么帧 MAC 不写 Internet 服务器的 MAC</strong>：服务器与主机 2 不在同一网段，MAC 地址只在链路层网段内有效，出了网关就要换帧重新封装——帧层认下一跳，IP 层认终点，两者各司其职。</li></ul>
 <h3>第 3）问：主机 1 能否访问 WWW 服务器 / Internet</h3>
-<p>答题框架：先判断同网段直连，再看网关对不对。</p>
-<ul><li>掩码 <code>255.255.255.0</code> 与网络 /24 一致；WWW 服务器 111.123.15.3 与主机 1 同子网 → <strong>直接交付、不经网关，能访问</strong>。</li><li>默认网关被配成 <code>111.123.15.2</code>——那是 DHCP 服务器，不是路由器内网口（应为 111.123.15.1）。访问 Internet 的分组会被交给错误网关，而 DHCP 服务器不作路由转发 → <strong>不能访问 Internet</strong>。</li></ul>
+<ul><li><strong>能访问 WWW 服务器</strong>：主机 1 掩码 255.255.255.0 与网络 /24 一致；WWW 服务器 111.123.15.3 与主机 1 同子网 → 按交付规则走<strong>直接交付</strong>，根本不查默认网关，网关配错也拦不住同网段通信。</li><li><strong>不能访问 Internet</strong>：默认网关被配成 <code>111.123.15.2</code>——那是 DHCP 服务器，不是路由器内网口（应为 111.123.15.1）。发往 Internet 的分组被交给 .2，而 DHCP 服务器<strong>不做路由转发</strong>，分组出不了这个子网。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>把 .255 或静态占用的 .1～.4 算进 DHCP 地址池</strong>。</li><li><strong>第 2）问把「载 IP 分组的帧」也写成全 F</strong>：广播只用于 ARP 请求；传数据帧的目的 MAC 是网关接口的 MAC。</li><li><strong>第 3）问漏答 WWW 可达</strong>：同子网通信不依赖默认网关，网关配错只影响跨网段访问。</li></ul>
-<blockquote>记忆锚点：DHCP Discover = 0.0.0.0 → 255.255.255.255；ARP 请求 = 全 F 广播；跨网段的帧永远封装「下一跳」的 MAC。</blockquote></div></div>
+<ul><li><strong>把 .255 或静态占用的 .1～.4 算进 DHCP 地址池</strong>：全 1 主机号是广播地址、静态地址已占用，均不可分配。</li><li><strong>第 2）问把「载 IP 分组的帧」也写成全 F</strong>：广播只用于 ARP 请求解析网关 MAC；传数据的帧目的 MAC 是下一跳（网关接口）的 MAC。</li><li><strong>第 3）问漏答 WWW 可达</strong>：同子网直接交付不依赖默认网关，网关错配只影响跨网段访问。</li><li><strong>混淆帧 MAC 与 IP 头</strong>：跨网段传输中 IP 头的目的 IP 始终是终点，帧的目的 MAC 逐跳更换。</li></ul>
+<blockquote>记忆锚点：DHCP Discover = 0.0.0.0 → 255.255.255.255；ARP 请求 = 全 F 广播；跨网段的帧永远封装「下一跳」的 MAC；同网段直达不过网关。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -106,6 +106,9 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：结构体对齐、数组寻址与小端存放</h2>
+<h3>第 0 步：为什么有"边界对齐"和"小端"这两条规矩</h3>
+<p><strong>边界对齐</strong>：32 位 CPU 访存一次取 4 字节，int 型成员的地址若不是 4 的倍数，取一个值就要拆成两次访存再拼接。编译器宁愿在成员之间塞填充字节，也要让每个 int 从 4 的倍数地址开始——这就是 name[10]（占 10 字节）之后要空 2 字节的原因；同理，整个结构体的大小也凑成最大对齐值（4）的倍数，保证数组里每个元素的 id 都对齐。</p>
+<p><strong>小端存放</strong>：按字节编址时，多字节机器数要拆成单字节摆放，小端的规则是<strong>最低有效字节（LSB）放最低地址</strong>——记忆口诀"低对低"。把 1234 5678H 从低地址往高地址排就是 78、56、34、12（大端正好相反，MSB 在低地址）。</p>
 <h3>第一步：算结构体成员偏移与大小</h3>
 <p>32 位机、边界对齐：int 型成员地址须是 4 的倍数，char 型任意。</p>
 <table><thead><tr><th>成员</th><th>类型</th><th>偏移</th></tr></thead><tbody><tr><td>id</td><td>int</td><td>0～3</td></tr><tr><td>name[10]</td><td>char</td><td>4～13</td></tr><tr><td>（填充）</td><td>—</td><td>14～15</td></tr><tr><td>salary</td><td>int</td><td>16～19</td></tr></tbody></table>
@@ -117,7 +120,7 @@
 <table><thead><tr><th>地址</th><th>A0C4H</th><th>A0C5H</th><th>A0C6H</th><th>A0C7H</th></tr></thead><tbody><tr><td>内容</td><td>78H</td><td>56H</td><td>34H</td><td>12H</td></tr></tbody></table>
 <p>56H 在 <strong>0000 A0C5H</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉 salary 前的填充</strong>：把结构体算成 18 字节，employee[1] 起点算成 A0C2H，整串地址全错。</li><li><strong>大小端弄反</strong>：以为 12H 在 A0C4H——小端是「低字节在低地址」，于是 56H 落在 A0C5H。</li><li><strong>元素下标差 1</strong>：employee[1] 要跳过一整个元素（20B），不是从 employee[0].name 后面接着数。</li></ul>
+<ul><li><strong>漏掉 salary 前的填充</strong>：把结构体算成 18 字节，employee[1] 起点算成 A0C2H，56H 落在 A0C3H——干扰项 A 的来源。</li><li><strong>误选 B（A0C4H）</strong>：拿 id 的起始地址直接当答案——56H 是机器数 1234 5678H 里第二高的字节，不是首字节；小端下首字节是 78H，56H 在首地址 +1，必须逐字节排。</li><li><strong>大小端弄反</strong>：以为 12H 在 A0C4H——小端是「低字节在低地址」；若按大端排，56H 会落在 A0C6H，正是干扰项 D。</li><li><strong>元素下标差 1</strong>：employee[1] 要跳过一整个元素（20B），不是从 employee[0].name 后面接着数。</li></ul>
 <blockquote>一句话结论：元素 20B，employee[1] 起于 A0C4H，小端下 78H→A0C4H、56H→A0C5H，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">

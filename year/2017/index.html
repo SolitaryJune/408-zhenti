@@ -111,17 +111,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：循环执行次数与时间复杂度</h2>
 <p><strong>答案：B</strong>（O(n^1/2)，即 n 的平方根量级）。</p>
-<h3>第一步：看懂循环在累加什么</h3>
-<p><code>sum += ++i</code> 中 <code>++i</code> 先把 i 加 1 再参与加法。第 1 轮结束 i=1、sum=1；第 2 轮 i=2、sum=3；第 3 轮 sum=6……第 k 轮结束时 sum = 1+2+…+k = k(k+1)/2。</p>
+<h3>第零步：先立机制——这一轮循环到底在攒什么</h3>
+<p>复杂度由循环执行次数决定，而执行次数由 <code>sum</code> 的增长规律决定。每轮执行 <code>sum += ++i</code>：<code>++i</code> 先把 i 加 1，再加进 sum，所以第 1 轮加 1、第 2 轮加 2……第 k 轮加 k，第 k 轮结束时 sum = 1+2+…+k = k(k+1)/2（三角形数）。于是复杂度问题转化成：<strong>三角形数何时首次达到 n</strong>——循环退出时 k 是多少，执行次数就是多少。</p>
 <table><thead><tr><th>轮数 k</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>轮末 sum</td><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td></tr></tbody></table>
-<h3>第二步：解出循环执行轮数</h3>
-<p>循环条件是 <code>sum &lt; n</code>，所以循环恰好执行 K 轮等价于：(K−1)K/2 &lt; n 且 K(K+1)/2 ≥ n。由 K(K+1)/2 ≥ n 得 K ≈ √(2n)，即执行次数与 √n 同阶。</p>
-<p>数值验证：n=100 时 K=14（14×15/2=105 首次 ≥ 100，√200≈14.1）；n=1000000 时 K=1414。</p>
-<h3>第三步：下结论</h3>
-<p>执行次数 T(n) ≈ √(2n)，故时间复杂度为 <strong>O(n^1/2)</strong>，选 <strong>B</strong>。</p>
+<h3>第一步：解出循环轮数</h3>
+<p>循环条件 <code>sum &lt; n</code>：恰好执行 K 轮意味着 (K−1)K/2 &lt; n ≤ K(K+1)/2，即第 K 轮把 sum 顶过 n。由 K(K+1)/2 ≥ n 得 K ≈ √(2n)。数值验证：n=100 时 K=14（14×15/2=105 首次 ≥ 100，√200≈14.1）；n=1000000 时 K=1414。</p>
+<h3>第二步：为什么记作 O(n^1/2) 而不是别的</h3>
+<p>T(n) ≈ √(2n) = √2·n^1/2。大 O 只保留增长最快的因子，<strong>常数因子直接吸收</strong>——√2 与 n 无关，量级由 n^1/2 决定 → <strong>O(n^1/2)</strong>。再排除其余选项：对数 log n 增长远慢于 n^1/2（n=10⁶ 时 log₂n≈20，而这里要走 1414 轮），A 不可能；n 与 nlog n 又明显偏大，C、D 排除。</p>
 <h3>易错点</h3>
-<ul><li><strong>只盯循环变量 i 的写法</strong>：i 最终约等于 √(2n) 而不是 n，按 O(n) 估就会误选 C。</li><li><strong>忽略循环条件的位置</strong>：<code>while(sum &lt; n)</code> 每轮先判断再累加，执行 K 轮的边界是"三角形数首次 ≥ n"。</li></ul>
-<blockquote>一句话结论：三角形数 k(k+1)/2 首次达到 n 时 k ≈ √(2n)，所以是 O(n^1/2)。</blockquote></div></div>
+<ul><li><strong>只盯循环变量 i 的写法</strong>：i 最终约等于 √(2n) 而不是 n，按 O(n) 估就会误选 C。</li><li><strong>被系数吓住</strong>：算出 √(2n) 后纠结"2n 不是 n"，忘记常数进不了大 O，在 B 与其他项之间摇摆。</li><li><strong>忽略循环条件的位置</strong>：<code>while(sum &lt; n)</code> 先判断再累加，退出时刻是"三角形数首次 ≥ n"。</li></ul>
+<blockquote>一句话结论：第 k 轮攒到三角形数 k(k+1)/2，首次 ≥ n 时 k ≈ √(2n)；常数 √2 不影响量级，复杂度 O(n^1/2)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -170,13 +169,13 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：栈的概念辨析（找错误叙述）</h2>
 <p><strong>答案：C</strong>（错误的是 I、III、IV，只有 II 正确）。</p>
+<h3>第零步：先立机制——栈为什么"恰好"能服务函数调用</h3>
+<p>栈的本质是<strong>操作端被锁死的线性表</strong>：只允许在栈顶插入（push）与删除（pop）。函数调用恰好需要"最后发生的事最先收拾"的顺序——最晚被调用的函数最先返回。所以系统把返回地址、参数、局部变量压入调用栈，返回时弹出，LIFO 与"后调用先返回"一一对应。这就是 II 正确的机制根源。</p>
 <h3>第一步：逐条判断</h3>
-<ul><li><strong>I（错）</strong>：用栈保存信息是把递归改写为非递归的<strong>常用</strong>手段，但不是<strong>必须</strong>——尾递归、简单的递推关系可以直接改写成循环（迭代），不需要栈。「必须」二字过于绝对。</li><li><strong>II（对）</strong>：函数调用时系统把返回地址、参数、局部变量等压入函数调用栈，返回时弹出，正好契合"最后调用的最先返回"的后进先出特性。</li><li><strong>III（错）</strong>：入栈次序确定，出栈次序<strong>不确定</strong>：入栈、出栈可以交错进行。1、2、3 依次入栈（中途允许出栈）就能得到 5 种（Catalan 数）不同的合法出栈序列。</li><li><strong>IV（错）</strong>：栈只允许在<strong>一端（栈顶）</strong>插入和删除；允许两端操作的是双端队列。前半句"受限线性表"对，后半句"两端操作"错。</li></ul>
-<h3>第二步：选出答案</h3>
-<p>错误的叙述是 I、III、IV → <strong>C</strong>。</p>
+<ul><li><strong>I（错）</strong>：用栈保存信息是把递归改写为非递归的<strong>常用</strong>手段，但不是<strong>必须</strong>。像尾递归、简单递推（如阶乘的累乘形式）没有"回头再处理"的部分，可直接改写成循环，不需要栈。「必须」二字过于绝对。</li><li><strong>II（对）</strong>：即第零步的机制——调用栈的 LIFO 特性正好承接调用的嵌套次序。</li><li><strong>III（错）</strong>：入栈、出栈可以<strong>交错进行</strong>，出栈次序就不由入栈次序唯一决定。例：依次入 1、入 2、弹 2、弹 1、入 3、弹 3，出栈序列是 2、1、3；若全部入完再弹则得 3、2、1——同一入栈次序已有两种出栈结果。n 个元素依次入栈的合法出栈序列共 Catalan(n) 种（n=3 时 5 种）。</li><li><strong>IV（错）</strong>：栈只允许在<strong>一端（栈顶）</strong>插入和删除；允许两端操作的是双端队列。前半句"受限线性表"对，后半句"两端操作"错。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>把"常用"当"必须"</strong>：栈能模拟递归，但并非一切非递归改写都要栈，否则会漏判 I。</li><li><strong>认为 III 对</strong>：忽略"入栈与出栈可交错"，n 个元素依次入栈的出栈序列多达 Catalan(n) 种。</li><li><strong>认为 IV 对</strong>：混淆栈（单端操作）与双端队列（两端操作）。</li></ul>
-<blockquote>一句话结论：II 正确；I、III、IV 都错在绝对化表述或概念混淆。</blockquote></div></div>
+<ul><li><strong>把"常用"当"必须"</strong>：栈能模拟递归，但无回溯需求的递归可直接迭代化，否则会漏判 I。</li><li><strong>认为 III 对</strong>：只想到"全部入完再弹"这一种情形（那才唯一是逆序），忽略入栈出栈可交错、出栈序列多达 Catalan(n) 种。</li><li><strong>认为 IV 对</strong>：混淆栈（单端操作）与双端队列（两端操作）。</li></ul>
+<blockquote>一句话结论：II 正确；I、III、IV 错在绝对化表述、"只想到一种出栈情形"和概念混淆。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -225,15 +224,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：稀疏矩阵的压缩存储结构</h2>
 <p><strong>答案：A</strong>（三元组表和十字链表）。</p>
-<h3>第一步：抓住"稀疏矩阵"的特点</h3>
-<p>稀疏矩阵：非零元素很少且分布无规律。压缩存储的思路是<strong>只存非零元素及其行列位置</strong>，跳过大量零元素。</p>
-<h3>第二步：两个正选结构</h3>
-<ul><li><strong>三元组表</strong>：每个非零元存成 (行, 列, 值) 三元组，另附行列维数与非零元个数。顺序存储、结构简单，是稀疏矩阵压缩的标准结构之一。</li><li><strong>十字链表</strong>：每个非零元一个结点，同时挂在所在行的行链表和所在列的列链表上，适合非零元会动态增删的运算场合（如矩阵加法、乘法）。两者正是教材列出的两种稀疏矩阵压缩存储结构。</li></ul>
-<h3>第三步：排除干扰项</h3>
-<ul><li><strong>邻接矩阵</strong>：是图的存储结构，n 个顶点要开 n×n 矩阵，稀疏结构照样浪费空间，谈不上压缩。</li><li><strong>二叉链表</strong>：是二叉树的存储结构，与矩阵毫无关系。</li><li>含邻接矩阵的 B、D 与含二叉链表的 C 全部排除 → 选 <strong>A</strong>。</li></ul>
+<h3>第零步：先立机制——压缩的依据是"非零元远少于零元"</h3>
+<p>稀疏矩阵：非零元素很少且分布无规律。压缩的思路不是把零也存下来，而是<strong>只记非零元素"在哪、是什么"</strong>——行号、列号、值。凡是围绕这三个信息组织存储的结构，都是稀疏矩阵的压缩结构；反过来，凡是要为"全部位置"预留空间的，都与压缩背道而驰。</p>
+<h3>第一步：两种正选结构为什么合适</h3>
+<ul><li><strong>三元组表</strong>：每个非零元存成一个 (行, 列, 值) 三元组，顺序排列，另附行列维数与非零元个数。存储量正比于<strong>非零元个数</strong>而不是 m×n——这正是"压缩"的落点；结构简单，适合非零元位置稳定、只做存储与转置类运算的场合。</li><li><strong>十字链表</strong>：每个非零元一个结点，同时挂在所在<strong>行的链表</strong>和所在<strong>列的链表</strong>上。为什么行、列各挂一次？因为矩阵加法这类运算既可能沿行找同类、又可能沿列找同类，两个方向都要能走；插入删除只改指针，适合非零元动态增删的场合。</li></ul>
+<h3>第二步：排除干扰项——它们为什么不是压缩结构</h3>
+<ul><li><strong>邻接矩阵</strong>（B、D 含）：是图的存储结构，n 个顶点必须开 n×n 数组——空间由顶点数的平方决定，与"有几个非零元"无关；矩阵稀疏时大量格子存 0，恰恰是浪费，谈不上压缩。</li><li><strong>二叉链表</strong>（C 含）：是二叉树的存储结构，与矩阵的行列结构毫无关系。</li></ul>
+<p>→ 含邻接矩阵的 B、D 与含二叉链表的 C 全部排除，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>看到"矩阵"就联想"邻接矩阵"</strong>：邻接矩阵是图的概念，且它恰恰不压缩稀疏结构。</li><li><strong>十字链表与二叉链表混淆</strong>：十字链表 = 行链＋列链，服务稀疏矩阵；二叉链表服务二叉树。</li></ul>
-<blockquote>记忆锚点：稀疏矩阵压缩 = 三元组表（顺序）＋十字链表（链式）。</blockquote></div></div>
+<ul><li><strong>看到"矩阵"就联想"邻接矩阵"</strong>：邻接矩阵是图的概念，且它为所有顶点对预留空间，不压缩稀疏结构。</li><li><strong>十字链表与二叉链表混淆</strong>：十字链表 = 行链＋列链，服务稀疏矩阵；二叉链表服务二叉树。</li></ul>
+<blockquote>记忆锚点：稀疏矩阵压缩 = 三元组表（顺序、静态）＋十字链表（链式、动态）。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -282,15 +282,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：先序序列与中序序列相同的条件</h2>
 <p><strong>答案：B</strong>（所有非叶结点只有右子树）。</p>
-<h3>第一步：比较两种遍历的"走法"</h3>
-<p>先序 = 根·左·右；中序 = 左·根·右。两序列都以根开头，分歧从第二个位置开始：先序第二位是<strong>左子树的根</strong>，中序第二位是<strong>左子树最左下的结点</strong>。只要某个结点的左子树非空，这两个位置就不一致。</p>
-<h3>第二步：推出条件</h3>
-<p>要让两序列逐位相同，必须<strong>每个结点的左子树为空</strong>，即所有非叶结点只有右子树——整棵树成为向右下延伸的一条链：先序 N1 N2 N3，中序 N1 N2 N3，完全相同。</p>
-<h3>第三步：小链验证</h3>
-<table><thead><tr><th>树形</th><th>先序</th><th>中序</th><th>是否相同</th></tr></thead><tbody><tr><td>只有右子树（右链 N1→N2→N3）</td><td>N1 N2 N3</td><td>N1 N2 N3</td><td>✓</td></tr><tr><td>只有左子树（左链）</td><td>N1 N2 N3</td><td>N3 N2 N1</td><td>✗ 恰好相反</td></tr></tbody></table>
+<h3>第零步：先立机制——两个序列"谁排在谁前面"由遍历定义决定</h3>
+<p>先序 = 根·左·右：根排在<strong>自己整棵子树</strong>之前。中序 = 左·根·右：左子树的结点排在根之前。两相对照：设某结点 v 带非空左子树，取左子树里任一结点 u——先序中 v 在 u 前（根先行），中序中 u 在 v 前（左子树先行）。<strong>同一个 v、u，两个序列的先后关系恰好相反</strong>，两序列必不相同。所以"先序 = 中序"要求树里<strong>任何一个结点都没有左子树</strong>。</p>
+<h3>第一步：验证右链确实逐位相同</h3>
+<p>所有非叶结点只有右子树时，整棵树退化成向右下延伸的一条链 N1→N2→N3：每层访问都"左空 → 访问根 → 进右孩子"，先序 = N1 N2 N3，中序 = N1 N2 N3，逐位相同 ✓。</p>
+<h3>第二步：为什么其他选项不行</h3>
+<table><thead><tr><th>树形</th><th>先序</th><th>中序</th><th>是否相同</th></tr></thead><tbody><tr><td>只有右子树（右链）</td><td>N1 N2 N3</td><td>N1 N2 N3</td><td>✓</td></tr><tr><td>只有左子树（左链）</td><td>N1 N2 N3</td><td>N3 N2 N1</td><td>✗ 恰好相反</td></tr></tbody></table>
+<ul><li><strong>A（只有左子树）</strong>：中序把最左下的叶子排最前，先序把根排最前，两序列正好相反——那是"先序与中序<strong>相反</strong>"的条件。</li><li><strong>C（度均为 1）</strong>：度 1 的结点可能只带<strong>左</strong>孩子，只要存在一个左孩子，第零步的反序关系就出现；"度均为 1"并不保证全是右孩子。</li><li><strong>D（度均为 2）</strong>：每个结点都有左子树，中序必然先输出左子树内容，更不可能相同。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>误选 C（度均为 1）</strong>：度 1 的结点可能只带左孩子，不满足"无左子树"。</li><li><strong>误选 A（只有左子树）</strong>：那是"先序与中序<strong>相反</strong>"的条件。</li><li><strong>对称结论记反</strong>：中序 = 后序 ⇔ 所有非叶结点只有<strong>左</strong>子树（左链）。</li></ul>
-<blockquote>一句话结论：先序 = 中序 ⇔ 树无左孩子（右链）；对称地，中序 = 后序 ⇔ 无右孩子（左链）。</blockquote></div></div>
+<ul><li><strong>从"第二位"入手比较</strong>：先序第二位是左子树之根，中序第二位是左子树最左下结点，两者在某些左链情形恰好相同，真正的分歧在"左子树结点相对祖先的先后"——机制要从遍历定义看。</li><li><strong>对称结论记反</strong>：先序 = 中序 ⇔ 无左孩子（右链）；对称地，中序 = 后序 ⇔ 无右孩子（左链）。</li></ul>
+<blockquote>一句话结论：先序让根领先于左子树、中序让左子树领先于根——两序列要相同，只能全树无左孩子，即所有非叶结点只有右子树。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -339,18 +340,18 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：由后序序列＋树形反推结点层次</h2>
 <p><strong>答案：B</strong>（与 a 同层的是 d）。</p>
-<h3>第一步：后序的最后一位是根</h3>
-<p>后序 = 左·右·根，所以整棵树的根是 <strong>f</strong>。</p>
-<h3>第二步：按树形切分左右子树</h3>
-<p>题图中根有两个孩子，两个孩子各只带一个孩子，各孙子也各只带一个孩子：共 1+2+2+2 = 7 个结点。于是左子树占后序前 3 位 <code>e a c</code>，右子树占后 3 位 <code>b d g</code>。</p>
-<h3>第三步：单链子树自底向上读</h3>
-<p>单链子树的后序恰好是"从叶到根"：左子树 <code>e a c</code> → c 是左子树根（第 2 层），a 是 c 的孩子（第 3 层），e 是 a 的孩子（第 4 层）；同理右子树 <code>b d g</code> → g（第 2 层）→ d（第 3 层）→ b（第 4 层）。</p>
+<h3>第零步：先立机制——后序"左·右·根"决定谁排最后</h3>
+<p>后序遍历中，任何结点都要等它的整棵子树输出完才轮到自己，所以<strong>序列最后一位一定是整棵树的根 f</strong>。同理，把 f 的左右子树切开之后，每段的末位就是该子树的根——后序的"末位定根"在每一层都成立。</p>
+<h3>第一步：按树形切分左右子树</h3>
+<p>切分位置不能猜，由题图决定：根有两个孩子，两个孩子各只带一个孩子，各孙子也各只带一个孩子，共 1+2+2+2 = 7 个结点，左右子树各 3 个。于是后序 <code>e a c b d g f</code> 切成：左子树 <code>e a c</code>，右子树 <code>b d g</code>。</p>
+<h3>第二步：单链子树自底向上定层</h3>
+<p><strong>为什么单链的后序恰好是"从叶到根"？</strong> 链上每层只有一个孩子，后序 = "孩子子树的后序 + 自己"，递归展开就是：叶子、叶子的父亲、……、子树根，逐层向上。所以左段 <code>e a c</code> → c（第 2 层，左子树根）、a（第 3 层）、e（第 4 层）；右段 <code>b d g</code> → g（第 2 层）、d（第 3 层）、b（第 4 层）。</p>
 <table><thead><tr><th>层号</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>结点</td><td>f</td><td>c、g</td><td><strong>a、d</strong></td><td>e、b</td></tr></tbody></table>
-<h3>第四步：回答问题</h3>
-<p>a 在第 3 层，同层的是 <strong>d</strong> → 选 <strong>B</strong>。</p>
+<h3>第三步：回答问题并核对干扰项</h3>
+<p>a 在第 3 层，同层的只有 <strong>d</strong> → 选 <strong>B</strong>。其余三项为什么不对：f 是根（第 1 层）；c、g 在第 2 层——它们与 a 同在一条（子）链上却高一层，把"同子树/同链"误当"同层"，正是误选 C、D 的来源；f 则是最高的祖先。</p>
 <h3>易错点</h3>
-<ul><li><strong>跳过"树形定左右段"这一步</strong>：不先确定左子树 3 个、右子树 3 个结点，后序就没法切分。</li><li><strong>层次数错起点</strong>：根是第 1 层，a、d 在第 3 层而不是第 2 层。</li></ul>
-<blockquote>一句话结论：后序末位定根 → 树形定左右段 → 单链段自底向上定层。</blockquote></div></div>
+<ul><li><strong>跳过"树形定切分"这一步</strong>：不先由图确定左 3 右 3，后序就没法切，切错一段层次全错。</li><li><strong>层次数错起点</strong>：根是第 1 层，a、d 在第 3 层而不是第 2 层。</li><li><strong>混淆"同层"与"同子树"</strong>：c、g 与 a 同在半边子树里，但层号不同。</li></ul>
+<blockquote>一句话结论：后序末位定根 → 树形定左右段 → 单链段后序自叶向根逐层读出，a、d 同在第 3 层。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -399,15 +400,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：哈夫曼编码的译码（前缀码切分）</h2>
 <p><strong>答案：D</strong>（afeefgd）。</p>
-<h3>第一步：明确译码规则</h3>
-<p>哈夫曼编码是<strong>前缀码</strong>：任一字符的编码都不是另一个编码的前缀。所以从第 1 位开始逐位读入，读到能唯一确定一个字符（走到叶子）就切一段、译出一个字符，再从下一位重新开始——切分方式唯一。</p>
-<h3>第二步：逐段切分</h3>
+<h3>第零步：先立机制——前缀码为什么保证切分唯一</h3>
+<p>哈夫曼编码是<strong>前缀码</strong>：任一字符的编码都不是另一个编码的前缀。把编码看成 0/1 路标：0 走左、1 走右，从哈夫曼树根出发逐位走，<strong>只有走到叶子才停</strong>——中途任何位置都不可能是另一个字符的终点（否则就有编码成了别人的前缀）。所以从序列第 1 位起，读到叶子就译出一个字符、回到根重来，切分方式唯一，不存在歧义。</p>
+<h3>第一步：逐段切分</h3>
 <p>编码表：a=0100、b=10、c=0000、d=0101、e=001、f=011、g=11、h=0001。对编码序列 0100011001001011110101（22 位）：</p>
 <ul><li>0100 → a</li><li>011 → f</li><li>001 → e</li><li>001 → e</li><li>011 → f</li><li>11 → g</li><li>0101 → d</li></ul>
+<p><strong>为什么 0100 只能是 a、不会拆出别的字符？</strong> 0 开头的合法编码只有 0000、0001、001、0100、0101、011：逐位走到 <code>01</code> 时没有任何编码终止（001 差一位、0100/0101 还差两位、011 差一位），继续走到第四位恰好唯一命中 a——前缀码保证没有更短或更长的编码与它共享这整段前缀。</p>
 <p>拼回去核对：0100 011 001 001 011 11 0101 = 0100011001001011110101，22 位恰好用完 ✓。译码结果 <strong>afeefgd</strong> → 选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>见 0 就急着断段</strong>：要读到能完整匹配一个编码为止，前缀码保证这样切分唯一。</li><li><strong>001 与 011 混淆</strong>：e=001、f=011，本题两者各出现两次，顺序容易数错。</li><li><strong>不核对总位数</strong>：切完必须恰好用完 22 位，多一位少一位都说明切错了。</li></ul>
-<blockquote>一句话结论：前缀码从左到右"读到叶子就切断"，本题译出 a f e e f g d。</blockquote></div></div>
+<ul><li><strong>见 0 就急着断段</strong>：要读到"走到叶子"为止；提前断段会把后面的位串错位，得到 A、B、C 一类似是而非的串。</li><li><strong>001 与 011 混淆</strong>：e=001、f=011，本题两者各出现两次，走树时只差一个分叉，顺序容易数错。</li><li><strong>不核对总位数</strong>：切完必须恰好用完 22 位，多一位少一位都说明切错了。</li></ul>
+<blockquote>一句话结论：前缀码 = 从根走树、到叶才切，本题译出 a f e e f g d。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -513,15 +515,15 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：折半查找判定树的形态判据</h2>
 <p><strong>答案：A</strong>。</p>
-<h3>第一步：判定树由表长唯一决定</h3>
-<p>折半查找每次取中点把表对半分。取 <code>mid = ⌈(low+high)/2⌉</code>（向上取整）时，每个结点都必须满足：<strong>左子树结点数 = 右子树结点数，或左子树恰比右子树多 1</strong>（左 ≥ 右）。这与元素取值无关，只看结构。</p>
-<h3>第二步：逐项验算</h3>
-<ul><li><strong>A（10 个结点：1+2+4+3）</strong>：根左 5 右 4 ✓；左半两个 5 结点子树各左 2 右 2 ✓；其下 2 结点子树均为左孩子（1 对 0）✓；右半 4 结点子树左 2 右 1 ✓；其下 2 结点子树左孩子 ✓。全程满足判据，正是 n=10 的判定树。</li><li><strong>B（11 个）</strong>：右半的两个 2 结点子树挂<strong>右</strong>孩子（右比左多），违反"左 ≥ 右" ✗。</li><li><strong>C（9 个）</strong>：左半 4 结点子树左 1 右 2，右子树反而多 ✗。</li><li><strong>D（10 个）</strong>：根就左 4 右 5 ✗。</li></ul>
-<h3>第三步：结论</h3>
-<p>只有 A 能全程满足同一划分规则 → 选 <strong>A</strong>。</p>
+<h3>第零步：先立机制——判定树由"取中点"逐层派生</h3>
+<p>折半查找每次取 mid，把当前区间分成"左半、mid、右半"，mid 就是判定树的一个结点，左右两半递归生成左右子树——<strong>判定树是查找过程的展开，形态只由表长决定，与元素取值无关</strong>。本题取 <code>mid = ⌈(low+high)/2⌉</code>（向上取整）：n 个结点的子树，mid 左边放 ⌈(n−1)/2⌉ 个、右边放 ⌊(n−1)/2⌋ 个。所以每个结点都必须满足判据——<strong>左子树结点数 = 右子树结点数，或恰好多 1（左 ≥ 右）</strong>，且左右子树递归地满足同一条判据。</p>
+<h3>第一步：逐项验算（只看结构，不碰取值）</h3>
+<ul><li><strong>A（10 个结点：1+2+4+3）</strong>：根左 5 右 4（5 = 4+1 ✓）；左半两个 5 结点子树各左 2 右 2 ✓；其下 2 结点子树均为左孩子（左 1 右 0）✓；右半 4 结点子树左 2 右 1 ✓；其下 2 结点子树左孩子 ✓。全程满足判据，正是 n=10 的判定树。</li><li><strong>B（11 个）</strong>：右半的两个 2 结点子树把独生孩子挂在<strong>右</strong>边（左 0 右 1），违反"左 ≥ 右" ✗。</li><li><strong>C（9 个）</strong>：左半 4 结点子树左 1 右 2，右子树反而多 ✗。</li><li><strong>D（10 个）</strong>：根就左 4 右 5，方向反了 ✗。</li></ul>
+<h3>第二步：结论</h3>
+<p>只有 A 能从头到尾满足同一条划分规则 → 选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只数总结点数</strong>：A、D 都是 10 个，必须看左右子树的分配方式才能区分。</li><li><strong>判据方向与取整规则不配套</strong>：向上取整版是"左 ≥ 右、至多多 1"；若换向下取整则为"右 ≥ 左"。同一套题内规则必须统一，逐结点验算方向不能变。</li></ul>
-<blockquote>一句话结论：判定树 = 对半分的过程树，逐结点验算"左右子树结点数关系"即可锁定 A。</blockquote></div></div>
+<ul><li><strong>只数总结点数</strong>：A、D 都是 10 个结点，必须看左右子树的划分方向才能区分。</li><li><strong>判据方向与取整规则不配套</strong>：向上取整版是"左 ≥ 右、至多多 1"；若换向下取整 <code>mid=⌊(low+high)/2⌋</code>，独生孩子该挂右边，判据变成"右 ≥ 左"。同一套推导里规则必须统一，逐结点验算方向不能变。</li></ul>
+<blockquote>一句话结论：判定树 = 对半分过程的展开，n 个结点时 ⌈(n−1)/2⌉ 个放左、⌊(n−1)/2⌋ 个放右，逐结点验算"左 ≥ 右"即可锁定 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -625,13 +627,15 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：为什么选归并而不选插入排序</h2>
 <p><strong>答案：B</strong>（仅 III）。</p>
-<h3>第一步：逐条审查三个理由</h3>
-<ul><li><strong>I 归并代码更短</strong>：错。归并要递归划分＋辅助数组＋合并过程，代码比插入排序<strong>长</strong>，插入排序才是短小简单的那个。</li><li><strong>II 归并占用空间更少</strong>：错。归并需要 O(n) 的辅助数组；插入排序原地排序、辅助空间 O(1)。归并空间开销反而更大。</li><li><strong>III 归并运行效率更高</strong>：对。归并 O(n log n) 且与初始序列无关；插入排序 O(n²)（基本有序时最好 O(n)）。规模大时差距悬殊。</li></ul>
+<h3>第零步：先立机制——两种排序的"结构"决定了一切</h3>
+<p>插入排序：双重循环、原地搬移，代码短、辅助空间 O(1)，工作量正比于逆序对数，基本有序时最好 O(n)，平均 O(n²)。归并排序：递归对半分 + O(n) 辅助数组 + 逐层线性合并，层数 log n、每层合并 Θ(n)，所以<strong>任何输入</strong>都是 O(n log n)。三条理由的对错，全部可以从这个结构差异推出来。</p>
+<h3>第一步：逐条审查</h3>
+<ul><li><strong>I 归并代码更短</strong>：错。归并要写递归划分、辅助数组分配与合并三个部分，代码比"一个双重循环"的插入排序<strong>长</strong>；插入排序才是以短小著称的那个。</li><li><strong>II 归并占用空间更少</strong>：错。归并必须开 O(n) 辅助数组存放合并结果；插入排序原地排序、辅助空间 O(1)。空间账恰好说反——归并是用空间换时间。</li><li><strong>III 归并运行效率更高</strong>：对。<strong>为什么归并与初始序列无关也稳定在 O(n log n)？</strong> "对半分"不看数据内容，划分层数恒为 log n，每层合并恒为 Θ(n)；而插入排序的工作量随逆序对数波动，规模大时 O(n log n) 与 O(n²) 差距悬殊。</li></ul>
 <h3>第二步：下结论</h3>
 <p>站得住脚的理由只有 III → 选 <strong>B</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只背复杂度忘了空间账</strong>：归并是以 O(n) 空间换 O(n log n) 时间，II 恰好说反。</li><li><strong>忽略"代码长度"也是比较项</strong>：I 说反了——插入排序才以"短"著称。</li></ul>
-<blockquote>一句话结论：归并 = 代码更长、空间更多、效率更高；能当理由的只有效率这一条。</blockquote></div></div>
+<ul><li><strong>只背复杂度忘了空间账</strong>：归并 O(n log n) 是拿 O(n) 辅助数组换来的，II 恰好说反。</li><li><strong>忽略"代码长度"也是比较项</strong>：I 说反了——插入排序才以"短"著称。</li><li><strong>以为归并快是因为"数据好"</strong>：归并的高效来自分治结构本身，与初始序列无关，这正是 III 成立的关键。</li></ul>
+<blockquote>一句话结论：归并 = 代码更长、空间更多、效率更高且与初序无关；能当理由的只有效率这一条。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1086,15 +1090,15 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：主存 MM 与控制存储器 CS 的对比</h2>
-<h3>第一步：列对比表</h3>
-<table><thead><tr><th>维度</th><th>主存 MM</th><th>控存 CS</th></tr></thead><tbody><tr><td>位置</td><td>CPU 外</td><td>CPU 内（微程序控制器中）</td></tr><tr><td>存放内容</td><td>指令和数据</td><td>微指令（微程序）</td></tr><tr><td>访问方式</td><td>按地址访问</td><td>按微地址访问</td></tr><tr><td>实现介质</td><td>RAM 和 ROM</td><td>ROM</td></tr></tbody></table>
-<h3>第二步：逐项核对找"错误"项</h3>
-<ul><li>A：MM 在 CPU 外，CS 在 CPU 内，与上表相符，正确。</li><li>B：说"MM 按地址访问，CS 按内容访问"——<strong>错</strong>。控存里的微指令也是按<strong>微地址</strong>逐条取出执行的；"按内容访问"是相联存储器（如 TLB）的特征。</li><li>C：MM 存指令和数据、CS 存微指令，正确。</li><li>D：MM 用 RAM 和 ROM 实现、CS 用 ROM 实现，正确。</li></ul>
-<h3>第三步：结论</h3>
-<p>错误的叙述是 B，<strong>答案：B</strong>。</p>
+<p><strong>答案：B</strong>（"MM 按地址访问，CS 按内容访问"错误）。</p>
+<h3>第零步：先立机制——控存是微程序控制器的"程序存放处"</h3>
+<p>采用微程序控制的 CPU 里，每条机器指令对应一段<strong>微程序</strong>，微程序由一串<strong>微指令</strong>组成，存放在 CPU 内部的<strong>控制存储器（CS）</strong>中。执行指令时，微地址寄存器给出微地址，从控存<strong>按微地址逐条取出</strong>微指令、发出微操作控制信号——微程序是顺序执行的，所以控存和主存一样<strong>按地址访问</strong>，只是这个地址叫"微地址"。控存内容出厂固化、只读不写，故用 ROM 实现。主存 MM 在 CPU 外、按主存地址访问、存指令和数据，用 RAM 和 ROM 实现。</p>
+<h3>第一步：对号入座</h3>
+<table><thead><tr><th>维度</th><th>主存 MM</th><th>控存 CS</th></tr></thead><tbody><tr><td>位置</td><td>CPU 外</td><td>CPU 内（微程序控制器中）</td></tr><tr><td>存放内容</td><td>指令和数据</td><td>微指令（微程序）</td></tr><tr><td>访问方式</td><td>按地址访问</td><td>按<strong>微地址</strong>访问</td></tr><tr><td>实现介质</td><td>RAM 和 ROM</td><td>ROM</td></tr></tbody></table>
+<p>A、C、D 与上表逐项相符；B 说"CS 按内容访问"——<strong>错</strong>。控存里的微指令按微地址顺序取出；"按内容访问"是<strong>相联存储器（CAM）</strong>的特征（TLB、Cache 标记比较用它），张冠李戴正是 B 的设错点。</p>
 <h3>易错点</h3>
-<ul><li><strong>把"按内容访问"张冠李戴到控存</strong>：那是相联存储器（CAM）、Cache 标记比较、TLB 的特征。</li><li><strong>以为 CS 也在 CPU 外</strong>：控存属于微程序控制器，位于 CPU 内部，程序员不能访问。</li></ul>
-<blockquote>记忆锚点：控存存微指令、在 CPU 内、按微地址访问。</blockquote></div></div>
+<ul><li><strong>把"按内容访问"安到控存头上</strong>：微程序顺序执行、给微地址取微指令，不需要也不存在按内容匹配。</li><li><strong>以为 CS 也在 CPU 外</strong>：控存属于微程序控制器，位于 CPU 内部，程序员不能访问。</li></ul>
+<blockquote>记忆锚点：控存 = CPU 内、ROM、存微指令、按<strong>微地址</strong>访问；"按内容访问"是相联存储器的专利。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1198,15 +1202,16 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：多总线结构特性与 PCI-Express 的传输方式</h2>
-<h3>第一步：回忆多总线结构的要点</h3>
-<p>按速度分层挂接：越靠近 CPU 的总线越快（存储器总线最快），越往外越慢；不同总线之间必须通过桥接器相连，完成协议与速度的转换；存储器总线支持突发（burst）传送，给出一个首地址后连续传送一串数据。</p>
-<h3>第二步：逐项核对</h3>
-<ul><li>A 对：靠近 CPU 的总线速度快，这是分层设计的初衷。</li><li>B 对：存储器总线可支持突发传送（如一次读出一个缓存行）。</li><li>C 对：总线之间必须通过桥接器相连。</li><li>D 错：PCI-Express 是<strong>串行</strong>点对点传输标准，×16 指 16 条 lane，每条 lane 都是独立的串行差分线路；并行传输是传统 PCI/ISA 的方式。</li></ul>
-<h3>第三步：结论</h3>
-<p>错误的叙述是 D，<strong>答案：D</strong>。</p>
+<p><strong>答案：D</strong>（"PCI-Express×16 采用并行传输方式"错误）。</p>
+<h3>第零步：先立机制——总线为什么要分层次</h3>
+<p>CPU、主存、高速设备与低速设备速度相差悬殊：把所有设备挂在同一条总线上，最慢的设备会拖低整条总线的时序。所以采用<strong>分层多总线</strong>：越靠近 CPU 的总线越快（存储器总线最快），越往外越慢，让设备"各得其所"；不同总线的协议、时序、速率都不同，<strong>必须通过桥接器</strong>相连，由桥完成信号、协议与速度的转换；存储器总线还支持<strong>突发（burst）传送</strong>——给出一个首地址后连续传送一串数据，正合主存成块访问（如填充缓存行）的规律。</p>
+<h3>第一步：逐项核对</h3>
+<ul><li>A 对：靠近 CPU 的总线速度快，这是分层设计的初衷。</li><li>B 对：存储器总线支持突发传送（一次给出首地址、连续读出一串数据）。</li><li>C 对：总线之间必须通过桥接器相连（原因见第零步）。</li><li>D 错：<strong>为什么 ×16 不是并行？</strong> PCI-Express 是<strong>串行</strong>点对点标准，×16 指 16 条 lane（通道），每条 lane 都是独立的串行差分线路对，数据在 lane 内逐位串行传输；并行传输是传统 PCI/ISA 共享总线的方式。</li></ul>
+<h3>第二步：结论</h3>
+<p>错误的叙述是 D，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>被"×16"迷惑</strong>：×16 是 16 条串行 lane 的意思，不是 16 位并行总线。</li><li><strong>混淆 PCI 与 PCI-Express</strong>：PCI 是并行共享总线，PCI-Express 是串行点对点。</li></ul>
-<blockquote>记忆锚点：PCIe = 串行，lane 数只是通道条数。</blockquote></div></div>
+<ul><li><strong>被"×16"迷惑</strong>：×16 是 16 条串行 lane，不是 16 位并行总线。</li><li><strong>混淆 PCI 与 PCI-Express</strong>：PCI = 并行共享总线；PCIe = 串行点对点，靠 lane 数扩展带宽。</li></ul>
+<blockquote>记忆锚点：分层总线 = 近快远慢 + 桥接转换；PCIe = 串行，lane 数只是通道条数。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1535,15 +1540,16 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：按簇分配的磁盘空间计算</h2>
-<h3>第一步：明确分配单位</h3>
-<p>文件系统以<strong>簇</strong>为最小分配单位：本题簇 = 1KB = 1024B（每簇含 2 个 512B 扇区）。无论文件多小，至少分配 1 簇。</p>
-<h3>第二步：算文件需要几簇</h3>
-<p>文件 1026B：第 1 簇装 1024B，剩下 2B 进入第 2 簇 → 共需 <code>1026/1024</code> 向上取整 = <strong>2 簇</strong>。</p>
-<h3>第三步：换算分配的磁盘空间</h3>
-<p>分配空间按簇的整数倍计算：2 × 1024B = <strong>2048B</strong>。其中第 2 簇只用了 2B，浪费的 1022B 属于簇内碎片。</p>
+<p><strong>答案：D</strong>（2048B）。</p>
+<h3>第零步：先立机制——为什么分配单位是簇而不是扇区</h3>
+<p>文件系统记录"哪些空间属于哪个文件"时，若按 512B 扇区逐一登记，表项数量和管理开销都会暴涨。折中办法是把连续若干个扇区打包成<strong>簇</strong>（本题簇 = 1KB = 1024B，含 2 个 512B 扇区），以簇为最小分配单位，文件系统只按簇记账。代价是<strong>簇内碎片</strong>——文件没用满的最后一簇照样整簇占着。所以分配空间 = 文件大小向上取整到簇大小的整数倍，与文件的实际字节数、扇区数都无关；再小的文件也至少占 1 簇。</p>
+<h3>第一步：算文件需要几簇</h3>
+<p>文件 1026B：第 1 簇装 1024B，剩下 2B 进入第 2 簇 → 共需 1026/1024 向上取整 = <strong>2 簇</strong>。</p>
+<h3>第二步：换算分配空间</h3>
+<p>2 × 1024B = <strong>2048B</strong>。第 2 簇只用了 2B，浪费的 1022B 就是簇内碎片——这正是"为什么不能按 1026B 分"的机制根源。</p>
 <h3>易错点</h3>
-<ul><li><strong>按文件实际大小选</strong>：1026B（A）是"用多少算多少"的错误想法，磁盘空间必须整簇分配。</li><li><strong>按扇区凑数</strong>：1536B（B）、1538B（C）都是拿 512B 扇区拼凑的结果——扇区是磁盘的物理读/写单位，<strong>分配单位是簇</strong>。</li></ul>
-<blockquote>答案：<strong>D</strong>（2048B）。口诀：文件大小向上取整到簇的整数倍。</blockquote></div></div>
+<ul><li><strong>按文件实际大小选 A（1026B）</strong>：把"用多少算多少"套到磁盘上，忽略了分配单位是整簇。</li><li><strong>按扇区凑数选 B/C（1536B、1538B）</strong>：拿 512B 扇区往上拼。扇区是磁盘的<strong>物理</strong>读/写单位，<strong>逻辑分配单位是簇</strong>，两者不能混。</li><li><strong>忘了"至少 1 簇"</strong>：哪怕只超 1 字节，也要多占一整簇。</li></ul>
+<blockquote>一句话结论：分配空间 = ⌈文件大小/簇大小⌉ × 簇大小 = 2 × 1024B = 2048B，多出的 1022B 是簇内碎片。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2094,13 +2100,14 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：特殊 IP 地址"只能作源"的辨析</h2>
-<h3>第一步：回忆特殊地址的用途</h3>
-<p>答案：A（0.0.0.0）。<br/>逐项检查四个地址在"作源地址 / 作目的地址"两个方向上的合法性。</p>
-<h3>第二步：逐项判断</h3>
-<table><thead><tr><th>地址</th><th>身份</th><th>作源</th><th>作目的</th></tr></thead><tbody><tr><td><code>0.0.0.0</code></td><td>本机尚未分得 IP 时的"本主机"</td><td>可以（典型：DHCP 发现报文的源）</td><td>不可以（不会被当作交付目标）</td></tr><tr><td><code>127.0.0.1</code></td><td>环回地址</td><td>可以</td><td>可以（不出本机）</td></tr><tr><td><code>200.10.10.3</code></td><td>普通 C 类单播地址</td><td>可以</td><td>可以</td></tr><tr><td><code>255.255.255.255</code></td><td>受限广播地址</td><td>不可以</td><td>可以（本网络所有主机）</td></tr></tbody></table>
-<p>只有 <code>0.0.0.0</code> 满足"只能作源、不能作目的"。典型场景：主机开机时还没有 IP 地址，发出的 DHCP 报文源地址填 <code>0.0.0.0</code>、目的地址填 <code>255.255.255.255</code>。</p>
+<p><strong>答案：A</strong>（0.0.0.0）。</p>
+<h3>第零步：先立机制——"能不能作源/目的"由地址的语义决定</h3>
+<p>一个地址能否填进某个字段，取决于协议对它的语义规定：<strong>源地址</strong>要回答"这个分组是谁发的"；<strong>目的地址</strong>要能被路由拿去匹配、交付给确定的收方。<code>0.0.0.0</code> 的语义是"本机尚未获得 IP 地址时的自己"——能表明身份（源），却不指向任何可交付目标（目的）。<code>255.255.255.255</code> 是受限广播地址，语义是"本网络所有人"，恰好相反：它从不唯一标识发送者，而源地址必须唯一标识发送接口。<code>127.0.0.1</code> 是环回地址，本机协议栈自发自收，两个方向都合法但不出主机。</p>
+<h3>第一步：逐项对号</h3>
+<table><thead><tr><th>地址</th><th>身份</th><th>作源</th><th>作目的</th></tr></thead><tbody><tr><td><code>0.0.0.0</code></td><td>未配置地址时的"本主机"</td><td>可以（DHCP 发现报文的源）</td><td>不可以（无路由可交付）</td></tr><tr><td><code>127.0.0.1</code></td><td>环回地址</td><td>可以</td><td>可以（不出本机）</td></tr><tr><td><code>200.10.10.3</code></td><td>普通 C 类单播地址</td><td>可以</td><td>可以</td></tr><tr><td><code>255.255.255.255</code></td><td>受限广播地址</td><td>不可以（源须是具体地址）</td><td>可以（本网络所有主机）</td></tr></tbody></table>
+<p>只有 <code>0.0.0.0</code> 满足"只能作源、不能作目的"。典型场景：主机开机时还没有 IP，发出的 DHCP 报文源地址填 <code>0.0.0.0</code>、目的地址填 <code>255.255.255.255</code>——一个"不知道自己是谁"，一个"要找所有人"。</p>
 <h3>易错点</h3>
-<ul><li><strong>选 D（255.255.255.255）</strong>：方向记反了——它是"只能作目的、不能作源"的受限广播地址。</li><li><strong>选 B（127.0.0.1）</strong>：环回地址在本机收发都可以（ping 127.0.0.1 能通），不是"只能作源"。</li><li><strong>选 C（200.10.10.3）</strong>：普通单播地址双向都合法，没有任何限制。</li></ul>
+<ul><li><strong>选 D（255.255.255.255）</strong>：方向记反——它是"只能作目的、不能作源"，因为源地址必须唯一标识发送接口。</li><li><strong>选 B（127.0.0.1）</strong>：环回地址在本机收发都可以（ping 127.0.0.1 能通），不是"只能作源"。</li><li><strong>选 C（200.10.10.3）</strong>：普通单播地址双向合法，没有任何限制。</li></ul>
 <blockquote>记忆锚点：0.0.0.0 只源不目的；255.255.255.255 只目的不源；127.0.0.1 双可但不出网。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2393,20 +2400,36 @@ void BtreeToE(BTree *root) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：表达式树转等价中缀表达式</h2>
-<h3>第一问：算法基本设计思想（答题框架）</h3>
-<p>表达式树的<strong>中序遍历</strong>正好对应中缀表达式：左子树（左操作数）→ 根（操作符）→ 右子树（右操作数）。括号通过"结点深度"动态补：</p>
-<ul><li><strong>叶结点</strong>（操作数）直接输出，不加括号；</li><li><strong>根结点</strong>代表整个表达式，不加外层括号；</li><li><strong>其余非叶结点</strong>（子表达式）在递归左子树<strong>前</strong>输出左括号 <code>(</code>，递归右子树<strong>后</strong>输出右括号 <code>)</code>。</li></ul>
-<p>实现时给遍历函数带上<strong>深度 deep</strong>（根为 1）：仅当 <code>deep &gt; 1</code> 的非叶结点才加括号，这样恰好把根排除在外。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：表达式树转等价中缀表达式（中序遍历 + 动态括号）</h2>
+<p>答案要点：<strong>中序遍历为骨架，非根非叶的结点在遍历左子树前补 <code>(</code>、遍历右子树后补 <code>)</code></strong>，两棵示例树分别输出 <code>(a+b)*(c*(-d))</code> 与 <code>(a*b)+(-(c-d))</code>。</p>
+<h3>第一问：为什么是"中序遍历 + 括号"——先把机制立起来</h3>
+<p>表达式树里，<strong>操作符在内部结点、操作数在叶子</strong>。树本身记录了完整的运算次序，但把它摊平成线性序列时信息会丢失：对任意结点，只有"左子树、根、右子树"这个顺序（即<strong>中序遍历</strong>）才能让操作符落在两个操作数中间，呈现"左操作数 ⊕ 右操作数"的中缀形态。</p>
+<p><strong>那为什么还要加括号？</strong> 中序序列本身只有符号、没有树形——不同形状的树可以输出同一段符号序列，运算次序无从恢复。括号的作用就是把丢失的"子表达式边界"标回来：题目要求"通过括号反映操作符的计算次序"，正是在补这条信息。</p>
+<p><strong>括号加在哪，规则从哪来？</strong> 看每个结点的角色：</p>
+<ul><li><strong>叶子是操作数</strong>——原子成分，它就是边界本身，不需要括号；</li><li><strong>根结点是整个表达式</strong>——整体之外没有更大的运算要裹住它，加外层括号纯属冗余；</li><li><strong>其余内部结点是子表达式</strong>——它的输出要作为一个整体去参与父结点的运算，必须把首尾圈起来，否则父结点的运算会"越界"混进来。</li></ul>
+<p>所以规则是：<strong>非根且非叶的结点，前 <code>(</code> 后 <code>)</code></strong>。这个规则天然不漏——每个非叶结点的一对括号恰好圈住它整个子树的输出；偶尔多一层括号（如 <code>(a+b)+c</code> 的内层）不影响正确性，考试要的是"次序无歧义"。</p>
+<p><strong>"根"怎么在递归里识别？</strong> 给遍历函数带一个深度参数 <code>deep</code>：根为 1，每深入一层加 1。于是 <code>deep &gt; 1</code> 与"非根"等价——这就是参考代码里 <code>if (deep &gt; 1) printf("(")</code> 的来历。</p>
 <h3>第二问：算法实现（与参考答案同一口径）</h3>
-<p>核心递归过程 <code>BtreeToExp(root, deep)</code>：</p>
-<ol><li>空结点直接返回；</li><li>若 <code>root-&gt;left</code> 与 <code>root-&gt;right</code> 都为 NULL（叶子），输出 <code>root-&gt;data</code>（不加括号）；</li><li>否则：若 <code>deep &gt; 1</code> 输出 <code>(</code>；递归 <code>BtreeToExp(root-&gt;left, deep+1)</code>；输出 <code>root-&gt;data</code>；递归 <code>BtreeToExp(root-&gt;right, deep+1)</code>；若 <code>deep &gt; 1</code> 输出 <code>)</code>。</li></ol>
-<p>入口函数 <code>BtreeToE(root)</code> 调用 <code>BtreeToExp(root, 1)</code>。完整 C 代码见参考答案。</p>
-<h3>第三步：用题给两棵树验证</h3>
-<ul><li>树1：<code>a+b</code>、<code>c*(−d)</code> 是 deep=2 的子表达式 → 各加一层括号；<code>−(d)</code> 在 deep=3 再加一层 → 输出 <code>(a+b)*(c*(-d))</code> ✓。</li><li>树2：<code>a*b</code> 与第二层 <code>−</code> 是 deep=2；深层 <code>c−d</code> 是 deep=3 → 输出 <code>(a*b)+(-(c-d))</code> ✓。</li></ul>
+<pre><code>void BtreeToExp(BTree *root, int deep) {
+    if (root == NULL) return;                       // 空结点返回
+    else if (root-&gt;left == NULL &amp;&amp; root-&gt;right == NULL)
+        printf("%s", root-&gt;data);                   // 叶结点：直接输出操作数
+    else {
+        if (deep &gt; 1) printf("(");                  // 非根的子表达式先补左括号
+        BtreeToExp(root-&gt;left, deep + 1);           // 递归左子树（左操作数）
+        printf("%s", root-&gt;data);                   // 输出操作符
+        BtreeToExp(root-&gt;right, deep + 1);          // 递归右子树（右操作数）
+        if (deep &gt; 1) printf(")");                  // 再补右括号
+    }
+}
+void BtreeToE(BTree *root) { BtreeToExp(root, 1); } // 根深度为 1</code></pre>
+<p>两个实现细节的"为什么"：</p>
+<ul><li><strong>判叶必须看孩子指针</strong>：<code>data[10]</code> 是字符数组，操作数（如 <code>ab</code>）和操作符（如 <code>+</code>）都可能存在里面，从内容判叶不可靠；<code>left</code>、<code>right</code> 同时为 NULL 才是叶子的定义。</li><li><strong>单目减为什么天然正确</strong>：<code>−</code> 只有右孩子，递归左子树时遇到 NULL 直接返回，什么都不输出，于是打印出来就是 <code>-d</code>——不需要为单目运算符写任何特殊分支。</li></ul>
+<h3>第三步：用题给两棵树走一遍验证</h3>
+<ul><li>树1：根 <code>*</code>（deep=1，不加括号）；左子树 <code>+</code>（deep=2）输出 <code>(a+b)</code>；右子树 <code>*</code>（deep=2）内，<code>−</code>（deep=3）输出 <code>(-d)</code> → 整体 <code>(a+b)*(c*(-d))</code> ✓</li><li>树2：根 <code>+</code>（deep=1）；<code>*</code>（deep=2）输出 <code>(a*b)</code>；上层 <code>−</code>（deep=2，左孩子为空）内，深层 <code>−</code>（deep=3）输出 <code>(c-d)</code> → 整体 <code>(a*b)+(-(c-d))</code> ✓</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>根也加括号</strong>：输出成 <code>((a+b)*(c*(-d)))</code>，多一层冗余括号——<code>deep &gt; 1</code> 判定正是为排除根。</li><li><strong>单目减按双目处理</strong>：<code>−</code> 只有右孩子，中序遍历左孩子为空自然跳过，输出 <code>-d</code>，不能补左操作数。</li><li><strong>用 data 内容判叶</strong>：<code>data[10]</code> 可存多字符操作数，判叶必须看左右孩子指针是否都为 NULL。</li></ul>
-<blockquote>一句话结论：中序遍历 + "深度大于 1 的非叶结点前后补括号"，两个示例输出分别为 <code>(a+b)*(c*(-d))</code> 与 <code>(a*b)+(-(c-d))</code>。</blockquote></div></div>
+<ul><li><strong>根也加括号</strong>：输出 <code>((a+b)*(c*(-d)))</code>，多一层冗余——<code>deep &gt; 1</code> 判定正是为排除根。</li><li><strong>叶结点也套括号</strong>：<code>(a)+(b)</code> 不合题意——叶子是原子，加括号说明没分清"操作数"与"子表达式"。</li><li><strong>单目减按双目处理</strong>：<code>−</code> 左孩子为空，中序遍历自然跳过，输出 <code>-d</code>，不能人为补左操作数。</li><li><strong>不处理括号</strong>：输出 <code>a+b*c*-d</code>，次序信息全丢——本题考的正是"遍历骨架之外还要补括号"这半截。</li></ul>
+<blockquote>一句话结论：中序遍历给出中缀骨架，"非根非叶结点前后补括号"补回树形结构信息；入口 <code>BtreeToE(root)</code> 调 <code>BtreeToExp(root, 1)</code>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2459,19 +2482,24 @@ void BtreeToE(BTree *root) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：Prim 算法求最小生成树与唯一性判断</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：Prim 算法求 MST 与唯一性判断</h2>
+<p>答案要点：（1）依次选边 <strong>(A, D)、(D, E)、(C, E)、(B, C)</strong>；（2）本题 MST <strong>唯一</strong>；（3）<strong>任意环上所有边权值均不相同时 MST 唯一</strong>（充分条件：所有边权互不相同）。</p>
+<h3>第 0 步：Prim 为什么"每轮选最小横切边"是对的——先立机制</h3>
+<p>Prim 的动作人人会背，这里要立住的是它背后的<strong>割性质</strong>：把已并入的顶点集合记为 U，剩下的顶点记为 V−U。任何生成树都必须在割 (U, V−U) 上至少跨一条边——否则 U 内与 U 外不连通，不成其为树。而最小生成树要总权最小，那么<strong>跨这个割的那条边就该取权最小的横切边</strong>（若取了更大的，换成最小的那条仍连通且总权更小，矛盾）。于是 Prim 每轮把 U 当成一个整体，从「U 内顶点 ↔ U 外顶点」的所有横切边里挑最小的一条、并入一个新顶点；n 个顶点做 n−1 = 4 轮。</p>
 <h3>第一问：从 A 出发逐轮选边</h3>
-<p>Prim 的规则：维护已并入的顶点集 U，每轮在「U 内顶点 ↔ U 外顶点」的所有横切边里选<strong>权最小</strong>的一条，把树外顶点并入 U，共选 n−1 = 4 条边。</p>
+<p>每轮候选边要把 U 内<strong>每个</strong>顶点到 U 外<strong>每个</strong>顶点的边列全，再取最小：</p>
 <table><thead><tr><th>轮</th><th>树内 U</th><th>候选横切边</th><th>选中</th></tr></thead><tbody><tr><td>1</td><td>{A}</td><td>AB=6, AD=4, AE=5</td><td>(A,D)=4</td></tr><tr><td>2</td><td>{A,D}</td><td>AB=6, AE=5, DE=4, DC=6</td><td>(D,E)=4</td></tr><tr><td>3</td><td>{A,D,E}</td><td>AB=6, DC=6, EC=5</td><td>(C,E)=5</td></tr><tr><td>4</td><td>{A,D,E,C}</td><td>AB=6, CB=4</td><td>(B,C)=4</td></tr></tbody></table>
-<p>依次选出的边：<strong>(A,D)、(D,E)、(C,E)、(B,C)</strong>，总权 4+4+5+4 = 17。</p>
-<h3>第二问：本题的 MST 唯一吗？</h3>
-<p><strong>唯一</strong>。逐轮看横切边的最小值：4、4、5、4——每轮的最小边都<strong>没有并列</strong>，Prim 每一步都没有第二种选择；进一步枚举图中全部 24 棵生成树验证，总权 17 的只有这一棵。所以 G 的 MST 是唯一的。</p>
-<h3>第三问：一般条件</h3>
-<p><strong>当带权连通图中任意环上的所有边权值均不相同时，其 MST 是唯一的</strong>。更常用的特例（充分条件）：图中<strong>所有边的权值互不相同</strong>。</p>
-<p>理解：若某个环上有两条等权边，把其中一条替换成另一条就可能得到另一棵同权的生成树——等权出现在环上正是 MST 不唯一的隐患；"环上边权互异"切断了这种替换的可能。</p>
+<p>依次选出 <strong>(A, D)、(D, E)、(C, E)、(B, C)</strong>，总权 4+4+5+4 = 17。注意第 2 轮 (D,E)=4 与第 1 轮 (A,D)=4 权值虽同为 4，但属于不同轮次的最小边，不构成"并列"。</p>
+<h3>第二问：本题的 MST 唯一吗——为什么能断定"唯一"</h3>
+<p><strong>唯一</strong>。给两层论证：</p>
+<ul><li><strong>从 Prim 的过程看</strong>：上面 4 轮里，每轮的最小横切边都是<strong>独一份</strong>（4、4、5、4，无并列）。也就是说算法的每一步都是"被迫"的，不存在第二种走法，没有任何一次选择可以做等权替换。</li><li><strong>从结果本身看</strong>：本题图共有 24 棵不同的生成树，逐一比较总权，权为 17 的只有上表这一棵。两棵不同 MST 之间必然可以通过一次"删一条树边、补一条环上等权边"互换——而图中找不到这样的等权替换。</li></ul>
+<p>答题时写"每轮最小横切边均无并列，且总权 17 的生成树仅此一棵，故 MST 唯一"即可。</p>
+<h3>第三问：什么条件下任意带权连通图的 MST 唯一</h3>
+<p><strong>当带权连通图中任意环的所有边权值均不相同时，其 MST 是唯一的</strong>（更常用的强充分条件：图中所有边的权值互不相同）。</p>
+<p>机制上说：MST 不唯一的唯一根源是<strong>等权替换</strong>——若某个环上有两条权相同的边，把树里那条换成环上另一条，连通性不变、总权不变，就冒出第二棵等权生成树；而等权边只有落在<strong>同一个环</strong>上才有这种互相顶替的机会。"任意环上边权互不相同"把一切环内并列全部掐断，替换无处发生，MST 只能唯一。反之，只要某个环上出现并列权值，MST 就有了不唯一的隐患（本题第(2)问正是"隐患不存在"的实例）。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 Prim 当 Kruskal</strong>：Kruskal 是按权从小到大全局选边再判环；Prim 每轮只在「树内 ↔ 树外」的横切边里选。</li><li><strong>候选边列漏</strong>：每轮必须把 U 与<strong>每个</strong>树外顶点相连的边都列出再取最小。</li><li><strong>唯一性条件答偏</strong>：MST 唯一性与环上边权是否重复有关，与顶点度数、边数无关。</li></ul>
-<blockquote>一句话结论：Prim 逐轮选最小横切边得 (A,D)、(D,E)、(C,E)、(B,C)，总权 17；任意环上边权互不相同 ⇒ MST 唯一。</blockquote></div></div>
+<ul><li><strong>把 Prim 当 Kruskal</strong>：Kruskal 按权从小到大全局选边、用并查集判环；Prim 每轮只在「树内 ↔ 树外」的横切边里选，候选边范围完全不同。</li><li><strong>候选边列漏</strong>：每轮必须扫 U 内全部顶点对 U 外全部顶点，漏一条就可能选错（如第 2 轮漏掉 DE=4 会误选 AE=5）。</li><li><strong>唯一性说理只有结论</strong>：只答"是唯一的"拿不到分，要给依据——每轮最小边无并列 + 总权 17 的生成树仅一棵。</li><li><strong>条件答偏</strong>：唯一性只与<strong>环上边权是否并列</strong>有关，与顶点度数、边数、起点选择无关。</li></ul>
+<blockquote>一句话结论：Prim 逐轮取最小横切边得 (A,D)、(D,E)、(C,E)、(B,C)，总权 17；割的最小横切边处处唯一 ⇒ MST 唯一；一般判据是任意环上边权互不相同。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2531,24 +2559,32 @@ void BtreeToE(BTree *root) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：unsigned 下溢、int 溢出与 float 舍入</h2>
-<p><strong>答题框架</strong>：f(n) = 2^(n+1) − 1，即二进制 n+1 个 1。f1 用 int 累加（看表示范围），f2 用 float 累加（看有效位数与表示范围），循环跑 n 轮（i = 0 … n−1）后 sum = 2^(n+1) − 1。五个小问分别对应：无符号运算规则、24 位有效数字、舍入、int 上限、float 上限。</p>
-<h3>第（1）问：n=0 为何死循环</h3>
-<p>i、n 均为 unsigned。循环条件先算 <code>n−1</code>：无符号运算 0−1 下溢，机器数为 FFFFFFFFH（32 个 1），即 2^32 − 1，是 unsigned 能表示的最大值。于是 <code>i ≤ n−1</code> 恒成立，循环永不结束。若把 i、n 都改成 int：n−1 = −1，初始 i = 0，条件 <code>0 ≤ −1</code> 不成立，循环体一次都不执行，不会死循环。</p>
-<h3>第（2）问：f1(23) 与 f2(23)</h3>
-<p>n=23 时和 = 2^24 − 1 = 16 777 215，二进制恰好 24 个 1：</p>
-<ul><li>f1（int）：在 32 位补码范围内，机器数 <code>00FFFFFFH</code>。</li><li>f2（float）：IEEE 754 单精度有效数字 24 位（隐含首位 1 + 23 位尾数），24 个 1 恰好装下、无需舍入，机器数 = 0 | 10010110 | 111…1（阶码 23 + 127 = 150），即 <code>4B7FFFFFH</code>。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：unsigned 下溢、int 溢出与 float 的精度/范围</h2>
+<p>答题框架：f(n) = 2^(n+1) − 1，即二进制 <strong>n+1 个连续的 1</strong>；循环跑 n 轮（i = 0 … n−1）。f1 用 int 累加、f2 用 float 累加，五个小问全是这两套记数系统与"n+1 个 1"的碰撞：无符号模运算（第(1)问）、24 位有效数字（第(2)(3)问）、补码范围（第(4)问）、float 范围（第(5)问）。</p>
+<h3>第 0 步：先立两套记数系统的模型</h3>
+<ul><li><strong>int（补码）</strong>：32 位补码是模 2^32 的记数——最高位为 1 的位串，真值 = 无符号值 − 2^32；可表示范围 −2^31 ~ 2^31−1，<strong>全 1 位串 = −1</strong>。</li><li><strong>float（IEEE 754 单精度）</strong>：1 位符号 + 8 位阶码 + 23 位尾数，隐含首位 1 后有 <strong>24 位有效数字</strong>；可表示数值上限约 (2 − 2^−23) × 2^127 = 2^128 − 2^104，略小于 2^128。</li></ul>
+<p>int 只受<strong>范围</strong>限制；float 先受<strong>精度</strong>限制（有效位数），再受<strong>范围</strong>限制。这条主轴贯穿全题。</p>
+<h3>第（1）问：n=0 为什么死循环；改成 int 为什么就没事</h3>
+<p>i、n 均为 unsigned。无符号运算是<strong>模 2^32 运算</strong>：条件式里的 <code>n−1</code> 先算，0 − 1 在模 2^32 下同余于 2^32 − 1，机器数就是 32 个 1（FFFFFFFFH）——恰好是 unsigned 的最大值。于是 <code>i ≤ n−1</code> 恒成立，i 一路加到 0xFFFFFFFF 再回绕也出不去，死循环。</p>
+<p><strong>为什么可以"减模"求真值？</strong> 位串 FFFFFFFFH 之所以代表 2^32 − 1（无符号）就是这么定义的模运算余数；0−1 的余数即 2^32 − 1，没有"负数"一说。</p>
+<p>若把 i、n 都改成 int：<code>n−1 = −1</code>（补码真值），首次判断 <code>0 ≤ −1</code> 不成立，循环体一次都不执行，直接返回 sum = 1——恰好等于 f(0) = 2^1 − 1，根本进不了循环，自然不会死循环。</p>
+<h3>第（2）问：f1(23) 与 f2(23) 是否相等</h3>
+<p>n=23 时和 = 2^24 − 1 = 16 777 215，二进制恰好 <strong>24 个 1</strong>。</p>
+<ul><li>f1（int）：24 个 1 &lt; 2^31，范围内，机器数 <code>00FFFFFFH</code>。</li><li>f2（float）：规格化形式 1.11…1 × 2^23，有效数字 24 位<strong>恰好装下 24 个 1</strong>，无需舍入；阶码真值 23 + 偏置 127 = 150 = 10010110B，机器数 = 0｜10010110｜111…1 = <code>4B7FFFFFH</code>。</li></ul>
 <p>两者返回值相等（都是 16 777 215）。</p>
-<h3>第（3）问：f1(24) 与 f2(24) 为何不等</h3>
-<p>n=24 时和 = 2^25 − 1 = 33 554 431，二进制 25 个连续的 1，超出 float 的 24 位有效数字，累加时必须舍入：它恰好介于相邻浮点数 33 554 430 与 33 554 432 之间，按就近舍入得 33 554 432.0。int 不舍入，f1(24) = 33 554 431，故两者相差 1。</p>
-<h3>第（4）问：f1(31) 为何是 −1；最大 n</h3>
-<p>n=31 时和 = 2^32 − 1，超出 int 的表示上限 2^31 − 1，发生溢出：32 位全 1 按补码解释就是 −1。要 f1(n) 与 f(n) 相等，需 2^(n+1) − 1 ≤ 2^31 − 1，即 n ≤ 30，最大 n = 30。</p>
-<h3>第（5）问：f2(127) 与两个边界</h3>
-<table><thead><tr><th>循环里程碑</th><th>f1 的 sum（int）</th><th>f2 的 sum（float）</th><th>说明</th></tr></thead><tbody><tr><td>i=22 后（n=23 完成）</td><td>16 777 215（00FFFFFFH）</td><td>16 777 215.0（4B7FFFFFH）</td><td>24 个 1，精确</td></tr><tr><td>i=23 后（n=24 完成）</td><td>33 554 431（01FFFFFFH）</td><td>33 554 432.0（4B800000H）</td><td>25 个 1，舍入</td></tr><tr><td>i=30 后（n=31 完成）</td><td>FFFFFFFFH = −1</td><td>2^32（4F800000H）</td><td>int 溢出，float 是 2 的幂仍精确</td></tr><tr><td>i=126 后（n=127 完成）</td><td>早已溢出</td><td>+∞（7F800000H）</td><td>2^127 + 2^127 = 2^128 超上限</td></tr></tbody></table>
-<ul><li>f2(127) 的机器数 7F80 0000H 对应的值是<strong>正无穷（+∞）</strong>。</li><li>不溢出的最大 n：末轮和 2^(n+1) 不得超过 float 上限（约 (2 − 2^−23) × 2^127，略小于 2^128）→ n = 126。</li><li>结果精确（无舍入）的最大 n：和的有效位数 n+1 ≤ 24 → n = 23。</li></ul>
+<h3>第（3）问：f1(24) 与 f2(24) 为什么差 1</h3>
+<p>n=24 时和 = 2^25 − 1 = 33 554 431，二进制 <strong>25 个 1</strong>——比 float 的 24 位有效数字多一位，<strong>必须舍入</strong>。</p>
+<p><strong>为什么恰好舍到 33 554 432？</strong> 24 位有效数字意味着 float 在 [2^24, 2^25) 区间内每 2 个整数才取一个（相邻可表示数间隔为 2），33 554 431 恰好落在 33 554 430 与 33 554 432 的<strong>正中间</strong>；IEEE 754 默认"就近舍入、并列取偶"，33 554 432（尾数全 0，偶）胜过 33 554 430（尾数全 1，奇）→ f2(24) = 33 554 432.0。f1 不舍入，f1(24) = 33 554 431，故相差 1。</p>
+<h3>第（4）问：f1(31) 为什么返回 −1；最大 n</h3>
+<p>n=31 时和 = 2^32 − 1，超出 int 上限 2^31 − 1，<strong>溢出</strong>：留下的 32 位全 1 位串，按补码规则读回真值就是 2^32 − 1 − 2^32 = <strong>−1</strong>（无符号值减模）。要 f1(n) 与 f(n) 相等，需 2^(n+1) − 1 ≤ 2^31 − 1，即 n ≤ 30，<strong>最大 n = 30</strong>。</p>
+<h3>第（5）问：f2(127) 是什么；两个边界各在哪</h3>
+<p>n=127 时末轮和 = 2^128 − 1。float 的上限是 2^128 − 2^104（比 2^128 小一点点），2^128 − 1 已越过它，就近舍入只能落到<strong>正无穷 +∞</strong>，机器数 <code>7F80 0000H</code>。所以：</p>
+<ul><li><strong>不溢出的最大 n = 126</strong>：末轮和 2^127 − 1 &lt; 上限，仍是有限值（虽然要舍入，但"不溢出"只要求有限）。</li><li><strong>精确（无舍入）的最大 n = 23</strong>：和的有效位数是 n+1，float 只有 24 位有效数字，n+1 ≤ 24 ⇒ n ≤ 23；从 n=24 起（25 个 1）必舍入，即第(3)问的场景。</li></ul>
+<p>用一张里程碑表对号入座（第二层汇总）：</p>
+<table><thead><tr><th>循环里程碑</th><th>f1 的 sum（int）</th><th>f2 的 sum（float）</th><th>说明</th></tr></thead><tbody><tr><td>i=22 后（n=23 完成）</td><td>16 777 215（00FFFFFFH）</td><td>16 777 215.0（4B7FFFFFH）</td><td>24 个 1，精确</td></tr><tr><td>i=23 后（n=24 完成）</td><td>33 554 431（01FFFFFFH）</td><td>33 554 432.0（4C000000H）</td><td>25 个 1，舍入</td></tr><tr><td>i=30 后（n=31 完成）</td><td>FFFFFFFFH = −1</td><td>2^32（4F800000H）</td><td>int 溢出；float 对 2 的幂仍精确</td></tr><tr><td>i=125 后（n=127 的末轮前）</td><td>早已溢出</td><td>2^127（有限，舍入）</td><td>2^127−1 舍入为 2^127，即 n=126 的结果</td></tr><tr><td>i=126 后（n=127 完成）</td><td>—</td><td>+∞（7F80 0000H）</td><td>2^127 + 2^127 = 2^128 越过 float 上限</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>unsigned 的 0−1 不是 −1</strong>：无符号运算直接下溢到 2^32 − 1，这是第（1）问的关键。</li><li><strong>把 float 有效位数记成 23</strong>：尾数 23 位 + 隐含首位 1 = 24 位有效数字。</li><li><strong>混淆两个上限</strong>：int 看范围（2^31 − 1，全 1 是 −1），float 既看精度（24 位有效数字）又看范围（约 2^128）。</li></ul>
-<blockquote>一句话：f1 败在"范围"，f2 先败在"精度"（n ≥ 24 舍入）再败在"范围"（n ≥ 127 溢出）。</blockquote></div></div>
+<ul><li><strong>unsigned 的 0−1 不是 −1</strong>：无符号是模 2^32 运算，0−1 ≡ 2^32 − 1，这是第(1)问死循环的根源。</li><li><strong>把 float 有效位数记成 23</strong>：尾数 23 位 + 隐含首位 1 = 24 位有效数字；24 个 1 能装下、25 个 1 装不下。</li><li><strong>混淆两个边界</strong>：不溢出看范围（n ≤ 126），精确看有效位数（n ≤ 23），两问分开答。</li><li><strong>int 全 1 想不起是 −1</strong>：补码 = 模记数，全 1 = 2^32 − 1 − 2^32 = −1。</li></ul>
+<blockquote>一句话：f1 败在"范围"（n=31 溢出成 −1），f2 先败在"精度"（n ≥ 24 舍入）再败在"范围"（n ≥ 127 变 +∞）。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2608,23 +2644,24 @@ void BtreeToE(BTree *root) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：机器级代码判 CISC、算代码长度、求 CF 标志、辨 shl 与 float</h2>
-<p><strong>答题框架</strong>：四个问分别对应 ①指令系统风格判别 ②用地址差算代码长度 ③补码加减器与借位标志 ④浮点格式与整数移位的区别。</p>
-<h3>第（1）问：RISC 还是 CISC</h3>
-<p>图中机器指令<strong>长短不一</strong>（不同指令占的字节数不同），不符合 RISC"指令定长、格式少、以 Load/Store 访存"的特征，所以计算机 M 是 <strong>CISC</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：CISC 判别、代码长度、cmp 的 CF 标志与 shl 不能移 float</h2>
+<p>答题框架：四个小问对应四块机制——①用 RISC/CISC 的<strong>指令系统特征</strong>判别 ②按字节编址下"末地址 − 首地址 + 1"算长度 ③补码加/减运算器如何产生进位/借位标志 ④整数移位与浮点表示的位串语义差异。</p>
+<h3>第（1）问：M 是 RISC 还是 CISC</h3>
+<p>先摆判据：<strong>RISC 的标志特征是指令定长、格式种类少、寻址方式少、只有 Load/Store 指令访存</strong>；CISC 反其道——指令长短不一、寻址方式复杂多样。看图中样例：<code>55</code>（1 字节）、<code>39 4D F4</code>（3 字节）、<code>D1 E2</code>（2 字节）、<code>C3</code>（1 字节）——<strong>指令长短不一</strong>，且 <code>cmp dword ptr [ebp-0Ch],ecx</code> 一条指令就带"寄存器间接 + 位移"寻址并直接访存。两者都不符合 RISC 特征，所以 M 是 <strong>CISC</strong>（x86 风格）。</p>
 <h3>第（2）问：机器指令代码共占多少字节</h3>
-<p>代码从第一条指令 push ebp 的 00401020H 开始，到最后一条指令 ret 的 0040107FH 结束（按字节编址）：</p>
+<p>机器代码<strong>连续存放</strong>、按字节编址，所以只看首尾：第一条 <code>push ebp</code> 在 00401020H，最后一条 <code>ret</code> 在 0040107FH，</p>
 <p><code>总字节数 = 0040107FH − 00401020H + 1 = 60H = 96 字节</code></p>
-<p>注意末尾要 <strong>+1</strong>：地址相减得到的是"间隔数"，首尾两条指令都要计入。</p>
+<p><strong>为什么末尾要 +1</strong>：地址相减得到的是"间隔数"（好比 5 根手指之间只有 4 个间隔），00401020H 自身这个字节也要计入，差 1 就少算一条指令的字节。</p>
 <h3>第（3）问：i=0 时 cmp 之后 CF 的内容</h3>
-<p>执行 f1(0)：n=0、i=0；由于 n 是 unsigned，条件中的 <code>n−1</code> 下溢为 FFFFFFFFH。cmp 指令做减法 <code>i − (n−1)</code> = <code>0 − FFFFFFFFH</code>。补码加/减运算器把减法化为"加补"：</p>
-<p><code>0 + FFFFFFFFH 各位取反(=00000000H) + 1 = 00000001H</code></p>
-<p>最高位无进位，进位输出 C = 0；减法的借位标志 CF = 进位输出取反，故 <strong>CF = 1</strong>（不够减、有借位）。</p>
+<p>执行 f1(0)：n=0、i=0。第 20 条 <code>cmp</code> 做减法 <code>i − (n−1)</code>，由于 n 是 unsigned，<code>n−1</code> 下溢为 FFFFFFFFH（模 2^32 运算，见题 43 第(1)问）。<strong>cmp 不写回结果，只做减法并设标志</strong>。</p>
+<p>减法在补码加/减运算器中化为"加负数的补码"：0 − FFFFFFFFH = 0 + (FFFFFFFH 按位取反 = 00000000H) + 1 = 00000001H，<strong>最高位进位输出 C = 0</strong>。</p>
+<p><strong>为什么减法的借位标志 CF = 进位输出取反？</strong> 无符号减法 A − B "够减" ⟺ A ≥ B ⟺ A + (2^32 − 1 − B) + 1 ≥ 2^32 ⟺ 这趟加法在最高位<strong>有进位</strong>。于是"无进位 ⟺ 不够减（有借位）"，硬件就把减法的 CF 接成进位输出取反。本题 C = 0 → <strong>CF = 1</strong>——直觉也对得上：0 &lt; FFFFFFFFH，确实不够减、要借位。</p>
 <h3>第（4）问：f2 中能否用 shl 实现 power × 2</h3>
-<p>不能。f2 中 power 是 float 型变量，其 32 位机器数按"符号 + 8 位阶码 + 23 位尾数"解释；shl 是整数移位指令，把整个位串左移 1 位（对整数等价于乘 2），但不能正确处理浮点数的阶码——左移后位型不再表示 2 倍的浮点值。浮点乘 2 应使用浮点乘法指令完成。</p>
+<p><strong>不能</strong>。先看整数为什么可以：补码每一位的位权是相邻低位的 2 倍，整体左移 1 位相当于所有位权升一级、空位补 0，数值恰好 ×2（不溢出时）——<code>shl</code> 移的是<strong>整个位串</strong>。</p>
+<p>而 float 的 32 位位串不是"数位"，是<strong>符号｜8 位阶码｜23 位尾数</strong>三段拼接；浮点 ×2 的正确动作是<strong>阶码加 1、尾数不动</strong>。用 shl 整体左移会把三段一起错位：符号位被阶码顶掉、阶码与尾数相互串位，得到的位串不再表示 2 倍的值。举个本题之外的实例看清破坏力：<code>1.0f</code> 的机器数是 3F800000H，浮点 ×2 应得 2.0f = 40000000H；而 shl 左移一位得 7F000000H，按 float 解读是 2^127——面目全非。所以 f2 中 power（float）×2 必须交给浮点乘法/浮点部件，不能挪用整数移位指令。</p>
 <h3>易错点</h3>
-<ul><li><strong>算代码长度忘了 +1</strong>：0040107FH − 00401020H = 5FH，加 1 才是 60H = 96。</li><li><strong>CF 直接取进位输出</strong>：减法的借位标志 CF 与加法进位 C 相反，本题 C=0 → CF=1。</li><li><strong>把整数移位套到 float 上</strong>：shl 移的是机器数位串，不是数值本身，阶码会被破坏。</li></ul>
-<blockquote>一句话：长短不一判 CISC，地址差 + 1 算长度，减法 CF = 进位取反，float 不能整体左移。</blockquote></div></div>
+<ul><li><strong>算代码长度忘了 +1</strong>：0040107FH − 00401020H = 5FH，加 1 才是 60H = 96 字节。</li><li><strong>CF 直接抄进位输出</strong>：减法借位与加法进位方向相反，本题 C=0 → CF=1；直接写 CF=0 是把加法规则套到了减法上。</li><li><strong>忘记先做 n−1 的下溢</strong>：cmp 比的是 i 与 FFFFFFFFH，不是 i 与 −1——unsigned 的模运算要先算进条件里。</li><li><strong>把"位串左移"当"数值乘 2"用于 float</strong>：float 的机器数是分段编码，×2 靠阶码 +1，不是移位。</li></ul>
+<blockquote>一句话：长短不一判 CISC，地址差 +1 算长度（96B），减法 CF = 进位输出取反（本题 CF=1），float ×2 动阶码不动位串、shl 用不得。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2684,19 +2721,26 @@ void BtreeToE(BTree *root) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二级分页地址转换与 scanf 的进程状态</h2>
-<p>答题框架：先由虚拟地址格式求页大小，再对题 44 机器代码做"占几页"判断和 10|10|12 位拆分，最后按系统调用 + 中断的流程写状态链。</p>
-<h3>第（1）问：函数 f1 的机器指令占多少页</h3>
-<ul><li>页内偏移量 12 位 → 页大小 = 2 的 12 次方 B = 4KB；</li><li>由题 44 代码：首条指令 <code>push ebp</code> 位于 <code>00401020</code>，末条指令 <code>ret</code> 位于 <code>0040107F</code>，整段代码范围 00401020～0040107F；</li><li>4KB 页按 …000 边界对齐：00401020 与 0040107F 都落在页 00401000～00401FFF 内 → <strong>仅占 1 页</strong>。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二级分页地址转换与 scanf 的进程状态变化</h2>
+<p>答题框架：先把二级分页机制立起来（页大小从偏移位数来、每级索引 10 位从表项大小来），再做"占几页"判断和 10｜10｜12 位拆分，最后按"系统调用陷入 → I/O 中断唤醒 → 调度"写状态链。</p>
+<h3>第 0 步：二级分页的机制——三段地址为什么是 10｜10｜12</h3>
+<p>虚拟地址 32 位被切成<strong>页目录号（10 位）｜页表索引（10 位）｜页内偏移（12 位）</strong>，这不是随意规定，而是两个算术约束推出的：</p>
+<ul><li><strong>偏移 12 位 ⇒ 页大小 = 2^12 B = 4KB</strong>（页内偏移必须能遍历一页内所有字节）；</li><li><strong>每级索引 10 位 ⇒ 每张表 2^10 = 1024 个表项</strong>：页目录和页表本身也要放进内存，各占一页（4KB），表项 4B，一页恰好装 4KB/4B = 1024 项——所以索引恰好 10 位，一个不多一个不少。</li></ul>
+<p>转换流程：CR3 给出页目录基址 → 高 10 位当索引查页目录表项，得到页表基址 → 中 10 位查页表表项，得到页框号 → 页框号拼上低 12 位偏移，得到物理地址。</p>
+<h3>第（1）问：f1 的机器指令占几页</h3>
+<p>由题 44：代码从 00401020H（<code>push ebp</code>）到 0040107FH（<code>ret</code>），共 96 字节、连续存放。页大小 4KB，页边界是 4096 的倍数（地址以 …000 结尾）：00401020H 与 0040107FH 掩去低 12 位后同为 <strong>00401000H</strong>，即整段落在 00401000H～00401FFFH 这一页内 → <strong>仅占 1 页</strong>。</p>
+<p><strong>为什么看首尾两个地址就够</strong>：代码连续存放且总长 96B 远小于页大小 4KB，只要首尾同页，中间不可能跨页；若首尾不同页才需要数页边界。</p>
 <h3>第（2）问：访问页目录、页表的第几个表项</h3>
-<p>把取指地址 <code>00401020</code> 展开为 32 位：<code>0000000001 ｜ 0000000001 ｜ 000001000000</code>：</p>
-<ul><li>高 10 位（页目录号）= 1 → 访问<strong>页目录第 1 个表项</strong>；</li><li>中 10 位（页表索引）= 1 → 访问<strong>页表第 1 个表项</strong>；</li><li>低 12 位是页内偏移（020H），不参与查表。</li></ul>
-<p>表项编号从 0 开始，故两级查表分别命中各自的第 1 个表项。</p>
-<h3>第（3）问：执行 scanf() 的状态变化与 CPU 态</h3>
-<ul><li><code>scanf()</code> 是<strong>系统调用</strong>：进程 P 由执行态陷入内核请求键盘输入，输入尚未到来，P 转入阻塞态；</li><li>M 的 I/O 采用<strong>中断控制方式</strong>：键入字符产生中断，CPU 在内核态处理中断、把数据交给 P 并<strong>唤醒</strong>它，P 由阻塞态转就绪态；</li><li>之后 P 被调度程序选中，由就绪态转运行态，继续执行。</li><li>状态链：<strong>执行态 → 阻塞态 → 就绪态 → 运行态</strong>；</li><li>CPU <strong>会进入内核态</strong>：陷入指令进入系统调用服务程序、以及键入后的中断处理程序都在核心态执行。</li></ul>
+<p>取第 1 条指令的虚拟地址 = 00401020H，展开成 32 位再按 10｜10｜12 切开：</p>
+<pre><code>0000000001 ｜ 0000000001 ｜ 000001000000
+   页目录号        页表索引       页内偏移</code></pre>
+<p>高 10 位 = 1（地址中 0x00400000 处的 1 恰落在页目录号字段的最低位），中 10 位 = 1（0x00001000 处的 1 恰落在页表索引字段的最低位），低 12 位 = 020H 是页内偏移、不参与查表。编号从 0 开始，所以分别访问<strong>页目录第 1 个表项</strong>和<strong>页表第 1 个表项</strong>——两级查表用的都是各自下标为 1 的表项。</p>
+<h3>第（3）问：执行 scanf() 过程中 P 的状态变化与 CPU 态</h3>
+<p>机制上把"为什么"拆开看：</p>
+<ul><li><strong>为什么是转阻塞态而不是就绪态</strong>：scanf() 要等键盘输入，事件没来之前 P 继续占着 CPU 也干不了活——它<strong>主动</strong>通过系统调用（陷入指令）进内核，把自己挂到键盘输入的等待队列上让出 CPU。等待事件属于"自愿阻塞"，与时间片用完被剥夺（转就绪）是两回事。</li><li><strong>为什么之后能回运行态</strong>：M 的 I/O 采用<strong>中断控制方式</strong>，键入字符产生中断，CPU 转内核态执行中断处理程序、把数据交给 P 并<strong>唤醒</strong>它。唤醒只是把 P 放进就绪队列（阻塞态 → 就绪态）——能否上 CPU 由调度程序决定，不能跳级。</li><li><strong>状态链：执行态 → 阻塞态 → 就绪态 → 运行态</strong>（之后被调度选中继续执行）。</li><li><strong>CPU 会进入内核态</strong>：执行 scanf() 时的系统调用陷入，以及键入后的中断处理，都在核心态完成——两处都进内核。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>页大小算错</strong>：偏移 12 位对应 4KB；"占几页"看代码是否跨 4KB 页边界，不是按字节数乱除。</li><li><strong>表项编号口径错</strong>：编号从 0 开始，算出 1 就答"第 1 个表项"，不要再加 1。</li><li><strong>状态链漏环节</strong>：中断唤醒后先到就绪态，须被调度才回运行态，不能写"阻塞态 → 运行态"。</li><li><strong>漏答内核态</strong>：scanf 既经历系统调用又经历中断处理，两处都进内核态。</li></ul>
-<blockquote>一句话结论：(1) 1 页；(2) 页目录第 1 表项、页表第 1 表项；(3) 执行态→阻塞态→就绪态→运行态，CPU 会进入内核态。</blockquote></div></div>
+<ul><li><strong>页大小算错</strong>：偏移 12 位对应 4KB；"占几页"看代码是否跨 4KB 页边界，不是拿字节数去凑。</li><li><strong>表项编号口径错</strong>：编号从 0 开始，拆出的索引是 1 就答"第 1 个表项"，不要再 +1 答"第 2 个"。</li><li><strong>状态链漏环节或错环节</strong>：唤醒后先到就绪态、须被调度才回运行态，"阻塞态 → 运行态"直接跳级是错的；把"等 I/O"当成"被剥夺时间片"写成转就绪也是错的。</li><li><strong>漏答内核态</strong>：scanf 既经历系统调用（陷入）又经历中断处理，问"CPU 是否进入内核态"必须答"会"。</li></ul>
+<blockquote>一句话结论：(1) 仅占 1 页；(2) 页目录第 1 表项、页表第 1 表项；(3) 执行态 → 阻塞态 → 就绪态 → 运行态，CPU 会进入内核态。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2775,19 +2819,46 @@ signal(mutex_y2);</code></pre></div></div></div></div>
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三线程读写复数 y、z 的信号量设计</h2>
-<p>答题框架：先列"谁读谁写" → 确定互斥对象 → 给每个互斥对象配初值为 1 的互斥信号量 → 按"先 P 后访问、用完即 V"写代码 → 检查无死锁且并发最大。</p>
-<h3>第一步：分析各线程对共享变量的访问</h3>
-<ul><li><code>x</code>：只有 thread1 读取（<code>add(x, y)</code>），无写者 → 不需要信号量；</li><li><code>y</code>：thread1 读、thread2 读、thread3 写（<code>y = add(y, w)</code>）→ 读写之间要互斥；</li><li><code>z</code>：thread2 读、thread3 写（<code>z = add(z, w)</code>）→ 要互斥；</li><li><code>w</code>：各线程自己的局部变量，不属于共享资源。</li></ul>
-<h3>第二步：设计信号量（初值均为 1）</h3>
+<p>答题框架：先讲清"互斥防的是什么、防不住什么"的机制 → 列出谁读谁写 → 给每个互斥对象配初值为 1 的信号量 → 按"先 P 后访问、用完即 V"写代码 → 检查互斥、无死锁、并发最大。</p>
+<h3>第 0 步：为什么需要互斥、又为什么"读读"可以放行</h3>
+<p><code>y</code>、<code>z</code> 是全局的 <code>cnum</code> 结构（float a + float b），对它们"读改写"不是一步完成的：thread3 的 <code>y = add(y, w)</code> 内部是"读旧 y → 计算求和 → 写回"，写回前 thread1 若同时执行 <code>add(x, y)</code> 读 y，就可能读到<strong>写了一半的 y</strong>（a、b 两个字段一新一旧）——交错穿插使结果不一致。这就是互斥要防的<strong>读写/写写竞争</strong>。</p>
+<p>反过来，两个线程<strong>都只读</strong>时谁也不改值，读到什么都是同一个 y，并发无害。所以设计原则是：<strong>读写、写写必须互斥，读读可以并行</strong>——"最大限度并发"的得分点全部源于这条原则。信号量模型本身很朴素：初值 1 表示一份"准入名额"，wait/P 抢名额，signal/V 归还名额，持名额期间其他竞争者一律在队列里等。</p>
+<h3>第一步：列出各线程对共享变量的访问</h3>
+<ul><li><code>x</code>：只有 thread1 读取（<code>add(x, y)</code>），<strong>没有写者</strong> → 无竞争，不需要信号量；</li><li><code>y</code>：thread1 读、thread2 读、thread3 写 → 两个读者各自要和写者互斥；</li><li><code>z</code>：thread2 读、thread3 写 → 一对读写竞争；</li><li><code>w</code>：各线程自己的局部变量，不属于共享资源。</li></ul>
+<h3>第二步：设计信号量（三个，初值均为 1）——为什么 y 要两把锁</h3>
 <ul><li><code>mutex_y1</code>：thread1 与 thread3 对 y 的互斥；</li><li><code>mutex_y2</code>：thread2 与 thread3 对 y 的互斥；</li><li><code>mutex_z</code>：thread2 与 thread3 对 z 的互斥。</li></ul>
-<p>thread1 与 thread2 对 y 都只是"读"，各自用不同的 y 信号量后可同时进行，这正是"最大限度并发"的关键；thread3 写 y 时须握住 mutex_y1 与 mutex_y2 两个信号量。</p>
-<h3>第三步：按参考口径写代码</h3>
-<ol><li>thread1：<code>wait(mutex_y1)</code> → <code>w = add(x, y)</code> → <code>signal(mutex_y1)</code>；</li><li>thread2：<code>wait(mutex_y2)</code> → <code>wait(mutex_z)</code> → <code>w = add(y, z)</code> → <code>signal(mutex_z)</code> → <code>signal(mutex_y2)</code>；</li><li>thread3：<code>w.a=1; w.b=1</code>（局部，不用加锁）→ <code>wait(mutex_z)</code> → <code>z = add(z, w)</code> → <code>signal(mutex_z)</code> → <code>wait(mutex_y1)</code> → <code>wait(mutex_y2)</code> → <code>y = add(y, w)</code> → <code>signal(mutex_y1)</code> → <code>signal(mutex_y2)</code>。</li></ol>
-<h3>第四步：检查正确性</h3>
-<ul><li><strong>互斥</strong>：任一时刻 y 上至多一个线程在写、读与写互斥，z 同理；</li><li><strong>无死锁</strong>：thread2 虽持 mutex_y2 再申请 mutex_z，但 thread3 是"先释放 z 再申请 y 的两个信号量"，不构成循环等待；</li><li><strong>并发最大</strong>：thread1 与 thread2 可同时读 y；thread3 的 z 段与 y 段分开加锁，锁粒度最小。</li></ul>
+<p><strong>为什么不用一个 mutex_y 统管 y？</strong> 若共用一把，thread1 与 thread2 这两个<strong>纯读者</strong>也会被串行化——违反"读读可并行"，丢掉"最大限度并发"的分。拆成两把后：t1 拿 mutex_y1、t2 拿 mutex_y2，互不相干，可以<strong>同时</strong>读 y；而 thread3 要写 y，写者必须排斥<strong>所有</strong>读者，所以它得<strong>同时</strong>握住 mutex_y1 与 mutex_y2 两把锁。</p>
+<h3>第三步：按参考口径写代码（先 P 后访问、用完立即 V）</h3>
+<pre><code>// thread1
+cnum w;
+wait(mutex_y1);
+w = add(x, y);
+signal(mutex_y1);
+
+// thread2
+cnum w;
+wait(mutex_y2);
+wait(mutex_z);
+w = add(y, z);
+signal(mutex_z);
+signal(mutex_y2);
+
+// thread3
+cnum w;
+w.a = 1;  w.b = 1;      // 局部变量，不用加锁
+wait(mutex_z);
+z = add(z, w);
+signal(mutex_z);
+wait(mutex_y1);
+wait(mutex_y2);
+y = add(y, w);
+signal(mutex_y1);
+signal(mutex_y2);</code></pre>
+<h3>第四步：检查三条性质</h3>
+<ul><li><strong>互斥成立</strong>：y 上任一时刻至多一个写者（t3 持双锁）、读者与写者不同场；z 上 t2 与 t3 互斥。</li><li><strong>无死锁</strong>：thread2 虽"持 mutex_y2 再申请 mutex_z"，但死锁需要<strong>循环等待</strong>——thread3 是"先 V 掉 z，再去 P y1/y2"，任何时刻它不会"持有 z 又等 y"，环闭不上。</li><li><strong>并发最大</strong>：t1、t2 可同时读 y；t3 的 z 段与 y 段分开加锁，锁粒度最小。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>给 x 也加信号量</strong>：x 无写者，加了反而白白降低并发；</li><li><strong>三线程共用一个 y 信号量</strong>：正确但两个纯读者被无谓串行化，丢"最大限度并发"的分；</li><li><strong>thread3 一次性持有 z 与 y 的锁</strong>：先申请 z 再接着申请 y1/y2 不释放，会与 thread2 交错成循环等待；按"先释放 z、再申请 y"书写最稳；</li><li><strong>P/V 位置错</strong>：必须"先 P 后访问，访问完立即 V"。</li></ul>
-<blockquote>一句话结论：3 个初值为 1 的互斥信号量 <code>mutex_y1</code>、<code>mutex_y2</code>、<code>mutex_z</code>，按参考答案的 P/V 位置书写即可。</blockquote></div></div>
+<ul><li><strong>给 x 也加信号量</strong>：x 无写者，加了白白降低并发。</li><li><strong>三线程共用一把 y 锁</strong>：功能正确，但两个纯读者被无谓串行化，丢"最大限度并发"的分——本题正是靠 mutex_y1/mutex_y2 分开才让读读并行。</li><li><strong>thread3 一次性持 z 加 y</strong>：先申请 z 不释放、接着申请 y1/y2，会与 thread2 交错成循环等待；必须"先 V z、再 P y"。</li><li><strong>P/V 位置错</strong>：必须先 P 后访问、访问完立即 V；V 提前到访问结束前等于没锁，P 落到访问后等于裸奔。</li><li><strong>漏写 signal 或次数不配对</strong>：每个 wait 必须有对应的 signal，漏一个就把后来者永久挡在门外。</li></ul>
+<blockquote>一句话结论：三个初值为 1 的互斥信号量 mutex_y1、mutex_y2、mutex_z；写者 t3 对 y 持双锁、对 z 单锁，且"先放 z 再取 y"避死锁；两个纯读者分锁并行，实现最大并发。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2840,23 +2911,31 @@ signal(mutex_y2);</code></pre></div></div></div></div>
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：GBN 双向捎带传输的窗口与超时推演</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：GBN 双向捎带传输的窗口推演与信道利用率</h2>
 <blockquote>答案速览：（1）3 个：<code>S_{0,0}</code>、<code>S_{1,0}</code>、<code>S_{2,0}</code>；（2）5 个，第一个 <code>S_{5,2}</code>、最后一个 <code>S_{1,2}</code>；（3）3 个，第一个 <code>S_{2,3}</code>；（4）50%。下面逐问推演。</blockquote>
-<h3>第一步：先算出三个基本常数</h3>
-<ul><li>序号字段 3 比特 → 序号 0~7，GBN 发送窗口最大 <strong>7</strong>（2^3 − 1）。</li><li>帧长 1000B、信道 100Mbps → 发送一帧用时 1000×8 ÷ 100×10^6 = <strong>0.08ms</strong>；捎带确认帧也是 1000B 的数据帧，发送用时同为 0.08ms。</li><li>确认号 y 的含义：希望接收对方的下一帧序号，即 <strong>y 之前的所有帧都已被正确接收</strong>（累计确认）。</li></ul>
-<h3>第二步：第（1）问——甲能断定乙正确接收了哪几帧</h3>
-<p>图(a) 中甲依次收到乙方三帧：R_{0,1}（确认号 1 → S_{0,0} 已收）、R_{1,3}（确认号 3 → S_{0,0}、S_{1,0}、S_{2,0} 都已收）、R_{3,3}（确认号仍是 3）。R_{3,3} 是乙的 3 号帧，而甲收完 R_{1,3} 后期待的是乙的 2 号帧，它属于乱序帧，GBN 接收方直接丢弃，不带来新信息。所以甲可断定乙已正确接收 <strong>3 个</strong>帧：<code>S_{0,0}</code>、<code>S_{1,0}</code>、<code>S_{2,0}</code>。</p>
-<h3>第三步：第（2）问——还能再发几帧</h3>
-<p>t1 时刻：甲已发 0~4 号共 5 帧，累计确认号 = 3（0、1、2 号已确认）→ 发送窗口基值 = 3，下一个待发序号 = 5，已发未确认的是 3、4 号两帧。发送窗口最大 7，覆盖序号 3~9（模 8），即 {3,4,5,6,7,0,1}；扣除已占用的 3、4，<strong>最多还能发 5 个</strong>：5、6、7、0、1。</p>
-<p>确认号字段：甲已按序收到乙的 0、1 号帧，期待乙的 2 号帧（R_{3,3} 乱序被丢弃，不改变期待）→ 填 2。第一个帧 <code>S_{5,2}</code>，最后一个帧 <code>S_{1,2}</code>。</p>
-<h3>第四步：第（3）问——图(b) 超时要重发几帧</h3>
-<p>图(b) 中甲收到 R_{2,2}：确认号仍是 2 → 乙始终没收到甲的 2 号帧（S_{2,0} 已丢失）。t1 时刻 S_{2,0} 超时，GBN 的规则是<strong>重发所有已发送且未被确认的帧</strong>：2、3、4 号，共 <strong>3 个</strong>。</p>
-<p>确认号：甲已按序收到乙的 0、1、2 号帧，期待乙的 3 号帧 → 填 3。重发的第一个帧是 <code>S_{2,3}</code>（其后依次是 S_{3,3}、S_{4,3}）。</p>
-<h3>第五步：第（4）问——最大信道利用率</h3>
-<p>甲一直有数据要发时，一个周期 = 从开始发送第 1 帧到收完对该帧的确认：周期 = T_D + RTT + T_A = 0.08 + 0.96 + 0.08 = <strong>1.12ms</strong>（捎带确认帧发送时间 T_A = 0.08ms）。周期内最多连续发送 7 帧，用于发送数据的时间 = 7 × 0.08 = <strong>0.56ms</strong>。</p>
+<h3>第 0 步：先立 GBN 的三条底层机制</h3>
+<p>这套题的所有小问都从这三条机制推出来：</p>
+<ul><li><strong>累计确认</strong>：确认号 y = "希望接收对方的下一帧序号"，等于宣告 <strong>y−1 及之前的帧已全部正确收到</strong>——看一个 y 就能一次性确认一串帧。</li><li><strong>接收窗口 = 1</strong>：GBN 接收方只按序收帧，序号不对的帧<strong>直接丢弃、不缓存</strong>——这是第(3)问"为什么整段重传"的根源。</li><li><strong>发送窗口 ≤ 2^n − 1</strong>：n=3 比特序号共 8 个（0~7），窗口却只能取 7。为什么不能取满 8？若 8 帧全部发出且都未确认，序号 0~7 同时"悬而未决"，此时收到一个确认，新旧两轮的同一序号无法区分，重传就会串号；留出一个空档就能永远分清新旧。</li></ul>
+<p>另有两笔常数账：帧长 1000B、速率 100Mbps → 发一帧用时 T_D = 1000×8 ÷ 100×10^6 = <strong>0.08ms</strong>；双方都用捎带确认，确认帧也是 1000B 的数据帧，发送用时同为 0.08ms。</p>
+<h3>第（1）问：甲能断定乙正确接收了哪几帧</h3>
+<p>图(a) 中甲依次收到乙方三帧，逐帧读它的确认号：</p>
+<ul><li><code>R_{0,1}</code>：y=1 → 乙已收齐甲的 0 号帧（确认 1 个：<code>S_{0,0}</code>）；</li><li><code>R_{1,3}</code>：y=3 → 累计确认一步宣告甲的 0、1、2 号都已收到（新增 2 个）；</li><li><code>R_{3,3}</code>：乙的 3 号帧，y 仍是 3——<strong>没有确认任何新帧</strong>；而且甲此刻在等乙的 2 号帧，3 号帧是失序帧，按"接收窗口 = 1"被甲直接丢弃，不带来任何信息。</li></ul>
+<p>所以 t1 前甲可断定乙已正确接收 <strong>3 个</strong>帧：<code>S_{0,0}</code>、<code>S_{1,0}</code>、<code>S_{2,0}</code>。</p>
+<h3>第（2）问：t1 起最多还能发几帧</h3>
+<p>给甲的发送端记一笔账：已发 0~4 号共 5 帧；累计确认号 = 3 → 0、1、2 号已确认，<strong>3、4 号已发未确认</strong>；下一个待发序号 = 5。发送窗口最大 7，从基值 3 起覆盖序号 {3,4,5,6,7,0,1}（模 8）；窗口内已占用 3、4 两个，<strong>最多还能发 5 个</strong>：5、6、7、0、1。</p>
+<p>确认号字段怎么填：甲的接收端按序收到了乙的 0 号（<code>R_{0,1}</code>）、1 号（<code>R_{1,3}</code>），<code>R_{3,3}</code> 乱序被丢弃 → 甲仍在等乙的 2 号帧 → y = <strong>2</strong>。所以第一帧 <code>S_{5,2}</code>、最后一帧 <code>S_{1,2}</code>。</p>
+<h3>第（3）问：图(b) 超时要重发几帧</h3>
+<p>图(b) 中 <code>S_{2,0}</code> 半路丢失：乙的累计确认停在 2（<code>R_{1,2}</code>、<code>R_{2,2}</code> 的 y 都是 2，说明乙始终没等到甲的 2 号帧）。t1 时刻 <code>S_{2,0}</code> 超时。</p>
+<p><strong>为什么必须重发 3 帧而不是只重发 2 号</strong>：乙的接收窗口 = 1，2 号没等到时，甲后续发出的 3、4 号到了也是失序帧，被乙<strong>丢弃</strong>、从未进入乙的缓存——它们等于没送到。GBN 的规则正是"超时重发所有已发送且未被确认的帧"：2、3、4 号，共 <strong>3 个</strong>。</p>
+<p>确认号：甲已按序收齐乙的 0、1、2 号（<code>R_{0,1}</code>、<code>R_{1,2}</code>、<code>R_{2,2}</code>）→ 期待乙的 3 号 → y = 3。重发的第一帧是 <code>S_{2,3}</code>（其后依次是 <code>S_{3,3}</code>、<code>S_{4,3}</code>）。</p>
+<h3>第（4）问：甲的最大信道利用率</h3>
+<p>思路：想榨干信道，就让窗口<strong>一直塞满</strong>。看"开始发送第 1 帧 → 该帧的确认收完"这个周期：甲发第 1 帧用 T_D，确认在路上走 RTT，乙发回捎带确认帧还要 T_A——周期 = T_D + RTT + T_A = 0.08 + 0.96 + 0.08 = <strong>1.12ms</strong>。</p>
+<p><strong>为什么分母要加 T_A</strong>：确认是捎带在数据帧里的，乙把这帧发出来同样要 0.08ms 的发送时间，确认没发完就不算这一周期结束；只加 RTT 会把利用率虚高到约 58%。</p>
+<p>周期内最多连发 7 帧（窗口 7），发送数据的时间 = 7 × 0.08 = <strong>0.56ms</strong>。</p>
 <p>信道利用率 = 0.56 ÷ 1.12 = <strong>50%</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 R_{3,3} 当作新确认信息</strong>：其确认号仍是 3，且对甲是乱序帧被丢弃，第（1）问的帧数不变。</li><li><strong>窗口当 8 用</strong>：GBN 发送窗口最大是 2^3 − 1 = 7；取 8 会导致新旧帧序号混淆。</li><li><strong>第（2）问确认号填错</strong>：不是 4（R_{3,3} 被丢弃，甲仍在等乙的 2 号帧），而是 2。</li><li><strong>利用率漏项</strong>：分母是 0.08 + 0.96 + 0.08 = 1.12ms；只加 RTT 会得约 58%，明显偏大。</li></ul></div></div>
+<ul><li><strong>把 <code>R_{3,3}</code> 当新确认</strong>：y 仍是 3，且对甲是乱序帧被丢弃——第(1)问的帧数、第(2)问的 y 都不受它影响。</li><li><strong>窗口当 8 用</strong>：GBN 发送窗口最大 2^3 − 1 = 7；取 8 会新旧串号，第(2)问就会多算一个序号。</li><li><strong>第(2)问确认号填 4</strong>：<code>R_{3,3}</code> 被丢弃，甲仍在等乙的 2 号帧，y=2 不是 4。</li><li><strong>第(3)问只重发 1 帧</strong>：忘了接收窗口 = 1、失序帧全丢——3、4 号必须整段重传。</li><li><strong>利用率漏加 T_A</strong>：分母是 0.08 + 0.96 + 0.08 = 1.12ms，漏项会得约 58%。</li></ul>
+<blockquote>一句话：累计确认读 y 即知收了哪几帧；窗口 7 决定还能发几帧；超时重传全部已发未确认（乙接收窗口 1 丢了 3、4 号）；利用率 = 7×0.08 ÷ 1.12 = 50%。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

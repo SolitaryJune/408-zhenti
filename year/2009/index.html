@@ -611,14 +611,17 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：用「第二趟的不变量」识别排序算法</h2>
-<h3>第一步：列出各算法第二趟结束后的特征</h3>
-<table><thead><tr><th>算法</th><th>第二趟结束后的不变量</th></tr></thead><tbody><tr><td>冒泡排序</td><td>大数沉底版：最大的两个数按序落在末两位；小数冒顶版：最小的两个落在前两位</td></tr><tr><td>插入排序</td><td>前 3 个元素构成有序段，其余元素保持输入原样</td></tr><tr><td>选择排序</td><td>全序列最小的两个数按序落在前两位</td></tr><tr><td>二路归并排序</td><td>每趟归并使有序段长度翻倍，第二趟后每 4 个一组各自有序</td></tr></tbody></table>
-<h3>第二步：逐一对照给定序列</h3>
-<p>给定序列：11, 12, 13, 7, 8, 9, 23, 4, 5。</p>
-<ul><li><strong>冒泡</strong>：末两位是 4、5，不是 13、23；前两位也不是 4、5 → 排除。</li><li><strong>插入</strong>：前 3 个 11, 12, 13 恰好有序，后 6 个可以是输入原样（例如输入取 11, 13, 12, 7, 8, 9, 23, 4, 5）→ 成立。</li><li><strong>选择</strong>：前两位 11、12 不是全序列最小的 4、5 → 排除。</li><li><strong>归并</strong>：第一组 11, 12, 13, 7 内部无序 → 排除。</li></ul>
+<p>答案：<strong>B（插入排序）</strong>。</p>
+<h3>第 0 步：先立机制——每一趟排序会在序列上留下什么「痕迹」</h3>
+<p>识别趟数题不能背结论，要想清楚每种算法<strong>一趟到底干了什么</strong>，痕迹自然推出来：</p>
+<ul><li><strong>冒泡排序</strong>：每一趟对无序区做相邻比较，把当前最值「推」到它的最终位置——一趟锁定一个。大数沉底版第 2 趟后，<strong>最大的两个数按序落在末两位</strong>；小数冒顶版对称地是最小的两个落在前两位。</li><li><strong>插入排序</strong>：像整理扑克牌，第 1 趟把第 2 个元素插进前缀，第 2 趟把第 3 个元素插进前缀——<strong>一趟只「消化」一个新元素</strong>。所以第 2 趟后前 3 个元素必然有序，后面的元素还停在输入原样。</li><li><strong>选择排序</strong>：每一趟从无序区选出当前最小的数放到前面，第 2 趟后<strong>全序列最小的两个数按序落在前两位</strong>。</li><li><strong>二路归并</strong>：每趟两两归并使有序段长度翻倍（1→2→4），第 2 趟后<strong>每 4 个一组各自有序</strong>，组间可以无序。</li></ul>
+<h3>第 1 步：拿四条痕迹逐一验收</h3>
+<p>给定第二趟后的序列 11, 12, 13, 7, 8, 9, 23, 4, 5：</p>
+<ul><li><strong>冒泡</strong>：末两位是 4、5，不是最大的 13、23；前两位也不是 4、5 → 排除；</li><li><strong>插入</strong>：前 3 个 11, 12, 13 有序，后 6 个可以是输入原样（例如输入恰好为 11, 13, 12, 7, 8, 9, 23, 4, 5）→ <strong>成立</strong>；</li><li><strong>选择</strong>：前两位 11、12 不是全序列最小的 4、5 → 排除；</li><li><strong>归并</strong>：第一组 11, 12, 13, 7 内部无序 → 排除。</li></ul>
+<p>只有插入排序与序列相容，选 <strong>B</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>看到「前几个数有序」就选归并</strong>：归并的特征是「块内有序」，必须按 4 个一组检查，而不是看前缀。</li><li><strong>忽略冒泡方向</strong>：无论大数沉底还是小数冒顶，两个最值都应「就位」，本题两端都不满足，选冒泡必错。</li><li><strong>漏考虑输入</strong>：插入排序只要求前缀有序，输入本身可以恰好让结果长成题面这样。</li></ul>
-<blockquote>结论：答案选 <strong>B（插入排序）</strong>。</blockquote></div></div>
+<ul><li><strong>看到「前几个数有序」就选归并</strong>：归并的痕迹是「4 个一组块内有序」，必须分组检查，前缀有序不是它的特征。</li><li><strong>忽略冒泡方向</strong>：无论沉底还是冒顶，两个最值都应「就位」，本题两端都不满足。</li><li><strong>以为「后 6 个无序」是矛盾</strong>：插入排序一趟只消化一个元素，后半段保持输入原样恰恰是它的正常表现。</li></ul>
+<blockquote>记忆锚点：识别趟数题 = 先推「每趟留下什么痕迹」，再拿序列验收——插入前缀有序、选择最值在前、冒泡最值在后、归并 2 的幂长有序段。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -720,18 +723,18 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：short 与 int 的机器数及相加</h2>
-<h3>第一步：写出 x 与 y 的机器数</h3>
-<p>x 为 int（32 位）：127 = 7FH，即 x = <code>0000007FH</code>（四个选项此项相同）。</p>
-<p>y 为 short（16 位）：-9 = -0009H，求补码：0009H 取反得 FFF6H，再加 1 得 <code>FFF7H</code>。注意 FFF9H 对应的是 -7，属于求补时出错的结果。</p>
-<h3>第二步：按 C 语言规则符号扩展后相加</h3>
-<p>z = x + y 中 short 自动转 int：FFF7H 符号扩展为 <code>FFFFFFF7H</code>（最高位为 1，高 16 位补全 1）。</p>
-<p>补码相加：0000007FH + FFFFFFF7H = 1 00000076H，最高位进位超出 32 位被丢弃，z = <code>00000076H</code>。</p>
-<table><thead><tr><th>变量</th><th>类型</th><th>机器数</th></tr></thead><tbody><tr><td>x</td><td>int</td><td>0000007FH</td></tr><tr><td>y</td><td>short</td><td>FFF7H</td></tr><tr><td>y 符号扩展</td><td>int</td><td>FFFFFFF7H</td></tr><tr><td>z</td><td>int</td><td>00000076H</td></tr></tbody></table>
-<h3>第三步：十进制验证并选答案</h3>
-<p>127 + (-9) = 118 = 76H，与 z = 00000076H 一致。逐项核对：A 中 y 错；B 中 y、z 都错；C 中 z 错；只有 <strong>D</strong> 全对，选 <strong>D</strong>。</p>
+<p>答案：<strong>D</strong>。</p>
+<h3>第 0 步：先立机制——补码就是模运算下的记数</h3>
+<p>16 位 short 的模是 2¹⁶ = 65536：最高位为 1 的位串代表负数，真值 = 无符号解释值 − 65536。求 −9 的 16 位补码，就是找 −9 在模 65536 下的代表：65536 − 9 = 65527 = <code>FFF7H</code>；用「取反加一」验算：0009H 取反得 FFF6H，加 1 得 FFF7H——两条路在数学上是同一件事，结果必然一致。（FFF9H = 65529 ≡ −7，正是漏加 1 的产物。）x = 127 = 7FH，按 32 位 int 写全：x = <code>0000007FH</code>，四个选项此项相同。</p>
+<h3>第 1 步：为什么要符号扩展——加法器只吃同宽输入</h3>
+<p>z = x + y 的加法在 32 位加法器里做，y 必须先扩成 32 位。扩展规则 = 左边补符号位：FFF7H 最高位是 1，补 1 得 <code>FFFFFFF7H</code>。<strong>为什么补 1 数值不变？</strong> 因为 −9 ≡ 65527 (mod 2¹⁶)，同时也 ≡ 2³² − 9 (mod 2³²)——同一个负数在更大模下的化身，补 1 只是换了个模把它写出来。若误补 0（零扩展），就成了 +65527，数值彻底改变。</p>
+<h3>第 2 步：相加并看进位</h3>
+<p>0000007FH + FFFFFFF7H = 1 00000076H。<strong>第 33 位的进位为什么可以扔？</strong> 32 位运算本来就是模 2³² 加法，丢掉 2³² 不影响 32 位内的余数——z = <code>00000076H</code>。十进制核对：127 + (−9) = 118 = 76H，吻合。</p>
+<h3>第 3 步：对号入座</h3>
+<p>A 的 y = FFF9H（求补漏加 1）错；B 的 y 错、z = FFFF0076H 也错——高 16 位照抄了 y 的符号位 FFFF，漏加了低 16 位相加产生的进位（正确应为 FFFF + 1 = 0000）；C 的 z 错；只有 <strong>D</strong> 三项全对。</p>
 <h3>易错点</h3>
-<ul><li><strong>求补漏加 1</strong>：得到 FFF9H（选项 A、B）。</li><li><strong>忽略符号扩展 / 保留进位</strong>：把 16 位结果直接拼进高位会得到形如 FFFF0076H 的错误值（选项 B）。</li><li><strong>只核对一个变量</strong>：必须 x、y、z 三个都验算，干扰项常是"两对一错"。</li></ul>
-<blockquote>结论：x = 0000007FH，y = FFF7H，z = 00000076H，选 D。</blockquote></div></div>
+<ul><li><strong>求补漏加 1</strong> → FFF9H，干扰项 A、B 的来路。</li><li><strong>高位漏加进位</strong> → z 形如 FFFF0076H，干扰项 B；高字必须参与 FFFF + 1 = 0000 的运算。</li><li><strong>只核对一个变量</strong>：干扰项常是「两对一错」，x、y、z 必须逐一验算。</li></ul>
+<blockquote>记忆锚点：补码真值 = 无符号值 − 模；负数扩展补 1（数值不变，只是换模）；模运算加法丢进位合法，但每位都要真的加到位。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -779,17 +782,19 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：浮点加法的对阶与溢出判断</h2>
-<h3>第一步：写出机器数</h3>
-<p>阶码 5 位、尾数 7 位，均含 2 位符号位（双符号位补码）。</p>
-<ul><li>X = 2^7 × 29/32 = 2^7 × 0.11101 → 阶码 <code>00111</code>，尾数 <code>0011101</code>（即 00.11101）</li><li>Y = 2^5 × 5/8 = 2^5 × 0.101 → 阶码 <code>00101</code>，尾数 <code>0010100</code>（即 00.10100）</li></ul>
-<h3>第二步：对阶</h3>
-<p>小阶向大阶对齐：阶差 = 7 − 5 = 2，Y 阶码加 2、尾数右移 2 位：0.101 → 0.00101，即 Y = <code>00111 0000101</code>。</p>
-<h3>第三步：尾数相加并判溢出</h3>
-<p>00.11101 + 00.00101 = <strong>01.00010</strong>——双符号位为 <strong>01</strong>，表示<strong>正溢出（上溢）</strong>。</p>
-<p>真值验证：X + Y = 116 + 20 = 136 = 2^7 × 1.00010，而该格式最大正数为 2^7 × (127/128) = 127，136 &gt; 127，且阶码已到最大值 7 无法再增，必然溢出 → 选 <strong>D</strong>。</p>
+<p>答案：<strong>D（发生溢出）</strong>。</p>
+<h3>第 0 步：先立机制——双符号位是干什么的</h3>
+<p>阶码 5 位、尾数 7 位，均含 2 位符号位（双符号位补码）。双符号位的设计意图：正常情况下两位符号应相同（00 正、11 负）；<strong>两位相异（01/10）说明真值超出了表示范围</strong>——最高位的进位「挤进」了符号位，这就是机器判溢出的信号。01 = 正溢，10 = 负溢。本题两数的机器数：</p>
+<ul><li>X = 2⁷ × 29/32 = 2⁷ × 0.11101 → 阶码 <code>00111</code>，尾数 <code>00.11101</code></li><li>Y = 2⁵ × 5/8 = 2⁵ × 0.101 → 阶码 <code>00101</code>，尾数 <code>00.10100</code></li></ul>
+<h3>第 1 步：对阶——为什么必须小阶向大阶对齐</h3>
+<p>改「小的阶」意味着尾数<strong>右移</strong>，丢的只是低位精度，可以靠舍入弥补；反过来让大阶向小阶对齐就要尾数左移，丢的是高位、数值直接错——所以规则统一为「小阶向大阶」。阶差 = 7 − 5 = 2，Y 阶码加 2、尾数右移 2 位：0.101 → 0.00101，Y = <code>00111 00.00101</code>。</p>
+<h3>第 2 步：尾数相加并读双符号位</h3>
+<p>00.11101 + 00.00101 = <strong>01.00010</strong>——两符号位 0、1 相异，<strong>正溢出</strong>。真值核对：X + Y = 116 + 20 = 136；该格式尾数数值位只有 5 位，最大正数 = 2⁷ × 31/32 = 124，136 &gt; 124，且阶码 3 位数值位最大 7 已用满、无法再增阶——必然溢出，选 <strong>D</strong>。</p>
+<h3>第 3 步：两个「算出结果」的干扰项是怎么来的</h3>
+<ul><li><strong>B（00111 0100010）</strong>：把溢出的和 01.00010 直接当结果——忘了判溢出这一步，双符号位 01 不是合法的符号组合。</li><li><strong>C（01000 0010001）</strong>：把 01.00010 强行右规（尾数 00.10001、阶码 7 + 1 = 8）——右规只是移动数值、补不回丢失的量级，且阶码 01000 的双符号位也是 01，<strong>阶码本身就溢出了</strong>，右规救不了。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>忘了判溢出</strong>：把和 01.00010 直接当结果，恰是干扰项 B（00111 0100010）。</li><li><strong>强行右规</strong>：右规得尾数 00.10001、阶码 7 + 1 = 8，写成 01000 0010001（选项 C）——阶码 01000 的双符号位也是 01，阶码本身就溢出了。</li><li><strong>对阶方向错</strong>：必须小阶向大阶对齐（尾数右移），不能大阶向小阶对齐。</li></ul>
-<blockquote>结论：尾数相加后双符号位 01，发生溢出，选 D。</blockquote></div></div>
+<ul><li><strong>忘了判溢出</strong>：尾数和的双符号位相异就是溢出信号，别急着写结果。</li><li><strong>强行右规</strong>：阶码超出 3 位数值位的表示范围（最大 7），右规后 01000 仍不合法。</li><li><strong>对阶方向错</strong>：必须小阶向大阶（尾数右移）；大阶向小阶要左移丢高位。</li></ul>
+<blockquote>记忆锚点：双符号位 01 正溢、10 负溢；对阶只右移（小阶向大阶）；判溢看尾数与阶码两处。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -837,17 +842,17 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：组相联映射的 Cache 组号计算</h2>
-<h3>第一步：定位主存块</h3>
-<p>主存块大小 32B，按字节编址：主存块号 = ⌊129 ÷ 32⌋ = <strong>4</strong>（块 4 覆盖 128~159 号单元）。</p>
-<h3>第二步：算 Cache 组数</h3>
-<p>Cache 共 16 块，2 路组相联（每组 2 块）：组数 = 16 ÷ 2 = <strong>8</strong> 组，组号 0~7。</p>
-<h3>第三步：映射取模</h3>
-<p>组相联映射规则：Cache 组号 = 主存块号 mod 组数 = 4 mod 8 = <strong>4</strong>。</p>
-<table><thead><tr><th>步骤</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>主存块号</td><td>129 ÷ 32 取整</td><td>4</td></tr><tr><td>Cache 组数</td><td>16 ÷ 2</td><td>8</td></tr><tr><td>Cache 组号</td><td>4 mod 8</td><td>4</td></tr></tbody></table>
-<p>即主存块 4 只能装入 Cache 第 4 组，组内 0、1 两行由替换算法决定 → 选 <strong>C</strong>。</p>
+<p>答案：<strong>C（装入第 4 组）</strong>。</p>
+<h3>第 0 步：先立机制——主存块往 Cache 的哪里放</h3>
+<p>Cache 与主存之间<strong>以块为单位</strong>交换信息（本题每块 32B），所以第一步永远是「把字节地址折算成主存块号」——映射规则作用在<strong>块号</strong>上，不是单元号上。2 路组相联的摆放规则可以概括为「<strong>组间直接映射、组内全相联</strong>」：Cache 16 块分成 16 ÷ 2 = 8 组，主存块号 mod 组数决定它只能进哪个组；进了组以后放组内 0、1 两行中的哪一行，由替换算法现场决定。</p>
+<h3>第 1 步：定位主存块</h3>
+<p>主存块号 = ⌊129 ÷ 32⌋ = <strong>4</strong>（块 4 覆盖 128～159 号单元）。</p>
+<h3>第 2 步：映射取模</h3>
+<p>组号 = 主存块号 mod 组数 = 4 mod 8 = <strong>4</strong>，即主存块 4 只能进 Cache 第 4 组，组内位置不固定。</p>
+<table><thead><tr><th>步骤</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>主存块号</td><td>129 ÷ 32 取整</td><td>4</td></tr><tr><td>Cache 组数</td><td>16 ÷ 2（块数 ÷ 路数）</td><td>8</td></tr><tr><td>Cache 组号</td><td>4 mod 8</td><td>4</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>直接拿单元号取模</strong>：129 mod 8 = 1，正是干扰项 B——必须先把字节地址折算成主存块号。</li><li><strong>混淆映射方式</strong>：直接映射才是「块号 mod Cache 块数」（4 mod 16 = 4 恰好也是 4，但口径不同）；组相联是「块号 mod 组数」。</li><li><strong>忘除以路数</strong>：把 16 当组数算出错误结论，组数永远是「块数 ÷ 路数」。</li></ul>
-<blockquote>答案：C（装入第 4 组）。</blockquote></div></div>
+<ul><li><strong>直接拿单元号取模</strong>：129 mod 8 = 1，得干扰项 B——映射按块进行，字节地址必须先除以块大小折算成块号。</li><li><strong>忘除以路数</strong>：把 16 当组数；组数永远是「块数 ÷ 路数」。</li><li><strong>混淆映射方式</strong>：直接映射是「块号 mod Cache 总块数」，组相联是「块号 mod 组数」——本题两者算出的数值恰好都是 4，但口径不同，不能靠背结果。</li></ul>
+<blockquote>记忆锚点：先折块号，再 mod 组数；组间直接映射、组内全相联，组内行号归替换算法管。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1396,16 +1401,15 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：综合考虑等待时间与执行时间的调度算法</h2>
-<h3>第一步：先看三个"只看一头"的算法</h3>
-<p>答案：<strong>D</strong>（高响应比优先）。先把各调度算法的"挑选依据"列出来对照：</p>
-<table><thead><tr><th>算法</th><th>挑选依据</th><th>缺陷</th></tr></thead><tbody><tr><td>时间片轮转</td><td>按固定时间片轮流执行，与等待/执行时间都无关</td><td>不区分长短与急缓</td></tr><tr><td>短进程优先</td><td>只看执行时间（短的先上）</td><td>长进程可能长期饥饿</td></tr><tr><td>先来先服务</td><td>只按到达先后排队（只体现等待时间）</td><td>对短进程不公平</td></tr></tbody></table>
-<h3>第二步：高响应比优先为什么是"综合"</h3>
-<p>响应比 R =（等待时间 + 要求服务时间）/ 要求服务时间 = <strong>1 + 等待时间 / 要求服务时间</strong>。</p>
-<ul><li>等待时间越长 → R 越大：等得久的进程优先级自动升高；</li><li>要求服务时间越短 → R 越大：短作业相对优先，长作业也不会饿死。</li></ul>
-<p>等待时间与执行时间<strong>同时</strong>进入 R 的取值，这正是"综合考虑"的含义。</p>
+<p>答案：<strong>D（高响应比优先）</strong>。</p>
+<h3>第 0 步：先立机制——「挑选依据」决定算法看哪些时间</h3>
+<p>调度算法的差别全在「下一次让谁上 CPU」的挑选依据上，它是否考虑等待时间、执行时间由此直接推出：</p>
+<ul><li><strong>时间片轮转</strong>：按就绪队列顺序轮流执行固定时间片，不比较任何时间属性——等待时间、执行时间都不参与决策；</li><li><strong>先来先服务</strong>：按到达先后排队——只有等待时间起作用，执行时间不影响次序，长作业后到也会把短作业「堵死」；</li><li><strong>短进程优先</strong>：每次挑预计服务时间最短的——只有执行时间起作用，等待时间不参与比较，长作业可能被不断新来的短作业挤得饥饿；</li><li><strong>高响应比优先</strong>：每次动态计算响应比 R =（等待时间 + 要求服务时间）/ 要求服务时间 = <strong>1 + 等待/服务</strong>，挑 R 最大者上机。</li></ul>
+<h3>第 1 步：R 的公式为什么算「综合考虑」</h3>
+<p>等待时间 W 与服务时间 S <strong>同时</strong>进入 R 的取值：S 越小 R 越大（短作业相对优先）；W 越大 R 越大（等得久优先级自动升高）。<strong>为什么长作业不会饿死</strong>——长作业刚到达时 R ≈ 1 排在后面，但 W 随时间流逝持续增大，R 终会反超后来短作业的 R 而被选中；这正是只看 S 的短进程优先缺的那份保险。</p>
 <h3>易错点</h3>
-<ul><li><strong>误选 C</strong>：FCFS 只体现等待时间，长作业后到仍要久等，执行时间不参与比较。</li><li><strong>误选 B</strong>：短进程优先只体现执行时间，等待时间不参与比较。</li><li><strong>记错分子</strong>：分子是"等待 + 服务"之和，不是只有等待时间。</li></ul>
-<blockquote>R = 1 + W/S：等待 W 与服务时间 S 同时起作用 → 选 <strong>D</strong>。</blockquote></div></div>
+<ul><li><strong>误选 C</strong>：FCFS 的「到达先后」只是等待时间的体现，执行时间不进入比较。</li><li><strong>误选 B</strong>：SJF 恰恰只看一头（执行时间），是「综合考虑」的反面。</li><li><strong>记错分子</strong>：分子是「等待 + 服务」之和，不是只有等待时间。</li></ul>
+<blockquote>记忆锚点：R = 1 + W/S——W 负责「不饿死」，S 负责「短者优先」，两者同时起作用才叫综合考虑。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2374,17 +2378,24 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：贪心「就近选点」能否求最短路径</h2>
-<h3>第一步：答题框架与结论</h3>
-<p>题中方法每一步只看「离当前顶点 u 最近且未加入路径的顶点 v」，属于<strong>贪心</strong>策略。答题分两步走：先下结论，再给反例（画图 + 权值 + 逐步推演）。结论：<strong>该方法不能求得最短路径</strong>。</p>
-<h3>第二步：反例一 —— 能走通，但不是最短</h3>
+<h3>第 0 步：机制先行——「最短」是谁的最短，贪心错在哪一环</h3>
+<p>最短路径问题要的是<strong>起点到目标的整条路径</strong>全局最优；而题中方法每一步只做一件局部的事：「选离当前顶点 u 最近的下一个顶点 v」，选中即固化进路径，<strong>绝不回头</strong>。这是典型的贪心策略。</p>
+<p>「每步局部最优 ⇒ 整体最优」并不是普适规律。Dijkstra 算法之所以能求最短路径，靠的是比较<strong>起点到各顶点的累计距离</strong>（全局量），并且权值非负保证了被选中的顶点一旦确定，其最短距离即为真实值。题中方法比较的对象完全不同：它比的是「当前点出发这一条边多长」，不看「此后还要付出多少」——每一步迈得便宜，可能把整条路带贵；还可能把路带进死胡同。</p>
+<p><strong>为什么用反例作答？</strong> 要证明「该方法能求最短路径」需要对所有带权图给出证明；而证明「不能」只需构造一个让它失手的图——举反例是证伪的标准手段。反例必须配图、配权值、配逐步推演，让阅卷人能逐步复核。下面的反例中权值全为正，说明失败与负权无关，是该策略本身的缺陷。</p>
+<p>由此得出本题结论：<strong>该方法不能求得最短路径</strong>，且有两种失手方式——求错（反例一）与求不出（反例二）。</p>
+<h3>反例一：走得通，但不是最短</h3>
 <p>构造图（1）：顶点 1、2、3、4，边 1-2、2-3、3-4 的权均为 1，另有直达边 1-4 权为 2。设初始顶点 1、目标顶点 4，按题中方法推演：</p>
-<table><thead><tr><th>轮次</th><th>当前 u</th><th>离 u 最近且未加入的顶点</th><th>路径累计长度</th></tr></thead><tbody><tr><td>第 1 轮</td><td>1</td><td>2（距离 1）</td><td>1</td></tr><tr><td>第 2 轮</td><td>2</td><td>3（距离 1）</td><td>2</td></tr><tr><td>第 3 轮</td><td>3</td><td>4（距离 1）</td><td>3</td></tr></tbody></table>
-<p>按该方法得到路径 1→2→3→4，长度为 3；而真实最短路径显然是直达边 1→4，长度为 2。3 ≠ 2，求出的不是最短路径。</p>
-<h3>第三步：反例二 —— 连路径都求不出</h3>
-<p>图（2）：只有两条边 1-2（权 1）、1-3（权 2），设初始顶点 1、目标顶点 3。第 1 轮选离 1 最近的顶点 2，加入路径后 u = 2；而 2 没有任何未访问的邻接点，也不是目标顶点，步骤②无法继续——该方法在这张图上<strong>求不出 1 到 3 的任何路径</strong>。</p>
-<h3>第四步：错在哪里</h3>
-<p>「局部最近」不等于「全局最短」：一次绕行（反例一）或提前走进死胡同（反例二）都会破坏最优性。正确的做法应像 Dijkstra 算法那样维护「起点到各顶点的当前最短距离」，而不是只比较相邻顶点的边权。</p>
-<blockquote>一句话结论：该方法不可行；给出上述反例（图 + 数据 + 推演）即可得分，两个反例一起给出更完整。</blockquote></div></div>
+<table><thead><tr><th>轮次</th><th>当前 u</th><th>离 u 最近且未加入的顶点</th><th>路径累计长度</th></tr></thead><tbody><tr><td>第 1 轮</td><td>1</td><td>2（距离 1，优于直达 4 的距离 2）</td><td>1</td></tr><tr><td>第 2 轮</td><td>2</td><td>3（距离 1）</td><td>2</td></tr><tr><td>第 3 轮</td><td>3</td><td>4（距离 1）</td><td>3</td></tr></tbody></table>
+<p>方法求出路径 1→2→3→4，长度 3；而真实最短路径是直达边 1→4，长度 2。</p>
+<p><strong>错在哪一步？</strong> 第 1 轮就错了：贪心只比较「到 2 的边权 1」和「到 4 的边权 2」，选了便宜的 2，却没看到「经 2 再到 4」总共要付 3。此后 u 一路固化，再无改道机会——<strong>局部最近 ≠ 全局最短</strong>，这正是缺少累计距离视角的代价。</p>
+<h3>反例二：连路径都求不出</h3>
+<p>图（2）：只有两条边 1-2（权 1）、1-3（权 2），设初始顶点 1、目标顶点 3。第 1 轮选离 1 最近的顶点 2，u = 2；而 2 没有任何未加入路径的邻接点，也不是目标顶点——步骤②找不到可加入的 v，方法<strong>卡死</strong>在中途，连 1 到 3 的路径（权 2，明明存在）都给不出。</p>
+<p>这说明该方法的失效不止「可能求错」一种：它维护的只是一条固定路径，一旦走进死胡同就没有任何恢复机制。</p>
+<h3>收束：正确的机制应当是什么</h3>
+<p>可行的做法要像 Dijkstra：维护「起点到每个顶点的当前最短距离」这个全局量，每轮从中取最小者固化并松弛其后继，而不是沿一条被局部选择串起来的固定路径走到底。</p>
+<h3>易错点</h3>
+<ul><li><strong>只给结论不给反例</strong>：题目明确要求「举例说明」，反例是得分主体，必须画图标权、逐步推演。</li><li><strong>反例不完整</strong>：只给反例一只能说明「会求错」；补上反例二（卡死）才覆盖该方法失效的全部方式，作答更完整。</li><li><strong>把本题贪心混同于 Dijkstra</strong>：两者都「选最近的」，但比较对象不同——前者比相邻一条边的权，后者比起点出发的累计距离。</li></ul>
+<blockquote>一句话结论：该方法不可行；反例一（求出 3，最短为 2）说明会求错，反例二说明可能根本求不出，反例配图配推演即可得分。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2459,17 +2470,21 @@ int Search_k(LinkList list, int k) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单链表倒数第 k 个结点 —— 双指针一次遍历</h2>
-<h3>第一步：审题，确定效率目标</h3>
-<p>带头结点的单链表只给头指针 list，且<strong>不改变链表</strong>。要「尽可能高效」，就不能先遍历一遍求表长、再第二遍定位，目标是<strong>一次遍历、常数个辅助变量</strong>——这指向<strong>双指针（快慢指针）法</strong>。</p>
-<h3>第二步：问 1 —— 基本设计思想</h3>
-<p>设 p、q 两个指针，初始都指向第一个结点（list 的后继）。让 p 先沿链走 k 步，之后 p、q <strong>同步后移</strong>，两者始终保持 k 个结点的间距。当 p 到达链尾（为 NULL）时，q 恰好停在倒数第 k 个结点上。若 p 在走满 k 步之前就到达链尾，说明 k 超过表长，查找失败。</p>
-<h3>第三步：问 2 —— 详细实现步骤</h3>
-<ol><li>初始化：p = q = list 的后继（第一个结点），计数器 count = 0。</li><li>当 p 不为空时循环：若 count &lt; k，则 p 后移一步、count 加 1（p 先行）；否则 p、q 各后移一步（同步走）。</li><li>循环结束后：若 count = k，q 即倒数第 k 个结点，输出其 data 并返回 1；若 count &lt; k，说明 k 超出表长，返回 0。</li></ol>
-<h3>第四步：问 3 —— C 语言实现</h3>
-<table><thead><tr><th>行</th><th>代码</th></tr></thead><tbody><tr><td>1</td><td><code>typedef struct LNode { int data; struct LNode *link; } *LinkList;</code></td></tr><tr><td>2</td><td><code>int Search_k(LinkList list, int k) {</code></td></tr><tr><td>3</td><td><code>LinkList p = list-&gt;link, q = list-&gt;link;  // 初始指向第一个结点</code></td></tr><tr><td>4</td><td><code>int count = 0;</code></td></tr><tr><td>5</td><td><code>while (p != NULL) {</code></td></tr><tr><td>6</td><td><code>if (count &lt; k) { p = p-&gt;link; count++; }  // p 先前进 k 步</code></td></tr><tr><td>7</td><td><code>else { p = p-&gt;link; q = q-&gt;link; }  // 之后 p 和 q 同步前进</code></td></tr><tr><td>8</td><td><code>}</code></td></tr><tr><td>9</td><td><code>if (count == k) { printf("%d", q-&gt;data); return 1; }  // 链表长度大于等于 k</code></td></tr><tr><td>10</td><td><code>return 0;  // k 超出链表长度</code></td></tr><tr><td>11</td><td><code>}</code></td></tr></tbody></table>
+<h3>第 0 步：机制先行——「倒数第 k」为什么难，双指针为什么行</h3>
+<p>单链表只能沿 link 单向走、<strong>不能随机访问</strong>，「倒数第 k 个」没有现成地址可算。直觉做法是两趟：先数出表长 n，再从头走 n−k+1 步。但链表一遍走完之前<strong>无法先知 n</strong>，而题目要求「尽可能高效」——所以要把「倒数」换成另一种度量方式。</p>
+<p>双指针的机制一句话：<strong>用「距链尾的距离」定义「倒数」</strong>。让 p 先走 k 步，在链上制造出一段固定间隔，然后 p、q 同步前进、间隔保持；当 p 越过链尾（p == NULL）时，q 距链尾恰好 k 个结点——这正是倒数第 k 个。</p>
+<p>这套机制靠三条推理支撑，也是最容易被追问的三个「为什么」：</p>
+<ul><li><strong>为什么间隔是 k？</strong> p 先行阶段每步只动 p 不动 q，p 比 q 多走 1 步/次，走 k 次后两者恰好相差 k 步。</li><li><strong>为什么间隔一直不变？</strong>（循环不变量）同步阶段 p、q 每轮各前移 1 步，走过的步数始终相同，差值自然保持 k。</li><li><strong>为什么 p == NULL 时 q 就是倒数第 k 个？</strong> 设表长 n，p == NULL 说明 p 已越过最后一个结点；q 比 p 落后 k 步，故 q 停在第 n−k+1 个结点，从后往前数正是第 k 个。举例验证：表长 5、k = 2——p 先行 2 步后指向第 3 个结点；同步走 3 步后 p 变 NULL，q 从第 1 个走到第 4 个，倒数第 2 个恰是第 4 个。✔</li></ul>
+<p><strong>为什么用 count 判失败？</strong> count 只在 p 先行阶段累加。若表长不足 k，p 没走满 k 步就越过了链尾，循环结束时 count &lt; k——「间隔没能建成」就是 k 非法的信号，返回 0。</p>
+<h3>问 1：算法的基本设计思想</h3>
+<p>设 p、q 初始均指向第一个结点。p 先沿链走 k 步（若中途 p 为空，说明 k 超过表长，查找失败）；随后 p、q 同步后移、保持间隔 k；当 p 到达链尾（NULL）时，q 所指即倒数第 k 个结点。全程<strong>一遍遍历</strong>，时间 O(n)，辅助变量仅常数个——这比两趟法（先求表长再定位）少一整趟扫描，是「尽可能高效」的落点。</p>
+<h3>问 2：详细实现步骤</h3>
+<ol><li>初始化：p = list 的后继，q = list 的后继（带头结点，第一个数据结点是头结点的后继），计数器 count = 0。</li><li>当 p 不为空时循环：若 count &lt; k，只让 p 后移一步、count 加 1（p 先行建间隔）；否则 p、q 同时后移一步（间隔已建成，同步走）。</li><li>循环结束后：若 count = k，q 即倒数第 k 个结点，输出 q 的 data 域并返回 1；若 count &lt; k，说明 k 超出表长，返回 0。</li></ol>
+<h3>问 3：C 语言实现（关键处有注释）</h3>
+<table><thead><tr><th>行</th><th>代码</th></tr></thead><tbody><tr><td>1</td><td><code>typedef struct LNode { int data; struct LNode *link; } *LinkList;</code></td></tr><tr><td>2</td><td><code>int Search_k(LinkList list, int k) {</code></td></tr><tr><td>3</td><td><code>    LinkList p = list-&gt;link, q = list-&gt;link;  // 均指向第一个结点</code></td></tr><tr><td>4</td><td><code>    int count = 0;</code></td></tr><tr><td>5</td><td><code>    while (p != NULL) {</code></td></tr><tr><td>6</td><td><code>        if (count &lt; k) { p = p-&gt;link; count++; }   // p 先行，建间隔 k</code></td></tr><tr><td>7</td><td><code>        else { p = p-&gt;link; q = q-&gt;link; }         // 间隔建成，同步前进</code></td></tr><tr><td>8</td><td><code>    }</code></td></tr><tr><td>9</td><td><code>    if (count == k) { printf("%d", q-&gt;data); return 1; }  // 表长≥k，查找成功</code></td></tr><tr><td>10</td><td><code>    return 0;   // k 超出表长</code></td></tr><tr><td>11</td><td><code>}</code></td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>两趟遍历</strong>：先求表长再定位虽正确，但不满足「尽可能高效」的要求，按次优解扣分。</li><li><strong>丢边界</strong>：忘记判 k 大于表长的情况（count &lt; k 时必须返回 0）。</li><li><strong>起点弄错</strong>：带头结点的链表第一个结点是 list 的后继，不是 list 本身。</li></ul>
-<blockquote>一句话结论：双指针保持 k 的间距一次遍历定位倒数第 k 个结点，时间 O(n)、空间 O(1)。</blockquote></div></div>
+<ul><li><strong>两趟遍历</strong>：先求表长再定位，结果正确但违背「尽可能高效」，按次优解扣分。</li><li><strong>丢失败分支</strong>：count &lt; k 时必须返回 0，漏判会继续解引用空指针。</li><li><strong>起点弄错</strong>：带头结点的链表第一个数据结点是 list 的后继，从 list 本身出发整条间隔错一位。</li><li><strong>间隔语义记反</strong>：p 先行 k 步、p 触底时 q 距链尾 k 个结点，对应「倒数第 k」；不要在先行步数上多加或少加 1。</li></ul>
+<blockquote>一句话结论：p 先走 k 步建间隔，p、q 同步走到 p 越过链尾，q 即倒数第 k 个结点；一次遍历 O(n)、空间 O(1)，count 判 k 是否合法。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2522,15 +2537,18 @@ int Search_k(LinkList list, int k) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：中断方式与 DMA 方式的 CPU 时间占比</h2>
-<h3>第一步：答题框架</h3>
-<p>占比 = 每秒 CPU 为该外设花掉的时钟周期数 ÷ CPU 每秒总时钟周期数（主频 500MHz）。两条路线都按「每秒事件次数 × 每次开销」先算分子。</p>
-<h3>第二步：问 1——中断方式（0.5MB/s，每次传 32 位 = 4B）</h3>
-<ol><li>每秒中断次数：0.5MB ÷ 4B = 125000 次</li><li>每次中断开销：服务程序 18 条指令 + 其他开销折合 2 条 = 20 条 × CPI 5 = 100 个时钟周期</li><li>每秒开销：100 × 125000 = 12.5M 个周期</li><li>占比：12.5M ÷ 500M = <strong>2.5%</strong></li></ol>
-<h3>第三步：问 2——DMA 方式（5MB/s，块 5000B）</h3>
-<ol><li>每秒 DMA 次数：5MB ÷ 5000B = 1000 次</li><li>CPU 只承担预处理和后处理，每次共 500 个周期；数据传送本身由 DMA 控制器完成，不占 CPU 时间</li><li>每秒开销：1000 × 500 = 0.5M 个周期</li><li>占比：0.5M ÷ 500M = <strong>0.1%</strong></li></ol>
+<h3>第 0 步：机制先行——CPU 的时间账本怎么记</h3>
+<p>占比的定义先立起来：CPU 每秒能支配的全部时间预算由主频决定，即 500M 个时钟周期。所以「CPU 用于该外设 I/O 的时间占比」= <strong>每秒为该外设花掉的周期数 ÷ 500M</strong>。两问共用同一套算法：先数「每秒发生多少次事件」，再数「每次事件 CPU 付多少个周期」，相乘得到分子。</p>
+<p>两种 I/O 方式的本质差别在于 <strong>CPU 介入的粒度</strong>：</p>
+<ul><li><strong>中断方式</strong>：CPU 与外设本可并行，但外设每攒够一个<strong>传输单位</strong>（题设 32 位 = 4B）就把 CPU 打断一次，CPU 必须完整执行一遍中断服务——18 条指令的服务程序，加上题设折合 2 条指令的其他开销。每传 4B 就付一次「全价」：事件极多，每次固定贵。</li><li><strong>DMA 方式</strong>：传送以<strong>块</strong>为单位（5000B），块内数据的搬运由 DMA 控制器掌管，期间 CPU 照常执行程序（题设「DMA 与 CPU 之间没有访存冲突」意味着连存储周期被挪用的拖累都不计）；CPU 只在每块开始前做预处理、结束后做后处理，付一次固定的 500 个周期。事件极少，每次固定。</li></ul>
+<h3>问 1：中断方式（0.5MB/s，每次传 4B）</h3>
+<ol><li><strong>每秒中断次数</strong>：外设每秒送来 0.5MB = 500 000 B（本题按十进制换算，1MB = 10⁶ B，与参考答案一致），每 4B 触发一次中断 → 500 000 ÷ 4 = <strong>125 000 次</strong>。</li><li><strong>每次中断的 CPU 开销</strong>：(18 + 2) 条指令 × CPI 5 = <strong>100 个时钟周期</strong>。</li><li><strong>每秒总开销</strong>：125 000 × 100 = 12 500 000 = <strong>12.5M 个周期</strong>。</li><li><strong>占比</strong>：12.5M ÷ 500M = <strong>2.5%</strong>。</li></ol>
+<h3>问 2：DMA 方式（5MB/s，块大小 5000B）</h3>
+<ol><li><strong>每秒 DMA 次数</strong>：5MB = 5 000 000 B，每块 5000B → 5 000 000 ÷ 5000 = <strong>1000 次</strong>。</li><li><strong>每次 CPU 的开销</strong>：只有预处理 + 后处理的 500 个周期；5000B 的搬运期间 CPU 零开销（无访存冲突假设）。</li><li><strong>每秒总开销</strong>：1000 × 500 = 500 000 = <strong>0.5M 个周期</strong>。</li><li><strong>占比</strong>：0.5M ÷ 500M = <strong>0.1%</strong>。</li></ol>
+<p><strong>为什么占比从 2.5% 骤降到 0.1%？</strong> 对比两条分子：中断方式把开销摊在每一个 4B 上（每秒 12.5 万次中断 × 每次 100 周期）；DMA 把同样的搬运打包成 1000 块，每块只付一次 500 的固定费用——CPU 的介入次数从 12.5 万次降到 1 千次。数据率虽扩大 10 倍，CPU 负担反而缩小 25 倍，这正是「成块传送、传送期间让位」的 DMA 机制优势。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉「其他开销相当于 2 条指令」</strong>：只按 18 条算得 90 周期、占比 2.25%。</li><li><strong>把 DMA 数据传送时间计入 CPU 开销</strong>：题目假设 DMA 与 CPU 无访存冲突，传送不占 CPU。</li><li><strong>单位换算</strong>：0.5MB/s 即每秒 0.5 × 10^6 字节；主频 500MHz 即每秒 500 × 10^6 个时钟周期，直接用 M 比较即可。</li></ul>
-<blockquote>结论：中断方式 2.5%，DMA 方式 0.1%——DMA 用「整块一次预处理/后处理」替代「每 4B 一次中断」，CPU 负担大幅减轻。</blockquote></div></div>
+<ul><li><strong>漏掉「其他开销折合 2 条指令」</strong>：只按 18 条算得每次 90 周期、占比 2.25%。</li><li><strong>把 DMA 的数据搬运时间计入 CPU</strong>：搬运由 DMA 控制器完成，CPU 只出 500 周期的前后处理；题设无访存冲突，连周期窃取的等待也不计。</li><li><strong>单位换算纠结</strong>：0.5MB/s 即每秒 0.5 × 10⁶ 字节，主频 500MHz 即每秒 500 × 10⁶ 个周期，都按 10⁶ 口径直接相除即可，不必换算成秒以下的物理时间。</li></ul>
+<blockquote>一句话结论：中断 2.5%、DMA 0.1%——占比 = 每秒事件次数 × 每次 CPU 周期数 ÷ 主频；两种方式的差别只在「事件粒度」。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2583,17 +2601,22 @@ int Search_k(LinkList list, int k) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：ADD (R1)，R0 执行阶段的节拍与控制信号</h2>
-<h3>第一步：答题框架</h3>
-<p>指令功能：(R0) + ((R1)) → (R1) 所指主存单元。取指与译码（C1~C4）已完成，执行阶段要做三件事：<strong>取内存操作数 → ALU 相加 → 写回主存</strong>。列节拍时逐拍问「这拍总线上走什么、谁打入」，一个节拍内只安排互不冲突的传输。</p>
-<h3>第二步：基本方案（6 个节拍）</h3>
+<h3>第 0 步：机制先行——单内总线数据通路的运行规则</h3>
+<p>先看清数据通路图的骨架：R0、R1、PC、IR、MAR、MDR、A、AC 都挂在<strong>一条内总线</strong>上；ALU 的一个输入端接暂存器 A，另一个输入端直接取自内总线，运算结果送 AC。访存走<strong>另一条外部通路</strong>：地址由 MAR 送出（题设 MAR 输出一直使能，地址可长期保持），数据经 DB 进出 MDR——所以 MDR 有两套门口：对内的 MDRin/MDRout，对外的 MDRinE/MDRoutE。</p>
+<p>由「一条内总线」直接推出列节拍的三条铁律：</p>
+<ol><li><strong>一拍一次总线传送</strong>：同一拍不能有两个部件同时往内总线送数，一个部件也不能「既被打入又被读走」。</li><li><strong>访存前地址必须就位</strong>：读操作以 MAR 的<strong>当前</strong>内容为地址，MAR←(R1) 与 MDR←M(MAR) 有数据依赖，不能同拍。</li><li><strong>ALU 两端不能都等总线</strong>：两个源操作数必须有一个先锁进 A，另一拍另一个操作数才上总线进 ALU。</li></ol>
+<p>执行阶段的目标：(R0) + ((R1)) → (R1) 所指主存单元。取指与译码（C1~C4）已完成，剩下的活分三段：<strong>取内存操作数 → 相加 → 写回主存</strong>。逐拍问「这拍总线上走什么、谁被打入」，方案自然出来。</p>
+<h3>基本方案（6 拍）：一步一步走</h3>
 <table><thead><tr><th>节拍</th><th>功能</th><th>有效控制信号</th></tr></thead><tbody><tr><td>C5</td><td>MAR ← (R1)</td><td>R1out, MARin</td></tr><tr><td>C6</td><td>MDR ← M(MAR)</td><td>MemR, MDRinE</td></tr><tr><td>C7</td><td>A ← (MDR)</td><td>MDRout, Ain</td></tr><tr><td>C8</td><td>AC ← (A) + (R0)</td><td>R0out, Add, ACin</td></tr><tr><td>C9</td><td>MDR ← (AC)</td><td>ACout, MDRin</td></tr><tr><td>C10</td><td>M(MAR) ← (MDR)</td><td>MDRoutE, MemW</td></tr></tbody></table>
-<p>要点：内存操作数经 MDR 先暂存到暂存器 A；ALU 相加时同时给 R0out（另一操作数上总线）、Add（加法命令）、ACin（结果打入 AC）。</p>
-<h3>第三步：优化方案（5 个节拍）</h3>
-<p>C6 访存读 MDR 的同时，R0 → A 可并行进行（访存走存储器数据通路，R0out 走内部总线，互不冲突），把 A ← (R0) 合并进 C6，省 1 拍：</p>
+<p><strong>逐拍为什么这样安排：</strong></p>
+<ul><li><strong>C5 → C6</strong>：先送地址再访存（铁律 2）。收数走外部通路，故用 MDRinE（从 DB 打入 MDR）配读命令 MemR。</li><li><strong>C7</strong>：操作数已在 MDR，但若下一拍让 MDR 直接上内总线给 ALU，R0 就上不了总线（铁律 1）——所以先把 (MDR) 锁进 A 腾出总线（铁律 3）。</li><li><strong>C8</strong>：三个信号同拍各司其职——R0out 把另一操作数经内总线送进 ALU，Add 命令 ALU 做加法，ACin 把结果打入 AC。</li><li><strong>C9 → C10</strong>：结果先回 MDR（走内部通路 MDRin），再写主存。写内存必须用 MDR 的<strong>外部</strong>输出 MDRoutE（数据摆上 DB）加写命令 MemW——与 C7 用的 MDRout 不是同一个信号，这是本题最大的埋伏。</li><li><strong>C10 为什么不必重送地址？</strong> MAR 输出一直使能，(R1) 从 C5 起一直保持，写操作直接复用。</li></ul>
+<h3>优化方案（5 拍）：C6 并行塞进第二件事</h3>
+<p>C6 的访存读走「存储器 ↔ DB」这条<strong>外部通路</strong>，而 R0 → A 走<strong>内总线</strong>，两条通路互不干扰，目标寄存器也不同（MDR 与 A），无数据依赖——满足相容性，可以同拍并行，省掉单独锁 A 的一拍：</p>
 <table><thead><tr><th>节拍</th><th>功能</th><th>有效控制信号</th></tr></thead><tbody><tr><td>C5</td><td>MAR ← (R1)</td><td>R1out, MARin</td></tr><tr><td>C6</td><td>MDR ← M(MAR), A ← (R0)</td><td>MemR, MDRinE, R0out, Ain</td></tr><tr><td>C7</td><td>AC ← (MDR) + (A)</td><td>MDRout, Add, ACin</td></tr><tr><td>C8</td><td>MDR ← (AC)</td><td>ACout, MDRin</td></tr><tr><td>C9</td><td>M(MAR) ← (MDR)</td><td>MDRoutE, MemW</td></tr></tbody></table>
+<p><strong>为什么 C6 不能顺手把加法也做了？</strong> 此刻 MDR 正从 DB 收数，同时又要 MDRout 读它给 ALU——「既打入又读出」违反铁律 1；加法只能等数据落定后的下一拍（C7），此时 A 里是 R0、MDR 里是内存操作数，MDRout 送数上总线即可。</p>
 <h3>易错点</h3>
-<ul><li><strong>写回漏 MDRoutE / MemW</strong>：写主存必须用 MDR 的外部输出通路 MDRoutE 并发存储器写命令 MemW，与内部传输用的 MDRout 不同。</li><li><strong>C8 漏 Add</strong>：做加法必须给加法命令 Add，否则 ALU 无操作。</li><li><strong>一拍塞多件冲突的事</strong>：MAR ← (R1) 与 MDR ← M(MAR) 不能合并——访存必须先有地址。</li></ul>
-<blockquote>结论：基本方案 6 拍（C5~C10），把 A ← (R0) 与读内存并行后优化为 5 拍（C5~C9）。</blockquote></div></div>
+<ul><li><strong>写回漏 MDRoutE / MemW</strong>：写主存必须用外部通路 MDRoutE + MemW；只给 MDRout 是往内总线送数，主存收不到。</li><li><strong>C8 漏 Add</strong>：不给 Add，ALU 不知道本次做加法。</li><li><strong>合并依赖拍</strong>：把 MAR←(R1) 与 MDR←M(MAR) 并到一拍——读操作用的地址还没就位，违反铁律 2。</li><li><strong>乱并行</strong>：并行的前提是「不同通路、不同目标、无数据依赖」；C6 的合并恰因两条通路独立才成立，不是任意两件微操作都能塞进一拍。</li></ul>
+<blockquote>一句话结论：基本方案 C5~C10 共 6 拍；利用「访存走外部通路、寄存器走内总线」的相容性把 A←(R0) 并入 C6，优化为 C5~C9 共 5 拍。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2687,20 +2710,23 @@ main() {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：生产者-消费者（奇偶分类）的信号量设计</h2>
-<h3>第一步：答题框架</h3>
-<p>7 分大题按三段作答：<strong>① 定义信号量并说明含义 → ② 用伪代码写三个进程 → ③ 点出同步/互斥/流量控制三个关键点</strong>。所有互斥信号量与同步信号量缺一不可。</p>
-<h3>第二步：定义信号量（4 个）</h3>
-<table><thead><tr><th>信号量</th><th>初值</th><th>含义</th></tr></thead><tbody><tr><td><code>mutex</code></td><td>1</td><td>互斥信号量，保证各进程互斥访问缓冲区</td></tr><tr><td><code>empty</code></td><td>N</td><td>同步信号量，缓冲区中<strong>空单元</strong>个数；P1 放数据前 P(empty)，P2/P3 取完后 V(empty)</td></tr><tr><td><code>odd</code></td><td>0</td><td>同步信号量，缓冲区中<strong>奇数</strong>个数；P1 放奇数后 V(odd)，P2 取之前 P(odd)</td></tr><tr><td><code>even</code></td><td>0</td><td>同步信号量，缓冲区中<strong>偶数</strong>个数；P1 放偶数后 V(even)，P3 取之前 P(even)</td></tr></tbody></table>
-<h3>第三步：伪代码（与参考答案同口径）</h3>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：生产者-消费者（奇偶分流）的信号量设计</h2>
+<h3>问 1：定义哪些信号量——先数清题目里有几类「等待」</h3>
+<p>信号量的机制：P 申请资源，不够则阻塞等待；V 释放资源，唤醒等待者。定义几个信号量，取决于进程间存在几类「等待关系」。本题一共三类：</p>
+<ol><li><strong>等空位</strong>：缓冲区共 N 个单元，P1 放数前必须有空单元。这是一种「资源计数」，初值 N。</li><li><strong>等数据</strong>：P2 只取<strong>奇数</strong>、P3 只取<strong>偶数</strong>——只知道「缓冲区里有数」不够，必须按奇偶分别计数、分别唤醒。两个信号量，初值都是 0（开局无数据，消费者先等）。</li><li><strong>等进入</strong>：缓冲区是被三个进程<strong>共享读写</strong>的数据结构，同一时刻只允许一人进出。互斥信号量，初值 1。</li></ol>
+<p><strong>为什么 odd/even 省不掉、不能合成一个「产品数」？</strong> 若只设一个「有数」信号量，P2 被唤醒后取出的可能是偶数，奇偶配对就乱了。本题比普通生产者-消费者多出的一层是<strong>产品分流</strong>：每种产品单独计数、单独唤醒对应消费者——这正是 odd 与 even 两个信号量的存在理由。</p>
+<table><thead><tr><th>信号量</th><th>初值</th><th>含义</th></tr></thead><tbody><tr><td><code>mutex</code></td><td>1</td><td>互斥信号量，保证各进程互斥访问缓冲区</td></tr><tr><td><code>empty</code></td><td>N</td><td>同步信号量，缓冲区中<strong>空单元</strong>个数；P1 放数前 P，P2/P3 取完后 V</td></tr><tr><td><code>odd</code></td><td>0</td><td>同步信号量，缓冲区中<strong>奇数</strong>个数；P1 放奇数后 V，P2 取之前 P</td></tr><tr><td><code>even</code></td><td>0</td><td>同步信号量，缓冲区中<strong>偶数</strong>个数；P1 放偶数后 V，P3 取之前 P</td></tr></tbody></table>
+<h3>问 2：伪代码（与参考答案同口径）</h3>
 <p><strong>P1（生产者）</strong>：</p>
-<table><thead><tr><th>步</th><th>语句</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td><code>x = produce();</code></td><td>生成一个正整数</td></tr><tr><td>2</td><td><code>P(empty);</code></td><td>申请一个空单元</td></tr><tr><td>3</td><td><code>P(mutex);</code></td><td>互斥进入缓冲区</td></tr><tr><td>4</td><td><code>put();</code></td><td>放入缓冲区</td></tr><tr><td>5</td><td><code>V(mutex);</code></td><td>释放临界区</td></tr><tr><td>6</td><td><code>if(x % 2 == 0) V(even); else V(odd);</code></td><td>在临界区外按奇偶唤醒对应消费者</td></tr></tbody></table>
+<table><thead><tr><th>步</th><th>语句</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td><code>x = produce();</code></td><td>生成一个正整数</td></tr><tr><td>2</td><td><code>P(empty);</code></td><td>先申请空单元</td></tr><tr><td>3</td><td><code>P(mutex);</code></td><td>再申请进入缓冲区</td></tr><tr><td>4</td><td><code>put();</code></td><td>放入缓冲区</td></tr><tr><td>5</td><td><code>V(mutex);</code></td><td>退出临界区</td></tr><tr><td>6</td><td><code>if (x % 2 == 0) V(even); else V(odd);</code></td><td>按奇偶唤醒对应消费者</td></tr></tbody></table>
 <p><strong>P2（取奇数）</strong>：<code>P(odd); P(mutex); getodd(); V(mutex); V(empty); countodd();</code></p>
 <p><strong>P3（取偶数）</strong>：<code>P(even); P(mutex); geteven(); V(mutex); V(empty); counteven();</code></p>
 <p>三个进程用 <code>cobegin ... coend</code> 并发执行。</p>
+<p><strong>为什么 P(empty) 必须在 P(mutex) 之前？</strong> 这是「<strong>先同步后互斥</strong>」原则。若颠倒：缓冲区已满时，P1 先拿到 mutex，随后阻塞在 P(empty) 上——它<strong>抱着锁睡觉</strong>；P2/P3 要腾出空位得先进缓冲区取数，即先执行 P(mutex)，锁却握在 P1 手里。两边互等，死锁。同理，消费者也必须先 P(odd)/P(even) 再 P(mutex)：没有对应产品时同样不该占着锁等。</p>
+<p><strong>为什么 V(odd)/V(even) 放在 V(mutex) 之后？</strong> 「数据已放入」这个事实在 put() 结束时就已成立，唤醒消费者不必占用临界区——临界区只包住真正读写缓冲区的语句，越短越好。消费者先 V(mutex) 再 V(empty) 同理：数据已取出，空单元数的增加才成立，再唤醒生产者。</p>
 <h3>易错点</h3>
-<ul><li><strong>P(empty) 与 P(mutex) 顺序颠倒</strong>：缓冲区满时，生产者先拿到 mutex 再等空单元，消费者却因拿不到 mutex 进不了缓冲区 → 死锁。两个 P 操作不可交换。</li><li><strong>漏掉 odd/even</strong>：只写 mutex 和 empty 是普通生产者-消费者，实现不了"奇数给 P2、偶数给 P3"的配对同步。</li><li><strong>V 的位置</strong>：按参考答案口径，先 V(mutex) 退出临界区，再判断奇偶执行 V(odd)/V(even)；消费者先 V(mutex) 再 V(empty)。</li></ul>
-<blockquote>mutex 管互斥，empty 管容量（流量控制），odd/even 管奇偶配对（同步）。</blockquote></div></div>
+<ul><li><strong>P(empty) 与 P(mutex) 顺序颠倒</strong>：满缓冲区时抱锁互等 → 死锁。所有 P 操作都要「先同步、后互斥」，不可交换。</li><li><strong>漏掉 odd/even</strong>：只写 mutex 和 empty 就退化成普通生产者-消费者，实现不了「奇数给 P2、偶数给 P3」的分流。</li><li><strong>信号量含义没说清</strong>：每个信号量的初值、物理含义、「谁 P 谁 V」都要写明，这是本题的给分点。</li><li><strong>empty 初值写错</strong>：它数的是<strong>空单元</strong>，初值是容量 N，不是 0 也不是 1。</li></ul>
+<blockquote>一句话结论：mutex 管互斥，empty 管空位（容量），odd/even 管奇偶配对（同步）；P 操作先同步后互斥，V 操作出临界区后再唤醒。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2753,17 +2779,21 @@ main() {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：请求分页的访问耗时与缺页置换</h2>
-<h3>第一步：把条件整理成表</h3>
-<p>答案要点先行：第 1 问三次访问时间分别为 <strong>210ns、100000220ns、110ns</strong>；第 2 问 1565H 的物理地址为 <strong>101565H</strong>。</p>
-<ul><li>页面大小 4KB = 2 的 12 次方 B → 虚地址<strong>低 3 位十六进制</strong>是页内位移，其余高位是页号；</li><li>页表：页 0 → 页框 101H（有效）、页 1 → 无效、页 2 → 页框 254H（有效）；</li><li>TLB 初始为空；TLB 访问 10ns，访存 100ns，缺页处理 10 的 8 次方 ns（已含更新 TLB 与页表）。</li></ul>
-<h3>第二步：第 1 问——逐地址推演</h3>
-<table><thead><tr><th>虚地址</th><th>路径</th><th>计时</th></tr></thead><tbody><tr><td>2362H</td><td>页号 2：TLB 未命中 → 查页表有效（页框 254H）→ 访存</td><td>10+100+100 = <strong>210ns</strong></td></tr><tr><td>1565H</td><td>页号 1：TLB 未命中 → 查页表有效位 0 → 缺页处理 → 返回重新执行：TLB 命中 → 访存</td><td>10+100+10 的 8 次方+10+100 = <strong>100000220ns</strong></td></tr><tr><td>25A5H</td><td>页号 2：TLB 命中 → 访存</td><td>10+100 = <strong>110ns</strong></td></tr></tbody></table>
-<p>2362H 访问后页 2 装入 TLB（更新时间忽略）；1565H 缺页处理时更新了 TLB（含页 1）；25A5H 时页 2 仍在 TLB，故命中。</p>
-<h3>第三步：第 2 问——为什么是 101565H</h3>
-<ul><li>1565H 缺页时，驻留集固定 2 页（页 0、页 2 在内存）；LRU 淘汰<strong>最久未使用</strong>的页——页 2 刚被 2362H 访问过，故淘汰<strong>页 0</strong>；</li><li>页 1 装入页 0 腾出的<strong>页框 101H</strong>；物理地址 = 页框号拼接页内位移 = 101H ∥ 565H = <strong>101565H</strong>。</li></ul>
+<h3>第 0 步：机制先行——一次虚地址访问的完整流水线</h3>
+<p>请求分页系统里，每访问一个虚地址都要走完这条流水线，计时就是把走过的每一段加起来：</p>
+<ol><li><strong>切地址</strong>：页面大小 4KB = 2¹² B，虚地址<strong>低 12 位（低 3 位十六进制）是页内位移</strong>，其余高位是页号。为什么可以只换页号、照抄位移？因为分页把地址切成定长块，页与页框等大，块内偏移在页框里同样成立。</li><li><strong>查 TLB（10ns）</strong>：命中，直接得页框号；未命中也要付这 10ns（题设②规定先查 TLB）。</li><li><strong>TLB 未命中 → 查页表（100ns）</strong>：有效位 1 → 得到页框号（按题设，其后的 TLB 更新不计时）；有效位 0 → <strong>缺页中断</strong>，处理耗时 10⁸ ns（题设已含更新 TLB 和页表），处理完<strong>返回重新执行该指令</strong>——重执时页已进 TLB，按命中路径重新计时。</li><li><strong>访问主存（100ns）</strong>：拿到页框号后拼出物理地址，取数据还要真正访存一次——TLB 只负责「地址翻译」，数据本身在内存。</li></ol>
+<p>TLB 的状态随访问序列演变：TLB 初始为空；第一次访问后页 2 进 TLB；1565H 的缺页处理把页 1 写入 TLB。这些状态是后面三次计时的依据。</p>
+<h3>问 1：三个虚地址逐个计时</h3>
+<p><strong>2362H</strong>：页号 2、位移 362H。TLB 空 → 未命中 10ns；查页表，页 2 有效 → 100ns；拼 254H ∥ 362H 后访存 → 100ns。合计 <strong>210ns</strong>。此后页 2 进入 TLB（更新时间按题设忽略）。</p>
+<p><strong>1565H</strong>：页号 1、位移 565H。TLB 未命中 10ns；查页表，页 1 有效位 0 → 100ns；缺页中断处理 10⁸ ns（含把页 1 写入 TLB 与页表）；返回重新执行：TLB 命中 10ns + 访存 100ns。合计 10 + 100 + 10⁸ + 10 + 100 = <strong>100000220ns</strong>。</p>
+<p><strong>25A5H</strong>：页号 2、位移 5A5H。页 2 在第一次访问时已进 TLB，且此后没有被移出——缺页处理换出的是<strong>主存驻留集</strong>里的页 0，TLB 中页 2 → 254H 的表项不受影响 → TLB 命中 10ns + 访存 100ns = <strong>110ns</strong>。</p>
+<table><thead><tr><th>虚地址</th><th>路径</th><th>计时</th></tr></thead><tbody><tr><td>2362H</td><td>TLB 未命中 → 页表有效 → 访存</td><td>10+100+100 = <strong>210ns</strong></td></tr><tr><td>1565H</td><td>TLB 未命中 → 页表无效 → 缺页处理 → 重执：TLB 命中 → 访存</td><td>10+100+10⁸+10+100 = <strong>100000220ns</strong></td></tr><tr><td>25A5H</td><td>TLB 命中 → 访存</td><td>10+100 = <strong>110ns</strong></td></tr></tbody></table>
+<h3>问 2：1565H 的物理地址为什么是 101565H</h3>
+<p><strong>先淘汰谁？</strong> 缺页发生时驻留集已满（固定 2 页：页 0 在 101H、页 2 在 254H），必须先淘汰一页再装入页 1。LRU 选「最久未被访问」的驻留页：页 2 刚被 2362H 访问过，页 0 自始至终没被碰过——牺牲的是<strong>页 0</strong>（注意不是「淘汰页 1」，页 1 本来就不在内存，谈不上淘汰）。页 1 装入页 0 腾出的页框 <strong>101H</strong>。</p>
+<p><strong>地址怎么拼？</strong> 页框大小 = 页面大小 = 4KB，页内位移直接照抄：物理地址 = 页框号 ∥ 页内位移 = 101H ∥ 565H = <strong>101565H</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏算缺页后的"重新执行"</strong>：缺页中断返回要重新执行指令，TLB 命中 10ns + 访存 100ns 不能漏。</li><li><strong>LRU 选错牺牲页</strong>：不是淘汰页 1（它本来就不在内存），而是在内存中的两页里选最久未用的<strong>页 0</strong>。</li><li><strong>误判第三次访问</strong>：页 2 仍在 TLB，25A5H 是命中路径，只有 110ns，不能再算一次页表访问。</li></ul>
-<blockquote>访问耗时看路径：TLB 命中 110ns、未命中 210ns、缺页 10 的 8 次方 ns 量级；1565H 物理地址 <strong>101565H</strong>。</blockquote></div></div>
+<ul><li><strong>漏算缺页后的「重新执行」</strong>：题设③明确返回重执，重执的 TLB 命中 10ns + 访存 100ns 不能漏。</li><li><strong>LRU 选错牺牲页</strong>：在驻留的页 0、页 2 之间选最久未用的页 0；页 1 不在驻留集，不是候选。</li><li><strong>误判第三次访问</strong>：页 2 的 TLB 表项仍有效，25A5H 走命中路径 110ns，不能再算一次页表 100ns。</li><li><strong>页号切错</strong>：页内位移位数由页面大小决定，4KB → 低 3 位十六进制；2362H 的页号是 2，不是把 236 当页号。</li></ul>
+<blockquote>一句话结论：三次访问依次 210ns、100000220ns、110ns；LRU 淘汰页 0，页 1 入驻 101H，物理地址 101565H。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2815,20 +2845,25 @@ main() {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：子网划分与两级路由表配置（9 分）</h2>
-<p><strong>答题框架</strong>：第 1 问算主机位定掩码并给出划分；第 2 问给 R1 四条路由（两条直连、一条主机路由、一条默认路由）；第 3 问给 R2 一条聚合路由。以下按参考答案的方案一作答（两个子网对调分配的方案二同样得分，但后两问必须与所选方案一致）。</p>
-<h3>第 1 问：子网划分</h3>
-<p>每个局域网需 ≥120 个可分配地址，设主机位为 n，要满足 2 的 n 次方减 2 ≥ 120：2 的 6 次方减 2 = 62 不够；2 的 7 次方减 2 = 126 够。所以主机位 7 位，从 24 位前缀中借 1 位做子网位，掩码 /25，即 <code>255.255.255.128</code>。</p>
-<table><thead><tr><th>子网</th><th>地址范围</th><th>分配</th></tr></thead><tbody><tr><td>202.118.1.0/25</td><td>0～127</td><td>局域网1</td></tr><tr><td>202.118.1.128/25</td><td>128～255</td><td>局域网2</td></tr></tbody></table>
-<h3>第 2 问：R1 的路由表</h3>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：子网划分与两级路由表配置</h2>
+<h3>第 0 步：机制先行——路由器查表的三条规则</h3>
+<p>后面三问全都建立在这几条机制上，先立起来：</p>
+<ol><li><strong>掩码匹配</strong>：表项匹配的条件是「目的地址 AND 子网掩码 = 表项里的目的网络地址」；掩码中 1 的位数就是前缀长度（/25 → 前 25 位全 1）。</li><li><strong>最长前缀优先</strong>：多条表项同时匹配时，取前缀最长的——这条规则解释了为什么 /32 主机路由能压过 /0 默认路由被优先选中。</li><li><strong>直连路由免下一跳</strong>：目的网络直接挂在本路由器接口所在的链路上，交付由本机接口完成，下一跳写「直接」。</li></ol>
+<h3>问 1：划分两个子网——先定主机位，再借子网位</h3>
+<p><strong>为什么计算要减 2？</strong> 一个子网内主机位全 0 是网络地址、全 1 是广播地址，都不能分配给主机，可用地址数 = 2^h − 2。</p>
+<p>设主机位为 h：2⁶ − 2 = 62 &lt; 120 不够；2⁷ − 2 = 126 ≥ 120 够 → <strong>h = 7</strong>。/24 本有 8 个主机位，只用 7 位，剩下 <strong>1 位借作子网位</strong> → 前缀 /25，掩码 <code>255.255.255.128</code>。子网位取 0/1，把原 /24 从中间一分为二：</p>
+<table><thead><tr><th>子网</th><th>地址范围</th><th>分配（方案一）</th></tr></thead><tbody><tr><td>202.118.1.0/25</td><td>202.118.1.0 ～ 202.118.1.127</td><td>局域网 1（E1）</td></tr><tr><td>202.118.1.128/25</td><td>202.118.1.128 ～ 202.118.1.255</td><td>局域网 2（E2）</td></tr></tbody></table>
+<p>（两子网对调分配的方案二同样得分，但第 2、3 问的表必须与所选方案前后一致。）</p>
+<h3>问 2：R1 的路由表——四条路由各自的道理</h3>
 <table><thead><tr><th>目的网络 IP 地址</th><th>子网掩码</th><th>下一跳 IP 地址</th><th>接口</th></tr></thead><tbody><tr><td>202.118.1.0</td><td>255.255.255.128</td><td>直接</td><td>E1</td></tr><tr><td>202.118.1.128</td><td>255.255.255.128</td><td>直接</td><td>E2</td></tr><tr><td>202.118.3.2</td><td>255.255.255.255</td><td>202.118.2.2</td><td>L0</td></tr><tr><td>0.0.0.0</td><td>0.0.0.0</td><td>202.118.2.2</td><td>L0</td></tr></tbody></table>
-<p>要点：两条直连路由的下一跳写「直接」；域名服务器 202.118.3.2 是单个主机，必须写<strong>主机路由</strong>（掩码 32 位全 1）；到互联网的其余流量走默认路由，下一跳为 R2 的 L0 接口 <code>202.118.2.2</code>。</p>
-<h3>第 3 问：R2 的聚合路由</h3>
-<p>R2 到两个局域网都要经 R1 转发。两个 /25 子网地址连续（0～127 与 128～255）、合起来正好是完整一个 /24，故聚合为一条路由：</p>
+<ul><li><strong>两条直连路由</strong>：两个局域网分别挂在 E1、E2 上，按规则 3 下一跳写「直接」。</li><li><strong>主机路由为什么是 /32</strong>：域名服务器 202.118.3.2 是<strong>一台主机</strong>，题目点名要「主机路由」——掩码 32 位全 1，使该表项只匹配它自己；若写成 /24 匹配的就是整个 202.118.3.0/24 网段，不是主机路由。它不在 R1 的直连链路上，须先交给 R2，故下一跳 = R2 的 L0 地址 202.118.2.2，从 L0 口发出。</li><li><strong>默认路由为什么是 0.0.0.0/0</strong>：掩码全 0 时「目的地址 AND 0 = 0」对任何地址恒成立——它匹配一切目的地址，是兜底表项；去互联网的流量除以上三条外全部走它，下一跳同样是 R2。它只在其他三条都不匹配时才被选中，这一优先顺序正是由最长前缀规则（规则 2）保证的。</li></ul>
+<h3>问 3：R2 的聚合路由——为什么能合成一条</h3>
+<p>R2 到两个局域网的下一跳<strong>完全相同</strong>（都是 R1 的 L0 接口 202.118.2.1），这是聚合的前提。两个 /25 子网地址连续（0～127 与 128～255）、前 24 位完全相同，合并后边界对齐恰好铺满一个 /24 → 聚合为一条：</p>
 <table><thead><tr><th>目的网络 IP 地址</th><th>子网掩码</th><th>下一跳 IP 地址</th><th>接口</th></tr></thead><tbody><tr><td>202.118.1.0</td><td>255.255.255.0</td><td>202.118.2.1</td><td>L0</td></tr></tbody></table>
+<p>聚合后 R2 凡见 202.118.1.x 一律交给 R1，再由 R1 用自己的两条 /25 表项区分两个局域网——聚合只发生在「下一跳相同」的边界处，表项数从两条减为一条，这正是路由聚合的价值所在。</p>
 <h3>易错点</h3>
-<ul><li><strong>主机位算少</strong>：用 2 的 6 次方 = 64 认为「够 120」——必须减去网络地址与广播地址，2 的 7 次方减 2 = 126 才满足。</li><li><strong>主机路由掩码写错</strong>：域名服务器是主机，掩码必须是 <code>255.255.255.255</code>，写成 /24 只能算到网段，不符合「主机路由」的要求。</li><li><strong>聚合掩码写 /25</strong>：R2 只发一条路由，须把两个 /25 聚合成 /24（255.255.255.0）。</li><li><strong>下一跳接错口</strong>：R1 的下一跳指向 R2 的 L0（202.118.2.2），R2 的聚合路由下一跳指回 R1 的 L0（202.118.2.1），方向别写反。</li></ul>
-<blockquote>口径提醒：子网 1/2 与局域网 1/2 的对应关系两种均可，全卷前后必须一致。</blockquote></div></div>
+<ul><li><strong>主机位算少</strong>：2⁶ = 64 忘了减 2 → 62 &lt; 120 不满足；必须 2⁷ − 2 = 126 才够。</li><li><strong>主机路由掩码写 /24</strong>：匹配的是网段不是主机，不符合「主机路由」要求。</li><li><strong>聚合掩码写 /25</strong>：题目要求「采用路由聚合技术」给出<strong>一条</strong>路由，须聚合到 /24（255.255.255.0）。</li><li><strong>下一跳方向写反</strong>：R1 的下一跳指向 R2 的 L0（202.118.2.2），R2 的聚合路由下一跳指回 R1 的 L0（202.118.2.1）。</li></ul>
+<blockquote>一句话结论：/25 一切为二（126 ≥ 120）；R1 = 两条直连 + 一条 /32 主机路由 + 一条默认路由；R2 聚合为 202.118.1.0/24 交给 R1。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

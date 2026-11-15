@@ -103,16 +103,17 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码真值还原与减法结果的机器数</h2>
 <p><strong>答案：C</strong>（x = −33，y = 65，x−y 的机器数为 <code>FFFF FF9EH</code>）。</p>
+<h3>第 0 步：先把机制立住——补码是模运算下的记数</h3>
+<p>32 位共 2³² 个状态，构成一个环：最高位为 0 的状态表示 0 ~ 2147483647；最高位为 1 的状态表示负数，<strong>真值 = 无符号解释值 − 2³²</strong>。为什么减一次模就能还原？因为位串代表负数 −t，正是由于 −t ≡ (2³² − t) (mod 2³²)。于是"求负数 −t 的位串"就是算 2³² − t，而二进制的"<strong>取反加一</strong>"恰好完成它：按位取反得 (2³² − 1) − t，再加一得 2³² − t。取反后忘加一，结果恰好差 1——这不是巧合，是公式本身的形状。</p>
 <h3>第一步：还原 x 和 y 的真值</h3>
-<ul><li>y = <code>0000 0041H</code>：最高位为 0，正数直接读值：41H = 4×16 + 1 = <strong>65</strong>。</li><li>x = <code>FFFF FFDFH</code>：最高位为 1，是负数，对全 32 位"取反加一"求绝对值：<code>0000 0020H + 1 = 0000 0021H</code> = 33，故 x = <strong>−33</strong>。</li></ul>
-<h3>第二步：算 x − y</h3>
-<p>x − y = −33 − 65 = <strong>−98</strong>，未超出 32 位 int 的表示范围，不溢出（选项 A 的"溢出"是错的）。</p>
-<h3>第三步：把 −98 写成 32 位补码</h3>
-<table><thead><tr><th>步骤</th><th>计算</th></tr></thead><tbody><tr><td>绝对值</td><td>98 = <code>0000 0062H</code></td></tr><tr><td>按位取反</td><td><code>FFFF FF9DH</code></td></tr><tr><td>末位加一</td><td><code>FFFF FF9EH</code></td></tr></tbody></table>
-<p>所以 x−y 的机器数为 <code>FFFF FF9EH</code>。</p>
+<ul><li>y = <code>0000 0041H</code>：最高位 0，正数直接读：41H = 4×16 + 1 = <strong>65</strong>。</li><li>x = <code>FFFF FFDFH</code>：最高位 1，是负数。取反加一：<code>0000 0020H</code> + 1 = <code>0000 0021H</code> = 33 → x = <strong>−33</strong>。（模运算小验证：低字节 DFH = 223，223 − 256 = −33，与全 32 位的读法一致。）</li></ul>
+<h3>第二步：算 x − y 并判断溢出</h3>
+<p>x − y = −33 − 65 = <strong>−98</strong>。int 的表示范围是 −2147483648 ~ +2147483647，−98 远在界内 → 不溢出，干扰项 A 的"溢出"不成立。</p>
+<h3>第三步：把 −98 写回 32 位补码</h3>
+<p>求 −98 的位串 = 算 2³² − 98，走"取反加一"：98 = <code>0000 0062H</code>，按位取反得 <code>FFFF FF9DH</code>，末位加一得 <code>FFFF FF9EH</code>。若忘加一停在 <code>FFFF FF9DH</code>，那是 −99 的编码——干扰项 B 正是这个"差一"错误。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 x 的真值算错成 −65</strong>（干扰项 A、D）：求补必须对全 32 位取反加一，<code>FFFF FFDFH</code> 对应 −33；顺带记住 −65 的补码是 <code>FFFF FFBFH</code>。</li><li><strong>取反后忘记加一</strong>：得到 <code>FFFF FF9DH</code>，正是干扰项 B。</li><li><strong>看到两个负号就以为溢出</strong>：结果 −98 远在 int 范围内。</li></ul>
-<blockquote>补码口诀：正数照抄，负数"取反加一"；从机器数还原真值同样是"取反加一"。</blockquote></div></div>
+<ul><li><strong>把 x 算成 −65</strong>（干扰项 A、D）：必须对全 32 位取反加一；−33 与 −65 的位串（<code>FFFF FFDFH</code> 与 <code>FFFF FFBFH</code>）不要混。</li><li><strong>取反后忘记加一</strong>（干扰项 B）：补码差 1，最高位仍是 1，最易漏检——回到模运算公式即可自查。</li><li><strong>看到两个负号就以为溢出</strong>：溢出看真值结果是否越界，与位串"长得吓不吓人"无关。</li></ul>
+<blockquote>补码口诀：位串与真值按"模 2³²"互相换算；求负数位串、还原负数真值，都走"取反加一"。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

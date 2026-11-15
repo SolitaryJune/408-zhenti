@@ -353,13 +353,15 @@ free(q);</code></pre></div></span><span class="choice-mark" aria-hidden="true"><
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：哈夫曼树求最小 WPL</h2>
 <p>答案：<strong>B</strong>。</p>
-<h3>第一步：明确方法</h3>
-<p>5 个叶结点权值 10, 12, 16, 21, 30。最小 WPL = 哈夫曼树的带权路径长度。构造哈夫曼树：每次从森林中取<strong>两个最小</strong>的权值合并，新权值放回森林，重复直到只剩一棵树。</p>
+<h3>第一步：明确方法与它的"为什么"</h3>
+<p>5 个叶结点权值 10, 12, 16, 21, 30。WPL = Σ(叶权值 × 叶到根的路径长度)，路径上每条边记 1。哈夫曼树的构造规则：每次从森林中取<strong>两个最小</strong>的权值合并，新权值放回森林，重复到只剩一棵树。</p>
+<p><strong>为什么专挑最小的两个合并？</strong> 直观地看：越晚参与合并的结点，离根越近、路径越短；越早被合并的结点，被一层层"垫"在底下、路径越长。让权值小的叶走长路、权值大的叶走近路，总和才最小——这正是"贪心"能取到最小 WPL 的原因。</p>
 <h3>第二步：逐步合并</h3>
 <table><thead><tr><th>步</th><th>森林中权值</th><th>取出</th><th>合并</th></tr></thead><tbody><tr><td>1</td><td>10,12,16,21,30</td><td>10,12</td><td>22</td></tr><tr><td>2</td><td>16,21,22,30</td><td>16,21</td><td>37</td></tr><tr><td>3</td><td>22,30,37</td><td>22,30</td><td>52</td></tr><tr><td>4</td><td>37,52</td><td>37,52</td><td>89</td></tr></tbody></table>
 <h3>第三步：求 WPL</h3>
 <p>WPL = 所有<strong>非叶结点</strong>（合并结果）权值之和 = 22 + 37 + 52 + 89 = <strong>200</strong>。</p>
-<p>（也可画树后按"叶权值 × 叶深度"累加，结果相同；"非叶求和"更快且不易错。）</p>
+<p><strong>为什么非叶求和就等于 WPL？</strong> 每次合并产生的新权值 = 它两棵子树中全部叶权值之和。一个叶权值每经过一次合并就被计入一次，而它从叶到根恰好经历<strong>深度次</strong>合并——所以 Σ(叶权值 × 叶深度) 与 Σ(各次合并值) 算的是同一个账，只是后者不用画树，更快且不易错。</p>
+<p>（验算：画树后 10、12 各在深度 3，16、21、30 各在深度 2：10×3 + 12×3 + 16×2 + 21×2 + 30×2 = 30 + 36 + 32 + 42 + 60 = 200 ✓，两条路结果一致。）</p>
 <h3>易错点</h3>
 <ul><li><strong>选 A（89）</strong>：把最后一次合并值（树根权值）当成 WPL——WPL 是全部合并值之和。</li><li><strong>每次没取最小两个</strong>：合并顺序错，WPL 会偏大，对应 208、289 这类干扰值。</li><li><strong>重复使用已合并的权值</strong>：合并后小权值"消失"，只留新结点继续参战。</li></ul>
 <blockquote>结论：WPL = 22 + 37 + 52 + 89 = 200，答案 <strong>B</strong>。</blockquote></div></div>
@@ -649,8 +651,10 @@ free(q);</code></pre></div></span><span class="choice-mark" aria-hidden="true"><
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：LSD 基数排序第 1 趟（按个位）</h2>
 <p>答案：<strong>C</strong>。</p>
-<h3>第一步：明确第 1 趟规则</h3>
-<p>最低位优先（LSD）从个位开始：按个位数字把元素分入 0–9 号桶，<strong>桶内保持原序列的先后顺序</strong>（先到先排，不重排），再按 0→9 依次收集。</p>
+<h3>第一步：明确第 1 趟规则与两条"为什么"</h3>
+<p>最低位优先（LSD）<strong>从最低有效位（个位）开始</strong>：按个位数字把元素分入 0–9 号桶，<strong>桶内保持原序列的先后顺序</strong>（先到先排，不重排），再按 0→9 依次收集。</p>
+<p><strong>为什么桶内必须保持原序？</strong> 这是稳定性在起作用：每一趟只按"本位"排大小，本位相同的元素谁先谁后要<strong>继承上一趟的顺序</strong>。若第一趟桶内乱排，下一趟按十位分桶时，同十位的元素之间的个位次序已经被打乱，个位信息就丢了——整套"逐位升级"的逻辑随即失效。</p>
+<p><strong>为什么从个位开始而不是最高位？</strong> 个位是最小的权重，先按它排好，再靠后面每一趟稳定排序把它"带"上去：按十位排完后，十位相同的数自动保持个位升序，十位不同的数按十位升序——最低位到最高位每趟走完，整体就完全有序。反过来从最高位开始，低位相同的数还得回头调整，方向就错了。</p>
 <h3>第二步：按个位分配（d = 个位数字）</h3>
 <table><thead><tr><th>桶</th><th>元素（按原序）</th></tr></thead><tbody><tr><td>1</td><td>151, 301</td></tr><tr><td>2</td><td>372, 892</td></tr><tr><td>3</td><td>93, 43</td></tr><tr><td>5</td><td>485</td></tr><tr><td>6</td><td>946, 146, 236</td></tr><tr><td>7</td><td>327</td></tr><tr><td>9</td><td>9</td></tr></tbody></table>
 <p>（0、4、8 号桶为空。）</p>
@@ -823,7 +827,8 @@ free(q);</code></pre></div></span><span class="choice-mark" aria-hidden="true"><
 <h3>第一步：无符号读法</h3>
 <p>把三个机器数直接按无符号解释：x = <code>FFFDH</code> = 65533，y = <code>FFDFH</code> = 65503，z = <code>7FFCH</code> = 32764。大小顺序是 <strong>z &lt; y &lt; x</strong>——选项 A 说 z &lt; x &lt; y（需要 x &lt; y，实际 x 更大）、选项 B 说 x &lt; y &lt; z，都不成立，排除 A、B。</p>
 <h3>第二步：补码读法</h3>
-<p>最高位为 1 是负数，真值 = 机器数 − 2^16（借位减 10000H）：</p>
+<p>补码不是另一套数制，而是<strong>模运算下的记数方式</strong>：16 位共有 65536（2^16）个状态，把这个"状态环"从中间掰开——最高位为 0 的 0000H~7FFFH 表示 0 ~ +32767；<strong>最高位为 1 的 8000H~FFFFH 表示 −32768 ~ −1</strong>。所以判读就两句话：最高位为 1 → 负数；<strong>真值 = 无符号解释值 − 2^16</strong>。</p>
+<p><strong>为什么"减 2^16"是合法的？</strong> 因为补码的定义就是同余：位串 FFFDH 之所以代表 −3，是因为 −3 ≡ 65533 (mod 65536)。位串本身没有符号，"最高位为 1"恰是"这个余数对应负真值"的记号，从余数还原真值，减一次模即可。（用"取反加一"验算：FFFDH 取反加一得 0003H = 3 → 真值 −3，与减模一致。）</p>
 <table><thead><tr><th>变量</th><th>机器数</th><th>最高位</th><th>真值</th></tr></thead><tbody><tr><td>x</td><td>FFFDH</td><td>1</td><td>FFFDH − 10000H = <strong>−3</strong></td></tr><tr><td>y</td><td>FFDFH</td><td>1</td><td>FFDFH − 10000H = <strong>−33</strong></td></tr><tr><td>z</td><td>7FFCH</td><td>0</td><td>正数 <strong>32764</strong></td></tr></tbody></table>
 <p>顺序为 <strong>y(−33) &lt; x(−3) &lt; z(32764)</strong>，选 D；选项 C 说 x &lt; y &lt; z，第一步就错在 −3 &lt; −33 不成立。</p>
 <h3>易错点</h3>
@@ -2431,19 +2436,22 @@ free(q);</code></pre></div></span><span class="choice-mark" aria-hidden="true"><
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：判断无向图是否存在 EL 路径（欧拉路径）</h2>
-<h3>答题框架</h3>
-<p>三问分别是：设计思想、C 语言实现、复杂度分析。核心考点是<strong>欧拉路径的度数判定</strong>：无向连通图中，度为奇数的顶点个数为 0 或 2 时，存在包含所有边且长度为 |E| 的路径（EL 路径）。</p>
+<h3>第 0 步：先立机制——为什么"奇度顶点 0 或 2 个"就能一笔画</h3>
+<p>把 EL 路径想成<strong>一笔画</strong>：沿路径每经过一个顶点一次，就从它身上用掉两条边（一进一出），只有起点和终点例外——各有一条边只用了"一半"。于是路径中间的顶点必须全是偶度，允许奇度的只有起点、终点这两个位置：</p>
+<ul><li>奇度顶点 <strong>0 个</strong>：起点与终点重合，路径闭合成<strong>欧拉回路</strong>——它同样包含所有边且长度为 |E|，也是一条 EL 路径；</li><li>奇度顶点 <strong>2 个</strong>：这两个奇度点正好一个当起点、一个当终点，EL 路径从其中一点画到另一点。</li></ul>
+<p><strong>为什么奇度顶点不可能是 1 个、3 个？</strong> 所有顶点度数之和 = 2|E|（每条边给两个端点各贡献 1 度），必为偶数；偶度顶点贡献偶数，所以"度数总和的奇偶性 = 奇度顶点个数的奇偶性"，奇度顶点永远有偶数个。"不大于 2 的偶数"就只剩 0 和 2 两个候选——这正是题目条件的来历。</p>
+<p>题目已给定"无向连通图、|E|&gt;0"，连通性不必再查，判定只剩一件事：<strong>数出奇度顶点的个数</strong>。</p>
 <h3>第 1）问：基本设计思想</h3>
-<p>逐个顶点统计度数：无向图邻接矩阵中，顶点 i 的度 = 邻接矩阵第 i 行元素之和（图无自环）。用计数器 count 统计<strong>度为奇数的顶点个数</strong>：count 为 0 或 2 → 存在 EL 路径，返回 1；否则返回 0。</p>
+<p>机制落到邻接矩阵上：无向图的邻接矩阵对称，每条与顶点 i 相连的边都在第 i 行贡献一个 1（图无自环，对角线不用单独处理），所以<strong>顶点 i 的度 = 第 i 行元素之和</strong>。逐行求度，用 count 累计奇度顶点个数：count 为 0 或 2 → 返回 1，否则返回 0。</p>
 <h3>第 2）问：算法实现（与参考答案同口径）</h3>
 <p><code>int IsExistEL(MGraph G)</code> 的骨架：</p>
 <ul><li>外层 <code>for (i = 0; i &lt; G.numVertices; i++)</code>：内层先把 <code>degree</code> 清零，再 <code>for (j = 0; j &lt; G.numVertices; j++) degree += G.Edge[i][j];</code></li><li><code>if (degree % 2 != 0) count++;</code> —— 奇度顶点计数。</li><li>循环结束后 <code>if (count == 0 || count == 2) return 1; else return 0;</code></li></ul>
 <p>关键注释点：degree 初始化清零、奇度判断、<code>count==0 || count==2</code> 的最终判定。</p>
 <h3>第 3）问：复杂度</h3>
-<p>双重循环遍历整个邻接矩阵：时间复杂度 <strong>O(n²)</strong>，n 为顶点数 numVertices；只用了 degree、count 等常数个辅助变量，空间复杂度 <strong>O(1)</strong>。</p>
+<p>双重循环把矩阵的 n² 个元素<strong>每个看一次</strong>，与实际边数无关——邻接矩阵的开销由"矩阵多大"决定，不由"边有多少"决定，时间复杂度 <strong>O(n²)</strong>（n 为 numVertices）。辅助变量只有 degree、count、i、j 常数个，输入矩阵本身不算额外空间，空间复杂度 <strong>O(1)</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉"0 也算存在"</strong>：奇度顶点为 0 时存在欧拉回路，同样是 EL 路径，条件必须写成 <code>count==0 || count==2</code>。</li><li><strong>度数统计不完整</strong>：无向图邻接矩阵对称，整行求和即可；只加一半会数错。</li><li><strong>复杂度写成 O(n+e)</strong>：那是邻接表的口径；邻接矩阵必须扫全表，是 O(n²)。</li><li><strong>忘记初始化</strong>：degree 每行开始前必须清零，否则累加到上一个顶点的度上。</li></ul>
-<blockquote>一句话：数奇度顶点，0 或 2 个就有 EL 路径；矩阵逐行求度，O(n²) 时间、O(1) 空间。</blockquote></div></div>
+<ul><li><strong>漏掉"0 也算存在"</strong>：奇度顶点为 0 时是欧拉回路，首尾相接、同样包含所有边且长度为 |E|，条件必须写成 <code>count==0 || count==2</code>。</li><li><strong>度数统计不完整</strong>：无向图邻接矩阵对称，整行求和即可；只加一半会数错。</li><li><strong>复杂度写成 O(n+e)</strong>：那是邻接表的口径——邻接表只存实际边才与 e 有关；邻接矩阵必须扫全表。</li><li><strong>忘记初始化</strong>：degree 每行开始前必须清零，否则会累加到上一个顶点的度上。</li></ul>
+<blockquote>记忆锚点：一笔画只允许起点终点各"欠"一条边 → 奇度顶点 0 或 2 个；矩阵第 i 行行和 = 顶点 i 的度；扫全矩阵 = O(n²) 时间、O(1) 空间。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2577,27 +2585,30 @@ else
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：16 位定长指令的译码与带符号运算</h2>
-<h3>答题框架</h3>
-<p>先由机器参数定各寄存器与 ALU 的位数（第 1 问），再数操作码与寄存器编号的组合数（第 2 问），然后按位段拆指令、做带符号减/乘并判溢出（第 3 问），最后答扩展方式与指令格式（第 4、5 问）。</p>
-<p>指令格式：R 型 = <code>000000</code>（6 位）+ rs（2 位）+ rt（2 位）+ rd（2 位）+ op1（4 位），功能 <code>R[rd] ← R[rs] op1 R[rt]</code>；I 型 = op2（6 位）+ rs + rt + imm（4 位）；J 型 = op3（6 位）+ target（10 位），<code>PC 低 10 位 ← target</code>。</p>
-<h3>第 1）问</h3>
-<ul><li>ALU 宽度 = 字长 = <strong>16 位</strong>；</li><li>可寻址空间由地址线决定：2^20 B = <strong>1 MB</strong>；</li><li>IR 存整条指令 = <strong>16 位</strong>；MAR 与地址线等宽 = <strong>20 位</strong>；MDR 与数据线等宽 = <strong>8 位</strong>。</li></ul>
-<h3>第 2）问</h3>
-<ul><li>R 型：op1 有 4 位 → 最多 2^4 = <strong>16 种</strong>操作；</li><li>I 型与 J 型的操作码 op2、op3 都占指令前 6 位，合用同一个 6 位编码空间共 64 个码点，其中 <code>000000</code> 已被 R 型占用 → 最多 64 − 1 = <strong>63 种</strong>；</li><li>寄存器编号 rs/rt/rd 都是 2 位 → 通用寄存器最多 2^2 = <strong>4 个</strong>。</li></ul>
-<h3>第 3）问</h3>
-<p><code>01B2H</code> = 0000 0001 1011 0010B，按位段拆开：</p>
-<table><thead><tr><th>位段</th><th>编码</th><th>含义</th></tr></thead><tbody><tr><td>前 6 位</td><td>000000</td><td>R 型标志</td></tr><tr><td>rs</td><td>01</td><td>1 号寄存器</td></tr><tr><td>rt</td><td>10</td><td>2 号寄存器</td></tr><tr><td>rd</td><td>11</td><td>3 号寄存器</td></tr><tr><td>op1</td><td>0010</td><td>带符号整数减法</td></tr></tbody></table>
-<p>功能：<code>R[3] ← R[1] − R[2]</code>。<code>01B3H</code> 与它只差最低位，op1 = 0011 → 带符号整数乘法：<code>R[3] ← R[1] × R[2]</code>。</p>
-<p>带符号真值：R[1] = <code>B052H</code>，最高位 1 为负，真值 = B052H − 10000H = −4FAEH = −20398；R[2] = <code>0008H</code> = 8。</p>
-<ul><li><strong>减法</strong>：−20398 − 8 = −20406；16 位补码 = 10000H − 4FB6H = <code>B04AH</code>；−20406 在范围 [−32768, 32767] 内 → <strong>不溢出</strong>。</li><li><strong>乘法</strong>：−20398 × 8 = −163184，远超 16 位补码范围 → <strong>溢出</strong>；取低 16 位得 8290H（−163184 + 3×65536 = 33424 = 8290H）。</li></ul>
-<h3>第 4）问</h3>
-<p>访存指令中 imm 是基址偏移量，偏移可正可负（向前或向后访问）；地址计算做加法时必须<strong>符号扩展</strong>，才能保持 imm 的带符号数值不变。</p>
-<h3>第 5）问</h3>
-<p>无条件转移只需改变 PC，不需要寄存器操作数；J 型格式正是"操作码 + 转移目标"，<code>PC 低 10 位 ← target</code> → 采用 <strong>J 型格式</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：16 位定长指令的位数分配、译码与带符号运算</h2>
+<h3>第 0 步：先立机制——每个部件的位数由"它一次要装下什么"决定</h3>
+<p>位数题不要背结论，先问"这个东西一次必须完整装下/送出什么"：</p>
+<ul><li><strong>ALU</strong>：一次对两个操作数完成一次运算，操作数是一个字 → ALU 宽度 = 字长 = <strong>16 位</strong>；</li><li><strong>IR</strong>：一条指令必须一口气取进 IR 才能译码 → IR = 指令字长。定长指令字 16 位 → <strong>16 位</strong>；</li><li><strong>MAR</strong>：地址沿地址线一位一位送出，MAR 的每一位都要有对应的地址线 → MAR = 地址线条数 = <strong>20 位</strong>；</li><li><strong>MDR</strong>：数据沿数据线搬运，数据线只有 8 位，一次总线事务只能搬 1 字节 → MDR = 数据线条数 = <strong>8 位</strong>。</li></ul>
+<p>（为什么 16 位指令装得进 8 位 MDR？分两次：先取高字节经 MDR 转存 IR，再取低字节——这正是"按字节编址 + 8 位数据线"的机器取一条指令的真实过程。）</p>
+<p>可寻址空间同理：20 位地址线能给出 2^20 个不同地址，按字节编址 → <strong>2^20 B = 1 MB</strong>。空间由地址线根数决定，与字长无关。</p>
+<h3>第 1）问：答案</h3>
+<p>ALU 16 位；可寻址主存 2^20 B = 1 MB；IR 16 位、MAR 20 位、MDR 8 位。</p>
+<h3>第 2）问：编码空间账</h3>
+<p>三种格式共享<strong>前 6 位</strong>这个公共字段：CPU 取来指令先看前 6 位——是 <code>000000</code> 就按 R 型处理，真正的操作编码藏在其后的 op1 里；否则这 6 位就是操作码（在 I 型里叫 op2、在 J 型里叫 op3，是<strong>同一个字段的两个名字</strong>，不会同时出现）。</p>
+<ul><li>R 型：op1 有 4 位 → 最多 2^4 = <strong>16 种</strong>操作；</li><li>I 型 + J 型：共用 6 位编码共 64 个码点，其中 <code>000000</code> 已被 R 型征用 → 64 − 1 = <strong>63 种</strong>；</li><li>rs/rt/rd 各 2 位，编号最多编出 2^2 = 4 个 → 通用寄存器最多 <strong>4 个</strong>。</li></ul>
+<h3>第 3）问：拆指令、做运算、判溢出</h3>
+<p><code>01B2H</code> = 0000 0001 1011 0010。前 6 位 = 000000 → R 型，按位段拆开：</p>
+<table><thead><tr><th>位段</th><th>编码</th><th>含义</th></tr></thead><tbody><tr><td>rs</td><td>01</td><td>1 号寄存器</td></tr><tr><td>rt</td><td>10</td><td>2 号寄存器</td></tr><tr><td>rd</td><td>11</td><td>3 号寄存器</td></tr><tr><td>op1</td><td>0010</td><td>带符号整数减法</td></tr></tbody></table>
+<p>功能：<code>R[3] ← R[1] − R[2]</code>。<code>01B3H</code> 与它只差最低位，op1 = 0011 → 乘法：<code>R[3] ← R[1] × R[2]</code>。</p>
+<p>求真值用减模：R[1] = B052H 最高位为 1 → 负数，真值 = 无符号值 − 模 = 45138 − 65536 = −20398；R[2] = 0008H = 8。</p>
+<ul><li><strong>减法</strong>：−20398 − 8 = −20406，落在 16 位补码范围 [−32768, 32767] 内 → <strong>不溢出</strong>；写回 16 位补码 = 65536 − 20406 = 45130 = <strong>B04AH</strong>。</li><li><strong>乘法</strong>：−20398 × 8 = −163184，远超范围 → <strong>溢出</strong>。判溢出看的是<strong>真值</strong>是否越界，不是结果最高位长什么样；目的寄存器 rd 只有 16 位，硬件只保留低 16 位：−163184 + 3×65536 = 33424 = <strong>8290H</strong>。</li></ul>
+<h3>第 4）问：imm 要符号扩展</h3>
+<p>imm 是<strong>带符号</strong>偏移量，可正可负（负数表示"从基址往回走"）。地址计算 = 基址 + imm，要在加法器里做补码加法，imm 必须先扩到与基址同宽：只有<strong>符号扩展</strong>（高位补符号位）才能保持数值不变。若零扩展，负偏移会被读成巨大的正数，访存地址完全错掉——与 2019 年那道基址寻址题是同一个机制。</p>
+<h3>第 5）问：无条件转移用 J 型</h3>
+<p>无条件转移只需要"把 PC 改成目标地址"，不碰寄存器、不做运算；R/I 型的寄存器号和 imm 位段对它毫无用处，而 J 型恰好就是"操作码 + 10 位 target"（PC 低 10 位 ← target），位段一点不浪费 → 采用 <strong>J 型格式</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，与字长无关。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，总共只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判断依据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：零扩展会把负偏移变成大正数，地址算错。</li></ul>
-<blockquote>位段账：R 型 = 000000 + 三个 2 位寄存器号 + 4 位扩展操作码；01B2H / 01B3H 只差 op1 末位，分别是减法与乘法。</blockquote></div></div>
+<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，16 位指令分两次取、每次装 1 字节。</li><li><strong>可寻址空间用字长算成 64 KB</strong>：空间由地址线（20 位）决定，2^20 B = 1 MB。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，合计只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：负偏移变大正数，地址算错。</li></ul>
+<blockquote>记忆锚点：MAR/MDR 跟着地址线/数据线走，IR 跟着指令字长走；前 6 位是公共判别字段，000000 让给 R 型；带符号数先减模求真值，溢出看真值是否越界。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2650,24 +2661,26 @@ else
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TLB 2 路组相联的划分与 LRU 替换</h2>
-<h3>答题框架</h3>
-<p>先把虚拟地址切成"虚页号 + 页内偏移"（第 1 问），再把虚页号切成"TLB 标记 + 组号"（第 2 问），然后按组号归组、按 LRU 模拟访问序列找出被替换的表项（第 3 问），最后算虚拟地址加长后表项位数增加多少（第 4 问）。</p>
-<h3>第 1）问</h3>
-<p>页大小 4 KB = 2^12 → 页内地址 <strong>12 位</strong>；虚拟地址 30 位 → 虚页号 = 30 − 12 = <strong>18 位</strong>。</p>
-<ul><li>虚页号：高 18 位（位 29～12）；</li><li>页内地址：低 12 位（位 11～0）。</li></ul>
-<h3>第 2）问</h3>
-<p>TLB 共 8 组，组号需 log2 8 = <strong>3 位</strong>。按"虚页号高位作标记、低位作组号"：</p>
-<ul><li>TLB 组号 = 虚页号低 3 位（虚拟地址位 14～12）；</li><li>TLB 标记 = 虚页号高 15 位（虚拟地址位 29～15）。</li></ul>
-<h3>第 3）问</h3>
-<p>组号 = 虚页号 mod 8（即虚页号低 3 位）：</p>
-<table><thead><tr><th>次</th><th>虚页号</th><th>组号</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>10</td><td>2</td><td>调入</td></tr><tr><td>2</td><td>12</td><td>4</td><td>调入</td></tr><tr><td>3</td><td>16</td><td>0</td><td>调入</td></tr><tr><td>4</td><td>7</td><td>7</td><td>调入</td></tr><tr><td>5</td><td>26</td><td>2</td><td>组 2 第 2 路调入</td></tr><tr><td>6</td><td>4</td><td>4</td><td>组 4 第 2 路调入</td></tr><tr><td>7</td><td>12</td><td>4</td><td>命中</td></tr><tr><td>8</td><td>20</td><td>4</td><td>组 4 已满，需替换</td></tr></tbody></table>
-<p>第 7 次 12 命中后，组 4 内两行是 {12, 4}：12 刚被访问，4 自第 6 次调入后未再动——<strong>LRU 是 4</strong>。第 8 次访问虚页号 20（20 mod 8 = 4）时组 4 已满，按 LRU 替换掉虚页号 4 的表项，20 占据其位置。→ <strong>虚页号 4 对应的 TLB 表项被替换</strong>。</p>
-<h3>第 4）问</h3>
-<p>虚拟地址增至 32 位后，页内地址仍 12 位，虚页号增至 32 − 12 = 20 位；组号仍是 3 位，TLB 标记增至 20 − 3 = 17 位，比原 15 位多 2 位；表项中物理页号等其余字段不变 → <strong>TLB 表项位数增加 2 位</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：虚拟地址切分与 TLB 组相联的 LRU 替换</h2>
+<h3>第 0 步：先立机制——虚拟地址的"两刀切分"</h3>
+<p>虚拟地址的切分永远按固定次序来。<strong>第一刀按页大小切</strong>：页内偏移的任务是给页内每个字节编号，页大小 4 KB = 2^12 B，编完一页需要 12 位，所以低 12 位必是页内地址（页按 2 的幂对齐，低 12 位天然落在页内），剩下的高位整体就是虚页号。<strong>第二刀按 TLB 的组织方式切</strong>：TLB 查找分两步——先"定位组"，再"在组内比对认页"，所以虚页号的低位作组号（取位即可直接定位组），高位作标记（在组内逐路比较，负责认出"到底是哪个虚页"）。</p>
+<h3>第 1）问：虚页号 / 页内地址</h3>
+<ul><li>页内地址：低 <strong>12</strong> 位（位 11～0）——位数只由页大小决定，与虚拟地址总位数无关；</li><li>虚页号：30 − 12 = <strong>18</strong> 位，即高 18 位（位 29～12）。</li></ul>
+<h3>第 2）问：TLB 标记 / 组号</h3>
+<p>8 组 → 组号需 log2 8 = <strong>3 位</strong>。按题干"高位作标记、低位作组号"：</p>
+<ul><li>组号 = 虚页号低 3 位 = 虚拟地址位 14～12；</li><li>标记 = 虚页号剩下的高 15 位 = 虚拟地址位 29～15。</li></ul>
+<p>为什么标记是"剩余全部高位"：同一组的 2 路表项本来就属于这个组，单靠组号分不出彼此，必须由标记认出具体虚页——除组号外的所有虚页号位都得进标记。</p>
+<h3>第 3）问：模拟访问序列</h3>
+<p>组号 = 虚页号 mod 8（即低 3 位）。2 路组相联 = 每组只放 2 个表项；LRU 淘汰组内<strong>最久未被访问</strong>的表项，且<strong>命中也算一次访问</strong>、会刷新"新鲜度"。逐次模拟：</p>
+<table><thead><tr><th>次</th><th>虚页号</th><th>组号</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>10</td><td>2</td><td>调入</td></tr><tr><td>2</td><td>12</td><td>4</td><td>调入</td></tr><tr><td>3</td><td>16</td><td>0</td><td>调入</td></tr><tr><td>4</td><td>7</td><td>7</td><td>调入</td></tr><tr><td>5</td><td>26</td><td>2</td><td>组 2 第 2 路调入</td></tr><tr><td>6</td><td>4</td><td>4</td><td>组 4 第 2 路调入</td></tr><tr><td>7</td><td>12</td><td>4</td><td>命中，刷新 12</td></tr><tr><td>8</td><td>20</td><td>4</td><td>组 4 已满，LRU 替换</td></tr></tbody></table>
+<p>第 7 次 12 命中后，组 4 里是 {12, 4}：12 刚被访问过，4 自第 6 次调入后再没动过——最久未用的是 4。第 8 次访问 20（20 mod 8 = 4）时组 4 已满，按 LRU 淘汰<strong>虚页号 4</strong> 的表项，20 占据其位置。</p>
+<h3>第 4）问：虚拟地址加长后表项加几位</h3>
+<p>虚拟地址 30 → 32 位时，三段里只有标记会变长，逐段检查：</p>
+<ul><li>页大小不变 → 页内偏移仍 12 位；</li><li>TLB 组数不变（仍 8 组）→ 组号仍 3 位；</li><li>虚页号增至 32 − 12 = 20 位 → 标记增至 20 − 3 = 17 位，比原 15 位<strong>多 2 位</strong>；</li><li>表项另一头的物理页号由物理地址决定：物理地址仍 24 位、页大小不变 → 物理页号仍 12 位，不变。</li></ul>
+<p>所以 <strong>TLB 表项位数增加 2 位</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>组号与路数混淆</strong>：8 组对应组号 3 位；2 路只说明每组放 2 个表项，不影响组号位数。</li><li><strong>LRU 数错</strong>：第 7 次 12 命中后，组内最久未用的是 4 不是 12。</li><li><strong>标记位数算成 18</strong>：虚页号低 3 位已作组号，标记只剩 15 位；虚拟地址变 32 位后标记是 17 位，不是 20 位。</li></ul>
-<blockquote>切分链：虚拟地址（30 位）= TLB 标记（15）+ 组号（3）+ 页内偏移（12）。</blockquote></div></div>
+<ul><li><strong>组号与路数混淆</strong>：8 组 → 组号 3 位；"2 路"只说明每组放 2 个表项，不占组号位数。</li><li><strong>LRU 数错</strong>：第 7 次 12 命中把 12 刷新，组内最久未用的是 4 不是 12。</li><li><strong>标记位数算成 18 或 20</strong>：标记 = 虚页号减去组号后的剩余位（原 15 位；变长后 17 位）。</li><li><strong>第 4 问把物理页号也加长</strong>：物理地址 24 位没变，物理页号 12 位不变，多出的 2 位全落在标记上。</li></ul>
+<blockquote>切分链：虚拟地址（30 位）= TLB 标记（15）+ 组号（3）+ 页内偏移（12）；虚拟地址加长 2 位，标记跟着加长 2 位。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2784,19 +2797,21 @@ else
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：多阶段引导顺序与制作启动盘的顺序</h2>
-<h3>第 1）问：系统启动过程中各程序的执行顺序</h3>
-<p><strong>答案：ROM 中的引导程序 → 磁盘引导程序 → 分区引导程序 → 操作系统的初始化程序。</strong></p>
-<p>加电后 CPU 首先执行 ROM 中的引导程序；它读入硬盘第一个扇区（主引导记录 MBR）并执行其中的<strong>磁盘引导程序</strong>；磁盘引导程序根据分区表选定要引导的分区，读入该分区第一个扇区中的<strong>分区引导程序</strong>并执行；分区引导程序装载该分区中的操作系统，把控制权交给<strong>操作系统的初始化程序</strong>，完成系统初始化。启动链条是逐级"接力"的。</p>
-<h3>第 2）问：制作启动盘时 4 个操作的正确顺序</h3>
-<p><strong>答案：磁盘的物理格式化 → 对磁盘进行分区 → 逻辑格式化 → 操作系统的安装。</strong></p>
-<ul><li><strong>物理格式化（低级格式化）</strong>：把盘面划分为扇区，建立磁盘的最小读写单位，这是后续一切操作的基础；</li><li><strong>对磁盘进行分区</strong>：在格式化后的磁盘上划分出若干分区，并记录分区表等描述信息；</li><li><strong>逻辑格式化（高级格式化）</strong>：在分区上建立文件系统——初始化文件系统的元数据、建立根目录等；</li><li><strong>安装操作系统</strong>：把操作系统程序装入分区，此后该盘才能作为启动盘引导。</li></ul>
-<p>顺序逻辑：先有扇区（物理格式化）才能分区；先有分区才能在其上建文件系统（逻辑格式化）；先有文件系统才能安放操作系统文件。</p>
-<h3>第 3）问：扇区划分与根目录建立分别发生在哪一步</h3>
-<ul><li><strong>磁盘扇区的划分</strong>在"<strong>磁盘的物理格式化</strong>"中完成；</li><li><strong>文件系统根目录的建立</strong>在"<strong>逻辑格式化</strong>"中完成。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：多阶段引导的接力顺序与制盘顺序</h2>
+<h3>第 0 步：先立机制——为什么启动必须"逐级接力"</h3>
+<p>CPU 加电那一刻，内存（RAM）是空的，没有程序可取，所以第一步只能执行<strong>固化在 ROM 里</strong>的引导程序——它不依赖磁盘、加电即可运行。但 ROM 里的程序做不了太多事，它只认得"约定好的固定位置"：去硬盘第一个扇区（主引导记录 MBR）把<strong>磁盘引导程序</strong>读进内存、交出控制权；磁盘引导程序查分区表，把选定分区第一个扇区里的<strong>分区引导程序</strong>读进内存、交出控制权；分区引导程序认识该分区的文件系统，把操作系统装载进来，交给<strong>操作系统的初始化程序</strong>。接力能一棒一棒传下去，靠的是"每一级都知道下一级放在哪个固定位置"。</p>
+<h3>第 1）问：执行顺序</h3>
+<p><strong>ROM 中的引导程序 → 磁盘引导程序 → 分区引导程序 → 操作系统的初始化程序。</strong></p>
+<p>（为什么磁盘引导程序不能先执行：它躺在硬盘上，必须先被 ROM 中的程序加载进内存才能运行；后面每一级同理——先被上一级装入，才能接棒。）</p>
+<h3>第 2）问：制盘的 4 个操作顺序</h3>
+<p><strong>磁盘的物理格式化 → 对磁盘进行分区 → 逻辑格式化 → 操作系统的安装。</strong></p>
+<p>顺序由依赖关系决定：<strong>扇区是磁盘读写的最小单位</strong>，分区表、文件系统数据最终都要写到具体扇区上，没有扇区就无处落笔，所以物理格式化必须最先；文件系统建在"某个分区"之内，先有分区这个容器，才能对分区做逻辑格式化；安装操作系统是把 OS 文件写进分区的文件系统里，所以最后。</p>
+<ul><li><strong>物理格式化（低级格式化）</strong>：划分扇区，建立最小读写单位；</li><li><strong>对磁盘进行分区</strong>：划出若干分区，写好分区表等描述信息；</li><li><strong>逻辑格式化（高级格式化）</strong>：在分区上建立文件系统（初始化元数据、建根目录）；</li><li><strong>安装操作系统</strong>：把 OS 装入分区，此后该盘才能引导。</li></ul>
+<h3>第 3）问：扇区划分与根目录建立发生在哪一步</h3>
+<ul><li><strong>磁盘扇区的划分</strong> → "<strong>磁盘的物理格式化</strong>"：低级格式化的本职工作就是把盘面划成扇区；</li><li><strong>文件系统根目录的建立</strong> → "<strong>逻辑格式化</strong>"：根目录是文件系统的目录结构，属于"建文件系统"这件事。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>把 ROM 引导程序与磁盘引导程序颠倒</strong>：ROM 中的程序最先执行，磁盘引导程序是被它读入内存后才执行的。</li><li><strong>把分区放在物理格式化之前</strong>：没有划分扇区的"生盘"无法直接分区。</li><li><strong>把建根目录归到"安装操作系统"</strong>：根目录属于文件系统的结构，随逻辑格式化建立，与是否安装 OS 无关。</li></ul>
-<blockquote>记忆锚点：启动链条 ROM → 磁盘引导 → 分区引导 → OS 初始化；制盘链条 物理格式化 → 分区 → 逻辑格式化 → 安装 OS；扇区划分属物理格式化，根目录建立属逻辑格式化。</blockquote></div></div>
+<ul><li><strong>把 ROM 引导程序与磁盘引导程序颠倒</strong>：ROM 里的程序最先执行，磁盘引导程序是被它读进内存后才执行的。</li><li><strong>把分区放在物理格式化之前</strong>：没划扇区的"生盘"无处记录分区信息。</li><li><strong>把建根目录归到"安装操作系统"</strong>：根目录随逻辑格式化建立，与装不装 OS 无关。</li></ul>
+<blockquote>记忆锚点：启动接力 ROM → 磁盘引导 → 分区引导 → OS 初始化；制盘 物理格式化 → 分区 → 逻辑格式化 → 安装 OS；扇区划分属物理格式化，根目录建立属逻辑格式化。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2849,22 +2864,24 @@ else
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：域名访问全过程中 DNS、ARP 与交换机自学习</h2>
-<h3>答题框架</h3>
-<p>先在草稿上还原 t0 → t1 的完整事件序列：<strong>ARP 找 DNS 服务器的 MAC → DNS 查询/应答 → ARP 找默认网关的 MAC → 发 HTTP 请求</strong>。三问都从这条时间线上取材。</p>
-<h3>第一问：除了 HTTP 还用了哪个应用层协议？如何封装？</h3>
-<p>浏览器手里只有域名 www.abc.com，必须先向本地域名服务器（192.168.1.126）发 <strong>DNS 查询</strong>。DNS 基于 UDP，封装链为：</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：域名访问全程中 DNS、ARP 与交换机自学习</h2>
+<h3>第 0 步：先立机制——一次 Web 访问前要先补齐哪些"地址"</h3>
+<p>H1 想把一个包发出去，帧里必须同时填好<strong>目的 IP</strong> 和<strong>目的 MAC</strong>。t₀ 时 H1 手里只有域名 www.abc.com，事件顺序被"缺什么补什么"推着走：</p>
+<ol><li><strong>域名 → IP</strong>：向本地域名服务器（192.168.1.126，与 H1 同网段）发 DNS 查询。但发帧还需要对方的 MAC，而 H1 的 <strong>ARP 表为空</strong> → 先<strong>广播 ARP 请求</strong>找 192.168.1.126 的 MAC（为什么必须广播：目的 MAC 未知，广播是唯一能问遍全网段的方式）；DNS 服务器<strong>单播</strong> ARP 应答——它从请求里已经拿到了 H1 的 MAC，可以定点回复。</li><li><strong>DNS 查询 / 应答</strong>（UDP）：拿到 Web 服务器的 IP。</li><li>Web 服务器在网外，包必须先交给<strong>默认网关</strong> 192.168.1.1（路由器 R）——H1 的 ARP 表里仍没有网关的 MAC → <strong>第二次 ARP 广播</strong>，路由器单播应答。</li><li>封装 <strong>HTTP 请求</strong>帧发出 → t₁。</li></ol>
+<p>为什么两次 ARP 找的不是同一个对象：DNS 服务器与 H1 同网段，可直接交付；www.abc.com 在网外，下一跳永远是网关。</p>
+<h3>第 1）问：另一个应用层协议与封装链</h3>
+<p>t₀ 到 t₁ 期间除 HTTP 外运行的协议是 <strong>DNS</strong>。DNS 基于 UDP，封装链：</p>
 <p><code>DNS 报文 → UDP 数据报 → IP 数据报 → 以太网帧</code></p>
-<p>对照记忆：HTTP 报文走 <code>HTTP → TCP → IP → 以太网帧</code>，差别在传输层。</p>
-<h3>第二问：t1 时刻 S 的交换表</h3>
-<p>交换机自学习规则：从端口 X 收到帧时，把"帧的<strong>源 MAC</strong> → 端口 X"写入交换表。逐帧记录：</p>
+<p>对照记忆：HTTP 报文走 <code>HTTP → TCP → IP → 以太网帧</code>，差别只在传输层。</p>
+<h3>第 2）问：t₁ 时刻 S 的交换表</h3>
+<p>自学习机制：交换机从端口 X 收到帧，就把"帧的<strong>源 MAC</strong> → X"写入交换表。为什么学的是源 MAC：交换机学习的目的是"以后往这个 MAC 发帧时知道从哪个端口出"，而回程方向与来帧相反——入端口的源 MAC 正是回程帧的去向。t₀ 到 t₁ 间触发学习的帧：</p>
 <table><thead><tr><th>触发学习的帧</th><th>进入端口</th><th>学到表项</th></tr></thead><tbody><tr><td>H1 的 ARP 查询广播</td><td>4</td><td>CC → 4</td></tr><tr><td>DNS 服务器的 ARP 应答</td><td>1</td><td>BB → 1</td></tr><tr><td>路由器 R 的 ARP 应答</td><td>2</td><td>AA → 2</td></tr></tbody></table>
-<p>（CC/BB/AA 即 <code>00-11-22-33-44-CC/BB/AA</code>。）此后的 DNS 查询/应答、HTTP 请求都是单播帧且表项已齐，只查表转发、不再新增。故 t1 时刻交换表为：<strong>CC→4、BB→1、AA→2</strong>。</p>
-<h3>第三问：H2 至少收到几个帧？</h3>
-<p>交换机对<strong>广播帧泛洪</strong>、对查到表项的单播帧定点转发。H2 挂在端口 3，只有泛洪才轮得到它。全程 H2 恰好赶上两次泛洪：H1 的两次 <strong>ARP 查询广播帧</strong>（一次找 DNS 服务器的 MAC，一次找网关 192.168.1.1 的 MAC），故至少收到 <strong>2 个帧</strong>，目的 MAC 均为 <code>FF-FF-FF-FF-FF-FF</code>。</p>
+<p>（CC/BB/AA 即 <code>00-11-22-33-44-CC/BB/AA</code>；ARP 应答虽是单播，源 MAC 同样触发学习。）之后的 DNS 查询/应答与 HTTP 请求都是表项已齐的单播帧，只查表转发、不再新增。故 t₁ 时刻交换表为：<strong>CC → 4、BB → 1、AA → 2</strong>。</p>
+<h3>第 3）问：H2 收到几个帧</h3>
+<p>交换机对<strong>广播帧泛洪</strong>（除入端口外全部转发）、对能查到表项的单播帧<strong>定点转发</strong>。H2 挂在端口 3，只有泛洪才轮得到它。时间线上 H2 恰好赶上两次泛洪——H1 的两次 <strong>ARP 查询广播帧</strong>（找 DNS 服务器 MAC、找网关 MAC），故至少收到 <strong>2 个帧</strong>，目的 MAC 均为 <code>FF-FF-FF-FF-FF-FF</code>。DNS/HTTP 都是单播帧，定点转发，H2 收不到。</p>
 <h3>易错点</h3>
-<ul><li><strong>把封装链答成 DNS → TCP → IP</strong>：DNS 用 UDP 不用 TCP。</li><li><strong>交换表漏记 BB 或 AA</strong>：ARP 应答虽是单播，但它的源 MAC 同样触发学习。</li><li><strong>认为 H2 会收到 DNS/HTTP 帧</strong>：这些是单播帧，交换机定点转发，H2 收不到。</li></ul>
-<blockquote>一句话：域名访问 = 先 DNS（UDP）后 HTTP（TCP）；交换表学的是"入端口的源 MAC"；H2 只能收到 ARP 查询广播帧，共 2 个，目的 MAC 全 F。</blockquote></div></div>
+<ul><li><strong>把封装链答成 DNS → TCP → IP</strong>：DNS 用 UDP 不用 TCP。</li><li><strong>交换表漏记 BB 或 AA</strong>：ARP 应答是单播，但源 MAC 照样触发学习。</li><li><strong>认为 H2 会收到 DNS/HTTP 帧</strong>：单播帧定点转发，泛洪的只有 ARP 查询。</li><li><strong>漏掉第二次 ARP</strong>：找 DNS 服务器和找默认网关是两次独立解析，各广播一次。</li></ul>
+<blockquote>一句话：域名访问 = 先 DNS（UDP）后 HTTP（TCP），中间夹两次 ARP 广播；交换表学"入端口的源 MAC"；H2 只收到 2 个目的 MAC 全 F 的 ARP 广播帧。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

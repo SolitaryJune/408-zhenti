@@ -107,17 +107,22 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：ADD (R1)，R0 执行阶段的节拍与控制信号</h2>
-<h3>第一步：答题框架</h3>
-<p>指令功能：(R0) + ((R1)) → (R1) 所指主存单元。取指与译码（C1~C4）已完成，执行阶段要做三件事：<strong>取内存操作数 → ALU 相加 → 写回主存</strong>。列节拍时逐拍问「这拍总线上走什么、谁打入」，一个节拍内只安排互不冲突的传输。</p>
-<h3>第二步：基本方案（6 个节拍）</h3>
+<h3>第 0 步：机制先行——单内总线数据通路的运行规则</h3>
+<p>先看清数据通路图的骨架：R0、R1、PC、IR、MAR、MDR、A、AC 都挂在<strong>一条内总线</strong>上；ALU 的一个输入端接暂存器 A，另一个输入端直接取自内总线，运算结果送 AC。访存走<strong>另一条外部通路</strong>：地址由 MAR 送出（题设 MAR 输出一直使能，地址可长期保持），数据经 DB 进出 MDR——所以 MDR 有两套门口：对内的 MDRin/MDRout，对外的 MDRinE/MDRoutE。</p>
+<p>由「一条内总线」直接推出列节拍的三条铁律：</p>
+<ol><li><strong>一拍一次总线传送</strong>：同一拍不能有两个部件同时往内总线送数，一个部件也不能「既被打入又被读走」。</li><li><strong>访存前地址必须就位</strong>：读操作以 MAR 的<strong>当前</strong>内容为地址，MAR←(R1) 与 MDR←M(MAR) 有数据依赖，不能同拍。</li><li><strong>ALU 两端不能都等总线</strong>：两个源操作数必须有一个先锁进 A，另一拍另一个操作数才上总线进 ALU。</li></ol>
+<p>执行阶段的目标：(R0) + ((R1)) → (R1) 所指主存单元。取指与译码（C1~C4）已完成，剩下的活分三段：<strong>取内存操作数 → 相加 → 写回主存</strong>。逐拍问「这拍总线上走什么、谁被打入」，方案自然出来。</p>
+<h3>基本方案（6 拍）：一步一步走</h3>
 <table><thead><tr><th>节拍</th><th>功能</th><th>有效控制信号</th></tr></thead><tbody><tr><td>C5</td><td>MAR ← (R1)</td><td>R1out, MARin</td></tr><tr><td>C6</td><td>MDR ← M(MAR)</td><td>MemR, MDRinE</td></tr><tr><td>C7</td><td>A ← (MDR)</td><td>MDRout, Ain</td></tr><tr><td>C8</td><td>AC ← (A) + (R0)</td><td>R0out, Add, ACin</td></tr><tr><td>C9</td><td>MDR ← (AC)</td><td>ACout, MDRin</td></tr><tr><td>C10</td><td>M(MAR) ← (MDR)</td><td>MDRoutE, MemW</td></tr></tbody></table>
-<p>要点：内存操作数经 MDR 先暂存到暂存器 A；ALU 相加时同时给 R0out（另一操作数上总线）、Add（加法命令）、ACin（结果打入 AC）。</p>
-<h3>第三步：优化方案（5 个节拍）</h3>
-<p>C6 访存读 MDR 的同时，R0 → A 可并行进行（访存走存储器数据通路，R0out 走内部总线，互不冲突），把 A ← (R0) 合并进 C6，省 1 拍：</p>
+<p><strong>逐拍为什么这样安排：</strong></p>
+<ul><li><strong>C5 → C6</strong>：先送地址再访存（铁律 2）。收数走外部通路，故用 MDRinE（从 DB 打入 MDR）配读命令 MemR。</li><li><strong>C7</strong>：操作数已在 MDR，但若下一拍让 MDR 直接上内总线给 ALU，R0 就上不了总线（铁律 1）——所以先把 (MDR) 锁进 A 腾出总线（铁律 3）。</li><li><strong>C8</strong>：三个信号同拍各司其职——R0out 把另一操作数经内总线送进 ALU，Add 命令 ALU 做加法，ACin 把结果打入 AC。</li><li><strong>C9 → C10</strong>：结果先回 MDR（走内部通路 MDRin），再写主存。写内存必须用 MDR 的<strong>外部</strong>输出 MDRoutE（数据摆上 DB）加写命令 MemW——与 C7 用的 MDRout 不是同一个信号，这是本题最大的埋伏。</li><li><strong>C10 为什么不必重送地址？</strong> MAR 输出一直使能，(R1) 从 C5 起一直保持，写操作直接复用。</li></ul>
+<h3>优化方案（5 拍）：C6 并行塞进第二件事</h3>
+<p>C6 的访存读走「存储器 ↔ DB」这条<strong>外部通路</strong>，而 R0 → A 走<strong>内总线</strong>，两条通路互不干扰，目标寄存器也不同（MDR 与 A），无数据依赖——满足相容性，可以同拍并行，省掉单独锁 A 的一拍：</p>
 <table><thead><tr><th>节拍</th><th>功能</th><th>有效控制信号</th></tr></thead><tbody><tr><td>C5</td><td>MAR ← (R1)</td><td>R1out, MARin</td></tr><tr><td>C6</td><td>MDR ← M(MAR), A ← (R0)</td><td>MemR, MDRinE, R0out, Ain</td></tr><tr><td>C7</td><td>AC ← (MDR) + (A)</td><td>MDRout, Add, ACin</td></tr><tr><td>C8</td><td>MDR ← (AC)</td><td>ACout, MDRin</td></tr><tr><td>C9</td><td>M(MAR) ← (MDR)</td><td>MDRoutE, MemW</td></tr></tbody></table>
+<p><strong>为什么 C6 不能顺手把加法也做了？</strong> 此刻 MDR 正从 DB 收数，同时又要 MDRout 读它给 ALU——「既打入又读出」违反铁律 1；加法只能等数据落定后的下一拍（C7），此时 A 里是 R0、MDR 里是内存操作数，MDRout 送数上总线即可。</p>
 <h3>易错点</h3>
-<ul><li><strong>写回漏 MDRoutE / MemW</strong>：写主存必须用 MDR 的外部输出通路 MDRoutE 并发存储器写命令 MemW，与内部传输用的 MDRout 不同。</li><li><strong>C8 漏 Add</strong>：做加法必须给加法命令 Add，否则 ALU 无操作。</li><li><strong>一拍塞多件冲突的事</strong>：MAR ← (R1) 与 MDR ← M(MAR) 不能合并——访存必须先有地址。</li></ul>
-<blockquote>结论：基本方案 6 拍（C5~C10），把 A ← (R0) 与读内存并行后优化为 5 拍（C5~C9）。</blockquote></div></div>
+<ul><li><strong>写回漏 MDRoutE / MemW</strong>：写主存必须用外部通路 MDRoutE + MemW；只给 MDRout 是往内总线送数，主存收不到。</li><li><strong>C8 漏 Add</strong>：不给 Add，ALU 不知道本次做加法。</li><li><strong>合并依赖拍</strong>：把 MAR←(R1) 与 MDR←M(MAR) 并到一拍——读操作用的地址还没就位，违反铁律 2。</li><li><strong>乱并行</strong>：并行的前提是「不同通路、不同目标、无数据依赖」；C6 的合并恰因两条通路独立才成立，不是任意两件微操作都能塞进一拍。</li></ul>
+<blockquote>一句话结论：基本方案 C5~C10 共 6 拍；利用「访存走外部通路、寄存器走内总线」的相容性把 A←(R0) 并入 C6，优化为 C5~C9 共 5 拍。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

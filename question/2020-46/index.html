@@ -107,18 +107,19 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二级页表请求分页下的地址变换全过程</h2>
-<h3>第一步：确定虚拟地址结构</h3>
-<p>页目录项和页表项均为 4 字节，每页 4KB 可放 4096/4 = 1024 项 → 页目录号占 10 位、页号占 10 位、页内偏移占 12 位（页大小 4KB）。</p>
-<h3>第（1）问：a[1][2] 的虚拟地址与变换</h3>
-<ol><li>按行优先，a[1][2] 前面共有 1×1024 + 2 = 1026 个元素，每个 4 字节，字节偏移 = 1026×4 = 4104 = <code>1008H</code>。</li><li>虚拟地址 = <code>1080 0000H + 1008H</code> = <strong><code>1080 1008H</code></strong>。</li><li>按 10|10|12 拆位：高 10 位页目录号 = <code>0001000010B</code> = <strong><code>042H</code></strong>；中间 10 位页号 = <code>0000000001B</code> = <strong><code>001H</code></strong>；低 12 位页内偏移 = <code>008H</code>。</li><li>页目录项物理地址 = 页目录基址 + 页目录号×4 = <code>0020 1000H + 042H×4</code> = <code>0020 1000H + 108H</code> = <strong><code>0020 1108H</code></strong>。</li><li>该目录项中页框号为 <code>00301H</code> → 页表起始物理地址 = <code>00301H × 1000H</code> = <code>0030 1000H</code>；页表项物理地址 = <code>0030 1000H + 001H×4</code> = <strong><code>0030 1004H</code></strong>。</li></ol>
-<h3>第（2）问：连续性</h3>
-<p>数组在程序中整体定义，在<strong>虚拟地址空间中必须连续</strong>；请求分页把各页离散地装入物理内存，在<strong>物理地址空间中可以不连续</strong>。</p>
-<h3>第（3）问：局部性</h3>
-<p>数组按行优先存放：按行遍历时访问顺序与存放顺序一致，相邻访问基本落在同一页内，<strong>按行遍历的局部性更好</strong>；按列遍历每访问一个元素就跨到下一行（跳 4KB），会频繁跨越页面、增加缺页。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二级页表下数组元素的地址翻译全程</h2>
+<h3>第零步：机制——为什么切成 10 | 10 | 12，翻译为什么分两跳</h3>
+<p><strong>页大小 4KB</strong> → 页内偏移 12 位（2¹² = 4096，按字节编址）。<strong>页目录项、页表项都是 4B</strong>，而页表自己也要放进一个页里：一页 4KB ÷ 4B = 1024 = 2¹⁰ 项 → <strong>页目录号 10 位、页号 10 位</strong>。这就是题图 10 | 10 | 12 的来历——两级页表，每级表恰好一页、恰好 1024 项。</p>
+<p><strong>翻译机制（两次查表）</strong>：虚拟地址的高 10 位（页目录号）当<strong>索引</strong>去查页目录，读出的目录项给出对应<strong>页表</strong>的物理位置；中间 10 位（页号）当索引去查该页表，读出的表项给出<strong>页框号</strong>；页框号拼上 12 位页内偏移就是物理地址。每一次查表用的都是同一个公式——<strong>表项物理地址 = 表基址 + 索引 × 4B</strong>，两级页表只是把它连用两遍。</p>
+<h3>第（1）问：a[1][2] 的寻址之旅</h3>
+<ol><li><strong>字节偏移</strong>：行优先存放，a[i][j] 的偏移 = (i×1024 + j)×4B。a[1][2] 前面共有 1×1024 + 2 = 1026 个元素，偏移 = 1026×4 = 4104 = <code>1008H</code>。</li><li><strong>虚拟地址</strong> = <code>1080 0000H</code> + <code>1008H</code> = <strong><code>1080 1008H</code></strong>。</li><li><strong>切三段</strong>：高 10 位页目录号 = <strong><code>042H</code></strong>；中间 10 位页号 = <strong><code>001H</code></strong>；低 12 位页内偏移 = <code>008H</code>。</li><li><strong>查页目录</strong>：页目录是"每项 4B"的数组，第 <code>042H</code> 项的物理地址 = 页目录基址 + <code>042H</code>×4 = <code>0020 1000H</code> + <code>108H</code> = <strong><code>0020 1108H</code></strong>。<strong>为什么乘 4</strong>：数组寻址就是基址 + 下标 × 元素大小，表项 4B。</li><li><strong>查页表</strong>：该目录项中存放的页框号为 <code>00301H</code>——页框号只是"第几个 4KB 物理框"的编号，乘页大小（左移 12 位）才还原成字节地址，页表起始物理地址 = <code>00301H × 1000H</code> = <code>0030 1000H</code>。页表同样是 4B 一项的数组，a[1][2] 所在页对应页表项的物理地址 = <code>0030 1000H</code> + 页号 <code>001H</code>×4 = <strong><code>0030 1004H</code></strong>。</li></ol>
+<h3>第（2）问：虚拟连续、物理离散</h3>
+<ul><li><strong>虚拟地址空间中必须连续</strong>：程序与编译器按 <code>a[i][j] = 基址 + (i×1024+j)×4</code> 这个公式计算元素地址，公式成立的前提是整个数组在虚拟空间里连成一片——否则按公式算出的地址对不上元素。</li><li><strong>物理地址空间中可以不连续</strong>：请求分页以<strong>页</strong>为单位离散分配，数组所在的各页可以被装进任意空闲页框；地址翻译逐页进行，页表把离散的页框"拼接"成连续的虚拟空间。这正是分页/虚拟存储的意义——<strong>装得下不必装得整</strong>，页面还能按需调入换出。</li></ul>
+<h3>第（3）问：局部性——按行遍历更好</h3>
+<p><strong>机制：访问顺序要贴着存放顺序走。</strong> 行优先存放时，a[i][j] 与 a[i][j+1] 在内存中相邻（差 4B）。<strong>按行遍历</strong>的访问顺序与存放顺序一致：连续 1024 个元素落在同一页里，空间局部性好，缺页与 Cache 缺失都少。<strong>按列遍历</strong>时，相邻两次访问 a[j][i]、a[j+1][i] 相距 1024×4B = 4KB——<strong>恰好隔一页</strong>：每访问一个元素就跳到新的一页，一趟要摸 1024 个不同页并反复跨页，缺页频繁。→ <strong>按行遍历的局部性更好</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>页目录项地址忘乘 4</strong>：第 <code>042H</code> 项的地址是基址 + <code>042H×4</code>，不是基址 + <code>042H</code>。</li><li><strong>页表基址忘了页框号左移 12 位</strong>：页框号是物理页框编号，要乘页大小 <code>1000H</code> 才是页表起始物理地址。</li><li><strong>把"物理必须连续"当对</strong>：虚拟连续、物理离散正是分页存储管理的意义。</li></ul>
-<blockquote>一句话结论：VA=<code>1080 1008H</code>，页目录号 <code>042H</code>、页号 <code>001H</code>，页目录项地址 <code>0020 1108H</code>，页表项地址 <code>0030 1004H</code>；虚拟地址必须连续、物理地址不必连续；按行遍历局部性更好。</blockquote></div></div>
+<ul><li><strong>页目录项地址忘乘 4</strong>：第 <code>042H</code> 项的地址是基址 + <code>042H</code>×4，不是基址 + <code>042H</code>。</li><li><strong>页框号忘左移 12 位</strong>：<code>00301H</code> 是框号，乘 <code>1000H</code> 才是页表起始物理地址 <code>0030 1000H</code>。</li><li><strong>把页号当页框号</strong>：页号是虚拟空间里的索引，页框号才是物理位置的编号，两者通过页表项对应。</li><li><strong>以为物理也必须连续</strong>：虚拟连续、物理离散正是分页存储管理的核心。</li></ul>
+<blockquote>一句话：查表公式"基址 + 下标×4"连用两遍得 <code>0020 1108H</code>、<code>0030 1004H</code>；虚拟必须连续、物理可以离散；访问顺序贴着行优先的存放顺序 → 按行遍历局部性好。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

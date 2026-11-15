@@ -129,18 +129,21 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：判定顺序存储的二叉树是否为二叉搜索树</h2>
-<h3>答题框架</h3>
-<p>两问：基本设计思想 + C 代码实现。核心认知：判定 BST <strong>不能只比较“双亲与直接孩子”</strong>，必须比较“双亲与整棵子树的最值”——左子树的最大值要小于双亲，右子树的最小值要大于双亲。用辅助数组 <code>pmin</code>、<code>pmax</code> 自底向上传播即可，时间 O(n)。</p>
+<h3>第 0 步：先立机制——BST 的性质是“子树级”的，不是“父子级”的</h3>
+<p>二叉搜索树的定义最容易被读窄。它要求的不是“每个结点比左孩子大、比右孩子小”，而是<strong>比左子树里所有结点都大、比右子树里所有结点都小</strong>。树深不超过 1 时两句话等价；树一深，父子局部的检查就会漏判。题目图里的 T2 自己就藏着这样的例子：结点 35 与它的双亲 30 直接比较完全合法（右孩子 35 &gt; 30），但它挂在 50 的右子树里——50 的右子树必须全部大于 50，而 35 &lt; 50。这层“祖孙关系”用“双亲 vs 直接孩子”永远看不见，违规只能顺着子树最值浮上来。</p>
+<p>把定义压成可检查的形式：<strong>对每个结点，左子树的最大值 &lt; 结点值 &lt; 右子树的最小值</strong>——这与 BST 定义完全等价（最大值/最小值把整棵子树压缩成一个数，任何深层违规都会体现在最值上）。算法的全部工作，就是自底向上算出每个结点的子树最值，顺路完成检查。</p>
 <h3>第 1）问：基本设计思想</h3>
-<ol><li>建立与顺序存储数组等长的辅助数组 <code>pmin</code>、<code>pmax</code>，<code>pmin[k]</code>、<code>pmax[k]</code> 表示以 k 号结点为根的子树中的最小值、最大值。</li><li>初始化：<code>pmin[k] = pmax[k] = SqBiTNode[k]</code>（先认为子树最值就是结点自身）。</li><li>从最后一个下标向 1 <strong>倒序扫描</strong>（保证处理双亲时其子树信息已就绪）：值为 −1 的空位跳过；<code>m = (k−1)/2</code> 为双亲下标。k 为奇数是左孩子：若双亲值 &gt; <code>pmax[k]</code> 成立，则把 <code>pmin[k]</code> 传播给双亲；k 为偶数是右孩子：若双亲值 &lt; <code>pmin[k]</code> 成立，则把 <code>pmax[k]</code> 传播给双亲；任一检查失败立即返回 false。</li><li>循环完整结束（回到根）返回 true。</li></ol>
+<ol><li>建立与顺序存储数组等长的辅助数组 <code>pmin</code>、<code>pmax</code>：<code>pmin[k]</code>、<code>pmax[k]</code> 记录以 k 号结点为根的子树中的最小值、最大值。初始化 <code>pmin[k] = pmax[k] = SqBiTNode[k]</code>——对叶结点（以及“暂时只看见自己”的结点）来说，子树最值就是它自己。</li><li>从最后一个下标 k = ElemNum−1 向 1 <strong>倒序扫描</strong>。为什么倒序一定可行：顺序存储里下标 k 的双亲是 (k−1)/2，恒小于 k，也就是说<strong>所有孩子都排在双亲后面</strong>——倒序处理到任何结点时，它的左右子树的 pmin/pmax 已经算好。</li><li>值为 −1 的空位跳过。为什么可以放心跳过：题目规定结点值均为正整数，−1 只是“此处无结点”的占位符，不是值；拿去比较会凭空制造违规，混进最值更会污染整条传播链（空位自己的 pmin/pmax 虽被初始化为 −1，但因被跳过永远不会上传）。</li><li>对每个非空结点 k，求双亲 m = (k−1)/2。k 为奇数是左孩子：检查 <code>SqBiTNode[m] &gt; pmax[k]</code>（左子树最大值必须小于双亲——为什么看最大值：左子树里唯一可能顶破双亲上界的就是最大值），成立则把 <code>pmin[k]</code> 上传给 <code>pmin[m]</code>；k 为偶数是右孩子：检查 <code>SqBiTNode[m] &lt; pmin[k]</code>（右子树最小值必须大于双亲），成立则把 <code>pmax[k]</code> 上传给 <code>pmax[m]</code>。任一检查失败立即返回 false。</li><li>为什么检查通过后只朝一个方向传播？以左孩子为例：既然双亲值大于左子树的最大值，合并后的子树<strong>最大值就是双亲自己</strong>，<code>pmax[m]</code> 不用动，只需把最小值接力上去；右孩子对称。根结点无双亲、无检查对象，所以主循环到 k = 1 为止。</li><li>扫描完整结束（一路传到根都通过）返回 true。</li></ol>
 <h3>第 2）问：算法实现（与参考答案同口径）</h3>
-<ul><li>初始化：<code>for (k = 0; k &lt; bt.ElemNum; k++) pmin[k] = pmax[k] = bt.SqBiTNode[k];</code></li><li>主循环：<code>for (k = bt.ElemNum - 1; k &gt; 0; k--)</code>，空位用 <code>if (bt.SqBiTNode[k] != -1)</code> 跳过，<code>m = (k - 1) / 2;</code> 求双亲。</li><li>左孩子分支：<code>if (k % 2 == 1 &amp;&amp; bt.SqBiTNode[m] &gt; pmax[k]) pmin[m] = pmin[k];</code> —— 奇数下标 2m+1 是左孩子，合法才传播最小值。</li><li>右孩子分支：<code>else if (k % 2 == 0 &amp;&amp; bt.SqBiTNode[m] &lt; pmin[k]) pmax[m] = pmax[k];</code> —— 偶数下标 2m+2 是右孩子，合法才传播最大值。</li><li>失败出口：<code>else return false;</code>；全部通过后 <code>return true;</code>。</li></ul>
-<p>用题目数据验证：T1 依次检查 k=9（30 与 27）、k=6（60 与 80）、k=4、k=2、k=1 全部通过 ⇒ true；T2 在 k=10 通过后，k=4 处 30 是 50 的右孩子而 50 &lt; pmin[4]=30 不成立 ⇒ false。</p>
+<ul><li>初始化：<code>for (k = 0; k &lt; bt.ElemNum; k++) pmin[k] = pmax[k] = bt.SqBiTNode[k];</code></li><li>主循环：<code>for (k = bt.ElemNum - 1; k &gt; 0; k--)</code>，空位用 <code>if (bt.SqBiTNode[k] != -1)</code> 跳过，<code>m = (k - 1) / 2;</code> 求双亲。</li><li>左孩子分支：<code>if (k % 2 == 1 &amp;&amp; bt.SqBiTNode[m] &gt; pmax[k]) pmin[m] = pmin[k];</code> —— 奇数下标 2m+1 是左孩子。</li><li>右孩子分支：<code>else if (k % 2 == 0 &amp;&amp; bt.SqBiTNode[m] &lt; pmin[k]) pmax[m] = pmax[k];</code> —— 偶数下标 2m+2 是右孩子。</li><li>失败出口：<code>else return false;</code>；全部通过后 <code>return true;</code>。</li></ul>
+<h3>用题目数据走一遍</h3>
+<p>T1（ElemNum=10）：k=9 时 27 是 30 的左孩子，30 &gt; 27 成立，pmin[4]=27；k=6 时 80 是 60 的右孩子，60 &lt; 80 成立，pmax[2]=80；k=4 时 30 是 25 的右孩子，25 &lt; pmin[4]=27 成立，pmax[1]=30；k=2 时 60 是 40 的右孩子，40 &lt; 60 成立，pmax[0]=80；k=1 时 25 是 40 的左孩子，40 &gt; 30 成立 ⇒ <strong>true</strong>。</p>
+<p>T2（ElemNum=11）：k=10 时 35 是 30 的右孩子，30 &lt; 35 成立，pmax[4]=35；k=9~5 为 −1 空位跳过；k=4 时 30 是 50 的右孩子，要求 50 &lt; pmin[4]=30，不成立 ⇒ <strong>false</strong>。T2 里其实有两处违规：30 &lt; 50 是直接违规，在 k=4 先被抓住；35 &lt; 50 是深层违规——即使把 30 的值改大越过 50，pmin[4] 也会被 35 拉低，仍在 k=4 被抓住。</p>
 <h3>复杂度分析</h3>
-<p>每个下标只处理一次：时间复杂度 <strong>O(n)</strong>；pmin、pmax 两个辅助数组与 n 同规模：空间复杂度 <strong>O(n)</strong>。</p>
+<p>每个下标只入循环一次、做常数次比较与赋值：时间复杂度 <strong>O(n)</strong>；pmin、pmax 两个辅助数组与 n 同规模：空间复杂度 <strong>O(n)</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只比较双亲与直接孩子</strong>：T2 中 30 与 50 直接看是“右孩子比双亲小”可抓到，但若错误藏得更深（如 35 &gt; 30 却越过了 50 的界限），必须靠子树最值传播才能抓住。</li><li><strong>顺序扫描（k 从 0 递增）</strong>：必须自底向上，否则处理双亲时子树的 pmin/pmax 还没算好，传播链断裂。</li><li><strong>忘记跳过 −1 空位</strong>：空位不是结点，拿去比较会误判；ElemNum 只限定扫描范围。</li><li><strong>左右孩子奇偶写反</strong>：奇数下标是左孩子、偶数下标是右孩子，分支判断一旦写反，检查与传播全错。</li></ul>
-<blockquote>一句话：pmin/pmax 自底向上传播子树最值，左孩子比 pmax、右孩子比 pmin，时间 O(n)、空间 O(n)。</blockquote></div></div>
+<ul><li><strong>只比较双亲与直接孩子</strong>：T2 的 35 与双亲 30 直接比较合法，但 35 &lt; 50（它待在 50 的右子树里）；深层违规必须靠 pmin/pmax 向上传播才抓得住。</li><li><strong>顺序扫描（k 从 0 递增）</strong>：孩子下标恒大于双亲下标，必须倒序才能“先子后父”；正序时处理双亲，子树的 pmin/pmax 还没算好，传播链断裂。</li><li><strong>忘记跳过 −1 空位</strong>：−1 是占位符不是值，拿去比较会误判，混进最值会污染传播；ElemNum 只限定扫描范围。</li><li><strong>左右孩子奇偶写反</strong>：奇数下标 2m+1 是左孩子、偶数下标 2m+2 是右孩子，分支一旦写反，检查与传播全错。</li></ul>
+<blockquote>一句话：pmin/pmax 自底向上传播子树最值，左孩子拿 pmax 比双亲、右孩子拿 pmin 比双亲，通过才传播、失败即返回，时间 O(n)、空间 O(n)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

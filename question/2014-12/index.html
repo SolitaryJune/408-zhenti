@@ -103,14 +103,19 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：执行时间三要素的倍率合成</h2>
 <p>答案：<strong>D</strong>（16.8 秒）。</p>
-<h3>第一步：列出执行时间公式</h3>
-<p>CPU 执行时间 = 指令条数 × CPI × 时钟周期。编译优化只改变了前两个因子：指令条数变为原来的 70%（乘 0.7），CPI 变为原来的 1.2 倍（乘 1.2）；题干没有说主频变化，时钟周期不变（乘 1）。</p>
-<h3>第二步：合成倍率</h3>
+<h3>第一步：先把"执行时间 = 指令数 × CPI × 时钟周期"这条链拆开</h3>
+<p>时间从哪来：程序一共执行 N 条指令，<strong>每条指令</strong>平均要花 CPI 个时钟周期，每个时钟周期长 Tc 秒。于是一条指令 ≈ CPI × Tc 秒，N 条指令共</p>
+<p><code>N × CPI × Tc</code> 秒</p>
+<p>三个因子是一条<strong>量纲接力链</strong>："条 → 周期 → 秒"，每一环乘上下一环的换算率——所以只能<strong>相乘</strong>、不能相加（把 0.7 和 1.2 相加，量纲都对不上）。</p>
+<p>编译优化动的是前两个因子：指令条数变为原来的 70%（乘 0.7），CPI 变为原来的 1.2 倍（乘 1.2）。</p>
+<h3>第二步：两个"为什么"提前答掉</h3>
+<ul><li><strong>为什么时钟周期不变？</strong> 编译优化只改代码形态（少生成指令），CPU 主频由硬件时钟决定；题目没说换机器、没说降频，所以时钟周期不变（乘 1）。</li><li><strong>为什么指令少了，CPI 反而升？</strong> 编译器砍掉的往往是短小、省周期的指令（或把几条合成一条），留下来的指令平均"个头"更大、占的周期更多——指令数降与 CPI 升常常同时发生。净效果看乘积：0.7 × 1.2 = 0.84 &lt; 1，仍然是赚的。</li></ul>
+<h3>第三步：合成倍率</h3>
 <table><thead><tr><th>因子</th><th>优化前</th><th>优化后</th><th>对时间的影响</th></tr></thead><tbody><tr><td>指令条数</td><td>1</td><td>0.7</td><td>×0.7</td></tr><tr><td>CPI</td><td>1</td><td>1.2</td><td>×1.2</td></tr><tr><td>时钟周期</td><td>1</td><td>1</td><td>×1</td></tr></tbody></table>
 <p>新执行时间 = 20 × 0.7 × 1.2 = 20 × 0.84 = <strong>16.8 秒</strong>，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只乘指令数因子</strong>：20 × 0.7 = 14 秒，漏掉了 CPI 变大这一项，对应干扰项 C。减少指令数往往使每条指令的平均周期数上升，两个因子必须同时计入。</li><li><strong>倍率方向搞反</strong>：把"减少到 70%"当成 ×1.7 或把"增加到 1.2 倍"当成减少，会得出 8.4 秒、11.7 秒这类错误结果（干扰项 A、B）。</li><li><strong>忘了基准是 20 秒</strong>：0.84 只是倍率，最后必须乘回原时间 20 秒。</li></ul>
-<blockquote>记忆锚点：指令数、CPI、时钟周期各乘各的倍率，执行时间 = 三倍率之积 × 原时间。</blockquote></div></div>
+<ul><li><strong>只乘指令数因子</strong>：20 × 0.7 = 14 秒，漏掉了 CPI 变大这一项，对应干扰项 C——两个因子是乘法链上的两环，动了哪环都得乘上。</li><li><strong>倍率方向搞反</strong>：把"减少到 70%"当成 ×1.7，或把 CPI ×1.2 错当 ÷1.2（20 × 0.7 ÷ 1.2 ≈ 11.7，正是干扰项 B），会得出 8.4 秒、11.7 秒这类错误结果（干扰项 A、B）。</li><li><strong>忘了基准是 20 秒</strong>：0.84 只是倍率，最后必须乘回原时间 20 秒。</li></ul>
+<blockquote>记忆锚点：执行时间 = 指令数 × CPI × 时钟周期，三因子是"条 → 周期 → 秒"的量纲接力链，各乘各的倍率再乘回原时间。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

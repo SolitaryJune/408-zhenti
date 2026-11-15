@@ -108,19 +108,21 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：Cache 结构计算 + 循环访存缺失计数 + 缺失处理流程</h2>
-<h3>答题框架</h3>
-<p>先把主存地址按"标记 | 组索引 | 块内地址"切干净（第 1 问），再用块大小数缺失次数（第 2 问），最后按"查组、比标记、缺失处理"描述取指过程（第 3 问）。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：把主存地址切干净——Cache 结构、缺失计数与缺失处理</h2>
 <h3>第 1）问：标记、LRU 位、修改位</h3>
-<ul><li>主存块 64B，按字节编址，块内地址 6 位；</li><li>数据区 32KB ÷ 64B = 512 行，8 路组相联，512 ÷ 8 = 64 组，组索引 6 位；</li><li>标记 = 32 − 6 − 6 = <strong>20 位</strong>；</li><li>LRU 信息：8 路组相联要在 8 行中区分使用次序，每行 <strong>3 位</strong>；</li><li>指令 Cache 采用<strong>直写</strong>策略，写入时同时写主存，行内容与主存块始终一致，<strong>不需要修改位</strong>（脏位）。</li></ul>
+<p><strong>机制：组相联映射下，主存地址从低位到高位切成三段——块内地址 | 组索引 | 标记</strong>，每段的位数都由块大小、组数、地址总长推出来：</p>
+<ul><li><strong>块内地址 6 位</strong>：主存块 64B = 2⁶，块内任意一个字节要用 6 位编号。为什么这块"不需要变换"：Cache 与主存以块为单位整体交换，块内偏移在 Cache 行里的位置和在主存里完全相同。</li><li><strong>组索引 6 位</strong>：数据区 32KB ÷ 64B = <strong>512 行</strong>；8 路组相联把 512 行分成 512 ÷ 8 = <strong>64 组</strong>，2⁶ = 64 → 组索引 6 位。为什么组号要放进地址：映射规则是"主存块只能进第几组"由地址中段决定，所以组索引必须是地址的一部分。</li><li><strong>标记 = 32 − 6 − 6 = 20 位</strong>：剩下的高位。为什么需要标记：组索引只把主存块定位到"某一组"，组内 8 行都可能放它，必须用标记比对确认哪一行真的是这个块。</li><li><strong>LRU 位 3 位</strong>：8 路组相联要在组内 8 行中区分"最近使用"的先后次序，8 种次序用 2³ = 8 个状态恰好能编号——每行配 3 位 LRU 计数位，命中或替换时更新。</li><li><strong>没有修改位</strong>：直写（Write Through）策略下，每次写命中<strong>同时写 Cache 和主存</strong>，行内容与主存块永远一致，不存在"主存落后于 Cache"的情况，无需"此行被改过"的记录。修改位（脏位）是<strong>回写</strong>策略的产物——只有"平时只写 Cache、淘汰时才写回主存"才需要它。</li></ul>
 <h3>第 2）问：访问数组 s 的缺失次数</h3>
-<table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>数组总大小</td><td>1024 × 4B</td><td>4096B</td></tr><tr><td>占用主存块数</td><td>4096 ÷ 64</td><td>64 块</td></tr><tr><td>每块元素数</td><td>64 ÷ 4</td><td>16 个</td></tr><tr><td>首址对齐</td><td><code>0080 00C0H</code> 是 64 的整数倍</td><td>块不对跨</td></tr></tbody></table>
-<p>每次循环先<strong>读</strong> <code>s[k]</code>（把所在块调入 Cache），再<strong>写</strong> <code>s[k]</code>（块已在 Cache，命中；直写只是同步写主存，不产生缺失）。变量 k 在寄存器中，不经过 Cache。所以每块只在第一个元素读取时缺失 1 次：64 块 × 1 = <strong>64 次</strong>。</p>
-<h3>第 3）问：读取 <code>0001 0003H</code> 中指令的过程</h3>
-<ol><li><strong>分解地址</strong>：块内偏移 = 低 6 位 = 3；组索引 = 中间 6 位 = 0；标记 = 高 20 位 = <code>00010H</code>；</li><li><strong>查组</strong>：按组索引 0 定位指令 Cache 的第 0 组；</li><li><strong>比标记</strong>：取组内 8 行的标记与有效位比较，Cache 初始为空、有效位全 0，无一命中，<strong>缺失</strong>；</li><li><strong>缺失处理</strong>：访问主存，把该指令所在的块（起始地址 <code>00010000H</code>，即 <code>0001 0000H</code>，64B）调入 Cache：在组 0 中按 LRU 算法选一行（空 Cache 时选一个空闲行即可），写入数据、置有效位为 1、填入标记；</li><li><strong>取指</strong>：按块内偏移 3 从该行取出指令，送 CPU。</li></ol>
+<p><strong>机制：缺失按"块"数，不按访问次数数</strong>——一个块第一次被访问时缺失一次、整块调入，之后块内所有访问都命中。所以只要求出"数组占多少个块"：</p>
+<table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>数组总大小</td><td>1024 × 4B</td><td>4096B</td></tr><tr><td>占用主存块数</td><td>4096 ÷ 64</td><td>64 块</td></tr><tr><td>每块元素个数</td><td>64 ÷ 4</td><td>16 个</td></tr><tr><td>首址对齐</td><td><code>0080 00C0H</code>：C0H = 192 = 3×64，是 64 的倍数</td><td>数组起点恰是某块起点</td></tr></tbody></table>
+<p><strong>为什么要专门验证首址对齐</strong>：若起点落在某块中间，4096B 会摊到 65 个块上（首尾各占半块），缺失就变成 65 次。本题起点对齐，16 个连续元素恰好装满一块 → 正好 64 块。</p>
+<p><strong>为什么写 <code>s[k]</code> 不产生缺失</strong>：每轮循环先<strong>读</strong> <code>s[k]</code>——第一次碰到该块，缺失 1 次并调入；随后的<strong>写</strong> <code>s[k]</code> 命中（块已在 Cache），直写只是把这次写同步进主存，与缺失无关。变量 k 分配在寄存器里，根本不经过 Cache。</p>
+<p><strong>为什么不会发生"挤掉重装"的第二次缺失</strong>：数组只占 64 块、共 4KB，而数据 Cache 有 512 行；这 64 块的组索引互不相同（相邻块依次 +1，64 组各摊到一块），8 路远远装得下，不存在容量或冲突缺失 → 每块恰缺 1 次：<strong>64 次</strong>。</p>
+<h3>第 3）问：读取 <code>0001 0003H</code> 中指令的全过程</h3>
+<ol><li><strong>切地址</strong>：低 6 位块内偏移 = 3；中间 6 位组索引 = 0；高 20 位标记 = <code>00010H</code>——为什么这么切：与第 1 问的三段划分一致。</li><li><strong>查组</strong>：按组索引 0 在指令 Cache 中定位第 0 组（指令 Cache 与数据 Cache 分立，取指只查指令 Cache）。</li><li><strong>比标记</strong>：组内 8 行逐行比较有效位 + 标记。<strong>为什么有效位要放在最前</strong>：Cache 初始为空，各行标记字段只是残留值，比标记没有意义——有效位为 0 直接判不命中。本题 8 行全部无效 → <strong>缺失</strong>。</li><li><strong>缺失处理</strong>：访问主存，把该指令所在的块（起始地址 <code>0001 0000H</code>，共 64B）调入 Cache：在组 0 按 LRU 算法选一行——全空时任选一个空闲行即可（日后才真正按 LRU 淘汰"最久未用"的行，它的依据是时间局部性：最近用过的块更可能再用）；写入该块数据、<strong>置有效位为 1</strong>、填入标记 <code>00010H</code>，并更新 LRU 位。</li><li><strong>取指</strong>：按块内偏移 3 从该行取出指令，送 CPU。</li></ol>
 <h3>易错点</h3>
-<ul><li><strong>LRU 位数</strong>：8 路要在 8 行之间区分次序，3 位即可，不是 8 位；</li><li><strong>以为直写也有修改位</strong>：修改位是回写策略的产物，直写不需要；</li><li><strong>把写 s[k] 也算缺失</strong>：读先把块调进来，随后的写命中；</li><li><strong>位数记混</strong>：组索引和块内地址都是 6 位，但一个是中间 6 位、一个是最低 6 位。</li></ul>
-<blockquote>地址切分 20 + 6 + 6，LRU 3 位，直写无脏位；4096B 数据恰占 64 块，每块缺 1 次，共 64 次。</blockquote></div></div>
+<ul><li><strong>LRU 位算成 8 位</strong>：8 种使用次序 3 位就够（2³ = 8），不是每位 1 位、每行 8 位。</li><li><strong>以为直写也有修改位</strong>：修改位是回写策略的产物，直写下行与主存永远一致，不需要。</li><li><strong>把写 <code>s[k]</code> 也计入缺失</strong>：读先把块调进来，写命中；缺失只按块第一次被访问计。</li><li><strong>不验证首址是否 64 的倍数</strong>：本题 <code>0080 00C0H</code> 恰好对齐才有 64 次；不对齐就是 65 次。</li><li><strong>组索引、块内地址切错位置</strong>：都是 6 位，但块内地址是<strong>最低</strong> 6 位，组索引是<strong>中间</strong> 6 位。</li></ul>
+<blockquote>记忆锚点：地址切分 20 | 6 | 6；LRU 3 位（8 种次序）；直写无脏位；4096B 恰占 64 块、每块缺 1 次 → 64 次；缺失处理 = 调块 + 置有效位 + 填标记 + 按偏移取数。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

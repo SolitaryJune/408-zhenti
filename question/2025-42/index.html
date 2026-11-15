@@ -107,23 +107,30 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：AOE 网的关键路径、并行活动与时间余量</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：AOE 网——工期、关键活动、并行窗口与赶工</h2>
+<h3>第 0 步：先立机制——事件、活动与"被最慢的入边钉住"的工期</h3>
+<p>AOE 网用<strong>有向边表示活动</strong>（边上权 = 持续时间）、<strong>顶点表示事件</strong>（一个事件 = "射入它的所有活动都已完工"这个时刻状态）。整个工程的工期由最后的事件（汇点）决定，而一个事件什么时候能发生，取决于它<strong>最慢的那条入边</strong>——所有入边都完成，事件才算发生。这条"处处取最慢"的链就是<strong>关键路径</strong>，它的长度就是最短工期。</p>
+<p>由这个模型推出四条计算规则，后面每一问都从这里自然流出：</p>
+<ul><li><strong>正推取 max</strong>：事件最早发生时间 ve = max{各入边弧尾 ve + 活动时长}——要等<strong>所有</strong>入边完工，只能取最晚的那条；</li><li><strong>逆推取 min</strong>：事件最迟发生时间 vl = min{各出边弧头 vl − 活动时长}——它不能拖累<strong>任何</strong>一个后继按期开工，只能迁就要求最早的那个后继；</li><li><strong>活动余量</strong> = 弧头的 vl − 弧尾的 ve − 持续时间：活动最早可在弧尾事件发生时开工，最晚须在"弧头事件最迟时刻 − 自己的时长"时开工，两界之差就是它可自由滑动的窗口宽度；</li><li><strong>余量为 0 ⇔ 关键活动</strong>：窗口宽度为 0，动它一天，工期就晚一天。</li></ul>
 <h3>第 (1) 问：最短工期与关键活动</h3>
-<p>事件最早时间正推（源点 1）：ve(1)=0；ve(3)=ve(1)+a=2；ve(4)=max(ve(1)+d=3, ve(3)+e=5)=<strong>5</strong>；ve(6)=max(ve(3)+c=3, ve(4)+g=6)=6；ve(2)=max(ve(1)+b=5, ve(4)+f=9)=9；ve(7)=max(ve(6)+h=7, ve(4)+m=9)=9；ve(5)=max(ve(2)+k=11, ve(4)+j=6, ve(7)+n=12)=<strong>12</strong>。</p>
-<p>事件最迟时间逆推（汇点 5，vl(5)=12）：vl(7)=12−n=9；vl(2)=12−k=10；vl(6)=vl(7)−h=8；vl(4)=min(vl(2)−f=6, vl(5)−j=11, vl(7)−m=5, vl(6)−g=7)=<strong>5</strong>；vl(3)=min(vl(4)−e=2, vl(6)−c=7)=2；vl(1)=0。</p>
-<p>活动余量 = 最迟开始 − 最早开始（最早开始 = 弧尾的 ve；最迟开始 = 弧头的 vl − 持续时间）：</p>
+<p>源点 1 从 ve(1)=0 出发正推（每个事件把所有入边算一遍取最大）：</p>
+<p>ve(3)=0+2=2；ve(4)=max(0+3, 2+3)=5；ve(6)=max(2+1, 5+1)=6；ve(2)=max(0+5, 5+4)=9；ve(7)=max(6+1, 5+4)=9；ve(5)=max(9+2, 5+1, 9+3)=<strong>12</strong>。</p>
+<p>工期就是汇点事件 5 的最早发生时刻：<strong>最短完成时间为 12</strong>。</p>
+<p>再从 vl(5)=12 逆推（不能拖累后继，取最小）：vl(7)=12−3=9；vl(2)=12−2=10；vl(6)=9−1=8；vl(4)=min(10−4, 12−1, 9−4, 8−1)=<strong>5</strong>；vl(3)=min(5−3, 8−1)=2；vl(1)=0。</p>
+<p>活动的最早开始 = 弧尾 ve，最迟开始 = 弧头 vl − 时长，逐个算出余量（第二层对号入座）：</p>
 <table><thead><tr><th>活动</th><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th><th>h</th><th>j</th><th>k</th><th>m</th><th>n</th></tr></thead><tbody><tr><td>最早开始</td><td>0</td><td>0</td><td>2</td><td>0</td><td>2</td><td>5</td><td>5</td><td>6</td><td>5</td><td>9</td><td>5</td><td>9</td></tr><tr><td>最迟开始</td><td>0</td><td>5</td><td>7</td><td>2</td><td>2</td><td>6</td><td>7</td><td>8</td><td>11</td><td>10</td><td>5</td><td>9</td></tr><tr><td>余量</td><td>0</td><td>5</td><td>5</td><td>2</td><td>0</td><td>1</td><td>2</td><td>2</td><td>6</td><td>1</td><td>0</td><td>0</td></tr></tbody></table>
-<p>最短工期 = <strong>12</strong>；余量为 0 的关键活动：<strong>a、e、m、n</strong>（关键路径 1→3→4→7→5，2+3+4+3=12）。</p>
-<h3>第 (2) 问：可能与 e 同时进行的活动</h3>
-<p>e 的可能执行时段：最早 2 开始、最迟 2+3=5 完成，即 [2, 5]。一个活动"可能"与 e 同时进行，当且仅当它的可能时段与 [2,5] 相交：b 的时段 [0, 5+5=10]、c 的时段 [2, 7+1=8]、d 的时段 [0, 2+3=5] 都与之重叠；而 f、g、m 最早 5 才开始（只挨着不重叠），a 最迟 2 就得完成，h、j、k、n 更晚。答：<strong>b、d、c</strong>。</p>
+<p>余量为 0 的活动即关键活动：<strong>a、e、m、n</strong>（它们串成关键路径 1→3→4→7→5，2+3+4+3=12，恰等于工期）。</p>
+<h3>第 (2) 问：可能与 e 同时进行的活动——"可能"= 窗口相交</h3>
+<p><strong>机制</strong>：每个活动并不钉死在一个时刻，它可以在自己的窗口 [最早开始, 最迟开始 + 时长] 内任选开工时刻。"可能与 e 同时进行" ⇔ 两者的窗口<strong>有重叠</strong>。</p>
+<p>e 的余量为 0，窗口被钉死在 [2, 5]。逐个对照：b 的窗口 [0, 10]、c 的窗口 [2, 8]、d 的窗口 [0, 5] 都与 [2,5] 相交；a 最迟 2 完成、f/g/m 最早 5 才开始——只在端点"贴着"，不算同时；h、j、k、n 更晚。答：<strong>b、d、c</strong>。</p>
 <h3>第 (3) 问：时间余量最大的活动</h3>
-<p>查余量表：<strong>活动 j 的余量 = 11 − 5 = 6</strong>，为最大。</p>
-<h3>第 (4) 问：b 在时刻 6 才开工的处理</h3>
-<p>b 正常最早 0 开始；若拖到时刻 6 才开始：</p>
-<ul><li>不延期的条件是事件 2 仍满足 ve(2)+k ≤ 12，即 b 最迟在 10 完成，故 6 + b 的持续时间 ≤ 10，<strong>b 的持续时间最多为 4</strong>。</li><li>若 b 仍持续 5（到 11 才完成，ve(2)=11），只能压缩其后继：需 11 + k ≤ 12 → k ≤ 1，即<strong>把 k 由 2 压缩为 1</strong>（k 原本有 1 的余量，压缩 1 不会引出新矛盾；压 f 无用，因为此时 ve(2) 已由 b 决定）。</li></ul>
+<p>查上表余量行：最大的是<strong>活动 j，余量 = 11 − 5 = 6</strong>——它最早 5 就能开工，却可以拖到 11 才开工而不影响工期。</p>
+<h3>第 (4) 问：b 拖到时刻 6 开工——缩自己还是缩后继</h3>
+<p>b 的余量是 5（最早 0、最迟 5 开工），拖到时刻 6 开工已经越界，影响会沿它的后继链 事件 2 → 活动 k → 事件 5 传导；汇入事件 2 的其他入边（f 等）此刻都早于 b 完成，决定不了 ve(2)，所以威胁的只有 k 这一段。</p>
+<ul><li><strong>不改变其他活动</strong>：不延期的要求是 6 + b 的时长 + k 的时长 2 ≤ 12，解得 <strong>b 的持续时间最多为 4</strong>。</li><li><strong>b 的时长仍为 5</strong>：则 ve(2) = 6+5 = 11，需 11 + k ≤ 12 → k ≤ 1，即<strong>把 k 的持续时间由 2 压缩为 1</strong>（k 原有 1 的余量，压 1 恰好用完，不会引出新矛盾；压 f 无用——此刻 ve(2) = 11 已由 b 决定，f 那条 9 追不上）。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>关键活动找错</strong>：必须用"活动"的余量（最迟开始 − 最早开始），不是事件的 vl − ve；d、f、g、h 都有正余量，不在关键路径上。</li><li><strong>第 (2) 问漏掉 c</strong>：c 从事件 3 出发，最早 2 开始，恰好与 e 同段重叠。</li><li><strong>第 (4) 问压缩对象选错</strong>：b 顺延只威胁"k 这一段"；f 已不决定 ve(2)，压 f 救不了。</li></ul>
-<blockquote>一句话：正推得工期 12 与关键活动 a、e、m、n；余量最大是 j（6）；b 晚开工则要么缩到 4、要么把 k 压成 1。</blockquote></div></div>
+<ul><li><strong>用事件的 vl−ve 判关键活动</strong>：余量是<strong>活动</strong>的（弧头 vl − 弧尾 ve − 时长），事件时差只是中间量；d、f、g、h 都有正余量，不在关键路径上。</li><li><strong>正推误用 min、逆推误用 max</strong>：正推是"等所有入边"（max），逆推是"不拖任何后继"（min），方向弄反全盘皆错。</li><li><strong>第 (2) 问漏掉 c</strong>：c 从事件 3 出发、最早 2 开工，窗口 [2,8] 与 e 的 [2,5] 实打实重叠。</li><li><strong>把端点相接当同时</strong>：a 最迟 2 完成、f/g/m 最早 5 开始，都只是与 [2,5] 贴边，不算同时进行。</li><li><strong>第 (4) 问压缩对象选错</strong>：b 顺延只威胁 k 这一段；ve(2) 已由 b 决定，压 f 救不了。</li></ul>
+<blockquote>一句话：正推取 max 得工期 12，逆推取 min 得各事件最迟时刻；余量 0 即关键活动 a、e、m、n；窗口与 e 相交的是 b、d、c；余量最大 j（6）；b 晚到 6 开工则要么缩到 4、要么把 k 压成 1。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

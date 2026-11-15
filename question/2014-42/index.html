@@ -130,23 +130,27 @@ typedef struct HNode {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：OSPF 链路状态信息的存储与最短路径计算</h2>
+<h3>先立机制：OSPF 与"图"是怎么接上来的</h3>
+<p>OSPF 是<strong>链路状态</strong>协议：每台路由器把自己的邻接情况（到谁、本地接口 IP、代价 Metric）封装成链路状态信息（LSI）<strong>泛洪</strong>给全网；每台路由器收齐所有 LSI 后，就能在本地<strong>拼出一幅完整的带权拓扑图</strong>。所以"网络 → 数据结构"的翻译规则是：路由器、子网都是<strong>顶点</strong>，链路/直连网络是<strong>边</strong>，Metric 是<strong>边权</strong>；链路双向可达，边没有方向——抽象为<strong>图（无向图）</strong>。而"已知全图、边权非负、求单源最短路"正是 <strong>Dijkstra 算法</strong>的适用场景——第 3 问用它不是巧合，是 OSPF 的协议设计本身。</p>
 <h3>第 1 问：抽象成什么逻辑结构</h3>
-<p>路由器与子网都可看作<strong>顶点</strong>，链路/直连网络看作<strong>边</strong>，费用（Metric）就是<strong>边上的权值</strong>，且链路是双向的——所以本题网络可抽象为数据结构中的<strong>图</strong>（具体为<strong>无向图</strong>，或称带权无向图/网）。</p>
+<p>按上面的翻译规则作答：本题中的网络可抽象为数据结构中的<strong>图</strong>（带权无向图/网）。<strong>为什么不能答树</strong>：路由器与子网之间是多对多的邻接关系（R1 同时连 R2、R3 和直连子网），拓扑里有回路，不满足树"无回路、双亲唯一"的限制。</p>
 <h3>第 2 问：链式存储结构的设计</h3>
-<p>采用<strong>带表头结点的邻接表思想</strong>：每个表头结点保存一个路由器 ID，指向该路由器的链路信息链；信息链上每个弧结点用 <code>Flag</code> 区分记录类型（Flag=1 是 Link、Flag=2 是 Net），联合体存两种记录，<code>Metric</code> 存费用，<code>next</code> 串起同一路由器的多条信息。数据类型定义（C 语言）：</p>
+<p>LSI 的天然形状是"<strong>按路由器分组、每组条数不定</strong>"：R1 有 3 条信息，别的路由器可能 4 条、5 条——这正是<strong>邻接表</strong>擅长的形状：表头结点存路由器 ID，后面挂一条变长的信息链；既不像邻接矩阵那样为"不存在的关系"浪费空间，也能适应各路由器信息条数的差异。信息分两类：Link（连到某路由器）与 Net（直连某网络），字段不同，所以弧结点用 <code>Flag</code> 区分类型、用 <code>union</code> 二选一存放（这是本题存储设计的给分点）。</p>
+<p>数据类型定义（C 语言）：</p>
 <p><code>typedef struct { unsigned int ID, IP; } LinkNode;</code>（Link 记录：所连路由器 ID 与本地 IP）</p>
 <p><code>typedef struct { unsigned int Prefix, Mask; } NetNode;</code>（Net 记录：直连网络前缀与掩码）</p>
 <p><code>typedef struct Node { int Flag; union { LinkNode Lnode; NetNode Nnode; } LinkORNet; unsigned int Metric; struct Node *next; } ArcNode;</code>（弧结点）</p>
 <p><code>typedef struct HNode { unsigned int RouterID; ArcNode *LN_link; struct HNode *next; } HNODE;</code>（表头结点）</p>
-<p>示意图的组织方式：R1 的表头结点保存 Router ID <code>10.1.1.1</code>，信息链依次挂"到 R2 的 Link（10.1.1.2，费用 3）""到 R3 的 Link（10.1.1.5，费用 2）""直连网络 192.1.1.0/24 的 Net（费用 1）"；其余路由器同样组织，弧结点链尾指针为空。</p>
+<p>示意图组织：R1 的表头结点保存 Router ID <code>10.1.1.1</code>，信息链依次挂"到 R2 的 Link（10.1.1.2，费用 3）""到 R3 的 Link（10.1.1.5，费用 2）""直连网络 192.1.1.0/24 的 Net（费用 1）"；其余路由器同样组织，弧结点链尾指针为空。</p>
 <h3>第 3 问：R1 到各子网的最短路径及费用</h3>
-<p>按 Dijkstra 算法从 R1 出发（每次选当前距离最小的顶点定案并松弛邻居），初始距离由 R1 的直连链路给出：N1=1、R3=2、R2=3、其余无穷大。</p>
+<p>Dijkstra 的机制一句话：<strong>已定案集合逐点扩大</strong>——每轮从"暂定距离最小的顶点"里挑一个宣布定案（因为所有边权非负，绕路只会更长，它的距离不可能再被改进），再用它松弛邻居。从 R1 出发，初始距离由直连链路给出：N1=1、R3=2、R2=3、其余无穷大。</p>
 <table><thead><tr><th>步骤</th><th>操作</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>选定 192.1.1.0/24（费用 1）</td><td>直连定案</td></tr><tr><td>2</td><td>选定 R3（费用 2）</td><td>经 L1 链路</td></tr><tr><td>3</td><td>经 R3 松弛</td><td>N5=2+1=3；R4=2+6=8</td></tr><tr><td>4</td><td>选定 192.1.5.0/24（3）</td><td>路径 R1-R3-N5</td></tr><tr><td>5</td><td>选定 R2（3）；经 R2 松弛</td><td>N6=3+1=4；R4 更新为 3+4=7</td></tr><tr><td>6</td><td>选定 192.1.6.0/24（4）、R4（7）</td><td>路径 R1-R2-N6</td></tr><tr><td>7</td><td>经 R4 松弛并选定 192.1.7.0/24</td><td>N7=7+1=8，路径 R1-R2-R4-N7</td></tr></tbody></table>
+<p><strong>为什么 N7 取 8 不取 9</strong>：到 N7 有两条候选——R1-R3-R4（2+6+1=9）与 R1-R2-R4（3+4+1=8）；松弛过程会把 R4 的暂定距离从经 R3 的 8 更新为经 R2 的 7，故 N7=7+1=8。</p>
 <p>最终答案表：</p>
 <table><thead><tr><th>目的网络</th><th>路径</th><th>费用</th></tr></thead><tbody><tr><td>192.1.1.0/24</td><td>直接到达</td><td>1</td></tr><tr><td>192.1.5.0/24</td><td>R1-R3-192.1.5.0/24</td><td>3</td></tr><tr><td>192.1.6.0/24</td><td>R1-R2-192.1.6.0/24</td><td>4</td></tr><tr><td>192.1.7.0/24</td><td>R1-R2-R4-192.1.7.0/24</td><td>8</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>答成树或线性结构</strong>：路由器与子网之间是多对多的邻接关系，必须答"图（无向图）"。</li><li><strong>漏掉 Flag/union</strong>：Link 与 Net 两种记录字段不同，弧结点必须能区分并二选一存储，这是本题存储设计的给分点。</li><li><strong>最短路径只报费用不报路径</strong>：第 3 问要求"路径及费用"两者都写全。</li><li><strong>忘记比较两条路</strong>：到 192.1.7.0/24 有 R1-R3-R4（2+6+1=9）和 R1-R2-R4（3+4+1=8）两条，要选费用小的 8。</li></ul>
-<blockquote>记忆锚点：OSPF 链路状态 → 图；存储 → 表头 + 弧结点邻接表；算路 → Dijkstra 逐点定案、逐边松弛。</blockquote></div></div>
+<ul><li><strong>答成树或线性结构</strong>：多对多邻接 + 有回路，必须答"图（无向图）"。</li><li><strong>漏掉 Flag/union</strong>：Link 与 Net 字段不同，弧结点必须能区分并二选一存储，这是给分点。</li><li><strong>最短路径只报费用不报路径</strong>：第 3 问要求"路径及费用"两者都写全。</li><li><strong>N7 误取 9</strong>：只看了 R1-R3-R4 一条路，忘了 R2 方向的松弛会把 R4 的距离更新得更小。</li></ul>
+<blockquote>记忆锚点：OSPF 链路状态 → 泛洪 LSI → 全网带权图；存储 → 表头 + 弧结点邻接表；算路 → Dijkstra 逐点定案、逐边松弛。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

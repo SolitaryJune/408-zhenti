@@ -141,18 +141,24 @@ LinkNode* FindCommonLinkList(LinkNode *str1, LinkNode *str2) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：求两单链表共同后缀的起始位置</h2>
-<h3>答题框架（先记这个）</h3>
-<ol><li>关键观察：<strong>后缀共享 ⇒ 两链表尾部是同一条链</strong>（图中两个表都汇入字符 i 结点）；</li><li>单链表无法从后往前找 ⇒ 让两指针<strong>先"尾部对齐"，再同步后移</strong>；</li><li>复杂度要做到 O(len1+len2)：先数长度、再对齐、再同步，每条链只扫常数遍。</li></ol>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单链表共同后缀的起始位置——先数长度、再对齐、再同步</h2>
+<h3>第 0 步：先看清"共享后缀"在链表里意味着什么</h3>
+<p>题图的存储方式是：两个单词各有一条链，从共同后缀首结点（字符 i）开始<strong>两条链汇成同一条链</strong>——i、n、g 这些结点只有一份，两个表经 next 指向同一批结点。由此得到两条关键性质：</p>
+<ol><li><strong>共享是"结点同一"，不是"内容相同"</strong>：汇合点 X 之后每个结点地址都一样；X 之前两链的结点互不相干（否则汇合点会更靠前）。</li><li><strong>单链表只有 next，不能从表尾倒着走</strong>：想"从后往前找第一个不同的结点"走不通，只能把方向问题转为正向——让两个指针站到"同一条链"上并排前进。</li></ol>
+<p>思路由此自然浮现：X 及其后是同一条链，X 之前是两段长度不同的私有前缀。若让两指针<strong>到表尾等距</strong>后同步后移：未到 X 时，两指针必各自走在私有前缀上（p ≠ q）；一旦同到 X 或其后，走的已是同一条链（p == q）。所以<strong>第一次 p == q 的结点恰好就是 X</strong>；走到 NULL 仍未相遇则无共同后缀。</p>
+<p>而"等距"怎么保证？表尾看不见，但表长数得出来：先各遍历一遍求 len1、len2，让较长链的指针先走 |len1−len2| 步即可。两个最可能追问的"为什么"先答掉：</p>
+<ul><li><strong>为什么比较指针而不比较字符</strong>？字符相同不代表同一结点（两个表都可能含 'i'）；只有 p == q（同一地址）才能保证其后整段共享。</li><li><strong>为什么先数长度</strong>？单链表不能倒走，"两段前缀差多少"只有数一遍才知道。</li></ul>
 <h3>第 1 问：算法的基本设计思想</h3>
-<ul><li>分别遍历两个链表（从 <code>head-&gt;next</code> 开始，跳过头结点），求出数据结点个数 len1、len2；</li><li>让<strong>较长链表的指针先走 |len1−len2| 步</strong>，使 p、q 到表尾的距离相等；</li><li>然后 p、q <strong>同步后移</strong>，第一个 p == q 的结点即共同后缀的起始位置（图中字符 i 所在结点）；若走到 NULL 仍未相遇，则无共同后缀。</li><li>以题中例子验证："loading" len1=7、"being" len2=5，p 先走 2 步，同步后第 3 步两指针同时到达字符 i 结点。</li></ul>
-<h3>第 2 问：C 语言描述（要点版）</h3>
-<ol><li><code>int Length(LinkNode *head)</code>：从 <code>head-&gt;next</code> 起计数，返回数据结点个数；</li><li>对齐：<code>p = str1; q = str2;</code> 若 <code>len1 &gt; len2</code> 则 p 先走 <code>len1-len2</code> 步，否则 q 先走 <code>len2-len1</code> 步（注意 p、q 都从<strong>头结点</strong>出发）；</li><li>同步：<code>while (p != NULL &amp;&amp; p != q) { p = p-&gt;next; q = q-&gt;next; }</code>；</li><li>返回 <code>p</code>——它要么指向共同后缀首结点，要么为 NULL（无共同后缀）。</li></ol>
+<ol><li>分别遍历两链（带头结点，从 <code>head-&gt;next</code> 起数）求出 len1、len2；</li><li>对齐：p、q 从两表<strong>头结点</strong>出发，较长表的指针先走 |len1−len2| 步——此后两指针到表尾（NULL）的步数相等；</li><li>同步后移，第一个 p == q 的结点即共同后缀首结点（图中字符 i 所在结点）；直至 NULL 未相遇则返回"无共同后缀"。</li></ol>
+<p>用题中例子走一遍："loading"（l→o→a→d→i→n→g，len1=7）、"being"（b→e→i→n→g，len2=5）。p 先走 2 步到 'o' 结点（此后 p、q 到 NULL 均为 6 步）；同步第 1 步 p=a、q=b，第 2 步 p=d、q=e，第 3 步两指针同时到达字符 i 的结点——即共同后缀的起始位置 p。</p>
+<h3>第 2 问：C 语言描述（要点）</h3>
+<ol><li><code>int Length(LinkNode *head)</code>：从 <code>head-&gt;next</code> 起计数，返回数据结点个数（跳过头结点）；</li><li>对齐：<code>p = str1; q = str2;</code> 若 <code>len1 &gt; len2</code> 则 p 先走 <code>len1 - len2</code> 步，否则 q 先走 <code>len2 - len1</code> 步；</li><li>同步：<code>while (p != NULL &amp;&amp; q != NULL &amp;&amp; p != q) { p = p-&gt;next; q = q-&gt;next; }</code>；</li><li>返回 <code>p</code>——要么指向共同后缀首结点，要么为 NULL（无共同后缀）。</li></ol>
+<p>（对齐的等距性可以验证：p 从头结点走 <code>len1−len2</code> 步后，p 之后（不含 p）恰剩 <code>len2</code> 个结点，与 q 从头结点出发后的 <code>len2</code> 个结点相等——计数跳过头结点、对齐从头结点走，两者正是配套的。）</p>
 <h3>第 3 问：时间复杂度</h3>
-<p>求长度各遍历一遍：O(len1+len2)；对齐与同步至多再走较短链表长度的结点：O(max(len1,len2))。总计 <strong>O(len1+len2)</strong>。若用"双重循环逐结点比对"则为 O(len1×len2)，不满足"时间尽可能高效"的要求。</p>
+<p>数长度：两链各扫一遍，O(len1+len2)；对齐：走 |len1−len2| 步；同步：至多走到 NULL，步数不超过较短链长。每个结点至多被扫 2 次，总计 <strong>O(len1+len2)</strong>。若用"双重循环逐结点比对"（对 str1 的每个结点去 str2 中找相同字符/位置），是 O(len1×len2)，不满足"时间上尽可能高效"的要求。</p>
 <h3>易错点</h3>
-<ul><li><strong>长度计数与对齐的起点搞混</strong>：本题带头结点，计数要跳过头结点；对齐时 p 从头结点出发走 len1−len2 步，恰好落在与 q"到表尾等距"的位置。</li><li><strong>同步时比较 data 值而不是结点指针</strong>：必须比较 <strong>p == q（同一结点）</strong>——两链表中出现相同字符不代表是同一结点，只有指针相同才真正进入共享后缀。</li></ul>
-<blockquote>记忆锚点：先数长度、再对齐、再同步，比较的是<strong>指针</strong>——O(len1+len2)。</blockquote></div></div>
+<ul><li><strong>同步时比较字符而不比较指针</strong>：必须 <code>p == q</code>——字符相同 ≠ 同一结点，这是本题最核心的陷阱。</li><li><strong>计数与对齐的起点不配套</strong>：计数从 <code>head-&gt;next</code>（跳过头结点），对齐时指针从头结点出发走差值步；起点一旦搞混，"等距"就不成立。</li><li><strong>漏掉无共同后缀的情形</strong>：循环条件必须含 <code>p != NULL &amp;&amp; q != NULL</code>，无共享时函数返回 NULL，而不是空指针崩溃。</li></ul>
+<blockquote>记忆锚点：共享后缀 = 尾部同一条链 → <strong>数长度 → 对齐 → 同步 → 比指针</strong>，O(len1+len2)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

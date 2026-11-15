@@ -101,17 +101,19 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IEEE 754 单精度机器数的还原</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IEEE 754 单精度浮点数的还原</h2>
 <p><strong>答案：A（−1.5 × 2^13）。</strong></p>
-<h3>第一步：把十六进制展开成 32 位二进制并切分字段</h3>
-<p><code>C640 0000H</code> = <code>1100 0110 0100 0000 0000 0000 0000 0000</code>。按 IEEE 754 单精度格式切成 1 + 8 + 23 三段：</p>
-<table><thead><tr><th>字段</th><th>二进制</th><th>读数</th></tr></thead><tbody><tr><td>数符 S（最高 1 位）</td><td>1</td><td>负数</td></tr><tr><td>阶码 E（第 30~23 位）</td><td>100 0110 0</td><td>140</td></tr><tr><td>尾数 M（低 23 位）</td><td>100…0（首 1 余 0）</td><td>0.5</td></tr></tbody></table>
-<h3>第二步：三段各自还原</h3>
-<ul><li>阶码用移码，真实指数 = E − 127 = 140 − 127 = <strong>13</strong>。</li><li>尾数按"1.M"隐含形式还原：1 + 0.5 = <strong>1.5</strong>。</li><li>数符为 1，整体取负。</li></ul>
-<p>该数 = <strong>−1.5 × 2^13</strong>。</p>
+<h3>第一步：先懂格式再拆位——两处必被追问的设计</h3>
+<p>IEEE 754 单精度把 32 位切成 <strong>1 位数符 + 8 位阶码 + 23 位尾数</strong>。动手拆之前，先弄清两处最容易被追问"为什么"的设计：</p>
+<ul><li><strong>阶码为什么减 127？</strong> 指数本来有正有负，若直接存补码，硬件比较两数大小、对阶时都要额外处理符号。于是约定存"指数 + 127"（移码/偏置码）：8 位全部落进 1~254 的无符号范围，比较阶码就是比较无符号整数。所以还原时<strong>真实指数 = E − 127</strong>。</li><li><strong>尾数为什么有隐藏的 1？</strong> 规格化二进制数总能写成 1.xxxx × 2^E，整数位恒为 1，存它纯属浪费——约定不存、还原时补上，等于白赚 1 位精度。所以尾数必须按 <strong>1.M</strong> 还原，而不是 0.M。</li></ul>
+<h3>第二步：拆 C640 0000H</h3>
+<p><code>C640 0000H</code> = <code>1100 0110 0100 0000 0000 0000 0000 0000</code>：</p>
+<table><thead><tr><th>字段</th><th>取出的位</th><th>读数</th></tr></thead><tbody><tr><td>数符（最高 1 位）</td><td>1</td><td>负数</td></tr><tr><td>阶码（数符后 8 位）</td><td><code>100 0110 0</code> = <code>10001100B</code></td><td>128+8+4 = 140</td></tr><tr><td>尾数（低 23 位）</td><td><code>100…0</code></td><td>M = 0.5</td></tr></tbody></table>
+<h3>第三步：三段拼成真值</h3>
+<p>真实指数 = 140 − 127 = <strong>13</strong>；尾数 1.M = 1 + 0.5 = <strong>1.5</strong>；数符为 1 → 整体取负。该数 = <strong>−1.5 × 2^13</strong>，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>忘记减偏置 127</strong>：把阶码 140 直接当指数就全错了；单精度偏置是 127。</li><li><strong>漏掉隐含的"1."</strong>：尾数 <code>100…0</code> 还原为 1.5 而不是 0.5——选 C（−0.5×2^13）、D（−0.5×2^12）正是掉了这个坑。</li><li><strong>指数 12 与 13 混淆</strong>：140 − 127 = 13；若错减 128 或多减一位，就会掉进 B（−1.5×2^12）。</li><li><strong>位段切错位置</strong>：阶码是第 30~23 位，即 <code>1100 0110 0100</code> 里的后 7 位接第 9 位那个 <code>1</code>，拼成 <code>1000 1100</code>。</li></ul>
-<blockquote>一句话结论：符号 1、阶码 10001100B=140、指数 140−127=13、尾数 1.M=1.5，该数 = −1.5×2^13，选 A。</blockquote></div></div>
+<ul><li><strong>忘记减偏置 127</strong>：把阶码 140 直接当指数，全盘皆错；单精度偏置是 127（双精度才是 1023）。</li><li><strong>漏掉隐含的 1</strong>：尾数按 0.M 还原成 0.5 → 得 −0.5×2^13（选项 C）或 −0.5×2^12（选项 D）。</li><li><strong>指数差 1</strong>：偏置错减 128、或指数多扣一位 → −1.5×2^12（选项 B）。</li><li><strong>位段切错位置</strong>：阶码是数符后的 8 位 <code>100 0110 0</code>，拼成 <code>1000 1100</code> = 140；从别处截取则指数全错。</li></ul>
+<blockquote>一句话结论：数符 1、阶码 10001100B = 140、指数 140 − 127 = 13、尾数 1.M = 1.5，该数 = −1.5 × 2^13，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

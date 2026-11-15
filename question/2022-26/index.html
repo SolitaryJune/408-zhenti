@@ -105,11 +105,12 @@
 <h3>第一步：先给结论</h3>
 <p>答案：<strong>B</strong>，安全序列有 <strong>2 个</strong>：P0→P1→P2 与 P0→P2→P1。</p>
 <h3>第二步：用 Available 逐一检查 Need</h3>
-<p>可用资源 Available = (1, 3, 2)。判定条件：进程的尚需量 Need 三个分量都 ≤ Available。</p>
+<p>可用资源 Available = (1, 3, 2)。</p>
+<p><strong>为什么判据是 Need ≤ Available？</strong> 安全序列的定义是"按这个顺序执行，每个进程都能拿到它<strong>尚需的全部资源</strong>并顺利跑完"。银行家算法取最保守的假设——进程可能把它声明过的尚需量一次性全部要走；所以只有当 Available 现在就能满足某进程的全部尚需量（Need 三个分量都 ≤ Available）时，才敢保证它能完成并归还资源，序列才"安全"。</p>
 <table><thead><tr><th>进程</th><th>Need(A,B,C)</th><th>对 (1,3,2) 判定</th><th>结论</th></tr></thead><tbody><tr><td>P0</td><td>(0,2,1)</td><td>0≤1，2≤3，1≤2</td><td>满足</td></tr><tr><td>P1</td><td>(1,2,3)</td><td>C 分量 3 大于 2</td><td>不满足</td></tr><tr><td>P2</td><td>(0,1,3)</td><td>C 分量 3 大于 2</td><td>不满足</td></tr></tbody></table>
 <p>此时能立即运行的<strong>只有 P0</strong>，安全序列的第 1 位只能是 P0。</p>
 <h3>第三步：P0 完成后释放资源，再查一遍</h3>
-<p>P0 运行结束归还全部已分配资源 (2,0,1)：Available = (1,3,2) + (2,0,1) = <strong>(3,3,3)</strong>。再检查：</p>
+<p><strong>为什么归还 (2,0,1)？</strong> P0 跑完意味着它不再持有任何资源，已分配的全部释放回系统。P0 运行结束归还全部已分配资源 (2,0,1)：Available = (1,3,2) + (2,0,1) = <strong>(3,3,3)</strong>。再检查：</p>
 <ul><li>P1：Need (1,2,3) ≤ (3,3,3) → 满足；</li><li>P2：Need (0,1,3) ≤ (3,3,3) → 满足。</li></ul>
 <p>两者都能满足，后两位可以是 P1→P2，也可以是 P2→P1，各构成一个安全序列，共 2 个。</p>
 <h3>易错点</h3>

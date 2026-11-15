@@ -109,15 +109,15 @@ for (i = 1; i * i &lt;= n; i++) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：双层循环的时间复杂度——数"内层总共执行了多少次"</h2>
-<p><strong>答案：B（O(n)）</strong>。这类题不背结论，老老实实把内层执行总次数累加出来。</p>
+<p><strong>答案：B（O(n)）</strong>。计数模型只有一句话：这段程序里唯一随 n 增长的动作是 <code>count++</code>，它的执行总次数 = 内层循环体的运行总次数，其余都是常数开销——所以时间复杂度就是"内层总共执行了多少次"的数量级。</p>
 <h3>第一步：看清外层循环的范围</h3>
-<p>外层条件是 <code>i * i &lt;= n</code>，即 i 最大取到 k = ⌊√n⌋。外层不是跑 n 次，而是只跑 √n 次——这是本题第一个陷阱。</p>
+<p>外层条件是 <code>i * i &lt;= n</code>。<strong>为什么 i 最大只到 √n？</strong> 因为它等价于 <code>i &lt;= √n</code>，而 i 每轮只加 1、逐个试探到平方超过 n 为止——这是"给 i 定上限"的判停条件，不是让 i 翻倍跳跃。所以外层不是跑 n 次，而是只跑 k = ⌊√n⌋ 次——这是本题第一个陷阱。</p>
 <h3>第二步：累加内层执行次数</h3>
 <p>外层第 i 轮时，内层 <code>j = 1..i</code> 执行 i 次。取 n = 36（k = 6）验证：</p>
 <table><thead><tr><th>i</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>内层执行次数</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr><tr><td>count 累计</td><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td></tr></tbody></table>
 <p>总计 = 1 + 2 + … + k = k(k+1)/2 ≈ (√n)²/2 = <strong>n/2</strong>。系数 1/2 不影响数量级，故时间复杂度为 O(n)。</p>
 <h3>易错点</h3>
-<ul><li><strong>见两层循环就选 O(n²)</strong>：内层上限是 i 而不是 n；累加 1+2+…+√n 恰好是"平方项自乘"，量级被压回 n。</li><li>**把 <code>i*i &lt;= n</code> 读成 <code>i &lt;= n</code>**：那才会得到 O(n²) 级的错误判断。</li><li><strong>纠结低阶项与系数</strong>：n/2 + √n/2 里的 √n 是低阶项，大 O 只看最高阶。</li></ul>
+<ul><li><strong>见两层循环就选 O(n²)</strong>（干扰项 D）：内层上限是 i 而不是 n；累加 1+2+…+√n 恰好是"平方项自乘"，量级被压回 n。</li><li>**把 <code>i*i &lt;= n</code> 读成 <code>i &lt;= n</code>**：那才会得到 O(n²) 级的错误判断——判停条件没读懂，上限直接放大 n^1.5 倍。</li><li><strong>误选 A（O(log n)）</strong>：把外层趟数当成对数级（误以为 i 会指数式逼近 n，实际 i 每次 +1），又漏掉内层还要线性累加——只数了趟数、没数总工作量。</li><li><strong>误选 C（O(n log n)）</strong>：套"外层 n × 内层 log n"的模板，两头都没对着本题：外层只跑到 √n，内层跑的是 i 次（从 1 累到 √n），不是 log n 次。</li><li><strong>纠结低阶项与系数</strong>：n/2 + √n/2 里的 √n 是低阶项，大 O 只看最高阶。</li></ul>
 <blockquote>结论：外层跑 k = ⌊√n⌋ 次，总次数 k(k+1)/2 = Θ(n)，选 <strong>B</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -221,7 +221,7 @@ for (i = 1; i * i &lt;= n; i++) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：顺序存储二叉树的合法性——"孩子存在，父亲必须存在"</h2>
-<p><strong>答案：D</strong>。判据只有一条：下标 i 的结点若存在（值 ≠ -1），其父结点下标 ⌊i/2⌋ 必须存在；反过来"父存在而孩子为 -1"完全合法。</p>
+<p><strong>答案：D</strong>。先立模型再判：二叉树的顺序存储是<strong>按完全二叉树的层序给编号</strong>——编号 i 的左孩子固定是 2i、右孩子固定是 2i+1；反过来，i 为偶数（左孩子）父是 i/2，i 为奇数（右孩子）父是 (i−1)/2，统一写成 <strong>⌊i/2⌋</strong>。数组里位置 k 的值 ≠ -1 表示"编号 k 的结点存在"，= -1 表示缺席。于是判据只有一条：<strong>下标 i 的结点若存在（值 ≠ -1），其父结点 ⌊i/2⌋ 必须存在</strong>——孩子只能"挂"在存在的父亲下面；反过来"父存在而孩子为 -1"完全合法，缺席不违反任何规则。</p>
 <h3>第一步：逐项检查（数组下标从 1 起）</h3>
 <table><thead><tr><th>选项</th><th>数组 R</th><th>检查点</th><th>结论</th></tr></thead><tbody><tr><td>A</td><td>20,15,40,-1,-1,35</td><td>6 号（35）的父 ⌊6/2⌋=3 号（40）存在</td><td>合法</td></tr><tr><td>B</td><td>15,40,10,18,35,-1,-1</td><td>4 号（18）、5 号（35）的父都是 2 号（40）</td><td>合法</td></tr><tr><td>C</td><td>15,40,10,-1,-1,-1,12</td><td>7 号（12）的父 ⌊7/2⌋=3 号（10）存在</td><td>合法</td></tr><tr><td>D</td><td>17,20,35,-1,18,45,-1,-1,19,27</td><td>9 号（19）的父 ⌊9/2⌋=4 号 = -1</td><td>矛盾</td></tr></tbody></table>
 <h3>第二步：D 为什么矛盾</h3>
@@ -331,7 +331,7 @@ for (i = 1; i * i &lt;= n; i++) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：哈夫曼树的构建与编码长度统计</h2>
-<p><strong>答案：D（5 个）</strong>。哈夫曼编码长度 = 字符在哈夫曼树中叶子的深度；构建规则：每一步合并当前森林中<strong>最小的两个</strong>权值。</p>
+<p><strong>答案：D（5 个）</strong>。先把两条机制立住：<strong>其一</strong>，哈夫曼编码是从根到叶的路径——每经过一条边就写下一位 0/1，且任何编码都不是另一个的前缀（前缀码），所以一个字符的编码长度恰好等于它在哈夫曼树中的<strong>叶子深度</strong>；<strong>其二</strong>，哈夫曼构造每步合并权值最小的两棵子树，越小的权值被"垫"得越早、一层层压下去，于是频次小的字符天然在深处、编码更长。</p>
 <h3>第一步：模拟合并过程</h3>
 <table><thead><tr><th>步</th><th>合并前森林</th><th>取最小两个</th><th>合并结果</th></tr></thead><tbody><tr><td>1</td><td>2,3,4,6,8,10,11</td><td>2、3</td><td>新结点 5</td></tr><tr><td>2</td><td>4,5,6,8,10,11</td><td>4、5</td><td>新结点 9</td></tr><tr><td>3</td><td>6,8,9,10,11</td><td>6、8</td><td>新结点 14</td></tr><tr><td>4</td><td>9,10,11,14</td><td>9、10</td><td>新结点 19</td></tr><tr><td>5</td><td>11,14,19</td><td>11、14</td><td>新结点 25</td></tr><tr><td>6</td><td>19,25</td><td>19、25</td><td>根 44</td></tr></tbody></table>
 <h3>第二步：读出各字符的编码长度（叶子深度）</h3>
@@ -339,7 +339,7 @@ for (i = 1; i * i &lt;= n; i++) {
 <table><thead><tr><th>频次</th><th>2</th><th>3</th><th>4</th><th>6</th><th>8</th><th>10</th><th>11</th></tr></thead><tbody><tr><td>编码长度</td><td>4</td><td>4</td><td>3</td><td>3</td><td>3</td><td>2</td><td>2</td></tr></tbody></table>
 <p>长度 ≥ 3 的是频次 2、3、4、6、8 对应的字符，共 <strong>5 个</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>合并顺序错</strong>：每一步都必须取"当前森林"中最小的两个，新结点要参与后续比较，不能按原始顺序配对。</li><li><strong>不建树就估长度</strong>：哈夫曼树只保证"频次小在深处"的趋势，具体长度必须建完树读深度。</li><li><strong>数错对象</strong>：长度为 2 的只有 10、11 两个字符，故长度 ≥ 3 的是 7 − 2 = 5 个，选 <strong>D</strong>。</li></ul>
+<ul><li><strong>合并顺序错</strong>：每一步都必须取"当前森林"中最小的两个，新结点要参与后续比较，不能按原始顺序配对。</li><li><strong>不建树就估长度</strong>：哈夫曼树只保证"频次小在深处"的趋势，具体长度必须建完树读深度。</li><li><strong>数错对象</strong>：长度为 2 的只有 10、11 两个字符，故长度 ≥ 3 的是 7 − 2 = 5 个，选 <strong>D</strong>。</li><li><strong>误选 A（2 个）</strong>：把"大于等于 3"读成"等于 2"，恰好数到深度为 2 的 10、11 两个字符。</li><li><strong>误选 B（3 个）</strong>：只数了深度恰好为 3 的字符（4、6、8 三个），漏掉更深处深度为 4 的频次 2、3。</li><li><strong>误选 C（4 个）</strong>：建树时合并顺序出错（某步没取当前最小的两个），读出的深度分布整体错一档。</li></ul>
 <blockquote>口诀：<strong>小权值在深处</strong>。长度 ≥ 3 的字符共 5 个。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -501,7 +501,7 @@ for (i = 1; i * i &lt;= n; i++) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：4 阶 B 树的形态计数——按"根关键字数 + 树高"分类枚举</h2>
-<p><strong>答案：C（9 种）</strong>。4 阶 B 树规则：每结点至多 3 个关键字；非根结点至少 1 个（⌈4/2⌉−1）；根若非叶子至少 2 棵子树；所有叶子同层。</p>
+<p><strong>答案：C（9 种）</strong>。4 阶 B 树规则：每结点至多 3 个关键字；非根结点至少 1 个（⌈4/2⌉−1）；根若非叶子至少 2 棵子树；所有叶子同层。计数思路：7 个关键字太少，B 树形态完全由"每个结点装几个关键字"决定，所以按<strong>根放几个关键字</strong>、<strong>树撑到几层</strong>两条轴分类，就能不重不漏地穷举。</p>
 <h3>第一步：树高为 2 的情形（根 + 一层叶子）</h3>
 <p>根有 k 个关键字 → 有 k+1 个叶子，叶子共装 7−k 个关键字，每个叶子装 1~3 个：</p>
 <table><thead><tr><th>根关键字 k</th><th>叶子数</th><th>叶子关键字分布（有序）</th><th>种数</th></tr></thead><tbody><tr><td>1</td><td>2</td><td>(3,3)</td><td>1</td></tr><tr><td>2</td><td>3</td><td>(1,1,3),(1,2,2),(1,3,1),(2,1,2),(2,2,1),(3,1,1)</td><td>6</td></tr><tr><td>3</td><td>4</td><td>(1,1,1,1)</td><td>1</td></tr></tbody></table>
@@ -511,7 +511,7 @@ for (i = 1; i * i &lt;= n; i++) {
 <h3>第三步：合计</h3>
 <p>1 + 6 + 1 + 1 = <strong>9 种</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把叶子分布当无序</strong>：(1,1,3) 与 (3,1,1) 中各叶子装的关键字个数不同，根两侧区间不同，是不同的 B 树。</li><li><strong>树高枚举漏掉 3 层</strong>：7 个关键字恰好撑得起一棵三层 B 树（全部取下限 1 个关键字），容易漏数最后 1 种。</li><li><strong>违反关键字下限</strong>：非根结点至少 1 个关键字，根至少 2 棵子树，靠这些约束才能圈定所有形态。</li></ul>
+<ul><li><strong>把叶子分布当无序</strong>：(1,1,3) 与 (3,1,1) 中各叶子装的关键字个数不同，根两侧区间不同，是不同的 B 树。</li><li><strong>树高枚举漏掉 3 层</strong>（干扰项 B 的 8 = 树高 2 的小计）：7 个关键字恰好撑得起一棵三层 B 树（全部取下限 1 个关键字），容易漏数最后 1 种。</li><li><strong>把有序分布当重复数</strong>（干扰项 A 的 7）：在树高 2 里把 (1,3,1) 之类误当成 (1,1,3) 的重复而删掉，6 种只剩 5 种。</li><li><strong>把树高 3 多算成 2 种</strong>（干扰项 D 的 10）：以为根放 1 个或 2 个关键字都能撑起三层——但内部结点和叶子全取下限 1 才恰好凑满 7 个，根再多放 1 个关键字总数就超了，树高 3 只能 1 种。</li><li><strong>违反关键字下限</strong>：非根结点至少 1 个关键字，根至少 2 棵子树，靠这些约束才能圈定所有形态。</li></ul>
 <blockquote>结论：树高 2 共 8 种 + 树高 3 共 1 种 = 9 种，选 <strong>C</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -725,15 +725,18 @@ unsigned int ui = si;</code></pre></div></div>
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：short 转 unsigned int 的符号扩展与无符号解释</h2>
+<h3>第 0 步：先立模型——补码与无符号数是同一位串的两种解释</h3>
+<p>32 位一共只有 2^32 个位串。<strong>补码</strong>和<strong>无符号数</strong>是同一批位串的两种读法：位串按补码读出真值 t（−2^31 ~ 2^31−1），按无符号读出 u（0 ~ 2^32−1），两者恒满足 <strong>u ≡ t (mod 2^32)</strong>——真值为负时就是 <strong>u = t + 2^32</strong>。这正是本题的全部机关：si 按补码是 −32767，赋给 unsigned 后同一串位按无符号读，值就是 −32767 + 2^32。</p>
+<p><strong>为什么符号扩展补 1 而数值不变？</strong> 8001H 之所以代表 −32767，依据是 −32767 ≡ 32769 (mod 2^16)；高位再补一串 1 得 FFFF 8001H，依据变成 −32767 ≡ 4294934529 (mod 2^32)——同一个负数在更大模下的化身，同余关系被高位全 1 维持着。若补 0，同余关系破坏，就换成另一个数了。</p>
 <h3>第一步：先写出 si 的 16 位补码</h3>
 <p>si = -32767。先写 32767 的 16 位表示：0111 1111 1111 1111B = 7FFFH；取负数按「按位取反、末位加 1」得 1000 0000 0000 0001B，即 [si]补 = 8001H。</p>
 <h3>第二步：赋给 32 位 unsigned int 时发生了什么</h3>
 <p>C 语言转换规则：short（16 位有符号）赋给 unsigned int（32 位）时，先把 16 位补码<strong>符号扩展</strong>到 32 位——符号位是 1，高 16 位全部补 1，得机器数 FFFF 8001H；然后这个 32 位机器数按<strong>无符号数</strong>解释。</p>
 <table><thead><tr><th>阶段</th><th>机器数</th><th>解释</th></tr></thead><tbody><tr><td>si 的 16 位补码</td><td>8001H</td><td>真值 -32767</td></tr><tr><td>符号扩展成 32 位</td><td>FFFF 8001H</td><td>按补码解释仍是 -32767</td></tr><tr><td>按 unsigned 解释</td><td>FFFF 8001H</td><td>2^32 - 32767</td></tr></tbody></table>
 <h3>第三步：按无符号数算真值</h3>
-<p>FFFF 8001H 的最高位是 1，但 ui 是无符号类型，按位权展开即为无符号真值 = 2^32 − 32767。而 32767 = 2^15 − 1，所以 ui = 2^32 − 2^15 + 1，选 <strong>D</strong>。</p>
+<p>FFFF 8001H 的最高位是 1，但 ui 是无符号类型，按第 0 步的模型直接加模：u = −32767 + 2^32 = 2^32 − 32767。而 32767 = 2^15 − 1，所以 ui = 2^32 − 2^15 + 1，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>做成零扩展</strong>：把 8001H 前面直接补 0 得 0000 8001H，无符号解释正好是 2^15 + 1——这就是干扰项 A。有符号数加宽位数必须符号扩展。</li><li><strong>按补码读回</strong>：得到 -32767，忽略了 ui 是无符号类型，最高位 1 不再当符号。</li><li><strong>加减差 1</strong>：8001H 对应的绝对值是 32767 = 2^15 − 1，所以减 32767 等价于 −2^15 + 1；误算成 2^32 − 2^15 − 1 就是干扰项 C。</li></ul>
+<ul><li><strong>做成零扩展</strong>：把 8001H 前面直接补 0 得 0000 8001H，无符号解释正好是 2^15 + 1——这就是干扰项 A。有符号数加宽位数必须符号扩展。</li><li><strong>误选 B（2^15）</strong>：把 8001H 的无符号值记成 2^15——记错邻居：无符号值 2^15 = 8000H 才是 −32768 的位串；8001H 的无符号值是 2^15 + 1 = 32769。</li><li><strong>按补码读回</strong>：得到 -32767，忽略了 ui 是无符号类型，最高位 1 不再当符号。</li><li><strong>加减差 1</strong>：8001H 对应的绝对值是 32767 = 2^15 − 1，所以减 32767 等价于 −2^15 + 1；误算成 2^32 − 2^15 − 1 就是干扰项 C。</li></ul>
 <blockquote>一句话结论：先符号扩展得 FFFF 8001H，再按无符号解释为 2^32 − 2^15 + 1，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -786,11 +789,11 @@ unsigned int ui = si;</code></pre></div></div>
 <p>4730 0000H = 0100 0111 0011 0000 0000 0000 0000 0000B。单精度格式按 1 + 8 + 23 拆：</p>
 <table><thead><tr><th>字段</th><th>数符 S</th><th>阶码 E（8 位）</th><th>尾数 M（23 位）</th></tr></thead><tbody><tr><td>取值</td><td>0</td><td>1000 1110</td><td>011 0000 0000 0000 0000 0000</td></tr></tbody></table>
 <h3>第二步：算指数与有效数字</h3>
-<ul><li>阶码 E = 1000 1110B = 128 + 8 + 4 + 2 = 142；单精度偏置 127，真指数 = 142 − 127 = 15。</li><li>尾数域 M = 011B，其余 20 位全 0，即 0.011B = 0.25 + 0.125 = 0.375；规格化数隐含最高位的 1，有效数字 = 1.011B = 1 + 0.375 = 1.375。</li></ul>
+<ul><li>阶码 E = 1000 1110B = 128 + 8 + 4 + 2 = 142。<strong>为什么减 127？</strong> 8 位阶码按无符号形式存放（便于硬件逐位比较大小），要容纳负指数就得把真实指数整体抬高 127 存进去——所以真指数 = E − 127 = 15。</li><li>尾数域 M = 011B，其余 20 位全 0，即 0.011B = 0.25 + 0.125 = 0.375。<strong>为什么有效数字是 1.M 而不是 0.M？</strong> 规格化把小数点挪到第一个 1 之后，尾数整数位恒为 1；这个 1 对所有规格化数都相同，干脆不存、省出一位精度——所以有效数字 = 1.011B = 1 + 0.375 = 1.375，最终 x = 1.375 × 2^15。</li></ul>
 <h3>第三步：合成真值</h3>
 <p>x = 1.375 × 2^15（数符 0 为正），选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉隐含的 1</strong>：把值写成 0.375 × 2^15（干扰项 A、C 的来源）——规格化非零数尾数域前隐含一个 1。</li><li><strong>指数忘了减偏置 127</strong>：直接拿 142 当指数。</li><li><strong>按字节拆字段</strong>：符号 1 位、阶码 8 位必须从最高位连续数下来，0x4730 这两个字节同时横跨符号位、阶码和尾数域。</li></ul>
+<ul><li><strong>漏掉隐含的 1</strong>：把值写成 0.375 × 2^15（干扰项 A、C 的来源）——规格化非零数尾数域前隐含一个 1。</li><li><strong>误选 B（1.375 × 2^14）</strong>：尾数对了、指数差 1——典型原因是 32 位连写时字段拆分错位（阶码读成 1000 1101），说明拆字段必须从最高位一位一位数，不能按字节想当然。</li><li><strong>指数忘了减偏置 127</strong>：直接拿 142 当指数。</li><li><strong>按字节拆字段</strong>：符号 1 位、阶码 8 位必须从最高位连续数下来，0x4730 这两个字节同时横跨符号位、阶码和尾数域。</li></ul>
 <blockquote>一句话结论：S = 0，E = 142 − 127 = 15，M = 0.011B，x = 1.375 × 2^15，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -845,12 +848,12 @@ unsigned int ui = si;</code></pre></div></div>
 <p>补码运算器做 x − y = x + [−y]补。y = 0111 0101B，按位取反加 1 得 [−y]补 = 1000 1011B = 8BH。</p>
 <h3>第三步：8 位竖式相加（从 bit0 到 bit7）</h3>
 <table><thead><tr><th>位</th><th>bit7</th><th>bit6</th><th>bit5</th><th>bit4</th><th>bit3</th><th>bit2</th><th>bit1</th><th>bit0</th></tr></thead><tbody><tr><td>[x]补</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>[−y]补</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr><tr><td>本位和</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td></tr></tbody></table>
-<p>逐位：bit0 1+1=进1得0；bit1 1+1+1=进1得1；bit2 0+0+1=1；bit3 0+1=1；bit4 0；bit5 1+0=1；bit6 0；bit7 1+1=进1得0。8 位结果 = 0010 1110B = 2EH = <strong>46</strong>，最高位进位被丢弃。</p>
+<p>逐位：bit0 1+1=进1得0；bit1 1+1+1=进1得1；bit2 0+0+1=1；bit3 0+1=1；bit4 0；bit5 1+0=1；bit6 0；bit7 1+1=进1得0。8 位结果 = 0010 1110B = 2EH = <strong>46</strong>，最高位进位被丢弃。<strong>为什么第 9 位进位可以扔？</strong> 8 位运算器是模 2^8 = 256 的记数系统，第 9 位根本不在寄存器里；丢掉它等于减 256，而 −210 ≡ 46 (mod 256)，2EH 正是 −210 在 8 位世界里的化身。</p>
 <h3>第四步：判 OF</h3>
 <ul><li>双高位法：最高位进位 C7 = 1，次高位进位 C6 = 0，OF = C7 与 C6 异或 = <strong>1</strong>；</li><li>符号判断：负数 + 负数 = 正数（0010 1110B 符号位 0），必然溢出；</li><li>真值核对：x − y = −93 − 117 = −210，超出 8 位补码范围 −128～127，确实溢出；机器数 2EH 按 8 位补码读回是 +46（即 −210 + 256）。</li></ul>
 <p>所以 x − y 的机器结果为 <strong>46、OF = 1</strong>，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>直接按真值减</strong>：得 −210 后写不出 8 位结果——运算器里只有 8 位机器数，结果就是 2EH。</li><li><strong>OF 判成 0</strong>：只看到「最高位有进位 CF=1」就完事；OF 是有符号溢出标志，负加负得正、C7 与 C6 相异才是溢出。</li><li><strong>[−y]补 求错</strong>：是对 y 的机器数取反加 1，不是对真值 117 直接写 −117 的十进制。</li></ul>
+<ul><li><strong>误选 A（24，0）</strong>：把减法做成了加法——A3H + 75H = 118H，取低 8 位得 18H = 24；异号相加不可能溢出，OF 正确地为 0。一步「减变加」错，数值和标志就全错。</li><li><strong>误选 B（24，1）</strong>：数值同样来自误加，OF 又把「最高位有进位」错当成溢出——CF 是无符号进位标志，有符号溢出看的是 C7 与 C6 是否相异。</li><li><strong>OF 判成 0</strong>（干扰项 C：46 对但标志错）：只看到「最高位有进位 CF=1」就完事；OF 是有符号溢出标志，负加负得正、C7 与 C6 相异才是溢出。</li><li><strong>[−y]补 求错</strong>：是对 y 的机器数取反加 1，不是对真值 117 直接写 −117 的十进制。</li></ul>
 <blockquote>一句话结论：x + [−y]补 = A3H + 8BH = 2EH（46），C7=1、C6=0，OF=1，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -903,6 +906,9 @@ unsigned int ui = si;</code></pre></div></div>
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：结构体对齐、数组寻址与小端存放</h2>
+<h3>第 0 步：为什么有"边界对齐"和"小端"这两条规矩</h3>
+<p><strong>边界对齐</strong>：32 位 CPU 访存一次取 4 字节，int 型成员的地址若不是 4 的倍数，取一个值就要拆成两次访存再拼接。编译器宁愿在成员之间塞填充字节，也要让每个 int 从 4 的倍数地址开始——这就是 name[10]（占 10 字节）之后要空 2 字节的原因；同理，整个结构体的大小也凑成最大对齐值（4）的倍数，保证数组里每个元素的 id 都对齐。</p>
+<p><strong>小端存放</strong>：按字节编址时，多字节机器数要拆成单字节摆放，小端的规则是<strong>最低有效字节（LSB）放最低地址</strong>——记忆口诀"低对低"。把 1234 5678H 从低地址往高地址排就是 78、56、34、12（大端正好相反，MSB 在低地址）。</p>
 <h3>第一步：算结构体成员偏移与大小</h3>
 <p>32 位机、边界对齐：int 型成员地址须是 4 的倍数，char 型任意。</p>
 <table><thead><tr><th>成员</th><th>类型</th><th>偏移</th></tr></thead><tbody><tr><td>id</td><td>int</td><td>0～3</td></tr><tr><td>name[10]</td><td>char</td><td>4～13</td></tr><tr><td>（填充）</td><td>—</td><td>14～15</td></tr><tr><td>salary</td><td>int</td><td>16～19</td></tr></tbody></table>
@@ -914,7 +920,7 @@ unsigned int ui = si;</code></pre></div></div>
 <table><thead><tr><th>地址</th><th>A0C4H</th><th>A0C5H</th><th>A0C6H</th><th>A0C7H</th></tr></thead><tbody><tr><td>内容</td><td>78H</td><td>56H</td><td>34H</td><td>12H</td></tr></tbody></table>
 <p>56H 在 <strong>0000 A0C5H</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉 salary 前的填充</strong>：把结构体算成 18 字节，employee[1] 起点算成 A0C2H，整串地址全错。</li><li><strong>大小端弄反</strong>：以为 12H 在 A0C4H——小端是「低字节在低地址」，于是 56H 落在 A0C5H。</li><li><strong>元素下标差 1</strong>：employee[1] 要跳过一整个元素（20B），不是从 employee[0].name 后面接着数。</li></ul>
+<ul><li><strong>漏掉 salary 前的填充</strong>：把结构体算成 18 字节，employee[1] 起点算成 A0C2H，56H 落在 A0C3H——干扰项 A 的来源。</li><li><strong>误选 B（A0C4H）</strong>：拿 id 的起始地址直接当答案——56H 是机器数 1234 5678H 里第二高的字节，不是首字节；小端下首字节是 78H，56H 在首地址 +1，必须逐字节排。</li><li><strong>大小端弄反</strong>：以为 12H 在 A0C4H——小端是「低字节在低地址」；若按大端排，56H 会落在 A0C6H，正是干扰项 D。</li><li><strong>元素下标差 1</strong>：employee[1] 要跳过一整个元素（20B），不是从 employee[0].name 后面接着数。</li></ul>
 <blockquote>一句话结论：元素 20B，employee[1] 起于 A0C4H，小端下 78H→A0C4H、56H→A0C5H，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -1521,7 +1527,7 @@ unsigned int ui = si;</code></pre></div></div>
 <p>内存内容（左端＝最久未用）变化：<code>0,1,2</code> → <code>1,2,0</code> → <code>2,0,1</code> → <code>0,1,2</code> → <code>1,2,0</code> → 淘汰 1 得 <code>2,0,5</code> → 淘汰 2 得 <code>0,5,1</code> → 淘汰 0 得 <code>5,1,4</code> → 淘汰 5 得 <code>1,4,3</code> → 淘汰 1 得 <code>4,3,0</code> → 淘汰 4 得 <code>3,0,2</code> → 之后访问 3、2、0 连续命中。</p>
 <p>13 次访问：缺页 <strong>6</strong> 次（5、1、4、3、0、2 调入时），命中 7 次，选 <strong>B</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把初始装入也计成缺页</strong>：得 9 次——题干明说 0、1、2 已在内存。</li><li><strong>淘汰方向记反</strong>：LRU 淘汰的是最久未用的页（序列左端），不是最近使用的。</li><li><strong>第 9 次访问 0 误判命中</strong>：0 在访问 4（第 7 次）时已被淘汰，必然缺页。</li></ul>
+<ul><li><strong>误选 A（5）</strong>：把第 9 次访问 0 误判成命中——0 在第 7 次访问 4 时已被淘汰，这次必然缺页，少算 1 次。</li><li><strong>误选 C（7）</strong>：把第 4 次访问 0 误当缺页（0、1、2 都在内存，这次明明命中），多计 1 次。</li><li><strong>误选 D（8）</strong>：再把第 11 次访问 3 误当缺页（3 第 8 次刚被调入），多计 2 次。</li><li><strong>把初始装入也计成缺页</strong>：得 9 次——题干明说 0、1、2 已在内存，这个数连选项里都没有，说明口径错了。</li><li><strong>淘汰方向记反</strong>：LRU 淘汰的是最久未用的页（序列左端），不是最近使用的；方向一反，整个淘汰序列就全错。</li></ul>
 <blockquote>一句话结论：前 4 次命中，中段 6 连缺，末尾 3 连中——缺页 6 次，选 B。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -1911,7 +1917,7 @@ unsigned int ui = si;</code></pre></div></div>
 <h3>第五步：比较排序</h3>
 <p>1.776 s &gt; 1.6000352 s &gt; 1.600032 s，即 T_ms &gt; T_ps &gt; T_cs。</p>
 <h3>易错点</h3>
-<ul><li><strong>以为分组交换必然最快</strong>：若漏掉「H1 发送 5000 个分组要被 10 Mbps 卡住」，只按首分组 355.2 μs 后每 3.2 μs 到达一个来推算，会得到 T_ps 远小于 T_cs 的错误排序（A 项正是这么来的）。本题三段速率在两种方式下相同，分组交换只比电路交换多付 32 + 3.2 μs 的存储转发时延。</li><li><strong>报文交换漏算逐段时延</strong>：报文交换在 R1、R2 各要整段收完再转发，必须把三段的发送时延全加上。</li><li><strong>单位错</strong>：把 1 M 按 2²⁰ 处理，或把 Mb 与 MB 混用，结果都会算错。</li></ul>
+<ul><li><strong>以为分组交换必然最快</strong>：若漏掉「H1 发送 5000 个分组要被 10 Mbps 卡住」，只按首分组 355.2 μs 后每 3.2 μs 到达一个来推算，会得到 T_ps 远小于 T_cs 的错误排序（A 项正是这么来的）。本题三段速率在两种方式下相同，分组交换只比电路交换多付 32 + 3.2 μs 的存储转发时延。</li><li><strong>误选 C（Tms&gt;Tcs&gt;Tps）</strong>：把 T_ps 算成 1.6 s——漏掉最后一个分组在 R1、R2 的两次存储转发（32 + 3.2 μs），于是 T_cs 反超了 T_ps。</li><li><strong>误选 D（Tps&gt;Tms&gt;Tcs）</strong>：把报文交换"整段转发"的逐段开销错安到分组交换头上（给 T_ps 重复计入三段的发送时延），把最大的 1.776 s 记在了 T_ps 名下。</li><li><strong>报文交换漏算逐段时延</strong>：报文交换在 R1、R2 各要整段收完再转发，必须把三段的发送时延全加上。</li><li><strong>单位错</strong>：把 1 M 按 2²⁰ 处理，或把 Mb 与 MB 混用，结果都会算错。</li></ul>
 <blockquote>一句话结论：<code>T_ms(1.776 s) &gt; T_ps(1.6000352 s) &gt; T_cs(1.600032 s)</code>，选 <strong>B</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2258,7 +2264,7 @@ unsigned int ui = si;</code></pre></div></div>
 <h3>第三步：对比</h3>
 <p>UDP 8 ms &lt; TCP 16 ms：UDP 一个往返直接拿结果；TCP 要先花一个 RTT 建立连接，才能开始请求。</p>
 <h3>易错点</h3>
-<ul><li><strong>TCP 漏算握手</strong>：只算请求与响应的 1 个 RTT 得 8 ms，会误选 C 项；TCP 必须先付「三次握手」这 1 个 RTT。</li><li><strong>单程与往返混淆</strong>：RTT = 8 ms 指一来一回，单程传播时延是 4 ms，别把 8 ms 当单程。</li><li><strong>以为 UDP 也要 2 个 RTT</strong>：UDP 无连接，无需任何准备阶段，1 个 RTT 就是它的最少耗时（A 项）。</li></ul>
+<ul><li><strong>误选 A（8，8）</strong>：UDP 算对了，但 TCP 漏算了三次握手的 1 个 RTT——握手期间客户不能发数据，这 1 个 RTT 是纯开销，必须先付。</li><li><strong>误选 D（16，16）</strong>：TCP 算对了，但把 UDP 也当成要先"建立联系"花 2 个 RTT——UDP 无连接，无需任何准备阶段，1 个 RTT 就是它的最少耗时。</li><li><strong>误选 C（16，8）</strong>：两头同时错——UDP 被多算 1 个 RTT，TCP 又漏算握手。</li><li><strong>单程与往返混淆</strong>：RTT = 8 ms 指一来一回，单程传播时延是 4 ms，别把 8 ms 当单程。</li></ul>
 <blockquote>一句话结论：UDP = 1 RTT = <strong>8 ms</strong>；TCP = 握手 1 RTT + 请求/响应 1 RTT = <strong>16 ms</strong>，选 <strong>B</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2386,18 +2392,33 @@ unsigned int ui = si;</code></pre></div></div>
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：calMulMax——后缀最值一遍扫描求最大乘积</h2>
-<h3>第 (1) 问：基本设计思想</h3>
-<p>朴素做法对每个 i 枚举所有 j ∈ [i, n−1]，时间 O(n²)。优化点藏在乘积的性质里：res[i] = max{A[i]·A[j] | i ≤ j ≤ n−1}，j 的取值范围就是"A[i] 及其右侧"，于是：</p>
-<ul><li>若 <strong>A[i] ≥ 0</strong>：A[i] 乘右侧<strong>最大值</strong> maxSuffix 得最大乘积；</li><li>若 <strong>A[i] &lt; 0</strong>：负数乘越小的数越大，乘右侧<strong>最小值</strong> minSuffix 得最大乘积（负负得正）。</li></ul>
-<p>因此<strong>从右向左</strong>扫描数组，边扫边维护"当前位置及其右侧"的最小值 minSuffix 与最大值 maxSuffix：初值都取 A[n−1]；每到一个 i，先用 A[i] 更新两个后缀最值，再计算 res[i]——"先更新后计算"保证 j = i（与自身相乘）的情形被覆盖，与题设 0 ≤ i ≤ j 一致。</p>
-<h3>第 (2) 问：算法实现</h3>
-<ul><li><code>void calMulMax(int A[], int res[], int n) {</code></li><li><code>    if (n &lt;= 0) return;</code></li><li><code>    int minSuffix = A[n - 1];   // A[i..n-1] 的最小值</code></li><li><code>    int maxSuffix = A[n - 1];   // A[i..n-1] 的最大值</code></li><li><code>    for (int i = n - 1; i &gt;= 0; --i) {</code></li><li><code>        if (A[i] &lt; minSuffix) minSuffix = A[i];   // 先更新后缀最值</code></li><li><code>        if (A[i] &gt; maxSuffix) maxSuffix = A[i];</code></li><li><code>        if (A[i] &gt;= 0) res[i] = A[i] * maxSuffix; // 非负 × 后缀最大</code></li><li><code>        else res[i] = A[i] * minSuffix;           // 负数 × 后缀最小</code></li><li><code>    }</code></li><li><code>}</code></li></ul>
-<p>用题例 A = {1, 4, −9, 6} 验证：i=3 时 res[3]=6×6=36；i=2 时 minSuffix 更新为 −9，res[2]=(−9)×(−9)=81；i=1 时 res[1]=4×6=24；i=0 时 res[0]=1×6=6，得 res={6,24,81,36}，与题面一致。</p>
+<h3>第 (1) 问：基本设计思想——为什么只需两个后缀最值</h3>
+<p>朴素做法对每个 i 枚举所有 j ∈ [i, n−1]，时间 O(n²)。要降下来，先看清楚本题的底层机制：res[i] = A[i] × A[j]，j 被限制在"A[i] 及其右侧"。<strong>对固定的 A[i]，把乘积 A[i]·A[j] 看成 A[j] 的函数，它是单调的</strong>：</p>
+<ul><li>A[i] &gt; 0 时单调增 → 最大乘积在后缀元素的<strong>最大值</strong> maxSuffix 处取到；</li><li>A[i] &lt; 0 时单调减 → 最大乘积在后缀元素的<strong>最小值</strong> minSuffix 处取到（负负得正）；</li><li>A[i] = 0 时恒为 0 → 走哪个分支结果都是 0。</li></ul>
+<p>极值只可能落在取值区间的两个"端点"上，中间元素永远不可能是答案——<strong>所以只需维护"当前位置及其右侧"的最大、最小两个值，就覆盖了 j 的所有取法</strong>。这就是把 O(n²) 压成 O(n) 的那一刀。</p>
+<p><strong>为什么从右往左扫、初值取 A[n−1]？</strong> i = n−1 时后缀 A[n−1..n−1] 只有它自己，最大、最小都是它；i 每左移一格，把 A[i] 并入两个最值即可增量维护，不必回头重算——"右侧"这个方向也决定了只能倒着扫。</p>
+<p><strong>为什么"先更新最值、再算 res[i]"？</strong> 题设允许 j = i（与自身相乘）。若先算后更新，A[i] 恰是后缀新最值的情形会被漏掉——题例中 res[2] = (−9)×(−9) = 81，靠的正是 −9 先把自己并入 minSuffix。</p>
+<h3>第 (2) 问：算法实现（C 描述，与参考答案同一口径）</h3>
+<pre><code>void calMulMax(int A[], int res[], int n)
+{
+    if (n &lt;= 0) return;
+    int minSuffix = A[n - 1];   // A[i..n-1] 的最小值，初值 = 自己
+    int maxSuffix = A[n - 1];   // A[i..n-1] 的最大值，初值 = 自己
+    for (int i = n - 1; i &gt;= 0; --i) {
+        if (A[i] &lt; minSuffix) minSuffix = A[i];   // 先更新后缀最值
+        if (A[i] &gt; maxSuffix) maxSuffix = A[i];
+        if (A[i] &gt;= 0) res[i] = A[i] * maxSuffix; // 非负 × 后缀最大
+        else res[i] = A[i] * minSuffix;           // 负数 × 后缀最小
+    }
+}</code></pre>
+<p>用题例 A = {1, 4, −9, 6} 对号入座验证：</p>
+<table><thead><tr><th>i</th><th>更新后 minSuffix / maxSuffix</th><th>res[i]</th></tr></thead><tbody><tr><td>3</td><td>6 / 6</td><td>6×6 = 36</td></tr><tr><td>2</td><td>−9 / 6</td><td>(−9)×(−9) = 81</td></tr><tr><td>1</td><td>−9 / 6</td><td>4×6 = 24</td></tr><tr><td>0</td><td>−9 / 6</td><td>1×6 = 6</td></tr></tbody></table>
+<p>得 res = {6, 24, 81, 36}，与题面一致。</p>
 <h3>第 (3) 问：复杂度</h3>
-<p>数组只被扫描一遍、每个元素做常数次比较与乘法：时间复杂度 <strong>O(n)</strong>；只用 minSuffix、maxSuffix 两个辅助变量，额外空间复杂度 <strong>O(1)</strong>。</p>
+<p>数组只被<strong>从右向左完整扫一遍</strong>，每个元素做常数次比较与一次乘法：时间复杂度 <strong>O(n)</strong>；除 minSuffix、maxSuffix 两个辅助变量外不占用任何额外空间：空间复杂度 <strong>O(1)</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉 j = i（自身相乘）</strong>：−9 的答案是 (−9)×(−9)=81 而不是 −54；"先更新最值、再算 res[i]"正是为此。</li><li><strong>负数时误配后缀最大值</strong>：负 × 最大反而更小，必须配后缀<strong>最小</strong>值。</li><li><strong>从左往右扫</strong>：需要的是"右侧"的最值，只能从右向左维护。</li></ul>
-<blockquote>一句话：res[i] 只由 A[i] 的符号与右侧最值决定，一趟逆序扫描 O(n) 完成、O(1) 空间。</blockquote></div></div>
+<ul><li><strong>漏掉 j = i（自身相乘）</strong>：−9 的答案是 (−9)×(−9) = 81 而不是 −54；"先更新最值、再算 res[i]"正是为此。</li><li><strong>负数时误配后缀最大值</strong>：A[i] &lt; 0 时乘积随 A[j] 单调<strong>减</strong>，配最大值反而更小，必须配后缀<strong>最小</strong>值。</li><li><strong>从左往右扫</strong>：res[i] 依赖的是"右侧"的最值，只能从右向左增量维护。</li><li><strong>只维护一个最值</strong>：元素有正有负，最大乘积可能落在后缀最大值（非负乘子）或最小值（负乘子）上，两个都要。</li></ul>
+<blockquote>一句话：固定 A[i] 后乘积关于 A[j] 单调，最大只可能落在后缀最大值或最小值上——一趟逆序扫描维护两个后缀最值，O(n) 时间、O(1) 空间。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2450,23 +2471,30 @@ unsigned int ui = si;</code></pre></div></div>
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：AOE 网的关键路径、并行活动与时间余量</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：AOE 网——工期、关键活动、并行窗口与赶工</h2>
+<h3>第 0 步：先立机制——事件、活动与"被最慢的入边钉住"的工期</h3>
+<p>AOE 网用<strong>有向边表示活动</strong>（边上权 = 持续时间）、<strong>顶点表示事件</strong>（一个事件 = "射入它的所有活动都已完工"这个时刻状态）。整个工程的工期由最后的事件（汇点）决定，而一个事件什么时候能发生，取决于它<strong>最慢的那条入边</strong>——所有入边都完成，事件才算发生。这条"处处取最慢"的链就是<strong>关键路径</strong>，它的长度就是最短工期。</p>
+<p>由这个模型推出四条计算规则，后面每一问都从这里自然流出：</p>
+<ul><li><strong>正推取 max</strong>：事件最早发生时间 ve = max{各入边弧尾 ve + 活动时长}——要等<strong>所有</strong>入边完工，只能取最晚的那条；</li><li><strong>逆推取 min</strong>：事件最迟发生时间 vl = min{各出边弧头 vl − 活动时长}——它不能拖累<strong>任何</strong>一个后继按期开工，只能迁就要求最早的那个后继；</li><li><strong>活动余量</strong> = 弧头的 vl − 弧尾的 ve − 持续时间：活动最早可在弧尾事件发生时开工，最晚须在"弧头事件最迟时刻 − 自己的时长"时开工，两界之差就是它可自由滑动的窗口宽度；</li><li><strong>余量为 0 ⇔ 关键活动</strong>：窗口宽度为 0，动它一天，工期就晚一天。</li></ul>
 <h3>第 (1) 问：最短工期与关键活动</h3>
-<p>事件最早时间正推（源点 1）：ve(1)=0；ve(3)=ve(1)+a=2；ve(4)=max(ve(1)+d=3, ve(3)+e=5)=<strong>5</strong>；ve(6)=max(ve(3)+c=3, ve(4)+g=6)=6；ve(2)=max(ve(1)+b=5, ve(4)+f=9)=9；ve(7)=max(ve(6)+h=7, ve(4)+m=9)=9；ve(5)=max(ve(2)+k=11, ve(4)+j=6, ve(7)+n=12)=<strong>12</strong>。</p>
-<p>事件最迟时间逆推（汇点 5，vl(5)=12）：vl(7)=12−n=9；vl(2)=12−k=10；vl(6)=vl(7)−h=8；vl(4)=min(vl(2)−f=6, vl(5)−j=11, vl(7)−m=5, vl(6)−g=7)=<strong>5</strong>；vl(3)=min(vl(4)−e=2, vl(6)−c=7)=2；vl(1)=0。</p>
-<p>活动余量 = 最迟开始 − 最早开始（最早开始 = 弧尾的 ve；最迟开始 = 弧头的 vl − 持续时间）：</p>
+<p>源点 1 从 ve(1)=0 出发正推（每个事件把所有入边算一遍取最大）：</p>
+<p>ve(3)=0+2=2；ve(4)=max(0+3, 2+3)=5；ve(6)=max(2+1, 5+1)=6；ve(2)=max(0+5, 5+4)=9；ve(7)=max(6+1, 5+4)=9；ve(5)=max(9+2, 5+1, 9+3)=<strong>12</strong>。</p>
+<p>工期就是汇点事件 5 的最早发生时刻：<strong>最短完成时间为 12</strong>。</p>
+<p>再从 vl(5)=12 逆推（不能拖累后继，取最小）：vl(7)=12−3=9；vl(2)=12−2=10；vl(6)=9−1=8；vl(4)=min(10−4, 12−1, 9−4, 8−1)=<strong>5</strong>；vl(3)=min(5−3, 8−1)=2；vl(1)=0。</p>
+<p>活动的最早开始 = 弧尾 ve，最迟开始 = 弧头 vl − 时长，逐个算出余量（第二层对号入座）：</p>
 <table><thead><tr><th>活动</th><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th><th>h</th><th>j</th><th>k</th><th>m</th><th>n</th></tr></thead><tbody><tr><td>最早开始</td><td>0</td><td>0</td><td>2</td><td>0</td><td>2</td><td>5</td><td>5</td><td>6</td><td>5</td><td>9</td><td>5</td><td>9</td></tr><tr><td>最迟开始</td><td>0</td><td>5</td><td>7</td><td>2</td><td>2</td><td>6</td><td>7</td><td>8</td><td>11</td><td>10</td><td>5</td><td>9</td></tr><tr><td>余量</td><td>0</td><td>5</td><td>5</td><td>2</td><td>0</td><td>1</td><td>2</td><td>2</td><td>6</td><td>1</td><td>0</td><td>0</td></tr></tbody></table>
-<p>最短工期 = <strong>12</strong>；余量为 0 的关键活动：<strong>a、e、m、n</strong>（关键路径 1→3→4→7→5，2+3+4+3=12）。</p>
-<h3>第 (2) 问：可能与 e 同时进行的活动</h3>
-<p>e 的可能执行时段：最早 2 开始、最迟 2+3=5 完成，即 [2, 5]。一个活动"可能"与 e 同时进行，当且仅当它的可能时段与 [2,5] 相交：b 的时段 [0, 5+5=10]、c 的时段 [2, 7+1=8]、d 的时段 [0, 2+3=5] 都与之重叠；而 f、g、m 最早 5 才开始（只挨着不重叠），a 最迟 2 就得完成，h、j、k、n 更晚。答：<strong>b、d、c</strong>。</p>
+<p>余量为 0 的活动即关键活动：<strong>a、e、m、n</strong>（它们串成关键路径 1→3→4→7→5，2+3+4+3=12，恰等于工期）。</p>
+<h3>第 (2) 问：可能与 e 同时进行的活动——"可能"= 窗口相交</h3>
+<p><strong>机制</strong>：每个活动并不钉死在一个时刻，它可以在自己的窗口 [最早开始, 最迟开始 + 时长] 内任选开工时刻。"可能与 e 同时进行" ⇔ 两者的窗口<strong>有重叠</strong>。</p>
+<p>e 的余量为 0，窗口被钉死在 [2, 5]。逐个对照：b 的窗口 [0, 10]、c 的窗口 [2, 8]、d 的窗口 [0, 5] 都与 [2,5] 相交；a 最迟 2 完成、f/g/m 最早 5 才开始——只在端点"贴着"，不算同时；h、j、k、n 更晚。答：<strong>b、d、c</strong>。</p>
 <h3>第 (3) 问：时间余量最大的活动</h3>
-<p>查余量表：<strong>活动 j 的余量 = 11 − 5 = 6</strong>，为最大。</p>
-<h3>第 (4) 问：b 在时刻 6 才开工的处理</h3>
-<p>b 正常最早 0 开始；若拖到时刻 6 才开始：</p>
-<ul><li>不延期的条件是事件 2 仍满足 ve(2)+k ≤ 12，即 b 最迟在 10 完成，故 6 + b 的持续时间 ≤ 10，<strong>b 的持续时间最多为 4</strong>。</li><li>若 b 仍持续 5（到 11 才完成，ve(2)=11），只能压缩其后继：需 11 + k ≤ 12 → k ≤ 1，即<strong>把 k 由 2 压缩为 1</strong>（k 原本有 1 的余量，压缩 1 不会引出新矛盾；压 f 无用，因为此时 ve(2) 已由 b 决定）。</li></ul>
+<p>查上表余量行：最大的是<strong>活动 j，余量 = 11 − 5 = 6</strong>——它最早 5 就能开工，却可以拖到 11 才开工而不影响工期。</p>
+<h3>第 (4) 问：b 拖到时刻 6 开工——缩自己还是缩后继</h3>
+<p>b 的余量是 5（最早 0、最迟 5 开工），拖到时刻 6 开工已经越界，影响会沿它的后继链 事件 2 → 活动 k → 事件 5 传导；汇入事件 2 的其他入边（f 等）此刻都早于 b 完成，决定不了 ve(2)，所以威胁的只有 k 这一段。</p>
+<ul><li><strong>不改变其他活动</strong>：不延期的要求是 6 + b 的时长 + k 的时长 2 ≤ 12，解得 <strong>b 的持续时间最多为 4</strong>。</li><li><strong>b 的时长仍为 5</strong>：则 ve(2) = 6+5 = 11，需 11 + k ≤ 12 → k ≤ 1，即<strong>把 k 的持续时间由 2 压缩为 1</strong>（k 原有 1 的余量，压 1 恰好用完，不会引出新矛盾；压 f 无用——此刻 ve(2) = 11 已由 b 决定，f 那条 9 追不上）。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>关键活动找错</strong>：必须用"活动"的余量（最迟开始 − 最早开始），不是事件的 vl − ve；d、f、g、h 都有正余量，不在关键路径上。</li><li><strong>第 (2) 问漏掉 c</strong>：c 从事件 3 出发，最早 2 开始，恰好与 e 同段重叠。</li><li><strong>第 (4) 问压缩对象选错</strong>：b 顺延只威胁"k 这一段"；f 已不决定 ve(2)，压 f 救不了。</li></ul>
-<blockquote>一句话：正推得工期 12 与关键活动 a、e、m、n；余量最大是 j（6）；b 晚开工则要么缩到 4、要么把 k 压成 1。</blockquote></div></div>
+<ul><li><strong>用事件的 vl−ve 判关键活动</strong>：余量是<strong>活动</strong>的（弧头 vl − 弧尾 ve − 时长），事件时差只是中间量；d、f、g、h 都有正余量，不在关键路径上。</li><li><strong>正推误用 min、逆推误用 max</strong>：正推是"等所有入边"（max），逆推是"不拖任何后继"（min），方向弄反全盘皆错。</li><li><strong>第 (2) 问漏掉 c</strong>：c 从事件 3 出发、最早 2 开工，窗口 [2,8] 与 e 的 [2,5] 实打实重叠。</li><li><strong>把端点相接当同时</strong>：a 最迟 2 完成、f/g/m 最早 5 开始，都只是与 [2,5] 贴边，不算同时进行。</li><li><strong>第 (4) 问压缩对象选错</strong>：b 顺延只威胁 k 这一段；ve(2) 已由 b 决定，压 f 救不了。</li></ul>
+<blockquote>一句话：正推取 max 得工期 12，逆推取 min 得各事件最迟时刻；余量 0 即关键活动 a、e、m、n；窗口与 e 相交的是 b、d、c；余量最大 j（6）；b 晚到 6 开工则要么缩到 4、要么把 k 压成 1。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2524,19 +2552,20 @@ for (i = 0; i &lt; 2048; i++)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：组相联 Cache 地址划分、缺失率与跨页分析</h2>
-<h3>答题框架</h3>
-<p>先由 Cache 容量、相联度、块大小求出地址划分；再算数组元素的虚拟地址与组号；然后统计循环访问中的缺失次数，得缺失率与平均访问时间；最后按页大小看数组跨几个页、缺页几次。</p>
+<h3>答题框架与底层机制</h3>
+<p>本题的全部计算都挂在两条机制上：其一，Cache 的地址划分由<strong>容量、相联度、块大小</strong>三个参数唯一决定——块内地址位数 = log(块大小)，组号位数 = log(组数)，组数 = 块数 ÷ 路数；其二，页式虚拟存储在"虚地址 → 实地址"翻译中<strong>只替换页号、原样保留页内偏移</strong>，所以页内偏移覆盖的低位字段不需要查页表就能直接用。先由参数切出地址段，再确认这些段落在页内偏移之内，剩下的就是逐元素算地址、数缺失、数页。</p>
 <h3>第（1）问：Cache 地址字段与虚拟地址索引位</h3>
-<ul><li>Cache 数据区 32 KB ÷ 块 64 B = 512 块；8 路组相联 → 组数 = 512 ÷ 8 = 64 = 2^6 → <strong>组号字段 6 位</strong>；</li><li>块大小 64 B = 2^6 → <strong>块内地址字段 6 位</strong>；</li><li>页大小 4 KB = 2^12 → 虚拟地址低 12 位是页内偏移，且虚存与实存的页内偏移相同；组号（6 位）+ 块内地址（6 位）恰在这 12 位内，故 <strong>VA11～VA6 可作为 Cache 索引</strong>（VA5～VA0 是块内地址）。</li></ul>
+<ul><li>Cache 数据区 32 KB ÷ 块 64 B = <strong>512 块</strong>；8 路组相联 = 每组摆 8 块 → 组数 = 512 ÷ 8 = 64 = 2⁶ → <strong>组号字段 6 位</strong>（为什么除以路数：块是"行"，组是"每 8 行并成的桶"，行数 ÷ 每桶行数 = 桶数）；</li><li>块大小 64 B = 2⁶ → <strong>块内地址字段 6 位</strong>；</li><li>页大小 4 KB = 2¹² → 虚拟地址低 12 位是页内偏移，且虚存与实存的<strong>页内偏移相同</strong>。组号 6 位 + 块内 6 位恰好都落在低 12 位内 → <strong>VA11～VA6 可作 Cache 索引</strong>（VA5～VA0 是块内地址）。</li></ul>
+<p><strong>为什么敢用虚拟地址位查 Cache？</strong> 正因为索引位与块内偏移位都藏在页内偏移里，而页内偏移在地址翻译前后不变——VA11～VA6 与 PA11～PA6 完全相同，CPU 不必先查页表就能定位组、比较块内字节。</p>
 <h3>第（2）问：d[100] 的虚拟地址与组号</h3>
-<ul><li>d 是 int 数组，每元素 4 B：d[100] 虚拟地址 = 0180 0020H + 100×4 = 0180 0020H + 190H = <strong>0180 01B0H</strong>；</li><li>组号 = VA11～VA6：0x1B0 = 0001 1011 0000B，取 bit11～bit6 = <strong>000110B = 06H（十进制 6）</strong>。</li></ul>
+<ul><li>int 占 4 B、按字节编址 → d[100] = 起始地址 0180 0020H + 100×4 = 0180 0020H + 190H = <strong>0180 01B0H</strong>；</li><li>组号取 VA11～VA6：0x1B0 = 0001 1011 0000B，bit11～bit6 = <strong>000110B，即 06H（十进制 6）</strong>。</li></ul>
 <h3>第（3）问：块内偏移、缺失率与平均访问时间</h3>
-<ul><li>d[0] 虚拟地址 0180 0020H 的低 6 位 → 块内偏移 <strong>20H</strong>；</li><li>数组共 2048 × 4 = 8192 B，从块内偏移 20H 处开始，占 0 号块末尾并延伸到第 128 号块，共 <strong>129 个主存块</strong>；</li><li>循环每轮对 d[i] 读一次（d[i]/x）、写一次（赋值），共 2 × 2048 = 4096 次访问；数组按块顺序访问，每块只有首次访问缺失，其后读、写都命中 → 缺失 <strong>129 次</strong>；</li><li>缺失率 = 129/4096 ≈ <strong>3.15%</strong>；</li><li>平均访问时间 = 2 + 0.0315 × 200 = <strong>8.30 个时钟周期</strong>。</li></ul>
+<ul><li>d[0] 的虚拟地址 0180 0020H 的低 6 位 → 块内偏移 <strong>20H</strong>；</li><li>数组共 2048 × 4 = 8192 B，从块内偏移 20H（32 B）处开始：首块只装得下数组开头的 32 B，此后顺着块铺开，(32 + 8192) ÷ 64 = 128.5 → 向上取整，共 <strong>129 个主存块</strong>（首块、末块各只占一半——起点不在块边界，才会多出这一块）；</li><li>循环一轮对每个 d[i] <strong>读一次</strong>（取 d[i]/x）、<strong>写一次</strong>（结果赋回去），访问数组 d 共 2 × 2048 = 4096 次。访问按 i 递增顺序进行，相邻元素大多同块（一块装 16 个 int）；每块只有<strong>首次</strong>访问缺失，整块调入后块内其余读、写全部命中 → 缺失 <strong>129 次</strong>；</li><li>缺失率 = 129/4096 ≈ <strong>3.15%</strong>；</li><li>平均访问时间：命中恒花 2 个周期，缺失时在命中基础上再叠加缺失损失 200 个周期，期望 = 2 + 0.0315 × 200 = <strong>8.30 个时钟周期</strong>。</li></ul>
 <h3>第（4）问：跨页数与缺页次数</h3>
-<ul><li>数组占用虚拟地址 0180 0020H ～ 0180 201FH（8192 B）；页大小 4 KB（1000H），首地址页号 01800H，末地址页号 01802H → 数组分布在 <strong>3 个页</strong>；</li><li>执行循环时 d 尚未调入主存，每页第一次被访问必缺页；缺页调入整页后页内其余访问不再缺页 → 缺页次数 = <strong>3 次</strong>。</li></ul>
+<ul><li>数组占用虚拟地址 0180 0020H ～ 0180 201FH（8192 B）；页大小 4 KB（1000H）远大于块 64 B，<strong>一块绝不会跨页</strong>。首地址落在页 01800H 的偏移 020H 处，末地址落在页 01802H 的偏移 01FH 处 → 数组占据 01800 页尾部、01801 整页、01802 页头，分布在 <strong>3 个页</strong>中；</li><li>循环开始时 d 尚未调入主存，第一次触及某页必缺页；缺页按<strong>整页</strong>调入，页内后续访问不再缺页 → 缺页次数 = <strong>3 次</strong>。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>组数忘了除以路数</strong>：512 是块数，64 才是组数。</li><li><strong>d[100] 忘乘 4</strong>：int 元素占 4 B，字节偏移是 400 = 190H。</li><li><strong>把读写都算缺失</strong>：同一块调入后读写都命中，缺失只有 129 次。</li><li><strong>平均访问时间漏加命中时间</strong>：应为 2 + 缺失率 × 缺失损失。</li></ul>
-<blockquote>一句话结论：组号 6 位、块内 6 位、VA11～VA6 作索引；d[100] 虚拟地址 0180 01B0H、组号 06H；d[0] 偏移 20H、129 块、缺失率 3.15%、平均 8.30 周期；数组跨 3 页、缺页 3 次。</blockquote></div></div>
+<ul><li><strong>组数忘了除以路数</strong>：512 是块数，64 才是组数。</li><li><strong>d[100] 忘乘 4</strong>：int 元素占 4 B，字节偏移是 400 = 190H。</li><li><strong>129 块算成 128</strong>：起点在块内偏移 32 B 处，首块只占一半，(32+8192)÷64 = 128.5，必须向上取整。</li><li><strong>把读写都算缺失</strong>：同一块调入后读写都命中，缺失只有 129 次；分母 4096 是读写各算一次访问。</li><li><strong>平均访问时间漏加命中时间</strong>：应为 2 + 缺失率 × 缺失损失。</li><li><strong>缺页次数按块计</strong>：缺页以页（4 KB）为单位，不是以块（64 B）为单位——129 块 ≠ 129 次缺页。</li></ul>
+<blockquote>一句话结论：组号 6 位、块内 6 位、VA11～VA6 作索引（页内偏移翻译时不变）；d[100] 虚拟地址 0180 01B0H、组号 06H；d[0] 偏移 20H、129 块、缺失率 3.15%、平均 8.30 周期；数组跨 3 页、缺页 3 次。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2600,20 +2629,20 @@ idiv R1, R3               // R1 &lt;- ({R0, R1} / R2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码除法器的初始寄存器内容与除法异常</h2>
-<h3>答题框架</h3>
-<p>先按机器级代码顺序推 idiv 执行前的寄存器内容：mov 装入被除数，scov 把 32 位被除数符号扩展成 64 位存入 {R0, R1}，除数 x 在 R2；再对照除法器结构答出 R、Q、Y 的初始内容与计数器位置；最后按「除数为 0」和「商溢出」两种情形分析除法异常及响应过程。</p>
+<h3>第 0 步：先立机制——补码除法为什么要有 64 位被除数容器和三个寄存器</h3>
+<p>除法器面对的不对称是：被除数 d[i] 与除数 x 都是 32 位，但<strong>相除前被除数要先符号扩展成 64 位</strong>——商最多 32 位（放在原低位），余数占高位，"高位 R + 低位 Q"合成一个 64 位的被除数容器，除法过程中 R、Q 联合逐位左移、每步试一位商。这正是 <code>scov R1</code>（符号扩展）与 {R0, R1} 双寄存器存在的理由：<strong>符号扩展把负被除数高位的"欠账"如实带进 64 位容器</strong>——负数高位补 1、数值不变，同一个负数在更大模下的化身。</p>
 <h3>第（1）问：R、Q、Y 的初始内容、计数器与 ALU 运算</h3>
-<ul><li>执行到 idiv 时：R1 = d[i] = 87654321H（最高位为 1，是负数）；除数 x = 0xFF；</li><li><code>scov R1</code> 把 R1 按符号扩展成 64 位：{R0, R1} = FFFF FFFF 8765 4321H，即 R0 = FFFFFFFFH、R1 = 87654321H；</li><li>对照补码除法器结构，三个寄存器的初始内容见下表：</li></ul>
-<table><thead><tr><th>寄存器</th><th>初始内容</th><th>说明</th></tr></thead><tbody><tr><td>R</td><td>FFFFFFFFH</td><td>被除数的高 32 位，由符号扩展产生</td></tr><tr><td>Q</td><td>87654321H</td><td>被除数的低 32 位</td></tr><tr><td>Y</td><td>000000FFH</td><td>除数 x</td></tr></tbody></table>
-<ul><li>计数器：<strong>控制逻辑（部件）中包含计数器 Cn</strong>，用来控制加/减与移位的步数；</li><li>ALUop 控制的 ALU 运算只有 <strong>加法、减法</strong> 两种（除法过程中做减法试商、加法调整余数）。</li></ul>
+<p>按机器级代码推 idiv 执行前的现场：<code>mov R1, (R3+R4*4)</code> 把 d[i] = 87654321H 取入 R1（最高位是 1，负数）；<code>scov R1</code> 对 R1 按符号扩展成 64 位 → {R0, R1} = FFFF FFFF 8765 4321H；除数 x = 0xFF 已在 R2。三个寄存器的初值如下：</p>
+<table><thead><tr><th>寄存器</th><th>初始内容</th><th>为什么</th></tr></thead><tbody><tr><td>R</td><td>FFFFFFFFH</td><td>64 位被除数的高 32 位 = 符号扩展补出的全 1（被除数为负，高位补符号位 1）</td></tr><tr><td>Q</td><td>87654321H</td><td>64 位被除数的低 32 位 = d[i] 原样</td></tr><tr><td>Y</td><td>000000FFH</td><td>除数 x = 0xFF（正数，无需扩展）</td></tr></tbody></table>
+<ul><li><strong>计数器在哪个部件</strong>：除法是按"步"进行的——每步做一次加/减、移一位、记一位商；发号施令的是<strong>控制逻辑</strong>，它必须记住"现在到第几步"，所以计数器 Cn 位于<strong>控制逻辑</strong>中（ALU 只管算，不记步数）。</li><li><strong>ALUop 控制的运算有哪几种</strong>：整个除法过程每步只做两件事——试商时<strong>减</strong>（余数减除数）、不够减时<strong>加</strong>回去（恢复/调整余数），配合移位完成；所以 ALUop 控制的只有<strong>加法和减法</strong>两种运算。</li></ul>
 <h3>第（2）问：除法异常的情形与响应操作</h3>
-<p>idiv 检测并触发除法异常的两种情况：</p>
-<table><thead><tr><th>情形</th><th>d[i]（被除数）</th><th>x（除数）</th><th>原因</th></tr></thead><tbody><tr><td>除 0 异常</td><td>表示范围内的任意值</td><td>0000 0000H</td><td>除数为 0，商无定义</td></tr><tr><td>商溢出异常</td><td>8000 0000H</td><td>FFFF FFFFH</td><td>−2^31 ÷ (−1) = 2^31，超出 int 表示范围</td></tr></tbody></table>
-<p>发生除法异常后，异常响应过程中 CPU 需要：</p>
-<ol><li><strong>保存断点和程序状态</strong>（保存被中断指令的下一条地址与程序状态字等现场）；</li><li><strong>关中断</strong>（防止异常响应过程被新的中断请求打断）；</li><li><strong>跳转到异常处理程序执行</strong>（转入除法异常处理服务程序）。</li></ol>
+<p><strong>机制</strong>：除法异常只有两类来源——① 商根本无定义（除数为 0）；② 商有定义但<strong>装不下</strong>（超出 32 位补码表示范围）。补码能表示的最小数是 −2³¹，其绝对值恰比最大可表示数 2³¹−1 大 1，于是唯一"装不下"的组合是 (−2³¹) ÷ (−1) = +2³¹；除数取其他非零值时，商的绝对值都不会超过 2³¹−1。</p>
+<table><thead><tr><th>情形</th><th>d[i]（被除数）</th><th>x（除数）</th><th>为什么异常</th></tr></thead><tbody><tr><td>除 0 异常</td><td>表示范围内的任意值</td><td>0000 0000H</td><td>除数为 0，商无定义</td></tr><tr><td>商溢出异常</td><td>8000 0000H</td><td>FFFF FFFFH</td><td>−2³¹ ÷ (−1) = +2³¹，超出 int 表示范围</td></tr></tbody></table>
+<p>发生除法异常后，异常响应过程中 CPU 需要依次完成（每步都有"不做会怎样"的理由）：</p>
+<ol><li><strong>保存断点和程序状态</strong>——不保存现场，异常处理完就回不到被中断的程序；</li><li><strong>关中断</strong>——响应期间若再被新中断打断，现场会被嵌套覆盖；</li><li><strong>跳转到异常处理程序执行</strong>——转入除法异常的处理程序。</li></ol>
 <h3>易错点</h3>
-<ul><li><strong>R 答成 00000000H</strong>：符号扩展看被除数最高位，87654321H 是负数，高 32 位全 1。</li><li><strong>溢出情形写错组合</strong>：只有最小负数 −2^31（8000 0000H）除以 −1（FFFF FFFFH）时商 2^31 才装不下；除数是其他非零值时商都在范围内。</li><li><strong>响应操作漏「关中断」</strong>：标准三步是保存断点和程序状态、关中断、转异常处理程序。</li></ul>
-<blockquote>一句话结论：R = FFFFFFFFH、Q = 87654321H、Y = 000000FFH，计数器在控制逻辑中，ALU 只做加法和减法；x = 00000000H 或（d[i] = 80000000H 且 x = FFFFFFFFH）时触发除法异常，响应时保存断点和程序状态、关中断、转异常处理程序。</blockquote></div></div>
+<ul><li><strong>R 答成 00000000H</strong>：符号扩展看被除数最高位，87654321H 最高位为 1，高 32 位全补 1。</li><li><strong>溢出情形写错组合</strong>：只有最小负数 −2³¹（8000 0000H）除以 −1（FFFF FFFFH）时商 +2³¹ 才装不下；除数是其他非零值时商都在范围内。</li><li><strong>计数器位置答成 ALU 或寄存器</strong>：计步数是"控制"的事，计数器在控制逻辑里。</li><li><strong>响应操作漏「关中断」</strong>：标准三步是保存断点和程序状态、关中断、转异常处理程序。</li></ul>
+<blockquote>一句话结论：R = FFFFFFFFH（符号扩展全 1）、Q = 87654321H、Y = 000000FFH；计数器在控制逻辑中；ALU 只做加、减。x = 0000 0000H（d[i] 任意），或 d[i] = 8000 0000H 且 x = FFFF FFFFH 时触发除法异常；响应 = 保存断点和程序状态 → 关中断 → 转异常处理程序。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2695,18 +2724,47 @@ while (1) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三人植树的同步互斥设计</h2>
-<h3>第一步：先画清流程与约束</h3>
-<p>答案口径与参考解答一致，共 4 个信号量。流程：<strong>甲挖坑 → 乙放树苗 → 乙填土 → 丙浇水</strong>。两类关系：</p>
-<ul><li><strong>同步（前后件）</strong>：挖好坑乙才能放苗；填好土丙才能浇水；"树坑数量小于 3"限制甲挖坑的节奏。</li><li><strong>互斥（工具）</strong>：铁锹只有一把，挖坑（甲）与填土（乙）都要用；水桶只有一把但<strong>只有丙使用</strong>，无竞争，不需要信号量。</li></ul>
-<h3>第二步：定义尽可能少的信号量</h3>
-<table><thead><tr><th>信号量</th><th>初值</th><th>作用</th></tr></thead><tbody><tr><td>position</td><td>3</td><td>可挖的树坑名额（保证坑数小于 3 时甲才能挖）</td></tr><tr><td>pit</td><td>0</td><td>已挖好、待放苗的坑数（同步：甲 → 乙）</td></tr><tr><td>tree</td><td>0</td><td>已填土、待浇水的树苗数（同步：乙 → 丙）</td></tr><tr><td>mutex</td><td>1</td><td>铁锹的互斥使用（甲挖坑、乙填土共用）</td></tr></tbody></table>
-<h3>第三步：三人代码（与参考答案一致）</h3>
-<ul><li>甲：<code>wait(position); wait(mutex); 挖坑; signal(mutex); signal(pit);</code></li><li>乙：<code>wait(pit); 放树苗; signal(position); wait(mutex); 填土; signal(mutex); signal(tree);</code></li><li>丙：<code>wait(tree); 浇水;</code></li></ul>
-<p>要点：甲先申请坑位再拿铁锹挖坑，挖完还铁锹、<code>signal(pit)</code> 通知乙；乙取坑放苗后 <code>signal(position)</code> 归还坑位（该坑已放苗，不再是空"树坑"），再拿铁锹填土，填完 <code>signal(tree)</code> 通知丙；丙直接等 <code>tree</code> 浇水即可。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三人植树——用生产者-消费者链搭同步互斥</h2>
+<h3>第 0 步：先立机制——这是一条"坑 → 苗"的生产者-消费者链</h3>
+<p>植树流水线是：<strong>甲挖坑 → 乙放树苗 → 乙填土 → 丙浇水</strong>。把它看成两级生产者-消费者：甲"生产"空坑，乙"消费"坑、再"生产"待浇水的苗，丙"消费"苗。同步信号量的通用配法就一句话：<strong>前件做完的地方 signal（资源 +1），后件开始之前 wait（资源 −1）</strong>——没有资源时后件自然阻塞，工序顺序由信号量强行锁定。互斥信号量只发给<strong>多人争用的同一件工具</strong>；只有一人使用的工具不存在竞争，设了反而违背"尽可能少"。</p>
+<h3>第一步：数一数约束，给每个约束配一个信号量</h3>
+<ul><li><strong>"树坑数量小于 3 时甲才可以挖"</strong>：等价于"未放苗的空坑最多同时存在 3 个"——给甲发 3 张"挖坑名额"，挖一个消耗一张，乙放完苗归还一张 → <code>position</code>，初值 <strong>3</strong>。为什么是 3 不是 2：条件允许在第 3 个坑出现时甲仍挖得出第 3 个（2 &lt; 3 时放行），名额上限是 3；</li><li><strong>乙要等坑</strong>：初始一个坑也没有 → <code>pit</code>，初值 <strong>0</strong>（甲挖好一个坑 signal 一次）；</li><li><strong>丙要等苗</strong>：初始没有苗 → <code>tree</code>，初值 <strong>0</strong>（乙填好土 signal 一次）；</li><li><strong>铁锹只有一把</strong>：挖坑（甲）和填土（乙）都要用 → <code>mutex</code>，初值 <strong>1</strong>。水桶虽然也只有一把，但<strong>只有丙使用</strong>，无竞争 → 不设信号量。</li></ul>
+<table><thead><tr><th>信号量</th><th>初值</th><th>作用（汇总）</th></tr></thead><tbody><tr><td>position</td><td>3</td><td>未放苗空坑的名额上限（保证坑数 &lt; 3 才挖）</td></tr><tr><td>pit</td><td>0</td><td>已挖好、待放苗的坑数（同步：甲 → 乙）</td></tr><tr><td>tree</td><td>0</td><td>已填土、待浇水的苗数（同步：乙 → 丙）</td></tr><tr><td>mutex</td><td>1</td><td>铁锹互斥（甲挖坑、乙填土共用）</td></tr></tbody></table>
+<h3>第二步：三人代码（与参考答案一致）</h3>
+<pre><code>semaphore position = 3;   // 可挖树坑的数量
+semaphore pit = 0;        // 树坑数量
+semaphore tree = 0;       // 等浇水树苗数量
+semaphore mutex = 1;      // 铁锹互斥
+
+甲:
+while (1) {
+    wait(position);      // 申请挖坑名额（坑数&lt;3 才放行）
+    wait(mutex);         // 拿铁锹
+    挖坑;
+    signal(mutex);       // 还铁锹
+    signal(pit);         // 通知乙：多了一个空坑
+}
+
+乙:
+while (1) {
+    wait(pit);           // 等一个空坑
+    放树苗;
+    signal(position);    // 苗已入坑：不再是空坑，归还名额
+    wait(mutex);         // 拿铁锹
+    填土;
+    signal(mutex);       // 还铁锹
+    signal(tree);        // 通知丙：多了一棵待浇的苗
+}
+
+丙:
+while (1) {
+    wait(tree);          // 等一棵待浇水的苗
+    浇水;
+}</code></pre>
+<p>两个关键位置的道理：<strong>signal(position) 必须放在放树苗之后</strong>——题设的"树坑数量"按空坑计，苗一入坑它就不再是空坑，此刻归还名额甲才能接着挖（放到填土之后会让甲被无谓卡住）；<strong>放树苗不需要 mutex</strong>——放苗不动铁锹，铁锹只被"挖坑"和"填土"两处争用。</p>
 <h3>易错点</h3>
-<ul><li><strong>给水桶也设信号量</strong>：水桶只有丙使用，无竞争，设置它违背"尽可能少"。</li><li><strong>漏掉 position</strong>：没有它无法表达"树坑数量小于 3 才能挖"。</li><li><strong>signal(position) 的位置放错</strong>：应在放树苗之后（空坑被占用、名额归还），而不是填土之后。</li></ul>
-<blockquote>一句话结论：position(3)、pit(0)、tree(0)、mutex(1) 共 4 个信号量，三人代码如上。</blockquote></div></div>
+<ul><li><strong>给水桶也设信号量</strong>：水桶只有丙使用，无竞争，设置它违背"尽可能少"。</li><li><strong>漏掉 position</strong>：没有它无法表达"树坑数量小于 3 才能挖"。</li><li><strong>position 初值答 2</strong>："小于 3 才能挖"允许空坑数达到 3，名额上限是 3 不是 2。</li><li><strong>signal(position) 的位置放错</strong>：应在放树苗之后（空坑被占用、名额归还），而不是填土之后。</li></ul>
+<blockquote>一句话结论：position(3)、pit(0)、tree(0)、mutex(1) 共 4 个信号量——同步沿"坑 → 苗"生产链"前 signal、后 wait"，互斥只护两人争用的铁锹，水桶免设。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2833,22 +2891,20 @@ void main()
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：卫星链路时延/吞吐量、GBN 窗口与序号、子网划分（2025 大题）</h2>
-<p>背景速记：工程部网络（H—S1—R1—TR1）经卫星链路（TR2—R2）接公司总部网络；卫星轨道高度 36000 km，电磁波速度 300000 km/s；R1—R2 之间为对称全双工信道，每个方向 200 kb/s；图中主机 H 的地址为 10.10.10.33/26，位于管理区子网。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：卫星链路时延/吞吐量、GBN 窗口与序号、子网划分</h2>
+<p>背景速记：工程部网络（H—S1—R1—TR1）经卫星链路（TR2—R2）接公司总部网络；卫星轨道高度 36000 km，电磁波速度 300000 km/s；R1—R2 为对称全双工信道、每方向 200 kb/s；图中主机 H 的地址为 10.10.10.33/26，位于管理区子网。</p>
 <h3>第（1）问：单向传播时延、最大吞吐量与 4000B 文件时间</h3>
-<p><strong>答题框架</strong>：传播时延 = 距离 ÷ 速度，逐段算再相加；吞吐量按「短板效应」取全路径最慢速率；文件时间 = 发送时延 + 单向传播时延。</p>
-<ul><li>卫星到地面收发设备的距离一致，上行、下行传播时延各为 36000 ÷ 300000 = 0.12 s，故 R1 到 R2 之间的卫星链路单向传播时延 = 2 × 0.12 = <strong>0.24 s</strong>。</li><li>最大吞吐量符合短板效应，找整条链路中最慢的一段：全路径只给出 200 kb/s 这一个速率，故最大吞吐量为 <strong>200 kb/s</strong>。</li><li>忽略各层首部开销与以太网内传播时延：4000 B 的发送时延 = 4000 × 8 ÷ 200000 = 0.16 s，至少需要 0.16 + 0.24 = <strong>0.40 s</strong>。</li></ul>
+<p><strong>机制</strong>：传播时延 = 距离 ÷ 传播速度，一段一段算再相加；端到端吞吐量受制于<strong>最慢的一段</strong>（短板效应——快的那几段只能提前把数据交出去，最终还得在慢段排队）；"至少需要的时间"要算到<strong>最后一位到达</strong>为止 = 发送时延 + 单向传播时延。</p>
+<ul><li>为什么乘 2：卫星到两个地面收发设备的距离一致（轨道高 36000 km），上行、下行各 36000 ÷ 300000 = 0.12 s，故 R1 到 R2 的卫星链路单向传播时延 = 2 × 0.12 = <strong>0.24 s</strong>；</li><li>为什么吞吐量是 200 kb/s：全路径只给出卫星信道 200 kb/s 这一个速率，最慢的一段就是它，最大吞吐量 = <strong>200 kb/s</strong>；</li><li>4000 B 的发送时延 = 4000 × 8 ÷ 200000 = 0.16 s，最后一位发出后还要在链路上飞 0.24 s 才落地：至少需要 0.16 + 0.24 = <strong>0.40 s</strong>（忽略各层首部开销与以太网内传播时延）。</li></ul>
 <h3>第（2）问：GBN 链路层协议 SLP 的发送窗口与序号位数</h3>
-<p><strong>答题框架</strong>：先算一帧发送时间与「发出 → 收到确认」的周期，由信道利用率不等式解出窗口 w，再按 GBN 序号规则（序号空间 ≥ 发送窗口 + 接收窗口）定位数。</p>
-<ul><li>帧发送时间 Tf = 1500 × 8 ÷ 200000 = 0.06 s；一个周期 = Tf + 2 × 0.24 = 0.54 s。</li><li>利用率：<code>w × Tf ÷ 0.54 ≥ 0.8</code>，即 <code>0.06w ≥ 0.432</code>，得 <code>w ≥ 7.2</code>——发送窗口不能取 7，最小只能取 <strong>8</strong>。</li><li>GBN 接收窗口为 1，帧序号空间至少为 8 + 1 = 9：2³ = 8 &lt; 9 ≤ 2⁴ = 16，故帧序号字段至少需要 <strong>4 位</strong>。</li></ul>
+<p><strong>机制</strong>：信道利用率的本义是"一个确认回路里能塞进多少发送时间"。从发出第 1 帧到收到它的 ACK，要经历：发完这一帧（Tf）+ 数据帧飞去（单向传播）+ ACK 飞回（单向传播）；在这段回路时长内发送方最多连续发送 w 帧，利用率 = w × Tf ÷ 回路时长。</p>
+<ul><li>帧发送时间 Tf = 1500 × 8 ÷ 200000 = 0.06 s；回路时长 = Tf + 2 × 0.24 = 0.54 s（ACK 帧长忽略）；</li><li>利用率不低于 80%：<code>w × 0.06 ÷ 0.54 ≥ 0.8</code> → 60w ≥ 432 → w ≥ 7.2。<strong>为什么取 8</strong>：窗口必须取整数且不得低于 7.2，取 7 的利用率只有 7 × 0.06 ÷ 0.54 ≈ 77.8%，达不到要求，故发送窗口至少为 <strong>8</strong>；</li><li><strong>为什么序号要 4 位</strong>：GBN 的接收窗口为 1，发送方不能复用未确认的序号，所以序号空间必须 ≥ 发送窗口 + 接收窗口 = 8 + 1 = 9；2³ = 8 &lt; 9 ≤ 2⁴ = 16 → 帧序号字段至少需要 <strong>4 位</strong>。</li></ul>
 <h3>第（3）问：三个子网的 CIDR 地址</h3>
-<p><strong>答题框架</strong>：按「可分配地址数 = 地址块大小 − 2」选前缀长度，再从 10.10.10.0/24 顺次切块，最后用 H 的地址验证归属。</p>
-<ul><li>生活区可分配 ≥ 120 → 用 /25（128 个地址，可分配 126）；作业区、管理区可分配 ≥ 60 → 各用 /26（64 个地址，可分配 62）。</li><li>从 10.10.10.0/24 顺次划分，三块恰好覆盖整个 /24：</li></ul>
+<p><strong>机制</strong>：可分配地址数 = 地址块大小 − 2（扣掉网络地址与广播地址）。要 ≥ 120 → 只能用 /25（128 − 2 = 126；/26 只有 62，不够）；要 ≥ 60 → /26 就够（62 ≥ 60）。三块从 10.10.10.0/24 顺次切，64 + 64 + 128 = 256 恰好覆盖整个 /24；H 的地址 10.10.10.33/26 落在 0～63 区间，与题图"H 位于管理区子网"一致，划分自洽。</p>
 <table><thead><tr><th>子网</th><th>地址（CIDR）</th><th>可分配数</th></tr></thead><tbody><tr><td>管理区</td><td>10.10.10.0/26</td><td>62</td></tr><tr><td>作业区</td><td>10.10.10.64/26</td><td>62</td></tr><tr><td>生活区</td><td>10.10.10.128/25</td><td>126</td></tr></tbody></table>
-<ul><li>验证：H = 10.10.10.33/26 落在 10.10.10.0/26 内，与图中「H 位于管理区子网」一致，划分成立。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>单向传播时延答 0.12 s</strong>：R1 到 R2 是「上行 + 下行」两段，共 0.24 s。</li><li><strong>文件时间漏加传播时延</strong>：只答发送时延 0.16 s 会错一半。</li><li><strong>发送窗口取 7</strong>：7.2 必须向上取整；取 7 的利用率只有 7 × 0.06 ÷ 0.54 ≈ 77.8%，达不到 80%。</li><li><strong>序号答 3 位</strong>：2³ = 8 只够 8 个序号，而发送窗口 8 + 接收窗口 1 需要 9 个序号，必须 4 位。</li><li><strong>可分配数按块大小计</strong>：/26 可分配的主机地址是 62 个（要扣掉网络地址与广播地址），不是 64。</li></ul>
-<blockquote>一句话结论：（1）单向传播时延 <strong>0.24 s</strong>、最大吞吐量 <strong>200 kb/s</strong>、4000B 文件至少 <strong>0.40 s</strong>；（2）发送窗口至少 <strong>8</strong>、帧序号至少 <strong>4 位</strong>；（3）管理区 <strong>10.10.10.0/26</strong>、作业区 <strong>10.10.10.64/26</strong>、生活区 <strong>10.10.10.128/25</strong>。</blockquote></div></div>
+<ul><li><strong>单向传播时延答 0.12 s</strong>：R1 到 R2 是"上行 + 下行"两段，共 0.24 s。</li><li><strong>文件时间漏加传播时延</strong>：只答发送时延 0.16 s 会错一半——要算到最后一位<strong>到达</strong>。</li><li><strong>发送窗口取 7</strong>：7.2 必须向上取整；取 7 的利用率只有 7 × 0.06 ÷ 0.54 ≈ 77.8%，达不到 80%。</li><li><strong>序号答 3 位</strong>：2³ = 8 只够 8 个序号，而发送窗口 8 + 接收窗口 1 需要 9 个序号，必须 4 位。</li><li><strong>可分配数按块大小计</strong>：/26 可分配的主机地址是 62 个（扣网络地址与广播地址），不是 64。</li></ul>
+<blockquote>一句话结论：（1）单向传播时延 0.24 s、最大吞吐量 200 kb/s、4000B 文件至少 0.40 s；（2）发送窗口至少 8、帧序号至少 4 位；（3）管理区 10.10.10.0/26、作业区 10.10.10.64/26、生活区 10.10.10.128/25。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

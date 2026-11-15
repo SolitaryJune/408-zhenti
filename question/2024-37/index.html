@@ -103,14 +103,14 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：SR 协议窗口滑动与超时重传的时序推演</h2>
 <p>答案：<strong>D</strong>（t1 发 F4，t2 发 F1）。</p>
-<h3>第一步：确定窗口大小</h3>
-<p>序号 3 比特，序号空间 2×2×2 = 8；SR 协议要求发送窗口 + 接收窗口 ≤ 序号总数，题设两窗口相同且均取最大值，故发送窗口 = 接收窗口 = 8 ÷ 2 = <strong>4</strong>。</p>
+<h3>第一步：确定窗口大小——为什么最大是 4</h3>
+<p>序号 3 比特，序号空间 2 的 3 次方 = 8。SR 协议要求<strong>发送窗口 + 接收窗口 ≤ 序号总数</strong>：否则接收窗口前移后，新帧的序号会与尚未确认的旧帧重号，接收方无法区分"重传的旧帧"和"新帧"。题设两窗口相同且均取最大值，故发送窗口 = 接收窗口 = 8 ÷ 2 = <strong>4</strong>。</p>
 <h3>第二步：按图逐事件推演</h3>
 <table><thead><tr><th>事件</th><th>状态变化</th></tr></thead><tbody><tr><td>甲发 F0、F1、F2、F3（窗口 [0,3] 占满）</td><td>F1 在途中丢失；F0、F2、F3 正确到达乙</td></tr><tr><td>乙只对正确收到的帧独立确认</td><td>乙发出 ACK0、ACK2、ACK3</td></tr><tr><td>甲收到 ACK0</td><td>窗口滑动为 [1,4]，序号 4 可用 → <strong>t1 时刻发 F4</strong></td></tr><tr><td>甲收到 ACK2</td><td>窗口滑动为 [2,5]；ACK3 在途中丢失</td></tr><tr><td>F1 的超时计时器到时</td><td><strong>t2 时刻重传 F1</strong>（SR 对每帧独立超时重传）</td></tr></tbody></table>
 <h3>第三步：确认答案</h3>
-<p>t1 时甲刚收到 ACK0，窗口刚滑到 [1,4]，新序号 4 进入窗口，故发新帧 <strong>F4</strong>（此时 F1 还没超时，甲也没收到关于 F1 的任何消息）；t2 由图中「F1超时」标注触发，SR 按帧独立超时重传，故发 <strong>F1</strong>。选 <strong>D</strong>。</p>
+<p>t1 时甲刚收到 ACK0，窗口刚滑到 [1,4]，新序号 4 进入窗口，故发新帧 <strong>F4</strong>——此时 F1 还没超时，甲对 F1 的丢失一无所知，腾出的空位只能发新帧；t2 由图中「F1超时」标注触发，SR 按帧独立超时重传，故发 <strong>F1</strong>。选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把窗口当成 8</strong>：忽略了 SR 要满足发送窗口 + 接收窗口 ≤ 2 的 3 次方，发送窗口最大是序号空间的一半 = 4。</li><li><strong>误选 B（t2 发 F4）</strong>：t2 是 F1 超时触发的重传事件，发的是 F1；F4 早在 t1 已发出。</li><li><strong>误选 A / C（t1 重传）</strong>：t1 时 F1 尚未超时，甲对 F1 的丢失一无所知，滑动窗口腾出的空位只能发新帧 F4。</li></ul>
+<ul><li><strong>把窗口当成 8</strong>：忽略了 SR 要满足发送窗口 + 接收窗口 ≤ 序号空间总数，发送窗口最大是序号空间的一半 = 4。</li><li><strong>误选 B（t2 发 F4）</strong>：t2 是 F1 超时触发的重传事件，发的是 F1；F4 早在 t1 已发出。</li><li><strong>误选 A / C（t1 重传）</strong>：t1 时 F1 尚未超时，甲对 F1 的丢失一无所知，滑动窗口腾出的空位只能发新帧 F4。</li></ul>
 <blockquote>一句话结论：SR 收到 ACK0 就滑窗，t1 发新帧 <strong>F4</strong>；F1 丢失只能等超时，t2 重传 <strong>F1</strong>，选 <strong>D</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">

@@ -102,20 +102,22 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：CRC 校验——余数为 0 才算无错</h2>
-<p>答案：D（10111 1100）。</p>
-<h3>第一步：判据</h3>
-<p>G(X) = X^4 + X + 1 对应除数 <strong>G = 10011</strong>（5 位，最高位对应 X^4）。接收方的判据：<strong>收到的比特串除以 G，余数为 0 ⇔ 判定传输无错</strong>。</p>
+<p>答案：<strong>D</strong>（10111 1100）。</p>
+<h3>第一步：机制——为什么"余 0 判无错"</h3>
+<p>G(X) = X^4 + X + 1 对应除数 <strong>G = 10011</strong>（5 位，最高位对应 X^4）。发送方构造码字时，把数据左移 r = 4 位（<strong>补 4 个 0，正好为 4 位的 FCS 腾出位置</strong>），用模 2 除法除以 G，把余数 FCS 拼在末尾——这样<strong>整个码字恰好是 G 的倍式</strong>（模 2 意义下）。接收方拿同样的 G 除收到的串：</p>
+<ul><li>无错：整串仍是 G 的倍式，余 0；</li><li>出错：相当于在码字上异或了一个错误图案 E，由除法的线性性，余数变成 <strong>E mod G</strong>——只要 E 不是 G 的倍式，余数就非 0。</li></ul>
+<p>这就是"余 0 ⇔ 判定无错"的由来（严格说 CRC 是"检错"：余非 0 必有错，余 0 是大概率无错）。模 2 除法全程按位<strong>异或</strong>，不借位不进位。</p>
 <h3>第二步：先算出「正确」的 FCS</h3>
-<p>四个选项的数据部分都是 10111。发送方算 CRC：数据后补 r = 4 个 0（r = G 位数 − 1）得 101110000，用模 2 除法（按位异或，不借位）除以 G：</p>
-<table><thead><tr><th>步骤</th><th>操作</th><th>结果</th></tr></thead><tbody><tr><td>第 1 轮</td><td>首位 1 对齐：10111 ⊕ 10011</td><td>余下 001000000</td></tr><tr><td>第 2 轮</td><td>对齐余下首位 1：⊕ 10011</td><td>余下 4 位 → 余数 1100</td></tr></tbody></table>
+<p>四个选项的数据部分都是 10111。数据后补 r = 4 个 0（r = G 位数 − 1）得 101110000，除以 G：</p>
+<table><thead><tr><th>步骤</th><th>操作</th><th>结果</th></tr></thead><tbody><tr><td>第 1 轮</td><td>首位 1 对齐：10111 ⊕ 10011</td><td>余下 001000000</td></tr><tr><td>第 2 轮</td><td>对齐余下首位 1：⊕ 10011</td><td>余 4 位 → 余数 1100</td></tr></tbody></table>
 <p>余数 <strong>FCS = 1100</strong>，正确码字 = 10111 <strong>1100</strong>。</p>
 <h3>第三步：检验四个选项</h3>
-<p>正确码字除 G 余 0，所以收到的串余数是否为 0，只看末 4 位与 1100 的差异：</p>
-<table><thead><tr><th>选项</th><th>末 4 位</th><th>除 G 余数</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>0000</td><td>1100</td><td>有错</td></tr><tr><td>B</td><td>0100</td><td>1000</td><td>有错</td></tr><tr><td>C</td><td>1000</td><td>0100</td><td>有错</td></tr><tr><td><strong>D</strong></td><td><strong>1100</strong></td><td><strong>0000</strong></td><td><strong>无错 ✓</strong></td></tr></tbody></table>
-<p>只有 D 除以 G 余 0。</p>
+<p>正确码字余 0，四个选项与它又只差末 4 位，所以各选项的余数 = "末 4 位与 1100 的差异"本身（差异位串不满 4 位，模 G 不再变化）：</p>
+<table><thead><tr><th>选项</th><th>末 4 位</th><th>与 1100 的差异</th><th>除 G 余数</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>0000</td><td>1100</td><td>1100</td><td>有错</td></tr><tr><td>B</td><td>0100</td><td>1000</td><td>1000</td><td>有错</td></tr><tr><td>C</td><td>1000</td><td>0100</td><td>0100</td><td>有错</td></tr><tr><td><strong>D</strong></td><td><strong>1100</strong></td><td>0000</td><td><strong>0000</strong></td><td><strong>无错 ✓</strong></td></tr></tbody></table>
+<p>只有 D 除以 G 余 0，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只看数据部分相同就选</strong>：四个选项开头都是 10111，CRC 检验的是<strong>整串</strong>除 G 的余数，差别全在末 4 位。</li><li><strong>把除法当普通减法</strong>：模 2 除法是按位<strong>异或</strong>，不借位不进位。</li><li><strong>补 0 个数错</strong>：要补 G 的位数 − 1 = 4 个 0，不是 3 个或 5 个。</li></ul>
-<blockquote>接收端用同一个 G 做模 2 除法，余 0 判无错；只有 10111 1100 能除尽，选 D。</blockquote></div></div>
+<ul><li><strong>只看数据部分相同就选</strong>：四个选项开头都是 10111，CRC 检验的是<strong>整串</strong>除 G 的余数，差别全在末 4 位。</li><li><strong>把除法当普通减法</strong>：模 2 除法按位异或，不借位不进位。</li><li><strong>补 0 个数错</strong>：要补 G 的位数 − 1 = 4 个 0——为 4 位 FCS 腾位，补 3 个或 5 个都对不上。</li></ul>
+<blockquote>接收端用同一个 G 做模 2 除法：码字是 G 的倍式，余 0 判无错；只有 10111 1100 能除尽，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

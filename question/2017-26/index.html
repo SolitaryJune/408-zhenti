@@ -102,15 +102,16 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：按簇分配的磁盘空间计算</h2>
-<h3>第一步：明确分配单位</h3>
-<p>文件系统以<strong>簇</strong>为最小分配单位：本题簇 = 1KB = 1024B（每簇含 2 个 512B 扇区）。无论文件多小，至少分配 1 簇。</p>
-<h3>第二步：算文件需要几簇</h3>
-<p>文件 1026B：第 1 簇装 1024B，剩下 2B 进入第 2 簇 → 共需 <code>1026/1024</code> 向上取整 = <strong>2 簇</strong>。</p>
-<h3>第三步：换算分配的磁盘空间</h3>
-<p>分配空间按簇的整数倍计算：2 × 1024B = <strong>2048B</strong>。其中第 2 簇只用了 2B，浪费的 1022B 属于簇内碎片。</p>
+<p><strong>答案：D</strong>（2048B）。</p>
+<h3>第零步：先立机制——为什么分配单位是簇而不是扇区</h3>
+<p>文件系统记录"哪些空间属于哪个文件"时，若按 512B 扇区逐一登记，表项数量和管理开销都会暴涨。折中办法是把连续若干个扇区打包成<strong>簇</strong>（本题簇 = 1KB = 1024B，含 2 个 512B 扇区），以簇为最小分配单位，文件系统只按簇记账。代价是<strong>簇内碎片</strong>——文件没用满的最后一簇照样整簇占着。所以分配空间 = 文件大小向上取整到簇大小的整数倍，与文件的实际字节数、扇区数都无关；再小的文件也至少占 1 簇。</p>
+<h3>第一步：算文件需要几簇</h3>
+<p>文件 1026B：第 1 簇装 1024B，剩下 2B 进入第 2 簇 → 共需 1026/1024 向上取整 = <strong>2 簇</strong>。</p>
+<h3>第二步：换算分配空间</h3>
+<p>2 × 1024B = <strong>2048B</strong>。第 2 簇只用了 2B，浪费的 1022B 就是簇内碎片——这正是"为什么不能按 1026B 分"的机制根源。</p>
 <h3>易错点</h3>
-<ul><li><strong>按文件实际大小选</strong>：1026B（A）是"用多少算多少"的错误想法，磁盘空间必须整簇分配。</li><li><strong>按扇区凑数</strong>：1536B（B）、1538B（C）都是拿 512B 扇区拼凑的结果——扇区是磁盘的物理读/写单位，<strong>分配单位是簇</strong>。</li></ul>
-<blockquote>答案：<strong>D</strong>（2048B）。口诀：文件大小向上取整到簇的整数倍。</blockquote></div></div>
+<ul><li><strong>按文件实际大小选 A（1026B）</strong>：把"用多少算多少"套到磁盘上，忽略了分配单位是整簇。</li><li><strong>按扇区凑数选 B/C（1536B、1538B）</strong>：拿 512B 扇区往上拼。扇区是磁盘的<strong>物理</strong>读/写单位，<strong>逻辑分配单位是簇</strong>，两者不能混。</li><li><strong>忘了"至少 1 簇"</strong>：哪怕只超 1 字节，也要多占一整簇。</li></ul>
+<blockquote>一句话结论：分配空间 = ⌈文件大小/簇大小⌉ × 簇大小 = 2 × 1024B = 2048B，多出的 1022B 是簇内碎片。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -108,21 +108,25 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单总线 CPU 数据通路（寄存器可见性、控制信号、连线与 MUX）</h2>
-<p><strong>答题框架</strong>：先分清"程序员可见/不可见"寄存器，再按"操作数个数"推控制信号位数，按"信号的物理对象"认控制端点，最后围绕 (PC)+2 补全数据通路、解释 MUX 输入 2。</p>
+<p><strong>答题框架</strong>：单总线 CPU 的一切设计都由"总线一次只能传一个数据"这一个约束推出来——寄存器可见性按"指令系统是否提供访问"划分，控制信号按"部件要做什么动作"配位数，缺的连线按"数据从哪来、到哪去"补齐，MUX 的常数 2 由"下条指令地址 = (PC)+2"解释。</p>
 <h3>第 1 问：程序员可见寄存器与暂存器 T 的作用</h3>
-<ul><li><strong>程序员可见</strong>：通用寄存器 <code>R0～R3</code> 和 <code>PC</code>（可寻址、可编程访问）。MAR、MDR、IR、暂存器 T、移位寄存器 SR 都是 CPU 内部工作寄存器，程序员不可见。</li><li><strong>为什么设 T</strong>：单总线一次只能传一个数据，而 ALU 的两个输入端（A、B）要同时拿到两个操作数。先把总线上的数据暂存进 T（T 的输出接 ALU 的 A 端口），B 端口再从另一路（MUX）取数，两个端口就得到了两个不同的数据。</li></ul>
+<ul><li><strong>程序员可见</strong>：通用寄存器 <code>R0～R3</code> 和 <code>PC</code>。判断标准不是"在图里找得到"，而是<strong>指令系统是否提供对它的访问、或它是否承载程序可感知的状态</strong>：R0~R3 可被指令显式读写；PC 存放"下一条指令地址"，转移、调用指令直接以它为操作对象，取指又被硬件按它自动推进——程序员能感知并控制它的变化。</li><li><strong>程序员不可见</strong>：MAR、MDR、IR、暂存器 T、移位寄存器 SR。<strong>为什么它们不算</strong>：它们是 CPU 内部<strong>自动使用</strong>的工作寄存器（访存地址缓冲、数据缓冲、指令寄存、运算暂存、移位），指令系统不提供编址与访问——程序员若能直接操作 MAR/MDR，等于绕过了访存过程本身。</li><li><strong>为什么设 T</strong>：单总线一次只能传一个数据，而 ALU 的两个输入端（A、B）需要同时拿到两个操作数。先把总线上的数据暂存进 T（T 的输出固定接 ALU 的 A 端口），B 端口再从另一路（MUX）取数，A、B 两个端口就得到了两个不同来源的数据。T 是单总线约束下的"分流器"。</li></ul>
 <h3>第 2 问：ALUop 与 SRop 的位数</h3>
-<ul><li>ALU 有 7 种操作（mova、add、sub、and、or、not、inc）：2 位只能编 4 种，不够；3 位可编 8 种 → <strong>至少 3 位</strong>。</li><li>SR 有 3 种操作（mov、left、right）：2 位可编 4 种 → <strong>至少 2 位</strong>。</li><li>公式：n 种操作至少需要 log2 n 向上取整位。</li></ul>
+<p>n 种互斥操作至少需要 ⌈log2 n⌉ 位来区分。<strong>为什么是"至少"</strong>：位数少了编不完（2 位只有 4 种状态，装不下 7 种操作），位数多了浪费编码。</p>
+<ul><li>ALU 有 7 种操作（mova、add、sub、and、or、not、inc）：2 位最多 4 种不够，3 位可编 8 种 ≥ 7 → <strong>至少 3 位</strong>；</li><li>SR 有 3 种操作（mov、left、right）：2 位可编 4 种 ≥ 3 → <strong>至少 2 位</strong>。</li></ul>
 <h3>第 3 问：SRout 控制的部件</h3>
-<p>SRout 控制<strong>三态门</strong>：位于移位寄存器 SR 的输出与 CPU 内总线之间，决定 SR 的输出能否送上总线（为 1 导通，为 0 呈高阻断开）。</p>
+<p>SRout 控制<strong>三态门</strong>——移位寄存器 SR 输出与 CPU 内总线之间的开关。<strong>为什么需要三态门</strong>：内总线是所有部件共享的通道，任何时刻只允许一个部件把数据放上去；不发送数据的部件必须让输出呈<strong>高阻态</strong>（相当于从总线上断开），否则多个输出同时顶线会互相干扰。SRout = 1 导通送数，= 0 高阻隔离。</p>
 <h3>第 4 问：哪些端点须连接控制部件输出端</h3>
-<p>端点 <strong>①（SRout）、②（SRop）、③（ALUop）、⑤（Tin）、⑧（MUXop）</strong> 是控制信号输入端，须连控制部件输出端；它们分别控制三态门、移位操作、ALU 操作、T 的写入和 MUX 的选择。④⑥⑦⑨ 是数据通路端点，不接控制器。</p>
+<p>先把 9 个端点分两类：<strong>控制端点</strong>决定"这一拍部件做什么动作"，取值只能由控制部件按时序发出；<strong>数据端点</strong>只承载数据的进出，动作已由别的信号定好。</p>
+<ul><li>控制端点：<strong>①（SRout，三态门开关）、②（SRop，移位操作）、③（ALUop，ALU 操作）、⑤（Tin，T 的写入使能）、⑧（MUXop，MUX 选路）</strong>——它们决定动作，须接控制部件输出端。</li><li>数据端点：<strong>④（ALU 的 B 输入端）、⑥（CPU 内总线引向 MUX 的引出点）、⑦（MUX 的输出端）、⑨（MUX 的输入 1）</strong>——它们传的是数据本身，不接控制器。</li></ul>
+<p>→ 端点 <strong>1、2、3、5、8</strong> 须连接到控制部件输出端。</p>
 <h3>第 5 问：补全数据通路的两条连线</h3>
-<ul><li><strong>连线 1：⑥ → ⑨</strong>——把 CPU 内总线上的数据引到 MUX 的输入端 1（MUX 的另一输入端是常数 2）。</li><li><strong>连线 2：⑦ → ④</strong>——把 MUX 的输出引到 ALU 的 B 端口。</li></ul>
-<p>两条线打通后，MUX 才能把"2"或总线数据供给 ALU 的 B 端口，与 T（A 端口）配合完成运算，例如 (PC)+2。</p>
+<p>看图找"断了的数据流"：MUX 名义上要在两路输入之间二选一——"常数 2"（输入 0，图中已接好）与"总线数据"（输入 1），但<strong>总线到输入 1 这条线还没有连</strong>；MUX 选出的数据要参与运算，<strong>MUX 输出到 ALU 的 B 端这条线也还没有连</strong>。</p>
+<ul><li><strong>连线 1：⑥ → ⑨</strong>——把 CPU 内总线上的数据引到 MUX 的输入端 1；</li><li><strong>连线 2：⑦ → ④</strong>——把 MUX 的输出引到 ALU 的 B 端口。</li></ul>
+<p>两条线补上后，ALU 的 B 端既能取到常数 2（配合 A 端的 (PC) 算下条指令地址），又能取到总线上的第二操作数（配合 T 完成"A op B"运算）。</p>
 <h3>第 6 问：MUX 的一个输入端为什么是 2</h3>
-<p>指令 16 位定长、主存<strong>按字节编址</strong>：顺序执行时下条指令地址 = (PC) + <strong>2</strong>。MUX 输入端接常数 2，经 ALU 加法即可实现 (PC)+2 → PC。</p>
-<blockquote>主线逻辑：单总线一次一个数 → 用 T 分离 A 端口操作数、用 MUX 喂 B 端口、用常数 2 实现 PC+2。</blockquote></div></div>
+<p>指令 <strong>16 位定长</strong>、主存<strong>按字节编址</strong> → 一条指令占 2 字节，顺序执行时下条指令地址 = <strong>(PC) + 2</strong>。<strong>为什么不是 +1</strong>：按字节编址下 +1 只前进半个指令字，会落在指令中间，取指必然错位。实现上也不必为 PC 配专用加法器：MUX 选常数 2 送 ALU 的 B 端（A 端取到暂存的 (PC)），ALUop = add 即得 (PC)+2，经 SR 直送上总线写回 PC——与普通运算共用同一套 ALU，省部件。</p>
+<blockquote>主线逻辑：单总线一次一个数 → T 分流 A 端、MUX 喂 B 端；MUX 两路输入 = 常数 2（算 PC+2）+ 总线数据（普通运算）；每个部件输出到总线都要过三态门。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

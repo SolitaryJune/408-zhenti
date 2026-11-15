@@ -103,18 +103,21 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码的算术移位与加法（z = 2x + y/2）</h2>
 <p><strong>答案：A（1 1000000，即 −64，不溢出）。</strong></p>
-<h3>第一步：把机器数翻译成真值</h3>
-<table><thead><tr><th>变量</th><th>补码</th><th>真值</th></tr></thead><tbody><tr><td>x</td><td><code>1 1110100</code></td><td>符号位 1 为负，数值位取反加 1 得 0001100 = 12 → <strong>−12</strong></td></tr><tr><td>y</td><td><code>1 0110000</code></td><td>数值位取反加 1 得 1010000 = 80 → <strong>−80</strong></td></tr></tbody></table>
-<h3>第二步：用移位实现 ×2 与 ÷2</h3>
-<ul><li><strong>2x</strong>：补码算术左移 1 位，低位补 0：<code>11110100</code> → <code>11101000</code>，即 <strong>−24</strong>。</li><li><strong>y/2</strong>：补码算术右移 1 位，符号位不变、高位补 1：<code>10110000</code> → <code>11011000</code>，即 <strong>−40</strong>。</li></ul>
-<h3>第三步：补码相加并丢掉进位</h3>
-<table><thead><tr><th>步骤</th><th>机器数</th><th>真值</th></tr></thead><tbody><tr><td>2x（左移 1 位）</td><td><code>11101000</code></td><td>−24</td></tr><tr><td>y/2（算术右移 1 位）</td><td><code>11011000</code></td><td>−40</td></tr><tr><td>相加（最高位进位丢弃）</td><td><code>1 11000000</code> → 取 8 位 <code>11000000</code></td><td><strong>−64</strong></td></tr></tbody></table>
-<p>真值核对：2×(−12) + (−80)/2 = −24 − 40 = −64，与补码结果一致。</p>
-<h3>第四步：判断是否溢出</h3>
-<p>两个负数相加得负数（符号位进位 = 最高数值位进位），−64 也在 8 位补码范围 [−128, 127] 内 → <strong>无溢出</strong>，结果有效。</p>
+<h3>第一步：先把补码"读对"——它是模 256 的记数</h3>
+<p>8 位补码是<strong>模 256 的记数方式</strong>：最高位为 1 即负数，真值 = 无符号解释值 − 256（减模合法，因为位串与真值在 mod 256 下同余）。</p>
+<ul><li>[x]补 = <code>11110100</code> = 244 → 244 − 256 = <strong>−12</strong>；</li><li>[y]补 = <code>10110000</code> = 176 → 176 − 256 = <strong>−80</strong>。</li></ul>
+<p>（"取反加一"是同一件事的另一种算法，两条路结果必然一致。）</p>
+<h3>第二步：移位实现 ×2 与 ÷2——为什么负数右移要补 1</h3>
+<ul><li><strong>2x</strong>：算术左移 1 位、低位补 0：<code>11110100</code> → <code>11101000</code> = 232 → −24。</li><li><strong>y/2</strong>：算术右移 1 位：<code>10110000</code> → <code>11011000</code> = 216 → −40。</li></ul>
+<p><strong>为什么负数右移高位补 1？</strong> 补码左边那一串 1 是负数的"欠账"，右移腾出的最高位必须续 1，它在更大模下的解释才仍是同一个负数——<code>11011000</code> ≡ −40 (mod 256)，恰是真值 −80 ÷ 2。这与符号扩展"补符号位数值不变"是同一原理。若补 0，<code>01011000</code> = +88，负数被读成了正数——逻辑右移只对无符号数才有意义。</p>
+<h3>第三步：相加并丢进位——为什么进位可以扔</h3>
+<p>竖式：<code>11101000</code> + <code>11011000</code> = <code>1 11000000</code>，共 9 位。8 位机器只保留低 8 位 <code>11000000</code>，第 9 位进位自然丢弃——补码加减本来就是<strong>模 256 运算</strong>，丢掉一个 256 不影响余数。<code>11000000</code> = 192 → 192 − 256 = <strong>−64</strong>。</p>
+<p>真值核对：2×(−12) + (−80)/2 = −24 − 40 = −64，与机器结果一致。</p>
+<h3>第四步：为什么不是溢出</h3>
+<p>两个负数相加得负数——符号位进位与最高数值位进位一致（双进位相同），且 −64 在 8 位补码范围 [−128, 127] 之内 → 无溢出，结果有效。</p>
 <h3>易错点</h3>
-<ul><li><strong>右移当成逻辑右移</strong>：算术右移必须保持符号位并补符号位（<code>10110000</code> → <code>11011000</code>）；若高位补 0 得 <code>01011000</code>（+88），全盘皆错。</li><li><strong>先加后移</strong>：必须先分别完成 2x 与 y/2 的移位，再做加法；顺序颠倒结果不同。</li><li><strong>把最高位进位 1 当成溢出</strong>：补码加减中向外的进位直接丢弃即可，本题丢弃后符号位仍是 1，结果正确。</li><li><strong>看到负数相加就选"溢出"</strong>：溢出要看双进位是否一致（或用双符号位判断），本题两者相同，不溢出。</li></ul>
-<blockquote>一句话结论：2x = <code>11101000</code>（−24），y/2 = <code>11011000</code>（−40），相加丢进位得 <code>[z]补 = 1 1000000</code>（−64），无溢出，选 A。</blockquote></div></div>
+<ul><li><strong>右移当成逻辑右移</strong>：高位补 0 得 <code>01011000</code>（+88），把负数读成正数，全盘皆错——算术右移必须补符号位。</li><li><strong>把进位 1 当溢出</strong>：模运算下丢进位是合法操作，丢弃后符号位仍为 1、与真值核对一致。</li><li><strong>见"负加负"就选溢出（选项 D）</strong>：溢出看双进位是否一致（或双符号位是否相异），本题一致，不溢出。</li><li><strong>先加后移</strong>：必须先各自完成 2x、y/2 的移位再相加，顺序颠倒结果不同。</li></ul>
+<blockquote>一句话结论：2x = <code>11101000</code>（−24），y/2 = <code>11011000</code>（−40），相加丢进位得 [z]补 = <code>1 1000000</code>（−64），无溢出，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -103,6 +103,10 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：Dijkstra 最短路径的生成次序</h2>
 <p><strong>答案：C（f, d, e）</strong></p>
+<h3>第 0 步：先立机制——Dijkstra 每轮在干什么，凭什么可以贪心</h3>
+<p>Dijkstra 逐轮扩张"已确定最短路径的顶点集 S"：每轮从未确定顶点里挑 <strong>dist 最小</strong>的一个收入 S，再用它的出边去松弛（更新）邻居的 dist。整套算法只有一个动作：选最小 + 松弛。</p>
+<p><strong>为什么挑 dist 最小的就是对的？</strong> 关键在<strong>边的权非负</strong>：从源点 a 到任何未确定顶点的路径，都必须从 S 里某个顶点跨出去，而跨出去的每条边权 ≥ 0——绕得越远只会累加得越多。所以当前 dist 最小的那个顶点，不可能再被任何"更长的绕路"缩短，它的最短路径已经板上钉钉。这就是"<strong>一旦收入 S，dist 不再变小</strong>"的原因（对比：一旦有负权边，绕路可能更短，贪心失效，得改用 Bellman-Ford 算法）。</p>
+<p>带着这条机制去看逐轮推导，每一步的"为什么选它"就都有了依据。</p>
 <h3>第一步：列出图的弧</h3>
 <p>a→b=2，a→c=5，b→c=1，b→d=3，c→d=3，c→e=4，c→f=1，d→e=1，d→f=4，e→f=1。</p>
 <h3>第二步：逐轮"选最小 + 松弛"（S 为已确定最短路径的顶点集）</h3>
@@ -111,7 +115,7 @@
 <p>题干已给第一条 b、第二条 c；其后依次是 <strong>f → d → e</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>第 4 位误选 d</strong>（A/B 的来源）：只盯着"离源点近的邻接顶点"，忘了 c→f=1 这条短弧使 dist(f)=4 已小于 dist(d)=5——Dijkstra 每轮选的是当前 <strong>dist 最小</strong>者，不看别的。</li><li><strong>漏掉松弛的"倒挂"</strong>：e 先由 c 松弛成 7，最后被 d 松弛降为 6，最终路径是 a→b→c→d→e，不是 a→b→c→e。</li></ul>
-<blockquote>每轮贪心选当前 dist 最小的未定顶点；权非负时 dist 一旦选定就不再变小。</blockquote></div></div>
+<blockquote>记忆锚点：非负权 ⇒ 绕路只会更长 ⇒ 每轮收当前 dist 最小者进 S；收入后 dist 永不再变。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

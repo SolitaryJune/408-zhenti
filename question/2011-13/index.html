@@ -102,17 +102,18 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：把 −8.25 编成 IEEE 754 单精度浮点数</h2>
-<h3>第一步：先给答案</h3>
-<p><strong>答案：A（C104 0000H）</strong>。IEEE 754 单精度 = 1 位数符 + 8 位阶码（偏置 127）+ 23 位尾数，把 −8.25 按三段分别求出再拼接即可。</p>
-<h3>第二步：可复现的编码步骤</h3>
-<ol><li><strong>写成二进制</strong>：8.25 = 1000 + 0.01 = <code>1000.01B</code>，所以 x = −1000.01B。</li><li><strong>规格化</strong>：小数点左移 3 位，得 <strong>−1.00001 × 2³</strong>。</li><li><strong>数符 S</strong>：负数 → <strong>1</strong>。</li><li><strong>阶码 E</strong>：真指数 3 加偏置 127，E = 130 = <code>1000 0010B</code>。</li><li><strong>尾数 M</strong>：去掉隐含的整数位 1，只存小数部分 <code>00001</code>，后面补 0 凑满 23 位 → <code>000 0100 0000 0000 0000 0000</code>（第 5 位是 1，对应 2^−5，即 1/32；验证 1 + 1/32 = 33/32，33/32 × 8 = 8.25）。</li></ol>
-<table><thead><tr><th>字段</th><th>位数</th><th>内容</th></tr></thead><tbody><tr><td>数符</td><td>1</td><td>1</td></tr><tr><td>阶码</td><td>8</td><td>1000 0010</td></tr><tr><td>尾数</td><td>23</td><td>0000 1000 0000 0000 0000 000（从高位起）</td></tr></tbody></table>
-<p>拼接 32 位：<code>1100 0010 0000 1000 0000 0000 0000 0000</code> → 十六进制 <strong>C104 0000H</strong>。</p>
-<h3>第三步：快速验算</h3>
-<p>反向还原：数符 1 为负；阶码 130 − 127 = 3；尾数 1.00001B = 1 + 1/32。值 = −(33/32) × 2³ = −8.25，正确。</p>
+<p><strong>答案：A（C104 0000H）</strong>。单精度 = 1 位数符 + 8 位阶码 + 23 位尾数；动手前先弄清两个设计的"为什么"，步骤才不是死记。</p>
+<h3>第一步：为什么阶码要加偏置 127、尾数要隐含 1</h3>
+<ul><li><strong>阶码加偏置 127</strong>：真指数可正可负（2³ 与 2⁻³ 都会出现），若用补码存 8 位阶码，比较两个浮点数大小前还得先判符号。规定<strong>阶码 = 真指数 + 127</strong>，把指数平移成 1~254 的无符号数，浮点数之间就能像整数一样按位快速比较——偏置的全部目的就是"免符号判定"。</li><li><strong>尾数隐含 1</strong>：规格化后二进制数必写成 1.xxx × 2ᵉ 的形状，整数位恒为 1，存它是浪费。把它藏起来，23 位全部用来存小数部分，<strong>凭空多赚一位精度</strong>；还原数值时硬件自动补回这个 1。</li></ul>
+<h3>第二步：可复现编码</h3>
+<ol><li>写成二进制：8.25 = 1000 + 0.01 = 1000.01B，故 x = −1000.01B；</li><li>规格化：小数点左移 3 位，得 −1.00001 × 2³，真指数 = 3；</li><li>数符 S：负数 → <strong>1</strong>；</li><li>阶码 E：3 + 127 = 130 = <code>1000 0010B</code>；</li><li>尾数 M：去掉隐含的 1，存小数部分 <code>00001</code> 并补 0 满 23 位。</li></ol>
+<table><thead><tr><th>字段</th><th>内容</th></tr></thead><tbody><tr><td>数符（1 位）</td><td>1</td></tr><tr><td>阶码（8 位）</td><td>1000 0010</td></tr><tr><td>尾数（23 位）</td><td>0000 1000 0000 0000 0000 000</td></tr></tbody></table>
+<p>拼接 32 位：<code>1100 0010 0000 1000 0000 0000 0000 0000</code> → <strong>C104 0000H</strong>。</p>
+<h3>第三步：反向验算</h3>
+<p>数符 1（负）×（1 + 1/32）× 2^(130−127) = −33/32 × 8 = <strong>−8.25</strong> ✓。</p>
 <h3>易错点</h3>
-<ul><li><strong>选 B（C242 0000H）</strong>：把阶码算成 4 或 5——8.25 规格化后是 2³，不是 2⁴。</li><li><strong>选 C/D</strong>：尾数补位错位——<code>00001</code> 是"小数点后第 5 位为 1"，即 23 位尾数的高 5 位是 <code>00001</code>，不是 <code>000000001...</code> 也不是 <code>10000...</code>。</li><li><strong>忘加偏置 127</strong>：直接把 3 写进阶码字段。</li></ul>
-<blockquote>记忆锚点：单精度编码三步走——规格化定指数、加 127 得阶码、去 1 补零填尾数。</blockquote></div></div>
+<ul><li><strong>选 B（C242 0000H）</strong>：其阶码字段是 132，即把指数当成 5——8.25 的小数点只左移 3 位，指数是 3 而非 4、5。</li><li><strong>选 C/D</strong>：尾数错位——<code>00001</code> 表示"小数点后第 5 位为 1"，应落在 23 位尾数的<strong>高 5 位</strong>（高位起 <code>00001</code>），不是右移后的 <code>000000001…</code>，也不是把隐含的 1 写进尾数。</li><li><strong>忘加偏置 127</strong>：把 3 直接填进阶码字段。</li><li><strong>用补码思路存阶码</strong>：阶码是无符号的"真指数 + 偏置"，不走补码。</li></ul>
+<blockquote>记忆锚点：单精度编码 = 规格化定指数 → 加 127 得阶码 → 去 1 补零填尾数；偏置为快速比较、隐含 1 为多赚精度。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

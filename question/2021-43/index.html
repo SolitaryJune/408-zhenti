@@ -107,27 +107,30 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：16 位定长指令的译码与带符号运算</h2>
-<h3>答题框架</h3>
-<p>先由机器参数定各寄存器与 ALU 的位数（第 1 问），再数操作码与寄存器编号的组合数（第 2 问），然后按位段拆指令、做带符号减/乘并判溢出（第 3 问），最后答扩展方式与指令格式（第 4、5 问）。</p>
-<p>指令格式：R 型 = <code>000000</code>（6 位）+ rs（2 位）+ rt（2 位）+ rd（2 位）+ op1（4 位），功能 <code>R[rd] ← R[rs] op1 R[rt]</code>；I 型 = op2（6 位）+ rs + rt + imm（4 位）；J 型 = op3（6 位）+ target（10 位），<code>PC 低 10 位 ← target</code>。</p>
-<h3>第 1）问</h3>
-<ul><li>ALU 宽度 = 字长 = <strong>16 位</strong>；</li><li>可寻址空间由地址线决定：2^20 B = <strong>1 MB</strong>；</li><li>IR 存整条指令 = <strong>16 位</strong>；MAR 与地址线等宽 = <strong>20 位</strong>；MDR 与数据线等宽 = <strong>8 位</strong>。</li></ul>
-<h3>第 2）问</h3>
-<ul><li>R 型：op1 有 4 位 → 最多 2^4 = <strong>16 种</strong>操作；</li><li>I 型与 J 型的操作码 op2、op3 都占指令前 6 位，合用同一个 6 位编码空间共 64 个码点，其中 <code>000000</code> 已被 R 型占用 → 最多 64 − 1 = <strong>63 种</strong>；</li><li>寄存器编号 rs/rt/rd 都是 2 位 → 通用寄存器最多 2^2 = <strong>4 个</strong>。</li></ul>
-<h3>第 3）问</h3>
-<p><code>01B2H</code> = 0000 0001 1011 0010B，按位段拆开：</p>
-<table><thead><tr><th>位段</th><th>编码</th><th>含义</th></tr></thead><tbody><tr><td>前 6 位</td><td>000000</td><td>R 型标志</td></tr><tr><td>rs</td><td>01</td><td>1 号寄存器</td></tr><tr><td>rt</td><td>10</td><td>2 号寄存器</td></tr><tr><td>rd</td><td>11</td><td>3 号寄存器</td></tr><tr><td>op1</td><td>0010</td><td>带符号整数减法</td></tr></tbody></table>
-<p>功能：<code>R[3] ← R[1] − R[2]</code>。<code>01B3H</code> 与它只差最低位，op1 = 0011 → 带符号整数乘法：<code>R[3] ← R[1] × R[2]</code>。</p>
-<p>带符号真值：R[1] = <code>B052H</code>，最高位 1 为负，真值 = B052H − 10000H = −4FAEH = −20398；R[2] = <code>0008H</code> = 8。</p>
-<ul><li><strong>减法</strong>：−20398 − 8 = −20406；16 位补码 = 10000H − 4FB6H = <code>B04AH</code>；−20406 在范围 [−32768, 32767] 内 → <strong>不溢出</strong>。</li><li><strong>乘法</strong>：−20398 × 8 = −163184，远超 16 位补码范围 → <strong>溢出</strong>；取低 16 位得 8290H（−163184 + 3×65536 = 33424 = 8290H）。</li></ul>
-<h3>第 4）问</h3>
-<p>访存指令中 imm 是基址偏移量，偏移可正可负（向前或向后访问）；地址计算做加法时必须<strong>符号扩展</strong>，才能保持 imm 的带符号数值不变。</p>
-<h3>第 5）问</h3>
-<p>无条件转移只需改变 PC，不需要寄存器操作数；J 型格式正是"操作码 + 转移目标"，<code>PC 低 10 位 ← target</code> → 采用 <strong>J 型格式</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：16 位定长指令的位数分配、译码与带符号运算</h2>
+<h3>第 0 步：先立机制——每个部件的位数由"它一次要装下什么"决定</h3>
+<p>位数题不要背结论，先问"这个东西一次必须完整装下/送出什么"：</p>
+<ul><li><strong>ALU</strong>：一次对两个操作数完成一次运算，操作数是一个字 → ALU 宽度 = 字长 = <strong>16 位</strong>；</li><li><strong>IR</strong>：一条指令必须一口气取进 IR 才能译码 → IR = 指令字长。定长指令字 16 位 → <strong>16 位</strong>；</li><li><strong>MAR</strong>：地址沿地址线一位一位送出，MAR 的每一位都要有对应的地址线 → MAR = 地址线条数 = <strong>20 位</strong>；</li><li><strong>MDR</strong>：数据沿数据线搬运，数据线只有 8 位，一次总线事务只能搬 1 字节 → MDR = 数据线条数 = <strong>8 位</strong>。</li></ul>
+<p>（为什么 16 位指令装得进 8 位 MDR？分两次：先取高字节经 MDR 转存 IR，再取低字节——这正是"按字节编址 + 8 位数据线"的机器取一条指令的真实过程。）</p>
+<p>可寻址空间同理：20 位地址线能给出 2^20 个不同地址，按字节编址 → <strong>2^20 B = 1 MB</strong>。空间由地址线根数决定，与字长无关。</p>
+<h3>第 1）问：答案</h3>
+<p>ALU 16 位；可寻址主存 2^20 B = 1 MB；IR 16 位、MAR 20 位、MDR 8 位。</p>
+<h3>第 2）问：编码空间账</h3>
+<p>三种格式共享<strong>前 6 位</strong>这个公共字段：CPU 取来指令先看前 6 位——是 <code>000000</code> 就按 R 型处理，真正的操作编码藏在其后的 op1 里；否则这 6 位就是操作码（在 I 型里叫 op2、在 J 型里叫 op3，是<strong>同一个字段的两个名字</strong>，不会同时出现）。</p>
+<ul><li>R 型：op1 有 4 位 → 最多 2^4 = <strong>16 种</strong>操作；</li><li>I 型 + J 型：共用 6 位编码共 64 个码点，其中 <code>000000</code> 已被 R 型征用 → 64 − 1 = <strong>63 种</strong>；</li><li>rs/rt/rd 各 2 位，编号最多编出 2^2 = 4 个 → 通用寄存器最多 <strong>4 个</strong>。</li></ul>
+<h3>第 3）问：拆指令、做运算、判溢出</h3>
+<p><code>01B2H</code> = 0000 0001 1011 0010。前 6 位 = 000000 → R 型，按位段拆开：</p>
+<table><thead><tr><th>位段</th><th>编码</th><th>含义</th></tr></thead><tbody><tr><td>rs</td><td>01</td><td>1 号寄存器</td></tr><tr><td>rt</td><td>10</td><td>2 号寄存器</td></tr><tr><td>rd</td><td>11</td><td>3 号寄存器</td></tr><tr><td>op1</td><td>0010</td><td>带符号整数减法</td></tr></tbody></table>
+<p>功能：<code>R[3] ← R[1] − R[2]</code>。<code>01B3H</code> 与它只差最低位，op1 = 0011 → 乘法：<code>R[3] ← R[1] × R[2]</code>。</p>
+<p>求真值用减模：R[1] = B052H 最高位为 1 → 负数，真值 = 无符号值 − 模 = 45138 − 65536 = −20398；R[2] = 0008H = 8。</p>
+<ul><li><strong>减法</strong>：−20398 − 8 = −20406，落在 16 位补码范围 [−32768, 32767] 内 → <strong>不溢出</strong>；写回 16 位补码 = 65536 − 20406 = 45130 = <strong>B04AH</strong>。</li><li><strong>乘法</strong>：−20398 × 8 = −163184，远超范围 → <strong>溢出</strong>。判溢出看的是<strong>真值</strong>是否越界，不是结果最高位长什么样；目的寄存器 rd 只有 16 位，硬件只保留低 16 位：−163184 + 3×65536 = 33424 = <strong>8290H</strong>。</li></ul>
+<h3>第 4）问：imm 要符号扩展</h3>
+<p>imm 是<strong>带符号</strong>偏移量，可正可负（负数表示"从基址往回走"）。地址计算 = 基址 + imm，要在加法器里做补码加法，imm 必须先扩到与基址同宽：只有<strong>符号扩展</strong>（高位补符号位）才能保持数值不变。若零扩展，负偏移会被读成巨大的正数，访存地址完全错掉——与 2019 年那道基址寻址题是同一个机制。</p>
+<h3>第 5）问：无条件转移用 J 型</h3>
+<p>无条件转移只需要"把 PC 改成目标地址"，不碰寄存器、不做运算；R/I 型的寄存器号和 imm 位段对它毫无用处，而 J 型恰好就是"操作码 + 10 位 target"（PC 低 10 位 ← target），位段一点不浪费 → 采用 <strong>J 型格式</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，与字长无关。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，总共只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判断依据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：零扩展会把负偏移变成大正数，地址算错。</li></ul>
-<blockquote>位段账：R 型 = 000000 + 三个 2 位寄存器号 + 4 位扩展操作码；01B2H / 01B3H 只差 op1 末位，分别是减法与乘法。</blockquote></div></div>
+<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，16 位指令分两次取、每次装 1 字节。</li><li><strong>可寻址空间用字长算成 64 KB</strong>：空间由地址线（20 位）决定，2^20 B = 1 MB。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，合计只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：负偏移变大正数，地址算错。</li></ul>
+<blockquote>记忆锚点：MAR/MDR 跟着地址线/数据线走，IR 跟着指令字长走；前 6 位是公共判别字段，000000 让给 R 型；带符号数先减模求真值，溢出看真值是否越界。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

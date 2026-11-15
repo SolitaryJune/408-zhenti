@@ -391,16 +391,18 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二叉排序树的中序定序法</h2>
 <p><strong>答案：C。</strong></p>
-<h3>第一步：从图中读出树形</h3>
-<p>按结点层高与横向位置判定父子及左右：x1 位置最高是根；x2 在 x1 右下方，是 x1 的右孩子；x3 在 x2 左下方，是 x2 的<strong>左</strong>孩子；x4 在 x3 右下方，是 x3 的<strong>右</strong>孩子；x5 在 x4 左下方，是 x4 的<strong>左</strong>孩子。整棵树是一条之字形链。</p>
-<h3>第二步：中序遍历得到递增序列</h3>
-<p>二叉排序树的中序遍历（左·根·右）给出严格递增序列。逐个输出：x1（根，无左子树）→ 进入 x2 的左子树访问 x3 → x3 的右子树中先访问 x4 的左孩子 x5、再访问 x4 → 最后访问 x2。中序序列为 x1, x3, x5, x4, x2，于是 <strong>x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2</strong>。</p>
-<h3>第三步：对照四个选项</h3>
-<table><thead><tr><th>选项</th><th>断言</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>x1 &lt; x2 &lt; x5</td><td>x5 在 x2 左子树内，x5 &lt; x2，错</td></tr><tr><td>B</td><td>x1 &lt; x4 &lt; x5</td><td>x5 是 x4 的左孩子，x5 &lt; x4，错</td></tr><tr><td>C</td><td>x3 &lt; x5 &lt; x4</td><td>与排序一致，对</td></tr><tr><td>D</td><td>x4 &lt; x3 &lt; x5</td><td>x4 在 x3 右子树内，x3 &lt; x4，错</td></tr></tbody></table>
-<p>答案选 <strong>C</strong>。</p>
+<h3>第一步：先立机制——为什么 BST 一"中序"就升序</h3>
+<p>二叉排序树的性质是<strong>子树级</strong>的：任取一个结点，其左子树里的所有结点都比它小，右子树里的所有结点都比它大。中序遍历按"左子树 → 根 → 右子树"访问，于是<strong>每个结点被输出时，比它小的已经全部输出完，比它大的还一个没出</strong>——这条性质对每个子树递归成立，整串输出必然严格递增。所以本题的钥匙不是逐对比较大小，而是<strong>把图读成树形，走一遍中序，全序到手</strong>，再拿四个选项来对号。</p>
+<h3>第二步：从图中读出树形</h3>
+<p>图上 5 个结点连成一条之字形链，父子与左右由位置判定：x1 位置最高是根；x2 在 x1 右下方，是 x1 的<strong>右</strong>孩子；x3 在 x2 左下方，是 x2 的<strong>左</strong>孩子；x4 在 x3 右下方，是 x3 的<strong>右</strong>孩子；x5 在 x4 左下方，是 x4 的<strong>左</strong>孩子。</p>
+<h3>第三步：走一遍中序，序列自然展开</h3>
+<ul><li>访问 x1：它没有左子树，直接输出 x1；</li><li>进入右子树 x2：x2 有左子树（x3 一支），必须先把它处理完；</li><li>x3 无左孩子，输出 x3，再进它的右子树 x4；x4 有左孩子 x5，按"左→根→右"先输出 x5、再输出 x4；</li><li>回到 x2 输出，x2 无右孩子，结束。</li></ul>
+<p>中序序列为 <strong>x1, x3, x5, x4, x2</strong>，即 x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2。</p>
+<h3>第四步：选项对号入座</h3>
+<table><thead><tr><th>选项</th><th>断言</th><th>用全序检验</th></tr></thead><tbody><tr><td>A</td><td>x1 &lt; x2 &lt; x5</td><td>x5 在 x2 的左子树内，必有 x5 &lt; x2，错</td></tr><tr><td>B</td><td>x1 &lt; x4 &lt; x5</td><td>x5 是 x4 的左孩子，必有 x5 &lt; x4，错</td></tr><tr><td>C</td><td>x3 &lt; x5 &lt; x4</td><td>与全序一致，对</td></tr><tr><td>D</td><td>x4 &lt; x3 &lt; x5</td><td>x4 在 x3 的右子树内，必有 x3 &lt; x4，错</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>只看相邻父子</strong>：x5 与 x2 是祖先—后代关系，x5 在 x2 的子树中必大于 x2；不能只比较直接父子。</li><li><strong>左右孩子看错</strong>：左右由图中横向位置决定，x3 在 x2 左侧是左孩子；画得靠下不代表是右孩子。</li><li><strong>不用中序而逐对猜</strong>：先写出完整中序序列，再对选项逐条核对，又快又稳。</li></ul>
-<blockquote>一句话：BST 中序即升序，本树中序为 x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2，唯一正确的是 C。</blockquote></div></div>
+<ul><li><strong>只比较直接父子</strong>：祖先—后代之间没有边直接相连，但子树性质照样管用——x5 在 x2 的子树里就必小于 x2；选项 A 正是漏了这一层。</li><li><strong>左右孩子凭上下位置猜</strong>：左右由横向位置决定（x3 在 x2 左侧就是左孩子），"画得靠下"不等于"是右孩子"。</li><li><strong>跳过中序逐对猜</strong>：先写出完整中序，再逐条核对，每条断言都有全序兜底，不会漏判。</li></ul>
+<blockquote>一句话：BST 中序即升序，本树中序为 x1 &lt; x3 &lt; x5 &lt; x4 &lt; x2，唯一正确的断言是 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -449,15 +451,17 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：拓扑序列的判定（入度法逐步模拟）</h2>
 <p><strong>答案：D（不是拓扑序列）。</strong></p>
-<h3>第一步：整理边与初始入度</h3>
-<p>由图得 8 条有向边：1→2、1→3、2→3、2→6、3→4、5→2、5→4、6→4。各顶点初始入度：1:0、2:2（来自 1、5）、3:2（来自 1、2）、4:3（来自 3、5、6）、5:0、6:1（来自 2）。拓扑排序每步只能输出<strong>当前入度为 0</strong> 的顶点，初始只有 1 和 5 可选。</p>
-<h3>第二步：验证 A、B、C 均可行</h3>
-<ul><li><strong>A：1,5,2,3,6,4</strong>——输出 1 后 2:1、3:1；输出 5 后 2:0、4:2；再输出 2（3:0、6:0）、3（4:1）、6（4:0）、4。全程每步入度归零，可行。</li><li><strong>B：5,1,2,6,3,4</strong>——输出 5（2:1、4:2）→ 1（2:0、3:1）→ 2（3:0、6:0）→ 6（4:1）→ 3（4:0）→ 4。可行。</li><li><strong>C：5,1,2,3,6,4</strong>——同样每步都有入度为 0 的顶点可选。可行。</li></ul>
-<h3>第三步：D 在第二步断链</h3>
-<p>D 是 5,2,1,6,3,4。第一步输出 5，只删除 5→2 和 5→4 两条边，此时 2 的入度 = 2 − 1 = <strong>1</strong>（边 1→2 还在）。序列下一个要输出 2，但 2 的入度不为 0，不是可选顶点——拓扑排序在此无法继续。故 D 不是该图的拓扑序列，选 <strong>D</strong>。</p>
+<h3>第一步：先立机制——拓扑序到底在要求什么</h3>
+<p>有向图里每条边 u→v 都是一条"先后约束"：u 必须排在 v 之前。一个序列是拓扑序列，当且仅当它不违反任何一条约束。落到操作上就是入度法：<strong>一个顶点的入度 = 还没排完的前驱个数</strong>。入度为 0，说明所有指向它的边的那一端都已输出，它可以安全地排下一个；输出它之后，要把它发出的所有出边一并"销账"，让后继的入度各减 1。判定给定序列，就按序列顺序逐个检查：<strong>轮到它时，它的入度是不是恰好为 0</strong>。</p>
+<h3>第二步：整理图与初始入度</h3>
+<p>由图得 8 条有向边：1→2、1→3、2→3、2→6、3→4、5→2、5→4、6→4。初始入度：1:0、5:0、2:2（来自 1、5）、3:2（来自 1、2）、4:3（来自 3、5、6）、6:1（来自 2）。第一个输出的只能从入度为 0 的 1、5 中选。</p>
+<h3>第三步：验证 A、B、C 均可行</h3>
+<ul><li><strong>A：1,5,2,3,6,4</strong>——出 1 后 2:1、3:1；出 5 后 2:0、4:2；出 2 后 3:0、6:0；再出 3（4:1）、6（4:0）、4。每步入度恰好归零，可行。</li><li><strong>B：5,1,2,6,3,4</strong>——出 5（2:1、4:2）→ 1（2:0、3:1）→ 2（3:0、6:0）→ 6（4:1）→ 3（4:0）→ 4。可行。</li><li><strong>C：5,1,2,3,6,4</strong>——出 3 时，约束它的 1→3、2→3 已先后销账，3 的入度恰为 0；其余同 B。可行。</li></ul>
+<h3>第四步：D 在第二步断链</h3>
+<p>D 是 5,2,1,6,3,4。第一步输出 5，只销掉 5→2、5→4 两条账，此时 2 的入度 = 2 − 1 = <strong>1</strong>——边 1→2 还压着，前驱 1 还没输出。可序列下一个偏要输出 2：它入度不为 0，直接违反 1→2 的先后约束，拓扑排序到此无法继续。故 D 不是该图的拓扑序列，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只检查相邻两个元素间有没有边</strong>：判定拓扑序列必须逐步模拟入度，看每一步被输出顶点的入度是否为 0。</li><li><strong>忘记删除被输出顶点的所有出边</strong>：输出 5 后必须让 2、4 的入度各减 1，否则后面全判错。</li><li><strong>错怪 6</strong>：D 的问题不在 6 与 2 的先后，而在 2 抢在 1 之前出现。</li></ul>
-<blockquote>一句话：拓扑序列 = 每步输出当前入度为 0 的顶点；D 中输出 2 时 1→2 尚未删除，断链，选 D。</blockquote></div></div>
+<ul><li><strong>只看相邻两个元素之间有没有边</strong>：约束是全序级的，必须逐个检查"轮到它时入度是否为 0"；相邻两点间无边不代表前面没有未满足的约束。</li><li><strong>忘记销账</strong>：输出顶点后不删它的出边，后面所有入度全错；B、C 的判定都依赖正确销账。</li><li><strong>错怪 6</strong>：D 的问题不在 6 排在哪，而在 2 抢在了 1 之前。</li></ul>
+<blockquote>一句话：拓扑序 = 每条边起点先于终点；入度为 0 才能输出。D 中输出 2 时 1→2 还在，断链，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -506,16 +510,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：3 阶 B 树的最少关键字个数</h2>
 <p><strong>答案：B（31）。</strong></p>
-<h3>第一步：明确 3 阶 B 树的下限</h3>
-<p>3 阶（m=3）B 树的规则：根结点最少 2 棵子树、1 个关键字；非根结点最少 ⌈3/2⌉ = 2 棵子树、1 个关键字（最多 3 棵子树、2 个关键字）。求「至少」时，让每个结点都取下限：1 个关键字、2 棵子树，于是每层结点数恰好是上一层的 2 倍。</p>
-<h3>第二步：逐层推算结点数</h3>
-<p>高度为 5 即有 5 层含关键字的结点（最底层是叶结点层，叶结点不含信息但上一层终端结点含关键字）：</p>
+<h3>第一步：先立机制——"至少"意味着每个结点都压着下限长</h3>
+<p>m 阶 B 树对结点度的下限是定义死的：<strong>根结点</strong>（非叶时）至少 2 棵子树、1 个关键字——根是全树查找的入口，若允许它只有 1 棵子树，这层分叉就毫无意义；<strong>非根结点</strong>至少 ⌈m/2⌉ 棵子树，3 阶即 ⌈3/2⌉ = 2 棵，对应至少 1 个关键字。求"至少含多少关键字"，就让树里每个结点都取下限：个个 1 个关键字、2 棵子树——于是每层结点数恰好翻倍，树瘦成一条"满二叉树形状"的骨架。</p>
+<h3>第二步：高度口径——本题高度 5 对应 5 层关键字结点</h3>
+<p>高度 5 按真题口径是<strong>从根到最底层关键字结点共 5 层</strong>（查找失败的外部结点不占层）。这是本题第一个陷阱：若按"高度把失败结点层也算进去"的口径，关键字结点只剩 4 层，会得出 15——恰是干扰项 A。做题时用答案口径反推校准：5 层逐层翻倍得 1、2、4、8、16，总关键字 31，与选项 B 吻合。</p>
+<h3>第三步：逐层累加</h3>
 <table><thead><tr><th>层</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><td>最少结点数</td><td>1</td><td>2</td><td>4</td><td>8</td><td>16</td></tr><tr><td>每结点最少关键字</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr></tbody></table>
-<h3>第三步：求和</h3>
-<p>关键字总数最少 = 1 + 2 + 4 + 8 + 16 = <strong>31</strong>，选 <strong>B</strong>。</p>
+<p>关键字总数最少 = 1 + 2 + 4 + 8 + 16 = <strong>31</strong>。这与通用公式一致：m 阶 B 树高度 h 的最少关键字数 = 2×⌈m/2⌉^(h−1) − 1，本题即 2×2⁴ − 1 = 31——公式来历就是"根先放 1 个，往下一代代翻倍"。</p>
 <h3>易错点</h3>
-<ul><li><strong>误选 A（15）</strong>：15 = 1+2+4+8，只算了 4 层——把「高度 5」理解成 4 层关键字结点（多减了一层）。</li><li><strong>误选 C（62）</strong>：62 = 2×31，误以为每个结点至少 2 个关键字；3 阶 B 树结点至少 1 个关键字。</li><li><strong>误选 D（242）</strong>：242 是按满树（每结点 3 棵子树、2 个关键字，结点数 1,3,9,27,81）算出的「最多」关键字数，题目问的是「至少」。</li></ul>
-<blockquote>一句话：3 阶 B 树最少情形 = 每层结点 1、2、4、8、16，每结点 1 个关键字，共 31 个。</blockquote></div></div>
+<ul><li><strong>误选 A（15）</strong>：只数了 4 层关键字结点，把高度口径弄错一层。</li><li><strong>误选 C（62）</strong>：以为每个结点至少 2 个关键字——3 阶 B 树结点最多 2 个关键字，<strong>最少</strong>情形压在 1 个上。</li><li><strong>误选 D（242）</strong>：242 是每个结点都取<strong>上限</strong>（3 棵子树、2 个关键字，结点数 1,3,9,27,81）数出的"最多"关键字数 = 2×(1+3+9+27+81)——题目问的是"至少"。</li></ul>
+<blockquote>记忆锚点：最少关键字 = 2×⌈m/2⌉^(h−1) − 1；3 阶、h = 5 时 = 2×2⁴ − 1 = 31。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -680,16 +684,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：自底向上建大根堆</h2>
 <p><strong>答案：A。</strong></p>
-<h3>第一步：建堆规则</h3>
-<p>n = 7，最后一个非叶结点编号 ⌊7/2⌋ = 3。从结点 3 开始，对结点 3、2、1 依次执行「下沉」：与较大的孩子比较，若孩子更大则交换，交换后继续向下检查。</p>
-<h3>第二步：逐步下沉</h3>
-<p>初始序列（按完全二叉树编号）6,1,5,9,8,4,7：</p>
-<ol><li><strong>结点 3（值 5）</strong>：孩子为 4、7，最大孩子 7 &gt; 5，交换 → 6,1,7,9,8,4,5；</li><li><strong>结点 2（值 1）</strong>：孩子为 9、8，最大孩子 9 &gt; 1，交换 → 6,9,7,1,8,4,5；</li><li><strong>结点 1（值 6）</strong>：孩子为 9、7，9 &gt; 6，交换 → 9,6,7,1,8,4,5；6 落到结点 2 后还要继续下沉；</li><li><strong>结点 2（值 6）继续下沉</strong>：孩子为 1、8，8 &gt; 6，交换 → 9,8,7,1,6,4,5；</li><li><strong>结点 3（值 7）</strong>：孩子为 4、5，无需交换。堆建成：9,8,7,1,6,4,5。</li></ol>
+<h3>第一步：先立机制——为什么从最后一个非叶结点开始、倒序处理</h3>
+<p>堆用数组存的完全二叉树表示：编号 i 的结点，左孩子 2i、右孩子 2i+1。建堆用的"下沉"操作有一个前提：<strong>当前结点的左右子树都已经是堆</strong>，它才能通过"与大孩子交换"把自己这块调平。叶结点没有孩子，天生就是堆，不用处理；于是从最后一个非叶结点编号 ⌊n/2⌋ = ⌊7/2⌋ = 3 开始，<strong>倒序</strong>处理 3、2、1——每走到一个结点，它的两棵子树都已被处理成堆，前提成立。反过来若从根开始（选项 B 的做法），根的子树那时还不是堆，"调平"无从谈起，这正是建堆必须自底向上的原因。</p>
+<h3>第二步：逐步下沉（每次与较大的孩子比较）</h3>
+<p>初始序列（按编号）6,1,5,9,8,4,7：</p>
+<ol><li><strong>结点 3（值 5）</strong>：孩子 4、7，最大孩子 7 &gt; 5，交换 → 6,1,7,9,8,4,5；</li><li><strong>结点 2（值 1）</strong>：孩子 9、8，最大孩子 9 &gt; 1，交换 → 6,9,7,1,8,4,5；</li><li><strong>结点 1（值 6）</strong>：孩子 9、7，9 &gt; 6，交换 → 9,6,7,1,8,4,5——6 换到结点 2 的位置，还没完；</li><li><strong>结点 2（值 6）继续下沉</strong>：孩子 1、8，8 &gt; 6，交换 → 9,8,7,1,6,4,5（这就是"下沉要沉到底"：交换后必须沿新位置继续向下检查，直到不违反堆性质）；</li><li><strong>结点 3（值 7）复查</strong>：孩子 4、5，均不大于 7，不动。堆建成：9,8,7,1,6,4,5。</li></ol>
 <h3>第三步：对照选项</h3>
-<p>变化过程 6,1,7,9,8,4,5 → 6,9,7,1,8,4,5 → 9,6,7,1,8,4,5 → 9,8,7,1,6,4,5 与选项 <strong>A</strong> 完全一致。</p>
+<p>全过程变化序列 6,1,7,9,8,4,5 → 6,9,7,1,8,4,5 → 9,6,7,1,8,4,5 → 9,8,7,1,6,4,5 与选项 <strong>A</strong> 完全一致。</p>
 <h3>易错点</h3>
-<ul><li><strong>从结点 1 开始下沉</strong>：必须从最后一个非叶结点 ⌊n/2⌋ 开始、倒序处理到结点 1；B 选项先动根，过程错误。</li><li><strong>下沉一次就停</strong>：交换后必须继续向下检查（第 4 步 6 从结点 2 又沉到结点 4 位置），漏掉会停留在 9,6,7,... 这类中间态。</li><li><strong>与较小的孩子交换</strong>：应与两个孩子中较大者交换，否则仍违反大根堆性质；D 选项结尾 9,8,6,1,7,4,5 正是交换对象选错的产物。</li></ul>
-<blockquote>一句话：从结点 3 到 1 依次下沉并注意连续下沉，全过程即选项 A，最终堆 9,8,7,1,6,4,5。</blockquote></div></div>
+<ul><li><strong>从根开始建堆</strong>（选项 B）：下沉前提"子树已是堆"不成立，过程错误；正确顺序是 ⌊n/2⌋ → 1。</li><li><strong>下沉一次就停</strong>：第 3 步的 6 换到结点 2 后还要继续沉到下一层，漏掉就停在 9,6,7,… 这类非法中间态。</li><li><strong>与较小的孩子交换</strong>（选项 D 结尾 9,8,6,1,7,4,5 正是此错）：必须与两个孩子中<strong>较大</strong>者交换，否则大孩子仍压在下面，堆性质照样被破坏。</li></ul>
+<blockquote>一句话：从 ⌊n/2⌋ = 3 倒序下沉、沉到底，全过程即 A，最终堆 9,8,7,1,6,4,5。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -794,16 +798,17 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码真值还原与减法结果的机器数</h2>
 <p><strong>答案：C</strong>（x = −33，y = 65，x−y 的机器数为 <code>FFFF FF9EH</code>）。</p>
+<h3>第 0 步：先把机制立住——补码是模运算下的记数</h3>
+<p>32 位共 2³² 个状态，构成一个环：最高位为 0 的状态表示 0 ~ 2147483647；最高位为 1 的状态表示负数，<strong>真值 = 无符号解释值 − 2³²</strong>。为什么减一次模就能还原？因为位串代表负数 −t，正是由于 −t ≡ (2³² − t) (mod 2³²)。于是"求负数 −t 的位串"就是算 2³² − t，而二进制的"<strong>取反加一</strong>"恰好完成它：按位取反得 (2³² − 1) − t，再加一得 2³² − t。取反后忘加一，结果恰好差 1——这不是巧合，是公式本身的形状。</p>
 <h3>第一步：还原 x 和 y 的真值</h3>
-<ul><li>y = <code>0000 0041H</code>：最高位为 0，正数直接读值：41H = 4×16 + 1 = <strong>65</strong>。</li><li>x = <code>FFFF FFDFH</code>：最高位为 1，是负数，对全 32 位"取反加一"求绝对值：<code>0000 0020H + 1 = 0000 0021H</code> = 33，故 x = <strong>−33</strong>。</li></ul>
-<h3>第二步：算 x − y</h3>
-<p>x − y = −33 − 65 = <strong>−98</strong>，未超出 32 位 int 的表示范围，不溢出（选项 A 的"溢出"是错的）。</p>
-<h3>第三步：把 −98 写成 32 位补码</h3>
-<table><thead><tr><th>步骤</th><th>计算</th></tr></thead><tbody><tr><td>绝对值</td><td>98 = <code>0000 0062H</code></td></tr><tr><td>按位取反</td><td><code>FFFF FF9DH</code></td></tr><tr><td>末位加一</td><td><code>FFFF FF9EH</code></td></tr></tbody></table>
-<p>所以 x−y 的机器数为 <code>FFFF FF9EH</code>。</p>
+<ul><li>y = <code>0000 0041H</code>：最高位 0，正数直接读：41H = 4×16 + 1 = <strong>65</strong>。</li><li>x = <code>FFFF FFDFH</code>：最高位 1，是负数。取反加一：<code>0000 0020H</code> + 1 = <code>0000 0021H</code> = 33 → x = <strong>−33</strong>。（模运算小验证：低字节 DFH = 223，223 − 256 = −33，与全 32 位的读法一致。）</li></ul>
+<h3>第二步：算 x − y 并判断溢出</h3>
+<p>x − y = −33 − 65 = <strong>−98</strong>。int 的表示范围是 −2147483648 ~ +2147483647，−98 远在界内 → 不溢出，干扰项 A 的"溢出"不成立。</p>
+<h3>第三步：把 −98 写回 32 位补码</h3>
+<p>求 −98 的位串 = 算 2³² − 98，走"取反加一"：98 = <code>0000 0062H</code>，按位取反得 <code>FFFF FF9DH</code>，末位加一得 <code>FFFF FF9EH</code>。若忘加一停在 <code>FFFF FF9DH</code>，那是 −99 的编码——干扰项 B 正是这个"差一"错误。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 x 的真值算错成 −65</strong>（干扰项 A、D）：求补必须对全 32 位取反加一，<code>FFFF FFDFH</code> 对应 −33；顺带记住 −65 的补码是 <code>FFFF FFBFH</code>。</li><li><strong>取反后忘记加一</strong>：得到 <code>FFFF FF9DH</code>，正是干扰项 B。</li><li><strong>看到两个负号就以为溢出</strong>：结果 −98 远在 int 范围内。</li></ul>
-<blockquote>补码口诀：正数照抄，负数"取反加一"；从机器数还原真值同样是"取反加一"。</blockquote></div></div>
+<ul><li><strong>把 x 算成 −65</strong>（干扰项 A、D）：必须对全 32 位取反加一；−33 与 −65 的位串（<code>FFFF FFDFH</code> 与 <code>FFFF FFBFH</code>）不要混。</li><li><strong>取反后忘记加一</strong>（干扰项 B）：补码差 1，最高位仍是 1，最易漏检——回到模运算公式即可自查。</li><li><strong>看到两个负号就以为溢出</strong>：溢出看真值结果是否越界，与位串"长得吓不吓人"无关。</li></ul>
+<blockquote>补码口诀：位串与真值按"模 2³²"互相换算；求负数位串、还原负数真值，都走"取反加一"。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -969,16 +974,18 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：逻辑右移与算术右移</h2>
 <p><strong>答案：B</strong>（逻辑右移得 <code>0110 1100</code>，算术右移得 <code>1110 1100</code>）。</p>
-<h3>第一步：抓住 x 的关键特征</h3>
-<p>x = <code>1101 1000</code>，最高位（符号位）是 <strong>1</strong>。右移 1 位时，各 位整体右移一格，最低位的 0 移出丢弃；两种移位的差别只在<strong>左边空出的那一位补什么</strong>。</p>
-<h3>第二步：两种右移各自的规则</h3>
-<ul><li><strong>逻辑右移</strong>：不管符号，高位一律补 <strong>0</strong> → <code>0110 1100</code>。</li><li><strong>算术右移</strong>：高位补<strong>符号位</strong>（本题是 1）→ <code>1110 1100</code>。</li></ul>
+<h3>第一步：先立机制——右移的差别全在"补什么"</h3>
+<p>右移 1 位 = 各位整体右移一格、最低位丢弃，左端空出 1 位。<strong>两种移位的一切差别都在空出的那一位补什么</strong>，而补什么的规则来自位串的两种解释：</p>
+<ul><li><strong>逻辑右移</strong>把位串当<strong>无符号数</strong>：无符号数没有"符号欠账"的概念，空位只能补 0，才能保持"右移后 ≈ 原数除以 2"的意义（补 1 会凭空多出一大截）。</li><li><strong>算术右移</strong>把位串当<strong>补码有符号数</strong>：补码负数的"负"由高位一串 1 共同承担，符号位统领全部高位含义，所以空位必须补<strong>符号位</strong>——否则负数右移一次就翻身变正数，"除以 2"的意义全毁。</li></ul>
+<h3>第二步：看 x 的关键特征并分别执行</h3>
+<p>x = <code>1101 1000</code>，最高位是 <strong>1</strong>（负数）：</p>
+<ul><li>逻辑右移 1 位：高位补 0 → <code>0110 1100</code>；</li><li>算术右移 1 位：高位补符号位 1 → <code>1110 1100</code>。</li></ul>
+<p><strong>数值印证</strong>：x 按无符号读是 216，216 ÷ 2 = 108 = <code>0110 1100</code> ✓；x 按补码读是 −40，算术右移得 <code>1110 1100</code> = −20 = −40 ÷ 2 ✓——两种移位各自守住了自己那种解释下的"除以 2"。</p>
 <h3>第三步：对号入座</h3>
-<table><thead><tr><th>操作</th><th>结果</th></tr></thead><tbody><tr><td>逻辑右移 1 位</td><td><code>0110 1100</code></td></tr><tr><td>算术右移 1 位</td><td><code>1110 1100</code></td></tr></tbody></table>
-<p>对照选项：只有 B 前后两个结果（逻辑在前、算术在后）都对。</p>
+<p>题目先问逻辑右移、后问算术右移，顺序是"逻辑在前、算术在后"；只有 B 的两个结果与顺序都对。</p>
 <h3>易错点</h3>
-<ul><li><strong>顺序记反</strong>（选项 C）：题目先问逻辑右移、后问算术右移，别把两个结果对调。</li><li><strong>以为算术右移也补 0</strong>（选项 A、D）：算术右移补符号位，才能保证负数右移仍近似等于除以 2；本题若补 0，负数会变成正数。</li></ul>
-<blockquote>一句话：逻辑右移补 0，算术右移补符号位；符号位是 1 就补 1。</blockquote></div></div>
+<ul><li><strong>顺序记反</strong>（选项 C）：把算术结果填在逻辑的位置——先看题目问的次序再对答案。</li><li><strong>以为算术右移也补 0</strong>（选项 A、D）：补 0 会把负数 <code>1101 1000</code> 翻成 <code>0110 1100</code>，这正是算术右移必须补符号位的理由。</li></ul>
+<blockquote>一句话：逻辑右移补 0（无符号解释），算术右移补符号位（补码解释）；符号位是 1 就补 1。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1202,15 +1209,14 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：流水线 CPU 的时钟周期</h2>
-<p><strong>答案：D</strong>（100ps）。</p>
-<h3>第一步：明确决定式</h3>
-<p>流水线按节拍推进，每个时钟周期内每段要完成本段加工并把结果写入段寄存器，所以</p>
-<p>时钟周期 ≥ 最长段耗时 + 段寄存器延时 = max(80, 50, 50, 70, 50) + 20</p>
-<h3>第二步：逐段计算</h3>
-<table><thead><tr><th>功能段</th><th>耗时</th><th>+ 段寄存器延时 20ps</th><th>合计</th></tr></thead><tbody><tr><td>A</td><td>80ps</td><td>20ps</td><td>100ps</td></tr><tr><td>B</td><td>50ps</td><td>20ps</td><td>70ps</td></tr><tr><td>C</td><td>50ps</td><td>20ps</td><td>70ps</td></tr><tr><td>D</td><td>70ps</td><td>20ps</td><td>90ps</td></tr><tr><td>E</td><td>50ps</td><td>20ps</td><td>70ps</td></tr></tbody></table>
+<p><strong>答案：D（100ps）。</strong></p>
+<h3>第一步：先立机制——为什么周期由"最慢一段 + 寄存器延时"决定</h3>
+<p>流水线把一条指令的执行切成 5 段，段与段之间用流水段寄存器隔开，<strong>所有段共用同一个时钟节拍</strong>：每个节拍里，各段同时开工、各自处理自己那一道指令，节拍结束时把结果写入下一级的段寄存器。节拍长度必须迁就最慢的要求——只要有一段在一个周期里干不完活，或写不完段寄存器，流水线就会撞车。所以时钟周期 ≥ 最长段耗时 + 段寄存器延时，与其他段多快无关：流水线的节拍永远是"短板"说了算。</p>
+<h3>第二步：逐段核对</h3>
+<table><thead><tr><th>功能段</th><th>耗时</th><th>+ 段寄存器延时 20ps</th><th>合计</th></tr></thead><tbody><tr><td>A</td><td>80ps</td><td>20ps</td><td><strong>100ps</strong></td></tr><tr><td>B</td><td>50ps</td><td>20ps</td><td>70ps</td></tr><tr><td>C</td><td>50ps</td><td>20ps</td><td>70ps</td></tr><tr><td>D</td><td>70ps</td><td>20ps</td><td>90ps</td></tr><tr><td>E</td><td>50ps</td><td>20ps</td><td>70ps</td></tr></tbody></table>
 <p>最大值是 A 段的 <strong>100ps</strong>，故 CPU 时钟周期至少为 100ps。</p>
 <h3>易错点</h3>
-<ul><li><strong>取最长段 80ps 就交卷</strong>（选项 C）：漏加了段寄存器写入的 20ps 延时。</li><li><strong>把五段时间加总或求平均</strong>：那是非流水线执行时间的思路；流水线周期只由"最慢一段"决定。</li><li><strong>忽略 D 段 70ps</strong>：70 + 20 = 90ps 也超过 80ps，说明即使不看 A 段，80ps 也不够。</li></ul>
+<ul><li><strong>取最长段 80ps 就交卷</strong>（选项 C）：漏加段寄存器写入的 20ps——每个周期都包含"干活 + 把结果锁存进段寄存器"两个动作。</li><li><strong>把五段加总或求平均</strong>：加总（300ps）是<strong>非流水线</strong>执行一条指令的总时间；流水线各段并行推进，周期只由最慢一段决定，与总和无关。</li><li><strong>忽略 D 段</strong>：70 + 20 = 90ps 也超过 80ps——就算漏看 A 段，80ps 同样不够。</li></ul>
 <blockquote>口诀：流水线时钟周期 = 最慢段耗时 + 段寄存器延时 = 80 + 20 = 100ps。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -1986,14 +1992,15 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：物理层接口规范的四个特性</h2>
-<h3>第一步：回忆四个特性</h3>
-<p>物理层接口规范（DTE 与 DCE 之间的接口标准）定义四个特性，考试常把具体例子对号入座：</p>
-<table><thead><tr><th>特性</th><th>定义内容</th><th>典型例子</th></tr></thead><tbody><tr><td>机械特性</td><td>接口的几何尺寸、形状、引脚数目与排列</td><td>接口形状</td></tr><tr><td>电气特性</td><td>信号电平、电压范围</td><td>信号电平</td></tr><tr><td>功能特性</td><td>每根引脚的信号功能</td><td>引脚功能</td></tr><tr><td>规程特性</td><td>信号先后时序的规程关系</td><td>时序关系</td></tr></tbody></table>
-<h3>第二步：逐项对号</h3>
-<ul><li>接口形状 → <strong>机械特性</strong>，属于接口规范定义范畴。</li><li>引脚功能 → <strong>功能特性</strong>，属于接口规范定义范畴。</li><li>信号电平 → <strong>电气特性</strong>，属于接口规范定义范畴。</li><li><strong>物理地址</strong>（MAC 地址）→ 这是<strong>数据链路层</strong>的寻址概念，标识网络接口卡；物理层只负责比特与信号的传输，接口规范不定义任何"地址"。所以物理地址<strong>不属于</strong>物理层接口规范的定义范畴。</li></ul>
+<p><strong>答案：C。</strong></p>
+<h3>第一步：先立机制——接口规范管的是"连接的四件事"</h3>
+<p>物理层接口规范（如 DTE 与 DCE 之间的接口标准）要保证不同厂家的设备<strong>插得上、配得上、认得对、接得顺</strong>，这四件事分开管，就是四个特性：<strong>机械特性</strong>管接口长什么样（形状、尺寸、引脚数与排列）；<strong>电气特性</strong>管信号长什么样（电平、电压范围）；<strong>功能特性</strong>管每根线是干什么的（引脚的信号含义）；<strong>规程特性</strong>管事件按什么顺序发生（时序关系）。注意四个特性全部围绕"<strong>接口与信号</strong>"做文章——物理层的世界里只有比特和电信号，没有"地址"这个概念；给网络接口编地址（MAC 地址）是<strong>数据链路层</strong>的寻址功能，物理层根本不参与。</p>
+<h3>第二步：选项对号入座</h3>
+<table><thead><tr><th>选项</th><th>内容</th><th>归属</th><th>是否属于接口规范</th></tr></thead><tbody><tr><td>A</td><td>接口形状</td><td>机械特性</td><td>是</td></tr><tr><td>B</td><td>引脚功能</td><td>功能特性</td><td>是</td></tr><tr><td>C</td><td>物理地址</td><td>链路层的地址概念</td><td><strong>否</strong></td></tr><tr><td>D</td><td>信号电平</td><td>电气特性</td><td>是</td></tr></tbody></table>
+<p>接口形状、引脚功能、信号电平分别落进机械、功能、电气特性，都在定义范畴内；<strong>物理地址</strong>不是任何硬件接口的属性，是链路层给网卡分配的标识——不属于物理层接口规范的定义范畴，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把"物理"二字混为一谈</strong>："物理层"与"物理地址"只差一个字，但 MAC 地址是链路层地址；物理层处理的只是比特流，根本不认识"地址"这个概念。</li><li><strong>四特性记不全</strong>：口诀"<strong>机、电、功、规</strong>"——形状、电平、引脚功能、时序规程，四个特性全是在"接口"上做文章。</li></ul>
-<blockquote>结论：不属于物理层接口规范定义范畴的是物理地址，答案 C。</blockquote></div></div>
+<ul><li><strong>被"物理"二字带偏</strong>（选项 C 的迷惑点）："物理层"与"物理地址"只差一个字，但物理层只负责把比特变成信号搬过去，不认识地址。</li><li><strong>四特性记不全</strong>：口诀"<strong>机、电、功、规</strong>"——形状、电平、引脚含义、时序规程；答题时先把具体例子翻译成特性名，再判断归属。</li></ul>
+<blockquote>一句话：机、电、功、规四特性管的全是接口与信号；物理地址是链路层的地址概念，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2410,19 +2417,26 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：找出未出现的最小正整数（空间换时间）</h2>
-<h3>第（1）问：算法基本设计思想</h3>
-<p>关键观察：<strong>答案只可能是 1 到 n+1 之间的某个整数</strong>。数组只有 n 个元素，即使 1~n 全部出现，也刚好占满，此时答案是 n+1；否则 1~n 中必有缺失。因此只需判断 1~n 中谁没出现。</p>
-<p>采用空间换时间：设标记数组 <code>B[n]</code>，<code>B[j]</code> 表示正整数 j+1 是否在 A 中出现过。先扫一遍 A：若 <code>1 ≤ A[i] ≤ n</code>，置 <code>B[A[i]-1] = 1</code>，越界值（负数、0、大于 n）一律忽略；再扫一遍 B：遇到第一个 <code>B[i] = 0</code> 就返回 <code>i+1</code>；若扫完没有 0，说明 1~n 全部出现，返回 <code>n+1</code>。</p>
+<h3>第 0 步：机制先行——先用计数论证把答案锁进小范围</h3>
+<p>这道题的钥匙不是数据结构，而是一个计数论证：<strong>答案必然是 1 ~ n+1 之间的某个整数</strong>。数组只有 n 个元素，最多能"证明" n 个不同的正整数出现过。把 1~n+1 这 n+1 个候选排成一排：</p>
+<ul><li>若 1~n 全部出现，n 个元素刚好被占满，谁也占不到 n+1 → 答案是 <strong>n+1</strong>；</li><li>否则 1~n 中至少缺一个 → 答案是其中<strong>最小的缺失者</strong>。</li></ul>
+<p>所以原问题被降维成一个<strong>判定问题</strong>：1~n 中谁出现过、谁没出现——这正是"标记数组"最擅长的事。</p>
+<p><strong>为什么越界值（≤0 或 &gt;n）可以放心忽略？</strong> 因为答案只由"1~n 各自是否出现"决定：负数、0 本身不可能是答案（答案 ≥ 1）；大于 n 的值也不是 1~n 中任何一员，既不会点亮任何标记位，也改变不了"1~n 是否集齐"的判定（集齐与否只看这 n 个标记位）。忽略它们不丢任何信息。</p>
+<h3>第（1）问：设计思想——用 O(n) 标记数组当"点名册"</h3>
+<p>设标记数组 <code>B[n]</code>，<code>B[j] = 1</code> 表示正整数 j+1 在 A 中出现过（值 v 对应下标 v−1，B[0..n−1] 恰好铺满 1~n）。为什么叫"空间换时间"：判定一个数是否出现，朴素做法是对每个候选扫一遍数组（O(n²)）；标记数组把"出现过没有"固化成一个位，一次查证只要 O(1)——多花 O(n) 空间，把总时间压到 O(n)。</p>
+<p>流程三步：先全清 0；扫一遍 A，<code>1 ≤ A[i] ≤ n</code> 的置 <code>B[A[i]-1] = 1</code>（重复置 1 无影响——同一个位写两次还是 1，标记天然幂等）；再扫 B，遇到第一个 0 就返回下标 i+1；扫完无 0 说明 1~n 全出现，返回 n+1。</p>
 <h3>第（2）问：C 语言描述</h3>
-<p>按参考答案口径逐行给出（关键处已注注释）：</p>
 <ol><li><code>int findMissingPositive(int A[], int n) {</code></li><li><code>    int i, j, a;</code></li><li><code>    int B[n];                    // 标记数组：B[j]=1 表示正整数 j+1 出现过</code></li><li><code>    for (j = 0; j &lt; n; j++) B[j] = 0;        // 初始化为全 0</code></li><li><code>    for (i = 0; i &lt; n; i++)</code></li><li><code>        if (A[i] &gt; 0 &amp;&amp; A[i] &lt;= n) {         // 只标记 1~n 的有效值</code></li><li><code>            a = A[i];  B[a - 1] = 1;</code></li><li><code>        }</code></li><li><code>    for (i = 0; i &lt; n; i++)</code></li><li><code>        if (B[i] == 0) break;                // 第一个未出现的正整数</code></li><li><code>    return i + 1;                            // 下标转数值；全出现时 i=n，返回 n+1</code></li><li><code>}</code></li></ol>
-<h3>第（3）问：复杂度分析</h3>
-<p>时间复杂度：初始化、标记、扫描各一遍，均为单重循环，共 <strong>O(n)</strong>。空间复杂度：辅助数组 B 大小为 n，为 <strong>O(n)</strong>。</p>
+<p>代码里两个"顺带的小聪明"值得看出：</p>
+<ul><li><code>return i + 1</code> 一句同时覆盖两种结局：找到 0 时 i 是缺失者的下标；全出现时循环把 i 走到 n，返回 n+1——不用再写 <code>if (i == n) return n+1;</code> 的特判。</li><li>下标映射 <code>a - 1</code> 让"值 1"对应 B[0]，1~n 恰好铺满 B[0..n-1]，一个格子也不浪费。</li></ul>
+<h3>第（3）问：复杂度——为什么 O(n) 已经不能再快</h3>
+<p>时间：清零、标记、扫描各一趟单重循环，<strong>O(n)</strong>。空间：辅助数组 B 大小 n，<strong>O(n)</strong>。</p>
+<p><strong>为什么 O(n) 是最优？</strong> 任何正确算法都必须把 n 个元素<strong>全部读完</strong>：只要漏读一个元素，就无法排除"它恰是那个缺失的正整数"，答案就可能出错。读完全部输入至少要 O(n)，标记法正好踩在这个下界上。题目只要求"时间上尽可能高效"、不限空间，所以用 O(n) 空间换时间是划算的一侧。（若额外要求 O(1) 空间，得用原地交换归位等复杂技巧，不属于本题要求。）</p>
 <h3>示例演算（与题干两个例子核对）</h3>
-<ul><li>A = {-5,3,2,3}：标记 B[2]=1（值 3）、B[1]=1（值 2）、再次 B[2]=1（重复无影响）；第一个 0 在 B[0]，返回 0+1 = 1 ✓</li><li>A = {1,2,3}：B 全部置 1；扫描无 0，i 走到 3，返回 3+1 = 4 ✓</li></ul>
+<ul><li>A = {-5,3,2,3}：−5 越界忽略；3 → B[2]=1；2 → B[1]=1；第二个 3 重复置 B[2]=1 仍为 1。B = [0,1,1]，第一个 0 在 B[0]，返回 0+1 = 1 ✓</li><li>A = {1,2,3}：B 全部置 1；扫描无 0，i 走到 3，返回 3+1 = 4 ✓</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>答案范围想窄了</strong>：只检查 1~n 会漏掉「全部出现返回 n+1」的情形。</li><li><strong>不判范围直接标记</strong>：负数、0 或超大值会使 B 下标越界，必须先判 <code>1 ≤ A[i] ≤ n</code>。</li><li><strong>写成双重循环</strong>：对每个正整数枚举查找是 O(n²) 的笨办法，标记法一遍即可。</li></ul>
-<blockquote>一句话：答案必在 1~n+1；标记数组记「谁出现过」，第一个没标记的下标加 1 就是答案。</blockquote></div></div>
+<ul><li><strong>答案范围想窄了</strong>：只检查 1~n 会漏掉「全部出现返回 n+1」的情形——这由第 0 步的计数论证保证，不是猜的。</li><li><strong>不判范围直接标记</strong>：A[i] ≤ 0 或 &gt; n 时下标 a−1 会越界（负下标或超出 B 的范围），必须先判 <code>1 ≤ A[i] ≤ n</code>。</li><li><strong>写成双重循环</strong>：对每个候选正整数再扫一遍数组是 O(n²) 的笨办法，没有利用"标记一次、查证 O(1)"的机制。</li><li><strong>漏初始化 B</strong>：标记数组不清 0，残留值会把"没出现"误判成"出现"。</li></ul>
+<blockquote>一句话：计数论证把答案锁死在 1~n+1；标记数组当点名册，第一个没点到的下标加 1 就是答案，全点到就报 n+1；O(n) 已是读完全部输入的下界。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2475,21 +2489,26 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：光通信骨干网的最小生成树与 TTL 判定</h2>
-<h3>第（1）问：最经济方案 = 最小生成树，共两种、总费用均 16</h3>
-<p>8 个城市连通需要 7 条边，最经济方案就是图的最小生成树。用 Kruskal 思路按边权从小到大选边：</p>
-<ol><li>权 2 的 5 条边全部可用：XA–BJ、XA–WH 连成块 {XA,BJ,WH}；TL–JN、QD–JN、QD–NJ 连成块 {TL,JN,QD,NJ}；</li><li>权 3 的边中：<strong>BJ–TL</strong> 恰好连接上述两大块，选入；<strong>CS–QD</strong> 把 CS 接入，选入；</li><li>WH–BJ、WH–QD、JN–NJ 都会成环，舍去；权 4 的边不再需要。</li></ol>
-<p>按上面顺序得到 7 条边：XA–BJ(2)、XA–WH(2)、TL–JN(2)、QD–JN(2)、QD–NJ(2)、BJ–TL(3)、CS–QD(3)，总费用 2+2+2+2+2+3+3 = <strong>16</strong>。</p>
-<p>注意「所有可能方案」：连接两大块的权 3 桥边有 <strong>BJ–TL</strong> 和 <strong>WH–QD</strong> 两条（BJ–JN 权 4 更贵不能选），二者任选其一都构成最小生成树，故共有<strong>两种方案</strong>，总费用均为 16：</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：光通信骨干网——最省钱方案为什么是最小生成树</h2>
+<h3>第 0 步：机制先行——最经济的连通方案必然是一棵树</h3>
+<p>8 个城市要用光纤连成一体，任何可行方案对应原图的一个<strong>连通子图</strong>。"最省钱"被两头夹死：</p>
+<ol><li><strong>边不能多</strong>：n 个顶点的连通图至少 n−1 条边；一旦多于 n−1 条，必含环，环上任意拆掉一条边图仍连通、费用立刻下降——所以最省钱方案不含环。</li><li><strong>边不能少</strong>：少于 n−1 条边必不连通。</li></ol>
+<p>两头合起来：最经济方案 = <strong>恰好 7 条边（n−1）+ 无环 + 连通</strong> = 生成树；费用最小的生成树就是<strong>最小生成树（MST）</strong>。于是第（1）问的"所有可能的最经济方案"翻译成人话就是：<strong>找出全部 MST</strong>。</p>
+<p>Kruskal 算法给出系统化做法：把边按权从小到大排队，逐条考察——<strong>不成环就选，成环就跳过</strong>。为什么跳过成环的边不亏：这条边的两端此刻已经被更便宜的边连通了，再选它只会花冤枉钱。</p>
+<h3>第（1）问：用 Kruskal 走一遍，并回答"为什么恰好两种"</h3>
+<p>题图共 12 条边，其中权 2 的恰 5 条。按权从小到大：</p>
+<ol><li><strong>权 2 的 5 条边全部入选</strong>：XA–BJ、XA–WH 把 {XA,BJ,WH} 连成一块；TL–JN、QD–JN、QD–NJ 把 {TL,JN,QD,NJ} 连成一块；CS 还是孤点。此时已选 5 条，还差 2 条，剩"两大块 + 一个孤点"待连通。</li><li><strong>权 3 的边里挑不成环的</strong>：BJ–TL 恰好把两大块连通，选；CS–QD 把 CS 接入，选。WH–BJ、JN–NJ 在各自块内成环，跳过；WH–QD 也想连两大块，但 BJ–TL 先到一步，再选就成环，跳过。凑满 7 条，总费用 2×5+3+3 = <strong>16</strong>。</li><li><strong>为什么恰好两种方案</strong>：那 5 条权 2 边在每棵 MST 里都躲不掉（各自块内它们就是最便宜且不成环的连接），真正有"选择权"的只有一件事——<strong>用哪条权 3 桥边把两个权 2 块连起来</strong>。候选恰有两条：<strong>BJ–TL</strong> 与 <strong>WH–QD</strong>（BJ–JN 权 4 更贵，选它总费用就不是最小）；二者等价且互斥（选了一条，另一条必成环）。所以 MST 恰好两棵，费用均 16：</li></ol>
 <table><thead><tr><th>方案</th><th>7 条边</th><th>总费用</th></tr></thead><tbody><tr><td>方案 1（桥边 WH–QD）</td><td>XA–BJ、XA–WH、WH–QD、QD–CS、QD–JN、QD–NJ、TL–JN</td><td>16</td></tr><tr><td>方案 2（桥边 BJ–TL）</td><td>XA–BJ、XA–WH、BJ–TL、TL–JN、JN–QD、QD–NJ、QD–CS</td><td>16</td></tr></tbody></table>
+<p>题目要求"用带权图表示"——作答时把两棵树的边与权值画出（或列出）并给出费用 16，缺一不可。</p>
 <h3>第（2）问：存储结构与算法名称</h3>
-<p>题图是无向带权图，用<strong>邻接矩阵或邻接表</strong>均可存储；求最小生成树可用 <strong>Prim 算法或 Kruskal 算法</strong>。</p>
-<h3>第（3）问：TTL = 5 的 IP 分组能否从 H1（TL）到 H2（BJ）</h3>
-<p>路由器<strong>转发</strong>分组时才把 TTL 减 1，减到 0 就丢弃。</p>
-<ul><li><strong>方案 2</strong>：TL 与 BJ 相邻（有边 BJ–TL），TL 路由器转发后 TTL = 4，BJ 路由器收到即可交付 H2，<strong>H2 可以收到</strong>。</li><li><strong>方案 1</strong>：TL 到 BJ 的路径为 TL → JN → QD → WH → XA → BJ，共 5 跳。TTL 变化：TL 转发后 4、JN 后 3、QD 后 2、WH 后 1、XA 后 0 —— TTL 减为 0 的分组在 XA 路由器被丢弃，<strong>H2 收不到</strong>。</li></ul>
+<p>题图是无向带权图，<strong>邻接矩阵或邻接表</strong>均可存储（8 个顶点规模很小，矩阵写起来更直观）；求 MST 用 <strong>Prim 算法或 Kruskal 算法</strong>都行——两者殊途同归：Prim 从一个点出发"长"树，Kruskal 从全局挑便宜边"合并"森林，本题上面走的是 Kruskal 的路线。</p>
+<h3>第（3）问：TTL = 5 能否从 TL 送进 BJ——先立 TTL 的规则</h3>
+<p>机制只有三条：TTL 记的是"还允许经过几个路由器"；<strong>只有路由器转发分组时才减 1</strong>（主机发出、主机接收都不减）；<strong>减到 0 的分组被丢弃</strong>。于是问题化为数跳数：</p>
+<ul><li><strong>方案 2</strong>：TL 与 BJ 相邻，TL 路由器转发一次，TTL 5→4，BJ 收到后直接交付 H2——<strong>H2 可以收到</strong>。</li><li><strong>方案 1</strong>：TL 到 BJ 只能走 TL → JN → QD → WH → XA → BJ，共 5 跳。5 个路由器逐跳减 1：TL 后 4、JN 后 3、QD 后 2、WH 后 1、XA 后 <strong>0</strong>——TTL 归 0 的分组在 XA 被丢弃，<strong>H2 收不到</strong>。</li></ul>
+<p>这正是参考答案"方案 1 距离过长"的准确含义：不是费用问题，是跳数超出了 TTL=5 的预算。</p>
 <h3>易错点</h3>
-<ul><li><strong>只给一棵生成树</strong>：题目问「所有可能的最经济方案」，漏掉桥边的第二种选择会丢一半分。</li><li><strong>把成环的边当必选</strong>：WH–BJ、WH–QD、JN–NJ 权值虽小但会成环；其中 WH–QD 又是另一棵 MST 的桥边，要认真区分。</li><li><strong>TTL 减 1 的时机</strong>：主机 H1 发出时 TTL = 5 未减；TL 是第一个减 1 的设备。按 5 跳减 5 次恰在 XA 归零被丢弃。</li><li><strong>第（1）问只答费用</strong>：必须同时给出用带权图表示的方案和总费用 16。</li></ul>
-<blockquote>一句话：两棵 MST 桥边二选一、总费用均 16；方案 2 相邻一跳可达，方案 1 五跳在 XA 处 TTL 归零被丢弃。</blockquote></div></div>
+<ul><li><strong>只给一棵生成树</strong>：题目问"所有可能的最经济方案"，桥边 BJ–TL / WH–QD 二选一产生两棵 MST，漏一棵丢一半分。</li><li><strong>把成环边当必选</strong>：WH–BJ、JN–NJ 权值小但块内成环；WH–QD 更特殊——在方案 1 里它是桥边，在方案 2 里它成环，同一张图里身份随选择而变。</li><li><strong>TTL 减 1 的时机</strong>：主机不减、路由器转发才减；5 跳减 5 次恰在最后一个路由器 XA 处归零被丢弃。</li><li><strong>第（1）问只报费用</strong>：必须同时给出方案的带权图表示和总费用 16。</li></ul>
+<blockquote>一句话：最省钱 = 无环连通 = MST；5 条权 2 边锁死，桥边 BJ–TL / WH–QD 二选一得两棵 MST 各 16；方案 2 一跳可达，方案 1 五跳在 XA 处 TTL 归零被丢弃。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2542,20 +2561,27 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三种 I/O 方式的时间账</h2>
-<p>先算统一口径：主频 500MHz，时钟周期 = 1/500MHz = <strong>2ns</strong>；CPI = 4，执行一条指令 = 4 × 2ns = <strong>8ns</strong>。两个设备接口的数据缓冲寄存器都是 32 位 = <strong>4B</strong>——每装满 4B 就必须被取走一次，否则新数据会把旧数据冲掉。</p>
-<h3>第（1）问：设备 A 的定时查询</h3>
-<p><strong>答题框架：先求"多长时间装满缓冲"，再求"每次查询花多少 CPU 时间"，后者除以前者。</strong></p>
-<ul><li>设备 A 速率 2MB/s，装满 4B 缓冲需要 4B ÷ 2MB/s = <strong>2µs</strong>。所以<strong>最多间隔 2µs</strong> 就要查询一次，否则数据丢失。</li><li>每次查询至少执行 10 条指令：10 × 8ns = <strong>80ns</strong>。</li><li>CPU 用于设备 A 输入/输出的时间占比 = 80ns ÷ 2µs = <strong>4%</strong>（题目问"至少"，因为 10 条指令是下限）。</li></ul>
-<h3>第（2）问：设备 B 能否用中断方式</h3>
-<p><strong>框架：比较"数据到达间隔"与"一次中断响应和处理的总耗时"。</strong></p>
-<ul><li>设备 B 每 4B 的到达间隔 = 4B ÷ 40MB/s = <strong>0.1µs</strong>。</li><li>一次中断响应和处理至少 400 × 2ns = <strong>0.8µs</strong>。</li><li>0.8µs 大于 0.1µs：一个数据还没处理完，下一个 4B 已经到达，数据必然丢失 → 设备 B <strong>不能</strong>采用中断 I/O 方式。</li></ul>
-<h3>第（3）问：设备 B 的 DMA 方式</h3>
-<p><strong>框架：DMA 传送期间 CPU 不参与，CPU 只花在预处理和后处理上，按每块传送时间分摊。</strong></p>
-<ul><li>每块 1000B，传送一块耗时 = 1000B ÷ 40MB/s = <strong>25µs</strong>，期间 CPU 可执行程序。</li><li>CPU 每块只投入预处理 + 后处理 = 500 × 2ns = <strong>1µs</strong>。</li><li>占比 = 1µs ÷ 25µs = <strong>4%</strong>，即 CPU 用于设备 B 输入/输出的时间占比最多是 <strong>4%</strong>。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三种 I/O 方式的时间账——节拍模型</h2>
+<h3>第 0 步：机制先行——I/O 的核心矛盾与统一口径</h3>
+<p>I/O 的核心矛盾一句话：<strong>设备按自己的速率一格一格地产出（或取走）数据，CPU 必须赶在下一格到来之前处理完上一格</strong>。接口里的 32 位数据缓冲寄存器就是那"一格"：32 位 = <strong>4B</strong>，每装满 4B 就必须被取走一次，否则下一批数据会把旧数据冲掉——设备速率决定了"格子多久满一次"，这就是 CPU 出场的节拍。</p>
+<p>统一口径（三问共用）：</p>
+<ul><li>主频 500MHz → 时钟周期 = 1/500MHz = <strong>2ns</strong>；CPI = 4 → 一条指令 = 4 × 2ns = <strong>8ns</strong>。</li><li>设备速率换算出节拍：设备 A 装满一格要 4B ÷ 2MB/s = <strong>2µs</strong>；设备 B 装满一格要 4B ÷ 40MB/s = <strong>0.1µs</strong>。</li></ul>
+<p>三问的结构完全一致：<strong>CPU 一次介入的成本 ÷ 设备的到达节拍</strong>。</p>
+<h3>第（1）问：定时查询——为什么是 2µs 与 4%</h3>
+<p>定时查询 = CPU 每隔固定时间主动问一次"数据好了吗"。两条约束：</p>
+<ul><li><strong>间隔上限</strong>：两次查询的间隔一旦超过 2µs，缓冲就被新数据冲掉 → <strong>最多间隔 2µs 查询一次</strong>。</li><li><strong>每次成本</strong>：每次查询至少 10 条指令 × 8ns = <strong>80ns</strong>。</li></ul>
+<p>占比 = 80ns ÷ 2µs = <strong>4%</strong>。<strong>为什么问"至少"？</strong> 两个"至少"叠加：每次查询至少 80ns（10 条指令是下限），间隔又不得大于 2µs（否则丢数据），所以单位时间里 CPU 花在设备 A 上的份额至少是 80ns/2µs = 4%——间隔取满 2µs 时才取到这个最小值。</p>
+<h3>第（2）问：中断方式——服务速度跟不上到达速度就不能用</h3>
+<p>中断 I/O 的机制：每来一格数据，设备向 CPU 发中断，CPU 花 400 个时钟周期 = 400 × 2ns = <strong>0.8µs</strong> 做响应和处理。可行性判据就是两个速率的比较：</p>
+<ul><li>到达节拍 0.1µs/格，服务节拍 0.8µs/格；</li><li>0.8µs &gt; 0.1µs：一格还没处理完，后面 8 格已经到了，缓冲被覆盖 → 数据必然丢失 → 设备 B <strong>不能</strong>采用中断 I/O 方式。</li></ul>
+<p>对比着看更清楚：设备 A 的节拍是 2µs/格，远大于 0.8µs，中断来得及——"能不能用中断"不是方式好坏的问题，是设备速率的问题。</p>
+<h3>第（3）问：DMA——CPU 只在块的首尾出场</h3>
+<p>DMA 的机制：整块数据的搬运交给 DMA 控制器，<strong>传送期间 CPU 照常执行程序</strong>；CPU 只在块开始时做<strong>预处理</strong>（初始化 DMA 控制器、写入主存起始地址与块长），块结束时做<strong>后处理</strong>（校验、收尾）。所以 25µs 的传送时间<strong>不算 CPU 的时间</strong>：</p>
+<ul><li>传送一块 1000B ÷ 40MB/s = <strong>25µs</strong>（由设备速率决定，与 CPU 无关）；</li><li>CPU 每块只投入预处理 + 后处理 = 500 × 2ns = <strong>1µs</strong>；</li><li>占比 = 1µs ÷ 25µs = <strong>4%</strong>。</li></ul>
+<p><strong>为什么问"最多"？</strong> 预处理/后处理是每块固定 1µs，而块与块的到达最密只能是背靠背连续传送（设备 40MB/s 打满、一块接一块），此时每 25µs 出一块、CPU 出 1µs，4% 就是封顶值；设备一旦有空闲，占比只会更低。与第（1）问的"至少"正好镜像。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 MB/s 当成 Mb/s</strong>：40MB/s 下 4B 的到达间隔是 0.1µs，不是 0.8µs。</li><li><strong>第（3）问把 25µs 的 DMA 传送计入 CPU 时间</strong>：传送由 DMA 控制器完成，CPU 只承担预处理/后处理的 1µs。</li><li><strong>忘记换算</strong>：10 条指令、400 周期、500 周期都要先乘时钟周期 2ns 换算成 ns/µs，再与设备时间比较。</li></ul>
-<blockquote>三问一个节奏：设备时间（装满缓冲/到达间隔/一块的传送时间）作分母，CPU 介入时间作分子。</blockquote></div></div>
+<ul><li><strong>把 MB/s 当成 Mb/s</strong>：40MB/s 下 4B 的到达间隔是 0.1µs，不是 0.8µs。</li><li><strong>第（3）问把 25µs 传送计入 CPU 时间</strong>：搬运由 DMA 控制器完成，CPU 只承担预处理/后处理的 1µs。</li><li><strong>"至少/最多"的来由没想清</strong>：第（1）问的"至少"来自"间隔 ≤ 2µs + 每次 ≥ 80ns"；第（3）问的"最多"来自"每块固定 1µs ÷ 块间隔最小 25µs"。</li><li><strong>忘记换算</strong>：10 条指令、400 周期、500 周期都要先乘时钟周期 2ns 换算成 ns/µs，再与设备时间比较。</li></ul>
+<blockquote>三问一个节奏：设备节拍（装满一格/到达间隔/一块的传送时间）作分母，CPU 一次介入的时间作分子；80ns/2µs = 4%，0.8µs &gt; 0.1µs 判死中断，1µs/25µs = 4%。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2609,21 +2635,24 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚存 → TLB → Cache 的地址翻译全程</h2>
-<p>先从题 44 图读出三个关键结构：虚拟地址 = 虚页号 20 位 + 页内地址 12 位；Cache 地址 = Tag 20 位 + 组号 3 位 + 块内地址 5 位；TLB 的每个表项都配一个比较器，拿虚页号与所有表项并行比较。</p>
-<h3>第（1）问：主存物理地址的位数</h3>
-<p>物理地址就是 Cache 地址：Tag 20 位 + 组号 3 位 + 块内 5 位 = <strong>28 位</strong>。（等价说法：实页号 16 位 + 页内地址 12 位 = 28 位。）</p>
+<h3>第 0 步：机制先行——把题 44 图读成一条三级流水线</h3>
+<p>CPU 给出的地址要走三级关卡，先把图里的结构读全：</p>
+<ul><li><strong>虚拟地址 32 位 = 虚页号 20 位 + 页内地址 12 位</strong>。第一级查 TLB：每个表项各配一个<strong>比较器</strong>，虚页号与所有表项<strong>并行比较</strong>——这是图里最重要的特征。</li><li>TLB 缺失才走慢路：按 <strong>10 位 + 10 位</strong>（页目录号 | 页表页号）两级查页表（PDBR 指向页目录），得 16 位实页号，与页内地址拼成物理地址。</li><li>物理地址再拆成 <strong>Tag 20 位 | 组号 3 位 | 块内地址 5 位</strong> 查 Cache：图中每组画了左右两个表项、每路各一个比较器。</li></ul>
+<p>后面每一问都从这张结构图自然长出来。</p>
+<h3>第（1）问：物理地址多少位</h3>
+<p>物理地址就是 Cache 收到的那个地址（Cache 按物理地址访问）：Tag 20 + 组号 3 + 块内 5 = <strong>28 位</strong>。等价说法：实页号 16 位 + 页内地址 12 位 = 28 位——两条路径算出来必须一致，正好互验。</p>
 <h3>第（2）问：TLB 的映射方式与器件</h3>
-<ul><li>图中每个 TLB 表项各带一个比较器，虚页号与全部表项同时比较，没有"按索引定位"的字段 → <strong>全相联映射</strong>。</li><li>TLB 必须尽快给出实页号、速度要求最高 → 用 <strong>SRAM</strong> 实现。</li></ul>
-<h3>第（3）问：Cache 的映射方式、附加位与容量</h3>
-<ul><li>组号 3 位，图中每组画出左右两个表项 → <strong>2 路组相联映射</strong>。</li><li>采用 LRU 替换：每组 2 行需要 1 位 <strong>LRU 位</strong>记录该淘汰哪一行；采用回写策略：需要 1 位<strong>修改位（脏位）</strong>标记该行是否被改过、换出时要不要写回主存。</li><li>容量：8 组 × 2 路 = 16 行；每行 = 数据 32B（256 位）+ Tag 20 位 + 有效位 1 位 + LRU 位 1 位 + 脏位 1 位 = 279 位。总容量 = 16 × 279 = <strong>4464 位 = 558 字节</strong>。</li><li><strong>有效位</strong>的作用：指示该 Cache 行中的数据是否有效（上电初始或行被作废时为 0，此时即使 Tag 匹配也不能使用）。</li></ul>
+<ul><li><strong>为什么是全相联</strong>：图里每个表项都有自己的比较器，虚页号与全部表项同时比较，地址里没有任何"先定位到某一项"的索引字段——这就是全相联的定义。反过来，若是组相联或直接映射，虚页号的低位必须拿去当索引选组，图中并没有这样的分流。</li><li><strong>为什么用 SRAM</strong>：TLB 站在<strong>每次访存的关键路径</strong>上——取指令、取数都要先过它拿到实页号，它慢一拍整个存储系统就慢一拍；SRAM 不需刷新、速度快，虽然贵，但 TLB 只有几十个表项，贵得起；DRAM 需要定期刷新、速度慢，不合格。</li></ul>
+<h3>第（3）问：Cache 映射方式、附加位与容量</h3>
+<ul><li><strong>为什么是 2 路组相联</strong>：组号 3 位 → 8 组；图中每组并排两个表项 → 每组 2 行 → 2 路组相联。</li><li><strong>为什么需要 LRU 位，且 1 位就够</strong>：LRU 要淘汰"最久未用"的那行；每组只有 2 行，只需区分"左还是右该淘汰"，1 位翻转即可表达。</li><li><strong>为什么需要修改位（脏位）</strong>：回写策略下，CPU 写命中只改 Cache 不动主存；只有被写过的行换出时才需写回主存——1 位脏位记录"改没改过"，省掉不必要的写回。</li><li><strong>容量</strong>：8 组 × 2 路 = 16 行；每行 = 数据 32B（256 位）+ Tag 20 位 + 有效位 1 位 + LRU 位 1 位 + 脏位 1 位 = <strong>279 位</strong>（LRU 位、脏位也是每行真实存放的硬件，必须计入）。总容量 = 16 × 279 = <strong>4464 位 = 558 字节</strong>。</li><li><strong>有效位的作用</strong>：指示该 Cache 行中的数据是否有效——上电初始或行被作废时为 0，此时即使 Tag 恰好匹配也不能使用该行。</li></ul>
 <h3>第（4）问：两个具体地址</h3>
-<p><strong>虚拟地址 <code>0008C040H</code>：</strong></p>
-<table><thead><tr><th>步骤</th><th>结果</th></tr></thead><tbody><tr><td>拆分</td><td>虚页号 = <code>0008CH</code>，页内地址 = <code>040H</code></td></tr><tr><td>查 TLB</td><td>表项 <code>0008CH</code> 有效位 = 1，命中，实页号 = <code>0040H</code></td></tr><tr><td>拼物理地址</td><td><code>0040H</code> 拼 <code>040H</code> = <code>0040040H</code></td></tr><tr><td>查 Cache</td><td>Tag = <code>00400H</code>，组号 = 2，块内偏移 = 0</td></tr><tr><td>判断</td><td>组 2 左路 Tag 恰为 <code>00400H</code>，但<strong>有效位 = 0</strong> → 不命中</td></tr></tbody></table>
-<p><strong>虚拟地址 <code>0007C260H</code> 所在主存块的 Cache 组号：</strong></p>
-<p>组号由物理地址第 7～5 位决定，这 3 位完全落在<strong>页内地址</strong>（低 12 位）里——虚存变换只改变高位（虚页号换成实页号），页内地址原样照搬。页内地址 = <code>C260H</code> = 0010 0110 0000B，其第 7～5 位 = 011 = <strong>3</strong>，所以映射到 Cache 组号 3（无需知道实页号即可作答）。</p>
+<p><strong>虚拟地址 <code>0008C040H</code>：</strong> 按流水线走一遍——</p>
+<ol><li>拆分：虚页号 = <code>0008CH</code>，页内地址 = <code>040H</code>；</li><li>查 TLB：表项 <code>0008CH</code> 有效位为 1，命中，得实页号 = <code>0040H</code>；</li><li>拼物理地址：<code>0040H</code> | <code>040H</code> → <strong><code>0040040H</code></strong>；</li><li>查 Cache：物理地址拆出 Tag = <code>00400H</code>、组号 2、块内偏移 0；</li><li>判定：组 2 左路 Tag 恰为 <code>00400H</code>，但<strong>有效位 = 0</strong> → <strong>不命中</strong>。</li></ol>
+<p><strong>为什么 Tag 相同还不算命中？</strong> 有效位为 0 表示这一行的内容不可信（可能是上电残留的旧块），Tag 撞车纯属巧合——"Tag 匹配 <strong>且</strong> 有效位为 1"才是命中的完整条件。</p>
+<p><strong>虚拟地址 <code>0007C260H</code> 所在主存块的 Cache 组号：</strong> 关键观察——<strong>组号 3 位全落在页内地址（低 12 位）里</strong>（块内 5 位 + 组号 3 位 = 低 8 位），而虚实地址变换只替换高 20 位（虚页号 → 实页号），页内地址原样照搬。所以不用查页表：页内地址 = <code>260H</code> = 0010 0110 0000B，其第 7~5 位 = 011B = <strong>组号 3</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把物理地址当成 32 位</strong>：物理地址 = 实页号 16 位 + 页内 12 位 = 28 位，与虚拟地址 32 位无关。</li><li><strong>以为算组号必须先查到实页号</strong>：组号 3 位全在页内地址里，虚/实相同，直接算。</li><li><strong>Tag 匹配就判命中</strong>：必须有效位为 1 才算命中，本题组 2 正是"Tag 对但有效位 0"的陷阱。</li><li><strong>容量漏算附加位</strong>：LRU 位、脏位每行各 1 位，16 行共 32 位，漏掉会算成 4432 位。</li></ul>
-<blockquote>主线：虚页号查 TLB 得实页号 → 拼 28 位物理地址 → 按"Tag 20 | 组 3 | 块内 5"查 Cache，Tag 匹配且有效位为 1 才算命中。</blockquote></div></div>
+<ul><li><strong>把物理地址当成 32 位</strong>：虚拟地址 32 位，物理地址 = 实页号 16 + 页内 12 = 28 位，两者位数不同。</li><li><strong>以为算组号必须先查到实页号</strong>：组号全在页内地址里，虚实相同，直接算。</li><li><strong>Tag 匹配就判命中</strong>：必须有效位为 1 才算命中，本题组 2 正是"Tag 对但有效位 0"的陷阱。</li><li><strong>容量漏算附加位</strong>：LRU 位、脏位每行各 1 位，16 行共 32 位，漏掉会算成 4432 位。</li><li><strong>TLB 映射方式答成组相联</strong>：判据是"有没有索引字段"——每个表项都带比较器、并行比较，才是全相联。</li></ul>
+<blockquote>主线：虚页号并行查 TLB（全相联、SRAM）→ 得实页号拼 28 位物理地址 → 按"Tag 20 | 组 3 | 块内 5"查 2 路组相联 Cache，Tag 匹配且有效位为 1 才算命中；组号只看页内地址，不必查页表。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2676,19 +2705,21 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚拟存储的地址结构、PDBR 与改进型 CLOCK</h2>
-<p><strong>答题框架</strong>：第（1）问按「页目录号 10 位 + 页表页号 10 位 + 页内偏移 12 位」拼 32 位地址；第（2）问抓住「PDBR 是硬件查页目录用的物理基地址」与「线程共享进程地址空间」；第（3）问记住改进型 CLOCK 同时看「访问位」和「修改位」。</p>
-<h3>第（1）问：拼出虚拟地址</h3>
-<p>由题 44 图：页大小 4KB = 2¹²B → 页内偏移 <strong>12 位</strong>；虚页号共 20 位，拆成<strong>页目录号 10 位 + 页表页号 10 位</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：两级页表的地址拼装、PDBR 的身份与改进型 CLOCK</h2>
+<h3>第 0 步：机制先行——为什么要两级页表、位段怎么定下来</h3>
+<p>题 44 图给出的骨架：虚拟地址 32 位 = 虚页号 20 位 + 页内地址 12 位；TLB 缺失时按 <strong>10 位 + 10 位</strong> 两段去查页目录和页表。这两个 10 不是拍脑袋定的，是"<strong>页目录、页表本身也按一页存放</strong>"逼出来的：</p>
+<ul><li>页大小 4KB = 2¹²B → 页内偏移 <strong>12 位</strong>；</li><li>每个页表项 4B，一页 4KB 恰好装 4KB/4B = <strong>1024 = 2¹⁰</strong> 个表项 → 每级索引恰好 <strong>10 位</strong>；</li><li>20 位虚页号于是拆成：页目录号 10 位（在页目录里选出哪个表项 → 指向哪一页页表）+ 页表页号 10 位（在该页表里选出哪个表项 → 得实页号）。</li></ul>
+<p>查表动作：PDBR 给出页目录位置 → 页目录号当索引取出页表基址 → 页表页号当索引取出实页号 → 与偏移拼成物理地址。第（1）问就是把这条链倒过来：给定三个索引值，拼出虚拟地址。</p>
+<h3>第（1）问：拼虚拟地址</h3>
 <table><thead><tr><th>位段</th><th>内容</th><th>二进制</th></tr></thead><tbody><tr><td>bits[31:22]</td><td>页目录号 6</td><td>0000000110</td></tr><tr><td>bits[21:12]</td><td>页表页号 6</td><td>0000000110</td></tr><tr><td>bits[11:0]</td><td>页内偏移 8</td><td>000000001000</td></tr></tbody></table>
-<p>拼接：0000 0001 1000 0000 0110 0000 0000 1000B，即 <strong>01806008H</strong>。</p>
-<h3>第（2）问：PDBR 的性质与切换行为</h3>
-<ul><li>PDBR 保存<strong>页目录的起始物理地址</strong>——MMU 用它直接访问页目录，访问页目录本身不可能再经过一次虚地址翻译，所以它是<strong>物理地址</strong>。</li><li><strong>进程切换时 PDBR 内容会变</strong>：不同进程的地址空间不同，页目录也不同。</li><li><strong>同一进程的线程切换时 PDBR 内容不变</strong>：线程共享所属进程的地址空间（同一套页目录和页表），只是换了个执行流。</li></ul>
-<h3>第（3）问：改进型 CLOCK 需要的字段</h3>
-<p>改进型 CLOCK（增强二次机会）淘汰页面时，要同时区分「最近是否被访问」与「是否被修改过」，因此页表项中需设置<strong>访问位（使用位）</strong>和<strong>修改位（脏位）</strong>，优先淘汰既未访问又未修改的页。</p>
+<p>从高到低拼接：0000 0001 1000 0000 0110 0000 0000 1000B = <strong>01806008H</strong>。（为什么偏移是 12 位、每级索引是 10 位，见第 0 步。）</p>
+<h3>第（2）问：PDBR 是物理地址还是虚拟地址；切换时变不变</h3>
+<ul><li><strong>为什么必须是物理地址</strong>：PDBR 是地址翻译的<strong>起点</strong>——MMU 靠它找到页目录。若它存的是虚拟地址，"查页目录"这件事自己也要先翻译，而翻译又要查页目录……死循环。所以 PDBR 保存页目录的<strong>物理</strong>起始地址。</li><li><strong>进程切换为什么变</strong>：页式虚拟存储的根本目的就是给每个进程一份独立地址空间，页目录是这套空间的根，<strong>每进程一套</strong>；切换进程就是切换地址空间，内核要把新进程页目录的物理基址装入 PDBR。</li><li><strong>同进程线程切换为什么不变</strong>：线程只是调度/执行单位，地址空间属于进程——同一进程内的线程共享同一套页目录和页表（这正是它们能直接共享数据的机制），只是换了一个执行流，页表的根没变。</li></ul>
+<h3>第（3）问：改进型 CLOCK 需要哪些字段</h3>
+<p>普通 CLOCK 只看"最近用没用过"给第二次机会；<strong>改进型</strong>多看一个维度，把页面按（访问位 A，修改位 M）分四档，淘汰时优先捡最便宜的：A=0,M=0 直接丢（不必写盘）；A=0,M=1 要写回；A=1 的先清 A 再给机会。<strong>为什么必须同时设两位</strong>：访问位回答"值不值得留"，修改位回答"丢出去要不要付写盘的代价"——改进算法省的就是写回 I/O，没有修改位就无从判断。所以页表项中需设置<strong>访问位（使用位）</strong>和<strong>修改位（脏位）</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>偏移位数算错</strong>：页大小 4KB = 2¹²B，偏移 12 位，不是 10 位。</li><li><strong>以为 PDBR 存虚拟地址</strong>：若存虚拟地址，查页目录本身又要翻译，陷入循环。</li><li><strong>线程切换也换 PDBR</strong>：线程只是调度单位，地址空间属于进程。</li></ul>
-<blockquote>结论：（1）01806008H；（2）物理地址，进程切换会变、同进程线程切换不变；（3）访问位与修改位。</blockquote></div></div>
+<ul><li><strong>偏移位数算错</strong>：页大小 4KB = 2¹²B → 偏移 12 位；每级索引 10 位来自 1024 个表项，不是随手拆的。</li><li><strong>以为 PDBR 存虚拟地址</strong>：翻译的起点不能依赖翻译本身，否则循环。</li><li><strong>线程切换也换 PDBR</strong>：地址空间属于进程，线程共享页目录/页表；换 PDBR 的时机是换地址空间（进程切换）。</li></ul>
+<blockquote>结论：（1）01806008H；（2）PDBR 保存页目录的物理地址；进程切换会变（每进程一套页目录），同进程线程切换不变（共享地址空间）；（3）访问位与修改位。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2742,19 +2773,24 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：混合索引结构的文件系统计算</h2>
-<p><strong>答题框架</strong>：第（1）问 = 直接项 + 各级间接项能索引的字节数相加；第（2）问分别算「索引节点区能容纳的文件数」与「数据区能容纳的文件数」再取小；第（3）问比较 F1、F2 最后一个簇的簇号存放在哪里。</p>
-<h3>第（1）问：最大文件长度</h3>
-<p>簇大小 4KB，地址项 4B，一个索引块可容纳 4KB / 4B = <strong>1024 个地址项</strong>。</p>
-<ul><li>直接地址项 8 个：8 × 4KB</li><li>一级间接：1 个索引块 → 1024 × 4KB</li><li>二级间接：1024² × 4KB</li><li>三级间接：1024³ × 4KB</li></ul>
-<p>最大文件长度 = <strong>(8 + 1024 + 1024² + 1024³) × 4KB</strong>。</p>
-<h3>第（2）问：最多能存多少个 5600B 的图像文件</h3>
-<ul><li>索引节点区：1M 个簇 × 每簇 4KB / 64B = 64 个 inode → 共 1M × 64 = <strong>64M 个 inode</strong>。</li><li>数据区：图像文件 5600B，占 ⌈5600/4096⌉ = <strong>2 个簇</strong>；512M 簇 ÷ 2 = 256M 个文件。</li><li>两者取小：受 inode 数量限制，最多能存放 <strong>64M 个</strong>图像文件。</li></ul>
-<h3>第（3）问：取 F1、F2 最后一个簇号的时间是否相同</h3>
-<ul><li><strong>F1 = 6KB</strong>：占 2 个簇，簇号都存放在索引节点的<strong>直接地址项</strong>中 → 取最后一个簇号只需查内存中的 inode，不必访问磁盘上的索引块。</li><li><strong>F2 = 40KB</strong>：占 10 个簇，前 8 个簇号在直接地址项，最后 2 个簇号在<strong>一级间接地址项</strong>所指向的索引块中 → 取最后一个簇号必须先从磁盘读入一级索引块，<strong>多一次磁盘访问</strong>。</li></ul>
-<p>故<strong>不相同</strong>：F2 需要额外读取一级间接索引块，时间更长。</p>
+<h3>第 0 步：机制先行——inode 是账本，簇是仓库格子</h3>
+<p>把文件系统想成一间仓库：数据区按<strong>簇</strong>（4KB）出租，一个文件的数据散在一串簇里；<strong>索引节点（inode）是账本</strong>，上面记着"这个文件的每个簇号在哪"。地址项就是账本里的条目，每条 4B，正好写下一个簇号。条目分两等：</p>
+<ul><li><strong>直接地址项</strong>：条目上直接写数据簇号，查一次就到；</li><li><strong>间接地址项</strong>：条目上写的是另一本"账本块"（索引块）的位置——索引块是 4KB 的一整页，装满纯簇号；一级间接跳一本，二级跳两本，三级跳三本。</li></ul>
+<p><strong>一本索引块能写多少个簇号？</strong> 4KB / 4B = <strong>1024 = 2¹⁰</strong> 个——这是后面所有计算的地基。</p>
+<h3>第（1）问：最大文件长度——各级账本能登记多少个簇</h3>
+<p>一个文件的簇可以自由分布在"直接项 + 各级间接项"管辖的地盘上，能寻址的总簇数就是各级之和：</p>
+<ul><li>直接：8 × 4KB</li><li>一级间接：1 本索引块 → 1024 × 4KB</li><li>二级间接：1024 × 1024 = 1024² 个簇 → 1024² × 4KB</li><li>三级间接：1024³ × 4KB</li></ul>
+<p>最大文件长度 = <strong>(8 + 1024 + 1024² + 1024³) × 4KB</strong>。（为什么是相加而不是取最大：同一个文件的簇号既可以登记在直接项、也可以登记在各级间接块里，寻址范围是并集。）</p>
+<h3>第（2）问：最多存多少个 5600B 的图像文件——两本账各管一摊</h3>
+<p><strong>关键机制：每个文件必须有且只有一个 inode</strong>——没有账本就没有文件。所以"能放多少个文件"同时受两本账约束，取二者较小值：</p>
+<ul><li><strong>inode 区封顶</strong>：1M 个簇 × 每簇 4KB/64B = 每簇 64 个 inode → 共 1M × 64 = <strong>64M 个 inode</strong> → 最多 64M 个文件。</li><li><strong>数据区封顶</strong>：图像文件 5600B，分配以簇为单位，⌈5600/4096⌉ = <strong>2 个簇</strong>（第二簇只装 1504B，剩下浪费——这是分配单位的代价）；512M 个簇 ÷ 2 = <strong>256M 个文件</strong>。</li></ul>
+<p>min(64M, 256M) = <strong>64M 个</strong>：瓶颈在账本（inode 区），不在仓库（数据区）。</p>
+<h3>第（3）问：取 F1、F2 最后一个簇号的时间为什么不同</h3>
+<ul><li><strong>F1 = 6KB</strong>：占 ⌈6/4⌉ = 2 个簇，2 ≤ 8，簇号全登记在 inode 的<strong>直接地址项</strong>里。打开文件时 inode 已读进内存，取最后一个簇号<strong>查内存里的账本即可，零磁盘 I/O</strong>。</li><li><strong>F2 = 40KB</strong>：占 10 个簇，前 8 个在直接项，后 2 个在<strong>一级间接地址项</strong>指向的索引块上。要拿最后一个簇号，必须先把那本 4KB 的索引块<strong>从磁盘读进内存</strong>——多一次磁盘访问。</li></ul>
+<p>磁盘 I/O 比内存查询慢几个数量级，所以<strong>时间不相同</strong>：F2 更慢，代价来自"账本翻页"。</p>
 <h3>易错点</h3>
-<ul><li><strong>第（2）问只算数据区</strong>：忘了 inode 区也是限制，答案应是 min(64M, 256M) = 64M。</li><li><strong>以为 5600B 还要额外索引块</strong>：占 2 簇，8 个直接项足够，不需要额外索引块。</li></ul>
-<blockquote>结论：（1）(8 + 1024 + 1024² + 1024³) × 4KB；（2）64M 个；（3）不相同，F2 多一次读索引块的磁盘访问。</blockquote></div></div>
+<ul><li><strong>第（2）问只算数据区</strong>：忘了"每文件一个 inode"这层约束，答案是 min(64M, 256M) = 64M，瓶颈是 inode 区。</li><li><strong>以为 5600B 要动用间接块</strong>：占 2 簇，8 个直接项（8 × 4KB = 32KB）足够覆盖，不需要额外索引块。</li><li><strong>各级相加写成取最大</strong>：文件的簇可同时用直接项和各级间接项登记，寻址范围是并集。</li><li><strong>间接级数与跳数对应记错</strong>：一级间接 = 跳 1 本索引块，二级 = 2 本，三级 = 3 本。</li></ul>
+<blockquote>结论：（1）(8 + 1024 + 1024² + 1024³) × 4KB；（2）64M 个（瓶颈是 inode 区）；（3）不相同——F1 查内存里的直接项即可，F2 要多读一次磁盘上的一级索引块。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2807,18 +2843,21 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：子网均分与 IP 分片计算（7 分）</h2>
-<h3>第（1）问：子网划分、广播地址与剩余主机数</h3>
-<p><strong>① 划分</strong>：192.168.1.0/24 均分给两个部门 → 从 24 位前缀借 1 位主机位做子网位，掩码 /25（255.255.255.128）：</p>
-<table><thead><tr><th>子网</th><th>子网地址</th><th>地址范围</th></tr></thead><tbody><tr><td>销售部</td><td>192.168.1.0/25</td><td>192.168.1.0 ～ 192.168.1.127</td></tr><tr><td>技术部</td><td>192.168.1.128/25</td><td>192.168.1.128 ～ 192.168.1.255</td></tr></tbody></table>
-<p><strong>② 销售部广播地址</strong>：主机位全 1（后 7 位 1111111）→ <strong>192.168.1.127</strong>。<br/><strong>③ 技术部子网地址</strong>：主机位全 0 → <strong>192.168.1.128</strong>。<br/><strong>④ 技术部还可连接的主机数</strong>：主机位 7 位，可用主机地址 = 2 的 7 次方 − 2 = <strong>126</strong> 个。图上已占用：技术部主机已分配 192.168.1.129 ～ 192.168.1.208 共 <strong>80</strong> 个，路由器接口 F1（192.168.1.254）占 <strong>1</strong> 个，合计 81 个 → 还可连接 126 − 81 = <strong>45 台</strong>。</p>
-<h3>第（2）问：IP 分片</h3>
-<p><strong>① 一个最大分片封装数据的字节数</strong>：分组 192.168.1.1 → 192.168.1.208 跨子网，经路由器接口 F1 转发，出口 MTU = 800B。每片总长 ≤ 800B，减去 20B 的 IP 头，每片数据 ≤ 780B；但<strong>片偏移以 8B 为单位</strong>，数据长度必须是 8 的整数倍 → 780 向下取到 8 的倍数 = <strong>776B</strong>。</p>
-<p><strong>② 至少分几片</strong>：原分组数据 = 总长 1500 − 头 20 = 1480B；1480 = 776 + 704 → 至少 <strong>2 个分片</strong>。</p>
-<p><strong>③ 片偏移</strong>：第 1 片偏移 = <strong>0</strong>；第 2 片的数据从原数据第 776B 处开始 → 776 ÷ 8 = <strong>97</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：子网均分与 IP 分片——位账与字节账</h2>
+<h3>第 0 步：机制先行——三条底层规则</h3>
+<p>三问共用三条机制：</p>
+<ol><li><strong>均分 = 借位</strong>：/24 均分给 2 个子网，就是从主机位里拿 <strong>1 位</strong>当子网号（借 k 位得 2^k 份，2^1 = 2 恰好两份；多借位会切出多余的子网、主机位也变少，与"均分两份"不符），掩码变 /25（255.255.255.128），每份剩 7 位主机位。</li><li><strong>两个保留地址</strong>：主机位<strong>全 0</strong> 是子网地址（网络自身），<strong>全 1</strong> 是广播地址（发给全网）——都不能指派给主机。这就是"可用主机数 = 2^主机位 − 2"里减 2 的来由。</li><li><strong>分片的两条硬规矩</strong>：MTU 限制的是<strong>含头的总长度</strong>；片偏移字段以 <strong>8B 为单位</strong>计数（13 位的字段记"这是第几个 8B 块"），所以除最后一片外，各片载荷必须是 8 的倍数，否则下一片的偏移没法用整数个 8B 表达。</li></ol>
+<h3>第（1）问：广播地址、子网地址与剩余主机数</h3>
+<p>均分后两份子网：</p>
+<table><thead><tr><th>子网</th><th>子网地址</th><th>地址范围</th><th>广播地址</th></tr></thead><tbody><tr><td>销售部</td><td>192.168.1.0/25</td><td>.0 ~ .127</td><td><strong>192.168.1.127</strong>（主机位全 1）</td></tr><tr><td>技术部</td><td><strong>192.168.1.128</strong>（主机位全 0）</td><td>.128 ~ .255</td><td>192.168.1.255</td></tr></tbody></table>
+<p><strong>技术部还可连接的主机数</strong>——按"总量 − 已占"记账：7 位主机位 → 2⁷ − 2 = <strong>126</strong> 个可用地址。题 47 图中技术部已分配 192.168.1.129 ~ 192.168.1.208，共 208 − 129 + 1 = <strong>80</strong> 个；路由器接口 F1 占 192.168.1.254 这 <strong>1</strong> 个（F0 = 192.168.1.126 在销售部子网内，不占技术部的账）。126 − 81 = <strong>45 台</strong>。</p>
+<h3>第（2）问：IP 分片——把 1480B 装进 800B 的车厢</h3>
+<p>分组 192.168.1.1 → 192.168.1.208 跨子网，从 F1（MTU = 800B）转发，必须分片：</p>
+<ol><li><strong>一个最大分片能装多少数据</strong>：每片总长 ≤ 800B，减去 20B 的 IP 头 → 载荷 ≤ 780B；按规矩取 8 的倍数向下取 → <strong>776B</strong>。</li><li><strong>至少几片</strong>：原分组载荷 = 1500 − 20 = <strong>1480B</strong>；1480 = 776 + 704 → <strong>2 个分片</strong>。</li><li><strong>片偏移</strong>：第 1 片从原载荷第 0 个 8B 块开始 → <strong>0</strong>；第 2 片从第 776B 处开始 → 776 ÷ 8 = <strong>97</strong>。</li></ol>
 <table><thead><tr><th>分片</th><th>数据长度</th><th>总长度（含 20B 头）</th><th>片偏移</th><th>MF 位</th></tr></thead><tbody><tr><td>第 1 片</td><td>776B</td><td>796B</td><td>0</td><td>1</td></tr><tr><td>第 2 片</td><td>704B</td><td>724B</td><td>97</td><td>0</td></tr></tbody></table>
+<p><strong>为什么最后一片不用凑 8 的倍数</strong>：8 的倍数约束只为了保证"下一片从哪儿开始"能落在新一个 8B 块上；最后一片后面没有下一片，704B 原样装走即可（本题 704 恰好也是 8 的倍数，是巧合不是约束）。</p>
 <h3>易错点</h3>
-<ul><li><strong>剩余主机数忘了减"已占用"</strong>：126 是可用上限，还要减去已分配的 80 个主机地址和 F1 的 1 个地址；漏减 F1 会错得 46，全不减会错得 126。</li><li><strong>把 780B 当作最大分片数据</strong>：780 不是 8 的倍数，必须向下取到 776B；对应第 2 片偏移 776 ÷ 8 = 97。</li><li><strong>总长度与数据长度混用</strong>：MTU 限制的是含头的<strong>总长度</strong>；"片偏移"以<strong>数据部分</strong>的第几个 8B 块计，不是用总长度算。</li></ul>
+<ul><li><strong>剩余主机数忘了减"已占用"</strong>：126 是可用上限，还要减去已分配的 80 个主机地址和 F1 的 1 个地址；漏减 F1 得 46，全不减得 126。</li><li><strong>把 780B 当最大分片载荷</strong>：780 不是 8 的倍数，必须向下取到 776B；随之第 2 片偏移 = 776 ÷ 8 = 97。</li><li><strong>总长度与数据长度混用</strong>：MTU 卡的是含头的<strong>总长度</strong>；片偏移按<strong>载荷</strong>的第几个 8B 块计。</li><li><strong>借位数想错</strong>：均分 2 份借 1 位即可；借 2 位得 4 份，多出的子网和变少的主机位都不符合题设。</li></ul>
 <blockquote>结论：（1）销售部广播地址 192.168.1.127，技术部子网地址 192.168.1.128，还可连接 45 台主机；（2）最大分片封装数据 776B，至少 2 个分片，片偏移分别为 0 和 97。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">

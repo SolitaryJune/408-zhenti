@@ -114,24 +114,32 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：unsigned 下溢、int 溢出与 float 舍入</h2>
-<p><strong>答题框架</strong>：f(n) = 2^(n+1) − 1，即二进制 n+1 个 1。f1 用 int 累加（看表示范围），f2 用 float 累加（看有效位数与表示范围），循环跑 n 轮（i = 0 … n−1）后 sum = 2^(n+1) − 1。五个小问分别对应：无符号运算规则、24 位有效数字、舍入、int 上限、float 上限。</p>
-<h3>第（1）问：n=0 为何死循环</h3>
-<p>i、n 均为 unsigned。循环条件先算 <code>n−1</code>：无符号运算 0−1 下溢，机器数为 FFFFFFFFH（32 个 1），即 2^32 − 1，是 unsigned 能表示的最大值。于是 <code>i ≤ n−1</code> 恒成立，循环永不结束。若把 i、n 都改成 int：n−1 = −1，初始 i = 0，条件 <code>0 ≤ −1</code> 不成立，循环体一次都不执行，不会死循环。</p>
-<h3>第（2）问：f1(23) 与 f2(23)</h3>
-<p>n=23 时和 = 2^24 − 1 = 16 777 215，二进制恰好 24 个 1：</p>
-<ul><li>f1（int）：在 32 位补码范围内，机器数 <code>00FFFFFFH</code>。</li><li>f2（float）：IEEE 754 单精度有效数字 24 位（隐含首位 1 + 23 位尾数），24 个 1 恰好装下、无需舍入，机器数 = 0 | 10010110 | 111…1（阶码 23 + 127 = 150），即 <code>4B7FFFFFH</code>。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：unsigned 下溢、int 溢出与 float 的精度/范围</h2>
+<p>答题框架：f(n) = 2^(n+1) − 1，即二进制 <strong>n+1 个连续的 1</strong>；循环跑 n 轮（i = 0 … n−1）。f1 用 int 累加、f2 用 float 累加，五个小问全是这两套记数系统与"n+1 个 1"的碰撞：无符号模运算（第(1)问）、24 位有效数字（第(2)(3)问）、补码范围（第(4)问）、float 范围（第(5)问）。</p>
+<h3>第 0 步：先立两套记数系统的模型</h3>
+<ul><li><strong>int（补码）</strong>：32 位补码是模 2^32 的记数——最高位为 1 的位串，真值 = 无符号值 − 2^32；可表示范围 −2^31 ~ 2^31−1，<strong>全 1 位串 = −1</strong>。</li><li><strong>float（IEEE 754 单精度）</strong>：1 位符号 + 8 位阶码 + 23 位尾数，隐含首位 1 后有 <strong>24 位有效数字</strong>；可表示数值上限约 (2 − 2^−23) × 2^127 = 2^128 − 2^104，略小于 2^128。</li></ul>
+<p>int 只受<strong>范围</strong>限制；float 先受<strong>精度</strong>限制（有效位数），再受<strong>范围</strong>限制。这条主轴贯穿全题。</p>
+<h3>第（1）问：n=0 为什么死循环；改成 int 为什么就没事</h3>
+<p>i、n 均为 unsigned。无符号运算是<strong>模 2^32 运算</strong>：条件式里的 <code>n−1</code> 先算，0 − 1 在模 2^32 下同余于 2^32 − 1，机器数就是 32 个 1（FFFFFFFFH）——恰好是 unsigned 的最大值。于是 <code>i ≤ n−1</code> 恒成立，i 一路加到 0xFFFFFFFF 再回绕也出不去，死循环。</p>
+<p><strong>为什么可以"减模"求真值？</strong> 位串 FFFFFFFFH 之所以代表 2^32 − 1（无符号）就是这么定义的模运算余数；0−1 的余数即 2^32 − 1，没有"负数"一说。</p>
+<p>若把 i、n 都改成 int：<code>n−1 = −1</code>（补码真值），首次判断 <code>0 ≤ −1</code> 不成立，循环体一次都不执行，直接返回 sum = 1——恰好等于 f(0) = 2^1 − 1，根本进不了循环，自然不会死循环。</p>
+<h3>第（2）问：f1(23) 与 f2(23) 是否相等</h3>
+<p>n=23 时和 = 2^24 − 1 = 16 777 215，二进制恰好 <strong>24 个 1</strong>。</p>
+<ul><li>f1（int）：24 个 1 &lt; 2^31，范围内，机器数 <code>00FFFFFFH</code>。</li><li>f2（float）：规格化形式 1.11…1 × 2^23，有效数字 24 位<strong>恰好装下 24 个 1</strong>，无需舍入；阶码真值 23 + 偏置 127 = 150 = 10010110B，机器数 = 0｜10010110｜111…1 = <code>4B7FFFFFH</code>。</li></ul>
 <p>两者返回值相等（都是 16 777 215）。</p>
-<h3>第（3）问：f1(24) 与 f2(24) 为何不等</h3>
-<p>n=24 时和 = 2^25 − 1 = 33 554 431，二进制 25 个连续的 1，超出 float 的 24 位有效数字，累加时必须舍入：它恰好介于相邻浮点数 33 554 430 与 33 554 432 之间，按就近舍入得 33 554 432.0。int 不舍入，f1(24) = 33 554 431，故两者相差 1。</p>
-<h3>第（4）问：f1(31) 为何是 −1；最大 n</h3>
-<p>n=31 时和 = 2^32 − 1，超出 int 的表示上限 2^31 − 1，发生溢出：32 位全 1 按补码解释就是 −1。要 f1(n) 与 f(n) 相等，需 2^(n+1) − 1 ≤ 2^31 − 1，即 n ≤ 30，最大 n = 30。</p>
-<h3>第（5）问：f2(127) 与两个边界</h3>
-<table><thead><tr><th>循环里程碑</th><th>f1 的 sum（int）</th><th>f2 的 sum（float）</th><th>说明</th></tr></thead><tbody><tr><td>i=22 后（n=23 完成）</td><td>16 777 215（00FFFFFFH）</td><td>16 777 215.0（4B7FFFFFH）</td><td>24 个 1，精确</td></tr><tr><td>i=23 后（n=24 完成）</td><td>33 554 431（01FFFFFFH）</td><td>33 554 432.0（4B800000H）</td><td>25 个 1，舍入</td></tr><tr><td>i=30 后（n=31 完成）</td><td>FFFFFFFFH = −1</td><td>2^32（4F800000H）</td><td>int 溢出，float 是 2 的幂仍精确</td></tr><tr><td>i=126 后（n=127 完成）</td><td>早已溢出</td><td>+∞（7F800000H）</td><td>2^127 + 2^127 = 2^128 超上限</td></tr></tbody></table>
-<ul><li>f2(127) 的机器数 7F80 0000H 对应的值是<strong>正无穷（+∞）</strong>。</li><li>不溢出的最大 n：末轮和 2^(n+1) 不得超过 float 上限（约 (2 − 2^−23) × 2^127，略小于 2^128）→ n = 126。</li><li>结果精确（无舍入）的最大 n：和的有效位数 n+1 ≤ 24 → n = 23。</li></ul>
+<h3>第（3）问：f1(24) 与 f2(24) 为什么差 1</h3>
+<p>n=24 时和 = 2^25 − 1 = 33 554 431，二进制 <strong>25 个 1</strong>——比 float 的 24 位有效数字多一位，<strong>必须舍入</strong>。</p>
+<p><strong>为什么恰好舍到 33 554 432？</strong> 24 位有效数字意味着 float 在 [2^24, 2^25) 区间内每 2 个整数才取一个（相邻可表示数间隔为 2），33 554 431 恰好落在 33 554 430 与 33 554 432 的<strong>正中间</strong>；IEEE 754 默认"就近舍入、并列取偶"，33 554 432（尾数全 0，偶）胜过 33 554 430（尾数全 1，奇）→ f2(24) = 33 554 432.0。f1 不舍入，f1(24) = 33 554 431，故相差 1。</p>
+<h3>第（4）问：f1(31) 为什么返回 −1；最大 n</h3>
+<p>n=31 时和 = 2^32 − 1，超出 int 上限 2^31 − 1，<strong>溢出</strong>：留下的 32 位全 1 位串，按补码规则读回真值就是 2^32 − 1 − 2^32 = <strong>−1</strong>（无符号值减模）。要 f1(n) 与 f(n) 相等，需 2^(n+1) − 1 ≤ 2^31 − 1，即 n ≤ 30，<strong>最大 n = 30</strong>。</p>
+<h3>第（5）问：f2(127) 是什么；两个边界各在哪</h3>
+<p>n=127 时末轮和 = 2^128 − 1。float 的上限是 2^128 − 2^104（比 2^128 小一点点），2^128 − 1 已越过它，就近舍入只能落到<strong>正无穷 +∞</strong>，机器数 <code>7F80 0000H</code>。所以：</p>
+<ul><li><strong>不溢出的最大 n = 126</strong>：末轮和 2^127 − 1 &lt; 上限，仍是有限值（虽然要舍入，但"不溢出"只要求有限）。</li><li><strong>精确（无舍入）的最大 n = 23</strong>：和的有效位数是 n+1，float 只有 24 位有效数字，n+1 ≤ 24 ⇒ n ≤ 23；从 n=24 起（25 个 1）必舍入，即第(3)问的场景。</li></ul>
+<p>用一张里程碑表对号入座（第二层汇总）：</p>
+<table><thead><tr><th>循环里程碑</th><th>f1 的 sum（int）</th><th>f2 的 sum（float）</th><th>说明</th></tr></thead><tbody><tr><td>i=22 后（n=23 完成）</td><td>16 777 215（00FFFFFFH）</td><td>16 777 215.0（4B7FFFFFH）</td><td>24 个 1，精确</td></tr><tr><td>i=23 后（n=24 完成）</td><td>33 554 431（01FFFFFFH）</td><td>33 554 432.0（4C000000H）</td><td>25 个 1，舍入</td></tr><tr><td>i=30 后（n=31 完成）</td><td>FFFFFFFFH = −1</td><td>2^32（4F800000H）</td><td>int 溢出；float 对 2 的幂仍精确</td></tr><tr><td>i=125 后（n=127 的末轮前）</td><td>早已溢出</td><td>2^127（有限，舍入）</td><td>2^127−1 舍入为 2^127，即 n=126 的结果</td></tr><tr><td>i=126 后（n=127 完成）</td><td>—</td><td>+∞（7F80 0000H）</td><td>2^127 + 2^127 = 2^128 越过 float 上限</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>unsigned 的 0−1 不是 −1</strong>：无符号运算直接下溢到 2^32 − 1，这是第（1）问的关键。</li><li><strong>把 float 有效位数记成 23</strong>：尾数 23 位 + 隐含首位 1 = 24 位有效数字。</li><li><strong>混淆两个上限</strong>：int 看范围（2^31 − 1，全 1 是 −1），float 既看精度（24 位有效数字）又看范围（约 2^128）。</li></ul>
-<blockquote>一句话：f1 败在"范围"，f2 先败在"精度"（n ≥ 24 舍入）再败在"范围"（n ≥ 127 溢出）。</blockquote></div></div>
+<ul><li><strong>unsigned 的 0−1 不是 −1</strong>：无符号是模 2^32 运算，0−1 ≡ 2^32 − 1，这是第(1)问死循环的根源。</li><li><strong>把 float 有效位数记成 23</strong>：尾数 23 位 + 隐含首位 1 = 24 位有效数字；24 个 1 能装下、25 个 1 装不下。</li><li><strong>混淆两个边界</strong>：不溢出看范围（n ≤ 126），精确看有效位数（n ≤ 23），两问分开答。</li><li><strong>int 全 1 想不起是 −1</strong>：补码 = 模记数，全 1 = 2^32 − 1 − 2^32 = −1。</li></ul>
+<blockquote>一句话：f1 败在"范围"（n=31 溢出成 −1），f2 先败在"精度"（n ≥ 24 舍入）再败在"范围"（n ≥ 127 变 +∞）。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -107,17 +107,21 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：请求分页的访问耗时与缺页置换</h2>
-<h3>第一步：把条件整理成表</h3>
-<p>答案要点先行：第 1 问三次访问时间分别为 <strong>210ns、100000220ns、110ns</strong>；第 2 问 1565H 的物理地址为 <strong>101565H</strong>。</p>
-<ul><li>页面大小 4KB = 2 的 12 次方 B → 虚地址<strong>低 3 位十六进制</strong>是页内位移，其余高位是页号；</li><li>页表：页 0 → 页框 101H（有效）、页 1 → 无效、页 2 → 页框 254H（有效）；</li><li>TLB 初始为空；TLB 访问 10ns，访存 100ns，缺页处理 10 的 8 次方 ns（已含更新 TLB 与页表）。</li></ul>
-<h3>第二步：第 1 问——逐地址推演</h3>
-<table><thead><tr><th>虚地址</th><th>路径</th><th>计时</th></tr></thead><tbody><tr><td>2362H</td><td>页号 2：TLB 未命中 → 查页表有效（页框 254H）→ 访存</td><td>10+100+100 = <strong>210ns</strong></td></tr><tr><td>1565H</td><td>页号 1：TLB 未命中 → 查页表有效位 0 → 缺页处理 → 返回重新执行：TLB 命中 → 访存</td><td>10+100+10 的 8 次方+10+100 = <strong>100000220ns</strong></td></tr><tr><td>25A5H</td><td>页号 2：TLB 命中 → 访存</td><td>10+100 = <strong>110ns</strong></td></tr></tbody></table>
-<p>2362H 访问后页 2 装入 TLB（更新时间忽略）；1565H 缺页处理时更新了 TLB（含页 1）；25A5H 时页 2 仍在 TLB，故命中。</p>
-<h3>第三步：第 2 问——为什么是 101565H</h3>
-<ul><li>1565H 缺页时，驻留集固定 2 页（页 0、页 2 在内存）；LRU 淘汰<strong>最久未使用</strong>的页——页 2 刚被 2362H 访问过，故淘汰<strong>页 0</strong>；</li><li>页 1 装入页 0 腾出的<strong>页框 101H</strong>；物理地址 = 页框号拼接页内位移 = 101H ∥ 565H = <strong>101565H</strong>。</li></ul>
+<h3>第 0 步：机制先行——一次虚地址访问的完整流水线</h3>
+<p>请求分页系统里，每访问一个虚地址都要走完这条流水线，计时就是把走过的每一段加起来：</p>
+<ol><li><strong>切地址</strong>：页面大小 4KB = 2¹² B，虚地址<strong>低 12 位（低 3 位十六进制）是页内位移</strong>，其余高位是页号。为什么可以只换页号、照抄位移？因为分页把地址切成定长块，页与页框等大，块内偏移在页框里同样成立。</li><li><strong>查 TLB（10ns）</strong>：命中，直接得页框号；未命中也要付这 10ns（题设②规定先查 TLB）。</li><li><strong>TLB 未命中 → 查页表（100ns）</strong>：有效位 1 → 得到页框号（按题设，其后的 TLB 更新不计时）；有效位 0 → <strong>缺页中断</strong>，处理耗时 10⁸ ns（题设已含更新 TLB 和页表），处理完<strong>返回重新执行该指令</strong>——重执时页已进 TLB，按命中路径重新计时。</li><li><strong>访问主存（100ns）</strong>：拿到页框号后拼出物理地址，取数据还要真正访存一次——TLB 只负责「地址翻译」，数据本身在内存。</li></ol>
+<p>TLB 的状态随访问序列演变：TLB 初始为空；第一次访问后页 2 进 TLB；1565H 的缺页处理把页 1 写入 TLB。这些状态是后面三次计时的依据。</p>
+<h3>问 1：三个虚地址逐个计时</h3>
+<p><strong>2362H</strong>：页号 2、位移 362H。TLB 空 → 未命中 10ns；查页表，页 2 有效 → 100ns；拼 254H ∥ 362H 后访存 → 100ns。合计 <strong>210ns</strong>。此后页 2 进入 TLB（更新时间按题设忽略）。</p>
+<p><strong>1565H</strong>：页号 1、位移 565H。TLB 未命中 10ns；查页表，页 1 有效位 0 → 100ns；缺页中断处理 10⁸ ns（含把页 1 写入 TLB 与页表）；返回重新执行：TLB 命中 10ns + 访存 100ns。合计 10 + 100 + 10⁸ + 10 + 100 = <strong>100000220ns</strong>。</p>
+<p><strong>25A5H</strong>：页号 2、位移 5A5H。页 2 在第一次访问时已进 TLB，且此后没有被移出——缺页处理换出的是<strong>主存驻留集</strong>里的页 0，TLB 中页 2 → 254H 的表项不受影响 → TLB 命中 10ns + 访存 100ns = <strong>110ns</strong>。</p>
+<table><thead><tr><th>虚地址</th><th>路径</th><th>计时</th></tr></thead><tbody><tr><td>2362H</td><td>TLB 未命中 → 页表有效 → 访存</td><td>10+100+100 = <strong>210ns</strong></td></tr><tr><td>1565H</td><td>TLB 未命中 → 页表无效 → 缺页处理 → 重执：TLB 命中 → 访存</td><td>10+100+10⁸+10+100 = <strong>100000220ns</strong></td></tr><tr><td>25A5H</td><td>TLB 命中 → 访存</td><td>10+100 = <strong>110ns</strong></td></tr></tbody></table>
+<h3>问 2：1565H 的物理地址为什么是 101565H</h3>
+<p><strong>先淘汰谁？</strong> 缺页发生时驻留集已满（固定 2 页：页 0 在 101H、页 2 在 254H），必须先淘汰一页再装入页 1。LRU 选「最久未被访问」的驻留页：页 2 刚被 2362H 访问过，页 0 自始至终没被碰过——牺牲的是<strong>页 0</strong>（注意不是「淘汰页 1」，页 1 本来就不在内存，谈不上淘汰）。页 1 装入页 0 腾出的页框 <strong>101H</strong>。</p>
+<p><strong>地址怎么拼？</strong> 页框大小 = 页面大小 = 4KB，页内位移直接照抄：物理地址 = 页框号 ∥ 页内位移 = 101H ∥ 565H = <strong>101565H</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏算缺页后的"重新执行"</strong>：缺页中断返回要重新执行指令，TLB 命中 10ns + 访存 100ns 不能漏。</li><li><strong>LRU 选错牺牲页</strong>：不是淘汰页 1（它本来就不在内存），而是在内存中的两页里选最久未用的<strong>页 0</strong>。</li><li><strong>误判第三次访问</strong>：页 2 仍在 TLB，25A5H 是命中路径，只有 110ns，不能再算一次页表访问。</li></ul>
-<blockquote>访问耗时看路径：TLB 命中 110ns、未命中 210ns、缺页 10 的 8 次方 ns 量级；1565H 物理地址 <strong>101565H</strong>。</blockquote></div></div>
+<ul><li><strong>漏算缺页后的「重新执行」</strong>：题设③明确返回重执，重执的 TLB 命中 10ns + 访存 100ns 不能漏。</li><li><strong>LRU 选错牺牲页</strong>：在驻留的页 0、页 2 之间选最久未用的页 0；页 1 不在驻留集，不是候选。</li><li><strong>误判第三次访问</strong>：页 2 的 TLB 表项仍有效，25A5H 走命中路径 110ns，不能再算一次页表 100ns。</li><li><strong>页号切错</strong>：页内位移位数由页面大小决定，4KB → 低 3 位十六进制；2362H 的页号是 2，不是把 236 当页号。</li></ul>
+<blockquote>一句话结论：三次访问依次 210ns、100000220ns、110ns；LRU 淘汰页 0，页 1 入驻 101H，物理地址 101565H。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

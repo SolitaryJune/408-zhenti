@@ -789,17 +789,19 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IEEE 754 单精度机器数的还原</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IEEE 754 单精度浮点数的还原</h2>
 <p><strong>答案：A（−1.5 × 2^13）。</strong></p>
-<h3>第一步：把十六进制展开成 32 位二进制并切分字段</h3>
-<p><code>C640 0000H</code> = <code>1100 0110 0100 0000 0000 0000 0000 0000</code>。按 IEEE 754 单精度格式切成 1 + 8 + 23 三段：</p>
-<table><thead><tr><th>字段</th><th>二进制</th><th>读数</th></tr></thead><tbody><tr><td>数符 S（最高 1 位）</td><td>1</td><td>负数</td></tr><tr><td>阶码 E（第 30~23 位）</td><td>100 0110 0</td><td>140</td></tr><tr><td>尾数 M（低 23 位）</td><td>100…0（首 1 余 0）</td><td>0.5</td></tr></tbody></table>
-<h3>第二步：三段各自还原</h3>
-<ul><li>阶码用移码，真实指数 = E − 127 = 140 − 127 = <strong>13</strong>。</li><li>尾数按"1.M"隐含形式还原：1 + 0.5 = <strong>1.5</strong>。</li><li>数符为 1，整体取负。</li></ul>
-<p>该数 = <strong>−1.5 × 2^13</strong>。</p>
+<h3>第一步：先懂格式再拆位——两处必被追问的设计</h3>
+<p>IEEE 754 单精度把 32 位切成 <strong>1 位数符 + 8 位阶码 + 23 位尾数</strong>。动手拆之前，先弄清两处最容易被追问"为什么"的设计：</p>
+<ul><li><strong>阶码为什么减 127？</strong> 指数本来有正有负，若直接存补码，硬件比较两数大小、对阶时都要额外处理符号。于是约定存"指数 + 127"（移码/偏置码）：8 位全部落进 1~254 的无符号范围，比较阶码就是比较无符号整数。所以还原时<strong>真实指数 = E − 127</strong>。</li><li><strong>尾数为什么有隐藏的 1？</strong> 规格化二进制数总能写成 1.xxxx × 2^E，整数位恒为 1，存它纯属浪费——约定不存、还原时补上，等于白赚 1 位精度。所以尾数必须按 <strong>1.M</strong> 还原，而不是 0.M。</li></ul>
+<h3>第二步：拆 C640 0000H</h3>
+<p><code>C640 0000H</code> = <code>1100 0110 0100 0000 0000 0000 0000 0000</code>：</p>
+<table><thead><tr><th>字段</th><th>取出的位</th><th>读数</th></tr></thead><tbody><tr><td>数符（最高 1 位）</td><td>1</td><td>负数</td></tr><tr><td>阶码（数符后 8 位）</td><td><code>100 0110 0</code> = <code>10001100B</code></td><td>128+8+4 = 140</td></tr><tr><td>尾数（低 23 位）</td><td><code>100…0</code></td><td>M = 0.5</td></tr></tbody></table>
+<h3>第三步：三段拼成真值</h3>
+<p>真实指数 = 140 − 127 = <strong>13</strong>；尾数 1.M = 1 + 0.5 = <strong>1.5</strong>；数符为 1 → 整体取负。该数 = <strong>−1.5 × 2^13</strong>，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>忘记减偏置 127</strong>：把阶码 140 直接当指数就全错了；单精度偏置是 127。</li><li><strong>漏掉隐含的"1."</strong>：尾数 <code>100…0</code> 还原为 1.5 而不是 0.5——选 C（−0.5×2^13）、D（−0.5×2^12）正是掉了这个坑。</li><li><strong>指数 12 与 13 混淆</strong>：140 − 127 = 13；若错减 128 或多减一位，就会掉进 B（−1.5×2^12）。</li><li><strong>位段切错位置</strong>：阶码是第 30~23 位，即 <code>1100 0110 0100</code> 里的后 7 位接第 9 位那个 <code>1</code>，拼成 <code>1000 1100</code>。</li></ul>
-<blockquote>一句话结论：符号 1、阶码 10001100B=140、指数 140−127=13、尾数 1.M=1.5，该数 = −1.5×2^13，选 A。</blockquote></div></div>
+<ul><li><strong>忘记减偏置 127</strong>：把阶码 140 直接当指数，全盘皆错；单精度偏置是 127（双精度才是 1023）。</li><li><strong>漏掉隐含的 1</strong>：尾数按 0.M 还原成 0.5 → 得 −0.5×2^13（选项 C）或 −0.5×2^12（选项 D）。</li><li><strong>指数差 1</strong>：偏置错减 128、或指数多扣一位 → −1.5×2^12（选项 B）。</li><li><strong>位段切错位置</strong>：阶码是数符后的 8 位 <code>100 0110 0</code>，拼成 <code>1000 1100</code> = 140；从别处截取则指数全错。</li></ul>
+<blockquote>一句话结论：数符 1、阶码 10001100B = 140、指数 140 − 127 = 13、尾数 1.M = 1.5，该数 = −1.5 × 2^13，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -848,18 +850,21 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码的算术移位与加法（z = 2x + y/2）</h2>
 <p><strong>答案：A（1 1000000，即 −64，不溢出）。</strong></p>
-<h3>第一步：把机器数翻译成真值</h3>
-<table><thead><tr><th>变量</th><th>补码</th><th>真值</th></tr></thead><tbody><tr><td>x</td><td><code>1 1110100</code></td><td>符号位 1 为负，数值位取反加 1 得 0001100 = 12 → <strong>−12</strong></td></tr><tr><td>y</td><td><code>1 0110000</code></td><td>数值位取反加 1 得 1010000 = 80 → <strong>−80</strong></td></tr></tbody></table>
-<h3>第二步：用移位实现 ×2 与 ÷2</h3>
-<ul><li><strong>2x</strong>：补码算术左移 1 位，低位补 0：<code>11110100</code> → <code>11101000</code>，即 <strong>−24</strong>。</li><li><strong>y/2</strong>：补码算术右移 1 位，符号位不变、高位补 1：<code>10110000</code> → <code>11011000</code>，即 <strong>−40</strong>。</li></ul>
-<h3>第三步：补码相加并丢掉进位</h3>
-<table><thead><tr><th>步骤</th><th>机器数</th><th>真值</th></tr></thead><tbody><tr><td>2x（左移 1 位）</td><td><code>11101000</code></td><td>−24</td></tr><tr><td>y/2（算术右移 1 位）</td><td><code>11011000</code></td><td>−40</td></tr><tr><td>相加（最高位进位丢弃）</td><td><code>1 11000000</code> → 取 8 位 <code>11000000</code></td><td><strong>−64</strong></td></tr></tbody></table>
-<p>真值核对：2×(−12) + (−80)/2 = −24 − 40 = −64，与补码结果一致。</p>
-<h3>第四步：判断是否溢出</h3>
-<p>两个负数相加得负数（符号位进位 = 最高数值位进位），−64 也在 8 位补码范围 [−128, 127] 内 → <strong>无溢出</strong>，结果有效。</p>
+<h3>第一步：先把补码"读对"——它是模 256 的记数</h3>
+<p>8 位补码是<strong>模 256 的记数方式</strong>：最高位为 1 即负数，真值 = 无符号解释值 − 256（减模合法，因为位串与真值在 mod 256 下同余）。</p>
+<ul><li>[x]补 = <code>11110100</code> = 244 → 244 − 256 = <strong>−12</strong>；</li><li>[y]补 = <code>10110000</code> = 176 → 176 − 256 = <strong>−80</strong>。</li></ul>
+<p>（"取反加一"是同一件事的另一种算法，两条路结果必然一致。）</p>
+<h3>第二步：移位实现 ×2 与 ÷2——为什么负数右移要补 1</h3>
+<ul><li><strong>2x</strong>：算术左移 1 位、低位补 0：<code>11110100</code> → <code>11101000</code> = 232 → −24。</li><li><strong>y/2</strong>：算术右移 1 位：<code>10110000</code> → <code>11011000</code> = 216 → −40。</li></ul>
+<p><strong>为什么负数右移高位补 1？</strong> 补码左边那一串 1 是负数的"欠账"，右移腾出的最高位必须续 1，它在更大模下的解释才仍是同一个负数——<code>11011000</code> ≡ −40 (mod 256)，恰是真值 −80 ÷ 2。这与符号扩展"补符号位数值不变"是同一原理。若补 0，<code>01011000</code> = +88，负数被读成了正数——逻辑右移只对无符号数才有意义。</p>
+<h3>第三步：相加并丢进位——为什么进位可以扔</h3>
+<p>竖式：<code>11101000</code> + <code>11011000</code> = <code>1 11000000</code>，共 9 位。8 位机器只保留低 8 位 <code>11000000</code>，第 9 位进位自然丢弃——补码加减本来就是<strong>模 256 运算</strong>，丢掉一个 256 不影响余数。<code>11000000</code> = 192 → 192 − 256 = <strong>−64</strong>。</p>
+<p>真值核对：2×(−12) + (−80)/2 = −24 − 40 = −64，与机器结果一致。</p>
+<h3>第四步：为什么不是溢出</h3>
+<p>两个负数相加得负数——符号位进位与最高数值位进位一致（双进位相同），且 −64 在 8 位补码范围 [−128, 127] 之内 → 无溢出，结果有效。</p>
 <h3>易错点</h3>
-<ul><li><strong>右移当成逻辑右移</strong>：算术右移必须保持符号位并补符号位（<code>10110000</code> → <code>11011000</code>）；若高位补 0 得 <code>01011000</code>（+88），全盘皆错。</li><li><strong>先加后移</strong>：必须先分别完成 2x 与 y/2 的移位，再做加法；顺序颠倒结果不同。</li><li><strong>把最高位进位 1 当成溢出</strong>：补码加减中向外的进位直接丢弃即可，本题丢弃后符号位仍是 1，结果正确。</li><li><strong>看到负数相加就选"溢出"</strong>：溢出要看双进位是否一致（或用双符号位判断），本题两者相同，不溢出。</li></ul>
-<blockquote>一句话结论：2x = <code>11101000</code>（−24），y/2 = <code>11011000</code>（−40），相加丢进位得 <code>[z]补 = 1 1000000</code>（−64），无溢出，选 A。</blockquote></div></div>
+<ul><li><strong>右移当成逻辑右移</strong>：高位补 0 得 <code>01011000</code>（+88），把负数读成正数，全盘皆错——算术右移必须补符号位。</li><li><strong>把进位 1 当溢出</strong>：模运算下丢进位是合法操作，丢弃后符号位仍为 1、与真值核对一致。</li><li><strong>见"负加负"就选溢出（选项 D）</strong>：溢出看双进位是否一致（或双符号位是否相异），本题一致，不溢出。</li><li><strong>先加后移</strong>：必须先各自完成 2x、y/2 的移位再相加，顺序颠倒结果不同。</li></ul>
+<blockquote>一句话结论：2x = <code>11101000</code>（−24），y/2 = <code>11011000</code>（−40），相加丢进位得 [z]补 = <code>1 1000000</code>（−64），无溢出，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1257,15 +1262,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：磁盘读一个扇区的平均时间</h2>
 <p><strong>答案：B（9.4ms）。</strong></p>
-<h3>第一步：分解存取时间</h3>
-<p>平均存取时间 = 平均寻道时间 + 平均旋转延迟 + 传输时间；本题还有磁盘控制器延迟，共四段。</p>
-<h3>第二步：逐段计算</h3>
-<table><thead><tr><th>分量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>平均寻道</td><td>题目给定</td><td>6ms</td></tr><tr><td>平均旋转延迟</td><td>转速 10000 rpm → 每转 60/10000 s = 6ms，平均等半圈 6ms ÷ 2</td><td>3ms</td></tr><tr><td>传输 4KB</td><td>4KB ÷ 20MB/s（4096 ÷ 20×10^6 s ≈ 0.0002 s）</td><td>≈0.2ms</td></tr><tr><td>控制器延迟</td><td>题目给定</td><td>0.2ms</td></tr></tbody></table>
+<h3>第一步：一次读盘的时间由四段拼成</h3>
+<p>磁头先移动到目标磁道（寻道），再等目标扇区转到磁头正下方（旋转延迟），数据读出后沿总线传走（传输），控制器处理命令本身还要占一点时间（控制器延迟）。四段依次发生，所以：</p>
+<p>平均存取时间 = 平均寻道时间 + 平均旋转延迟 + 传输时间 + 控制器延迟。</p>
+<h3>第二步：逐段计算——为什么旋转延迟取"半圈"</h3>
+<ul><li><strong>平均寻道</strong>：6ms（题目给定）。</li><li><strong>平均旋转延迟</strong>：转速 10000rpm，转一圈 = 60 ÷ 10000 s = 6ms。寻道结束时磁头停在扇区相对哪个位置完全随机，等待时间在 0 ~ 6ms 之间<strong>均匀分布</strong>，平均恰为中点 3ms（半圈）——"平均"二字指的就是这个期望值，它也正是本题与最大干扰项 D 之间的分水岭。</li><li><strong>传输 4KB</strong>：4KB ÷ 20MB/s ≈ 0.2ms。</li><li><strong>控制器延迟</strong>：0.2ms（题目给定）。</li></ul>
 <h3>第三步：求和</h3>
-<p>总时间 ≈ 6 + 3 + 0.2 + 0.2 = <strong>9.4ms</strong>。</p>
+<p>6 + 3 + 0.2 + 0.2 = <strong>9.4ms</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>旋转延迟算成一整圈（6ms）</strong>：平均只需等半圈，3ms；整圈就错成 6 + 6 + 0.2 + 0.2 = 12.4ms（选 D）。</li><li><strong>漏掉传输时间和控制器延迟</strong>：只剩寻道 + 旋转 = 6 + 3 = 9ms，对应干扰项 A。</li><li><strong>连半圈都漏、又漏后两项</strong>：6 + 6 = 12ms，对应干扰项 C。</li><li><strong>漏控制器延迟</strong>：得 9.2ms，说明分解不完整——题目明确给出了 0.2ms。</li></ul>
-<blockquote>一句话结论：6（寻道）+ 3（半圈旋转）+ 0.2（传输）+ 0.2（控制器）= 9.4ms，选 B。</blockquote></div></div>
+<ul><li><strong>旋转延迟算成一整圈（6ms）→ 12.4ms（选 D）</strong>：把"最坏要等一整圈"当成了"平均等待"。等待均匀分布在 0~6ms，平均只取半圈。</li><li><strong>漏掉传输时间和控制器延迟 → 9ms（选 A）</strong>：只算寻道 + 旋转；题目给出的每一段时间都要入账。</li><li><strong>既算整圈又漏后两项 → 12ms（选 C）</strong>：6 + 6 = 12ms，双重出错。</li><li><strong>只漏控制器延迟</strong>：得 9.2ms，同样属于分解不完整——0.2ms 虽小但明确给出。</li></ul>
+<blockquote>一句话结论：6（寻道）+ 3（半圈旋转：0~6ms 均匀分布取中点）+ 0.2（传输）+ 0.2（控制器）= 9.4ms，选 B。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1820,15 +1826,15 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：按计算/I/O 比例设置进程优先级</h2>
-<p><strong>答案：B</strong> —— 合理的优先级设置为 P₃ &gt; P₂ &gt; P₁。</p>
-<h3>第一步：目标是提高资源利用率</h3>
-<p>要提高系统资源利用率，就要让 <strong>CPU 与 I/O 设备尽量并行工作</strong>。让 I/O 繁忙的进程优先获得 CPU：它算完一小段就发起 I/O，设备不停歇；它阻塞等 I/O 时又把 CPU 让给其他进程，CPU 也不空闲。</p>
-<h3>第二步：按 I/O 占比排序</h3>
-<table><thead><tr><th>进程</th><th>计算时间</th><th>I/O 时间</th><th>特征</th></tr></thead><tbody><tr><td>P₁</td><td>90%</td><td>10%</td><td>CPU 繁忙型</td></tr><tr><td>P₂</td><td>50%</td><td>50%</td><td>均衡型</td></tr><tr><td>P₃</td><td>15%</td><td>85%</td><td>I/O 繁忙型</td></tr></tbody></table>
-<p>I/O 时间占比越高，优先级应越高：<strong>P₃ &gt; P₂ &gt; P₁</strong>。</p>
+<p><strong>答案：B（P₃ &gt; P₂ &gt; P₁）。</strong></p>
+<h3>第一步：目标决定排序标准</h3>
+<p>要提高系统资源利用率，就要让 CPU 和 I/O 设备这两类硬件<strong>尽量同时干活</strong>。I/O 繁忙型进程正是"并行发动机"：给它高优先级，它抢到 CPU 后算一小段就发起 I/O，设备转起来；它阻塞等 I/O 时又立刻把 CPU 让给别人，CPU 也不空闲。反过来让 CPU 繁忙型优先，它会长期霸占 CPU，设备大量空转。所以排序标准只有一条：<strong>I/O 时间占比越高，优先级越高</strong>。</p>
+<h3>第二步：对号入座</h3>
+<table><thead><tr><th>进程</th><th>计算</th><th>I/O</th><th>特征</th><th>优先级</th></tr></thead><tbody><tr><td>P₃</td><td>15%</td><td>85%</td><td>I/O 繁忙型</td><td>最高</td></tr><tr><td>P₂</td><td>50%</td><td>50%</td><td>均衡型</td><td>居中</td></tr><tr><td>P₁</td><td>90%</td><td>10%</td><td>CPU 繁忙型</td><td>最低</td></tr></tbody></table>
+<p>即 <strong>P₃ &gt; P₂ &gt; P₁</strong>，选 <strong>B</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>误选 A（P₁ &gt; P₂ &gt; P₃）</strong>：直觉上“长计算任务先跑”，实际适得其反——P₁ 长期霸占 CPU，P₃ 的 I/O 设备大量空转，整机资源利用率下降。</li></ul>
-<blockquote>一句话结论：<strong>I/O 繁忙者优先</strong>（P₃ &gt; P₂ &gt; P₁），让 CPU 与设备最大程度并行，选 B。</blockquote></div></div>
+<ul><li><strong>误选 A（P₁ &gt; P₂ &gt; P₃）</strong>：直觉上"计算量大的先跑"，实际 P₁ 长期占用 CPU，P₃ 的 I/O 设备大量空转，整机利用率反而最低——与题目目标背道而驰。</li><li><strong>误选 D（P₁ &gt; P₂ = P₃）</strong>：把"最耗 CPU"当成"最该优先"。优先级要给"能让设备并行起来"的进程，不是给"最需要 CPU"的进程；且 P₂ 与 P₃ 的 I/O 占比相差悬殊（50% 对 85%），划等号没有依据。</li><li><strong>误选 C（P₂ &gt; P₁ = P₃）</strong>：以为均衡型进程"两头都占"收益最大。但 P₂ 的 I/O 占比不及 P₃，让 P₂ 插队只会推迟 P₃ 发起 I/O，降低设备并行度；P₁ 与 P₃ 一个 CPU 型、一个 I/O 型，特征截然相反，同等对待同样没有依据。</li></ul>
+<blockquote>一句话结论：I/O 繁忙者优先（P₃ &gt; P₂ &gt; P₁），CPU 与设备才能最大程度并行，选 B。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2416,15 +2422,18 @@
 <h3>答题框架</h3>
 <p>大题按问作答：先写设计思想（两遍扫描：先投票、后验证），再写代码（关键处注释），最后写复杂度。核心一句话：一遍扫描用"抵消"找出候选主元素，第二遍扫描验证候选是否真的超过一半。</p>
 <h3>第（1）问：算法的基本设计思想</h3>
-<p>采用摩尔投票思想，分两个阶段：</p>
-<ol><li><strong>找候选</strong>：遍历数组，维护候选值 c 与计数 count。遇到与 c 相同的元素，count 加 1；遇到不同的元素，count 减 1；当 count 减到 0 时，把当前元素换作新候选、count 置 1。若主元素 x 真的存在（出现次数大于 n/2），它"一换一抵消"后必有剩余，最终候选一定是 x。</li><li><strong>再次遍历验证</strong>：候选未必真是主元素——例如 A=(0,5,5,3,5,1,5,7) 抵消后候选是 5，但 5 只出现 4 次，不大于 8/2。所以第二遍统计候选出现次数，若大于 n/2 输出该元素，否则输出 −1。</li></ol>
+<p><strong>先立机制：为什么"抵消"能找出主元素。</strong> 把扫描看成一场逐个登记的对决：维护候选 c 与计数 count，count 的含义是"候选手里还有 count 张没被抵消的票"——遇到与 c 相同的元素给候选加一票；遇到不同的元素，用一张新票抵掉候选一张旧票；count 减到 0，说明"当前候选与这段区间里的对手恰好一比一抵平"，就把当前元素立为新候选重新开账。</p>
+<p>这个机制的正确性靠两条性质，想通它们，设计思想就是自然推导：</p>
+<ol><li><strong>主元素若存在，一定抵不完</strong>：主元素出现次数大于 n/2，其余元素加起来不足 n/2——就算让所有其他元素都拿去和主元素配对抵消，也只能抵掉不足一半，主元素必有剩余。所以扫描结束时手里还有票的候选，若主元素存在就只能是它。</li><li><strong>换候选不丢主元素</strong>：count 减到 0 时扔掉的只是"候选票与非候选票恰好一比一"的一段前缀。主元素在这段里占不到便宜：它若是这段的候选，正好被对手抵平；若不是，它只是去抵消别人的票。所以丢弃这段不改变主元素"比其余元素多"的优势，优势会一路带到扫描结束。</li></ol>
+<p>有了这两条，设计思想分两阶段：</p>
+<ol><li><strong>找候选</strong>：遍历数组，维护候选值 c 与计数 count——相同加一、不同减一、减到 0 换当前元素为新候选。若主元素 x 真的存在（出现次数大于 n/2），它"一换一抵消"后必有剩余，最终候选一定是 x。</li><li><strong>再次遍历验证</strong>：候选只是"若主元素存在则必是它"，主元素不存在时算法照样会剩出一个候选——例如 A=(0,5,5,3,5,1,5,7) 抵消后候选是 5，但 5 只出现 4 次，不大于 8/2。所以第二遍统计候选出现次数，大于 n/2 输出该元素，否则输出 −1。（参考代码还借性质 1 省了一步：count 减到 0 连候选都没活下来，主元素必不存在，可直接返回 −1，连第二遍都不用扫。）</li></ol>
 <h3>第（2）问：C 语言实现（与参考答案一致，关键处注释）</h3>
-<ol><li><code>int i, c, count = 1;</code> // c 保存候选主元素，count 计数</li><li><code>c = A[0];</code> // 先设 A[0] 为候选</li><li><code>for (i = 1; i &lt; n; i++)</code> // 第一遍：找候选</li><li><code>if (A[i] == c) count++;</code> // 与候选相同则计数加一</li><li><code>else if (count &gt; 0) count--;</code> // 不同则抵消一次</li><li><code>else { c = A[i]; count = 1; }</code> // 计数为零时更换候选</li><li><code>if (count &gt; 0)</code> // 候选有剩余才值得验证</li><li><code>for (i = count = 0; i &lt; n; i++)</code> // 第二遍：重新计数</li><li><code>if (A[i] == c) count++;</code> // 统计候选实际出现次数</li><li><code>if (count &gt; n/2) return c; else return -1;</code> // 严格大于 n/2 才确认</li></ol>
+<ol><li><code>int i, c, count = 1;</code> // c 保存候选主元素，count 计数</li><li><code>c = A[0];</code> // 先设 A[0] 为候选</li><li><code>for (i = 1; i &lt; n; i++)</code> // 第一遍：找候选</li><li><code>if (A[i] == c) count++;</code> // 与候选相同则计数加一</li><li><code>else if (count &gt; 0) count--;</code> // 不同则抵消一次</li><li><code>else { c = A[i]; count = 1; }</code> // 计数为零时更换候选</li><li><code>if (count &gt; 0)</code> // 候选有剩余才值得验证（性质 1：主元素存在则必有剩余）</li><li><code>for (i = count = 0; i &lt; n; i++)</code> // 第二遍：重新计数</li><li><code>if (A[i] == c) count++;</code> // 统计候选实际出现次数</li><li><code>if (count &gt; n/2) return c; else return -1;</code> // 严格大于 n/2 才确认</li></ol>
 <h3>第（3）问：时间复杂度与空间复杂度</h3>
-<ul><li>时间复杂度：两次线性遍历数组，为 <strong>O(n)</strong>。</li><li>空间复杂度：只用 c、count、i 等常数个辅助变量，为 <strong>O(1)</strong>。</li></ul>
+<ul><li>时间复杂度：两次线性遍历数组，为 <strong>O(n)</strong>。为什么两遍不能并成一遍：第一遍结束时只知道"幸存候选"，不回头数一遍票，就无法区分真主元素与"无主元素时的幸存者"。</li><li>空间复杂度：只用 c、count、i 等常数个辅助变量，为 <strong>O(1)</strong>。这正是它比排序（O(n log n)）或哈希计数（O(n) 空间）更贴合"尽可能高效"的原因。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>只做一遍扫描就输出候选</strong>：候选不一定是主元素，缺少第二遍验证会丢分（题干第二个例子就是反例）。</li><li><strong>改用排序或哈希表统计</strong>：虽然正确，但时间是 O(n log n) 或空间 O(n)，达不到题目"尽可能高效"的 O(n) 时间、O(1) 空间。</li><li><strong>判断条件写成 count ≥ n/2</strong>：必须是严格大于 n/2；反例中 5 出现 4 次恰好等于 8/2，应输出 −1。</li></ul>
-<blockquote>两遍扫描：先投票选候选，再数票做验证；时间 O(n)、空间 O(1)。</blockquote></div></div>
+<ul><li><strong>只做一遍扫描就输出候选</strong>：候选只是"若存在则必是"，缺少第二遍验证会丢分（题干第二个例子就是反例）。</li><li><strong>改用排序或哈希表统计</strong>：虽然正确，但时间是 O(n log n) 或空间 O(n)，达不到题目"尽可能高效"的 O(n) 时间、O(1) 空间。</li><li><strong>判断条件写成 count ≥ n/2</strong>：定义是严格大于 n/2；反例中 5 出现 4 次恰好等于 8/2，应输出 −1。</li></ul>
+<blockquote>两遍扫描：先投票选候选（抵消机制保证"存在则候选必真"），再数票做验证；时间 O(n)、空间 O(1)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2478,18 +2487,20 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：让平均查找长度更短——顺序表与链表的两种改造（10 分）</h2>
-<h3>第一步：先算基准——折半查找的 ASL = 2.2</h3>
-<p>4 个元素折半（low=1, high=4，mid=⌊5/2⌋=2）的判定树：位置 2（for）为根在第 1 层，位置 1（do）、位置 3（repeat）在第 2 层，位置 4（while）在第 3 层。ASL = 0.15×1 + 0.35×2 + 0.15×2 + 0.35×3 = <strong>2.2</strong>，与题干一致。要更短，就必须让查找概率大的元素（do、while 各 0.35）处在更浅的层。</p>
+<h3>第一步：先立机制——ASL 由谁决定、折半为什么优化不动</h3>
+<p>平均查找长度 ASL = Σ 每个元素的查找概率 × 该元素的比较次数。想让它变短只有两条路：<strong>改变比较次数的分布</strong>（换查找方法或存储结构），或者<strong>让大概率元素落到比较次数小的位置</strong>（重排元素）。先算基准：4 个元素折半（low=1, high=4，mid=⌊5/2⌋=2）的判定树：位置 2 为根（比较 1 次），位置 1、3 在第 2 层（比较 2 次），位置 4 在第 3 层（比较 3 次）。按字典序 do &lt; for &lt; repeat &lt; while 存放：for 在位置 2，do、repeat 在第 2 层，while 在第 3 层，ASL = 0.15×1 + 0.35×2 + 0.15×2 + 0.35×3 = <strong>2.2</strong>，与题干一致。</p>
+<p><strong>为什么折半"怎么排都是 2.2"、优化不动？</strong> 这是最值得先答掉的追问：折半查找的前提是表<strong>按关键字有序</strong>——取 mid 后必须能靠一次比较判断往左还是往右，无序表折半根本不成立。有序性把"哪个元素在哪个位置"锁死（do 必在 1 位、for 必在 2 位……），判定树形状又被表长锁死，于是"概率 × 比较次数"的配对完全固定，重排元素的自由度根本不存在。所以想更短，<strong>必须换查找方法</strong>。</p>
 <h3>第（1）问：顺序存储——按概率降序排列 + 顺序查找</h3>
-<p>顺序查找的比较次数只由位置决定：第 k 个元素比较 k 次。折半的比较次数由判定树形状决定，怎么排都还是 2.2，所以要<strong>换查找方法</strong>：采用顺序查找，并把元素按查找概率<strong>降序</strong>排列：</p>
+<p>顺序查找对排列没有任何要求（从头逐个比过去即可），重排的自由度回来了。它的比较次数只由位置决定：第 k 个元素比较 k 次。要让 ASL 最短，就把概率大的放前面——概率降序是顺序查找的最优排列，因为每把一个大概率元素往前挪一位，"概率 × 次数"的总和只会变小。按降序：do、while（各 0.35）放第 1、2 位，for、repeat（各 0.15）放第 3、4 位：</p>
 <table><thead><tr><th>位置</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>元素</td><td>do</td><td>while</td><td>for</td><td>repeat</td></tr><tr><td>概率</td><td>0.35</td><td>0.35</td><td>0.15</td><td>0.15</td></tr><tr><td>比较次数</td><td>1</td><td>2</td><td>3</td><td>4</td></tr></tbody></table>
 <p>ASL = 0.35×1 + 0.35×2 + 0.15×3 + 0.15×4 = <strong>2.1</strong>，比 2.2 更短。</p>
 <h3>第（2）问：链式存储——构造二叉排序树查找</h3>
-<p>链表不支持随机访问，不能折半；改用<strong>二叉排序树（链式存储）</strong>查找。按字典序 do &lt; for &lt; repeat &lt; while，把大概率元素放浅层，取 for 为根：do 为左孩子，while 为右孩子，repeat 为 while 的左孩子：</p>
+<p>链表为什么不能折半：折半每一步要按下标直达"中间元素"，顺序存储取第 k 个是 O(1)；链表取第 k 个结点要走 k 步，折半失去意义。那链式能不能沿用（1）的思路、按概率降序做顺序查找？可以，但比较次数仍是 1、2、3、4——<strong>两个 0.35 的元素只能一个比 1 次、一个比 2 次</strong>，ASL 还是 2.1，降不下去。</p>
+<p>要更短就得换结构：<strong>二叉排序树（链式存储）</strong>。BST 查找的比较次数 = 结点深度，而树形有自由度——可以让<strong>两个大概率元素同时都待在第 2 层</strong>。按字典序 do &lt; for &lt; repeat &lt; while，取 for 为根：do 是左孩子，while 是右孩子；repeat 比while 小、比 for 大，只能作 while 的左孩子，落在第 3 层：</p>
 <table><thead><tr><th>元素</th><th>for</th><th>do</th><th>while</th><th>repeat</th></tr></thead><tbody><tr><td>层号（=比较次数）</td><td>1</td><td>2</td><td>2</td><td>3</td></tr><tr><td>概率</td><td>0.15</td><td>0.35</td><td>0.35</td><td>0.15</td></tr></tbody></table>
 <p>ASL = 0.15×1 + 0.35×2 + 0.35×2 + 0.15×3 = <strong>2.0</strong>，又比 2.1 更短。</p>
 <h3>易错点</h3>
-<ul><li><strong>顺序存储仍用折半</strong>：折半查找的比较次数取决于判定树形状，与元素排列顺序无关，怎么排都是 2.2，必须换用顺序查找。</li><li><strong>BST 里把 repeat 放错层</strong>：repeat 的字典序介于 for 与 while 之间，插在 while 之下（第 3 层）才是合法 BST；while 是 for 的右孩子。</li><li><strong>比较次数与层号错位</strong>：BST 根的比较次数是 1（即第 1 层），每深一层多比较一次。</li></ul>
+<ul><li><strong>顺序存储仍用折半</strong>：折半要求按关键字有序，元素排列被字典序锁死，比较次数与概率的配对无法改变，ASL 恒为 2.2，必须换用顺序查找。</li><li><strong>BST 里把 repeat 放错层</strong>：repeat 的字典序介于 for 与 while 之间，作 while 的左孩子（第 3 层）才是合法 BST；while 是 for 的右孩子。</li><li><strong>比较次数与层号错位</strong>：BST 根的比较次数是 1（第 1 层），每深一层多比较一次。</li><li><strong>（2）问仍按概率降序做链式顺序查找</strong>：只能得 2.1，与（1）相同；BST 能让两个 0.35 同时只比 2 次，才有 2.0。</li></ul>
 <blockquote>顺序表按概率降序 + 顺序查找得 2.1；链表建 BST（for 为根）得 2.0，两者都优于折半的 2.2。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2545,18 +2556,22 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：突发传送与 CPU 执行时间（9 分大题）</h2>
 <h3>答题框架</h3>
-<p>（1）两个时钟周期 + 总线带宽 →（2）一个主存块要几个突发事务 →（3）一次突发事务的时间（三段相加）→（4）CPU 时间 = 命中基础时间 + 缺失损失。</p>
+<p>（1）两个时钟周期 + 总线带宽 →（2）一个主存块要几个突发事务 →（3）一次突发事务的时间（三段相加）→（4）CPU 时间 = 命中基础时间 + 缺失损失。两个底层机制贯穿全题：<strong>总线按节拍传送</strong>（每个总线时钟周期送出一个 32 位字）与<strong>多体交叉流水</strong>（8 个体轮流启动，把"准备数据"的时间重叠起来）。</p>
 <h3>第（1）问：时钟周期与总线带宽</h3>
-<ul><li>CPU 时钟周期 = 1 ÷ 800MHz = <strong>1.25ns</strong>。</li><li>总线时钟周期 = 1 ÷ 200MHz = <strong>5ns</strong>。</li><li>总线带宽 = 总线宽度 × 总线时钟频率 = 32 位 ÷ 8 = 4B，4B × 200M/s = <strong>800MB/s</strong>。</li></ul>
+<p>时钟周期就是主频的倒数：CPU 时钟周期 = 1 ÷ 800MHz = <strong>1.25ns</strong>；总线时钟周期 = 1 ÷ 200MHz = <strong>5ns</strong>。</p>
+<p>带宽为什么拿 4B 乘 200MHz、而不是拿 32 位乘 CPU 主频：带宽是<strong>总线自己的指标</strong>——总线每个时钟周期送出一个 32 位数据字，32 位 = 4B，每秒 200M 个周期，所以带宽 = 4B × 200M/s = <strong>800MB/s</strong>。CPU 再快，总线每个节拍也只能过 4B，两者各算各的。</p>
 <h3>第（2）问：需要几个突发事务</h3>
-<p>Cache 块大小 32B，每次读突发传送正好 32B → 读一个主存块只需 <strong>1 个</strong>读突发传送总线事务。</p>
-<h3>第（3）问：一次读突发事务的时间（8 体交叉）</h3>
-<table><thead><tr><th>阶段</th><th>时间</th></tr></thead><tbody><tr><td>送首地址和命令</td><td>1 个总线周期 = 5ns</td></tr><tr><td>存储器准备数据</td><td>40 + (8−1)×5 = <strong>75ns</strong></td></tr><tr><td>传送最后一个数据</td><td>1 个总线周期 = 5ns</td></tr></tbody></table>
-<p>合计 5 + 75 + 5 = <strong>85ns</strong>。要点：8 体交叉下第一个字在启动后 40ns 读出，此后每隔一个总线周期（5ns）流出一个字，第 8 个字在 40 + 7×5 = 75ns 时就绪，把它送上总线再花 5ns。</p>
+<p>Cache 块 32B，一次突发传送恰好 32B——首地址送出后地址自动增量，8 个体各交出一个 32 位字（4B × 8 = 32B）→ 读一个主存块只需 <strong>1 个</strong>读突发传送总线事务。</p>
+<h3>第（3）问：一次读突发事务的时间（8 体交叉流水）</h3>
+<p>先讲机制再算时间。<strong>单体会拖累总线</strong>：一个体的存储周期 40ns 远大于总线周期 5ns，若只有一体，每传一个字总线要空等 40ns。<strong>8 体交叉的流水原理</strong>：一个 32B 块的 8 个字分存在 8 个体里，存储器每隔一个总线周期（5ns）启动一个体——这个节拍不是巧合，是由"总线每 5ns 空出一个槽接收一个字"决定的。于是第 1 个字在启动后 40ns 就绪，此后每 5ns 有一个字就绪、<strong>就绪即上总线</strong>，前面字的传送与后面体的准备互相重叠。</p>
+<p>按事务三段推时间线：</p>
+<table><thead><tr><th>阶段</th><th>时间</th></tr></thead><tbody><tr><td>送首地址和命令</td><td>1 个总线周期 = 5ns</td></tr><tr><td>存储器准备数据（启动首体到第 8 个字就绪）</td><td>40 + (8−1)×5 = <strong>75ns</strong></td></tr><tr><td>传送最后一个数据</td><td>1 个总线周期 = 5ns</td></tr></tbody></table>
+<p>合计 5 + 75 + 5 = <strong>85ns</strong>。两个追问提前答掉：为什么准备段不是 8 × 40 = 320ns——8 次准备被流水重叠，第 k 个字在 40+(k−1)×5ns 就绪，最慢的第 8 个字 75ns 就绪；为什么传送段只算最后一个字的 5ns——前 7 个字"就绪即传"，传送藏在准备段里，只有第 8 个字就绪后总线还要独占 5ns 把它送完。</p>
 <h3>第（4）问：CPU 执行时间</h3>
-<ul><li>基础时间（指令执行，访存全部按命中计）= 100 条 × CPI 4 × 1.25ns = <strong>500ns</strong>。</li><li>访存次数 = 100 × 1.2 = 120 次；缺失次数 = 120 × 5% = <strong>6 次</strong>。</li><li>每次缺失的损失 = 一次读突发事务时间 = 85ns；额外时间 = 6 × 85 = <strong>510ns</strong>。</li><li>总 CPU 执行时间 = 500 + 510 = <strong>1010ns</strong>。</li></ul>
+<p>模型：CPU 时间 = 命中路径时间 + 缺失附加时间。</p>
+<ul><li>基础时间 = 指令数 × CPI × 时钟周期 = 100 × 4 × 1.25ns = <strong>500ns</strong>。为什么访存次数不乘进基础时间：CPI = 4 是<strong>"Cache 命中时"</strong>执行一条指令的周期数，指令内的访存已含在这 4 拍里，缺失才是额外开销。</li><li>访存次数 = 100 × 1.2 = 120 次；缺失次数 = 120 × 5% = <strong>6 次</strong>。为什么缺失率作用在访存次数上：缺失发生在"访存"这个动作上，每条指令平均 1.2 次访存里才谈得上命中或缺失，不能拿指令条数去乘。</li><li>每次缺失的损失 = 一次读突发事务时间 = 85ns——缺失时 CPU 停等，要把整个 32B 主存块调入 Cache，正好一次突发事务；额外时间 = 6 × 85 = <strong>510ns</strong>。</li><li>总 CPU 执行时间 = 500 + 510 = <strong>1010ns</strong>。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>带宽漏除 8</strong>：32 位要换算成 4B，带宽 = 4B × 200MHz = 800MB/s，不是 6400MB/s。</li><li><strong>第（3）问只算 75ns</strong>：漏掉送首地址的 1 个周期或传送最后一个数据的 1 个周期，三段缺一不可。</li><li><strong>第（4）问缺失次数按指令数算</strong>：缺失率作用于"访存次数"（100×1.2 = 120 次），得 6 次；若按 100 条算成 5 次就错了。</li><li><strong>第（4）问漏掉基础 500ns</strong>：缺失率 5% 只意味着 6 次访存要额外付 85ns/次，命中的指令执行时间 500ns 照样要算。</li></ul>
+<ul><li><strong>带宽漏除 8</strong>：32 位要换算成 4B，带宽 = 4B × 200MHz = 800MB/s，不是 6400MB/s。</li><li><strong>第（3）问只算 75ns</strong>：漏掉送首地址的 1 个周期或传送最后一个数据的 1 个周期，三段缺一不可。</li><li><strong>第（3）问写成 5 + 40 + 8×5</strong>：数凑巧相同、机制却错了——40ns 只让第 1 个字就绪，8 个字并非同时就绪；规范过程是 5 + 75 + 5（75ns 是第 8 个字就绪时刻）。</li><li><strong>第（4）问缺失次数按指令数算</strong>：缺失率作用于"访存次数"（100×1.2 = 120 次），得 6 次；若按 100 条算成 5 次就错了。</li><li><strong>第（4）问漏掉基础 500ns</strong>：缺失率 5% 只意味着 6 次访存要额外付 85ns/次，命中的指令执行时间 500ns 照样要算。</li></ul>
 <blockquote>一句话结论：1.25ns / 5ns / 800MB/s；1 个事务；85ns；CPU 执行时间 1010ns。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2611,19 +2626,21 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：条件转移指令的执行（14 分大题）</h2>
-<h3>题目要点回顾</h3>
-<p>16 位定长指令：5 位操作码 <code>00000</code> + 检测位 C、Z、N 各 1 位 + 8 位补码偏移量 OFFSET。检测位为 1 表示要检测对应标志；被检测的标志中<strong>只要有一个为 1 就转移</strong>。转移目标 = (PC) + 2 + 2×OFFSET；顺序执行下条指令地址 = (PC) + 2。</p>
+<h3>第 0 步：先立模型——相对转移在算什么</h3>
+<p>条件转移指令要做的事：执行到它时按标志寄存器判断，决定下一条指令地址。本题公式是<strong>相对转移</strong>的标准模型：转移目标 = (PC)+2 + 2×OFFSET。两个约定先弄懂，后面每问都靠它——</p>
+<ul><li><strong>基准为什么是 (PC)+2 而不是 (PC)</strong>：相对转移以"顺序执行时的下一条指令地址"为基准，转移目标只取决于相对位置——这段代码整体搬到内存任何位置，转移关系都不变（位置无关）。</li><li><strong>为什么乘 2</strong>：OFFSET 数的是"相对下一条指令偏移了多少<strong>条</strong>指令"，每条指令 16 位 = 2 字节，地址差 = 条数 × 2B。这与（1）问的编址判断是同一件事的两面。</li></ul>
 <h3>第（1）问：编址方式与向后跳转上限</h3>
-<ul><li><strong>按字节编址</strong>：顺序执行时下条指令地址为 (PC)+2，说明每条指令占 2 个地址单元；16 位指令 = 2 字节，故存储器按字节编址。</li><li><strong>向后最多跳 127 条指令</strong>：OFFSET 是 8 位补码，最小值 −128。向后跳得最远时目标 = (PC)+2+2×(−128) = (PC)−254，相对本指令后退 254B，即 254 ÷ 2 = <strong>127 条指令</strong>。</li></ul>
+<ul><li><strong>按字节编址</strong>：倒推机制——16 位定长指令占 2B，顺序执行时下条指令地址为 (PC)+2，即每条指令占 2 个编址单元；若按字（16 位）编址，一条指令只应占 1 个单元、(PC) 应 +1。所以编址单元必是字节。</li><li><strong>向后最多跳 127 条指令</strong>：OFFSET 是 8 位补码。补码是模 256 的记数方式，最高位为 1 即负数，取值范围 −128 ~ +127（为什么是这两个端点：−128 对应 80H、+127 对应 7FH，正是模 256 的环从中间掰开的两侧）。向后跳最远取 OFFSET = −128：目标 = (PC)+2 + 2×(−128) = (PC) − 254。254B ÷ 2B/条 = <strong>127 条</strong>。为什么不是 128 条：−256B 的偏移是相对"下一条指令"说的；题目问的是相对<strong>本条指令</strong>后退多少条，(PC)−254 距 (PC) 为 254B = 127 条。</li></ul>
 <h3>第（2）问：两种标志下的 PC 值</h3>
-<p>指令地址 200CH，其机器码中 C=0、Z=1、N=1 → 只检测 <strong>ZF 和 NF</strong>；OFFSET = <code>1110 0011B = E3H</code>。</p>
-<p><strong>情况一：CF=0，ZF=0，NF=1 → 转移</strong></p>
-<ul><li>E3H 符号扩展到 16 位：<code>FFE3H</code>（−29）；</li><li>左移一位（×2）：<code>FFC6H</code>（−58）；</li><li>目标地址 = 200CH + 2 + FFC6H = 200EH + FFC6H = <strong>1FD4H</strong>，即 PC = 1FD4H。</li></ul>
-<p><strong>情况二：CF=1，ZF=0，NF=0 → 不转移</strong></p>
-<ul><li>被检测的 ZF、NF 都是 0，不满足转移条件 → 顺序执行，PC = 200CH + 2 = <strong>200EH</strong>。</li></ul>
+<p>指令机器码中 C=0、Z=1、N=1 → 检测 <strong>ZF 和 NF</strong>（CF 不参与）；被检测标志中只要有一个为 1 就转移——等价于对被测标志做逻辑或。OFFSET 字段为 <code>1110 0011B</code>，即 <strong>E3H</strong>。</p>
+<p><strong>情况一：CF=0，ZF=0，NF=1 → 转移</strong>。NF=1 使或条件成立。先算清偏移量，三步走：</p>
+<ol><li>E3H 是 8 位补码，最高位为 1 是负数：真值 = 227 − 256 = <strong>−29</strong>。为什么减 256：8 位补码按模 256 记数，E3H 与 −29 在模 256 下同余，减一次模即得真值。</li><li>16 位加法器吃不下 8 位输入，先<strong>符号扩展</strong>到 16 位：FFE3H——负数高位补 1、数值不变（同一个负数在更大模 2¹⁶ 下的化身；若误补 0，−29 就变成 +65299，全盘皆错）。</li><li>×2 用左移一位实现：FFE3H → <strong>FFC6H</strong>，即 −58。</li></ol>
+<p>求目标：200CH + 2 + FFC6H = 200EH + FFC6H = 11FD4H，16 位加法器的第 17 位进位自然丢弃（模 2¹⁶ 运算本来就允许丢进位）→ PC = <strong>1FD4H</strong>。</p>
+<p><strong>情况二：CF=1，ZF=0，NF=0 → 不转移</strong>。被检测的 ZF、NF 都是 0，或条件不成立 → 顺序执行。无论转不转移，取指后 (PC)+2 都已算好：不转移就直接采用，PC = 200CH + 2 = <strong>200EH</strong>。</p>
 <h3>第（3）问：无符号数"小于等于转移"</h3>
-<p>无符号比较中 CF 是借位（小于）标志、ZF 是相等（等于）标志。"小于<strong>或</strong>等于" → 需检测 CF 和 ZF：<strong>C=1，Z=1，N=0</strong>。</p>
+<p>机制全在"只要有一个为 1 就转移"这句话上——它把被测标志做<strong>逻辑或</strong>。把"小于等于"拆开看无符号比较：a &lt; b 时减法不够减、产生借位 → <strong>CF=1</strong>（CF 在无符号运算里的含义就是借位，所以它能充当"小于"）；a = b 时结果为零 → <strong>ZF=1</strong>。于是"小于或等于" = (CF=1) 或 (ZF=1) → <strong>C=1，Z=1，N=0</strong>。N 为什么不用：NF 记录的是按<strong>带符号</strong>解释时结果的符号位，无符号数没有正负可言，这个标志对它无意义。</p>
 <h3>第（4）问：数据通路部件①~③</h3>
+<p>顺着转移指令的数据流走一遍：取指后整条指令要有个落脚处——部件① 存它；偏移量要 ×2——靠部件② 移位实现；(PC)+2 与 2×OFFSET 要相加得到目标地址——靠部件③。对号入座：</p>
 <table><thead><tr><th>部件</th><th>名称</th><th>功能说明</th></tr></thead><tbody><tr><td>①</td><td>指令寄存器（IR）</td><td>存放取出的整条指令（OP、CZN、OFFSET）</td></tr><tr><td>②</td><td>移位寄存器</td><td>把符号扩展后的偏移量左移 1 位，实现 ×2</td></tr><tr><td>③</td><td>加法器</td><td>求 (PC)+2 与 2×OFFSET 之和，得到转移目标地址</td></tr></tbody></table>
 <h3>易错点</h3>
 <ul><li><strong>第（1）问答成按字编址</strong>：判断依据是 (PC)+2 与"16 位指令"的组合——每条指令占 2 个编址单元，单元必是字节。</li><li><strong>第（2）问漏符号扩展或左移</strong>：E3H 是 8 位补码，须先扩到 16 位 FFE3H 再左移得 FFC6H，直接拿 E3H 加会算错。</li><li><strong>第（2）问漏加 2</strong>：目标是 (PC)+2+2×OFFSET，先做 200CH+2 = 200EH。</li><li><strong>第（3）问误用 N</strong>：NF（符号标志）对无符号数比较无意义；无符号"小于等于"只用 CF（小于）与 ZF（等于）。</li><li><strong>第（4）问部件②答成普通寄存器</strong>：它的功能是"移位"实现 ×2，答"移位寄存器"才完整。</li></ul>
@@ -2768,19 +2785,26 @@ coend</code></pre></div></div></div></div>
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：一级/二级页表与页表项地址计算（8 分）</h2>
-<p><strong>答案要点</strong>：（1）页大小 <strong>4KB</strong>，页表最大 <strong>4MB</strong>；（2）页目录号 <code>LA &gt;&gt; 22</code>，页表索引 <code>(LA &gt;&gt; 12) &amp; 0x3FF</code>；（3）两个页表项物理地址 <strong>0020 0020H</strong>、<strong>0020 0024H</strong>，页框号 <strong>00900H</strong>、<strong>00901H</strong>，代码页面 2 起始物理地址 <strong>0090 1000H</strong>。</p>
-<h3>第 1）问：页大小与页表最大占用</h3>
-<p>一级页表的逻辑地址结构为 20 位页号 + 12 位页内偏移：</p>
-<ul><li>偏移 12 位 → 页大小 = 2^12 = <strong>4KB</strong>；</li><li>页号 20 位 → 页表最多 2^20 项，每项 4B → 页表最大 = 2^20 × 4B = <strong>4MB</strong>。</li></ul>
-<h3>第 2）问：二级页表的地址拆分</h3>
-<p>二级页表逻辑地址 = 10 位页目录号 + 10 位页表索引 + 12 位页内偏移：</p>
-<ul><li>页目录号 = <code>LA &gt;&gt; 22</code>（直接取最高 10 位）；</li><li>页表索引 = <code>(LA &gt;&gt; 12) &amp; 0x3FF</code>（右移 12 位去掉偏移，再用 0x3FF 屏蔽出低 10 位）。</li></ul>
-<h3>第 3）问：逐项计算</h3>
-<p>代码段起始逻辑地址 0000 8000H、长度 8KB，恰好占<strong>页号 8 和页号 9 两页</strong>（0000 8000H ÷ 4KB → 页号 00008H）：</p>
-<table><thead><tr><th>项</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>页面 1 的页表项物理地址</td><td>0020 0000H + 8 × 4B</td><td>0020 0020H</td></tr><tr><td>页面 2 的页表项物理地址</td><td>0020 0000H + 9 × 4B</td><td>0020 0024H</td></tr><tr><td>页面 1 的页框号</td><td>装载基址 0090 0000H 的高 20 位</td><td>00900H</td></tr><tr><td>页面 2 的页框号</td><td>00900H + 1（连续装载）</td><td>00901H</td></tr><tr><td>代码页面 2 起始物理地址</td><td>00901H 拼接页内偏移 000H</td><td>0090 1000H</td></tr></tbody></table>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：分页地址结构与页表项定位（8 分）</h2>
+<h3>第 0 步：先立机制——分页地址翻译的两条铁律</h3>
+<p>分页的本质是把逻辑地址的 32 个二进制位<strong>切成两段</strong>：高位是页号，低位是页内偏移。两条对应关系贯穿本题所有小问：</p>
+<ul><li><strong>偏移位数决定页大小</strong>：地址低 k 位是页内字节偏移，页内就有 2^k 个字节，页大小 = 2^k B。页大小与偏移位数是同一件事的两种说法。</li><li><strong>页号位数决定页表项数</strong>：页号 n 位就有 2^n 个不同的页；一级页表要给<strong>每一个可能的页</strong>都准备一个表项——少一项，对应页就没法翻译。所以页表项数 = 2^n，页表大小 = 2^n × 每项字节数。</li></ul>
+<p>页表本身是个数组：页号是下标，页框号是内容。于是<strong>页表项的物理地址 = 页表基址 + 页号 × 每项字节数</strong>——按字节编址的主存里，数组下标要乘元素大小才落到字节地址。</p>
+<h3>第（1）问：页大小与页表最大占用</h3>
+<p>一级页表的逻辑地址结构（题图）为 20 位页号 + 12 位页内偏移。套铁律：</p>
+<ul><li>偏移 12 位 → 页大小 = 2^12 B = <strong>4KB</strong>；</li><li>页号 20 位 → 页表最多 2^20 项，每项 4B → 页表最大 = 2^20 × 4B = <strong>4MB</strong>。</li></ul>
+<p>顺带看懂一个事实：页表自己要占 4MB <strong>连续</strong>主存，且绝大部分表项平时根本用不上——这正是（2）问引入二级页表的动机。</p>
+<h3>第（2）问：二级页表的地址拆分</h3>
+<p>二级页表把 20 位页号再切两段：10 位页目录号 + 10 位页表索引。<strong>为什么每段恰好 10 位？</strong> 不是随便定的：页表项 4B、一页 4KB，一页恰好装得下 4KB ÷ 4B = 1024 = 2^10 个表项——每个页表页管 2^10 个虚拟页，所以每级索引 10 位；10 + 10 + 12 = 32 恰好拼满。二级页表的妙处：页目录只占 1 页，用到的页表页才进主存，不必整块 4MB 常驻。</p>
+<p>表达式（LA 为 32 位逻辑地址）：</p>
+<ul><li>页目录号 = <code>LA &gt;&gt; 22</code>——最高 10 位，右移 22 位（扔掉 12 位偏移 + 10 位索引）后自然剩下；</li><li>页表索引 = <code>(LA &gt;&gt; 12) &amp; 0x3FF</code>——先右移 12 位扔掉页内偏移，但此时低 10 位还挂着页目录号，必须再 <code>&amp; 0x3FF</code>（10 个 1）把它屏蔽掉，只留中间 10 位。</li></ul>
+<h3>第（3）问：逐项计算</h3>
+<p>代码段起始逻辑地址 0000 8000H：0x8000 恰是 8 × 4KB，说明它从<strong>页号 8</strong> 的页首开始；长度 8KB = 2 页 → 占<strong>页 8 和页 9</strong> 两页，页内都从偏移 0 起。据此逐项推：</p>
+<ul><li><strong>页表项物理地址</strong> = 0020 0000H + 页号 × 4B：页 8 → 0020 0000H + 32 = <strong>0020 0020H</strong>；页 9 → +36 = <strong>0020 0024H</strong>。为什么乘 4B：页表是按页号索引的数组，下标 × 元素大小才是字节地址，漏乘会答成 0020 0008H。</li><li><strong>页框号</strong> = 物理地址的高 20 位：装载基址 0090 0000H 去掉低 12 位 000H → <strong>00900H</strong>；代码段被装入<strong>连续</strong>主存空间，页与页物理上紧挨着，页 9 落进下一框 → <strong>00901H</strong>。</li><li><strong>代码页面 2 的起始物理地址</strong> = 页框号拼 12 位页内偏移：00901H 左移 12 位、偏移 000H → <strong>0090 1000H</strong>。为什么拼 0：页的起始地址就是框首。</li></ul>
+<p>汇总对号入座：</p>
+<table><thead><tr><th>项</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>页面 1 页表项物理地址</td><td>0020 0000H + 8 × 4B</td><td>0020 0020H</td></tr><tr><td>页面 2 页表项物理地址</td><td>0020 0000H + 9 × 4B</td><td>0020 0024H</td></tr><tr><td>页面 1 页框号</td><td>装载基址 0090 0000H 的高 20 位</td><td>00900H</td></tr><tr><td>页面 2 页框号</td><td>00900H + 1（连续装载）</td><td>00901H</td></tr><tr><td>页面 2 起始物理地址</td><td>页框号 00901H 拼偏移 000H</td><td>0090 1000H</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>页表项地址算成 0020 0008H</strong>：主存按字节编址，每个页表项占 4B，必须乘以 4。</li><li><strong>页框号与页表项地址混淆</strong>：页框号是页表项<strong>的内容</strong>（00900H/00901H），页表项地址是它<strong>存放的位置</strong>（0020 0020H/0020 0024H）。</li><li><strong>页面 2 起始地址写 00901H</strong>：00901H 只是页框号，物理地址要拼上 12 位页内偏移 000H，得 0090 1000H。</li></ul>
+<ul><li><strong>页表项地址算成 0020 0008H</strong>：主存按字节编址，每个页表项占 4B，必须乘以 4。</li><li><strong>页框号与页表项地址混淆</strong>：页框号是页表项<strong>的内容</strong>（00900H/00901H），页表项地址是它<strong>存放的位置</strong>（0020 0020H/0020 0024H）。</li><li><strong>页面 2 起始地址写 00901H</strong>：00901H 只是页框号，物理地址要拼上 12 位页内偏移 000H，得 0090 1000H。</li><li><strong>页表索引忘写 &amp; 0x3FF</strong>：只右移不屏蔽，会把页目录号一起带进索引。</li></ul>
 <blockquote>一句话结论：页 4KB、页表 4MB；页目录号 <code>LA &gt;&gt; 22</code>、页表索引 <code>(LA &gt;&gt; 12) &amp; 0x3FF</code>；页表项在 0020 0020H/0020 0024H，页框号 00900H/00901H，页面 2 物理始址 0090 1000H。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2835,20 +2859,21 @@ coend</code></pre></div></div></div></div>
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：路由聚合、最长匹配与 BGP（综合题 9 分）</h2>
-<p><strong>答案要点</strong>：(1) R2 路由表 3 项（见下表）；(2) 从接口 <strong>E0</strong> 转发；(3) 用 <strong>BGP</strong>，其报文封装在 <strong>TCP</strong> 分组中传输。</p>
-<h3>第一步（问 1）：数清图中的子网</h3>
-<p>题 47 图共 <strong>5 个子网</strong>：AS1 内 R1 连接的 153.14.5.0/25 与 153.14.5.128/25；AS2 内 R3 连接的 194.17.20.0/25 与 194.17.21.0/24；R2 直连的 194.17.20.128/25。另有两条点对点链路（R1 侧接口 153.14.3.2，R3 侧接口 194.17.24.2），R2 路由表中用它们作下一跳。</p>
-<h3>第二步（问 1）：逐侧聚合，路由项最少</h3>
-<ul><li><strong>AS1 侧</strong>：153.14.5.0/25 与 153.14.5.128/25 前半、后半恰好拼满一个 /24 → 聚合为 <strong>153.14.5.0/24</strong>，下一跳 153.14.3.2（R1），走 S0。</li><li><strong>R3 侧</strong>：194.17.20.0/25（194.17.20.0~127）与 194.17.21.0/24（194.17.21.0~255）合并成连续块 194.17.20.0~194.17.21.255 → 聚合为 <strong>194.17.20.0/23</strong>，下一跳 194.17.24.2（R3），走 S1。</li><li><strong>R2 直连</strong>：194.17.20.128/25 从 E0 直连。注意 /23 的范围（194.17.20.0~194.17.21.255）<strong>包含</strong>这个直连子网，所以这条更精确的直连路由必须单独保留——这正是路由表需要 3 项、而不是 2 项的原因。</li></ul>
+<h3>第 0 步：先立机制——聚合与查表各靠什么工作</h3>
+<p>本题两个动作各有一条底层规则：</p>
+<ul><li><strong>路由聚合 = 求最长公共前缀</strong>。把几个前缀合并成一个更短的前缀，判断方法就是把各地址写成二进制、看前面多少位相同；合并出的块要恰好由它们连续拼出。聚合让路由表项变少，代价是块"变粗"——可能把不属于下一跳的范围也吃进来。</li><li><strong>查表转发 = 最长前缀匹配</strong>。目的 IP 可能同时命中多个表项，<strong>前缀越长、地址块越小越具体，优先级越高</strong>。这条规则正是聚合敢"变粗"的安全网：粗块兜底，细块优先。</li></ul>
+<p>带着这两条先数清图中的子网：AS1 内 R1 连着 <strong>153.14.5.0/25</strong> 与 <strong>153.14.5.128/25</strong>；AS2 内 R3 连着 <strong>194.17.20.0/25</strong> 与 <strong>194.17.21.0/24</strong>，R2 的 E0 直连 <strong>194.17.20.128/25</strong>。两条点对点链路的对端接口 153.14.3.2（R1 侧）、194.17.24.2（R3 侧）用作下一跳。</p>
+<h3>第（1）问：逐侧聚合，路由项最少</h3>
+<ul><li><strong>AS1 侧</strong>：153.14.5.0/25（.0~.127）与 153.14.5.128/25（.128~.255）的第 4 字节一个 0xxx xxxx、一个 1xxx xxxx，前 24 位完全相同，且两块恰好拼满 153.14.5.0~.255 → 公共前缀 24 位，聚合为 <strong>153.14.5.0/24</strong>，下一跳 153.14.3.2，走 S0。</li><li><strong>R3 侧</strong>：194.17.20.0/25 与 194.17.21.0/24——第 3 字节 20 = 0001 0100、21 = 0001 0101，只有末位不同，公共前缀 16 + 7 = 23 位；合并块 194.17.20.0~194.17.21.255 连续 → 聚合为 <strong>194.17.20.0/23</strong>，下一跳 194.17.24.2，走 S1。</li><li><strong>R2 直连</strong>：194.17.20.128/25 从 E0 直连。注意 /23 的范围（194.17.20.0~194.17.21.255）<strong>包含</strong>这个直连子网——粗块把它"吃"了进来，但发往它的分组实际不该送 R3。这正是最长前缀匹配发挥作用的地方：更长的 /25 直连项优先于 /23，所以这条<strong>必须单独保留</strong>——路由表是 3 项而不是 2 项，"路由项尽可能少"也到 3 为止。</li></ul>
 <p>R2 路由表：</p>
 <table><thead><tr><th>目的网络</th><th>下一跳</th><th>接口</th></tr></thead><tbody><tr><td>153.14.5.0/24</td><td>153.14.3.2</td><td>S0</td></tr><tr><td>194.17.20.0/23</td><td>194.17.24.2</td><td>S1</td></tr><tr><td>194.17.20.128/25</td><td>直连</td><td>E0</td></tr></tbody></table>
-<h3>第三步（问 2）：最长前缀匹配定接口</h3>
-<p>目的 IP 194.17.20.200 同时命中两项：194.17.20.0/23（194.17.20.0~194.17.21.255）与 194.17.20.128/25（194.17.20.128~194.17.20.255）。前缀 /25 比 /23 更长更精确，按<strong>最长前缀匹配</strong>走直连表项 → 从 <strong>E0</strong> 转发。</p>
-<h3>第四步（问 3）：AS 之间用 BGP，封装在 TCP 里</h3>
-<p>R1 属 AS1、R2 属 AS2，两者是<strong>不同自治系统</strong>的边界路由器，交换路由信息用外部网关协议 <strong>BGP</strong>（BGP-4）。BGP 的可靠性要求高，其报文封装在 <strong>TCP</strong> 分组（端口 179）中传输。对照：RIP 封装在 UDP 中，OSPF 直接封装在 IP 中——三者封装层次是常考点。</p>
+<h3>第（2）问：最长前缀匹配定接口</h3>
+<p>目的 IP 194.17.20.200 同时命中两项：194.17.20.0/23（.20.0~.21.255）与 194.17.20.128/25（.20.128~.20.255）——.200 落在 .128~.255 里。/25 比 /23 长 2 位、更具体，按最长前缀匹配取直连表项 → 从 <strong>E0</strong> 转发。</p>
+<h3>第（3）问：AS 之间用 BGP，封装在 TCP 里</h3>
+<p>R1 属 AS1、R2 属 AS2，分属<strong>不同自治系统</strong>，边界路由器之间交换路由信息用外部网关协议 <strong>BGP</strong>（BGP-4）——RIP、OSPF 都是 AS 内部的 IGP，跨 AS 只能靠 BGP。为什么 BGP 封装在 TCP 里：BGP 要与对端建立长久会话、传送大量路由条目，对可靠性要求高，故其报文封装在 <strong>TCP</strong> 分组（端口 179）中传输。对照记忆：RIP 封装在 UDP 中，OSPF 直接封装在 IP 中——三种协议的封装层次是常考点。</p>
 <h3>易错点</h3>
-<ul><li><strong>AS1 侧忘了聚合</strong>：把两个 /25 拆成两条路由 → 路由项不是最少，不合题意。</li><li><strong>丢掉直连的 /25</strong>：以为 /23 已覆盖它就不用写；一旦丢掉，发往 194.17.20.128~255 的分组会被送进 S1，绕去 R3。</li><li><strong>问 3 答成 OSPF/RIP</strong>：RIP、OSPF 是自治系统内部协议（IGP），跨 AS 用 BGP；且 BGP 跑在 TCP 之上。</li></ul>
-<blockquote>三句话：聚合看能否并成更短前缀；查表用最长前缀匹配；跨 AS 用 BGP、BGP 靠 TCP。</blockquote></div></div>
+<ul><li><strong>AS1 侧忘了聚合</strong>：把两个 /25 拆成两条路由 → 路由项不是最少，不合题意。</li><li><strong>丢掉直连的 /25</strong>：以为 /23 已覆盖它就不用写；一旦丢掉，发往 194.17.20.128~.255 的分组会被送进 S1 绕去 R3——最长前缀匹配没有细项可匹配了。</li><li><strong>问 3 答成 OSPF/RIP</strong>：RIP、OSPF 是自治系统内部协议（IGP），跨 AS 用 BGP；且 BGP 跑在 TCP 之上。</li></ul>
+<blockquote>三句话：聚合 = 求公共前缀；查表 = 最长前缀匹配（细项优先）；跨 AS 用 BGP、BGP 靠 TCP。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

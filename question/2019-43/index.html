@@ -122,19 +122,36 @@ while (true) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：哲学家就餐问题（碗 + 筷子）的信号量设计</h2>
-<blockquote>答题框架：先声明信号量并解释初值 → 再给出每位哲学家的 P、V 流程 → 最后说明为什么既不死锁又能尽可能多的人同时就餐。</blockquote>
-<h3>第一步：设定信号量及初值</h3>
-<ul><li><code>chopstick[i]</code>（i = 0,1,…,n−1）：<strong>互斥信号量</strong>，表示第 i 根筷子，<strong>初值均为 1</strong>。</li><li><code>bowl</code>：<strong>资源信号量</strong>，表示允许同时取碗进餐的名额数，<strong>初值为 min(m, n−1)</strong>。</li></ul>
-<h3>第二步：写出 Pi 的流程</h3>
-<p>按「先取碗 → 再取左右筷子 → 进餐 → 先还筷子 → 最后还碗」的顺序：</p>
-<table><thead><tr><th>步骤</th><th>操作</th><th>含义</th></tr></thead><tbody><tr><td>1</td><td><code>P(bowl)</code></td><td>申请一个碗名额，名额用完则等待</td></tr><tr><td>2</td><td><code>P(chopstick[i])</code></td><td>取一侧筷子</td></tr><tr><td>3</td><td><code>P(chopstick[(i+1) % n])</code></td><td>取另一侧筷子</td></tr><tr><td>4</td><td><code>eat</code></td><td>进餐</td></tr><tr><td>5</td><td><code>V(chopstick[i])</code>、<code>V(chopstick[(i+1) % n])</code></td><td>归还两根筷子</td></tr><tr><td>6</td><td><code>V(bowl)</code></td><td>归还碗名额，唤醒一位等待者</td></tr></tbody></table>
-<p>即参考答案的代码骨架：外层 <code>while(true){ think; P(bowl); P(chopstick[i]); P(chopstick[(i+1)%n]); eat; V(chopstick[i]); V(chopstick[(i+1)%n]); V(bowl); }</code>，其中 <code>chopstick[n]</code> 初值全 1，<code>bowl = min(n-1, m)</code>。</p>
-<h3>第三步：为什么初值取 min(m, n−1)</h3>
-<ul><li><strong>防死锁</strong>：至多 n−1 人同时拿筷子竞争，而筷子有 n 根，总有人能同时拿到两根，循环等待无法形成。</li><li><strong>尽可能多就餐</strong>：若 m &lt; n−1，碗是更紧的资源，bowl 初值取 m 可把碗用满；若 m ≥ n−1，取 n−1 即可，再多只会重新引入死锁风险。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：哲学家就餐变体（碗 + 筷子）的信号量设计</h2>
+<h3>第 0 步：先立模型——死锁是怎么形成的，才能对症下药</h3>
+<p>经典 n 位哲学家、n 根筷子的死锁机制：每人先抓起<strong>左手</strong>一根筷子 → n 根筷子全被占 → 每人都阻塞在等<strong>右手</strong>的筷子，而那根筷子在邻居手里、邻居也在等他——"持有并等待"连成一个环（循环等待条件成立），谁也不放手，全体永远等下去。</p>
+<p>对症思路：<strong>不让 n 个人同时进入"各持一根筷子"的状态</strong>。本题的新道具是 m 个碗——规定"先拿到碗，才有资格去拿筷子"，并把碗的名额限制在 n−1 以内。于是任何时刻至多 n−1 人在竞争筷子，而筷子有 n 根，由<strong>鸽笼原理</strong>：这 n−1 人中总有人能同时抓到左右两根 → 至少一人能就餐、吃完归还 → 循环等待无法成环。这就是 bowl 信号量的全部使命。</p>
+<h3>第一步：信号量及初值（与参考答案同口径）</h3>
+<ul><li><code>chopstick[i]</code>（i = 0,1,…,n−1）：<strong>互斥信号量</strong>，表示第 i 根筷子，<strong>初值均为 1</strong>（一根筷子一次只许一人用）。</li><li><code>bowl</code>：<strong>资源信号量</strong>，表示允许同时"取碗进餐"的名额数，<strong>初值为 min(m, n−1)</strong>。</li></ul>
+<p>为什么初值取 min(m, n−1)：m 是碗的物理上限，n−1 是防死锁的上限，名额取两者较小者。碗多（m ≥ n−1）时起作用的是 n−1，把竞争筷子的人数压到 n−1 以内；碗少（m &lt; n−1）时起作用的是 m，能就餐的人数更少，死锁更无从谈起。两种情况都安全，且名额不打折扣地用满。</p>
+<h3>第二步：写出 Pi 的流程（与参考答案同口径）</h3>
+<pre><code>semaphore chopstick[n];   // 初值全 1
+bowl = min(m, n-1);
+
+Pi:
+while (true) {
+    think;
+    P(bowl);                    // 先拿"入场券"
+    P(chopstick[i]);            // 取一侧筷子
+    P(chopstick[(i+1) % n]);    // 取另一侧筷子
+    eat;
+    V(chopstick[i]);            // 先还筷子
+    V(chopstick[(i+1) % n]);
+    V(bowl);                    // 最后还名额
+}</code></pre>
+<p><strong>为什么 P(bowl) 必须在最前</strong>：先拿"入场券"再碰筷子。若反过来先 P 筷子再 P 碗，可能出现 n 人各持一根筷子后一起在 bowl 上排队，拿到 bowl 的人互相等对方的筷子——死锁照旧。先拿碗，才把竞争筷子的人数从根本上压到 n−1 以内。</p>
+<p><strong>为什么两根筷子不需要"先左后右"的全局顺序</strong>：经典问题的奇偶/统一方向解法是为了破循环等待；这里破环的任务已交给 bowl，先拿哪根都安全，参考口径即先 <code>chopstick[i]</code> 后 <code>chopstick[(i+1)%n]</code>。</p>
+<p><strong>为什么 V 的顺序是先筷后碗</strong>：V 操作不阻塞、不会死锁，先还筷子能让邻座尽快凑齐两根开饭；最后 <code>V(bowl)</code> 归还名额并唤醒一位等待者。P、V 一一对应，名额不会泄漏。</p>
+<h3>第三步：验证题目两个目标</h3>
+<ul><li><strong>防死锁</strong>：就餐者 ≤ min(m, n−1) ≤ n−1 &lt; n，鸽笼原理保证总有人能同时拿到两根筷子，循环等待成不了环。</li><li><strong>尽可能多就餐</strong>：名额 = min(m, n−1)，碗不少占、名额不闲置，能同时就餐的人数达到安全前提下的最大值。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>只设筷子信号量、不设 bowl</strong>：n 人各抓一根筷子仍会全体阻塞，m 个碗也没有使用限制。</li><li><strong>bowl 初值直接写 m</strong>：当 m ≥ n 时起不到限流作用，必须取 min(m, n−1)。</li><li><strong>P、V 顺序随意</strong>：标准写法是先拿碗再拿筷、先还筷后还碗。</li></ul>
-<blockquote>一句话结论：<code>chopstick[n]</code> 初值 1 管互斥，<code>bowl</code> 初值 <code>min(m, n−1)</code> 管限流，一限一互斥，既不死锁又让尽可能多的哲学家同时就餐。</blockquote></div></div>
+<ul><li><strong>只设筷子信号量、不设 bowl</strong>：n 人各抓一根筷子照样全体阻塞，经典死锁原样重现。</li><li><strong>bowl 初值直接写 m</strong>：m ≥ n 时限流失效，n 人可同时持筷，防死锁没有保障。</li><li><strong>先 P 筷子后 P 碗</strong>：持筷等碗，循环等待未被破坏。</li><li><strong>漏掉某个 V 或 P/V 不对应</strong>：名额/筷子泄漏，最终无人能再就餐。</li></ul>
+<blockquote>一句话锚点：<code>chopstick[n]</code> 初值 1 管互斥，<code>bowl</code> 初值 <code>min(m, n−1)</code> 管限流；先拿碗后拿筷是破环的关键——把"n 人抢 n 根筷"压成"≤n−1 人抢 n 根筷"，鸽笼原理兜底。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

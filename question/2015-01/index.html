@@ -110,16 +110,18 @@ void main()
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：递归调用时栈内保存信息的排列次序</h2>
-<p><strong>答案：A</strong></p>
+<p><strong>答案：A</strong>（自栈底到栈顶：main() → S(1) → S(0)）。</p>
+<h3>第零步：先立模型——调用即压栈，返回即弹栈</h3>
+<p>程序运行时，每次函数调用都要保存"回来的路"和"现场的账"：返回地址、参数、局部变量等被打包成一个<strong>活动记录</strong>，在调用发生的那一刻<strong>压入调用栈</strong>；函数执行完毕返回时，它的活动记录<strong>弹出</strong>，控制流回到调用者。于是栈里自底向上恰好就是调用发生的先后次序。</p>
+<p><strong>为什么调用信息必须用栈存？</strong> 因为返回次序与调用次序严格相反：最后被调用的函数一定最先返回（S(0) 先于 S(1) 返回，S(1) 先于 main 结束）。这种"后进先出"的依赖关系天然对应栈结构——若用队列（先进先出）保存，返回时就找不到正确的去处了。</p>
 <h3>第一步：理清调用链</h3>
-<p>程序从 <code>main()</code> 开始执行，<code>main()</code> 调用 <code>S(1)</code>；<code>S(1)</code> 中 n=1 大于 0，于是要计算 <code>S(0)+1</code>，又调用 <code>S(0)</code>；<code>S(0)</code> 满足 n≤0 直接返回 0。所以调用链为 <code>main() → S(1) → S(0)</code>。</p>
-<h3>第二步：按"先调用先入栈"排栈</h3>
-<p>程序运行时用<strong>栈</strong>保存函数调用的信息（返回地址、参数、局部变量等），规则是：<strong>先调用的函数先入栈，后调用的压在栈顶</strong>。</p>
-<table><thead><tr><th>时刻</th><th>动作</th><th>栈内（自底向上）</th></tr></thead><tbody><tr><td>1</td><td>main() 开始执行</td><td>main()</td></tr><tr><td>2</td><td>main 调用 S(1)</td><td>main() → S(1)</td></tr><tr><td>3</td><td>S(1) 调用 S(0)（最深时刻）</td><td>main() → S(1) → S(0)</td></tr><tr><td>4</td><td>S(0) 返回 0 出栈，S(1) 算出 1 出栈</td><td>main()</td></tr><tr><td>5</td><td>main 输出 1，结束出栈</td><td>（空）</td></tr></tbody></table>
-<p>在递归到达最深、S(0) 尚未返回的那一刻，栈内自栈底到栈顶依次是 <strong>main() → S(1) → S(0)</strong>。</p>
+<p>程序从 <code>main()</code> 开始执行：<code>main()</code> 调用 <code>S(1)</code>；<code>S(1)</code> 中 n=1&gt;0，要计算 <code>S(0)+1</code>，又调用 <code>S(0)</code>；<code>S(0)</code> 满足 n≤0 直接返回 0。调用链为 <code>main() → S(1) → S(0)</code>。</p>
+<h3>第二步：按"压栈次序"还原栈内容</h3>
+<table><thead><tr><th>时刻</th><th>动作</th><th>栈内（自底向上）</th></tr></thead><tbody><tr><td>1</td><td>main() 开始执行</td><td>main()</td></tr><tr><td>2</td><td>main 调用 S(1)，压入 S(1) 的活动记录</td><td>main() → S(1)</td></tr><tr><td>3</td><td>S(1) 调用 S(0)（递归最深时刻）</td><td>main() → S(1) → S(0)</td></tr><tr><td>4</td><td>S(0) 返回 0 弹栈，S(1) 算出 1 弹栈</td><td>main()</td></tr><tr><td>5</td><td>main 输出 1，结束弹栈</td><td>（空）</td></tr></tbody></table>
+<p>递归到达最深、S(0) 尚未返回的那一刻，栈自底向顶依次是 <strong>main() → S(1) → S(0)</strong>：main 最先调用所以压在栈底，S(0) 最后调用所以停在栈顶。</p>
 <h3>易错点</h3>
-<ul><li><strong>把栈顶当成栈底</strong>：若按 B/D 那样把后调用的写在前面，就颠倒了"栈顶是最后入栈元素"这一基本性质。</li><li><strong>漏掉某一层调用</strong>：C 选项写成 <code>main()→S(0)→S(1)</code>，忽略了 S(1) 先于 S(0) 被调用。</li></ul>
-<blockquote>记忆点：调用栈的入栈次序 = 调用发生的先后次序；栈顶永远是"当前正在执行"的函数。</blockquote></div></div>
+<ul><li><strong>把栈顶当成栈底</strong>（对应 B/D）：后调用的压在<strong>栈顶</strong>而不是栈底，栈顶永远是"当前正在执行"的函数。</li><li><strong>漏掉或颠倒调用层</strong>（对应 C 的 main→S(0)→S(1)）：S(1) 先于 S(0) 被调用，压栈次序不可颠倒。</li><li><strong>误以为返回后栈里还留着记录</strong>：返回即弹栈，第 4 步之后栈里只剩 main()。</li></ul>
+<blockquote>记忆锚点：调用 = 压入活动记录，返回 = 弹出；栈自底向顶 = 调用先后次序；返回次序 = 调用次序的逆序，所以必须用栈。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -108,19 +108,21 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：上三角压缩还原与关键路径</h2>
 <h3>第 1 问：由一维数组还原邻接矩阵 A</h3>
-<p>上三角矩阵按<strong>行优先</strong>压缩：第 r 行只存 <code>A[r][r+1..5]</code>，共 <strong>5−r</strong> 个元素。据此把 15 个元素分段：第 0 行占下标 0~4，第 1 行占 5~8，第 2 行占 9~11，第 3 行占 12~13，第 4 行占 14，第 5 行没有元素。</p>
+<p>上三角矩阵按<strong>行优先</strong>压缩：第 r 行只存 <code>A[r][r+1..5]</code>——列号从 r+1 到 5，共 <strong>5−r</strong> 个元素。据此把 15 个元素分段：第 0 行占下标 0~4，第 1 行占 5~8，第 2 行占 9~11，第 3 行占 12~13，第 4 行占 14，第 5 行没有元素。</p>
+<p><strong>为什么只给 15 个数、对角线和下三角敢直接填 0/∞？</strong> 6×6 共 36 个元素，数组只有 15 个 = 5+4+3+2+1，恰好是"对角线以上"的元素个数——说明对角线与下三角是约定值：对角线为 0（无自环），下三角为 ∞（没有从大编号指回小编号的弧）。"上三角"还送了一个隐含结论：<strong>所有弧都从小号指向大号，0→1→2→3→4→5 就是天然的拓扑序</strong>——第 3 问求 ve、vl 时直接按编号顺序算即可，不必再排序。</p>
 <p>逐段还原（对角线与下三角均为 0/∞）：</p>
 <table><thead><tr><th>A</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><td><strong>0</strong></td><td>0</td><td>4</td><td>6</td><td>∞</td><td>∞</td><td>∞</td></tr><tr><td><strong>1</strong></td><td>∞</td><td>0</td><td>5</td><td>∞</td><td>∞</td><td>∞</td></tr><tr><td><strong>2</strong></td><td>∞</td><td>∞</td><td>0</td><td>4</td><td>3</td><td>∞</td></tr><tr><td><strong>3</strong></td><td>∞</td><td>∞</td><td>∞</td><td>0</td><td>∞</td><td>3</td></tr><tr><td><strong>4</strong></td><td>∞</td><td>∞</td><td>∞</td><td>∞</td><td>0</td><td>3</td></tr><tr><td><strong>5</strong></td><td>∞</td><td>∞</td><td>∞</td><td>∞</td><td>∞</td><td>0</td></tr></tbody></table>
 <p>即：数组前 5 个 <code>4, 6, ∞, ∞, ∞</code> 是第 0 行（得到边 0→1 权 4、0→2 权 6），接着 <code>5, ∞, ∞, ∞</code> 是第 1 行（1→2 权 5），<code>4, 3, ∞</code> 是第 2 行（2→3 权 4、2→4 权 3），<code>∞, 3</code> 是第 3 行（3→5 权 3），最后的 <code>3</code> 是第 4 行（4→5 权 3）。</p>
 <h3>第 2 问：画出有向带权图 G</h3>
 <p>共 7 条弧：<strong>0→1(4)、0→2(6)、1→2(5)、2→3(4)、2→4(3)、3→5(3)、4→5(3)</strong>。画图时按拓扑层次摆放：0 在最左，1、2 依次向右，3、4 并列一层，5 在最右，箭头一律指向大编号顶点（本图是 AOE 网/事件图）。</p>
 <h3>第 3 问：求关键路径及长度</h3>
-<p>这是 AOE 网：顶点是事件，弧是活动。先沿拓扑序求<strong>最早发生时间 ve</strong>，再沿逆拓扑序求<strong>最迟发生时间 vl</strong>：</p>
+<p>这是 AOE 网：顶点是事件，弧是活动。<strong>ve 回答"这个事件最早什么时候能发生"</strong>：一个事件必须等指向它的<strong>所有</strong>活动都干完才发生，所以 ve(j) = max(ve(i) + w)，对每条入弧取最大——漏看任何一条入弧，事件就可能在"还有活没干完"时被提前开工。<strong>vl 回答"最晚什么时候必须发生"</strong>：再晚会拖累某个后继，所以 vl(i) = min(vl(j) − w)，对每条出弧取最小——最紧的那个后继说了算。汇点的 ve(5) 是全部路径中最长的完成时间，它就是整个工程的工期。</p>
+<p>先沿拓扑序求 ve，再沿逆拓扑序求 vl：</p>
 <table><thead><tr><th>顶点</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><td>ve</td><td>0</td><td>4</td><td>9</td><td>13</td><td>12</td><td>16</td></tr><tr><td>vl</td><td>0</td><td>4</td><td>9</td><td>13</td><td>13</td><td>16</td></tr></tbody></table>
 <p>关键点的算法：<code>ve(2) = max(ve(0)+6, ve(1)+5) = max(6, 9) = 9</code>；<code>ve(5) = max(ve(3)+3, ve(4)+3) = max(16, 15) = 16</code>；<code>vl(2) = min(vl(3)−4, vl(4)−3) = min(9, 10) = 9</code>。</p>
-<p>再对每条活动求时间余量 <code>l − e</code>（e = ve(i)，l = vl(j) − 权），余量为 0 者是关键活动：</p>
+<p>再对每条活动求时间余量 <code>l − e</code>（e = ve(i)，l = vl(j) − 权）。<strong>为什么余量 0 就是关键活动？</strong> 余量是这条活动"最多能拖多久"的额度：额度为 0，拖一分钟总工期就后移一分钟。所有额度为 0 的活动首尾相接，正是从源点到汇点的最长路径——关键路径：</p>
 <table><thead><tr><th>活动</th><th>e</th><th>l</th><th>余量</th><th>关键？</th></tr></thead><tbody><tr><td>0→1</td><td>0</td><td>0</td><td>0</td><td><strong>是</strong></td></tr><tr><td>0→2</td><td>0</td><td>3</td><td>3</td><td>否</td></tr><tr><td>1→2</td><td>4</td><td>4</td><td>0</td><td><strong>是</strong></td></tr><tr><td>2→3</td><td>9</td><td>9</td><td>0</td><td><strong>是</strong></td></tr><tr><td>2→4</td><td>9</td><td>10</td><td>1</td><td>否</td></tr><tr><td>3→5</td><td>13</td><td>13</td><td>0</td><td><strong>是</strong></td></tr><tr><td>4→5</td><td>12</td><td>13</td><td>1</td><td>否</td></tr></tbody></table>
-<p>关键活动首尾相接成关键路径：<strong>0 → 1 → 2 → 3 → 5</strong>，长度 = 4 + 5 + 4 + 3 = <strong>16</strong>。</p>
+<p>关键活动首尾相接成关键路径：<strong>0 → 1 → 2 → 3 → 5</strong>，长度 = 4 + 5 + 4 + 3 = <strong>16</strong>——恰等于 ve(5)，与"关键路径长度 = 工期"互相印证。</p>
 <h3>易错点</h3>
 <ul><li><strong>分段起点算错</strong>：第 r 行的元素个数是 5−r（不是 6−r），上一行的终点 +1 是下一行的起点；错一段后面全错。</li><li><strong>ve(2) 只取 6</strong>：0→2 直达只有 6，但 0→1→2 是 4+5=9，事件必须等<strong>所有</strong>入弧都完成，取最大值。</li><li><strong>关键路径漏算 ve(4)</strong>：0→1→2→4→5 长 4+5+3+3=15，比 16 短，不是关键路径；若只盯一条路不走全图容易误判。</li></ul>
 <blockquote>结论：关键路径 0→1→2→3→5，长度 16；口诀——ve 顺拓扑取最大，vl 逆拓扑取最小，余量 0 连成关键路径。</blockquote></div></div>

@@ -103,12 +103,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：RAM 与 ROM 的特性对比</h2>
 <p>答案：<strong>A</strong>（仅 I 和 II 正确）。</p>
-<h3>第一步：逐条判定</h3>
-<table><thead><tr><th>叙述</th><th>判定</th><th>理由</th></tr></thead><tbody><tr><td>I. RAM 易失、ROM 非易失</td><td>正确</td><td>RAM（SRAM/DRAM）断电丢信息；ROM 断电后信息保持</td></tr><tr><td>II. 都采用随机存取</td><td>正确</td><td>随机存取 = 存取时间与单元位置无关；RAM、ROM 都按地址直接访问</td></tr><tr><td>III. 都可用作 Cache</td><td>错误</td><td>Cache 内容要动态替换更新，ROM <strong>只读不能写</strong>；Cache 由 SRAM 构成</td></tr><tr><td>IV. 都需要刷新</td><td>错误</td><td>只有 <strong>DRAM</strong> 需要定时刷新；SRAM 与 ROM 都不需要</td></tr></tbody></table>
-<h3>第二步：为什么 II 容易漏判</h3>
-<p>"随机存取"描述的是<strong>访问方式</strong>而不是"可写"：只要给出地址就能以相同时间访问任意单元，ROM 同样满足。很多人误以为随机存取是 RAM 的专利而漏掉 II。</p>
+<h3>第一步：先立机制——两把尺子分开量</h3>
+<p>判断 I~IV 要用两把互不相干的尺子：<strong>信息靠什么保住</strong>（决定易失性与刷新）、<strong>怎么访问</strong>（决定随机存取）。</p>
+<p>第一把尺子看保存介质。DRAM 用电容存电荷，电荷会泄漏——所以要<strong>定时刷新续命</strong>，断电更是一失俱失，这是"易失"的根源；SRAM 用双稳态触发器，不掉电就保持，不需刷新，但断电同样丢——也是易失。ROM 把位通过掩膜或浮栅电荷"写死"在物理结构里，断电不失、更不需要任何刷新——非易失。</p>
+<p>第二把尺子看寻址方式。<strong>随机存取说的是"给出任意地址，存取时间都一样、与位置无关"</strong>，它和"能不能写"是正交的两个维度。ROM 内部同样有地址译码器，按地址直接读出，所以 ROM 也是随机存取——"随机存取"不是 RAM 的专利。</p>
+<h3>第二步：Cache 为什么只能 SRAM 干</h3>
+<p>Cache 的本职是主存活跃块的<strong>动态副本</strong>，要不断换入换出、必须可写且快——ROM 只读、天然出局，只有 SRAM 合格。由此 III、IV 判死，I、II 成立。</p>
+<h3>第三步：逐条对号入座</h3>
+<table><thead><tr><th>叙述</th><th>判定</th><th>归因</th></tr></thead><tbody><tr><td>I. RAM 易失、ROM 非易失</td><td>正确</td><td>保存介质：电容/触发器 vs 掩膜/浮栅</td></tr><tr><td>II. 都采用随机存取</td><td>正确</td><td>都按地址译码直接访问；随机存取与可写与否无关</td></tr><tr><td>III. 都可用作 Cache</td><td>错误</td><td>Cache 需动态可写，ROM 只读</td></tr><tr><td>IV. 都需要刷新</td><td>错误</td><td>刷新是 DRAM 电容泄漏的专属补救</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>以为 ROM 不能随机访问、只能顺序读</strong>：ROM 是按地址访问的随机存取存储器，只是"只读"。</li><li><strong>以为 SRAM 也要刷新</strong>：刷新是 DRAM（电容存电荷会泄漏）特有的操作。</li><li><strong>忽略 Cache 需要可写</strong>：Cache 行要不断换入换出，只读器件当不了 Cache。</li></ul>
+<ul><li><strong>以为 ROM 不能随机访问、只能顺序读</strong>：ROM 是按地址访问的随机存取存储器，只是"只读"——漏掉 II 的根源。</li><li><strong>以为 SRAM 也要刷新</strong>：刷新是 DRAM（电容存电荷会泄漏）特有的操作。</li><li><strong>忽略 Cache 需要可写</strong>：Cache 行要不断换入换出，只读器件当不了 Cache。</li></ul>
 <blockquote>记忆锚点：RAM 易失、ROM 非易失；二者都随机存取；Cache 用 SRAM、刷新归 DRAM——正确的是 I 和 II，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">

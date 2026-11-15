@@ -107,18 +107,21 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：子网均分与 IP 分片计算（7 分）</h2>
-<h3>第（1）问：子网划分、广播地址与剩余主机数</h3>
-<p><strong>① 划分</strong>：192.168.1.0/24 均分给两个部门 → 从 24 位前缀借 1 位主机位做子网位，掩码 /25（255.255.255.128）：</p>
-<table><thead><tr><th>子网</th><th>子网地址</th><th>地址范围</th></tr></thead><tbody><tr><td>销售部</td><td>192.168.1.0/25</td><td>192.168.1.0 ～ 192.168.1.127</td></tr><tr><td>技术部</td><td>192.168.1.128/25</td><td>192.168.1.128 ～ 192.168.1.255</td></tr></tbody></table>
-<p><strong>② 销售部广播地址</strong>：主机位全 1（后 7 位 1111111）→ <strong>192.168.1.127</strong>。<br/><strong>③ 技术部子网地址</strong>：主机位全 0 → <strong>192.168.1.128</strong>。<br/><strong>④ 技术部还可连接的主机数</strong>：主机位 7 位，可用主机地址 = 2 的 7 次方 − 2 = <strong>126</strong> 个。图上已占用：技术部主机已分配 192.168.1.129 ～ 192.168.1.208 共 <strong>80</strong> 个，路由器接口 F1（192.168.1.254）占 <strong>1</strong> 个，合计 81 个 → 还可连接 126 − 81 = <strong>45 台</strong>。</p>
-<h3>第（2）问：IP 分片</h3>
-<p><strong>① 一个最大分片封装数据的字节数</strong>：分组 192.168.1.1 → 192.168.1.208 跨子网，经路由器接口 F1 转发，出口 MTU = 800B。每片总长 ≤ 800B，减去 20B 的 IP 头，每片数据 ≤ 780B；但<strong>片偏移以 8B 为单位</strong>，数据长度必须是 8 的整数倍 → 780 向下取到 8 的倍数 = <strong>776B</strong>。</p>
-<p><strong>② 至少分几片</strong>：原分组数据 = 总长 1500 − 头 20 = 1480B；1480 = 776 + 704 → 至少 <strong>2 个分片</strong>。</p>
-<p><strong>③ 片偏移</strong>：第 1 片偏移 = <strong>0</strong>；第 2 片的数据从原数据第 776B 处开始 → 776 ÷ 8 = <strong>97</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：子网均分与 IP 分片——位账与字节账</h2>
+<h3>第 0 步：机制先行——三条底层规则</h3>
+<p>三问共用三条机制：</p>
+<ol><li><strong>均分 = 借位</strong>：/24 均分给 2 个子网，就是从主机位里拿 <strong>1 位</strong>当子网号（借 k 位得 2^k 份，2^1 = 2 恰好两份；多借位会切出多余的子网、主机位也变少，与"均分两份"不符），掩码变 /25（255.255.255.128），每份剩 7 位主机位。</li><li><strong>两个保留地址</strong>：主机位<strong>全 0</strong> 是子网地址（网络自身），<strong>全 1</strong> 是广播地址（发给全网）——都不能指派给主机。这就是"可用主机数 = 2^主机位 − 2"里减 2 的来由。</li><li><strong>分片的两条硬规矩</strong>：MTU 限制的是<strong>含头的总长度</strong>；片偏移字段以 <strong>8B 为单位</strong>计数（13 位的字段记"这是第几个 8B 块"），所以除最后一片外，各片载荷必须是 8 的倍数，否则下一片的偏移没法用整数个 8B 表达。</li></ol>
+<h3>第（1）问：广播地址、子网地址与剩余主机数</h3>
+<p>均分后两份子网：</p>
+<table><thead><tr><th>子网</th><th>子网地址</th><th>地址范围</th><th>广播地址</th></tr></thead><tbody><tr><td>销售部</td><td>192.168.1.0/25</td><td>.0 ~ .127</td><td><strong>192.168.1.127</strong>（主机位全 1）</td></tr><tr><td>技术部</td><td><strong>192.168.1.128</strong>（主机位全 0）</td><td>.128 ~ .255</td><td>192.168.1.255</td></tr></tbody></table>
+<p><strong>技术部还可连接的主机数</strong>——按"总量 − 已占"记账：7 位主机位 → 2⁷ − 2 = <strong>126</strong> 个可用地址。题 47 图中技术部已分配 192.168.1.129 ~ 192.168.1.208，共 208 − 129 + 1 = <strong>80</strong> 个；路由器接口 F1 占 192.168.1.254 这 <strong>1</strong> 个（F0 = 192.168.1.126 在销售部子网内，不占技术部的账）。126 − 81 = <strong>45 台</strong>。</p>
+<h3>第（2）问：IP 分片——把 1480B 装进 800B 的车厢</h3>
+<p>分组 192.168.1.1 → 192.168.1.208 跨子网，从 F1（MTU = 800B）转发，必须分片：</p>
+<ol><li><strong>一个最大分片能装多少数据</strong>：每片总长 ≤ 800B，减去 20B 的 IP 头 → 载荷 ≤ 780B；按规矩取 8 的倍数向下取 → <strong>776B</strong>。</li><li><strong>至少几片</strong>：原分组载荷 = 1500 − 20 = <strong>1480B</strong>；1480 = 776 + 704 → <strong>2 个分片</strong>。</li><li><strong>片偏移</strong>：第 1 片从原载荷第 0 个 8B 块开始 → <strong>0</strong>；第 2 片从第 776B 处开始 → 776 ÷ 8 = <strong>97</strong>。</li></ol>
 <table><thead><tr><th>分片</th><th>数据长度</th><th>总长度（含 20B 头）</th><th>片偏移</th><th>MF 位</th></tr></thead><tbody><tr><td>第 1 片</td><td>776B</td><td>796B</td><td>0</td><td>1</td></tr><tr><td>第 2 片</td><td>704B</td><td>724B</td><td>97</td><td>0</td></tr></tbody></table>
+<p><strong>为什么最后一片不用凑 8 的倍数</strong>：8 的倍数约束只为了保证"下一片从哪儿开始"能落在新一个 8B 块上；最后一片后面没有下一片，704B 原样装走即可（本题 704 恰好也是 8 的倍数，是巧合不是约束）。</p>
 <h3>易错点</h3>
-<ul><li><strong>剩余主机数忘了减"已占用"</strong>：126 是可用上限，还要减去已分配的 80 个主机地址和 F1 的 1 个地址；漏减 F1 会错得 46，全不减会错得 126。</li><li><strong>把 780B 当作最大分片数据</strong>：780 不是 8 的倍数，必须向下取到 776B；对应第 2 片偏移 776 ÷ 8 = 97。</li><li><strong>总长度与数据长度混用</strong>：MTU 限制的是含头的<strong>总长度</strong>；"片偏移"以<strong>数据部分</strong>的第几个 8B 块计，不是用总长度算。</li></ul>
+<ul><li><strong>剩余主机数忘了减"已占用"</strong>：126 是可用上限，还要减去已分配的 80 个主机地址和 F1 的 1 个地址；漏减 F1 得 46，全不减得 126。</li><li><strong>把 780B 当最大分片载荷</strong>：780 不是 8 的倍数，必须向下取到 776B；随之第 2 片偏移 = 776 ÷ 8 = 97。</li><li><strong>总长度与数据长度混用</strong>：MTU 卡的是含头的<strong>总长度</strong>；片偏移按<strong>载荷</strong>的第几个 8B 块计。</li><li><strong>借位数想错</strong>：均分 2 份借 1 位即可；借 2 位得 4 份，多出的子网和变少的主机位都不符合题设。</li></ul>
 <blockquote>结论：（1）销售部广播地址 192.168.1.127，技术部子网地址 192.168.1.128，还可连接 45 台主机；（2）最大分片封装数据 776B，至少 2 个分片，片偏移分别为 0 和 97。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">

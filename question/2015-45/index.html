@@ -149,19 +149,23 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：双人信箱辩论的信号量同步（成对的生产者-消费者）</h2>
 <h3>答题框架</h3>
-<p>先找同步与互斥关系，再定义信号量，最后把 P、V 嵌进两个循环。口诀：<strong>同步 P 在互斥 P 之前；同一信箱的取/放要互斥</strong>。</p>
+<p>先立模型再写代码：A、B 两个循环各自做"取信 → 处理 → 放信"，取信依赖自己信箱非空、放信依赖对方信箱不满——这是<strong>两组生产者-消费者</strong>；信箱本身是共享数据结构，一取一放不能同时改——再各配一把互斥锁。口诀：<strong>同步 P 在互斥 P 之前；同一信箱的取/放要互斥</strong>。</p>
 <h3>第一问：分析同步与互斥关系</h3>
-<ul><li>A 从 A 信箱取邮件 → 依赖"A 信箱有邮件"；A 向 B 信箱放邮件 → 依赖"B 信箱有空位"。B 完全对称。</li><li>每个信箱是共享资源，一人取、另一人放可能同时进行 → 每个信箱再配一个<strong>互斥</strong>信号量。</li><li>本质是两组生产者-消费者：A 是"B 信箱的生产者、A 信箱的消费者"，B 反之。</li></ul>
+<ul><li><strong>同步（数量约束）</strong>：A 从 A 信箱取邮件 → 依赖"A 信箱有邮件"；A 向 B 信箱放邮件 → 依赖"B 信箱有空位"。B 完全对称。这就是生产者-消费者里的"产品数"与"缓冲区空位数"。</li><li><strong>互斥（动作约束）</strong>：<strong>为什么有了"满/空"信号量还要 mutex</strong>——Full/Empty 只约束数量，不保护"取信/放信"这个修改信箱的动作本身：A 取信与 B 放信可能同时对 A 信箱动手（改计数、动队列），不互斥就会互踩。</li><li>汇总：A 是"B 信箱的生产者、A 信箱的消费者"，B 反之；每个信箱 = 一对"满/空"信号量 + 一个互斥信号量。</li></ul>
 <h3>第二问：信号量定义与初值</h3>
 <table><thead><tr><th>信号量</th><th>初值</th><th>含义</th></tr></thead><tbody><tr><td>Full_A</td><td>x</td><td>A 信箱现有邮件数</td></tr><tr><td>Empty_A</td><td>M − x</td><td>A 信箱现有空位数</td></tr><tr><td>Full_B</td><td>y</td><td>B 信箱现有邮件数</td></tr><tr><td>Empty_B</td><td>N − y</td><td>B 信箱现有空位数</td></tr><tr><td>mutex_A</td><td>1</td><td>A 信箱的互斥访问</td></tr><tr><td>mutex_B</td><td>1</td><td>B 信箱的互斥访问</td></tr></tbody></table>
-<p>初值由题设直接读出：初始 A 有 x 封（0 &lt; x &lt; M），B 有 y 封（0 &lt; y &lt; N）。</p>
+<p>初值为什么这样定：Full 类由题设直接读出（A 现有 x 封、B 现有 y 封）；Empty 类是"容量减现有数"（M − x、N − y）；mutex 是互斥锁，取 1。</p>
 <h3>第三问：A 的完整过程</h3>
 <ol><li><code>P(Full_A);</code> —— 等 A 信箱有邮件；</li><li><code>P(mutex_A);</code> —— 进 A 信箱临界区；</li><li>从 A 的信箱中取出一个邮件；</li><li><code>V(mutex_A);</code> —— 退出临界区；</li><li><code>V(Empty_A);</code> —— A 信箱空位加 1；</li><li>回答问题并提出一个新问题；</li><li><code>P(Empty_B);</code> —— 等 B 信箱有空位；</li><li><code>P(mutex_B);</code> —— 进 B 信箱临界区；</li><li>将新邮件放入 B 的信箱；</li><li><code>V(mutex_B);</code> —— 退出临界区；</li><li><code>V(Full_B);</code> —— B 信箱邮件数加 1。</li></ol>
 <h3>第四问：B 的完整过程（与 A 对称）</h3>
 <ol><li><code>P(Full_B);</code></li><li><code>P(mutex_B);</code></li><li>从 B 的信箱中取出一个邮件；</li><li><code>V(mutex_B);</code></li><li><code>V(Empty_B);</code></li><li>回答问题并提出一个新问题；</li><li><code>P(Empty_A);</code></li><li><code>P(mutex_A);</code></li><li>将新邮件放入 A 的信箱；</li><li><code>V(mutex_A);</code></li><li><code>V(Full_A);</code></li></ol>
+<h3>为什么这套方案不会互相等死（初始条件的意义）</h3>
+<p>学习者最担心的是：A 等 B 的空位、B 等 A 的空位，会不会互相卡死？不会，而且<strong>题给的初始条件正是为排除死锁</strong>：</p>
+<ul><li>每轮都是"先取出一封、再放回一封"，两信箱邮件<strong>总数恒等于 x+y，不变</strong>；</li><li><strong>两箱不可能同时空</strong>：x&gt;0 且 y&gt;0，总数 x+y ≥ 2 &gt; 0；"两人都阻塞在取信上"要求两箱同时空、总数为 0，矛盾；</li><li><strong>两箱不可能同时满</strong>：x &lt; M 且 y &lt; N，总数 x+y &lt; M+N；"两人都阻塞在放信上"要求两箱同时满、总数为 M+N，矛盾。</li></ul>
+<p>死锁只有这两条发生路径，都被初始条件排除，方案安全。反过来看条件缺一不可：若 x = y = 0，两人开局同时阻塞在取信上，永远无人投出第一封——这正是题目限定 x &gt; 0、y &gt; 0 的用意之一。</p>
 <h3>易错点</h3>
-<ul><li><strong>同步 P 与互斥 P 顺序颠倒</strong>：若先 P(mutex_A) 再 P(Full_A)，信箱空时进程抱着临界区锁等邮件，对方也无法操作该信箱 → 可能死锁。</li><li><strong>漏掉互斥信号量</strong>：只写四个"满/空"信号量会丢分——同一信箱可能被同时取/放。</li><li><strong>P、V 配对错位</strong>：取出后应 <code>V(Empty_A)</code>（空位 +1），放入后应 <code>V(Full_B)</code>（邮件 +1），不能对调。</li><li><strong>初值写错</strong>：Empty 类初值是"容量减现有数"（M − x、N − y），不是 M、N。</li></ul>
-<blockquote>记忆锚点：一个信箱 = 一对"满/空"信号量 + 一个互斥信号量；先同步后互斥，取出 V 空、放入 V 满。</blockquote></div></div>
+<ul><li><strong>同步 P 与互斥 P 顺序颠倒</strong>：若先 P(mutex_A) 再 P(Full_A)，信箱空时进程抱着临界区锁等邮件，对方也无法操作该信箱 → 可能死锁。</li><li><strong>漏掉互斥信号量</strong>：只写四个"满/空"信号量会丢分——Full/Empty 只管数量，管不住"取/放"动作互踩。</li><li><strong>P、V 配对错位</strong>：取出后应 <code>V(Empty_A)</code>（空位 +1），放入后应 <code>V(Full_B)</code>（邮件 +1），不能对调。</li><li><strong>初值写错</strong>：Empty 类初值是"容量减现有数"（M − x、N − y），不是 M、N。</li></ul>
+<blockquote>记忆锚点：一个信箱 = 一对"满/空"信号量 + 一个互斥信号量；先同步后互斥，取出 V 空、放入 V 满；总数不变 + 初始不空不满 ⇒ 不会互等死锁。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

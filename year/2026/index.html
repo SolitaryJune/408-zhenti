@@ -801,17 +801,20 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码算术移位的规则与执行顺序</h2>
-<h3>第一步：明确算术移位规则</h3>
-<p>机器数 <code>1010 0110B</code> 是 8 位补码，符号位为 1（负数）。<strong>算术右移</strong>：符号位不变，高位补符号位 1；<strong>算术左移</strong>：符号位保持不变，低位补 0。</p>
-<h3>第二步：先算术右移 3 位（表格推演）</h3>
-<table><thead><tr><th>操作</th><th>结果</th><th>补码真值</th></tr></thead><tbody><tr><td>初始</td><td>1010 0110</td><td>−90</td></tr><tr><td>右移 1 位</td><td>1101 0011</td><td>−45</td></tr><tr><td>右移 2 位</td><td>1110 1001</td><td>−23</td></tr><tr><td>右移 3 位</td><td>1111 0100</td><td>−12</td></tr></tbody></table>
-<p>右移一位相当于除 2（向负无穷取整）：−90 → −45 → −23 → −12，每次移入的都是符号位 1。</p>
-<h3>第三步：再算术左移 2 位</h3>
-<table><thead><tr><th>操作</th><th>结果</th><th>补码真值</th></tr></thead><tbody><tr><td>左移 1 位</td><td>1110 1000</td><td>−24</td></tr><tr><td>左移 2 位</td><td>1101 0000</td><td>−48</td></tr></tbody></table>
+<p><strong>答案：A（1101 0000B）</strong></p>
+<h3>第一步：先立机制——移位改变位权，"补什么"决定数值语义</h3>
+<p>8 位补码是模 256 下的记数方式：最高位代表 −128，其余位按权相加。算术移位每移一位，所有位的权就放大或缩小一档，于是：</p>
+<ul><li><strong>算术右移 1 位 = 除以 2，向负无穷取整</strong>。为什么高位必须补符号位？负数之所以为负，全靠最高位那个 −128 权重上的 1；右移后这个 1 退到权 −64 的位置，新腾出的最高位必须再补一个 1，位串才仍落在"最高位为 1"的负数区，数值上恰好实现 ⌊x/2⌋。若补 0，位串就跳进无符号解释的正数区，数值面目全非——这正是算术移位与逻辑移位的分界线。</li><li><strong>算术左移 1 位 = 乘以 2（模 256）</strong>：低位一律补 0；只要真值仍在 −128~+127 范围内就不溢出。</li></ul>
+<h3>第二步：按题干顺序推演</h3>
+<p>初始 <code>1010 0110</code> = −128 + 32 + 4 + 2 = <strong>−90</strong>。</p>
+<p>右移 3 位（每次最高位补 1）：</p>
+<table><thead><tr><th>操作</th><th>位串</th><th>真值核对（÷2 向负无穷取整）</th></tr></thead><tbody><tr><td>右移 1 位</td><td>1101 0011</td><td>−90 ÷ 2 = −45</td></tr><tr><td>右移 2 位</td><td>1110 1001</td><td>⌊−45 ÷ 2⌋ = −23</td></tr><tr><td>右移 3 位</td><td>1111 0100</td><td>⌊−23 ÷ 2⌋ = −12</td></tr></tbody></table>
+<p>左移 2 位（低位补 0；−12 × 4 = −48 未超范围，不溢出）：</p>
+<table><thead><tr><th>操作</th><th>位串</th><th>真值核对（×2）</th></tr></thead><tbody><tr><td>左移 1 位</td><td>1110 1000</td><td>−24</td></tr><tr><td>左移 2 位</td><td>1101 0000</td><td>−48</td></tr></tbody></table>
 <p>最终结果 <code>1101 0000B</code>，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>负数右移补 0</strong>：算术右移必须补符号位 1，补 0 会得到错误结果，这是算术移位与逻辑移位的本质区别。</li><li><strong>左移把符号位一起移丢</strong>：算术左移符号位保持 1、低位补 0，得到 1101 0000；若符号位被移走就发生了溢出。</li><li><strong>调换操作顺序</strong>：先左移 2 位再右移 3 位与题干顺序结果不同，必须按题干顺序执行。</li></ul>
-<blockquote>记忆锚点：算术右移补符号位，算术左移低位补 0，符号位始终不动。</blockquote></div></div>
+<ul><li><strong>负数右移补 0</strong>：那是逻辑移位的规则；对负补码补 0 等于把它当无符号数截断，得不到"除 2"的语义。</li><li><strong>左移把符号位顶出去</strong>：算术左移符号位不动、低位补 0；本题 −48 在范围内故安全，一旦真值超范围即溢出。</li><li><strong>调换操作顺序</strong>：先左移 2 位时 −90 × 2 = −180 早已溢出（1010 0110 → 0100 1100，符号丢失），再右移 3 位得 1111 0011（−13），与题干顺序的 −48 完全不同——右移带取整、不可逆，移位顺序不可交换。</li></ul>
+<blockquote>记忆锚点：算术右移 = 除 2 向负无穷取整、高位补符号位；算术左移 = ×2、低位补 0；符号位始终不动。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1086,16 +1089,15 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：主存块映射到哪个 Cache 组</h2>
-<h3>第一步：算出组数</h3>
-<p>数据 Cache 共 1024 行、4 路组相联：组数 = 1024 ÷ 4 = <strong>256 组</strong>（组号 0～255），每组 4 行。</p>
-<h3>第二步：算出主存块号</h3>
-<p>按字节编址、主存块大小 32 B，地址 1028 的数据：</p>
-<table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>块内偏移</td><td>1028 mod 32</td><td>4</td></tr><tr><td>主存块号</td><td>1028 div 32（即 1028 − 4 后除以 32）</td><td>32</td></tr></tbody></table>
-<h3>第三步：算 Cache 组号</h3>
-<p>组相联映射规则：<strong>组号 = 主存块号 mod 组数</strong> = 32 mod 256 = <strong>32</strong>，选 <strong>C</strong>。</p>
+<p><strong>答案：C（组号 32）</strong></p>
+<h3>第一步：先立模型——组相联把 Cache 分组，主存块按块号循环入组</h3>
+<p>组相联是直接映射与全相联的折中：把 Cache 的行分成若干<strong>组</strong>，主存块不限定到某一行、只限定到某一个组，规则是<strong>组号 = 主存块号 mod 组数</strong>。为什么用块号取模？因为主存块按顺序连续编号，"mod 组数"正是把它们循环均分到各组的办法——效果上等于取块号二进制的低位作组号；至于块最终落在组内哪一行，由替换算法在组内 4 行里挑、硬件靠 tag 比对确认，与算组号无关。所以动手顺序不是拿地址直接运算，而是先把地址两层拆开：<strong>按块大小切出块号，再对块号取模得组号</strong>。</p>
+<h3>第二步：三步计算</h3>
+<ol><li><strong>组数</strong> = 1024 行 ÷ 4 路 = <strong>256 组</strong>（组号 0~255，每组 4 行）。</li><li><strong>主存块号</strong>：按字节编址、块大小 32 B，地址 1028 所在块 = 1028 div 32 = <strong>32</strong>（块内偏移 1028 mod 32 = 4，不参与映射）。</li><li><strong>组号</strong> = 32 mod 256 = <strong>32</strong>，选 <strong>C</strong>。</li></ol>
+<p>用地址拆分视角验算：1028 = <code>0000 0100 0000 0100B</code>，低 5 位是块内偏移，其后 8 位（2⁸ = 256 组）是组号字段——1028 右移 5 位得 32，低 8 位仍是 32，两条路一致。</p>
 <h3>易错点</h3>
-<ul><li><strong>拿地址直接 mod 组数</strong>：1028 mod 256 = 16，混淆了"地址"与"块号"，对应干扰项 B。</li><li><strong>拿块内偏移当组号</strong>：1028 mod 32 = 4，对应干扰项 A。</li><li><strong>块大小看错</strong>：若当成 16 B，块号变成 64，对应干扰项 D。</li><li><strong>忘除以路数</strong>：把 1024 行当 1024 组，组号会算成 32 mod 1024 = 32 恰好碰对，但分组概念已错。</li></ul>
-<blockquote>记忆锚点：先除块大小得块号，再 mod 组数得组号，两步都不可省。</blockquote></div></div>
+<ul><li><strong>拿地址直接 mod 组数</strong> → 1028 mod 256 = 16（干扰项 B）：地址 ≠ 块号，组号字段在地址的"块号"段而不在最低位段，必须先除以块大小。</li><li><strong>拿块内偏移当组号</strong> → 1028 mod 32 = 4（干扰项 A）：偏移只负责块内定位，与块到组的映射无关。</li><li><strong>块大小看错成 16 B</strong> → 块号变 64（干扰项 D）。</li><li><strong>忘除以路数</strong>：把 1024 行当成 1024 组——本题 32 mod 1024 恰好也是 32，碰对答案但模型已错，换个块号就露馅。</li></ul>
+<blockquote>记忆锚点：组相联 = 组间按"块号 mod 组数"循环入组 + 组内全相联；先除块大小得块号，再 mod 组数得组号。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2432,23 +2434,55 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二叉搜索树中找与 k 差值最小的结点</h2>
-<h3>第一步：问 1 —— 答题框架（4 分）</h3>
-<p>设计思想按「怎么走、记什么、何时停」三句话给足：</p>
-<ol><li><strong>怎么走</strong>：利用二叉搜索树的有序性，按「查找 k」的方式从根出发沿一条<strong>向下的单一路径</strong>查找：当前结点值大于 k 就进入左子树，小于 k 就进入右子树，直到遇到空指针。</li><li><strong>记什么</strong>：行进途中<strong>沿途记录</strong>差值绝对值最小的结点。若某结点值恰好等于 k，差值绝对值为 0，结果只含这一个结点；若不相等，结果最多包含两个结点（k 上下两侧各一个候选），差值绝对值大于 0。</li><li><strong>何时停</strong>：走到空指针或已命中 k 时结束，输出差值绝对值与对应结点的关键字。</li></ol>
-<h3>第二步：为什么只需考察路径上的结点（问 1 的得分点）</h3>
-<p>设当前结点值为 v：</p>
-<ul><li>v &gt; k 时，右子树中所有值都不小于 v，它们与 k 的差都大于 v−k，不可能是更优答案，候选只可能是当前结点或/及左子树中的结点，沿 left 指针继续；</li><li>v &lt; k 时对称，候选只可能是当前结点或/及右子树中的结点，沿 right 指针继续。</li></ul>
-<p>每一步要么结束、要么范围缩到一棵子树，因此路径上的结点已覆盖全部候选，时间复杂度为 O(h)（h 为树高），空间 O(1)。</p>
-<h3>第三步：问 2 —— 算法实现（9 分）</h3>
-<p>用 p 沿路径下行，min 记当前最小差值，pmin1、pmin2 记录取得最小差值的结点（最多两个）：</p>
-<table><thead><tr><th>行</th><th>代码</th></tr></thead><tbody><tr><td>1</td><td><code>void searchX(BTree root, int k) {</code></td></tr><tr><td>2</td><td><code>    BTree p = root, pmin1, pmin2;</code></td></tr><tr><td>3</td><td><code>    int min = MAX;  // MAX 为能表示的整型最大值</code></td></tr><tr><td>4</td><td><code>    if (p == NULL) return;  // 空树直接返回</code></td></tr><tr><td>5</td><td><code>    while (p != NULL) {</code></td></tr><tr><td>6</td><td><code>        if (p-&gt;data == k) {  // 命中 k：差值 0，结果唯一</code></td></tr><tr><td>7</td><td><code>            min = 0;</code></td></tr><tr><td>8</td><td><code>            printf("差值绝对值 = %d 结点 = %d\n", min, p-&gt;data);</code></td></tr><tr><td>9</td><td><code>            return;</code></td></tr><tr><td>10</td><td><code>        }</code></td></tr><tr><td>11</td><td><code>        else if (abs(p-&gt;data - k) &lt; min) {  // 出现差值更小的结点</code></td></tr><tr><td>12</td><td><code>            min = abs(p-&gt;data - k);</code></td></tr><tr><td>13</td><td><code>            pmin1 = pmin2 = p;</code></td></tr><tr><td>14</td><td><code>        }</code></td></tr><tr><td>15</td><td><code>        else if (abs(p-&gt;data - k) == min)  // 出现另一个同差值结点</code></td></tr><tr><td>16</td><td><code>            pmin2 = p;</code></td></tr><tr><td>17</td><td><code>        if (p-&gt;data &gt; k) p = p-&gt;left;   // 候选还可能在左子树</code></td></tr><tr><td>18</td><td><code>        else p = p-&gt;right;              // 候选还可能在右子树</code></td></tr><tr><td>19</td><td><code>    }</code></td></tr><tr><td>20</td><td><code>    if (pmin1-&gt;data != pmin2-&gt;data)  // 两个候选</code></td></tr><tr><td>21</td><td><code>        printf("差值绝对值 = %d 结点 1 = %d 结点 2 = %d\n", min, pmin1-&gt;data, pmin2-&gt;data);</code></td></tr><tr><td>22</td><td><code>    else  // 只有一个候选</code></td></tr><tr><td>23</td><td><code>        printf("差值绝对值 = %d 结点 = %d\n", min, pmin1-&gt;data);</code></td></tr><tr><td>24</td><td><code>}</code></td></tr></tbody></table>
-<h3>第四步：一个演算实例</h3>
-<p>取 BST：50 的左孩子 30（30 的孩子为 20、40，40 的左孩子 35），右孩子 70（孩子 60、80）。令 k = 45：</p>
-<table><thead><tr><th>p 指向</th><th>差值绝对值</th><th>动作</th><th>min / pmin1 / pmin2</th></tr></thead><tbody><tr><td>50</td><td>5</td><td>记录；50 大于 45，走左</td><td>5 / 50 / 50</td></tr><tr><td>30</td><td>15</td><td>不更新；30 小于 45，走右</td><td>5 / 50 / 50</td></tr><tr><td>40</td><td>5</td><td>等于 min，pmin2 = 40；40 小于 45，走右</td><td>5 / 50 / 40</td></tr><tr><td>NULL</td><td>—</td><td>循环结束，输出</td><td>差值 5，结点 50 与 40</td></tr></tbody></table>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：BST 中找与 k 差值绝对值最小的结点</h2>
+<h3>第 0 步：底层机制——BST 的有序性把"全树找"剪成"一条路"</h3>
+<p>二叉搜索树的性质：任一结点 v 的左子树所有值 &lt; v &lt; 右子树所有值，且对子树递归成立。按"查 k"的方式从根往下走（v&gt;k 走左、v&lt;k 走右），每走一步就<strong>整棵舍弃一侧子树</strong>：</p>
+<ul><li>v &gt; k：右子树的所有值都 ≥ v，它们与 k 的差只会比 |v−k| 更大——这一侧整体出局，候选只剩当前结点与左子树；</li><li>v &lt; k：对称地，左子树整体出局，候选只剩当前结点与右子树。</li></ul>
+<p><strong>为什么候选最多只有两个？</strong> 比 k 小的值里离 k 最近的是 k 的<strong>前驱</strong>，比 k 大的值里离 k 最近的是 k 的<strong>后继</strong>；BST 无重复值，同侧不可能出现两个并列最近（第二个必然更远）。而查找路径恰好把"夹住 k"的下界与上界一路收紧——往下舍弃的子树要么全在 k 的一侧更远处，要么全小于已见过的下界——所以前驱与后继都被这条路径覆盖，答案要么是 1 个结点（某结点值恰等于 k，差为 0），要么是 2 个（k 恰落在前驱与后继正中间）。</p>
+<p><strong>何时停</strong>：走到值等于 k 的结点（差 0 已是最小，立即输出返回），或走到空指针（路径走完，候选已记录完毕）。</p>
+<p>这套机制决定了算法形状：<strong>沿一条 O(h) 的路径边走边记</strong>，不必遍历全树（O(n)）——这正是"尽可能高效"的得分点。</p>
+<h3>第（1）问：基本设计思想（4 分）——把机制写成答题语言</h3>
+<p>按参考答案口径组织三句话：</p>
+<ol><li><strong>怎么走</strong>：按 BST 中查找 k 的方法从根开始沿一条向下的路径查找；当前结点关键字大于 k 沿 left 继续，小于 k 沿 right 继续，直到遇到空指针。</li><li><strong>记什么</strong>：沿途记录差值绝对值最小的结点。若某结点值等于 k，结果只含这一个结点、差值绝对值为 0；不相等时结果最多两个结点（前驱、后继各一），差值绝对值大于 0。</li><li><strong>何时停</strong>：命中 k 或遇到空指针时结束，输出差值绝对值与结点关键字。</li></ol>
+<p>时间复杂度 O(h)（h 为树高），辅助空间 O(1)。</p>
+<h3>第（2）问：算法实现（9 分）——三个分支与两个记录变量</h3>
+<pre><code>void searchX( BTree root, int k )
+{   BTree p = root, pmin1, pmin2;
+    int min = MAX;                          //MAX 为能表示的整型最大值
+    if ( p == NULL ) return;                //若为空树，则返回
+    while( p != NULL )
+    {   if ( p-&gt;data == k )                 //命中 k：差值 0，结果只含一个结点
+        {   min = 0;
+            printf ( "差值绝对值 = %d 结点 = %d\n", min, p-&gt;data );
+            return;
+        }
+        else if ( abs( p-&gt;data-k ) &lt; min )  //出现差值绝对值更小的结点
+        {   min = abs( p-&gt;data-k );
+            pmin1 = pmin2 = p;
+        }
+        else if ( abs( p-&gt;data-k ) == min ) //出现另一个并列最小者
+            pmin2 = p;
+        if ( p-&gt;data &gt; k )
+            p = p-&gt;left;    //候选还可能在左子树中
+        else
+            p = p-&gt;right;   //候选还可能在右子树中
+    }
+    if ( pmin1-&gt;data != pmin2-&gt;data )
+        printf ( "差值绝对值 = %d 结点 1 = %d 结点 2 = %d\n",
+        min, pmin1-&gt;data, pmin2-&gt;data );
+    else
+        printf ( "差值绝对值 = %d 结点 = %d\n", min, pmin1-&gt;data );
+    return;
+}</code></pre>
+<p>逐个"为什么"：</p>
+<ul><li><strong>为什么 min 初值取 MAX</strong>：路径上第一个结点的差值必然小于 MAX，保证它一定能"打败"初值被记录下来，省掉对第一个结点的特判。</li><li><strong>为什么小于 min 时 pmin1 = pmin2 = p</strong>：出现更优者，旧的并列作废；pmin2 先与 pmin1 同指一个结点，表示"当前只有一个候选"——这为最后的输出判断埋下伏笔。</li><li><strong>为什么等于 min 时只更新 pmin2</strong>：并列意味着两个<strong>不同值</strong>（k 下方一个、上方一个）同时最小，谁也顶替不了谁，只能并存——pmin1 保留先记录的，pmin2 换成后到的。</li><li><strong>为什么先记录、后下行</strong>：下行前必须把当前结点的差值记上账，否则路径最后一个结点会被漏掉。</li><li><strong>为什么结尾只比较 pmin1-&gt;data != pmin2-&gt;data</strong>：全程若从未出现并列，两个指针始终同指一个结点（data 相同）→ 输出一个；出现过并列 → data 不同 → 输出两个。一次比较同时区分"1 个还是 2 个"。</li></ul>
+<h3>一个演算实例</h3>
+<p>BST：根 50（左孩子 30，30 的孩子为 20、40，40 的左孩子 35；右孩子 70，孩子 60、80），k = 45：</p>
+<table><thead><tr><th>p 指向</th><th>差值绝对值</th><th>动作</th><th>min / pmin1 / pmin2</th></tr></thead><tbody><tr><td>50</td><td>5</td><td>记录（5&lt;MAX）；50&gt;45 走左</td><td>5 / 50 / 50</td></tr><tr><td>30</td><td>15</td><td>不更新；30&lt;45 走右</td><td>5 / 50 / 50</td></tr><tr><td>40</td><td>5</td><td>并列，pmin2=40；40&lt;45 走右</td><td>5 / 50 / 40</td></tr><tr><td>NULL</td><td>—</td><td>循环结束，输出</td><td>差值 5，结点 50 与 40</td></tr></tbody></table>
+<p>k=45 恰在 40 与 50 正中间，前驱 40、后继 50 双双命中；20、35、60、80 全程没被访问——与"候选只在路径上"的机制吻合。</p>
 <h3>易错点</h3>
-<ul><li><strong>全树遍历</strong>：中序遍历全树虽然正确，但为 O(n)，没有利用 BST 的有序性，不满足「尽可能高效」。</li><li><strong>只记一个候选</strong>：k 恰好落在两个结点值正中间时，差值最小者有两个，漏掉 pmin2 会丢解。</li><li><strong>忘记 k 等于某结点值的情形</strong>：此时差值 0 且唯一，应立即输出返回，否则会继续误判。</li><li><strong>空树未处理</strong>：入口处判 root 是否为 NULL，避免解引用空指针。</li></ul>
-<blockquote>一句话结论：沿 BST 查找路径边走边记最小差值，命中即返回，走到空指针时路径上的候选至多两个，时间 O(h)、空间 O(1)。</blockquote></div></div>
+<ul><li><strong>中序遍历全树再挑最小</strong>：正确但 O(n)，没有利用有序性，不满足"尽可能高效"。</li><li><strong>只记一个候选</strong>：k 落在两值正中间时最小差值有两个结点，漏掉 pmin2 丢解。</li><li><strong>忘记命中 k 提前返回</strong>：差 0 已不可能更小，继续走既多余，还可能把唯一结果误输出成两个。</li><li><strong>空树不判</strong>：root 为 NULL 时解引用会出错，入口先判。</li></ul>
+<blockquote>一句话结论：BST 有序性把候选剪成"查找路径上的前驱与后继"，命中即返、到空指针止，边走边记至多两个并列最小者，O(h) 时间、O(1) 空间。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2501,24 +2535,28 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：栈的出栈序列判定与计数</h2>
-<h3>第一步：问 1 —— 逐个模拟判定（2 分）</h3>
-<p>入栈次序固定为 1,2,…,9。出栈序列给定后，操作是<strong>唯一确定</strong>的：下一个要出的元素若不在栈顶，就把未入栈的元素依次压入，直到它出现在栈顶为止。</p>
-<p>序列 2,3,1,6,4,7,5,9,8：压 1、2，出 2；压 3，出 3、出 1；压 4、5、6，出 6。此时栈内自底向顶为 4、5，下一个要出 4，但 4 被 5 压住；即使继续压入 7、8、9 也无济于事——5 必须先出栈，而 5 在目标序列中排在第 7 位（7 之后），4 永远轮不到。<strong>不能得到</strong>该序列。</p>
-<p>序列 2,3,1,5,6,7,4,9,8：压 1、2，出 2；压 3，出 3、出 1；压 4、5，出 5；压 6，出 6；压 7，出 7；出 4；压 8、9，出 9；出 8。每一步都合法，<strong>能得到</strong>该序列。</p>
-<h3>第二步：问 2 —— 不可能序列的特征模式（2 分）</h3>
-<p>取 i&lt;j&lt;k，三个元素按输出次序为 Pi、Pj、Pk。当 <strong>Pj &lt; Pk &lt; Pi</strong> 时，该序列不可能是出栈序列。论证：入栈按值递增，Pj 先于 Pk 先于 Pi 入栈；Pi 最先出栈时，Pj、Pk 都尚未出栈，故两者都在栈中，且 Pk 压在 Pj 之上；Pi 出栈后栈顶是 Pk，而下一个要出的是 Pj——要出 Pj 必须先弹出 Pk，但 Pk 的输出位置排在 Pj 之后，矛盾。这就是经典的「312 模式」（输出次序为中、小、大）。</p>
-<h3>第三步：问 3 —— n=4 时以 2 开头的出栈序列个数（2 分）</h3>
-<p>先压 1、2 并弹出 2，此后栈底留着 1，待入 3、4。合法序列只有：</p>
-<p><code>2,1,3,4</code>、<code>2,1,4,3</code>、<code>2,3,1,4</code>、<code>2,3,4,1</code>、<code>2,4,3,1</code></p>
-<p>注意 2,4,1,3 不合法：要出 4 必须先压 3，3 便压住了 1。所以个数是 <strong>5</strong>。</p>
-<h3>第四步：问 4 —— 以 1、以 2 开头的个数与总数（4 分）</h3>
-<p>设 n = k−1 时的出栈序列总数为 M（即 Catalan 数 C(k−1)）。</p>
-<ul><li><strong>以 1 开头</strong>：先压 1、弹 1，栈空后剩下 2..k 共 k−1 个元素的出栈过程与 n=k−1 的情形完全相同，个数就是 <strong>M</strong>。</li><li><strong>以 2 开头</strong>：先压 1、2、弹 2，此后「栈中的 1 + 待入的 3..k」与 n=k−1 的出栈过程一一对应——把剩余序列中每个不小于 3 的元素 x 改记为 x−1（1 保持不变），就得到 1..k−1 的一个出栈序列，反之也能还原。所以个数也是 <strong>M</strong>。</li><li><strong>全部序列</strong>：Catalan 数满足递推 <code>C(k) = ((4k−2)/(k+1))·C(k−1)</code>，所以 n=k 时所有出栈序列的个数为 <strong>(4k−2)/(k+1)·M</strong>。</li></ul>
-<p>用 n=4 验证：M = C(3) = 5，以 1 开头 5 个（1234,1243,1324,1342,1432），以 2 开头 5 个，与问 3 一致；总数 C(4) = 14 = (14/5)×5。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：栈的出栈序列判定、312 模式与 Catalan 计数</h2>
+<h3>第 0 步：底层机制——给定出栈序列后，操作是唯一确定的</h3>
+<p>入栈次序固定为 1,2,…,n，栈只能在栈顶进出。给定目标出栈序列后，模拟只有一种走法：<strong>下一个要出的元素若已在栈顶，弹出它；不在栈顶，就把尚未入栈的元素按 1,2,… 依次压入，直到把它压到栈顶再弹出</strong>。</p>
+<p><strong>为什么"压到出现为止"就是全部活法？</strong> 少压不行——不把它压到栈顶根本弹不出来；多压有害无益——在它之前多压入的元素全压在它上面，而接下来要出的恰是它，这些多压者必须先出栈，可它们在目标序列里都排在它后面，立即死局。所以模拟全程不卡壳 ⇔ 序列能得到。下面每一问用的都是这台"确定性机器"。</p>
+<h3>第（1）问（2 分）：两条序列逐一过机</h3>
+<p><strong>2,3,1,6,4,7,5,9,8</strong>：压 1、2，弹 2（栈：1）；压 3，弹 3、弹 1（栈空）；压 4、5、6，弹 6（栈底到顶：4、5）。下一个要出 4，可 4 上面压着 5：想弹 4 必须先弹 5，但目标序列里 5 排在 4 之后（4、7、5）——7 还没出，5 不能先出；若把 7、8、9 压进来，只是往 5 上面再加盖子。<strong>不能得到</strong>。</p>
+<p><strong>2,3,1,5,6,7,4,9,8</strong>：压 1、2，弹 2；压 3，弹 3、弹 1；压 4、5，弹 5；压 6，弹 6；压 7，弹 7；弹 4；压 8、9，弹 9；弹 8。全程未卡壳，<strong>能得到</strong>。</p>
+<table><thead><tr><th>序列</th><th>卡壳点</th><th>结论</th></tr></thead><tbody><tr><td>2,3,1,6,4,7,5,9,8</td><td>栈中 5 压住 4，而 5 必须在 4 之后出</td><td>不能</td></tr><tr><td>2,3,1,5,6,7,4,9,8</td><td>每步按"压到出现为止"都顺利弹出</td><td>能</td></tr></tbody></table>
+<h3>第（2）问（2 分）：不可能序列的特征——312 模式</h3>
+<p>设输出位置 i&lt;j&lt;k 的三元素 Pi、Pj、Pk 满足 <strong>Pj &lt; Pk &lt; Pi</strong>。用机制推一遍：元素按值入栈（值小先入），Pi 最大却最先出——说明出 Pi 时 Pj、Pk 都已在栈中且被 Pi 压在下面；Pk 比 Pj 大、后入栈，故 Pk 压在 Pj 之上。Pi 出栈后，下一个要出的是 Pj，可栈顶是 Pk——要拿 Pj 必先弹 Pk，而 Pk 的输出位置排在 Pj 之后，矛盾。</p>
+<p>按输出次序的相对大小看，这就是"先出最大、再出最小、最后出中间"的 <strong>312 模式</strong>。其余五种相对次序都不构成这种死局——n=3 的 6 种输出排列里恰好只有 312 不行，可逐个验证。</p>
+<h3>第（3）问（2 分）：n=4 时以 2 开头的个数</h3>
+<p>2 第一个出 ⇒ 先压 1、2，弹 2；残局：栈底压着 1，待入 3、4。用确定性机器枚举全部走法：</p>
+<ul><li>弹 1 之后再随便走：<code>2,1,3,4</code>、<code>2,1,4,3</code></li><li>先玩 3：<code>2,3,1,4</code>、<code>2,3,4,1</code></li><li>先玩 4：<code>2,4,3,1</code>（压 3、压 4、弹 4、弹 3、弹 1）</li></ul>
+<p><code>2,4,1,3</code> 不在其中：想出 4 得先压 3，3 便压住了 1，而 1 要在 3 之前出——死局。共 <strong>5</strong> 个。</p>
+<h3>第（4）问（4 分）：以 1、以 2 开头的个数与总数</h3>
+<p>n=k 的全部出栈序列可按"第一个出栈的元素"分成 k 类，各类互不重叠——计数就化成"数每一类"。</p>
+<ul><li><strong>以 1 开头</strong>：压 1、弹 1 后栈空、待入 2..k，与 n=k−1 的整个过程完全同构 → 个数就是 <strong>M</strong>。</li><li><strong>以 2 开头</strong>：压 1、2、弹 2 后，残局是"栈底 1 + 待入 3..k"。做改号映射 x≥3 → x−1：待入变成 2..k−1。<strong>为什么这样一一对应？</strong> 两边对"谁能压、谁能弹"的限制完全相同：栈底的 1 只要求"它上面的弹完才轮到它"，这与 n=k−1 情形里 1 作为第一个入栈元素的约束一模一样；改号不改变大小次序，出栈合法性不受影响。所以个数也是 <strong>M</strong>。</li><li><strong>总数</strong>：n=k 的出栈序列总数就是 Catalan 数 C(k)（出栈序列与合法进出栈操作序列一一对应，合法操作序列的计数即 Catalan 数）。Catalan 数有标准递推 C(k) = ((4k−2)/(k+1))·C(k−1)（由生成函数可证，考场直接引用），而 M = C(k−1)，故总数 = <strong>(4k−2)/(k+1)·M</strong>。</li></ul>
+<p>与问 3 对号验证：k=4 时 M = C(3) = 5；以 1 开头 5 个（1,2,3,4 / 1,2,4,3 / 1,3,2,4 / 1,3,4,2 / 1,4,3,2）、以 2 开头 5 个，与问 3 一致；总数 C(4) = 14 = (14/5)×5 ✓。</p>
 <h3>易错点</h3>
-<ul><li><strong>只说「4 被 5 压住」就下结论</strong>：还须说明 5 为什么不可能先出（它在目标序列中位于 7 之后、4 之前无法腾出），论证才算完整。</li><li><strong>问 2 模式记反</strong>：不可能的只有「小、中、大」（Pj&lt;Pk&lt;Pi）；其余五种相对次序都能实现。</li><li><strong>问 4 误用 Catalan 乘积</strong>：以 j 开头的个数一般不是 C(j−1)·C(n−j)，因为 1..j−1 在 j 出栈时全部压在栈中、相互次序受栈约束；只有 j=1 和 j=2 时恰好等于 M。</li><li><strong>问 3 漏数或多数</strong>：逐一按「压到出现为止」模拟枚举，不要凭感觉列。</li></ul>
-<blockquote>一句话结论：判定靠确定性模拟（不在栈顶就压到出现为止），不可能模式是 Pj&lt;Pk&lt;Pi；n=4 以 2 开头 5 个；n=k 时以 1、以 2 开头各 M 个，总数为 (4k−2)/(k+1)·M。</blockquote></div></div>
+<ul><li><strong>只说"4 被 5 压住"就下结论</strong>：还须说明 5 为什么不可能先出（目标序列里 5 排在 4 之后），论证才闭环。</li><li><strong>312 模式记岔</strong>：不可能的输出次序是"大、小、中"（即 Pj&lt;Pk&lt;Pi）；用 n=3 枚举可自检，其余五种次序都可行。</li><li><strong>以 j 开头的个数误套 C(j−1)·C(k−j)</strong>：1..j−1 在 j 出栈时全部压在栈中、相互次序受栈约束，一般不成立；只有 j=1、j=2 恰好等于 M。</li><li><strong>问 3 凭感觉列</strong>：按"压到出现为止"的确定性枚举，才不会漏数多数。</li></ul>
+<blockquote>一句话结论：判定靠确定性模拟（不在栈顶就压到出现为止，多压必死）；不可能模式是 312（Pj&lt;Pk&lt;Pi）；n=4 以 2 开头 5 个；n=k 时以 1、以 2 开头各 M 个，总数为 (4k−2)/(k+1)·M。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2571,22 +2609,27 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：定长 16 位指令的格式分析与编码</h2>
-<p>题干格式（16 位，自高到低每 4 位一组）：R 型为 <code>0000 | rt | rs/num | op1</code>，功能 R[rt]←R[rt] op1 R[rs] 或 R[rt]←R[rt] op1 num；I 型为 <code>op2 | rt | imm8</code>，功能 R[rt]←R[rt] op2 imm8；M 型为 <code>op3 | offset</code>，功能 R[0]←M[R[15]+offset]、M[R[15]+offset]←R[0]。</p>
-<h3>第（1）问：主存单元与通用寄存器宽度（2 分）</h3>
-<ul><li>按字节编址 → 主存单元宽度 = <strong>8 位</strong>。</li><li>16 位计算机，通用寄存器存放机器字 → 宽度 = <strong>16 位</strong>（R[15] 恰好要作 16 位访存地址的基址，相互印证）。</li></ul>
-<h3>第（2）问：op1/op2、op2/op3 编码能否相同（2 分）</h3>
-<ul><li><strong>op1 与 op2 可以相同</strong>：op1 位于 R 型最低 4 位（bits 3~0），op2 位于 I 型最高 4 位（bits 15~12），二者在不同字段；译码时先由最高 4 位区分 R/I/M 型，不同型的字段互不冲突。</li><li><strong>op2 与 op3 不可以相同</strong>：两者同占最高 4 位的操作码字段，编码相同则无法区分加立即数与取数/存数。题中 op2=0100 与 op3=1110、1111 恰好互异。</li></ul>
-<h3>第（3）问：指令 0000 0010 1001 0001（2 分）</h3>
-<p>高 4 位 0000 → R 型；rt=0010=2，rs/num=1001=9，op1=0001=加，即 R2←R2+R9。</p>
-<table><thead><tr><th>步骤</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>相加</td><td>ABCDH + F001H</td><td>1 9BCEH</td></tr><tr><td>截取低 16 位</td><td>进位 1 丢弃</td><td><strong>R2 = 9BCEH</strong></td></tr></tbody></table>
-<p>R9 只作源操作数，<strong>R9 = F001H</strong> 不变。</p>
-<h3>第（4）问：实现 y = 16*x − 5 的 4 条指令（4 分）</h3>
-<p>x、y 为 16 位整数，从低地址向高地址连续存放：x 占 M[R15]，y 占 M[R15+2]。</p>
-<ol><li><strong>I1：R0←M[R15+0]，取 x</strong>：M 型取数 op3=1110、offset=0 → ① = <strong>1110</strong>。</li><li><strong>I2：R0←R0 左移 4 位（乘 16）</strong>：R 型 <code>0000 | rt=0000 | num=0100 | op1=0010</code> → ② = <strong>0000 0100</strong>。</li><li><strong>I3：R0←R0+(−5)</strong>：I 型 op2=0100、rt=0000、imm8=−5 的 8 位补码 → ③ = <strong>1111 1011</strong>。</li><li><strong>I4：M[R15+2]←R0，存 y</strong>：M 型存数 op3=1111、offset=2 → ④ = <strong>0000 0000 0010</strong>。</li></ol>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：定长 16 位指令的格式切分与编码分析</h2>
+<h3>第 0 步：底层机制——译码器怎么"读"指令、运算落在哪个模里</h3>
+<p><strong>译码分两级</strong>。定长 16 位指令进来，译码器第一步只看最高 4 位（bits15~12）：0000 → R 型，0100 → I 型，1110/1111 → M 型——这一步决定"剩下 12 位按哪种格式切"；第二步才按型的格式解读字段：R 型切 rt、rs/num、op1（功能 R[rt]←R[rt] op1 R[rs] 或 R[rt]←R[rt] op1 num），I 型切 rt、imm8（R[rt]←R[rt] op2 imm8），M 型切 offset（12 位，R[0]←M[R15+offset] 或 M[R15+offset]←R[0]）。<strong>字段只在自己"型"的语境里存在</strong>。</p>
+<p><strong>运算落在 16 位寄存器里</strong>。通用寄存器 16 位，加法按模 2¹⁶ 进行——第 17 位的进位在寄存器里无处存放，自然丢弃。</p>
+<p><strong>访存按字节编址</strong>。每个地址对应 1 字节；16 位变量占两个连续字节；M 型的 offset 是 12 位、基址固定用 R15、数据寄存器固定用 R0。</p>
+<p>下面四问全部从这三条机制里长出来。</p>
+<h3>第（1）问（2 分）：主存单元与寄存器宽度</h3>
+<ul><li>主存单元 <strong>8 位</strong>："按字节编址"的定义就是每个地址对应 1 字节。</li><li>通用寄存器 <strong>16 位</strong>："16 位计算机"指机器字长 16 位，通用寄存器存放机器字。相互印证：存储器地址是 16 位，M 型指令拿 R[r] 的全部 16 位当访存地址——寄存器若不足 16 位，地址就表达不全。</li></ul>
+<h3>第（2）问（2 分）：op1/op2、op2/op3 编码能否相同</h3>
+<ul><li><strong>op1 与 op2 可以相同</strong>。op1 在 R 型最低 4 位（bits3~0），op2 在 I 型最高 4 位（bits15~12）。为什么位置不同就够？第一级译码只读 bits15~12：读到 0000 才按 R 型切分、bits3~0 才被当作 op1 解释；读到 0100 则按 I 型切分、bits3~0 归 imm8 所有。op1 与 op2 的编码值永远不会被同一级译码放在一起比较，同码无歧义。</li><li><strong>op2 与 op3 不可以相同</strong>。两者同占 bits15~12 的第一级分型字段——译码器第一步就要靠它们区分"加立即数"与"取数/存数"，同码则连"是哪种型"都定不了，后 12 位按 imm8 还是 offset 切分就无从谈起。题给编码 0100 与 1110、1111 恰好互异。</li></ul>
+<h3>第（3）问（2 分）：指令 0000 0010 1001 0001</h3>
+<p>两级译码：高 4 位 0000 → R 型；rt = 0010 = 2，rs/num = 1001 = 9，op1 = 0001 = 加 → <strong>R2 ← R2 + R9</strong>。</p>
+<p>计算 ABCDH + F001H = 19BCEH。<strong>为什么 R2 写 9BCEH 而不是 19BCEH</strong>：R2 只有 16 位，第 17 位的进位按模 2¹⁶ 丢弃——这不是"舍入"，是寄存器宽度决定的必然。所以 <strong>R2 = 9BCEH</strong>。</p>
+<p><strong>为什么 R9 不变</strong>：R9 只是源操作数，本指令的目的寄存器是 rt=2，加法不写源 → <strong>R9 = F001H</strong>。</p>
+<h3>第（4）问（4 分）：y = 16*x − 5 的四条指令</h3>
+<p>先把数学拆成机器动作。x、y 均为 16 位，按字节编址下各占 2 字节、从低地址向高地址连续存放，x 的地址在 R15 → x 在 M[R15]、y 在 M[R15+2]（为什么不是 R15+1：16 位变量占 2 字节）。y = 16*x − 5 = (x 左移 4 位) − 5（为什么左移 4 位等于乘 16：左移 1 位 ×2，4 位即 2⁴ = 16，比反复相加高效，且题给指令恰有左移）；减 5 做成加 −5，imm8 用 8 位补码——减法统一成加法。中间结果都放 R0，因为 M 型指令固定以 R0 为数据寄存器、R15 为基址寄存器。</p>
+<table><thead><tr><th>指令</th><th>功能</th><th>字段填空</th><th>说明</th></tr></thead><tbody><tr><td>I1</td><td>R0 ← M[R15+0]，取 x</td><td>① = <strong>1110</strong></td><td>op3=取数 1110；offset=0，12 位全 0</td></tr><tr><td>I2</td><td>R0 ← R0 左移 4 位（乘 16）</td><td>② = <strong>0000 0100</strong></td><td>R 型：op1=0010（左移）、rt=0000、num=0100</td></tr><tr><td>I3</td><td>R0 ← R0+(−5)</td><td>③ = <strong>1111 1011</strong></td><td>op2=0100、rt=0000、imm8=−5 的 8 位补码</td></tr><tr><td>I4</td><td>M[R15+2] ← R0，存 y</td><td>④ = <strong>0000 0000 0010</strong></td><td>op3=存数 1111；offset=2，写满 12 位</td></tr></tbody></table>
+<ul><li><strong>为什么 I1 的 offset 全 0 也要写满 12 位</strong>：定长指令、字段宽度固定，"0"也是 12 位的 0000 0000 0000。</li><li><strong>为什么 ② = 0000 0100</strong>：② 对应 R 型中间 8 位 rs/num 字段 = rt(0000) + num(0100)，num=4 即左移 4 位。</li><li><strong>为什么 ③ = 1111 1011</strong>：+5 = 0000 0101，取反加一得 1111 1011，这是 8 位补码下的 −5。</li><li><strong>为什么 ④ 是 12 位</strong>：offset 字段宽 12 位，2 要写成 0000 0000 0010。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>第（3）问忘记截断进位</strong>：16 位机器的结果是 9BCEH，不是 19BCEH。</li><li><strong>第（4）问把 y 的偏移写成 1</strong>：按字节编址、16 位变量占 2 字节，y 在 R15+2 处。</li><li><strong>③ 的编码忘了符号</strong>：−5 的 8 位补码是 1111 1011（由 +5=0000 0101 取反加一得到）。</li><li><strong>第（2）问想当然</strong>：字段位置不同就能同码，同占一个操作码字段就必须互异。</li></ul>
-<blockquote>答案：①1110；②0000 0100；③1111 1011；④0000 0000 0010；R2=9BCEH，R9=F001H。</blockquote></div></div>
+<ul><li><strong>第（3）问忘记截断进位</strong>：答案 9BCEH，不是 19BCEH——16 位寄存器只装得下低 16 位。</li><li><strong>y 的偏移写成 1</strong>：按字节编址、16 位变量占 2 字节，y 在 R15+2。</li><li><strong>③ 忘了符号</strong>：−5 的 8 位补码是 1111 1011，不是 0000 0101。</li><li><strong>第（2）问想当然</strong>：字段位置不同就能同码，同占一个操作码字段就必须互异。</li></ul>
+<blockquote>记忆锚点：译码两级走——先高 4 位分型、再按型切字段；运算在 16 位模里进行、进位自然丢；offset 与 imm8 按字段宽度写全、负数用补码。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2639,25 +2682,32 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：给定数据通路的部件识别与控制信号取值</h2>
-<p>数据通路要点：①、② 分别是 GPRs 读地址端口 ra、rb 前的多路选择器（① 在 IR.rt 与 15 之间选择，② 在 IR.rs 与 0 之间选择）；扩展器把 IR11~0（12 位）扩成 16 位，送 ALU 的 B 端三选一多路选择器（输入 0=busB、1=常数 2、2=扩展器输出）；MARsrc 在 PC（0）与 ALU 输出（1）间选 MAR 来源；RegWsrc 在 MDR（0）与 ALU 输出（1）间选 busW；RegDst 在 0 与 IR.rt 间选写入端口号 rw。</p>
-<h3>第（1）问：①② 的部件名称（1 分）</h3>
-<p>①和②都是<strong>多路选择器（MUX）</strong>：多输入单输出，由控制信号选择把哪个输入送上端口。</p>
-<h3>第（2）问：ExtOp 至少几位（2 分）</h3>
-<p>扩展器输入固定是 IR11~0，需支持 <strong>3 种</strong>扩展情况：</p>
-<ol><li>I 型 imm8 为无符号数：对 IR7~0 零扩展（高位补 0）；</li><li>I 型 imm8 为带符号数：对 IR7~0 符号扩展（高位补 IR7）；</li><li>M 型 offset 为带符号数：对 IR11~0 符号扩展（高位补 IR11）。</li></ol>
-<p>三种情况须用不同编码区分，2 位编码有 4 种组合 ≥ 3 → ExtOp 至少 <strong>2 位</strong>。</p>
-<h3>第（3）问：取指周期 4 个信号（4 分）</h3>
-<p>取指要完成 M[PC] 读出送 IR，并在同一周期内完成 PC 增量：</p>
-<table><thead><tr><th>信号</th><th>取值</th><th>理由</th></tr></thead><tbody><tr><td>MARsrc</td><td>0</td><td>MAR←PC（选 PC 那路）</td></tr><tr><td>ALUAsrc</td><td>0</td><td>A←PC，让 ALU 计算加法</td></tr><tr><td>ALUBsrc</td><td>01</td><td>B←常数 2（输入 1，两位编码 01）</td></tr><tr><td>RegWr</td><td>0</td><td>取指不写通用寄存器</td></tr></tbody></table>
-<p>ALU 输出 PC+2 经 PCin 写回 PC，满足"取指周期内完成 PC 增量"。</p>
-<h3>第（4）问：左移指令执行周期（6 分）</h3>
-<p>左移是 R 型：R[rt]←R[rt] 左移 num 位，num 在 IR7~4。</p>
-<table><thead><tr><th>信号</th><th>取值</th><th>理由</th></tr></thead><tbody><tr><td>ALUBsrc</td><td>10</td><td>B←扩展器输出（输入 2，两位编码 10），其 bits 7~4 即 num</td></tr><tr><td>RegWsrc</td><td>1</td><td>结果来自 ALU 输出</td></tr><tr><td>RegDst</td><td>1</td><td>rw←IR.rt，目的寄存器是 rt</td></tr><tr><td>RegWr</td><td>1</td><td>允许写回</td></tr></tbody></table>
-<p><strong>ExtOp 可以与 M 型指令取值相同</strong>：num 位于 IR7~4，扩展器无论对 IR11~0 做符号扩展还是零扩展，都不会改变 IR7~4 这几位，故左移指令对 ExtOp 取值不敏感，可任意（含与 M 型相同）。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：数据通路的部件识别与控制信号取值</h2>
+<h3>第 0 步：底层机制——数据通路 = 存储部件 + 运算部件 + 选择部件</h3>
+<p>先立模型。数据只能沿固定导线流动，这条通路由三类部件搭成：</p>
+<ul><li><strong>存储部件</strong>：PC、IR、GPRs（通用寄存器组，读端口 ra/rb、写端口 rw）、MAR、MDR；</li><li><strong>运算部件</strong>：ALU（A、B 两个输入端）、扩展器（把 IR11~0 这 12 位扩成 16 位，怎么扩由 ExtOp 控制）；</li><li><strong>选择部件</strong>：一组多路选择器（MUX）加写使能。<strong>MUX 决定"谁上路"，写使能决定"谁落笔"</strong>。</li></ul>
+<p>图中几处关键选择点（后面逐问对号入座）：</p>
+<table><thead><tr><th>选择点</th><th>输入选项</th><th>控制信号</th></tr></thead><tbody><tr><td>GPRs 读端口 ra</td><td>IR.rt 或 15（M 型访存基址固定 R15）</td><td>①（MUX）</td></tr><tr><td>GPRs 读端口 rb</td><td>IR.rs 或 0（M 型存数固定读 R0）</td><td>②（MUX）</td></tr><tr><td>GPRs 写端口 rw</td><td>0 或 IR.rt</td><td>RegDst</td></tr><tr><td>ALU 的 A 端</td><td>PC（输入 0）或 busA（输入 1）</td><td>ALUAsrc</td></tr><tr><td>ALU 的 B 端</td><td>busB（0）、常数 2（1）、扩展器输出（2）</td><td>ALUBsrc（两位编码 00/01/10）</td></tr><tr><td>MAR</td><td>PC（0）或 ALU 输出（1）</td><td>MARsrc</td></tr><tr><td>busW（写 GPRs 的数据）</td><td>ALU 输出（1）或 MDR（0）</td><td>RegWsrc</td></tr></tbody></table>
+<p><strong>预答一个总问题：为什么连"PC 加 2"都要用 ALU？</strong> 这条通路只有 ALU 一个运算部件，没有专用加法器——取指周期"顺路"让 A 端接 PC、B 端接常数 2，ALU 算出 PC+2 经 PCin 写回 PC。这也解释了取指周期 A、B 端选择信号的取值为什么是"接 PC"和"接常数 2"。</p>
+<h3>第（1）问（1 分）：①②是什么部件</h3>
+<p>都是<strong>多路选择器（MUX）</strong>。识别特征：多根输入线汇到一个选择符号、单线输出、由控制信号选通。为什么 GPRs 的读端口前必须放它：ra/rb 的来源不止一种——执行 R 型时来自 IR.rt/IR.rs，M 型访存时要固定成 15/0——端口只有一个，必须"选"。</p>
+<h3>第（2）问（2 分）：ExtOp 至少几位</h3>
+<p>扩展器的输入固定是 IR11~0，但"扩成 16 位"的正确做法取决于字段语义，共 <strong>3 种</strong>互不相同的动作：</p>
+<ol><li>I 型 imm8 为无符号数：对低 8 位 IR7~0 <strong>零扩展</strong>（bits15~8 补 0）；</li><li>I 型 imm8 为带符号数：对 IR7~0 <strong>符号扩展</strong>（bits15~8 补 IR7）；</li><li>M 型 offset 为带符号数：对 IR11~0 整体<strong>符号扩展</strong>（bits15~12 补 IR11）。</li></ol>
+<p><strong>为什么不能合并成两种？</strong> 若 I 型带符号 imm8 也按 IR11~0 整体做符号扩展，高位补的是 IR11（那是 rt 字段的最高位）而不是 IR7——例如 imm8=FFH（−1）会被扩成 000FH（+15）而不是 FFFFH（−1），数值全错。所以 I 型带符号必须单列。</p>
+<p><strong>为什么 1 位不够、2 位够？</strong> 1 位只有 2 种编码，装不下 3 种动作；2 位有 4 种 ≥ 3。故 ExtOp 至少 <strong>2 位</strong>。</p>
+<h3>第（3）问（4 分）：取指周期</h3>
+<p>叙事先行——取指周期要同时干两件事：把 M[PC] 读进 IR，并在同一周期完成 PC 增量（题设要求）。顺着数据流走一遍：MARsrc=0 让 MAR←PC；主存按该地址读出指令，经 DBus/MDR 写入 IR；与此同时 ALUAsrc=0 让 A 端接 PC、ALUBsrc=01 让 B 端接常数 2，ALU 输出 PC+2 经 PCin 写回 PC。</p>
+<p><strong>为什么 RegWr=0</strong>：取指不写 GPRs。此刻 IR 里是刚取来的指令本身，若写使能开着，指令字会被当成数据写进寄存器组，直接污染现场——写使能默认关闭、按需置 1 是控制信号设计的通行原则。</p>
+<table><thead><tr><th>信号</th><th>取值</th><th>作用</th></tr></thead><tbody><tr><td>MARsrc</td><td>0</td><td>MAR←PC，给出取指地址</td></tr><tr><td>ALUAsrc</td><td>0</td><td>A 端接 PC，供增量运算</td></tr><tr><td>ALUBsrc</td><td>01</td><td>B 端接常数 2（输入 1 的两位编码）</td></tr><tr><td>RegWr</td><td>0</td><td>本周期不写通用寄存器</td></tr></tbody></table>
+<h3>第（4）问（6 分）：左移指令执行周期</h3>
+<p>左移是 R 型：R[rt] ← R[rt] 左移 num 位，num 藏在 rs/num 字段即 IR7~4。数据流：① 选 IR.rt 作 ra，busA=R[rt] 进 A 端；移位量不在任何寄存器里、只在指令里 → 只能取自扩展器输出，ALUBsrc=10（B 端输入 2 的编码）；扩展器把 IR11~0 补满 16 位后其 bits7~4 恰是 num，移位部件从中取量；结果从 ALU 输出走 busW 写回 GPRs，目的寄存器是 rt。</p>
+<table><thead><tr><th>信号</th><th>取值</th><th>作用</th></tr></thead><tbody><tr><td>ALUBsrc</td><td>10</td><td>B 端接扩展器输出（输入 2），其 bits7~4 为 num</td></tr><tr><td>RegWsrc</td><td>1</td><td>busW←ALU 输出（本指令不访存，不经 MDR）</td></tr><tr><td>RegDst</td><td>1</td><td>rw←IR.rt，结果写回 rt</td></tr><tr><td>RegWr</td><td>1</td><td>结果落笔</td></tr></tbody></table>
+<p><strong>为什么 RegDst=1</strong>：目的寄存器是 rt，不是固定编号——正因为 R 型的写回位置随指令变，而 M 型固定用 R0/R15，RegDst 这个选择器才需要"IR.rt"这个输入。</p>
+<p><strong>ExtOp 可以与 M 型指令取值相同吗？——可以。</strong> 扩展器动的是 IR11~0 的高位：符号扩展补 IR11 的副本、零扩展补 0，都只改 bits15~12；IR7~4 在任何一种扩展下都原样保留在扩展结果的 bits7~4 上。左移量恰取自 bits7~4，两种扩展给出一模一样的移位量——左移指令对 ExtOp 取值<strong>不敏感</strong>，取任意值（含与 M 型相同的那个）都正确。</p>
 <h3>易错点</h3>
-<ul><li><strong>取指周期 MARsrc 选成 ALU 输出</strong>：ALU 输出是 PC+2，读指令必须用 PC 本身，对应 MARsrc=0。</li><li><strong>ALUBsrc 与一位信号混写</strong>：ALUBsrc 是 2 位编码（00/01/10 对应 busB/常数 2/扩展器），其余信号是一位 0/1。</li><li><strong>左移指令 RegDst 忘置 1</strong>：目的寄存器是 rt，不是 R0。</li><li><strong>以为左移必须指定符号/零扩展</strong>：扩展方式不影响 IR7~4，ExtOp 取值任意。</li></ul>
-<blockquote>答案：（3）MARsrc=0、ALUAsrc=0、ALUBsrc=01、RegWr=0；（4）ALUBsrc=10、RegWsrc=1、RegDst=1、RegWr=1，ExtOp 可与 M 型相同。</blockquote></div></div>
+<ul><li><strong>取指周期 MARsrc 选成 1</strong>：ALU 输出是 PC+2，读指令必须用 PC 本身，对应 MARsrc=0。</li><li><strong>ALUBsrc 写成一位</strong>：它面对 3 个输入，是两位编码 00/01/10；其余信号多为一位 0/1。</li><li><strong>左移指令 RegDst 忘置 1</strong>：结果要写 rt，写错就落到 R0。</li><li><strong>以为左移必须指定扩展方式</strong>：扩展只动高位、不影响 IR7~4，ExtOp 取值任意。</li></ul>
+<blockquote>记忆锚点：MUX 管"谁上路"、写使能管"谁落笔"；取指 = MAR←PC + ALU 算 PC+2；移位量藏在指令里 → 走扩展器 → ALUBsrc=10；扩展只动高位、IR7~4 永不动 → 左移不挑 ExtOp。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2711,18 +2761,23 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：抢占式优先权 + 时间片轮转的调度推演</h2>
-<p><strong>答案框架</strong>：（1）以 10 ms 一次的时钟中断为"节拍"逐点推演，得时钟中断 22 次、CPU 调度 7 次，P1、P3、P4 首次执行时刻分别为 90 ms、140 ms、20 ms；（2）时间片增大 → CPU 调度次数减少；中断间隔减小 → 系统开销增加。</p>
-<h3>第一步：明确规则（易错点全藏在这里）</h3>
-<table><thead><tr><th>规则</th><th>内容</th></tr></thead><tbody><tr><td>抢占时机</td><td><strong>仅在时钟中断发生时</strong>才能抢占（每 10 ms 一个节点）</td></tr><tr><td>时间片</td><td>50 ms = 5 个中断间隔；每次进就绪队列都重置为 50 ms</td></tr><tr><td>优先权调整</td><td><strong>时间片用完</strong>再入队：优先权值 &gt; 0 则减 1；<strong>被抢占</strong>再入队：优先权不变</td></tr><tr><td>同优先权</td><td>先进入就绪队列者先执行</td></tr></tbody></table>
-<h3>第二步：逐中断推演（第 1 问）</h3>
-<table><thead><tr><th>时刻</th><th>时钟中断</th><th>事件</th></tr></thead><tbody><tr><td>10</td><td>第 1 次</td><td>P1(3)、P2(4) 到达，调度 <strong>P2</strong>（优先权 4 最高）执行</td></tr><tr><td>20</td><td>第 2 次</td><td>P4(5)（14 到达）优先权更高，<strong>抢占</strong> P2；P2 优先权不变（4）回就绪队列 → 调度 <strong>P4</strong>，P4 首次执行 = <strong>20 ms</strong></td></tr><tr><td>70</td><td>第 7 次</td><td>P4 跑满时间片（20→70），优先权 5→4；P2(4，20 入队) 先于 P4(4，70 入队) → 调度 <strong>P2</strong></td></tr><tr><td>80</td><td>第 8 次</td><td>P2 完成（共 20 ms）→ 调度 <strong>P4</strong>（余 10 ms）</td></tr><tr><td>90</td><td>第 9 次</td><td>P4 完成 → 调度 <strong>P1</strong>，P1 首次执行 = <strong>90 ms</strong></td></tr><tr><td>140</td><td>第 14 次</td><td>P1 跑满时间片（90→140），优先权 3→2；P3(2，12 入队) 先于 P1(2，140 入队) → 调度 <strong>P3</strong>，P3 首次执行 = <strong>140 ms</strong></td></tr><tr><td>180</td><td>第 18 次</td><td>P3 完成（40 ms）→ 调度 <strong>P1</strong>（优先权 2，余 45 ms）</td></tr><tr><td>225</td><td>—</td><td>P1 完成（180→225），全部结束</td></tr></tbody></table>
-<h3>第三步：统计（第 1 问答案）</h3>
-<ul><li><strong>时钟中断</strong>：10, 20, …, 220，进程 225 结束，230 的中断未发生 → 共 <strong>22 次</strong>。</li><li><strong>CPU 调度</strong>：发生在 10、20、70、80、90、140、180 → 共 <strong>7 次</strong>。</li><li><strong>首次执行时刻</strong>：P1 = 90 ms，P3 = 140 ms，P4 = 20 ms。</li></ul>
-<h3>第四步：变参数定性判断（第 2 问）</h3>
-<ul><li><strong>时间片 50 → 100 ms</strong>：推演得调度只发生在 10、20、80、90、190 共 5 次（P1 的 95 ms 在一个时间片内一次跑完，不再切片）→ CPU 调度次数<strong>减少</strong>。</li><li><strong>时钟中断间隔 10 → 1 ms</strong>：单位时间内中断次数增为 10 倍，每次中断都要执行中断处理程序（保存现场、查抢占条件等）→ 系统开销<strong>增加</strong>。</li></ul>
+<h3>第 0 步：底层机制——调度器只认"节拍"，中断不等于调度</h3>
+<p>这套系统的 CPU 调度决策<strong>只发生在时钟中断时刻</strong>（每 10 ms 一拍），两拍之间 CPU 不受打扰。每个节拍上调度器依次问三个问题：</p>
+<ol><li>有没有进程到达或完成？（到达者带着自己的优先权进就绪队列）</li><li>当前进程的时间片用完了吗？（50 ms = 5 拍；用完则回队，优先权值 &gt;0 时减 1）</li><li>就绪队列里有没有优先权<strong>严格更高</strong>的？（有则抢占，被抢占者回队且<strong>优先权不变</strong>；同权不抢）</li></ol>
+<p>三个问题里只要有一个引起"换人"，这一拍就发生一次 <strong>CPU 调度</strong>；一个都没有，中断照常发生但<strong>不发生调度</strong>——这是本题第一易错点：<strong>22 次中断里只有 7 次伴随调度</strong>。</p>
+<p>就绪队列的排序规则：优先权值大者先；同值按<strong>进就绪队列的时间</strong>先来先服务——注意比的是"进队时间"而不是"到达时间"。</p>
+<h3>第（1）问（5 分）：逐节拍推演</h3>
+<p>从 10 ms 起逐拍走：</p>
+<ul><li><strong>10 ms（第 1 次中断）</strong>：P1（权 3）、P2（权 4）同时到达，题目规定从此时开始调度 → 选 P2 [调度 1]。</li><li><strong>20 ms（第 2 次）</strong>：P4 已于 14 ms 带最高权 5 进队 → <strong>抢占</strong> P2；P2 是被抢占回队，权不变仍为 4，已跑 10 ms [调度 2] → <strong>P4 首次执行 = 20 ms</strong>。</li><li><strong>30~60 ms（第 3~6 次）</strong>：P4（5）在跑，队列里最高只有 P2（4），5&gt;4 不构成抢占，P4 的切片 20→70 也没满——中断照响，无调度。</li><li><strong>70 ms（第 7 次）</strong>：P4 跑满 50 ms 时间片 → 时间片用完回队，权 5→4；与 P2 同为 4，比进队时间：P2 是 20 ms 进的、P4 是 70 ms 进的 → <strong>选 P2</strong> [调度 3]。</li><li><strong>80 ms（第 8 次）</strong>：P2 累计 10+10=20 ms 跑完退出 → 队里 P4（权 4）最高 [调度 4]。</li><li><strong>90 ms（第 9 次）</strong>：P4 补完剩余 10 ms 完成退出 → P1（3）&gt; P3（2）[调度 5] → <strong>P1 首次执行 = 90 ms</strong>。</li><li><strong>100~130 ms（第 10~13 次）</strong>：P1（3）对 P3（2）不构成抢占，切片 90→140 未满，无调度。</li><li><strong>140 ms（第 14 次）</strong>：P1 满切片回队，权 3→2；与 P3 同为 2，P3 是 12 ms 进队的 → <strong>选 P3</strong> [调度 6] → <strong>P3 首次执行 = 140 ms</strong>。</li><li><strong>150~170 ms（第 15~17 次）</strong>：P3（2）与 P1（2）同权不抢占，P3 也只差 40 ms 就完。</li><li><strong>180 ms（第 18 次）</strong>：P3 跑满 40 ms（140→180）完成 → <strong>选 P1</strong> [调度 7]。</li><li><strong>190~220 ms（第 19~22 次）</strong>：P1 独占运行，180→225 跑完剩余 45 ms 结束；230 ms 的第 23 次中断已不存在。</li></ul>
+<p>汇总成表（第二层对号用）：</p>
+<table><thead><tr><th>时刻</th><th>中断序号</th><th>事件</th><th>CPU 调度</th></tr></thead><tbody><tr><td>10</td><td>1</td><td>P1、P2 到达</td><td>① P2</td></tr><tr><td>20</td><td>2</td><td>P4 抢占 P2（P4 首次执行）</td><td>② P4</td></tr><tr><td>70</td><td>7</td><td>P4 满切片（权 5→4），P2 以先进队胜出</td><td>③ P2</td></tr><tr><td>80</td><td>8</td><td>P2 完成</td><td>④ P4</td></tr><tr><td>90</td><td>9</td><td>P4 完成（P1 首次执行）</td><td>⑤ P1</td></tr><tr><td>140</td><td>14</td><td>P1 满切片（权 3→2），P3 以先进队胜出（P3 首次执行）</td><td>⑥ P3</td></tr><tr><td>180</td><td>18</td><td>P3 完成</td><td>⑦ P1</td></tr><tr><td>225</td><td>—</td><td>P1 完成，全部结束</td><td>—</td></tr></tbody></table>
+<p><strong>答案</strong>：时钟中断 <strong>22 次</strong>（10,20,…,220）；CPU 调度 <strong>7 次</strong>（10,20,70,80,90,140,180）；P1、P3、P4 首次执行时刻 <strong>90 ms、140 ms、20 ms</strong>。</p>
+<p><strong>为什么中断是 22 不是 23</strong>：计数只到全部进程结束（225 ms）为止，230 ms 的中断没有发生。<strong>为什么 P2 的首次执行不在答案里</strong>：题目只问 P1、P3、P4——P2 就是 10 ms 那次调度的当事者。</p>
+<h3>第（2）问（2 分）：改参数的定性判断</h3>
+<ul><li><strong>时间片 50→100 ms</strong>：重新推演，调度只发生在 10、20、80、90、190 共 <strong>5 次</strong>（P1 的 95 ms 在 90→185 一个时间片内一次跑完，不再被切片打断）。机制：时间片越大，"时间片用完"这一触发源出现得越少 → CPU 调度次数<strong>减少</strong>。</li><li><strong>时钟中断间隔 10→1 ms</strong>：中断频率 ×10，而每次中断都要执行时钟中断处理程序（查抢占条件、维护时间片计数等固定开销）→ 处理机花在"管"上的时间比例随之上升 → 系统开销<strong>增加</strong>。机制：开销 ∝ 中断次数 × 单次处理成本，成本不变、次数 ×10。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>20 ms 的事件误判为时间片用完</strong>：P4 是"优先权抢占" P2，P2 回队时优先权<strong>不变</strong>（4）——这决定 70 ms 时 P2 与 P4 同为 4 时谁先。</li><li><strong>优先权减 1 的时机搞错</strong>：只有"时间片用完"减 1；"被抢占"不减。</li><li><strong>中断计数多算</strong>：230 时刻的中断在全部进程结束之后，不计入，共 22 次而不是 23 次。</li><li><strong>同优先权排序弄反</strong>：比的是进入就绪队列的先后（P2 在 20 ms 入队早于 P4 的 70 ms）。</li></ul>
-<blockquote>结论：（1）时钟中断 22 次、CPU 调度 7 次，P1/P3/P4 首次执行时刻 90/140/20 ms；（2）调度次数减少，系统开销增加。</blockquote></div></div>
+<ul><li><strong>把 20 ms 的事件当成时间片用完</strong>：P4 是"优先权抢占"，P2 回队优先权<strong>不变</strong>（仍 4）——这正是 70 ms 时 P2 能压过同为 4 的 P4 的原因。</li><li><strong>优先权减 1 的时机搞错</strong>：只有"时间片用完"才减；"被抢占"不减。</li><li><strong>中断次数多算</strong>：230 ms 的中断在全部进程结束之后，不计入，是 22 次不是 23 次。</li><li><strong>同权排序比错对象</strong>：比的是进就绪队列的先后（P2 的 20 ms 早于 P4 的 70 ms；P3 的 12 ms 早于 P1 的 140 ms）。</li></ul>
+<blockquote>结论：（1）时钟中断 22 次、CPU 调度 7 次，P1/P3/P4 首次执行 90/140/20 ms；（2）时间片增大调度次数减少，中断间隔缩短系统开销增加。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2775,21 +2830,24 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：inode 定位、访盘次数与删除目录的元数据操作</h2>
-<p><strong>答案框架</strong>：（1）file 的索引节点在 <strong>131 号盘块</strong>；索引节点已读入内存时访问偏移 21460 的字节<strong>最多访问 2 个盘块</strong>；最多能创建 <strong>128K = 131072 个文件</strong>；（2）删除 dir1 要对<strong>盘块位图、索引节点位图、目录文件 dir</strong> 三类元数据做 6 步操作。</p>
-<h3>第一步（问 1）：file 的索引节点在几号盘块</h3>
-<table><thead><tr><th>计算步骤</th><th>算式</th><th>结果</th></tr></thead><tbody><tr><td>每块装多少个 inode</td><td>4096B ÷ 128B</td><td>32 个</td></tr><tr><td>inode 1000 的表内字节偏移</td><td>1000 × 128</td><td>128000 B</td></tr><tr><td>表内相对块号</td><td>128000 ÷ 4096 取下整</td><td>31</td></tr><tr><td>绝对盘块号</td><td>100 + 31</td><td><strong>131</strong></td></tr></tbody></table>
-<p>注意 inode 号从 0 开始编号：1000 号 inode 是表中第 1001 个，但偏移量按 1000 × 128 算。</p>
-<h3>第二步（问 1）：访问偏移 21460 的字节最多访盘几次</h3>
-<p>file 大小 30KB，21460 &lt; 30720，访问合法。逻辑块号 = 21460 ÷ 4096 取下整 = <strong>5</strong>（块内偏移 980）。直接地址项 5 个，只覆盖逻辑块 0～4（0～20479 字节）；逻辑块 5 超出直接区，落在<strong>一次间接地址区</strong>。索引节点已在内存，所以只需：① 读一次间接地址块取得数据块号；② 读数据块 → <strong>最多访问 2 个盘块</strong>。</p>
-<h3>第三步（问 1）：最多能创建多少文件</h3>
-<p>每个文件占用一个索引节点，文件数上限 = 索引节点总数 = 4096 块 × 32 个/块 = <strong>131072 = 128K 个</strong>（位图空间足够大、磁盘空间足够大时）。</p>
-<h3>第四步（问 2）：删除 dir1 要对哪些元数据做什么</h3>
-<p>目录树 dir → dir1 → file。要回收的空间：dir1 目录文件占的盘块、file 的数据盘块（30KB 占 8 个数据块）、file 索引节点中一次间接地址指向的盘块（间接地址块本身）；要回收的 inode：201、1000；要改的目录：dir 中 dir1 的目录项。</p>
-<table><thead><tr><th>元数据</th><th>操作</th></tr></thead><tbody><tr><td>盘块位图</td><td>dir1 占用的盘块对应位修改为 0</td></tr><tr><td>盘块位图</td><td>file 占用的盘块对应位修改为 0</td></tr><tr><td>盘块位图</td><td>file 索引节点中一次间接地址指向的盘块对应位修改为 0</td></tr><tr><td>索引节点位图</td><td>dir1 的索引节点（201）对应位修改为 0</td></tr><tr><td>索引节点位图</td><td>file 的索引节点（1000）对应位修改为 0</td></tr><tr><td>目录文件 dir</td><td>删除与 dir1 对应的目录项</td></tr></tbody></table>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：inode 定位、一次间接访盘与删除目录的元数据操作</h2>
+<h3>第 0 步：底层机制——这套文件系统怎么"记账"</h3>
+<p>三类记账结构，访问与删除的每一步都由它们决定：</p>
+<ol><li><strong>索引节点表</strong>：所有 inode 顺序排布在从 100 号盘块开始的 4096 个连续块中，<strong>inode 号 = 表内序号（从 0 起）</strong>——定位 inode 是纯算术：表首位置 + 序号 × 128B。</li><li><strong>两张位图</strong>：盘块位图、inode 位图，1=占用 0=空闲。<strong>它们是"谁被占用"的唯一权威</strong>——释放空间 = 清位，旧数据不必擦：位不清，块永远不会再被分配；位清了，旧数据留在盘上也无所谓。</li><li><strong>目录</strong>：目录项 =（文件名，inode 号），<strong>名字与实体分离</strong>——文件全部的位置信息（直接地址项 5 个，一/二/三次间接地址项各 1 个）都记在 inode 里。</li></ol>
+<p>预答一个总问题：<strong>为什么删除操作只动位图和目录，不擦数据块？</strong> 分配器判断"哪块空闲"只看位图；把位清 0 空间就算回收，擦旧数据是多余动作。</p>
+<h3>第（1）问（3 分）</h3>
+<p><strong>① file 的 inode 在几号盘块。</strong> inode 1000 前面排着 1000 个 inode（号从 0 起，偏移按 1000×128 算而不是 1001×128），表内字节偏移 1000×128 = 128000 B；每块 4096 ÷ 128 = 32 个 inode，128000 B 落在表内第 ⌊128000/4096⌋ = 31 个相对块；表首在 100 号块 → 绝对块号 100+31 = <strong>131</strong>。</p>
+<table><thead><tr><th>步骤</th><th>算式</th><th>结果</th></tr></thead><tbody><tr><td>每块装多少 inode</td><td>4096 ÷ 128</td><td>32 个</td></tr><tr><td>表内字节偏移</td><td>1000 × 128</td><td>128000 B</td></tr><tr><td>表内相对块号</td><td>⌊128000 ÷ 4096⌋</td><td>31</td></tr><tr><td>绝对盘块号</td><td>100 + 31</td><td><strong>131</strong></td></tr></tbody></table>
+<p><strong>② 访问偏移 21460 的字节最多访盘几次。</strong> 机制链：字节偏移 → 逻辑块号 → 地址项映射。21460 ÷ 4096 = 5 余 980 → 逻辑块 5（21460 &lt; 30KB，访问合法）；直接地址项 5 个只覆盖逻辑块 0~4（字节 0~20479），块 5 落在<strong>一次间接区</strong>——要先读 inode 的"一次间接地址项"指向的<strong>间接地址块</strong>（数据块号存在它里面），再读数据块。inode 已在内存（题设），省掉了读 inode 本身那一次 → <strong>最多访问 2 个盘块</strong>（间接块 1 次 + 数据块 1 次）。</p>
+<p><strong>③ 最多能创建多少文件。</strong> 每个文件对应一个 inode → 文件数上限 = inode 总数 = 4096 块 × 32 个/块 = <strong>128K = 131072 个</strong>。题设磁盘与位图空间足够大，唯一瓶颈就是 inode 表——创建文件时分配的正是 inode。</p>
+<h3>第（2）问（5 分）：删除 dir1 要对哪些元数据做什么</h3>
+<p>机制先行——删除目录 = 拆断"名字 → inode → 盘块"整条链，且要<strong>顺着子树拆到底</strong>（dir1 下面还挂着 file）：</p>
+<ol><li><strong>摘名字</strong>：目录文件 dir 中 dir1 的目录项删除——名字链从这里断开；</li><li><strong>释放 dir1 自己的空间</strong>：dir1 的目录文件（里面存着 file 的目录项）占用的盘块 → 盘块位图清 0；</li><li><strong>释放 file 的空间</strong>：file 的数据块（30 KB 占 8 个数据块）→ 盘块位图清 0；file 的 inode 中一次间接地址指向的间接块（8 &gt; 5，逻辑块 5~7 挂在一次间接下，这个间接块确实存在）→ 盘块位图清 0；</li><li><strong>释放 inode</strong>：dir1 的 inode 201、file 的 inode 1000 → inode 位图清 0。</li></ol>
+<table><thead><tr><th>元数据</th><th>操作</th></tr></thead><tbody><tr><td>盘块位图</td><td>dir1 占用的盘块所对应的位修改为 0</td></tr><tr><td>盘块位图</td><td>file 占用的盘块所对应的位修改为 0</td></tr><tr><td>盘块位图</td><td>file 的索引节点中一次间接地址指向的盘块所对应的位修改为 0</td></tr><tr><td>索引节点位图</td><td>dir1 的索引节点（201）所对应的位修改为 0</td></tr><tr><td>索引节点位图</td><td>file 的索引节点（1000）所对应的位修改为 0</td></tr><tr><td>目录文件 dir</td><td>删除与 dir1 对应的目录项</td></tr></tbody></table>
+<p><strong>为什么 dir 的 inode（100）与其位图位不动</strong>：删除的是 dir1 子树，dir 还活着。<strong>为什么不用单独删 file 的目录项</strong>：它住在 dir1 的目录文件里，dir1 的内容盘块整块回收，它随之消失。</p>
 <h3>易错点</h3>
-<ul><li><strong>inode 定位忘加起始块</strong>：只算出相对块号 31，忘了 +100 → 131。</li><li><strong>偏移量多乘一次</strong>：inode 从 0 编号，偏移按 1000×128 算，不是 1001×128。</li><li><strong>直接区范围算错</strong>：5 个直接项只覆盖前 20480 字节，21460 已超界，必须经一次间接块，访盘 2 次而非 1 次。</li><li><strong>删除操作漏项</strong>：容易漏掉"一次间接地址指向的盘块"的位图回收，或漏掉删除父目录 dir 中的目录项。</li></ul>
-<blockquote>结论：（1）131 号盘块、最多访盘 2 次、最多 128K 个文件；（2）对盘块位图 3 处、索引节点位图 2 处清 0，并删除 dir 中 dir1 的目录项。</blockquote></div></div>
+<ul><li><strong>inode 定位忘加表首</strong>：只算出相对块 31，忘了 +100 得 131。</li><li><strong>偏移多乘一次</strong>：inode 号从 0 起，偏移按 1000×128 算，不是 1001×128。</li><li><strong>直接区范围算错</strong>：5 个直接项只管前 20480 字节，21460 已越界进一次间接区——访盘 2 次而非 1 次。</li><li><strong>删除漏项</strong>：最容易漏"一次间接地址指向的盘块"的位图回收与"父目录 dir 中的目录项"两处。</li></ul>
+<blockquote>结论：（1）file 的 inode 在 131 号盘块；访问偏移 21460 最多访盘 2 次；最多建 128K=131072 个文件；（2）盘块位图 3 处、inode 位图 2 处清 0，并删除 dir 中 dir1 的目录项。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2842,27 +2900,31 @@ typedef BinTNode * BTree;              //二叉搜索树</code></pre><p><span>�
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TCP 建连、慢开始传输、挥手全流程推演</h2>
-<p><strong>答案要点</strong>：（1）3 次握手，ack_seq = 1001；（2）拥塞窗口 3 MSS = 1500 B，发送窗口 2 MSS = 1000 B；（3）4 次挥手，seq = 2001、ack_seq = 3002、FIN = 1；（4）4 × 5 ms = 20 ms。下面逐问给框架与推导。</p>
-<h3>第（1）问：三次握手与确认号（2 分）</h3>
-<p>答题框架：握手次数 + 第二次握手段的 ack_seq 规则（对方序号 + 1）。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TCP 建连、慢开始传输与挥手全流程推演</h2>
+<h3>第 0 步：底层机制——四套规则叠在一起</h3>
+<p>这题的所有数字都从四条机制里长出来，先把它们立住：</p>
+<ol><li><strong>序号记账</strong>：SYN 和 FIN 各<strong>消耗一个序号</strong>（哪怕不携带数据）；确认号 ack_seq = "期望对方发来的下一个字节序号" = 已正确收到的最后序号 + 1。全题所有"+1"都源于这两条。</li><li><strong>慢开始</strong>：cwnd 从 1 MSS 起步，<strong>每收到一个新确认加 1 MSS</strong>（"每轮翻倍"只是效果，机制是按确认个数加）；cwnd 达到阈值 ssthresh = 8 MSS 才转入拥塞避免。</li><li><strong>发送窗口 = min(cwnd, rwnd)</strong>：拥塞控制与流量控制两道闸门取小。本题 rwnd 恒为 1000 B = 2 MSS，是个硬顶。</li><li><strong>计时颗粒</strong>：忽略传输时延后，"发一批 → 确认回来"恰是一个 RTT = 5 ms，时间轴就是一格一格的 RTT。</li></ol>
+<h3>第（1）问（2 分）：三次握手与确认号</h3>
 <table><thead><tr><th>次序</th><th>方向</th><th>标志</th><th>seq</th><th>ack_seq</th></tr></thead><tbody><tr><td>第一次</td><td>C→Si</td><td>SYN=1</td><td>1000</td><td>—</td></tr><tr><td>第二次</td><td>Si→C</td><td>SYN=1, ACK=1</td><td>2000</td><td><strong>1001</strong></td></tr><tr><td>第三次</td><td>C→Si</td><td>ACK=1</td><td>1001</td><td>2001</td></tr></tbody></table>
-<p>C 收到的 SYN=1、ACK=1 段就是第二次握手段，其确认序号 = C 初始序号 + 1 = <code>1000 + 1 = 1001</code>。SYN 消耗一个序号，所以 Si 的数据序号从 2001 起，C 的从 1001 起。</p>
-<h3>第（2）问：拥塞窗口与发送窗口（2 分）</h3>
-<p>答题框架：慢开始"每收到一个新确认 cwnd 加 1 MSS" + 发送窗口 = min(cwnd, rwnd)。</p>
-<ul><li>初始 cwnd = 1 MSS（500 B）。C 先发第 1 段（seq 1001~1500），Si 回 ack_seq = 1501，cwnd 变 2 MSS。</li><li>C 再发第 2、3 段（seq 1501~2000、2001~2500）。Si 对每个段单独确认，其中确认第 2 段的那份就是题目给的 <code>ACK=1, seq=2001, ack_seq=2001, rwnd=1000</code>。</li><li>C 收到这份确认时，累计已收到 2 个新确认（ack_seq = 1501、2001），故 <code>cwnd = 1 MSS + 2 MSS = 3 MSS = 1500 B</code>。</li><li>发送窗口 = min(cwnd, rwnd) = min(1500 B, 1000 B) = <code>1000 B = 2 MSS</code>（受接收窗口限制）。</li></ul>
-<h3>第（3）问：四次挥手与最后一个报文段（4 分）</h3>
-<p>答题框架：挥手次数 + "C 收到的最后一个段"出现在第几次挥手 + FIN 占一个序号的编号规则。</p>
-<p>数据发完后 C 共上传 2000 B（序号 1001~3000），下一序号为 3001：</p>
-<table><thead><tr><th>次序</th><th>方向</th><th>标志</th><th>seq</th><th>ack_seq</th></tr></thead><tbody><tr><td>挥手一</td><td>C→Si</td><td>FIN=1</td><td>3001</td><td>2001</td></tr><tr><td>挥手二</td><td>Si→C</td><td>ACK=1</td><td>2001</td><td><strong>3002</strong></td></tr><tr><td>挥手三</td><td>Si→C</td><td><strong>FIN=1</strong>, ACK=1</td><td><strong>2001</strong></td><td><strong>3002</strong></td></tr><tr><td>挥手四</td><td>C→Si</td><td>ACK=1</td><td>3002</td><td>3002</td></tr></tbody></table>
-<p>共 <strong>4 次挥手</strong>。C 收到的最后一个段是挥手三：Si 没发过数据，确认段又不封装数据，其 seq 停在 <code>2000 + 1 = 2001</code>；确认号 <code>3001 + 1 = 3002</code>（FIN 消耗序号 3001）；FIN = 1。</p>
-<h3>第（4）问：确认文件送达的时刻（1 分）</h3>
-<p>答题框架：按 RTT 逐轮列"这一轮发多少"。忽略传输时延，每轮一个 RTT = 5 ms：</p>
-<table><thead><tr><th>轮次</th><th>时刻</th><th>动作</th><th>轮末状态</th></tr></thead><tbody><tr><td>RTT1</td><td>0~5 ms</td><td>三次握手</td><td>cwnd = 1 MSS，连接就绪</td></tr><tr><td>RTT2</td><td>5~10 ms</td><td>发 1 MSS（窗口 min(1, 2) = 1 MSS）</td><td>收到确认，cwnd = 2 MSS，剩 3 MSS</td></tr><tr><td>RTT3</td><td>10~15 ms</td><td>发 2 MSS（窗口 min(2, 2) = 2 MSS）</td><td>收到 2 个确认，cwnd = 4 MSS，剩 1 MSS</td></tr><tr><td>RTT4</td><td>15~20 ms</td><td>发最后 1 MSS</td><td>收到对全部数据的确认，文件送达</td></tr></tbody></table>
-<p><code>cwnd</code> 全程未达阈值 8 MSS，不进入拥塞避免。C 在 t = 4 × 5 ms = <strong>20 ms</strong> 时确认 Si 已成功收到文件。</p>
+<p>建立连接需 <strong>3 次握手</strong>。C 收到的 SYN=1、ACK=1 段是第二次握手段：Si 确认"你的序号 1000（SYN）已收到"，确认号指向下一个期望字节 → ack_seq = 1000+1 = <strong>1001</strong>。</p>
+<p><strong>为什么确认 1001 而不是 1000</strong>：SYN 占一个序号，确认号永远指向"已收齐之后的下一字节"——这也是为什么握手后 C 的数据从 1001 编号、Si 的从 2001 编号。</p>
+<h3>第（2）问（2 分）：拥塞窗口与发送窗口</h3>
+<p>叙事：连接建立后 cwnd = 1 MSS。C 发第 1 段（seq 1001~1500）→ Si 逐段确认，C 收到 ack_seq=1501 → cwnd 加到 2 MSS；C 按发送窗口 min(2 MSS, rwnd=1000 B) = 2 MSS 连发第 2、3 段（seq 1501~2000、2001~2500）；题给的"ACK=1，seq=2001，ack_seq=2001，rwnd=1000"正是 Si 对第 2 段的确认（ack_seq=2001 表示 1001~2000 已收齐）。</p>
+<p>此刻 C 已收到 <strong>2 个新确认</strong>（1501 与 2001）→ cwnd = 1+2 = <strong>3 MSS = 1500 B</strong>；发送窗口 = min(1500 B, 1000 B) = <strong>1000 B = 2 MSS</strong>。</p>
+<p><strong>为什么不是"一轮翻倍"到 4 MSS</strong>：慢开始加窗的单位是"确认个数"，此刻只数到 2 个确认。<strong>为什么发送窗口不取 3 MSS</strong>：rwnd = 1000 B 的闸门更紧，min 取小。</p>
+<h3>第（3）问（4 分）：四次挥手与最后一个报文段</h3>
+<p>文件发完，C 已用掉序号 1001~3000，下一序号 3001：</p>
+<table><thead><tr><th>次序</th><th>方向</th><th>标志</th><th>seq</th><th>ack_seq</th></tr></thead><tbody><tr><td>挥手一</td><td>C→Si</td><td>FIN=1</td><td>3001</td><td>2001</td></tr><tr><td>挥手二</td><td>Si→C</td><td>ACK=1</td><td>2001</td><td><strong>3002</strong></td></tr><tr><td>挥手三</td><td>Si→C</td><td>FIN=1, ACK=1</td><td><strong>2001</strong></td><td><strong>3002</strong></td></tr><tr><td>挥手四</td><td>C→Si</td><td>ACK=1</td><td>3002</td><td>3002</td></tr></tbody></table>
+<p>释放连接需 <strong>4 次挥手</strong>。C 收到的最后一个段是<strong>挥手三</strong>（挥手四是 C 发出去的）：Si 从未发送数据、确认段又不封装数据，其 seq 停在 2000+1 = <strong>2001</strong>；ack_seq = 3001+1 = <strong>3002</strong>——C 的 FIN 占用了序号 3001；FIN = <strong>1</strong>。</p>
+<p><strong>为什么挥手 4 次而握手 3 次</strong>：被动方收到 FIN 时可能还有数据没发完，必须先单独 ACK、等自己的数据发完再发 FIN——两步合不得（本题 Si 虽无数据可发，两段仍分开）。<strong>为什么挥手三的 seq 还是 2001</strong>：序号只在真正消耗序号（数据、SYN、FIN）时前进；Si 的挥手二只有 ACK、不占序号，序号原地停在 2001，到挥手三才被 FIN 消耗。</p>
+<h3>第（4）问（1 分）：何时确认文件送达</h3>
+<p>一格 RTT 一拍地数：</p>
+<table><thead><tr><th>轮次</th><th>时刻</th><th>动作</th><th>轮末状态</th></tr></thead><tbody><tr><td>RTT1</td><td>0~5 ms</td><td>三次握手</td><td>cwnd = 1 MSS，连接就绪</td></tr><tr><td>RTT2</td><td>5~10 ms</td><td>发 1 MSS（窗口 min(1, 2) = 1 MSS）</td><td>确认到达，cwnd = 2 MSS，剩 1500 B</td></tr><tr><td>RTT3</td><td>10~15 ms</td><td>发 2 MSS（窗口 min(2, 2) = 2 MSS）</td><td>确认到达，cwnd = 4 MSS，剩 500 B</td></tr><tr><td>RTT4</td><td>15~20 ms</td><td>发最后 1 MSS</td><td>对全部数据的确认到达 C</td></tr></tbody></table>
+<p>cwnd 全程 1→2→3→4，未触及阈值 8 MSS，不进入拥塞避免（且发送窗口始终被 rwnd 顶在 2 MSS）。第 4 个 RTT 末（20 ms）C 收到覆盖全部数据的确认，据此确认 Si 已成功收到文件 → <strong>4 × 5 ms = 20 ms</strong>。</p>
+<p><strong>为什么不是 3 个 RTT</strong>：计时从"请求建立连接"起，握手占掉第 1 个 RTT。</p>
 <h3>易错点</h3>
-<ul><li><strong>确认号漏加 1</strong>：ack_seq 都是对"已收到的最后一个序号 + 1"，SYN、FIN 各占一个序号，第三次握手与挥手二的 2001、3002 都来自这个规则。</li><li><strong>cwnd 误按"翻倍"提前翻</strong>：慢开始按"收到的新确认个数"加窗，收到 2 个确认才是 3 MSS；若误以为一开始就能按 rwnd 发 2 MSS，第（2）问会答错。</li><li><strong>发送窗口忘了取 min</strong>：发送窗口 = min(cwnd, rwnd)，rwnd 始终 1000 B，所以第（2）问窗口是 2 MSS 而不是 3 MSS。</li><li><strong>第（4）问漏算握手轮</strong>：时间从请求建连算起，握手占第 1 个 RTT，共 4 个 RTT = 20 ms。</li></ul>
-<blockquote>一句话结论：3 次握手 ack_seq=1001；收到第二个确认时 cwnd=3 MSS、发送窗口被 rwnd 限制为 2 MSS=1000 B；4 次挥手，最后收到 seq=2001、ack_seq=3002、FIN=1；握手 1 轮 + 慢开始 3 轮 = 4 × 5 ms = 20 ms。</blockquote></div></div>
+<ul><li><strong>确认号漏 +1</strong>：ack_seq 永远是"最后收到的序号 +1"，SYN、FIN 各占一个序号——1001、2001、3002 全部来自这条规则。</li><li><strong>cwnd 按"轮"翻倍提前翻</strong>：机制是每收到一个新确认加 1 MSS；收到 2 个确认时是 3 MSS 而不是 4 MSS。</li><li><strong>发送窗口忘取 min</strong>：rwnd = 1000 B 是硬顶，窗口是 2 MSS 而不是 3 MSS。</li><li><strong>最后一问漏算握手轮</strong>：时间从请求建连算起，握手占第 1 个 RTT，共 4 个 RTT = 20 ms。</li></ul>
+<blockquote>一句话结论：3 次握手 ack_seq=1001；收到第 2 个确认时 cwnd=3 MSS、发送窗口被 rwnd 限为 2 MSS=1000 B；4 次挥手，最后收到 seq=2001、ack_seq=3002、FIN=1；握手 1 轮 + 慢开始 3 轮 = 4×5 ms = 20 ms。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

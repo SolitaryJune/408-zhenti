@@ -138,19 +138,22 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：链表原地重排 L'=(a1,an,a2,a(n-1),…)</h2>
-<h3>答题框架</h3>
-<p>"原地重排链表"题的固定套路是三步走：<strong>快慢指针找中点 → 原地逆置后半段 → 前后半段交替合并</strong>。三步各扫一遍链表，只用几个指针变量，正好满足"空间 O(1)、时间尽可能高效"。以 n=6 为例：中点 a3，后半段逆置为 a6,a5,a4，交替合并得 (a1,a6,a2,a5,a3,a4)，正是要求的 L'。</p>
-<h3>第 1）问：算法的基本设计思想</h3>
-<ul><li><strong>找中间结点</strong>：设快、慢指针 p、q 均从头结点 h 出发。每轮 p 走 1 步、q 走 2 步（q-&gt;next 为空就停）。循环结束时 p 指向中间结点——n 为偶数时恰是前半段的最后一个结点。</li><li><strong>后半段原地逆置</strong>：从 p-&gt;next 断开后半段，用"头插到 p 之后"的方式就地逆置，不申请新结点。</li><li><strong>交替合并</strong>：s 从 h-&gt;next（前半段第一个结点）出发，q 指向逆置后的后半段；每轮取 q 的结点插到 s 之后，再令 s 前进、q 后移，直到后半段取空。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单链表原地重排 L'=(a1,an,a2,a(n-1),…)</h2>
+<h3>第 0 步：先立模型——三步走是目标结构"逼"出来的</h3>
+<p>把目标序列拆开看：<strong>奇数位置是 a1,a2,a3,…（前半段按原序），偶数位置是 an,a(n-1),…（后半段按逆序）</strong>。单链表只能顺着 next 单向走，取完 a1 想立刻拿 an，就要求 an 已经"排好队等在旁边"——这就是三步分解的全部动机：</p>
+<ol><li><strong>找中点</strong>：不切出两段，就谈不上"前半段""后半段"；</li><li><strong>逆置后半段</strong>：后半段在原表里是 a(n/2+1)…an 的正序，而 L' 要的是逆序，必须先翻转方向；</li><li><strong>交替合并</strong>：把翻转后的后半段逐个插进前半段相邻结点的缝隙里，织出 L'。</li></ol>
+<p>为什么不用数组存好顺序再重排？题干第一句就是硬约束：<strong>空间 O(1)</strong>——只许用常数个指针变量，不许申请新数组、新结点。所以一切操作都必须"在原链表上改指针"。</p>
+<h3>第 1）问：设计思想（每步的"为什么"）</h3>
+<ul><li><strong>快慢指针为什么能找中点</strong>：p 每轮走 1 步、q 每轮走 2 步，q 是 p 的 2 倍速；当 q 到达表尾（再走就越界）时，p 恰好走完一半路程——停在中间。循环条件写成"先走一步、能走再走第二步"，保证 n 为偶数时 p 停在<strong>前半段最后一个结点</strong>，切出来的前半段含 ⌈n/2⌉ 个结点、后半段含 ⌊n/2⌋ 个——<strong>前半段不短于后半段</strong>（奇数时恰多 1 个），这正是交替合并能"每个前半段结点后面都插进一个后半段结点"而不落空的原因。</li><li><strong>头插法为什么能逆置</strong>：p 当临时表头，每轮从旧链摘下头结点 q、插到 p 之后。摘取顺序是后半段正序 a(n/2+1),…,an，后摘的插在前面，链上顺序自然变成 an,…,a(n/2+1)——逆序。全程只改 next 指针、不建新结点，所以空间 O(1)。</li><li><strong>合并为什么先暂存 r</strong>：两处改指针都会"剪断"原链，必须先用 <code>r=q-&gt;next</code> 记住后继，否则断链后后半段就丢了。</li></ul>
 <h3>第 2）问：算法实现（与参考答案同口径，函数为 <code>reorderList(node *h)</code>）</h3>
-<ul><li>找中点：<code>p=q=h; while(q-&gt;next!=NULL){ p=p-&gt;next; q=q-&gt;next; if(q-&gt;next!=NULL) q=q-&gt;next; }</code>，p 停在中点。</li><li>逆置后半段：<code>q=p-&gt;next; p-&gt;next=NULL; while(q!=NULL){ r=q-&gt;next; q-&gt;next=p-&gt;next; p-&gt;next=q; q=r; }</code>，经典头插逆置，r 负责暂存后继。</li><li>交替合并：<code>s=h-&gt;next; q=p-&gt;next; p-&gt;next=NULL; while(q!=NULL){ r=q-&gt;next; q-&gt;next=s-&gt;next; s-&gt;next=q; s=q-&gt;next; q=r; }</code>，把后半段结点逐个插进前半段的缝隙里。</li></ul>
-<p>关键注释点：找中点的边界判断、逆置前的断链 <code>p-&gt;next=NULL</code>、合并时先用 r 保存后继再改指针。</p>
+<ol><li>找中点：<code>p=q=h; while(q-&gt;next!=NULL){ p=p-&gt;next; q=q-&gt;next; if(q-&gt;next!=NULL) q=q-&gt;next; }</code>，p 停在前半段末尾。</li><li>逆置后半段：<code>q=p-&gt;next; p-&gt;next=NULL; while(q!=NULL){ r=q-&gt;next; q-&gt;next=p-&gt;next; p-&gt;next=q; q=r; }</code>——先断链 <code>p-&gt;next=NULL</code> 把两段分开，再逐个头插。</li><li>交替合并：<code>s=h-&gt;next; q=p-&gt;next; p-&gt;next=NULL; while(q!=NULL){ r=q-&gt;next; q-&gt;next=s-&gt;next; s-&gt;next=q; s=q-&gt;next; q=r; }</code>——把后半段结点逐个插进前半段的缝隙，插完 s 经 <code>s=q-&gt;next</code> 落到下一个前半段结点。</li></ol>
+<p>关键注释点：找中点的边界判断、逆置前的断链、改 <code>q-&gt;next</code> 前先用 r 暂存后继。</p>
+<p>以 n=6 验证：p 停在 a3，后半段逆置为 a6→a5→a4，交替合并得 (a1,a6,a2,a5,a3,a4)，正是 L'。</p>
 <h3>第 3）问：复杂度</h3>
-<p>找中点、逆置、合并各一遍，均与 n 成正比，时间复杂度 <strong>O(n)</strong>；全程只用 p、q、r、s 四个指针变量，空间复杂度 <strong>O(1)</strong>。</p>
+<p>三步各扫一遍链表，指针只前进不回退，每步都与 n 成正比，时间复杂度 <strong>O(n)</strong>；全程只用 p、q、r、s 四个指针变量，空间复杂度 <strong>O(1)</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>开辅助数组存序再重排</strong>：空间 O(n)，直接违反题目要求，是最大扣分点。</li><li><strong>找中点边界错</strong>：快指针每轮"先走一步、能走再走第二步"；n 为偶数时中点落在前半段末尾，后半段不短于前半段，合并时"后半段先插"才不漏结点。</li><li><strong>逆置前忘断链</strong>：不先执行 <code>p-&gt;next=NULL</code>，合并时会成环。</li><li><strong>合并时指针更新顺序错</strong>：必须先 <code>r=q-&gt;next</code> 暂存，再改 <code>q-&gt;next</code>，否则后半段丢失。</li></ul>
-<blockquote>框架记忆：快慢找中 → 头插逆置 → 逐个穿插。</blockquote></div></div>
+<ul><li><strong>开辅助数组存序再重排</strong>：空间 O(n)，直接违反 O(1) 约束，是最大扣分点。</li><li><strong>找中点边界错</strong>：快指针必须"先走一步、能走再走第二步"；若 p 停到后半段开头，切分与合并全乱。</li><li><strong>后半段与前半段的长度关系记反</strong>：前半段 ≥ 后半段（奇数时前半段多 1 个），合并以前半段为骨架插后半段，才不漏结点。</li><li><strong>逆置前忘断链</strong>：不先执行 <code>p-&gt;next=NULL</code>，合并时会成环。</li><li><strong>合并/逆置时指针更新顺序错</strong>：必须先 <code>r=q-&gt;next</code> 暂存再改 <code>q-&gt;next</code>，否则后半段丢失。</li></ul>
+<blockquote>框架记忆：目标序列"前半正序 + 后半逆序"⇒ 快慢找中 → 头插逆置 → 逐个穿插；全程只改指针，空间 O(1)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

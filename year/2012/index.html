@@ -457,6 +457,10 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：Dijkstra 最短路径的生成次序</h2>
 <p><strong>答案：C（f, d, e）</strong></p>
+<h3>第 0 步：先立机制——Dijkstra 每轮在干什么，凭什么可以贪心</h3>
+<p>Dijkstra 逐轮扩张"已确定最短路径的顶点集 S"：每轮从未确定顶点里挑 <strong>dist 最小</strong>的一个收入 S，再用它的出边去松弛（更新）邻居的 dist。整套算法只有一个动作：选最小 + 松弛。</p>
+<p><strong>为什么挑 dist 最小的就是对的？</strong> 关键在<strong>边的权非负</strong>：从源点 a 到任何未确定顶点的路径，都必须从 S 里某个顶点跨出去，而跨出去的每条边权 ≥ 0——绕得越远只会累加得越多。所以当前 dist 最小的那个顶点，不可能再被任何"更长的绕路"缩短，它的最短路径已经板上钉钉。这就是"<strong>一旦收入 S，dist 不再变小</strong>"的原因（对比：一旦有负权边，绕路可能更短，贪心失效，得改用 Bellman-Ford 算法）。</p>
+<p>带着这条机制去看逐轮推导，每一步的"为什么选它"就都有了依据。</p>
 <h3>第一步：列出图的弧</h3>
 <p>a→b=2，a→c=5，b→c=1，b→d=3，c→d=3，c→e=4，c→f=1，d→e=1，d→f=4，e→f=1。</p>
 <h3>第二步：逐轮"选最小 + 松弛"（S 为已确定最短路径的顶点集）</h3>
@@ -465,7 +469,7 @@
 <p>题干已给第一条 b、第二条 c；其后依次是 <strong>f → d → e</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>第 4 位误选 d</strong>（A/B 的来源）：只盯着"离源点近的邻接顶点"，忘了 c→f=1 这条短弧使 dist(f)=4 已小于 dist(d)=5——Dijkstra 每轮选的是当前 <strong>dist 最小</strong>者，不看别的。</li><li><strong>漏掉松弛的"倒挂"</strong>：e 先由 c 松弛成 7，最后被 d 松弛降为 6，最终路径是 a→b→c→d→e，不是 a→b→c→e。</li></ul>
-<blockquote>每轮贪心选当前 dist 最小的未定顶点；权非负时 dist 一旦选定就不再变小。</blockquote></div></div>
+<blockquote>记忆锚点：非负权 ⇒ 绕路只会更长 ⇒ 每轮收当前 dist 最小者进 S；收入后 dist 永不再变。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -514,10 +518,11 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：最小生成树的四个命题</h2>
 <p><strong>答案：A（仅 I 正确）</strong></p>
-<h3>第一步：抓住核心结论</h3>
+<h3>第一步：抓住核心结论，并回答"为什么代价必唯一"</h3>
 <p>围绕两点：<strong>代价（权值和）唯一性</strong> 与 <strong>树形态唯一性</strong>。核心：MST 的<strong>代价必唯一，形态未必唯一</strong>（存在权值相同的边时）。</p>
+<p><strong>为什么形态可以不同、代价却必然相同？</strong> 用交换论证看：设两棵不同的 MST，取一棵里有、另一棵没有的一条边 e；把 e 加进第二棵树必构成一个环，环上至少有一条边可以拿出去换（否则第二棵就不是最小了），换入换出的两条边<strong>权值相等</strong>——不然换出来的那棵会更小，与"MST"矛盾。逐次交换后两棵树边权集合完全一致，权值和自然相等。换句话说：<strong>不同的 MST 只是"并列权值的边"挑得不一样，总价纹丝不动</strong>。有了这条，四个命题的判断都有了判据。</p>
 <h3>第二步：逐个判断</h3>
-<ul><li><strong>I 正确</strong>：无论 MST 形态如何，n−1 条边的权值和都相同——代价唯一。</li><li><strong>II 错误</strong>：反例——三角形三边权值全为 1，任取两条边都是 MST；任何一条"权值最小的边"都可能缺席某棵 MST。</li><li><strong>III 错误</strong>：Prim 从不同顶点出发，若存在并列权值的边，贪心顺序不同，可能长出<strong>不同形态</strong>的 MST（代价仍相等）。</li><li><strong>IV 错误</strong>：当 MST 唯一（如各边权互不相同）时，Prim 与 Kruskal 得到的就是<strong>同一棵</strong>树，"总不相同"不成立。</li></ul>
+<ul><li><strong>I 正确</strong>：由交换论证，任意两棵 MST 的边权集合相同，n−1 条边的权值和必相等——代价唯一。</li><li><strong>II 错误</strong>：反例——三角形三边权值全为 1，任取两条边都是 MST；任何一条"权值最小的边"都可能缺席某棵 MST。</li><li><strong>III 错误</strong>：Prim 从不同顶点出发，若存在并列权值的边，贪心顺序不同，可能长出<strong>不同形态</strong>的 MST（代价仍相等）。</li><li><strong>IV 错误</strong>：当 MST 唯一（如各边权互不相同）时，Prim 与 Kruskal 得到的就是<strong>同一棵</strong>树，"总不相同"不成立。</li></ul>
 <h3>第三步：得出组合</h3>
 <p>只有 I 正确 ⇒ 选 <strong>A</strong>。</p>
 <h3>易错点</h3>
@@ -808,6 +813,8 @@
 <p>x = 65530，而 65535 的十六进制是 <code>FFFFH</code>，故 x = FFFFH − 5H = <code>FFFAH</code>（16 位无符号数）。</p>
 <h3>第二步：短的无符号数加长 → 高位补 0</h3>
 <p>把 16 位的 unsigned short 赋给 32 位的 unsigned int，数值不变，只需在高位补 0（零扩展）：16 位的 <code>FFFA</code> 变成 32 位的 <code>0000 FFFA</code>。</p>
+<p><strong>为什么补 0 数值就不变？</strong> 无符号数没有符号位，它的值就是各位权重之和：FFFAH = 15×16³ + 15×16² + 15×16 + 10 = 65530。高位补 0 不新增任何权重项，值当然纹丝不动——扩展前后的位串只在"高位多几个 0"，权重和一字不差。</p>
+<p><strong>那有符号数为什么反而要补符号位？</strong> 因为补码位串是<strong>按模 2ⁿ 解释</strong>的：FFFAH 当 signed short 读时代表 −6（65530 − 65536 = −6）。把它放进 32 位的更大模里，要仍然表示同一个负数，高位必须补 1 得 <code>FFFF FFFA</code>（= 2³² − 6，在模 2³² 下同样代表 −6）才与原数同余；若补 0 就变成了 +65530。所以扩展规则取决于<strong>类型解释</strong>：无符号补 0，有符号补符号位——本题 x 是 unsigned short，走补 0 这条路。</p>
 <h3>第三步：对照干扰项，确认来源</h3>
 <p>若 x 是 <strong>signed short</strong> 且值为负数，加长时按符号扩展高位补 1，才会得到 <code>FFFF FFFA</code>（选项 D）——但本题 x 是 unsigned，根本没有符号位，一律补 0。选项 A、C 里的 <code>7FFA</code> 则是十进制转十六进制就错了的结果。</p>
 <p>答案选 <strong>B</strong>。</p>
@@ -867,6 +874,7 @@
 <h3>第二步：用 IEEE 754 单精度格式构造最大数</h3>
 <p>单精度 = 1 位符号 + 8 位阶码 + 23 位尾数。构造最大正数：</p>
 <ul><li>符号位 S = 0；</li><li>阶码全 1（E = 255）被保留给 ±∞ 和 NaN，不能表示数，故取最大可用阶码 E = 254，真指数 = 254 − 127 = 127；</li><li>尾数 M 全 1，加上隐含的最高位 1，即 1.M = 1.111…1 = 2 − 2^-23。</li></ul>
+<p><strong>两个"为什么"提前答掉：</strong> ①尾数为什么要加隐含的 1？规格化二进制数必写成 1.xxxx × 2^E，整数位的 1 永远存在，索性不存它——23 位的存储就能挤出 24 位有效精度，这叫隐藏位技术。M 全 1 时 1.M 就是最大的尾数 = 2 − 2^-23（离 2 差一个 2^-23）。②阶码为什么要减 127（偏置）？8 位若按补码存，负指数的比较和运算都别扭；改存"真指数 + 127"这个无符号数，硬件比较大小、做乘法都直接。所以存的最大阶码 254 对应真指数 254 − 127 = 127，而全 1 的 255 被保留给 ±∞ / NaN。</p>
 <p>最大值 = 1.M × 2^127 = (2 − 2^-23) × 2^127</p>
 <h3>第三步：展开成选项形式</h3>
 <p>(2 − 2^-23) × 2^127 = 2 × 2^127 − 2^-23 × 2^127 = <code>2^128 - 2^104</code>，选 <strong>D</strong>。</p>
@@ -932,6 +940,7 @@ record.a=273;</code></pre><p><span>若record变量的首地址为0xC008，则地
 <p>小端 = 数据的低位字节放在低地址。a 按边界对齐占 0xC008～0xC00B 四个字节：最低字节 <code>11</code> 放进最低地址 0xC008，其后依次是 01、00、00。所以地址 0xC008 的内容是 <strong>0x11</strong>。</p>
 <h3>第三步：按边界对齐排 b 和 c</h3>
 <p>b 是 char（1 字节，任意地址都能放）→ 0xC00C。c 是 short（2 字节，地址必须是 2 的倍数）：下一个可用地址 0xC00D 是奇地址，不满足对齐，跳过；c 从 <strong>0xC00E</strong> 开始，占 0xC00E～0xC00F。</p>
+<p><strong>为什么要有边界对齐这条规矩？</strong> 内存与 CPU 之间的数据总线宽度固定（int 一次取 4 字节、short 一次取 2 字节），访问电路默认从"自身宽度的整数倍地址"开始一个总线周期取回整个数据。若让 short 从 0xC00D 这种奇地址起放，它会横跨两个对齐边界，硬件得发两次访存、再把两半拼起来——慢且电路复杂。所以编译器宁可在这里留 1 字节空洞（0xC00D 作填充）也要把 c 推到 0xC00E，这就是 b 与 c 之间"空一拍"的由来。</p>
 <h3>易错点</h3>
 <ul><li><strong>按大端方式放 273</strong>：大端会把最高字节 00 放进 0xC008（干扰项 A、B 的 0x00），本题明确是小端。</li><li><strong>让 c 顶在 0xC00D</strong>：short 必须 2 字节对齐，0xC00D 奇地址不合法（干扰项 A、C 的 0xC00D）。</li><li><strong>忘记对齐产生的空洞</strong>：b 与 c 之间的 0xC00D 是 1 字节填充，不属于任何成员。</li></ul>
 <blockquote>记忆点：小端 = 低字节在低地址；short / int 的起始地址必须分别是 2 / 4 的倍数，放不下就留空洞。</blockquote></div></div>
@@ -1096,8 +1105,9 @@ record.a=273;</code></pre><p><span>若record变量的首地址为0xC008，则地
 <p><strong>答案：C</strong>——15 位。</p>
 <h3>第一步：字段直接编码法的分组原则</h3>
 <p>字段直接编码法把操作控制字段分成若干<strong>小段</strong>，把互斥的微命令编进同一段，各段独立译码、互不干扰。本题 33 个微命令构成 5 个互斥类 → 控制字段分成 5 段，段位数分别由各类的命令数决定。</p>
+<p><strong>为什么只有"互斥"的命令才能编进同一段？</strong> 每段配一个译码器，一次译码只点亮<strong>一条</strong>输出线——同一段在同一条微指令周期里最多发出 1 个微命令。若把两个可以同时出现（相容）的命令塞进同一段，它们就永远无法一起发出，控制功能直接残废；反过来，互斥（不可能同时需要）的命令共享一段恰好不损失任何组合能力。所以"互斥 → 同段、相容 → 分段"是分段的唯一依据。</p>
 <h3>第二步：每段要留一个"不发命令"的状态</h3>
-<p>每段必须留出一个状态表示"本段不发出任何微命令"，所以每段要编码的状态数 = 微命令数 + 1，段位数 = log2(命令数 + 1) 向上取整：</p>
+<p><strong>为什么每段必须留一个"不发命令"的状态？</strong> 一段 k 位有 2^k 个编码，译码器每个输出都被迫对应发出某条命令；但微指令经常需要"这一类操作什么都不做"（其他段照常工作），如果所有编码都绑死了命令，这种空操作就表达不出来。所以约定留出一个编码（通常全 0）表示本段不发任何微命令，可用命令数只剩 2^k − 1。于是每段要编码的状态数 = 微命令数 + 1，段位数 = log2(命令数 + 1) 向上取整：</p>
 <table><thead><tr><th>互斥类</th><th>命令数</th><th>状态数（+1）</th><th>位数</th></tr></thead><tbody><tr><td>1</td><td>7</td><td>8</td><td>3</td></tr><tr><td>2</td><td>3</td><td>4</td><td>2</td></tr><tr><td>3</td><td>12</td><td>16</td><td>4</td></tr><tr><td>4</td><td>5</td><td>8</td><td>3</td></tr><tr><td>5</td><td>6</td><td>8</td><td>3</td></tr></tbody></table>
 <h3>第三步：求和</h3>
 <p>3 + 2 + 4 + 3 + 3 = <strong>15 位</strong>，选 <strong>C</strong>。</p>
@@ -2104,11 +2114,13 @@ record.a=273;</code></pre><p><span>若record变量的首地址为0xC008，则地
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：GBN 序号比特数与信道利用率</h2>
 <h3>结论：答案 B（4 比特）</h3>
 <p>要让信道利用率最高，发送方必须<strong>连续不断</strong>发帧。用<strong>最短帧 128 B</strong> 的最坏情况算：填满「一去一回」管道需要的帧数最多，再由 GBN 窗口约束 <code>W ≤ 2^n − 1</code> 定出 n。</p>
+<p><strong>为什么必须按最短帧算？</strong> 利用率"最高"意味着确认回来之前发送方一刻不停；帧越短、发送时延 Tf 越小，同样 668 ms 的往返管道里要塞的帧数就越多——长帧（512 B，Tf = 256 ms）只要 5 帧多，短帧（128 B，Tf = 64 ms）要 10 帧多。序号比特数是按最坏需求设计的，所以取帧长下限 128 B。</p>
 <h3>第一步：算时间</h3>
 <table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>帧发送时延 Tf</td><td>128×8 bit ÷ 16 kbps</td><td>64 ms</td></tr><tr><td>单向传播时延 Tp</td><td>题目给定</td><td>270 ms</td></tr><tr><td>ACK 发送时延 Ta</td><td>确认帧与数据帧等长</td><td>64 ms</td></tr></tbody></table>
 <p>第 1 帧从开始发送到它的确认完全回到发送方：<code>Tf + Tp + Ta + Tp = 64 + 270 + 64 + 270 = 668 ms</code>。</p>
 <h3>第二步：算窗口与比特数</h3>
 <p>这 668 ms 内发送方一刻不能停，需要连发的帧数 <code>W ≥ 668 ÷ 64 ≈ 10.44</code>，取 <strong>W ≥ 11</strong>。GBN 发送窗口受序号空间限制：<code>2^n − 1 ≥ 11</code>，即 <code>2^n ≥ 12</code>：</p>
+<p><strong>为什么窗口上限是 2^n − 1 而不是 2^n？</strong> 序号共 2^n 个、GBN 接收窗口为 1。若发送窗口开满 2^n，发送方可以在一个确认都没收到的情况下把 0 ~ 2^n−1 号帧全部发完；此时一旦最老的累计确认丢失，重传的 0 号帧和"下一轮新发"的 0 号帧撞用同一序号，接收方无法分辨新旧帧，出了错就无法挽回。留出 1 个序号作隔离带，新帧序号就绝不会与未确认旧帧重合——这就是 <code>W ≤ 2^n − 1</code> 的由来。</p>
 <ul><li>n = 3：<code>2^3 − 1 = 7</code>，小于 11，不够；</li><li>n = 4：<code>2^4 − 1 = 15 ≥ 11</code>，可行。</li></ul>
 <p>故帧序号至少 <strong>4 比特</strong>。</p>
 <h3>易错点</h3>
@@ -2397,18 +2409,23 @@ record.a=273;</code></pre><p><span>若record变量的首地址为0xC008，则地
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：最佳归并树——5 次两两合并的最小比较总数</h2>
-<h3>答题框架（先记这个）</h3>
-<ol><li>两表合并的最坏比较次数 = <strong>两表长度之和 − 1</strong>；</li><li>要最坏总次数最小 ⇒ <strong>每次挑当前最短的两个表合并</strong>（哈夫曼思想，即"最佳归并树"）；</li><li>把 5 次合并逐一列出，累加比较次数。</li></ol>
+<h3>第 0 步：先建立机制——一次两两归并到底比多少次</h3>
+<p>合并两个升序表用的是"双指针归并"：两个指针各指向本表还没输出的最小元素，每比较一次，输出较小者并后移。<strong>只要两表都还有元素，就必须再比；一旦某表取空，剩余整段直接搬过去，不再比较。</strong> 由此得到一次合并的代价模型：</p>
+<ul><li><strong>最坏情况</strong>（谁也不提前取空，比到倒数第二次时两表都还有元素）：比较 <strong>a＋b−1</strong> 次；</li><li>为什么不是 a＋b：最后一个元素输出时对手表已经空了，无需再比；</li><li>为什么可能更少：运气好时某表提前取空，剩余部分免比直接搬。</li></ul>
+<p>再往上一层算总账：每合并一次产生一张新表，新表还会继续被合并——<strong>每个初始表每"参加"一次合并，就把自己表长贡献一次</strong>。所以总比较次数 = Σ(每次合并的两表长和 − 1) = Σ(表长 × 该表在合并树中的深度) − (N−1)（N 张表两两合并恰好 N−1 次，本题 6 张表合并 5 次）。而"Σ(权 × 深度)"正是<strong>哈夫曼树的带权路径长度 WPL</strong>——表长就是叶结点权值。于是"最坏总比较次数最小"等价于"WPL 最小"，构造方法就是哈夫曼法：<strong>每次取当前最小的两个表合并</strong>（贪心为什么最优：哈夫曼树的标准结论——若两个最小权不在最深层，把它们与最深处结点对调，WPL 只减不增，故最小权必在深处、应当最先合并）。</p>
 <h3>第 1 问：合并过程与最坏比较总次数</h3>
-<p>每次从当前表集合中选长度最小的两个合并：</p>
+<p>把 6 张表的表长 {10, 35, 40, 50, 60, 200} 当作权值，每次挑最小的两个：</p>
+<ol><li>最小的两个是 10、35 → 合并成 AB(45)；</li><li>此时剩下的最小两个是 40、45 → C 并入，ABC(85)；</li><li>剩下的最小两个是 50、60 → DE(110)；</li><li>剩下的最小两个是 85、110 → ABCDE(195)；</li><li>只剩 195、200 → 最终表(395)。</li></ol>
+<p>逐次代价（两表长和 − 1）：</p>
 <table><thead><tr><th>次序</th><th>参与合并的表</th><th>得到新表</th><th>最坏比较次数</th></tr></thead><tbody><tr><td>1</td><td>A(10) ＋ B(35)</td><td>AB(45)</td><td>10＋35−1 = <strong>44</strong></td></tr><tr><td>2</td><td>AB(45) ＋ C(40)</td><td>ABC(85)</td><td>45＋40−1 = <strong>84</strong></td></tr><tr><td>3</td><td>D(50) ＋ E(60)</td><td>DE(110)</td><td>50＋60−1 = <strong>109</strong></td></tr><tr><td>4</td><td>ABC(85) ＋ DE(110)</td><td>ABCDE(195)</td><td>85＋110−1 = <strong>194</strong></td></tr><tr><td>5</td><td>ABCDE(195) ＋ F(200)</td><td>最终表(395)</td><td>195＋200−1 = <strong>394</strong></td></tr></tbody></table>
 <p>最坏情况下比较的总次数 = 44＋84＋109＋194＋394 = <strong>825 次</strong>。</p>
+<p>（用 WPL 验算：A、B 各参加 4 次合并，C、D、E 各 3 次，F 只 1 次，10×4＋35×4＋40×3＋50×3＋60×3＋200×1 = 830，减去 5 次合并的 5 个"−1"得 825，两条路一致。）</p>
 <h3>第 2 问：N 个不等长表的合并策略与理由</h3>
-<p><strong>策略</strong>：对 N（N≥2）个不等长升序表，仿照<strong>哈夫曼树</strong>的构造方法（最佳归并树）：每次选当前长度最小的两个表合并，重复直到只剩一个表。</p>
-<p><strong>理由</strong>：一次两两合并的最坏代价是"两表长度之和 − 1"。若让长表早早参与合并，它会在后续每一次合并中反复"贡献"自己的长度；让短表先合并，长表只在最后参与一次，总代价最小。这与哈夫曼树"权值越小离根越远"完全同构——表长相当于叶结点权值，一次合并的代价相当于子树权值和。</p>
+<p><strong>策略</strong>：对 N（N≥2）个不等长升序表，仿照哈夫曼树的构造方法（即<strong>最佳归并树</strong>）：每次选当前长度最小的两个表合并，重复 N−1 次直到只剩一张表。</p>
+<p><strong>理由</strong>：第 0 步的恒等式已经给出答案——总比较次数 = Σ(表长 × 深度) − (N−1)。要让它最小，就该让<strong>长表深度小（少参加几次合并）、短表深度大（多参加几次）</strong>，"每次取最小两表合并"恰好做到这一点。本题即为例证：F(200) 只在第 5 次参加 1 次合并，而 A(10)、B(35) 各参加了 4 次。</p>
 <h3>易错点</h3>
-<ul><li><strong>按题目给出的顺序两两合并</strong>（如 A+B、C+D、E+F…）：总次数会远大于 825，没有体现"最坏情况下达到最小"的要求。</li><li><strong>比较次数漏减 1</strong>：归并两表时，最后一次比较完成时其中一个表已耗尽，故是"长度和 − 1"次而不是"长度和"次。</li></ul>
-<blockquote>记忆锚点：最佳归并树 = 哈夫曼思想用在"表长"上；本题最坏总比较 <strong>825</strong> 次。</blockquote></div></div>
+<ul><li><strong>按题目给出的顺序两两合并</strong>（如 A+B、C+D、E+F…）：没有体现"最坏情况下总次数最小"的要求，总代价远大于 825。</li><li><strong>比较次数漏减 1</strong>：某表取空后剩余元素免比直接搬，所以是"长度和 − 1"而不是"长度和"。</li><li><strong>把"最坏情况"理解成出错情况</strong>：这里的"最坏"指一次归并中运气最差的情形（谁也不提前取空）；"最坏总次数最小"是按这个代价模型求最优合并方案。</li></ul>
+<blockquote>记忆锚点：一次合并最坏 a＋b−1；总比较 = Σ(表长×深度) − (N−1) = 哈夫曼 WPL → 每次合并当前最小的两个表。本题最坏总比较 <strong>825</strong> 次。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2495,18 +2512,24 @@ LinkNode* FindCommonLinkList(LinkNode *str1, LinkNode *str2) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：求两单链表共同后缀的起始位置</h2>
-<h3>答题框架（先记这个）</h3>
-<ol><li>关键观察：<strong>后缀共享 ⇒ 两链表尾部是同一条链</strong>（图中两个表都汇入字符 i 结点）；</li><li>单链表无法从后往前找 ⇒ 让两指针<strong>先"尾部对齐"，再同步后移</strong>；</li><li>复杂度要做到 O(len1+len2)：先数长度、再对齐、再同步，每条链只扫常数遍。</li></ol>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单链表共同后缀的起始位置——先数长度、再对齐、再同步</h2>
+<h3>第 0 步：先看清"共享后缀"在链表里意味着什么</h3>
+<p>题图的存储方式是：两个单词各有一条链，从共同后缀首结点（字符 i）开始<strong>两条链汇成同一条链</strong>——i、n、g 这些结点只有一份，两个表经 next 指向同一批结点。由此得到两条关键性质：</p>
+<ol><li><strong>共享是"结点同一"，不是"内容相同"</strong>：汇合点 X 之后每个结点地址都一样；X 之前两链的结点互不相干（否则汇合点会更靠前）。</li><li><strong>单链表只有 next，不能从表尾倒着走</strong>：想"从后往前找第一个不同的结点"走不通，只能把方向问题转为正向——让两个指针站到"同一条链"上并排前进。</li></ol>
+<p>思路由此自然浮现：X 及其后是同一条链，X 之前是两段长度不同的私有前缀。若让两指针<strong>到表尾等距</strong>后同步后移：未到 X 时，两指针必各自走在私有前缀上（p ≠ q）；一旦同到 X 或其后，走的已是同一条链（p == q）。所以<strong>第一次 p == q 的结点恰好就是 X</strong>；走到 NULL 仍未相遇则无共同后缀。</p>
+<p>而"等距"怎么保证？表尾看不见，但表长数得出来：先各遍历一遍求 len1、len2，让较长链的指针先走 |len1−len2| 步即可。两个最可能追问的"为什么"先答掉：</p>
+<ul><li><strong>为什么比较指针而不比较字符</strong>？字符相同不代表同一结点（两个表都可能含 'i'）；只有 p == q（同一地址）才能保证其后整段共享。</li><li><strong>为什么先数长度</strong>？单链表不能倒走，"两段前缀差多少"只有数一遍才知道。</li></ul>
 <h3>第 1 问：算法的基本设计思想</h3>
-<ul><li>分别遍历两个链表（从 <code>head-&gt;next</code> 开始，跳过头结点），求出数据结点个数 len1、len2；</li><li>让<strong>较长链表的指针先走 |len1−len2| 步</strong>，使 p、q 到表尾的距离相等；</li><li>然后 p、q <strong>同步后移</strong>，第一个 p == q 的结点即共同后缀的起始位置（图中字符 i 所在结点）；若走到 NULL 仍未相遇，则无共同后缀。</li><li>以题中例子验证："loading" len1=7、"being" len2=5，p 先走 2 步，同步后第 3 步两指针同时到达字符 i 结点。</li></ul>
-<h3>第 2 问：C 语言描述（要点版）</h3>
-<ol><li><code>int Length(LinkNode *head)</code>：从 <code>head-&gt;next</code> 起计数，返回数据结点个数；</li><li>对齐：<code>p = str1; q = str2;</code> 若 <code>len1 &gt; len2</code> 则 p 先走 <code>len1-len2</code> 步，否则 q 先走 <code>len2-len1</code> 步（注意 p、q 都从<strong>头结点</strong>出发）；</li><li>同步：<code>while (p != NULL &amp;&amp; p != q) { p = p-&gt;next; q = q-&gt;next; }</code>；</li><li>返回 <code>p</code>——它要么指向共同后缀首结点，要么为 NULL（无共同后缀）。</li></ol>
+<ol><li>分别遍历两链（带头结点，从 <code>head-&gt;next</code> 起数）求出 len1、len2；</li><li>对齐：p、q 从两表<strong>头结点</strong>出发，较长表的指针先走 |len1−len2| 步——此后两指针到表尾（NULL）的步数相等；</li><li>同步后移，第一个 p == q 的结点即共同后缀首结点（图中字符 i 所在结点）；直至 NULL 未相遇则返回"无共同后缀"。</li></ol>
+<p>用题中例子走一遍："loading"（l→o→a→d→i→n→g，len1=7）、"being"（b→e→i→n→g，len2=5）。p 先走 2 步到 'o' 结点（此后 p、q 到 NULL 均为 6 步）；同步第 1 步 p=a、q=b，第 2 步 p=d、q=e，第 3 步两指针同时到达字符 i 的结点——即共同后缀的起始位置 p。</p>
+<h3>第 2 问：C 语言描述（要点）</h3>
+<ol><li><code>int Length(LinkNode *head)</code>：从 <code>head-&gt;next</code> 起计数，返回数据结点个数（跳过头结点）；</li><li>对齐：<code>p = str1; q = str2;</code> 若 <code>len1 &gt; len2</code> 则 p 先走 <code>len1 - len2</code> 步，否则 q 先走 <code>len2 - len1</code> 步；</li><li>同步：<code>while (p != NULL &amp;&amp; q != NULL &amp;&amp; p != q) { p = p-&gt;next; q = q-&gt;next; }</code>；</li><li>返回 <code>p</code>——要么指向共同后缀首结点，要么为 NULL（无共同后缀）。</li></ol>
+<p>（对齐的等距性可以验证：p 从头结点走 <code>len1−len2</code> 步后，p 之后（不含 p）恰剩 <code>len2</code> 个结点，与 q 从头结点出发后的 <code>len2</code> 个结点相等——计数跳过头结点、对齐从头结点走，两者正是配套的。）</p>
 <h3>第 3 问：时间复杂度</h3>
-<p>求长度各遍历一遍：O(len1+len2)；对齐与同步至多再走较短链表长度的结点：O(max(len1,len2))。总计 <strong>O(len1+len2)</strong>。若用"双重循环逐结点比对"则为 O(len1×len2)，不满足"时间尽可能高效"的要求。</p>
+<p>数长度：两链各扫一遍，O(len1+len2)；对齐：走 |len1−len2| 步；同步：至多走到 NULL，步数不超过较短链长。每个结点至多被扫 2 次，总计 <strong>O(len1+len2)</strong>。若用"双重循环逐结点比对"（对 str1 的每个结点去 str2 中找相同字符/位置），是 O(len1×len2)，不满足"时间上尽可能高效"的要求。</p>
 <h3>易错点</h3>
-<ul><li><strong>长度计数与对齐的起点搞混</strong>：本题带头结点，计数要跳过头结点；对齐时 p 从头结点出发走 len1−len2 步，恰好落在与 q"到表尾等距"的位置。</li><li><strong>同步时比较 data 值而不是结点指针</strong>：必须比较 <strong>p == q（同一结点）</strong>——两链表中出现相同字符不代表是同一结点，只有指针相同才真正进入共享后缀。</li></ul>
-<blockquote>记忆锚点：先数长度、再对齐、再同步，比较的是<strong>指针</strong>——O(len1+len2)。</blockquote></div></div>
+<ul><li><strong>同步时比较字符而不比较指针</strong>：必须 <code>p == q</code>——字符相同 ≠ 同一结点，这是本题最核心的陷阱。</li><li><strong>计数与对齐的起点不配套</strong>：计数从 <code>head-&gt;next</code>（跳过头结点），对齐时指针从头结点出发走差值步；起点一旦搞混，"等距"就不成立。</li><li><strong>漏掉无共同后缀的情形</strong>：循环条件必须含 <code>p != NULL &amp;&amp; q != NULL</code>，无共享时函数返回 NULL，而不是空指针崩溃。</li></ul>
+<blockquote>记忆锚点：共享后缀 = 尾部同一条链 → <strong>数长度 → 对齐 → 同步 → 比指针</strong>，O(len1+len2)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2559,20 +2582,25 @@ LinkNode* FindCommonLinkList(LinkNode *str1, LinkNode *str2) {
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：从 MIPS 到 DMA 请求与多体交叉带宽的性能折算链</h2>
-<p><strong>答题框架</strong>：先把 CPU 每秒执行的指令数算出来，再沿「指令 → 访存 → Cache 缺失 → 缺页 → DMA 请求」逐级折算，第 3 问答优先级比较，第 4 问用多体交叉的流水思想算带宽。</p>
-<p>结论：MIPS = 20；每秒 Cache 缺失 30 万次；主存带宽至少 4.8MB/s；每秒缺页 1.5 次；DMA 请求至少 1536 次/秒；DMA 优先级更高；最大带宽 320MB/s。</p>
-<h3>第 1 问：MIPS、Cache 缺失次数与主存带宽</h3>
-<ul><li>主频 80MHz、CPI = 4 → 每秒执行指令数 = 80M ÷ 4 = 20M 条，即 <strong>MIPS = 20</strong>。</li><li>每条指令平均访存 1.5 次 → 每秒访存 20M × 1.5 = 30M 次；Cache 命中率 99%，缺失率 1% → 每秒缺失 30M × 0.01 = 0.3M = <strong>300,000 次</strong>。</li><li>每次缺失主存与 Cache 交换一块 16B → 主存带宽至少 16B × 0.3M/s = <strong>4.8MB/s</strong>。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：从 MIPS 到 DMA 请求次数——一条"每秒流量"折算链</h2>
+<h3>第 0 步：先建立模型——所有"每秒多少次"挂在同一条链上</h3>
+<p>四道小问看似零散，其实共用一个模型：<strong>CPU 每秒执行的指令数是总龙头，后面每个事件都由上一级事件按比例"漏"下来</strong>：</p>
+<p>指令（20M 条/秒）→ 访存（×1.5 = 30M 次/秒）→ Cache 缺失（×1% = 0.3M 次/秒）→ 缺页（×0.0005% = 1.5 次/秒）→ DMA 请求（×1024 = 1536 次/秒）</p>
+<p>折算题最容易错的是<strong>每一级比例的分母</strong>。先把三个最可能追问的"为什么"答掉：</p>
+<ul><li><strong>为什么 MIPS = 主频 ÷ CPI</strong>？CPI = 4 表示每条指令占 4 个时钟周期，主频 80MHz 即每秒 80M 个周期，80M ÷ 4 拍/条 = 20M 条/秒，即 MIPS = 20。</li><li><strong>为什么缺失率作用在"访存次数"而不是"指令数"上</strong>？Cache 缺失只发生在真正访存的时候；每条指令平均访存 1.5 次，所以分母是 20M × 1.5 = 30M，不是 20M。</li><li><strong>为什么缺页率作用在"Cache 缺失后的主存访问"上</strong>？题目给定口径如此：只有 Cache 缺失、真正去主存取数时，才谈得上"页在不在内存"；Cache 命中的访问不出 CPU/Cache 层次，与缺页无关。分母是 0.3M，不是 30M 或 20M。</li></ul>
+<h3>第 1 问：MIPS、每秒 Cache 缺失次数、主存带宽下限</h3>
+<ul><li>MIPS = 80M ÷ 4 = <strong>20</strong>；</li><li>每秒访存 20M × 1.5 = 30M 次，命中率 99% → 每秒缺失 30M × 1% = 0.3M = <strong>300,000 次</strong>；</li><li>每次缺失要在主存与 Cache 之间交换一块 16B → 主存带宽至少 16B × 0.3M/s = <strong>4.8MB/s</strong>。</li></ul>
+<p>为什么是"至少"：CPU 每秒产生 0.3M 次缺失、每次都要搬 16B，这是主存必须消化的流量下限——带宽低于 4.8MB/s 时这些块传输就得排队，CPU 被迫停等，访存要求便不满足。</p>
 <h3>第 2 问：缺页异常与 DMA 请求次数</h3>
-<ul><li>缺页率 0.0005% 作用在"Cache 缺失后访问主存"上 → 每秒缺页 0.3M × 0.0005% = <strong>1.5 次</strong>。</li><li>页面大小 4KB，磁盘 I/O 接口的数据缓冲寄存器 32 位 = 4B → 每页要分 4KB ÷ 4B = 1024 次传送；周期挪用方式下每挪用一个存储周期传 4B、发一次 DMA 请求 → 每秒 DMA 请求至少 1.5 × 1024 = <strong>1536 次</strong>。</li></ul>
+<ul><li>每秒缺页 = 0.3M × 0.0005% = <strong>1.5 次</strong>；</li><li>一次缺页要把整个 4KB 页面从磁盘读入内存。DMA 的传送单位是磁盘接口<strong>数据缓冲寄存器的宽度</strong>：32 位 = 4B——<strong>周期挪用方式下，DMA 每挪用一个存储周期就传送 4B 并发出一次 DMA 请求</strong>。一页 4KB ÷ 4B = 1024 次传送 → 每秒 DMA 请求至少 1.5 × 1024 = <strong>1536 次</strong>。</li></ul>
 <h3>第 3 问：CPU 与 DMA 控制器谁优先级高</h3>
-<p><strong>DMA 控制器优先级更高</strong>。DMA 请求若得不到及时响应，I/O 传输的数据可能丢失（设备有实时性要求，等不起）；而 CPU 稍等一两个存储周期只是慢一点，不造成错误。</p>
+<p><strong>DMA 控制器优先级更高</strong>，理由要说到"丢数据"：DMA 请求来自按设备自身节奏产生/接收数据的外设，响应不及时，接口缓冲寄存器会被下一个数据冲掉——<strong>错误不可恢复</strong>；CPU 让出一两个存储周期只是程序慢一点，结果不受影响，属于性能问题而非正确性问题。且 DMA 占用总线的时长短、频次有限，让给它的代价很小。</p>
 <h3>第 4 问：四体低位交叉主存的最大带宽</h3>
-<p>四体低位交叉按「每 1/4 个存储周期启动一个体」流水工作：体启动间隔 = 50ns ÷ 4 = 12.5ns。流水满载时，每隔 12.5ns 就读出总线宽度 32 位（4B）的一个字 → 最大带宽 = 4B ÷ 12.5ns = <strong>320MB/s</strong>（等于 16B ÷ 50ns，即四个体并行）。</p>
+<p>机制：低位交叉把相邻地址依次分布在 4 个存储体上（体号 = 地址低 2 位），4 个体按"每 1/4 存储周期启动一体"流水工作——体启动间隔 = 50ns ÷ 4 = 12.5ns。流水满载后，每个 12.5ns 都有一个体读出一个 32 位（4B）字送上 32 位总线，总线的每个时段被不同体占用、互不冲突 → 最大带宽 = 4B ÷ 12.5ns = <strong>320MB/s</strong>（即 16B ÷ 50ns，等效于四个体并行读出）。</p>
+<p>为什么叫"最大"：这是访问地址连续铺在四个体、流水满载的理想情形；若地址都落在同一体上，就退化成单体带宽 4B ÷ 50ns = 80MB/s。</p>
 <h3>易错点</h3>
-<ul><li><strong>缺失次数忘乘 1.5</strong>：缺失率作用在每秒 30M 次"访存"上，不是 20M 条指令上。</li><li><strong>缺页率的作用对象找错</strong>：0.0005% 作用在每秒 0.3M 次"Cache 缺失后访问主存"上，不是全部访存或指令上。</li><li><strong>DMA 请求次数算错</strong>：要按缓冲寄存器宽度 4B 把每页 4KB 分成 1024 次，再乘每秒 1.5 次缺页。</li><li><strong>带宽按单体算</strong>：单体只有 4B ÷ 50ns = 80MB/s；四体流水满载才能提供 4 倍的 320MB/s。</li></ul>
-<blockquote>记忆点：性能折算题的关键是找准每一级"每秒次数"的作用对象，逐级相乘；交叉存储器的带宽 = 一次读出的总字节数 ÷ 一个存储周期。</blockquote></div></div>
+<ul><li><strong>缺失次数忘乘 1.5</strong>：缺失率的分母是每秒 30M 次"访存"，不是 20M 条指令。</li><li><strong>缺页率的分母找错</strong>：0.0005% 作用在每秒 0.3M 次"缺失后的主存访问"上，不是全部访存或全部指令。</li><li><strong>DMA 请求次数漏算拆分</strong>：要按缓冲寄存器宽度 4B 把 4KB 拆成 1024 次传送，再乘每秒 1.5 次缺页。</li><li><strong>第 4 问按单体算带宽</strong>：单体只有 80MB/s；四体流水满载才是 320MB/s。</li></ul>
+<blockquote>记忆锚点：折算链「指令 20M → 访存 30M → 缺失 0.3M → 缺页 1.5 → DMA 请求 1536」，每级找准分母；交叉存储器带宽 = 一次读出的总字节数 ÷ 一个存储周期。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2629,30 +2657,32 @@ I5  STORE  R2, [x]</code></pre><figure class="markdown-image"><img src="../../im
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：16 位机补码右移与 5 段流水线阻塞分析</h2>
-<p><strong>答题框架</strong>：第 1 问按补码规则手工移位；第 2 问用「k + (5 − 1)」数无阻塞周期；第 3 问按「无转发 + 同寄存器读写不同周期 + 按序发射」定位阻塞原因；第 4 问排出含阻塞的完整时空图数总周期。</p>
-<p>结论：R1 = FEFFH；8 个时钟周期；I3 的 ID 等 I1、I2 写回、I4 的 IF 因按序发射被 I3 拖住；17 个时钟周期。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：补码算术右移与 5 段流水线的阻塞推演</h2>
+<h3>第 0 步：先立好"游戏规则"——本题所有拍数都由两条规则推出</h3>
+<p>5 段流水线：IF 取指 → ID 译码/读寄存器 → EX 执行/计算有效地址 → M 访存 → WB 写回。题目附加的三个条件拧成两条规则：</p>
+<ul><li><strong>规则一（数据相关的代价）</strong>：没有转发技术，且同一寄存器的读写不能在同一时钟周期进行 → 后条指令在 ID 段读某寄存器，最早要排在写该寄存器的 WB 的<strong>下一拍</strong>。</li><li><strong>规则二（按序发射）</strong>：前一条指令还没完成发射（进入 ID）之前，后一条指令不能超前取指/前进 → 一处阻塞会沿流水线<strong>向后传染</strong>。</li></ul>
+<p>无阻塞时的拍数公式也顺带说清：第 1 条指令第 5 拍走完 WB，此后每个时钟周期流出一条 → k 条指令共 5 + (k−1) = <strong>k＋4</strong> 拍。</p>
 <h3>第 1 问：执行 SHR R1 后 R1 的内容</h3>
-<p>x = −513 = −(2^9 + 1)，16 位补码：原码 <code>1000 0001 0000 0001</code> → 补码 <code>1111 1101 1111 1111</code>（即 FDFFH）。SHR 是<strong>算术右移</strong>，高位补符号位 1：</p>
-<p><code>1111 1101 1111 1111</code> → <code>1111 1110 1111 1111</code> = <strong>FEFFH</strong></p>
-<p>（等价于 −513 ÷ 2 向下取整为 −257，−257 的补码正是 FEFFH。）</p>
-<h3>第 2 问：4 条指令无阻塞的周期数</h3>
-<p>5 段流水线执行 k 条指令需 k + (5 − 1) 个周期：4 + 4 = <strong>8 个时钟周期</strong>。</p>
-<h3>第 3 问：I3 的 ID 段与 I4 的 IF 段为何被阻塞</h3>
-<p>指令序列：I1 <code>LOAD R1,[a]</code>、I2 <code>LOAD R2,[b]</code>、I3 <code>ADD R1,R2</code>、I4 <code>STORE R2,[x]</code>。</p>
-<ul><li><strong>I3 的 ID 段被阻塞的原因</strong>：I3 与 I1、I2 存在数据相关，要读 R1 和 R2。流水线未采用转发技术，且同一寄存器的读和写不能在同一时钟周期进行，所以必须等 I1（周期 5 写回 R1）、I2（周期 6 写回 R2）都写回之后，I3 才能读寄存器内容 → ID 推迟到周期 7。</li><li><strong>I4 的 IF 段被阻塞的原因</strong>：流水线按"按序发射、按序完成"工作，前一条指令 I3 在 ID 段被阻塞，I4 不能越过它取指前进 → I4 的 IF 被阻塞（直到周期 7 才完成取指）。</li></ul>
+<p>SHR 是<strong>算术右移</strong>：右移一位、最高位补符号位，数值上等价于补码值 ÷2 再向下取整。先把 −513 写成 16 位补码：513 = 2⁹＋1，原码 = <code>1000 0010 0000 0001</code>（8201H），取反加一 → 补码 <code>1111 1101 1111 1111</code> = FDFFH（验证：65536 − 513 = 65023 = FDFFH，两条路一致）。</p>
+<p>右移、高位补符号位 1：<code>1111 1101 1111 1111</code> → <code>1111 1110 1111 1111</code> = <strong>FEFFH</strong>。用"÷2 向下取整"验证：⌊−513 ÷ 2⌋ = −257，而 −257 = 65536 − 257 = FEFFH ✓。</p>
+<p>为什么负数右移要补 1 而不是补 0：补码是模 65536 的记数，负数高位往左全是"1"；算术右移把符号位复制回来，才能保持"仍是负数、值恰为除以 2"。若按逻辑右移补 0，FDFFH 会变成 <code>0111 1110 1111 1111</code> = 7EFFH（正数 32511），数值完全错了。</p>
+<h3>第 2 问：4 条指令无阻塞的时钟周期数</h3>
+<p>k = 4：4 + (5−1) = <strong>8 个时钟周期</strong>（第 5 拍第一条指令完成，之后每拍流出一条）。</p>
+<h3>第 3 问：I3 的 ID 段、I4 的 IF 段为什么被阻塞</h3>
+<p>指令序列：I1 <code>LOAD R1,[a]</code>、I2 <code>LOAD R2,[b]</code>、I3 <code>ADD R1,R2</code>、I4 <code>STORE R2,[x]</code>（ADD 按 (Rs)+(Rd)→Rd，和存入 R2）。</p>
+<ul><li><strong>I3 的 ID 被阻塞</strong>：I3 要在 ID 段同时读出 R1 和 R2；R1 由 I1 在第 5 拍 WB、R2 由 I2 在第 6 拍 WB。按规则一，最早第 7 拍才能读 → I3 第 3 拍完成取指后一直堵着，ID 推迟到第 7 拍。</li><li><strong>I4 的 IF 被阻塞</strong>：I3 一直没完成发射（第 7 拍才进入 ID）；按规则二，I4 不能越过 I3 取指 → IF 同样拖到第 7 拍。</li></ul>
 <table><thead><tr><th>指令</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th></tr></thead><tbody><tr><td>I1</td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I2</td><td></td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I3</td><td></td><td></td><td>IF</td><td>—</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td></tr><tr><td>I4</td><td></td><td></td><td></td><td>—</td><td>—</td><td>—</td><td>IF</td><td>—</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td></tr></tbody></table>
-<p>（表中"—"为等待周期；I4 的 ID 还要等 I3 在周期 10 写回 R2 后才能读，故排在周期 11。）</p>
-<h3>第 4 问：x = x*2 + a 的最少时钟周期</h3>
-<p>2×x 可用移位实现，指令序列如下（按指令功能表，ADD Rs,Rd 的结果存入 Rd）：</p>
-<table><thead><tr><th>指令</th><th>汇编</th><th>功能</th></tr></thead><tbody><tr><td>I1</td><td><code>LOAD R1,[x]</code></td><td>R1 ← x</td></tr><tr><td>I2</td><td><code>LOAD R2,[a]</code></td><td>R2 ← a</td></tr><tr><td>I3</td><td><code>SHL R1</code></td><td>R1 ← 2×R1</td></tr><tr><td>I4</td><td><code>ADD R1,R2</code></td><td>R2 ← R1 + R2</td></tr><tr><td>I5</td><td><code>STORE R2,[x]</code></td><td>[x] ← R2</td></tr></tbody></table>
-<p>时空图（"—"为被阻塞的等待周期）：</p>
+<p>（"—"为等待拍；I4 的 ID 也要按规则一排在 I3 第 10 拍写回 R2 之后，故在第 11 拍。）</p>
+<h3>第 4 问：x = x * 2 + a 至少需要多少个时钟周期</h3>
+<p>先把语句翻译成指令。2×x 用 SHL 最省（<code>SHL Rd</code> 的功能就是 2×(Rd)→Rd，一条指令完成乘 2）；用 <code>ADD R1,R1</code> 也一样（R1←R1＋R1 = 2×R1），相关结构相同、总拍数不变。序列如下（ADD 的和按 (Rs)+(Rd)→Rd 落入 Rd，故最后存 R2）：</p>
+<ol><li>I1 <code>LOAD R1,[x]</code>　2. I2 <code>LOAD R2,[a]</code>　3. I3 <code>SHL R1</code>　4. I4 <code>ADD R1,R2</code>　5. I5 <code>STORE R2,[x]</code></li></ol>
+<p>用两条规则逐条推演：</p>
+<ul><li>I3 要读 R1，等 I1 第 5 拍写回 → ID 排第 6 拍（取指后堵第 4、5 拍）；</li><li>I4 要读 R1，等 I3 第 9 拍写回 → ID 排第 10 拍；I4 的 IF 等 I3 第 6 拍发射后才能取指，排第 6 拍；</li><li>I5 要读 R2，等 I4 第 13 拍写回 → ID 排第 14 拍；I5 的 IF 等 I4 完成发射（第 10 拍进入 ID）后才取指，排第 11 拍（I5 的 ID 反正要等第 14 拍，取指晚一两拍不影响总拍数）。</li></ul>
 <table><thead><tr><th>指令</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th></tr></thead><tbody><tr><td>I1</td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I2</td><td></td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I3</td><td></td><td></td><td>IF</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I4</td><td></td><td></td><td></td><td>—</td><td>—</td><td>IF</td><td>—</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td></tr><tr><td>I5</td><td></td><td></td><td></td><td></td><td></td><td></td><td>—</td><td>—</td><td>—</td><td>—</td><td>IF</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td></tr></tbody></table>
-<ul><li>I3 要读 R1，等 I1 在周期 5 写回 → ID 在周期 6；</li><li>I4 要读 R1，等 I3 在周期 9 写回 → ID 在周期 10；I4 的 IF 因按序发射排在周期 6；</li><li>I5 要读 R2，等 I4 在周期 13 写回 → ID 在周期 14；其 IF 因按序发射排在周期 11。</li></ul>
-<p>I5 的 WB 在周期 17 完成，共 <strong>17 个时钟周期</strong>。</p>
+<p>I5 的 WB 在第 17 拍完成 → 至少 <strong>17 个时钟周期</strong>。为什么是"至少"：每个 ID 的推迟都由规则一强制、每处 IF 的推迟由规则二强制，已经没有任何一拍可以再压缩。</p>
 <h3>易错点</h3>
-<ul><li><strong>算术右移补符号位</strong>：负数 SHR 高位补 1 得 FEFFH；按逻辑右移补 0 会错成 7EFFH。</li><li><strong>无阻塞周期数公式</strong>：k + (5 − 1) = 8，不是 5 × 4 = 20。</li><li><strong>忽略"读写不能同周期"</strong>：使用者（ID 读）必须排在写者（WB 写回）的下一个周期，这是所有阻塞的量化依据。</li><li><strong>忽略按序发射的连锁效应</strong>：前一条指令卡在 ID，后面的指令连 IF 都不能前进，I4、I5 的 IF 都被拖后。</li></ul>
-<blockquote>记忆点：无转发 + 写后读相关 → 使用者的 ID 排在写者 WB 的下一周期；按序发射把阻塞向后传染到取指段。</blockquote></div></div>
+<ul><li><strong>算术右移补 0</strong> → 错成 7EFFH；SHR 必须补符号位，才等价于 ÷2。</li><li><strong>无阻塞拍数公式记错</strong>：写成 5×4 = 20 或 4＋5 = 9；正确是 k＋(5−1) = 8。</li><li><strong>漏掉"读写不同拍"</strong>：把 I3 的 ID 排在第 6 拍（与 I2 的 WB 同拍读 R2）就不满足条件——使用者必须排在写者 WB 的下一拍。</li><li><strong>漏掉按序发射的传染</strong>：把 I4 的 IF 排第 4 拍、I5 的 IF 排第 7 拍，总拍数就会少算。</li></ul>
+<blockquote>记忆锚点：无转发 + 读写异拍 → 使用者的 ID = 写者 WB 的下一拍；按序发射 → 阻塞向后传染到 IF；无阻塞 k 条 = k＋4 拍。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2705,21 +2735,24 @@ I5  STORE  R2, [x]</code></pre><figure class="markdown-image"><img src="../../im
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：请求分页的局部页面置换策略</h2>
-<h3>答题框架</h3>
-<p>两条规则贯穿全题：① 每隔 5 个时间单位扫描一轮驻留集，本轮未被访问过的页框被系统回收、<strong>放到空闲页框链尾</strong>（内容在下一次分配前不清空）；② 缺页时，若该页<strong>曾被使用过且其页框还在空闲链中</strong>，直接取回放回驻留集；否则<strong>从空闲链头部</strong>取一个页框。</p>
-<p>初始状态：驻留集为空；空闲链（头→尾）为 <code>32, 15, 21, 41</code>。</p>
-<h3>第 1）问：访问 <code>&lt;0,4&gt;</code>，页框号 21</h3>
-<p>t=1 访问页1：缺页且从未用过，取链头页框 <code>32</code>；t=2 访问页3：缺页，取链头 <code>15</code>；t=4 访问页0：首次缺页且从未用过，再取链头 <code>21</code>（t=5 的第一轮扫描尚未发生，此前没有页面被回收）。此时空闲链剩 <code>41</code>。</p>
-<h3>第 2）问：访问 <code>&lt;1,11&gt;</code>，页框号 32</h3>
-<p>t=5 第 1 轮扫描（0~5）：页1、页3、页0 本轮都被访问过，无回收。t=6 访问页0：命中（页框 21）。t=10 第 2 轮扫描（5~10）：本轮只有页0 被访问，页1、页3 未被访问 → 页框 <code>32</code>、<code>15</code> 被回收放到链尾，空闲链变为 <code>41, 32, 15</code>。t=11 访问页1：缺页，但页1 曾被使用且页框 32 还在空闲链中 → <strong>重新放回驻留集，页框号为 32</strong>（不占用链头 41），空闲链剩 <code>41, 15</code>。</p>
-<h3>第 3）问：访问 <code>&lt;2,14&gt;</code>，页框号 41</h3>
-<p>t=13 访问页0：命中。t=14 访问页2：缺页且<strong>从未被使用过</strong>，不满足「从空闲链中取回」的条件 → 从空闲链头部取出 <code>41</code>，空闲链剩 <code>15</code>。</p>
-<h3>第 4）问：是否适合时间局部性好的程序</h3>
-<p><strong>适合</strong>。时间局部性好意味着刚被访问过的页面很快会再次被访问。该策略回收时只把页框挂到空闲链尾而<strong>不清空内容</strong>，缺页时允许「从空闲链中把曾用页直接取回」，相当于省去一次从磁盘读页的过程，提高了效率。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：请求分页的"页缓冲"式置换——回收不清空、缺页可取回</h2>
+<h3>第 0 步：先读懂这套策略的机制设计——"回收"不等于"淘汰"</h3>
+<p>普通置换把该换出的页写回磁盘、页框立即另作他用；本题策略的特别之处是：本轮没被访问的页框被回收时<strong>只摘下来挂到空闲页框链尾，内容保留不清空</strong>——页框里仍是该页的旧副本。这相当于给被回收的页一段"缓冲期"：</p>
+<ul><li>缓冲期内该页再次缺页 → 满足"曾被使用过且还在空闲链表中"，<strong>原样取回驻留集，省一次读盘</strong>；</li><li>一直没人要 → 它沉在链中，最终从<strong>链头</strong>被分配出去，内容才真正被覆盖。</li></ul>
+<p>两个方向性规则的设计意图也就清楚了：<strong>回收放链尾、分配取链头</strong>——新缺页优先拿"搁置最久"的页框，刚回收的页框沉在链尾、离被覆盖最远，给"马上又要用"的页留出最大的取回窗口（教材里这就是"页缓冲/页面缓冲池"思想）。扫描轮的划分同理可推：从 0 时刻起每隔 5 个时间单位扫一轮 → 扫描点 t=5、10、15……第 k 轮检查 (5(k−1), 5k] 这个时间窗内各页是否被访问过。</p>
+<p>初始状态：驻留集为空，空闲链（头→尾）<code>32, 15, 21, 41</code>。</p>
+<h3>第 1）问：访问 &lt;0,4&gt; → 页框号 21</h3>
+<p>t=1 访问页 1：缺页，页 1 从未用过（谈不上"取回"）→ 取链头 32；t=2 访问页 3：同样取链头 15；t=4 访问页 0：仍取链头 21。注意第一次扫描在 t=5 才发生，此刻还没有任何页框被回收。空闲链剩 <code>41</code>。</p>
+<h3>第 2）问：访问 &lt;1,11&gt; → 页框号 32</h3>
+<ul><li>t=5 扫第 1 轮 (0,5]：页 1、3、0 本轮都被访问过 → 无回收；</li><li>t=6 访问页 0：命中（页框 21）；</li><li>t=10 扫第 2 轮 (5,10]：本轮只有页 0 被访问 → 页 1（页框 32）、页 3（页框 15）被回收挂到链尾，空闲链变 <code>41, 32, 15</code>；</li><li>t=11 访问页 1：缺页，但页 1 曾被使用、页框 32 还在空闲链中 → <strong>原样取回，页框号为 32</strong>，空闲链剩 <code>41, 15</code>。</li></ul>
+<p>为什么不用链头 41：链头 41 是从未用过的"干净"页框，谁的副本都不在；而页 1 的内容还完整躺在 32 里，取回 32 正省下一次磁盘读——这正是该策略的设计目的。</p>
+<h3>第 3）问：访问 &lt;2,14&gt; → 页框号 41</h3>
+<p>t=13 访问页 0：命中。t=14 访问页 2：缺页，且页 2 <strong>从未被使用过</strong>，不满足"曾用页取回"的条件 → 只能从空闲链头部取出 41，空闲链剩 <code>15</code>。</p>
+<h3>第 4）问：该策略是否适合时间局部性好的程序</h3>
+<p><strong>适合</strong>。时间局部性好意味着刚被访问的页很快会再次被访问。被回收的页框"不清空 + 挂链尾"，恰好在该页最可能再次被访问的时间窗内保持"可取回"状态——再次缺页时免一次磁盘 I/O；而对局部性差的页，"分配取链头"保证旧页框最终被覆盖，不至于白白占着内存。两头都照顾到，故适合。</p>
 <h3>易错点</h3>
-<ul><li><strong>第 2）问误取链头 41</strong>：漏掉「曾被使用且还在空闲链中可取回」这条规则。</li><li><strong>扫描轮次搞错</strong>：0~5、5~10 各为一轮；t=10 回收的是「本轮（5~10）未被访问」的页，不是「从开始就没访问」的页。</li></ul>
-<blockquote>一句话结论：三问页框号依次为 <strong>21、32、41</strong>；该策略<strong>适合</strong>时间局部性好的程序。</blockquote></div></div>
+<ul><li><strong>第 2）问误取链头 41</strong>：漏掉"曾被使用且还在空闲链中可取回"这条规则——曾用页的取回优先于分配新页框。</li><li><strong>扫描窗口划错</strong>：t=10 那轮检查的是 (5,10]，页 0 在 t=6 被访问过所以保得住；把轮次或窗口算错，回收对象就全变了。</li><li><strong>把"回收"当"清空"</strong>：内容不清空是"取回省读盘"的前提；若以为回收即抹掉内容，第 2）问的机制就无从谈起。</li></ul>
+<blockquote>记忆锚点：回收放链尾不清空 = 页缓冲；曾用页可从空闲链原样取回（省一次读盘）；新分配只从链头取。三问答案：<strong>21、32、41</strong>，适合。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2772,16 +2805,21 @@ I5  STORE  R2, [x]</code></pre><figure class="markdown-image"><img src="../../im
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：文件索引结构与寻址字节计算</h2>
-<h3>答题框架</h3>
-<p>先把容量换算成块数：4TB = <code>2^42</code> B，磁盘块 1KB = <code>2^10</code> B，总块数 = <code>2^42 / 2^10</code> = <strong><code>2^32</code> 个块</strong>（块号范围 <code>0 ~ 2^32 - 1</code>）。两问都围绕「索引项/字段能覆盖多少个块 × 每块 1KB」展开。</p>
-<h3>第 1）问：块号最少 4 字节，单个文件最大 128 KB</h3>
-<ul><li>索引表项存放块号，要能区分 <code>2^32</code> 个块，块号至少需要 32 位 = <strong>4 字节</strong>。</li><li>索引表区共 512B，直接索引每项 4B：512 ÷ 4 = <strong>128 项</strong>，每项指向一个 1KB 磁盘块 → 单个文件最大长度 = 128 × 1KB = <strong>128 KB</strong>（即 <code>2^17</code> B）。</li></ul>
-<h3>第 2）问：最大长度 <code>2^26</code> 字节 + 84 KB；起始块号与块数各占 4 字节</h3>
-<ul><li>直接索引部分：剩余 504B，每项 6B → 504 ÷ 6 = <strong>84 项</strong> → 84 × 1KB = <strong>84 KB</strong>。</li><li>连续分配部分：块数字段占 2B（16 位）→ 最多表示 <code>2^16</code> 个块 → <code>2^16 × 1KB = 2^26</code> B（64MB）。</li><li>当前结构下单文件最大长度 = <code>2^26</code> B + 84 KB = 67108864 + 86016 = <strong>67194880 字节</strong>。</li><li>最优拆分：<code>&lt;起始块号, 块数&gt;</code> 共占 8B。起始块号占 4B 可寻址全部 <code>2^32</code> 个块（覆盖整个 4TB 空间）；块数占 4B 可表示最多 <code>2^32</code> 个块（即 4TB）——两者<strong>各占 4 字节</strong>时连续部分能覆盖整个文件系统容量，单个文件长度达到最大值 4TB。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：索引结点能撑起多大的文件——从"块数"算起</h2>
+<h3>第 0 步：先做一次单位翻译——块号是对"块"计数，不是对"字节"</h3>
+<p>磁盘以 1KB 为分配单位，文件系统给每个<strong>块</strong>编号：块号 n 对应字节区间 [n×1KB, (n+1)×1KB)。所以任何"块号/块数"字段要覆盖的都是块的<strong>个数</strong>：</p>
+<p>4TB = 2⁴² B，磁盘块 1KB = 2¹⁰ B → 总块数 = 2⁴² ÷ 2¹⁰ = <strong>2³² 个块</strong>（块号范围 0 ~ 2³²−1）。</p>
+<p>由此得到本题反复使用的两条判据：</p>
+<ol><li>一个字段"够不够"：它能表示的块数 ≥ 2³²，才覆盖得了全盘；</li><li>一个索引结构"有多大"：能表示 N 个块 → 覆盖 N × 1KB 字节。</li></ol>
+<h3>第 1）问：块号最少 4 字节，单个文件最大 128KB</h3>
+<ul><li>覆盖 2³² 个块 → 块号至少 32 位 = <strong>4 字节</strong>（问的是"最少"，取恰好够用的 32 位）；</li><li>索引表区共 512B，直接索引每项放一个 4B 块号：512 ÷ 4 = <strong>128 项</strong>，每项指向一个 1KB 块 → 单个文件最大 = 128 × 1KB = <strong>128KB</strong>（2¹⁷ 字节）。</li></ul>
+<h3>第 2）问：最大长度 2²⁶ 字节 + 84KB；起始块号与块数各占 4 字节</h3>
+<p>当前结构的文件最大长度 = 连续分配段 + 直接索引段，两段机制不同：</p>
+<ul><li><strong>连续段的上限由"块数"字段决定</strong>——起始块号只决定文件从盘上哪里开始，能连续圈多少块由块数字段直接计数：2B = 16 位 → 最多 2¹⁶ 块 → 2¹⁶ × 1KB = 2²⁶ B（64MB）。这里先预答一个"为什么"：瓶颈为什么不在起始块号？起始块号 6B = 48 位，能表示 2⁴⁸ 个块号，远超全盘的 2³² 块，早就够用——卡住上限的是只有 16 位的块数字段。</li><li><strong>直接索引段</strong>：剩余 504B，每项 6B → 504 ÷ 6 = <strong>84 项</strong> → 84KB。</li><li>合计：2²⁶ B ＋ 84KB = 67108864 ＋ 86016 = <strong>67194880 字节</strong>。</li></ul>
+<p>再看最优拆分。要让单个文件长度最大，就得让连续段覆盖<strong>整个文件系统</strong>（2³² 块），这要求两个字段<strong>同时</strong>达标：起始块号 ≥ 32 位（能指到全盘任意一块）、块数 ≥ 32 位（能数到 2³² 块）。<code>&lt;起始块号, 块数&gt;</code> 总预算 8B——<strong>各占 4 字节</strong>时两个字段都恰好覆盖 2³² 块，这也是 8B 中唯一能让两者同时达标的拆分（例如 5B＋3B，块数只有 24 位，最多数到 2²⁴ 块 = 16GB，离 4TB 还差 256 倍）。此时连续部分已达全盘容量，单个文件长度达到最大值 4TB。</p>
 <h3>易错点</h3>
-<ul><li><strong>块号按 4TB 字节数直接算</strong>：块号针对「块」计数，必须先除以块大小得到 <code>2^32</code> 个块，再确定 32 位（4 字节）。</li><li><strong>漏加 84KB</strong>：第 2）问的最大长度 = 连续分配部分 + 直接索引部分，两部分相加。</li><li><strong>最优拆分想成 6B+2B 不变</strong>：8B 拆成 4B+4B 才能让两个字段都覆盖 <code>2^32</code> 个块。</li></ul>
-<blockquote>一句话结论：1）块号最少 <strong>4 字节</strong>、最大文件 <strong>128 KB</strong>；2）最大长度 <strong><code>2^26</code> 字节 + 84 KB</strong>（67194880 字节），起始块号与块数应<strong>各占 4 字节</strong>。</blockquote></div></div>
+<ul><li><strong>按 4TB 的字节数直接算块号位数</strong>：块号以块为单位，必须先除以块大小得 2³² 个块，再定 32 位（4 字节）。</li><li><strong>漏加 84KB</strong>：第 2）问的最大长度是"连续段 + 直接索引段"两部分相加。</li><li><strong>最优拆分想成 6B＋2B 原样</strong>：块数字段 2B 只能数 2¹⁶ 块，永远到不了 4TB；必须 4B＋4B。</li><li><strong>把瓶颈安错字段</strong>：起始块号 6B 绰绰有余，上限是 16 位的块数字段卡出来的。</li></ul>
+<blockquote>记忆锚点：4TB ÷ 1KB = 2³² 块 → 块号最少 4B；字段能表示 N 块 = 覆盖 N×1KB；512B 索引区 ÷ 4B = 128 项 = 128KB；8B 拆 4B＋4B 才能让两个字段同时覆盖全盘。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2834,18 +2872,21 @@ I5  STORE  R2, [x]</code></pre><figure class="markdown-image"><img src="../../im
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TCP 抓包分析（握手、填充、TTL）</h2>
-<h3>答题框架与答案总览</h3>
-<p>抓包题三步走：看源/目的 IP 定方向；看 TCP 标志位、序号/确认号定连接阶段与数据量；用以太网最小帧规则和 TTL 规则算填充与路由器跳数。两个关键地址：<code>c0 a8 00 08</code> = 192.168.0.8（主机 H），<code>d3 44 47 50</code> = 211.68.71.80（服务器 S）。答案：第 1 问——H 发送 1、3、4 号，1、2、3 号完成连接建立，3、5 号填充；第 2 问——16 字节；第 3 问——15 个路由器。</p>
-<h3>第 1 问：方向、握手与填充</h3>
-<ul><li><strong>由 H 发送</strong>：源 IP = 192.168.0.8 的是 <strong>1、3、4 号</strong>（2、5 号的源 IP 是 S）。</li><li><strong>完成连接建立</strong>：1 号标志 <code>02H</code>（SYN，序号 846B41C5）→ 2 号 <code>12H</code>（SYN+ACK，确认号 846B41C6 = 对方序号 +1）→ 3 号 <code>10H</code>（ACK，确认对方的 SYN）。三次握手齐备 → <strong>1、2、3 号</strong>。</li><li><strong>需要填充</strong>：以太网数据字段最短 46 B，IP 数据报总长不足 46 B 必须填充。3 号和 5 号总长度都是 <code>0028H</code> = 40 B，填充 6 B → 填充的是 <strong>3、5 号</strong>（1、2 号 48 B、4 号 56 B，都不用）。</li></ul>
-<h3>第 2 问：S 已收到的应用层数据</h3>
-<ul><li>逐分组看数据量：1、2 号总长 48 B，减 IP 头 20 B、TCP 头 28 B（数据偏移为 7，含选项）后数据为 0；3、5 号总长 40 B，减去两个 20 B 头后也为 0。</li><li>只有 4 号携带数据：总长 <code>0038H</code> = 56 B − IP 头 20 B − TCP 头 20 B = <strong>16 B</strong>（标志 <code>18H</code> = PSH+ACK，序号 846B41C6）。</li><li>5 号是 S 发回的确认：确认号 <code>846B41D6</code> = 4 号序号 + 16，证实这 16 字节已被 S 收到。所以 S 已收到应用层数据 <strong>16 字节</strong>。</li></ul>
-<h3>第 3 问：经过的路由器数</h3>
-<p>47-b 表与 5 号分组的标识字段同为 <code>6811H</code>，是它在 S 发出时的样子：TTL = <code>40H</code> = 64。H 捕获到的 5 号分组 TTL = <code>31H</code> = 49。每经过一个路由器 TTL 减 1：<code>64 − 49 = 15</code>，即经过 <strong>15 个路由器</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TCP 抓包分析——从 40 字节十六进制读出方向、握手、填充与跳数</h2>
+<h3>第 0 步：先建立"读包"的方法——按头部结构逐字段切</h3>
+<p>抓包题的全部信息都在那 40 字节里，按题 47-a 图（IP 头）与题 47-b 图（TCP 头）的结构切开读：</p>
+<ul><li><strong>IP 头（前 20B）</strong>：首字节 <code>45</code> = 版本 4、头长 5×4B = 20B；第 3~4 字节是<strong>总长度</strong>；第 9 字节是 <strong>TTL</strong>；第 10 字节协议 06 = TCP；末 8 字节是源、目的 IP。先把两个地址认熟：<code>c0 a8 00 08</code> = 192.168.0.8（主机 H）、<code>d3 44 47 50</code> = 211.68.71.80（服务器 S）——<strong>源 IP 是谁，分组就是谁发的</strong>。</li><li><strong>TCP 头</strong>：源/目的端口、序号、确认号、数据偏移、标志位。数据偏移的单位是 <strong>4B</strong>（为什么 ×4：TCP 头长必须是 4 字节的整数倍，偏移字段数的是 32 位字的个数），<code>70</code> → 7×4 = 28B 头，<code>50</code> → 20B 头。标志位低 6 位依次为 FIN、SYN、RST、PSH、ACK、URG：<code>02</code> = SYN、<code>12</code> = SYN+ACK、<code>10</code> = ACK、<code>18</code> = PSH+ACK。</li><li><strong>确认号的语义</strong>（本题两处要用）：确认号 = 期望收到的下一个字节的序号（累积确认）。<strong>SYN 报文要消耗一个序号</strong>，所以对 SYN 的确认号 = 对方 ISN＋1；对数据的确认号 = 已收到的最后一个字节序号＋1。</li></ul>
+<h3>第 1 问：哪些是 H 发的、哪些完成握手、哪些填充</h3>
+<ul><li><strong>方向</strong>：1、3、4 号源 IP = <code>c0 a8 00 08</code> → 由 <strong>H 发送</strong>；2、5 号源 IP = <code>d3 44 47 50</code> → S 发送。</li><li><strong>握手</strong>：1 号标志 <code>02</code>（SYN，序号 846b41c5）→ 2 号 <code>12</code>（SYN+ACK，确认号 846b41c6 = 846b41c5＋1，正是"SYN 占一个序号"）→ 3 号 <code>10</code>（ACK，确认号 e0599ff0 = 对方 ISN e0599fef＋1）。SYN、SYN+ACK、ACK 三次握手齐备，且确认号逐个回扣对方序号 → <strong>1、2、3 号完成连接建立</strong>。</li><li><strong>填充</strong>：机制在以太网帧——MAC 帧数据字段最短 46B（最小帧长 64B − 目的/源地址与长度 14B − FCS 4B = 46B），IP 数据报不足 46B 就在帧层补填充。逐包看 IP 总长度：1、2 号 <code>0030H</code> = 48B（不填），3、5 号 <code>0028H</code> = 40B（<strong>补 6B</strong>），4 号 <code>0038H</code> = 56B（不填）→ <strong>填充的是 3、5 号</strong>。为什么填充不影响后续计算：填充加在帧的数据字段末尾、属于链路层，IP 总长度字段仍是 40，接收方按总长度上交 IP 层后把填充丢弃。</li></ul>
+<h3>第 2 问：S 已经收到的应用层数据字节数</h3>
+<p>分组携带的应用数据 = IP 总长度 − IP 头长 − TCP 头长（TCP 头长 = 数据偏移 × 4B）：</p>
+<ul><li>1、2 号：48 − 20 − 7×4 = 0；3、5 号：40 − 20 − 20 = 0——都是纯控制段，不带数据；</li><li>只有 4 号带数据：56 − 20 − 20 = <strong>16B</strong>（标志 <code>18</code> = PSH+ACK，序号 846b41c6，这 16 字节从 846b41c6 编起）。</li></ul>
+<p>但"H 发了"不等于"S 收到"，要看 5 号（S 发回的 ACK）的确认号：<code>846b41d6</code> = 846b41c6 ＋ 16。按累积确认，确认号之前的字节已全部收齐 → S 已收到应用层数据 <strong>16 字节</strong>。</p>
+<h3>第 3 问：该分组到达 H 时经过了多少个路由器</h3>
+<p>TTL 的机制：分组每被一台<strong>路由器</strong>转发一次，TTL 减 1；两端主机收发都不减 → 捕获时的 TTL − 发出时的 TTL = 路由器数。47-b 表与 5 号分组的标识字段同为 <code>6811H</code>，即 5 号在 S 发出时的样子：TTL = <code>40H</code> = 64；H 捕获到的 5 号 TTL = <code>31H</code> = 49；64 − 49 = <strong>15 台路由器</strong>。两端都是主机、主机不减 TTL，所以差值不需要再加 1 或减 1。</p>
 <h3>易错点</h3>
-<ul><li><strong>TTL 差值数错</strong>：两端都是主机、主机不减 TTL，差值 15 就是路由器台数，不需要再加 1。</li><li><strong>把 TCP 头一律按 20 B 算</strong>：1、2 号的 TCP 头是 28 B（数据偏移字段为 7），算数据长度时必须用数据偏移。</li><li><strong>忘记以太网 46 B 下限</strong>：40 B 的 IP 数据报在链路层要填充 6 B，填充字节属于链路层，不改变 IP 总长度。</li></ul>
-<blockquote>一句话：源 IP 定方向，标志位定握手，总长度定填充，TTL 差值定跳数。</blockquote></div></div>
+<ul><li><strong>TCP 头一律按 20B 算</strong>：1、2 号的数据偏移是 7，头长 28B（含选项）；算数据量必须用数据偏移 × 4。</li><li><strong>把"+1 的确认号"当笔误</strong>：SYN 消耗一个序号，SYN 与数据的确认号都指"下一个期望字节"，这是 TCP 的规定。</li><li><strong>把填充算进 IP 总长度</strong>：填充在帧层、不改变 IP 总长度字段，也不计入应用数据。</li><li><strong>TTL 差值再 ±1</strong>：只有路由器转发时减 1，两端主机不减，15 就是路由器台数。</li></ul>
+<blockquote>记忆锚点：源 IP 定方向；标志位＋确认号回扣定握手；IP 总长度 − 头部长定数据与填充（46B 下限定填充）；TTL 差值定跳数。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

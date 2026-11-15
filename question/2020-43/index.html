@@ -108,22 +108,25 @@ int imul(int x, int y) { return x * y; }</code></pre><p><span>假定某计算机
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：没有乘法指令怎么乘 + 乘积溢出判断</h2>
-<h3>答题框架</h3>
-<p>先答"乘法 = 加法 + 移位"的软件循环（第 1 问），再说硬件化时控制逻辑管什么（第 2 问），然后比较三种实现耗时（第 3 问），最后用 64 位乘积做溢出判断（第 4 问）。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：乘法为什么等于"加法+移位"——三种实现的快慢与 64 位乘积的溢出</h2>
 <h3>第 1）问：没有乘法指令为什么也能乘</h3>
-<p>乘法可以通过<strong>加法和移位组成的循环程序</strong>实现：按乘数的每一位判断，为 1 就把被乘数移位对齐后累加，循环 n 次。M 机的 ALU 能做加法，又有移位指令，所以用加、减、移位等指令写一个循环程序，就能完成 umul() 与 imul() 里的乘法运算。</p>
-<h3>第 2）问：控制逻辑的作用</h3>
-<p>用 ALU、位移器、寄存器以及相应控制逻辑实现乘法指令时，控制逻辑负责<strong>控制循环次数</strong>，并<strong>控制每一步的加法和移位操作</strong>（何时加、加到哪个寄存器、何时移位、移多少位）。</p>
+<p><strong>机制：按权展开。</strong> 二进制下 x×y = x·(y₀·2⁰ + y₁·2¹ + … + y₃₁·2³¹)，也就是说：<strong>乘数的每一位决定"要不要把被乘数左移 i 位后累加一次"</strong>——该位为 1 就加，为 0 就跳过。整个过程只用到"看一位、做一次加法、做一次移位"，循环 n 次即得乘积。乘法被彻底分解成了<strong>加法和移位</strong>。</p>
+<p>M 机的 ALU 能做加、减和逻辑运算，指令系统里又有移位类指令，所以用这些指令写一个"加法—移位"循环程序，<code>umul()</code> 的乘法就能完成；带符号乘法按补码乘法规则（部分积带符号扩展、符号位参与运算）同样可以写成"加法—移位"的循环，<code>imul()</code> 也能实现——这就是"没有乘法指令也能乘"的全部理由。</p>
+<h3>第 2）问：硬件化之后，控制逻辑管什么</h3>
+<p>把上面的软件循环"固化"进硬件：每一步都需要有人拍板——<strong>乘数当前这一位是 0 还是 1（这一步加不加被乘数）、加到哪个寄存器、什么时候移位、已经循环了几次、何时结束</strong>。这就是控制逻辑的作用：<strong>控制循环次数，并控制每一步的加法和移位操作</strong>（按时序发出相应控制信号）。</p>
+<p><strong>为什么不能一步做完？</strong> ALU 一拍只能完成一次加法，n 位乘法需要 n 次"加 + 移"，必须有控制逻辑逐拍调度——这正是第 3 问里情况②比情况③慢的根源。</p>
 <h3>第 3）问：三种实现的执行时间</h3>
-<table><thead><tr><th>情况</th><th>实现方式</th><th>执行时间</th></tr></thead><tbody><tr><td>① 无乘法指令</td><td>软件循环，要执行多条指令</td><td>最长</td></tr><tr><td>② ALU + 位移器</td><td>一条乘法指令，硬件按步循环</td><td>居中</td></tr><tr><td>③ 阵列乘法器</td><td>一条乘法指令，一个时钟周期并行完成</td><td>最短</td></tr></tbody></table>
-<p>情况①执行时间最长、情况③最短：①靠软件逐条执行指令；②③都是一条乘法指令，而 ③ 的阵列乘法器不需要逐步循环，一次即可得到结果。</p>
-<h3>第 4）问：64 位乘积与溢出</h3>
-<p>x = 2^31 − 1 = <code>7FFF FFFFH</code>，y = 2，n = 32：</p>
-<ul><li>真值 x×y = (2^31 − 1) × 2 = 2^32 − 2 = 4294967294，是正数；</li><li>2n = 64 位乘积，带符号与无符号两种乘法指令得到的结果相同：<code>00000000FFFFFFFEH</code>（书写分组即 <code>0000 0000 FFFF FFFEH</code>；真值为正且小于 2 的 63 次方，补码与无符号表示一致）；</li><li><strong>umul()</strong>：只取低 32 位 = <code>FFFF FFFEH</code> = 4294967294，与真值一致，<strong>不溢出</strong>；</li><li><strong>imul()</strong>：低 32 位 <code>FFFF FFFEH</code> 按补码解释是 −2，不等于真值 4294967294，<strong>溢出</strong>（低 32 位符号位为 1，高 32 位却是全 0，符号扩展不一致）；</li><li><strong>无符号溢出判断</strong>：仅取低 n 位作结果时，看 2n 位乘积的<strong>高 n 位是否全为 0</strong>——全 0 则不溢出，否则溢出。</li></ul>
+<table><thead><tr><th>情况</th><th>实现方式</th><th>为什么是这个速度</th></tr></thead><tbody><tr><td>① 无乘法指令</td><td>软件循环</td><td>每一步都要取指、译码、执行多条指令，还要维护循环变量，开销最大</td></tr><tr><td>② ALU+位移器</td><td>一条乘法指令，硬件逐拍循环</td><td>免去了取指译码，但仍要 n 拍"加+移"</td></tr><tr><td>③ 阵列乘法器</td><td>一条乘法指令，组合逻辑并行</td><td>全部位积<strong>同时</strong>产生、一次归位，<strong>一个时钟周期</strong>出结果</td></tr></tbody></table>
+<p><strong>情况①最长、情况③最短</strong>。①靠软件逐条执行指令，一次乘法被拆成几十条指令的取指—译码—执行；②③都是一条乘法指令，但 ② 仍按步循环、每拍只做一次加法，③ 的阵列乘法器是全并行的组合逻辑，不需要循环，一拍即可得到全部结果。</p>
+<h3>第 4）问：64 位乘积与溢出判断</h3>
+<p>x = 2³¹−1 = <code>7FFF FFFFH</code>，y = 2，真值 x×y = 2³²−2 = 4294967294，是正数。</p>
+<p><strong>为什么两种乘法指令的 64 位乘积相同？</strong> 有符号与无符号解释的差别，只在<strong>最高位被当作符号位还是数值位</strong>。这里 x、y 的最高位都是 0（都是正数），两种解释下操作数的数值完全一样，完整乘积都是 2³²−2 &lt; 2⁶³；而正数在补码和无符号之下的位型本来就一致 → 两种指令的 64 位乘积都是 <strong><code>00000000FFFFFFFEH</code></strong>。</p>
+<ul><li><strong>umul()</strong>：只取低 32 位 = <code>FFFF FFFEH</code>，按无符号解释 = 4294967294，与真值一致 → <strong>不溢出</strong>；</li><li><strong>imul()</strong>：只取低 32 位 = <code>FFFF FFFEH</code>，按补码解释是 <strong>−2</strong>，不等于真值 4294967294 → <strong>溢出</strong>。</li></ul>
+<p><strong>为什么 imul 的溢出一眼可见？</strong> 如果没溢出，64 位补码的高 32 位应当是低 32 位<strong>符号位的延伸</strong>——低 32 位符号位是 1，高 32 位就该全为 1；现在高 32 位全 0、低 32 位符号位却是 1，符号延伸不一致，这就是溢出的铁证。</p>
+<p><strong>无符号乘法的溢出判断（只取低 n 位作结果时）</strong>：低 n 位要能独立代表完整乘积，当且仅当完整乘积 &lt; 2ⁿ，即 <strong>2n 位乘积的高 n 位全为 0</strong> → 不溢出；高 n 位只要有一位是 1，完整乘积就 ≥ 2ⁿ，低 n 位已经丢了信息 → 溢出。</p>
 <h3>易错点</h3>
-<ul><li><strong>以为带符号乘法的 64 位乘积不同</strong>：真值是正数，两种解释的 64 位结果一样，都是 <code>0000 0000 FFFF FFFEH</code>。</li><li><strong>溢出判断看错对象</strong>：无符号乘法看高 n 位是否全 0，不看"符号"。</li><li><strong>第 3 问排序记反</strong>：软件循环（多条指令）最慢，阵列乘法器（一拍并行）最快。</li></ul>
-<blockquote>乘法的本质是"加法 + 移位"；无符号溢出只看一句话：2n 位乘积的高 n 位是否全 0。</blockquote></div></div>
+<ul><li><strong>以为带符号乘法的 64 位乘积不同</strong>：操作数最高位都是 0、乘积为正，两种解释的 64 位结果完全一样。</li><li><strong>溢出判断看错对象</strong>：无符号乘法不看"符号"，只看 2n 位乘积的高 n 位是否全 0。</li><li><strong>以为②③一样快</strong>：都是一条乘法指令，但 ② 仍需 n 拍逐步循环，③ 全并行一拍完成。</li><li><strong>第 3 问排序记反</strong>：软件循环（多条指令）最慢，阵列乘法器（一拍并行）最快。</li></ul>
+<blockquote>记忆锚点：乘法 = 按位加权累加 = 加法 + 移位；控制逻辑发节拍；阵列乘法器一拍并行；无符号溢出只看一句话——2n 位乘积的高 n 位是否全 0。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -107,21 +107,24 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单字长指令格式与 add (R4),(R5)+ 的机器码</h2>
-<blockquote>答题框架：先由字段宽度推出指令数、寄存器数与 MAR/MDR 位数 → 再由相对寻址定目标地址范围 → 最后按字段把汇编拼成机器码并推演执行。</blockquote>
-<h3>第(1)问：指令数、寄存器数与 MAR/MDR</h3>
-<ul><li>指令字长 16 位，操作码占 4 位 → 最多 2^4 = <strong>16 条指令</strong>。</li><li>寄存器编号占 3 位 → 最多 2^3 = <strong>8 个通用寄存器</strong>。</li><li>主存 128KB、按字编址、字长 16 位（2B）→ 共 128KB ÷ 2B = 64K = 2^16 个字单元 → <strong>MAR 至少 16 位</strong>；每次按字存取 → <strong>MDR 至少 16 位</strong>。</li></ul>
-<h3>第(2)问：转移指令的目标地址范围</h3>
-<p>相对寻址：目标地址 = (PC) + 偏移量（补码）。PC 为 16 位、偏移量按 16 位参加运算（模 2^16），结果落回 16 位地址空间 → 目标地址可覆盖整个主存空间 <strong>0000H ~ FFFFH</strong>（0～65535）。</p>
-<h3>第(3)问：机器码与执行结果</h3>
-<p>按字段拆解汇编 <code>add (R4),(R5)+</code>（逗号前为源、逗号后为目的）：</p>
-<table><thead><tr><th>字段</th><th>含义</th><th>编码</th></tr></thead><tbody><tr><td>OP</td><td>add 操作码</td><td>0010</td></tr><tr><td>Ms / Rs</td><td>源：寄存器间接 (R4)，R4 编号 100</td><td>001 / 100</td></tr><tr><td>Md / Rd</td><td>目的：寄存器间接自增 (R5)+，R5 编号 101</td><td>010 / 101</td></tr></tbody></table>
+<h3>第 0 步：先立机制——指令字是 16 位的"字段拼图"，位数由"要区分多少、要指到多少"决定</h3>
+<p>单字长指令 = 一条指令占一个字（16 位），内部按固定宽度切块。本题布局（自 15～12 起）：<strong>操作码 OP 4 位 | 源寻址方式 Ms 3 位、源寄存器号 Rs 3 位 | 目的寻址方式 Md 3 位、目的寄存器号 Rd 3 位</strong>。机器码就是按字段"对号填空"拼出的 16 个二进制位。三条位数规律：</p>
+<ul><li><strong>操作码位数 ↔ 指令条数</strong>：每条指令要靠唯一操作码区分，4 位给出 2^4 = 16 个编码 → 最多 <strong>16 条指令</strong>。</li><li><strong>寄存器编号位数 ↔ 寄存器数</strong>：3 位编号 → 2^3 = <strong>8 个通用寄存器</strong>。</li><li><strong>MAR 位数 ↔ 可寻址单元数</strong>：MAR 必须指得到每一个存储单元。主存 128KB、按字编址、字长 16 位（2B）→ 128KB ÷ 2B = 64K = 2^16 个字单元 → <strong>MAR ≥ 16 位</strong>；MDR 与主存一次传送一个存储字（存储字长 = 字长 = 16 位）→ <strong>MDR ≥ 16 位</strong>。</li></ul>
+<h3>第(1)问</h3>
+<p>16 条指令；8 个通用寄存器；MAR、MDR 至少各 <strong>16 位</strong>。</p>
+<h3>第(2)问：转移目标地址为什么是全空间</h3>
+<p>题目定义相对寻址：<strong>转移目标地址 = (PC) + 偏移量</strong>，偏移量用补码表示、占 16 位（−32768～+32767）。加法在 16 位运算器里按<strong>模 2^16</strong> 进行——第 17 位进位自然丢弃（补码运算本就是模运算，丢进位不影响 16 位内的结果）。</p>
+<p><strong>为什么范围是 0000H～FFFFH？</strong> 任给目标地址 T 与转移指令所在位置 P，偏移 = T − P (mod 2^16) 总落在 16 位补码可表示范围内——PC 在任何位置都"够得到"任何目标。对所有 PC 取并集即整个主存：<strong>0000H～FFFFH（0～65535）</strong>。</p>
+<h3>第(3)问：汇编 → 机器码 → 执行</h3>
+<p>查题目寻址方式定义表：<strong>001B = 寄存器间接 (Rn)</strong>（操作数 = ((Rn))），<strong>010B = 寄存器间接自增 (Rn)+</strong>（操作数 = ((Rn))，取完再 (Rn)+1 → Rn）。据此拆解 <code>add (R4),(R5)+</code>（逗号前为源、后为目的）：</p>
+<table><thead><tr><th>字段</th><th>含义</th><th>编码</th></tr></thead><tbody><tr><td>OP</td><td>add 操作码</td><td>0010</td></tr><tr><td>Ms / Rs</td><td>源 = (R4)：间接、R4 = 100B</td><td>001 / 100</td></tr><tr><td>Md / Rd</td><td>目的 = (R5)+：间接自增、R5 = 101B</td><td>010 / 101</td></tr></tbody></table>
 <p>拼接：0010 0011 0001 0101B = <strong>2315H</strong>。</p>
-<p>执行推演（(Rn)+ 先取数、后自增）：</p>
-<table><thead><tr><th>步骤</th><th>结果</th></tr></thead><tbody><tr><td>取源操作数</td><td>(R4) = 1234H → 访存读 (1234H) = 5678H</td></tr><tr><td>取目的操作数</td><td>(R5) = 5678H → 访存读 (5678H) = 1234H</td></tr><tr><td>加法写回</td><td>5678H + 1234H = 68ACH → 送存储单元 5678H</td></tr><tr><td>目的寄存器自增</td><td>(R5) + 1 = 5679H → 写回 R5</td></tr></tbody></table>
-<p>即执行后 <strong>R5 = 5679H</strong>、<strong>存储单元 5678H 的内容 = 68ACH</strong>；R4 与 1234H 单元内容不变。</p>
+<p><strong>执行前明确两条语义</strong>：① (R5)+ 是"<strong>先用后增</strong>"——取操作数用的还是 R5 的旧值 5678H，取完才 +1（定义表把"(Rn)+1→Rn"写在取操作数之后）；② 加法语义是<strong>目的 ← 源 + 目的</strong>，目的操作数经 (R5) 间接存在存储器里，结果写回存储单元而非寄存器。</p>
+<table><thead><tr><th>步骤</th><th>推演</th></tr></thead><tbody><tr><td>取源操作数</td><td>(R4) = 1234H → 读 (1234H) = 5678H</td></tr><tr><td>取目的操作数</td><td>(R5) = 5678H → 读 (5678H) = 1234H；随后 R5 ← 5679H</td></tr><tr><td>加法</td><td>5678H + 1234H = 68ACH</td></tr><tr><td>写回</td><td>68ACH → 存储单元 5678H</td></tr></tbody></table>
+<p>执行后：<strong>R5 = 5679H</strong>、<strong>(5678H) = 68ACH</strong>；R4 与 (1234H) 不变——R4 不是自增方式，(1234H) 只是被读出的源操作数。</p>
 <h3>易错点</h3>
-<ul><li><strong>源/目的字段位置弄反</strong>：机器码低 3 位 Rd = 101 对应目的 (R5)+，拼出来才是 2315H。</li><li><strong>漏掉 (Rn)+ 的自增</strong>：先按 (R5) 取目的操作数，取完才 +1，R5 变为 5679H。</li><li><strong>加法写回位置搞错</strong>：是"目的 ← 源 + 目的"，68ACH = 5678H + 1234H，写回 5678H 单元，1234H 单元不动。</li></ul>
-<blockquote>一句话结论：16 条指令、8 个通用寄存器、MAR/MDR 至少各 16 位；转移目标地址 0000H~FFFFH；机器码 2315H，执行后 R5 = 5679H、(5678H) = 68ACH。</blockquote></div></div>
+<ul><li><strong>字段位置拼反</strong>：Rd 占最低 3 位，(R5)+ 的 101B 必须落在末尾，否则拼不出 2315H。</li><li><strong>漏掉 (R5) 自增</strong>：先用后增，R5 终值 5679H；漏掉就少答一处"改变"。</li><li><strong>写回位置想当然</strong>：目的操作数在存储器，68ACH 写进 5678H 单元；写成"写回 R5"或改动 (1234H) 都错。</li></ul>
+<blockquote>一句话结论：16 条指令、8 个寄存器、MAR/MDR 各 16 位；转移目标 0000H～FFFFH；机器码 2315H，执行后 R5 = 5679H、(5678H) = 68ACH。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -108,17 +108,21 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页划分与指令 Cache 组相联的地址拆分</h2>
-<p>答题框架：两件事都归结为"把 32 位地址按字段切开"——分页按页大小切出页号，组相联按"块内 + 组号 + tag"从低位往高位切。</p>
-<h3>第一步：判断 push 与 ret 是否在同一页</h3>
-<p>页大小 4KB = 2^12 B，页内偏移占低 12 位，<strong>页号 = 主存地址的高 20 位</strong>：</p>
-<table><thead><tr><th>指令</th><th>地址</th><th>高 20 位（页号）</th><th>低 12 位（页内偏移）</th></tr></thead><tbody><tr><td>第 1 行 push</td><td>00401000H</td><td>00401H</td><td>000H</td></tr><tr><td>第 30 行 ret</td><td>0040104AH</td><td>00401H</td><td>04AH</td></tr></tbody></table>
-<p>两者页号相同（均为 00401H），低 12 位不同不影响，因此<strong>在同一页中</strong>。</p>
+<h3>第 0 步：先立模型——两个问题都是"切地址"，但切的依据不同</h3>
+<ul><li><strong>分页模型</strong>：地址 = 页号（高位）拼接页内偏移（低位）。页大小 4KB = 2¹²B ⇒ 低 12 位是页内偏移（同一页内地址连续，低 12 位任意变化），高 20 位是页号。判断两地址是否同页，只看高 20 位是否相同——页号 = 地址 ÷ 页大小取整，除以 2¹² 就是"砍掉低 12 位"。</li><li><strong>组相联映射模型</strong>：<strong>组间直接映射 + 组内全相联</strong>。主存按块大小切块，块号 = 地址 ÷ 块大小；一块允许放在哪个组由"块号 mod 组数"唯一决定（组间是直接映射，没得选）；放进组内哪一行则随意（组内全相联），靠 tag 记住"我到底是哪一块"。所以地址三段从低位往高位切：<strong>块内地址</strong>（块大小定位数）→ <strong>组号</strong>（组数定位数）→ <strong>tag</strong>（剩余高位）。这个模型直接回答"为什么组号由地址唯一确定"和"为什么命中还要比 tag"。</li></ul>
+<h3>第一步：push 与 ret 是否在同一页</h3>
+<p>页大小 4KB = 2¹²B，低 12 位是页内偏移，<strong>页号 = 高 20 位</strong>：</p>
+<table><thead><tr><th>指令</th><th>虚拟地址</th><th>高 20 位（页号）</th><th>低 12 位（页内偏移）</th></tr></thead><tbody><tr><td>第 1 行 push</td><td>00401000H</td><td>00401H</td><td>000H</td></tr><tr><td>第 30 行 ret</td><td>0040104AH</td><td>00401H</td><td>04AH</td></tr></tbody></table>
+<p>两者页号相同（均为 00401H），因此<strong>在同一页中</strong>；低 12 位的 000H 与 04AH 只是页内偏移不同，不影响判断。</p>
 <h3>第二步：Cache 地址三段划分</h3>
-<ul><li>指令 Cache 共 64 行、4 路组相联 → 组数 = 64 ÷ 4 = 16 组 → <strong>组号 4 位</strong>（2^4 = 16）；</li><li>主存块大小 64B → <strong>块内地址 6 位</strong>（2^6 = 64）；</li><li>32 位主存地址剩余部分为标记：32 − 6 − 4 = <strong>22 位</strong>。</li></ul>
+<ul><li>块大小 64B = 2⁶ ⇒ <strong>块内地址 6 位</strong>（bits 0～5）；</li><li>64 行 ÷ 4 路 = 16 组 = 2⁴ ⇒ <strong>组号 4 位</strong>（bits 6～9）；</li><li>32 − 6 − 4 = 22 ⇒ <strong>标记 tag 22 位</strong>（bits 10～31）。</li></ul>
 <table><thead><tr><th>位段</th><th>bits[31:10]</th><th>bits[9:6]</th><th>bits[5:0]</th></tr></thead><tbody><tr><td>含义</td><td>标记 tag（22 位）</td><td>Cache 组号（4 位）</td><td>块内地址（6 位）</td></tr></tbody></table>
 <h3>第三步：call 指令只可能命中哪一组</h3>
-<p>第 16 行 call 的地址为 00401025H = 0000 0000 0100 0000 0001 0000 0010 0101B。取 bits[9:6]：为 <strong>0000</strong>，即组号 0。组号由地址唯一确定（组号 = （地址 ÷ 块大小）mod 组数），与 tag 是否匹配无关——所以读取该指令时<strong>只可能在指令 Cache 第 0 组</strong>中命中，能否真命中还要看该组内 4 行的 tag 是否有匹配。</p>
-<blockquote>记忆锚点：组相联地址 = tag | 组号 | 块内（从低位往高位切）；组号 = （地址 ÷ 块大小）mod 组数；分页页号 = 地址 ÷ 页大小取整。</blockquote></div></div>
+<p>第 16 行 call 的地址 00401025H = <code>0000 0000 0100 0000 0001 0000 0010 0101B</code>，取出 bits[9:6] = <strong>0000</strong>，即组号 0。</p>
+<p>为什么说"<strong>只可能</strong>在第 0 组命中"：组号是地址自身的位段（等于块号 mod 16），在地址形成的那一刻就唯一确定，与 Cache 里装了什么、tag 配不配得上都无关——它规定了这条指令所在的主存块<strong>只能被映射到第 0 组</strong>，查找也只会在第 0 组进行。所以读取该指令时只可能在第 0 组命中；能否真命中还要看第 0 组内 4 行中是否存在有效位为 1 且 tag 相符的行——这正是"组间直接映射定组、组内全相联靠 tag 区分"的体现。</p>
+<h3>易错点</h3>
+<ul><li><strong>组数忘除以相联度</strong>：64 行是总行数，4 路组相联要除以 4 得 16 组、组号 4 位；直接拿 64 当组数会算出 6 位组号。</li><li><strong>三段顺序记反</strong>：低位永远是块内地址，最高位是 tag；tag 不是"剩下的随便放"，而是块号的高位部分。</li><li><strong>"只可能在第 0 组命中"答成"一定命中"</strong>：组号唯一由地址决定，但命中还需组内有 tag 匹配的有效行。</li><li><strong>同页判断看错字段</strong>：同页看高 20 位页号是否相同，低 12 位不同不代表不同页。</li></ul>
+<blockquote>记忆锚点：分页页号 = 地址 ÷ 页大小取整（高 20 位）；组相联地址从低位往高位切 = 块内（块大小）+ 组号（组数）+ tag（剩余）；组号 = 块号 mod 组数，命中与否另看 tag。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -107,19 +107,21 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚拟存储的地址结构、PDBR 与改进型 CLOCK</h2>
-<p><strong>答题框架</strong>：第（1）问按「页目录号 10 位 + 页表页号 10 位 + 页内偏移 12 位」拼 32 位地址；第（2）问抓住「PDBR 是硬件查页目录用的物理基地址」与「线程共享进程地址空间」；第（3）问记住改进型 CLOCK 同时看「访问位」和「修改位」。</p>
-<h3>第（1）问：拼出虚拟地址</h3>
-<p>由题 44 图：页大小 4KB = 2¹²B → 页内偏移 <strong>12 位</strong>；虚页号共 20 位，拆成<strong>页目录号 10 位 + 页表页号 10 位</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：两级页表的地址拼装、PDBR 的身份与改进型 CLOCK</h2>
+<h3>第 0 步：机制先行——为什么要两级页表、位段怎么定下来</h3>
+<p>题 44 图给出的骨架：虚拟地址 32 位 = 虚页号 20 位 + 页内地址 12 位；TLB 缺失时按 <strong>10 位 + 10 位</strong> 两段去查页目录和页表。这两个 10 不是拍脑袋定的，是"<strong>页目录、页表本身也按一页存放</strong>"逼出来的：</p>
+<ul><li>页大小 4KB = 2¹²B → 页内偏移 <strong>12 位</strong>；</li><li>每个页表项 4B，一页 4KB 恰好装 4KB/4B = <strong>1024 = 2¹⁰</strong> 个表项 → 每级索引恰好 <strong>10 位</strong>；</li><li>20 位虚页号于是拆成：页目录号 10 位（在页目录里选出哪个表项 → 指向哪一页页表）+ 页表页号 10 位（在该页表里选出哪个表项 → 得实页号）。</li></ul>
+<p>查表动作：PDBR 给出页目录位置 → 页目录号当索引取出页表基址 → 页表页号当索引取出实页号 → 与偏移拼成物理地址。第（1）问就是把这条链倒过来：给定三个索引值，拼出虚拟地址。</p>
+<h3>第（1）问：拼虚拟地址</h3>
 <table><thead><tr><th>位段</th><th>内容</th><th>二进制</th></tr></thead><tbody><tr><td>bits[31:22]</td><td>页目录号 6</td><td>0000000110</td></tr><tr><td>bits[21:12]</td><td>页表页号 6</td><td>0000000110</td></tr><tr><td>bits[11:0]</td><td>页内偏移 8</td><td>000000001000</td></tr></tbody></table>
-<p>拼接：0000 0001 1000 0000 0110 0000 0000 1000B，即 <strong>01806008H</strong>。</p>
-<h3>第（2）问：PDBR 的性质与切换行为</h3>
-<ul><li>PDBR 保存<strong>页目录的起始物理地址</strong>——MMU 用它直接访问页目录，访问页目录本身不可能再经过一次虚地址翻译，所以它是<strong>物理地址</strong>。</li><li><strong>进程切换时 PDBR 内容会变</strong>：不同进程的地址空间不同，页目录也不同。</li><li><strong>同一进程的线程切换时 PDBR 内容不变</strong>：线程共享所属进程的地址空间（同一套页目录和页表），只是换了个执行流。</li></ul>
-<h3>第（3）问：改进型 CLOCK 需要的字段</h3>
-<p>改进型 CLOCK（增强二次机会）淘汰页面时，要同时区分「最近是否被访问」与「是否被修改过」，因此页表项中需设置<strong>访问位（使用位）</strong>和<strong>修改位（脏位）</strong>，优先淘汰既未访问又未修改的页。</p>
+<p>从高到低拼接：0000 0001 1000 0000 0110 0000 0000 1000B = <strong>01806008H</strong>。（为什么偏移是 12 位、每级索引是 10 位，见第 0 步。）</p>
+<h3>第（2）问：PDBR 是物理地址还是虚拟地址；切换时变不变</h3>
+<ul><li><strong>为什么必须是物理地址</strong>：PDBR 是地址翻译的<strong>起点</strong>——MMU 靠它找到页目录。若它存的是虚拟地址，"查页目录"这件事自己也要先翻译，而翻译又要查页目录……死循环。所以 PDBR 保存页目录的<strong>物理</strong>起始地址。</li><li><strong>进程切换为什么变</strong>：页式虚拟存储的根本目的就是给每个进程一份独立地址空间，页目录是这套空间的根，<strong>每进程一套</strong>；切换进程就是切换地址空间，内核要把新进程页目录的物理基址装入 PDBR。</li><li><strong>同进程线程切换为什么不变</strong>：线程只是调度/执行单位，地址空间属于进程——同一进程内的线程共享同一套页目录和页表（这正是它们能直接共享数据的机制），只是换了一个执行流，页表的根没变。</li></ul>
+<h3>第（3）问：改进型 CLOCK 需要哪些字段</h3>
+<p>普通 CLOCK 只看"最近用没用过"给第二次机会；<strong>改进型</strong>多看一个维度，把页面按（访问位 A，修改位 M）分四档，淘汰时优先捡最便宜的：A=0,M=0 直接丢（不必写盘）；A=0,M=1 要写回；A=1 的先清 A 再给机会。<strong>为什么必须同时设两位</strong>：访问位回答"值不值得留"，修改位回答"丢出去要不要付写盘的代价"——改进算法省的就是写回 I/O，没有修改位就无从判断。所以页表项中需设置<strong>访问位（使用位）</strong>和<strong>修改位（脏位）</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>偏移位数算错</strong>：页大小 4KB = 2¹²B，偏移 12 位，不是 10 位。</li><li><strong>以为 PDBR 存虚拟地址</strong>：若存虚拟地址，查页目录本身又要翻译，陷入循环。</li><li><strong>线程切换也换 PDBR</strong>：线程只是调度单位，地址空间属于进程。</li></ul>
-<blockquote>结论：（1）01806008H；（2）物理地址，进程切换会变、同进程线程切换不变；（3）访问位与修改位。</blockquote></div></div>
+<ul><li><strong>偏移位数算错</strong>：页大小 4KB = 2¹²B → 偏移 12 位；每级索引 10 位来自 1024 个表项，不是随手拆的。</li><li><strong>以为 PDBR 存虚拟地址</strong>：翻译的起点不能依赖翻译本身，否则循环。</li><li><strong>线程切换也换 PDBR</strong>：地址空间属于进程，线程共享页目录/页表；换 PDBR 的时机是换地址空间（进程切换）。</li></ul>
+<blockquote>结论：（1）01806008H；（2）PDBR 保存页目录的物理地址；进程切换会变（每进程一套页目录），同进程线程切换不变（共享地址空间）；（3）访问位与修改位。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

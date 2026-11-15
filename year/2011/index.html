@@ -279,17 +279,20 @@ while (x &lt; n / 2)
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：完全二叉树叶结点个数</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：完全二叉树的叶结点个数</h2>
 <p><strong>答案：C（384）。</strong></p>
-<h3>第一步：备好两条结论</h3>
-<ul><li>二叉树度数性质：<strong>n0 = n2 + 1</strong>（叶子数 = 度为 2 的结点数 + 1）；</li><li>完全二叉树中度为 1 的结点 <strong>n1 只能取 0 或 1</strong>。</li></ul>
-<h3>第二步：列方程，用奇偶性定 n1</h3>
-<p>由 n = n0 + n1 + n2 = 768 与 n0 = n2 + 1，得 2·n2 + n1 + 1 = 768。左边 2·n2 + 1 是奇数，要等于偶数 768，<strong>n1 必为 1</strong>。于是 2·n2 = 766，n2 = 383，<strong>n0 = n2 + 1 = 384</strong>。</p>
-<h3>第三步：用编号法验证</h3>
-<p>完全二叉树按层编号，叶子恰为编号 <strong>⌊n/2⌋+1 到 n</strong> 的结点：⌊768/2⌋+1 = 385，即编号 385~768 全是叶子，共 768 − 384 = <strong>384</strong> 个，两法一致。最后一个分支结点是编号 384：它的左孩子（编号 768）存在而右孩子（编号 769）不存在，恰好只有一个孩子——这正是 n1 = 1 的体现。</p>
+<h3>第一步：n0 = n2 + 1 不是口诀，数两遍边就能推出来</h3>
+<p>二叉树里除了根，<strong>每个结点头顶都有一条来自父结点的边</strong>，所以边数 = 结点数 − 1；而边只会从分支结点发出——度 1 结点发 1 条、度 2 结点发 2 条，边数 = n1 + 2n2。两式相等：</p>
+<p>n0 + n1 + n2 − 1 = n1 + 2n2，两边消去 n1，得 <strong>n0 = n2 + 1</strong>——叶子永远比"双孩子结点"恰好多一个。</p>
+<h3>第二步：完全二叉树为什么 n1 只能取 0 或 1</h3>
+<p>完全二叉树按层编号 1..n，编号 i 的孩子是 2i 和 2i+1。度为 1 的结点若存在，只能是<strong>编号 ⌊n/2⌋ 的最后一个分支结点</strong>，且只可能"有左孩子、缺右孩子"——它若缺的是左孩子，左孩子编号 2i 比右孩子 2i+1 更小却不存在，违背按层连续填放的规则。于是：<strong>n 为奇数时 n1 = 0；n 为偶数时编号 n 恰是某个结点的左孩子，n1 = 1</strong>。</p>
+<h3>第三步：本题求解</h3>
+<p>768 是偶数 ⇒ n1 = 1。代入 n0 + n1 + n2 = 768 与 n0 = n2 + 1：2·n2 + 2 = 768，n2 = 383，<strong>n0 = 384</strong>。</p>
+<h3>第四步：编号法复核（第二层对号入座）</h3>
+<p>叶结点恰为编号 ⌊768/2⌋ + 1 = 385 到 768 的结点，共 768 − 384 = <strong>384</strong> 个；编号 384 的结点左孩子（768 号）存在、右孩子（769 号）越界不存在——这正是 n1 = 1 在这棵树上的具体模样。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏用奇偶性</strong>：若令 n1 = 0，则 2·n2 + 1 = 768 无整数解——这一步是判断的关键，跳过它就可能凑出错误答案。</li><li><strong>编号法差一</strong>：叶子从 ⌊768/2⌋+1 = 385 号开始，共 384 个；把 384 号也数进去会误选 D（385）。</li></ul>
-<blockquote>记忆锚点：完全二叉树求叶子——先由 n 的奇偶定 n1（偶数 ⇒ n1 = 1），再由 n0 = n2 + 1 解出；或直接用「叶子是编号 ⌊n/2⌋+1 … n 的结点」。</blockquote></div></div>
+<ul><li><strong>漏用奇偶性</strong>：令 n1 = 0 会得到 2·n2 + 1 = 768，无整数解——方程无解本身就是"n1 必为 1"的信号。</li><li><strong>编号法差一</strong>：叶子从 385 号开始数；把 384 号（它是分支结点）也算进去会误选 D（385）。</li></ul>
+<blockquote>记忆锚点：n0 = n2 + 1 靠数边两步推得；完全二叉树 n 为偶 ⇒ n1 = 1（最后一个分支结点只缺右孩子）。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -795,17 +798,18 @@ while (x &lt; n / 2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：把 −8.25 编成 IEEE 754 单精度浮点数</h2>
-<h3>第一步：先给答案</h3>
-<p><strong>答案：A（C104 0000H）</strong>。IEEE 754 单精度 = 1 位数符 + 8 位阶码（偏置 127）+ 23 位尾数，把 −8.25 按三段分别求出再拼接即可。</p>
-<h3>第二步：可复现的编码步骤</h3>
-<ol><li><strong>写成二进制</strong>：8.25 = 1000 + 0.01 = <code>1000.01B</code>，所以 x = −1000.01B。</li><li><strong>规格化</strong>：小数点左移 3 位，得 <strong>−1.00001 × 2³</strong>。</li><li><strong>数符 S</strong>：负数 → <strong>1</strong>。</li><li><strong>阶码 E</strong>：真指数 3 加偏置 127，E = 130 = <code>1000 0010B</code>。</li><li><strong>尾数 M</strong>：去掉隐含的整数位 1，只存小数部分 <code>00001</code>，后面补 0 凑满 23 位 → <code>000 0100 0000 0000 0000 0000</code>（第 5 位是 1，对应 2^−5，即 1/32；验证 1 + 1/32 = 33/32，33/32 × 8 = 8.25）。</li></ol>
-<table><thead><tr><th>字段</th><th>位数</th><th>内容</th></tr></thead><tbody><tr><td>数符</td><td>1</td><td>1</td></tr><tr><td>阶码</td><td>8</td><td>1000 0010</td></tr><tr><td>尾数</td><td>23</td><td>0000 1000 0000 0000 0000 000（从高位起）</td></tr></tbody></table>
-<p>拼接 32 位：<code>1100 0010 0000 1000 0000 0000 0000 0000</code> → 十六进制 <strong>C104 0000H</strong>。</p>
-<h3>第三步：快速验算</h3>
-<p>反向还原：数符 1 为负；阶码 130 − 127 = 3；尾数 1.00001B = 1 + 1/32。值 = −(33/32) × 2³ = −8.25，正确。</p>
+<p><strong>答案：A（C104 0000H）</strong>。单精度 = 1 位数符 + 8 位阶码 + 23 位尾数；动手前先弄清两个设计的"为什么"，步骤才不是死记。</p>
+<h3>第一步：为什么阶码要加偏置 127、尾数要隐含 1</h3>
+<ul><li><strong>阶码加偏置 127</strong>：真指数可正可负（2³ 与 2⁻³ 都会出现），若用补码存 8 位阶码，比较两个浮点数大小前还得先判符号。规定<strong>阶码 = 真指数 + 127</strong>，把指数平移成 1~254 的无符号数，浮点数之间就能像整数一样按位快速比较——偏置的全部目的就是"免符号判定"。</li><li><strong>尾数隐含 1</strong>：规格化后二进制数必写成 1.xxx × 2ᵉ 的形状，整数位恒为 1，存它是浪费。把它藏起来，23 位全部用来存小数部分，<strong>凭空多赚一位精度</strong>；还原数值时硬件自动补回这个 1。</li></ul>
+<h3>第二步：可复现编码</h3>
+<ol><li>写成二进制：8.25 = 1000 + 0.01 = 1000.01B，故 x = −1000.01B；</li><li>规格化：小数点左移 3 位，得 −1.00001 × 2³，真指数 = 3；</li><li>数符 S：负数 → <strong>1</strong>；</li><li>阶码 E：3 + 127 = 130 = <code>1000 0010B</code>；</li><li>尾数 M：去掉隐含的 1，存小数部分 <code>00001</code> 并补 0 满 23 位。</li></ol>
+<table><thead><tr><th>字段</th><th>内容</th></tr></thead><tbody><tr><td>数符（1 位）</td><td>1</td></tr><tr><td>阶码（8 位）</td><td>1000 0010</td></tr><tr><td>尾数（23 位）</td><td>0000 1000 0000 0000 0000 000</td></tr></tbody></table>
+<p>拼接 32 位：<code>1100 0010 0000 1000 0000 0000 0000 0000</code> → <strong>C104 0000H</strong>。</p>
+<h3>第三步：反向验算</h3>
+<p>数符 1（负）×（1 + 1/32）× 2^(130−127) = −33/32 × 8 = <strong>−8.25</strong> ✓。</p>
 <h3>易错点</h3>
-<ul><li><strong>选 B（C242 0000H）</strong>：把阶码算成 4 或 5——8.25 规格化后是 2³，不是 2⁴。</li><li><strong>选 C/D</strong>：尾数补位错位——<code>00001</code> 是"小数点后第 5 位为 1"，即 23 位尾数的高 5 位是 <code>00001</code>，不是 <code>000000001...</code> 也不是 <code>10000...</code>。</li><li><strong>忘加偏置 127</strong>：直接把 3 写进阶码字段。</li></ul>
-<blockquote>记忆锚点：单精度编码三步走——规格化定指数、加 127 得阶码、去 1 补零填尾数。</blockquote></div></div>
+<ul><li><strong>选 B（C242 0000H）</strong>：其阶码字段是 132，即把指数当成 5——8.25 的小数点只左移 3 位，指数是 3 而非 4、5。</li><li><strong>选 C/D</strong>：尾数错位——<code>00001</code> 表示"小数点后第 5 位为 1"，应落在 23 位尾数的<strong>高 5 位</strong>（高位起 <code>00001</code>），不是右移后的 <code>000000001…</code>，也不是把隐含的 1 写进尾数。</li><li><strong>忘加偏置 127</strong>：把 3 直接填进阶码字段。</li><li><strong>用补码思路存阶码</strong>：阶码是无符号的"真指数 + 偏置"，不走补码。</li></ul>
+<blockquote>记忆锚点：单精度编码 = 规格化定指数 → 加 127 得阶码 → 去 1 补零填尾数；偏置为快速比较、隐含 1 为多赚精度。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1021,18 +1025,19 @@ while (x &lt; n / 2)
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：无符号整数 bgt 的转移条件</h2>
-<h3>第一步：先给答案</h3>
-<p><strong>答案：C</strong>，即"CF + ZF 取反 = 1"，等价于 <strong>CF = 0 且 ZF = 0</strong>（无借位且结果非零）。</p>
-<h3>第二步：为什么是这两个标志</h3>
-<p>bgt 是<strong>无符号</strong>整数比较"大于"时转移。硬件比较用减法 A − B 完成，结果由标志位判读：</p>
-<table><thead><tr><th>比较结果</th><th>借位/进位 CF</th><th>零标志 ZF</th><th>CF + ZF</th><th>取反后</th><th>转移？</th></tr></thead><tbody><tr><td>A &gt; B</td><td>0（无借位）</td><td>0（结果非零）</td><td>0</td><td><strong>1</strong></td><td>转移</td></tr><tr><td>A &lt; B</td><td>1（不够减有借位）</td><td>0</td><td>1</td><td>0</td><td>不转移</td></tr><tr><td>A = B</td><td>0</td><td>1（结果为零）</td><td>1</td><td>0</td><td>不转移</td></tr></tbody></table>
-<p>"大于"要同时满足两个条件：减法<strong>无借位</strong>（CF = 0）<strong>且</strong>结果<strong>不为零</strong>（ZF = 0，排除相等）。两者用"或"合并后正好为 0，对其取反得 1，转移条件即 <code>(CF + ZF)</code> 取反 = 1。</p>
-<h3>第三步：排除其他选项</h3>
-<ul><li><strong>A</strong>（CF 取反 + OF = 1）：带上了溢出标志 OF，OF 用于带符号运算；无符号比较"大于"不需要它。</li><li><strong>B</strong>（SF 取反 + ZF = 1）：SF 是符号标志，判读<strong>带符号</strong>数的大小/正负用，无符号数没有"符号"概念。</li><li><strong>D</strong>（CF 取反 + SF = 1）：同样混入了带符号的 SF。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：无符号整数比较 bgt 的转移条件</h2>
+<p><strong>答案：C</strong>，即"CF 与 ZF 都取反后相或 = 1"，等价于 <strong>CF = 0 且 ZF = 0</strong>（无借位且结果非零）。</p>
+<h3>第一步：比较的底层机制——一次减法 + 标志位判读</h3>
+<p>硬件没有专门的"比较器"：A 与 B 的大小是在 ALU 里做一次减法 A − B，再看标志位判读的。对<strong>无符号数</strong>，判读靠两个标志：</p>
+<ul><li><strong>CF（进位/借位）</strong>：无符号减法<strong>不够减</strong>（A &lt; B）时必须向更高位借位，CF 置 1；够减（A ≥ B）则 CF = 0。所以 <strong>CF = 0 ⟺ A ≥ B</strong>——这就是"减法判大小"的原理，也是无符号比较不用 SF/OF 的原因；</li><li><strong>ZF（零标志）</strong>：差为 0（A = B）时置 1。CF = 0 只保证"A ≥ B"，要挑出<strong>严格大于</strong>，还须排除相等这一种。</li></ul>
+<p>两者合并：大于 ⟺ CF = 0 <strong>且</strong> ZF = 0，写成表达式即 <strong>(CF + ZF) 取反 = 1</strong>——正是选项 C。</p>
+<h3>第二步：三种情形对号入座</h3>
+<table><thead><tr><th>比较结果</th><th>CF</th><th>ZF</th><th>(CF+ZF) 取反</th><th>转移？</th></tr></thead><tbody><tr><td>A &gt; B（够减、差非零）</td><td>0</td><td>0</td><td><strong>1</strong></td><td>转移</td></tr><tr><td>A &lt; B（不够减，借位）</td><td>1</td><td>0</td><td>0</td><td>不转移</td></tr><tr><td>A = B（差为零）</td><td>0</td><td>1</td><td>0</td><td>不转移</td></tr></tbody></table>
+<h3>第三步：为什么不用 SF 和 OF</h3>
+<p>SF 记结果的符号位、OF 记<strong>带符号</strong>运算是否溢出，只有把操作数当<strong>带符号数</strong>解释时它们才有意义。无符号数没有"符号"概念，大小全凭借位与零这两个标志判定——混入 OF 的 A、混入 SF 的 B 和 D 方向就错了。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉 ZF</strong>：只写"CF = 0"会把 A = B 也误判为"大于"——大于必须排除相等。</li><li><strong>把带符号标志当无符号用</strong>：SF、OF 是带符号比较（如 bgt 的有符号版本 bgt 对应 jg）才用的标志。</li></ul>
-<blockquote>记忆锚点：无符号大于 = 无借位且非零 = CF 与 ZF 全 0 = "CF + ZF" 取反为 1。</blockquote></div></div>
+<ul><li><strong>漏掉 ZF</strong>：只写"CF = 0"会把 A = B 也误判为"大于"——大于必须排除相等。</li><li><strong>带符号、无符号标志混用</strong>：SF、OF 服务于带符号比较（如 jg 一类指令），CF、ZF 服务于无符号比较，两套体系不能混搭。</li></ul>
+<blockquote>记忆锚点：无符号大于 = 无借位且非零 = CF 与 ZF 全 0 = "(CF + ZF)" 取反为 1。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2316,18 +2321,20 @@ store x, R2</code></pre></div><p><span>两个操作完成后，x 的值<strong><
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TCP 第二次握手的报文段</h2>
-<p><strong>答案：C（SYN=1，ACK=1，seq=11221，ack=11221）</strong></p>
-<h3>第一步：认清这是第几次握手</h3>
-<p>甲发来 (SYN=1，seq=11220) 是<strong>第一次握手</strong>；乙接受连接，回送的是<strong>第二次握手</strong>：既要带上乙自己的同步位（SYN=1），又要确认甲的 SYN（ACK=1）。SYN=0、ACK=0 的 A、D 直接排除。</p>
-<h3>第二步：定确认号 ack</h3>
-<p>规则：<strong>SYN 报文段虽然不携带数据，但要消耗一个序号</strong>。甲的序号用到了 11220，乙期望甲的下一个字节从 11221 开始，所以 ack = 11220 + 1 = <strong>11221</strong>。B 的 ack = 11220，错在"忘了 SYN 占一个序号"，排除。</p>
-<h3>第三步：定序号 seq</h3>
-<p>seq 是<strong>乙自己选择</strong>的初始序号，与甲的 11220 无关；四个选项中同时满足 SYN=1、ACK=1、ack=11221 的只有 C（seq=11221）。</p>
-<table><thead><tr><th>选项</th><th>SYN / ACK</th><th>ack</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>0 / 0</td><td>11221</td><td>没有同步与确认位 ✗</td></tr><tr><td>B</td><td>1 / 1</td><td>11220</td><td>漏加 SYN 占的 1 ✗</td></tr><tr><td>C</td><td>1 / 1</td><td>11221</td><td>全对 ✓</td></tr><tr><td>D</td><td>0 / 0</td><td>11220</td><td>同 A ✗</td></tr></tbody></table>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：TCP 第二次握手报文段的字段</h2>
+<p><strong>答案：C（SYN = 1，ACK = 1，seq = 11221，ack = 11221）</strong>。</p>
+<h3>第一步：先吃透机制——SYN 为什么占一个序号</h3>
+<p>确认号 ack 的语义是"<strong>期望对方发来的下一个字节序号</strong>"：某样东西要被确认，就必须在序号空间里占一个位置。SYN 虽不携带数据，但它本身是要被对方确认的"事件"，所以规定 <strong>SYN = 1 的报文段消耗一个序号</strong>（FIN 同理）。于是"我确认了你的 SYN"只能表达为 <strong>ack = 对方 seq + 1</strong>——这就是本题确认号的全部来源。</p>
+<h3>第二步：第二次握手一身兼两职</h3>
+<p>乙接受连接时，回送的报文段同时要干两件事：</p>
+<ul><li><strong>确认甲的 SYN</strong>：ACK = 1，ack = 甲的 seq + 1 = 11220 + 1 = <strong>11221</strong>；</li><li><strong>发起乙自己的同步</strong>：SYN = 1，并自选乙的初始序号 seq——它由乙独立选取，与甲的 11220 无关，取什么值都合法。</li></ul>
+<p>所以第二次握手必然 <strong>SYN = 1、ACK = 1</strong>：SYN = 0、ACK = 0 的 A、D 连"同步 + 确认"的姿态都没有，先排除。</p>
+<h3>第三步：四个选项对号入座</h3>
+<table><thead><tr><th>选项</th><th>SYN / ACK</th><th>ack</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>0 / 0</td><td>11221</td><td>无同步无确认 ✗</td></tr><tr><td>B</td><td>1 / 1</td><td>11220</td><td>漏加 SYN 占的 1，等于没确认甲的 SYN ✗</td></tr><tr><td>C</td><td>1 / 1</td><td>11221</td><td>两职俱全 ✓</td></tr><tr><td>D</td><td>0 / 0</td><td>11220</td><td>同 A ✗</td></tr></tbody></table>
+<p>至于 seq = 11221：那是乙自选的初始序号，题目问"可能是"，C 完全合法。</p>
 <h3>易错点</h3>
-<ul><li><strong>ack 忘了加 1</strong>：SYN 占一个序号是三次握手的经典考点，确认号 = 对方 seq + 1。</li><li><strong>以为第二次握手只回 ACK</strong>：乙的同步也要借这次握手完成，所以 SYN 仍为 1。</li></ul>
-<blockquote>一句话结论：第二次握手 = (SYN=1，ACK=1，seq=乙自选，ack=甲 seq+1=11221)，选 C。</blockquote></div></div>
+<ul><li><strong>ack 忘加 1</strong>（误选 B）：忽略"SYN 占一个序号"的规定——ack = 甲 seq + 1 是确认 SYN 的唯一表达方式。</li><li><strong>以为第二次握手只回 ACK</strong>（误选 A/D 方向）：乙的同步也要借这同一个报文段完成，SYN 仍为 1。</li></ul>
+<blockquote>记忆锚点：SYN、FIN 都占一个序号；第二次握手 = SYN=1 + ACK=1，ack = 对方 seq + 1，seq 乙自选。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2439,19 +2446,21 @@ store x, R2</code></pre></div><p><span>两个操作完成后，x 的值<strong><
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：上三角压缩还原与关键路径</h2>
 <h3>第 1 问：由一维数组还原邻接矩阵 A</h3>
-<p>上三角矩阵按<strong>行优先</strong>压缩：第 r 行只存 <code>A[r][r+1..5]</code>，共 <strong>5−r</strong> 个元素。据此把 15 个元素分段：第 0 行占下标 0~4，第 1 行占 5~8，第 2 行占 9~11，第 3 行占 12~13，第 4 行占 14，第 5 行没有元素。</p>
+<p>上三角矩阵按<strong>行优先</strong>压缩：第 r 行只存 <code>A[r][r+1..5]</code>——列号从 r+1 到 5，共 <strong>5−r</strong> 个元素。据此把 15 个元素分段：第 0 行占下标 0~4，第 1 行占 5~8，第 2 行占 9~11，第 3 行占 12~13，第 4 行占 14，第 5 行没有元素。</p>
+<p><strong>为什么只给 15 个数、对角线和下三角敢直接填 0/∞？</strong> 6×6 共 36 个元素，数组只有 15 个 = 5+4+3+2+1，恰好是"对角线以上"的元素个数——说明对角线与下三角是约定值：对角线为 0（无自环），下三角为 ∞（没有从大编号指回小编号的弧）。"上三角"还送了一个隐含结论：<strong>所有弧都从小号指向大号，0→1→2→3→4→5 就是天然的拓扑序</strong>——第 3 问求 ve、vl 时直接按编号顺序算即可，不必再排序。</p>
 <p>逐段还原（对角线与下三角均为 0/∞）：</p>
 <table><thead><tr><th>A</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><td><strong>0</strong></td><td>0</td><td>4</td><td>6</td><td>∞</td><td>∞</td><td>∞</td></tr><tr><td><strong>1</strong></td><td>∞</td><td>0</td><td>5</td><td>∞</td><td>∞</td><td>∞</td></tr><tr><td><strong>2</strong></td><td>∞</td><td>∞</td><td>0</td><td>4</td><td>3</td><td>∞</td></tr><tr><td><strong>3</strong></td><td>∞</td><td>∞</td><td>∞</td><td>0</td><td>∞</td><td>3</td></tr><tr><td><strong>4</strong></td><td>∞</td><td>∞</td><td>∞</td><td>∞</td><td>0</td><td>3</td></tr><tr><td><strong>5</strong></td><td>∞</td><td>∞</td><td>∞</td><td>∞</td><td>∞</td><td>0</td></tr></tbody></table>
 <p>即：数组前 5 个 <code>4, 6, ∞, ∞, ∞</code> 是第 0 行（得到边 0→1 权 4、0→2 权 6），接着 <code>5, ∞, ∞, ∞</code> 是第 1 行（1→2 权 5），<code>4, 3, ∞</code> 是第 2 行（2→3 权 4、2→4 权 3），<code>∞, 3</code> 是第 3 行（3→5 权 3），最后的 <code>3</code> 是第 4 行（4→5 权 3）。</p>
 <h3>第 2 问：画出有向带权图 G</h3>
 <p>共 7 条弧：<strong>0→1(4)、0→2(6)、1→2(5)、2→3(4)、2→4(3)、3→5(3)、4→5(3)</strong>。画图时按拓扑层次摆放：0 在最左，1、2 依次向右，3、4 并列一层，5 在最右，箭头一律指向大编号顶点（本图是 AOE 网/事件图）。</p>
 <h3>第 3 问：求关键路径及长度</h3>
-<p>这是 AOE 网：顶点是事件，弧是活动。先沿拓扑序求<strong>最早发生时间 ve</strong>，再沿逆拓扑序求<strong>最迟发生时间 vl</strong>：</p>
+<p>这是 AOE 网：顶点是事件，弧是活动。<strong>ve 回答"这个事件最早什么时候能发生"</strong>：一个事件必须等指向它的<strong>所有</strong>活动都干完才发生，所以 ve(j) = max(ve(i) + w)，对每条入弧取最大——漏看任何一条入弧，事件就可能在"还有活没干完"时被提前开工。<strong>vl 回答"最晚什么时候必须发生"</strong>：再晚会拖累某个后继，所以 vl(i) = min(vl(j) − w)，对每条出弧取最小——最紧的那个后继说了算。汇点的 ve(5) 是全部路径中最长的完成时间，它就是整个工程的工期。</p>
+<p>先沿拓扑序求 ve，再沿逆拓扑序求 vl：</p>
 <table><thead><tr><th>顶点</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><td>ve</td><td>0</td><td>4</td><td>9</td><td>13</td><td>12</td><td>16</td></tr><tr><td>vl</td><td>0</td><td>4</td><td>9</td><td>13</td><td>13</td><td>16</td></tr></tbody></table>
 <p>关键点的算法：<code>ve(2) = max(ve(0)+6, ve(1)+5) = max(6, 9) = 9</code>；<code>ve(5) = max(ve(3)+3, ve(4)+3) = max(16, 15) = 16</code>；<code>vl(2) = min(vl(3)−4, vl(4)−3) = min(9, 10) = 9</code>。</p>
-<p>再对每条活动求时间余量 <code>l − e</code>（e = ve(i)，l = vl(j) − 权），余量为 0 者是关键活动：</p>
+<p>再对每条活动求时间余量 <code>l − e</code>（e = ve(i)，l = vl(j) − 权）。<strong>为什么余量 0 就是关键活动？</strong> 余量是这条活动"最多能拖多久"的额度：额度为 0，拖一分钟总工期就后移一分钟。所有额度为 0 的活动首尾相接，正是从源点到汇点的最长路径——关键路径：</p>
 <table><thead><tr><th>活动</th><th>e</th><th>l</th><th>余量</th><th>关键？</th></tr></thead><tbody><tr><td>0→1</td><td>0</td><td>0</td><td>0</td><td><strong>是</strong></td></tr><tr><td>0→2</td><td>0</td><td>3</td><td>3</td><td>否</td></tr><tr><td>1→2</td><td>4</td><td>4</td><td>0</td><td><strong>是</strong></td></tr><tr><td>2→3</td><td>9</td><td>9</td><td>0</td><td><strong>是</strong></td></tr><tr><td>2→4</td><td>9</td><td>10</td><td>1</td><td>否</td></tr><tr><td>3→5</td><td>13</td><td>13</td><td>0</td><td><strong>是</strong></td></tr><tr><td>4→5</td><td>12</td><td>13</td><td>1</td><td>否</td></tr></tbody></table>
-<p>关键活动首尾相接成关键路径：<strong>0 → 1 → 2 → 3 → 5</strong>，长度 = 4 + 5 + 4 + 3 = <strong>16</strong>。</p>
+<p>关键活动首尾相接成关键路径：<strong>0 → 1 → 2 → 3 → 5</strong>，长度 = 4 + 5 + 4 + 3 = <strong>16</strong>——恰等于 ve(5)，与"关键路径长度 = 工期"互相印证。</p>
 <h3>易错点</h3>
 <ul><li><strong>分段起点算错</strong>：第 r 行的元素个数是 5−r（不是 6−r），上一行的终点 +1 是下一行的起点；错一段后面全错。</li><li><strong>ve(2) 只取 6</strong>：0→2 直达只有 6，但 0→1→2 是 4+5=9，事件必须等<strong>所有</strong>入弧都完成，取最大值。</li><li><strong>关键路径漏算 ve(4)</strong>：0→1→2→4→5 长 4+5+3+3=15，比 16 短，不是关键路径；若只盯一条路不走全图容易误判。</li></ul>
 <blockquote>结论：关键路径 0→1→2→3→5，长度 16；口诀——ve 顺拓扑取最大，vl 逆拓扑取最小，余量 0 连成关键路径。</blockquote></div></div>
@@ -2546,8 +2555,12 @@ store x, R2</code></pre></div><p><span>两个操作完成后，x 的值<strong><
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：等长升序序列的中位数（折半舍弃法）</h2>
 <h3>第 1 问：算法的基本设计思想</h3>
 <p>分别取当前两个<strong>等长</strong>升序子序列 A′、B′ 的中位数 a 和 b（各取第 ⌈n/2⌉ 个元素，n 为当前子序列长度）：</p>
-<ol><li>若 <strong>a = b</strong>，它就是两序列全体元素的中位数，直接返回；</li><li>若 <strong>a &lt; b</strong>，中位数只可能更大：舍弃 A′ <strong>最前面</strong>的 ⌊n/2⌋ 个元素和 B′ <strong>最后面</strong>的 ⌊n/2⌋ 个元素（中位数 a 本身要保留在 A′ 中）；</li><li>若 <strong>a &gt; b</strong>，对称地：舍弃 A′ <strong>最后面</strong>的 ⌊n/2⌋ 个元素和 B′ <strong>最前面</strong>的 ⌊n/2⌋ 个元素（中位数 b 保留在 B′ 中）。</li></ol>
-<p>每轮两个子序列长度都减半且仍等长，重复上述过程；当两个子序列<strong>各剩一个元素</strong>时，取两者中<strong>较小</strong>者即为所求中位数。舍弃的正确性：a &lt; b 时，A′ 的前 ⌊n/2⌋ 个元素都不大于 a，全体中位数不可能落在它们中间，B′ 的尾部同理，整体舍弃不影响答案。</p>
+<ol><li>若 <strong>a = b</strong>，它就是两序列全体元素的中位数，直接返回；</li><li>若 <strong>a &lt; b</strong>，中位数只可能更大：舍弃 A′ <strong>最前面</strong>的 ⌊n/2⌋ 个元素和 B′ <strong>最后面</strong>的 ⌊n/2⌋ 个元素；</li><li>若 <strong>a &gt; b</strong>，对称地：舍弃 A′ <strong>最后面</strong>的 ⌊n/2⌋ 个元素和 B′ <strong>最前面</strong>的 ⌊n/2⌋ 个元素。</li></ol>
+<p>（谁留谁丢有讲究：<strong>较大的中位数每轮都保留</strong>，较小的中位数只在长度为奇数时保留——为什么，见下面的三个"为什么"。）</p>
+<p>每轮两个子序列长度都减半且仍等长，重复上述过程；当两个子序列<strong>各剩一个元素</strong>时，取两者中<strong>较小</strong>者即为所求中位数。</p>
+<p>这套"比一比、丢一半"为什么不会丢掉真答案？把最可能追问的三个"为什么"提前答掉：</p>
+<ul><li><strong>为什么 a &lt; b 就敢丢 A′ 前半段、B′ 后半段？</strong> 全局中位数 m 一定被夹在 [a, b] 之间：严格小于 a 的元素，A′ 里只有"中位数以前"那半段，B′ 里也至多"中位数以前"那半段（它们都 &lt; b），两侧合计至多 n−1 个，而第 n 小的 m 前面必须排满 n−1 个元素，故 m ≥ a；对称地 m ≤ b。于是被丢的 A′ 前 ⌊n/2⌋ 个都严格小于 a ≤ m，被丢的 B′ 后 ⌊n/2⌋ 个都严格大于 b ≥ m——全都不可能是 m。</li><li><strong>为什么较大的中位数每轮必留、较小的看奇偶？</strong> m 可能恰好等于某个中位数（样例第 3 轮的 11 就是被保留的那个），丢掉它答案就没了。长度为奇数时两个中位数的内侧恰好各隔 ⌊n/2⌋ 个元素，丢半伤不到它们，都保留；长度为偶数时较小中位数内侧只有 ⌊n/2⌋−1 个元素，要两侧丢得一样多就得把它捎上（对应代码 <code>start1 = m1 + 1</code> / <code>start2 = m2 + 1</code>）。此时丢它安全：严格小于它的元素两侧合计至多 n−2 个，它的名次到不了第 n；可能等于 m 的较大中位数已被保留。</li><li><strong>为什么"等长"是前提？</strong> 整个算法依赖"每轮两侧丢弃个数相等、剩余长度仍相等"，m 的位置关系才逐轮保持；一旦不等长，⌊n/2⌋ 的对称舍弃就错位了——这正是易错点第一条的根源。</li></ul>
+<p>收尾为什么取<strong>较小</strong>者：两序列各剩 1 个时全体只剩 2 个元素，中位数是第 ⌈2/2⌉ = 1 小的那个——正是两者中较小的。</p>
 <h3>第 2 问：算法实现要点（C/C++）</h3>
 <p>用四个下标变量维护两个「子序列」：<code>start1, end1, start2, end2</code>，中位数下标取 <code>m1 = (start1 + end1) / 2</code>、<code>m2 = (start2 + end2) / 2</code>。关键语句：</p>
 <ul><li>循环条件 <code>while (start1 != end1 || start2 != end2)</code>：两序列各剩一个元素时退出；</li><li><code>if (A[m1] == B[m2]) return A[m1];</code> ——情况 1 直接命中；</li><li><strong>a &lt; b</strong>：奇偶要区分——<code>(start1 + end1) % 2 == 0</code>（长度奇数）时 <code>start1 = m1</code>（中位数保留），否则 <code>start1 = m1 + 1</code>；同时一律 <code>end2 = m2</code>（b 保留在 B′ 尾部）；</li><li><strong>a &gt; b</strong>：对称——长度奇数时 <code>end1 = m1</code>、<code>start2 = m2</code>，长度偶数时 <code>end1 = m1</code>、<code>start2 = m2 + 1</code>；</li><li>循环结束后 <code>return A[start1] &lt; B[start2] ? A[start1] : B[start2];</code> 取较小者。</li></ul>
@@ -2618,21 +2631,25 @@ int k2=m+n;</code></pre><p><span>若编译器编译时将8个8位寄存器R1~R8�
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：8 位机上的无符号/带符号加减运算（综合题）</h2>
-<p><strong>结论先行：(1) R1 = 86H，R5 = 90H，R6 = 7CH；(2) m = −122，k1 = −112；(3) 能用同一个加法器；(4) 判溢出看符号/双进位，k2 = m + n 溢出。</strong></p>
+<h3>第 0 步：先立机制——8 位寄存器是"模 256"的世界，位模式 ≠ 数值</h3>
+<p>三句话把四个小问全部打通：</p>
+<ol><li><strong>位模式与解释是两回事</strong>：8 位共 256 个状态，<code>unsigned int</code> 读成 0~255，<code>int</code>（补码）读成 −128~127。赋值 <code>int m = x</code> 只是<strong>原样复制 8 个位</strong>，机器不做任何数值换算——变的只是解释方式。</li><li><strong>加减硬件只做模 256 加法</strong>：加法照加，第 9 位进位自然丢弃；减法等于加上减数在模 256 下的相反数（补数）。无符号、补码都活在同一套规则下。</li><li><strong>溢出是解释层面的报警</strong>：位模式照样产生，只是真值超出了当前解释方式的表示范围，读回的数不再是算术上的和/差。</li></ol>
 <h3>第 1 问：R1、R5、R6 的内容（十六进制）</h3>
 <p>先把 x、y 装入寄存器（8 位二进制）：</p>
 <ul><li>x = 134 = <code>1000 0110B</code> = <strong>86H</strong> → R1；</li><li>y = 246 = <code>1111 0110B</code> = F6H → R2。</li></ul>
 <p>无符号加减在 8 位机上是<strong>模 256</strong>运算（超出 8 位的进位自然丢弃）：</p>
 <ul><li>R5：z1 = x − y = 134 − 246 = −112，按模 256 加 256 回到 <strong>144 = 1001 0000B = 90H</strong>；</li><li>R6：z2 = x + y = 134 + 246 = 380，380 − 256 = <strong>124 = 0111 1100B = 7CH</strong>。</li></ul>
 <p>寄存器只存 8 位结果，进位丢弃，内容分别为 90H、7CH。</p>
+<p><strong>为什么"±256"是合法操作？</strong> 这是模运算的定义在兜底：8 位只有 256 个状态，−112 与 144 在模 256 下是同一个余数（−112 ≡ 144 (mod 256)），380 与 124 同理。从"数学和/差"落到"寄存器内容"，就是除模取余——加一次或减一次模即可。</p>
 <h3>第 2 问：m 与 k1 的值（十进制）</h3>
-<ul><li>m = x：把 86H 的位模式按补码重新解释：最高位 1 为负，<code>1000 0110</code> = −128 + 6 = <strong>−122</strong>；</li><li>n = y：F6H = <code>1111 0110</code> = −128 + 118 = −10；</li><li>k1 = m − n = −122 − (−10) = <strong>−112</strong>。</li></ul>
+<ul><li>m = x：<strong>为什么 m 不等于 134？</strong> 赋值只复制位模式（第 0 步机制 1）：m 的 8 个位与 x 完全相同，都是 86H，但 m 按 <code>int</code>（补码）解释——补码按权展开时最高位的权重是 −128，<code>1000 0110</code> = −128 + 4 + 2 = <strong>−122</strong>；</li><li>n = y：F6H = <code>1111 0110</code> = −128 + 118 = −10；</li><li>k1 = m − n = −122 − (−10) = <strong>−112</strong>。</li></ul>
 <p>机器上用补码加法做：k1 = m + (−n 的补码) = <code>1000 0110</code> + <code>0000 1010</code> = <code>1001 0000</code>，仍是 90H，按补码解释即 −112，<strong>未溢出</strong>。</p>
 <h3>第 3 问：四种运算能否共用一个加法器</h3>
-<p><strong>能。</strong> 无论无符号还是补码表示的带符号整数，加减法在机器里都归结为<strong>按模的加法</strong>：加法直接相加，减法转换为"加上减数的相反数（补数）"。同一个 n 位加法器（加上进位传递电路）即可完成全部四种运算——无符号与带符号的区别<strong>只在结果的解释方式和溢出判断标准</strong>，不在运算电路本身。</p>
+<p><strong>能。</strong> 无论无符号还是补码表示的带符号整数，加减法在机器里都归结为<strong>按模的加法</strong>：n 位加法器天然就是一个"模 2ⁿ 加法器"，第 n 位进位本来就是要丢弃的余数部分。减法为什么能变成加法？因为在模 2ⁿ 下"减 b"等价于"加 −b"，而 −b 的编码恰好是"按位取反加一"——一套加法器加一条取反通路就齐了。四种运算共用这套电路，区别<strong>只在结果的解释方式和溢出/进位判断标准</strong>，不在电路本身。本题就是铁证：R6（z2）与 k2 的位模式同为 7CH——同一次模 256 加法，无符号侧读出 124、记下进位 CF=1；带符号侧读出 +124、但真值 −132 越界，溢出标志 OF=1。</p>
 <h3>第 4 问：带符号溢出的判断与本题的溢出语句</h3>
 <p><strong>判断方法</strong>（两种等价）：</p>
 <ol><li>两个操作数符号相同而结果的符号不同 → 溢出；</li><li>次高位向最高位的进位 ≠ 最高位向前的进位 → 溢出。</li></ol>
+<p><strong>为什么"两个进位不同"就等于溢出？</strong> 次高位的进位是数值部分算出来、要送进符号位的进位；最高位的进位是符号位算完要丢出寄存器的进位（模运算里它本来就该丢）。两者一致时，数值部分没有"越权"改写符号位，真值落在 [−128, 127] 内；一旦两者不同，说明数值部分的进位把符号位顶翻了，真值必然越界。方法 1 是方法 2 的现象版：符号被顶翻，恰好表现为"同号相加得异号"。</p>
 <p>逐条检查带符号运算：</p>
 <ul><li>k1 = m − n：两操作数符号相异（−122 与 −10 相减转化为 m + 10，一正一负），不可能溢出，结果 −112 在 8 位补码范围 [−128, 127] 内；</li><li><strong>k2 = m + n</strong>：两操作数同为负（−122 与 −10），真值和为 −132 &lt; −128，超出范围 → <strong>溢出</strong>。机器过程：<code>1000 0110</code> + <code>1111 0110</code> = <code>1 0111 1100</code>，最高位进位 1、次高位进位 0，两者不同；且结果符号位变 0（"负 + 负 = 正"），按补码解释为 +124，与真值 −132 不符。</li></ul>
 <h3>易错点</h3>
@@ -2690,21 +2707,25 @@ int k2=m+n;</code></pre><p><span>若编译器编译时将8个8位寄存器R1~R8�
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：虚拟地址 → 物理地址 → Cache / TLB 全链路（综合题）</h2>
-<p><strong>结论先行：(1) 虚拟地址 24 位、虚页号取高 12 位；物理地址 20 位、页框号取高 8 位；(2) 物理地址拆成标记 12 位 + Cache 行号 3 位 + 块内地址 5 位；(3) 001C60H 在主存、物理地址 04C60H、Cache 不命中；(4) 024BACH 所在页面在主存中（TLB 命中）。</strong></p>
-<h3>第 1 问：地址位数与页号划分</h3>
-<table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>虚拟地址空间</td><td>16MB = 2^24 → 24 位</td><td>虚拟地址 <strong>24 位</strong></td></tr><tr><td>页面大小</td><td>4KB = 2^12 → 页内偏移占低 12 位</td><td>虚页号 = <strong>高 12 位</strong></td></tr><tr><td>物理地址空间</td><td>1MB = 2^20 → 20 位</td><td>物理地址 <strong>20 位</strong></td></tr><tr><td>页框号</td><td>位数字段与虚页号对齐</td><td><strong>高 8 位</strong></td></tr></tbody></table>
-<p>页内偏移在虚实转换中保持不变（都是 12 位），所以页框号位数 = 20 − 12 = 8 位。</p>
-<h3>第 2 问：物理地址访问 Cache 的字段划分</h3>
-<p>直接映射、8 行、块大小 32B，自低位向高位划分：</p>
-<ul><li><strong>块内地址</strong>：32B = 2^5 → 低 <strong>5 位</strong>（第 4～0 位）；</li><li><strong>Cache 行号（行索引）</strong>：8 行 = 2^3 → 中间 <strong>3 位</strong>（第 7～5 位）；</li><li><strong>主存字块标记（tag）</strong>：剩余高位 <strong>12 位</strong>（第 19～8 位）。</li></ul>
-<p>注意：中间 3 位是直接映射的<strong>行索引</strong>，用来选中 Cache 行；比较"是否命中"时用它与高 12 位标记配合，把 3 位单独称为"Cache 字块标记"是不准确的。</p>
-<h3>第 3 问：虚拟地址 001C60H 的查访过程</h3>
-<ol><li>拆分：虚页号 = 高 12 位 = <code>001H</code>，页内偏移 = <code>C60H</code>；</li><li>查页表：虚页号 001 的页表项<strong>有效位 = 1，页框号 = 04H</strong> → 页面在主存中；</li><li>拼物理地址：页框号 04H 左移 12 位拼上偏移 → <strong>04C60H</strong>；</li><li>访问 Cache：<code>04C60H</code> = <code>0000 0100 1100 0110 0000B</code> → 标记 = <code>04CH</code>，行号 = <code>011</code>（第 3 行），块内 = 0；</li><li>比较：Cache 第 3 行有效位为 1，但行内标记为 <code>105H</code> ≠ <code>04CH</code> → <strong>Cache 不命中</strong>（该行缓存的是别的块）。</li></ol>
-<h3>第 4 问：虚拟地址 024BACH 是否经 TLB 定位到主存</h3>
-<ol><li>拆分：虚页号 = <code>024H</code>，偏移 = <code>BACH</code>；</li><li>TLB 结构：8 项、四路组相联 → 组数 = 8 ÷ 4 = <strong>2 组</strong>；组号由虚页号<strong>最低 1 位</strong>给出 = 0；TLB 标记 = 虚页号高 11 位 = <code>024H</code> 右移 1 位 = <code>012H</code>；</li><li>查 TLB 第 0 组：存在<strong>有效位为 1 且标记 = 012H</strong> 的项（对应页框号 1FH）→ <strong>TLB 命中</strong>；</li><li>结论：虚页 024H 已被映射到主存页框 1FH，<strong>页面在主存中</strong>（不必再查内存页表）。</li></ol>
+<h3>第 0 步：先立机制——一次访存要过三道关卡</h3>
+<p>把整条链路想成一趟"翻译 + 缓存"的流水线，四个小问全挂在这条链上：</p>
+<ol><li><strong>分页翻译（虚→实）</strong>：虚拟地址 = 虚页号（高位）+ 页内偏移（低位）。页是搬动单位，一个虚页整页搬进某个主存页框，<strong>页内第几个字节的相对位置原封不动</strong>——所以偏移不参与翻译、原样拼接，页表只负责把虚页号换成页框号。</li><li><strong>直接映射 Cache（用物理地址访问）</strong>：主存每块只能"对号入座"到固定一行。地址从低位起分三段：<strong>块内地址</strong>定块内第几个字节，<strong>行号</strong>定进哪一行，<strong>标记 tag</strong> 定这一行缓存的究竟是不是这一块——行号只负责选行，命中与否全看 tag 比较的结果。</li><li><strong>TLB（页表的缓存）</strong>：四路组相联 = <strong>组间直接映射 + 组内全相联</strong>——虚页号低位定组号（对号入座到组），高位做 tag（组内逐项比较），有效位说明这项映射可用。</li></ol>
+<h3>第 1 问：虚拟/物理地址各几位，页号取哪几位</h3>
+<p>位数由空间大小直接决定：16MB = 2²⁴ → 虚拟地址 <strong>24 位</strong>；1MB = 2²⁰ → 物理地址 <strong>20 位</strong>。页内偏移两边必须同宽：页大小 4KB = 2¹² → 低 12 位是偏移。于是虚页号 = 24 − 12 = <strong>12 位（高 12 位）</strong>，页框号 = 20 − 12 = <strong>8 位（高 8 位）</strong>。</p>
+<table><thead><tr><th>地址</th><th>位数</th><th>高位字段</th><th>低位字段</th></tr></thead><tbody><tr><td>虚拟地址</td><td>24</td><td>虚页号 12 位</td><td>页内偏移 12 位</td></tr><tr><td>物理地址</td><td>20</td><td>页框号 8 位</td><td>页内偏移 12 位</td></tr></tbody></table>
+<p>（为什么页框号恰好是 8 位：偏移 12 位在翻译前后不变，剩下的位数自然全给页框号——20 − 12 = 8，不是另算的一项。）</p>
+<h3>第 2 问：物理地址的三段划分</h3>
+<p>从低位起分：块大小 32B = 2⁵ → <strong>块内地址 5 位（第 4~0 位）</strong>；8 行 = 2³ → <strong>Cache 行号 3 位（第 7~5 位）</strong>；剩下的高位全部归 tag → <strong>主存字块标记 12 位（第 19~8 位）</strong>。</p>
+<p>为什么必须从低位起分？块内偏移的粒度是字节，必须贴着最低位；行号要把所有主存块均匀分到 8 行，紧挨着块内地址；再往高的所有位统一交给 tag 做身份比较。把中间 3 位叫"Cache 字块标记（3 位）"是不准确的——它是<strong>行索引</strong>，用来选行；标记（tag）是高 12 位。</p>
+<h3>第 3 问：虚拟地址 001C60H 的完整查访</h3>
+<ol><li>拆分：高 12 位 = 虚页号 <code>001H</code>，低 12 位 = 偏移 <code>C60H</code>；</li><li>查页表：虚页 001 的表项<strong>有效位 = 1，页框号 = 04H</strong> → 页面已调入主存；</li><li>拼物理地址：页框号 04H 顶到高位、偏移 C60H 原样放低位（第 0 步机制 1）→ <strong>04C60H</strong>；</li><li>拆 Cache 地址：<code>04C60H</code> = <code>0000 0100 1100 0110 0000</code> → tag = <code>04CH</code>，行号 = <code>011</code>（第 3 行），块内 = 0；</li><li>比命中：第 3 行有效位为 1，但行内标记 = <code>105H</code> ≠ <code>04CH</code> → <strong>Cache 不命中</strong>。</li></ol>
+<p><strong>有效位为 1 为什么还不命中？</strong> 有效位只说明"这行装了东西"，tag 才说明"装的是谁"——第 3 行缓存的是主存标记 <code>105H</code> 那一块，而要找的是 <code>04CH</code> 块；直接映射下同一行两块只能轮流入住，此刻坐在里面的不是它。</p>
+<h3>第 4 问：虚拟地址 024BACH 查 TLB</h3>
+<ol><li>虚页号 = <code>024H</code>（偏移 <code>BACH</code> 不参与翻译）；</li><li>TLB 共 8 项、四路组相联 → 组数 = 8 ÷ 4 = <strong>2 组</strong>；组号取虚页号<strong>最低 1 位</strong> = 0 → 查第 0 组；</li><li>TLB 标记 = 虚页号其余 11 位：<code>024H</code> = <code>0000 0010 0100</code>，去掉最低位 0，高 11 位 = <code>0000 0010 010</code> = <strong><code>012H</code></strong>；</li><li>第 0 组中存在<strong>有效位为 1 且标记 = 012H</strong> 的表项（对应页框号 1FH）→ <strong>TLB 命中</strong>，虚页 024H 已映射到主存页框，<strong>页面在主存中</strong>，无需再访存查页表。</li></ol>
+<p><strong>为什么组号只取最低 1 位、标记却有 11 位？</strong> "组间直接映射"那 1 位已经把查找范围锁定到第 0 组，它不参与比较；组内是全相联，4 项逐个比标记——标记必须携带虚页号里除组号以外的全部信息，所以是 12 − 1 = 11 位。</p>
 <h3>易错点</h3>
-<ul><li><strong>页号位数算错</strong>：虚页号不是"虚页号位数 − 偏移位数"之外的另算项，它就是地址位数减去页内偏移位数（24 − 12 = 12 位）。</li><li><strong>Cache 字段从高位起分</strong>：必须从<strong>低位</strong>开始——先块内 5 位、再行号 3 位、剩下高位才是标记。</li><li><strong>TLB 组号用整段虚页号</strong>：四路组相联 2 组时，组号只取虚页号的<strong>低 1 位</strong>，其余 11 位才是 TLB 标记。</li></ul>
-<blockquote>一句话：24 位虚地址高 12 位查页表（001H → 04H），拼出 04C60H；Cache 按行号 3 比标记 04CH 对 105H 不中；024BAC 的虚页 024H 在 TLB 第 0 组（标记 012H）命中，页面在主存。</blockquote></div></div>
+<ul><li><strong>页号位数另起炉灶算</strong>：页号位数 = 地址位数 − 页内偏移位数（24−12、20−12），不存在"再减一"或"再加一"。</li><li><strong>Cache 字段从高位起分</strong>：顺序只能从低位起——块内 5 位、行号 3 位、标记 12 位；行号是用来"选行"的索引，不是标记。</li><li><strong>把有效位当命中</strong>：有效位 1 且 tag 相等才叫命中，缺一不可——第 3 问的陷阱正设在这里。</li><li><strong>TLB 组号用整个虚页号</strong>：2 组时组号只占虚页号最低 1 位，其余 11 位是 TLB 标记；组号那一位不参与比较。</li></ul>
+<blockquote>一句话：24 位虚地址高 12 位查页表（001H → 04H），偏移不变拼出 04C60H；Cache 按"块内 5 + 行号 3 + 标记 12"拆开，第 3 行标记 105H ≠ 04CH 不命中；024BAC 的虚页 024H 在 TLB 第 0 组（标记 012H）命中，页面在主存。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

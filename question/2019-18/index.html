@@ -103,14 +103,18 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：流水线数据冒险的判定</h2>
 <p>答案：<strong>C</strong>（I2 和 I4）。</p>
-<h3>第一步：列写每条指令读、写的寄存器</h3>
-<p>数据冒险看寄存器上的时序冲突：前一条<strong>写</strong>某寄存器、后一条<strong>读 / 写</strong>同一寄存器（RAW / WAW）就有冒险；两条都只是<strong>读</strong>同一寄存器则不冲突。</p>
+<h3>第 0 步：先立机制——数据冒险的本质是"值还没落地就被读走"</h3>
+<p>五段流水线（取指、译码/取数、执行、访存、写回）里多条指令同时在不同段推进。若后一条指令在取数段就要用某个寄存器的值，而写这个寄存器的前一条指令还没走到写回段，读到的就是<strong>旧值</strong>——这才是数据冒险。所以判据围绕"写"建立：</p>
+<ul><li><strong>前写后读（RAW）</strong>：有冒险——读的人要的值还在路上；</li><li><strong>读与读相遇</strong>：<strong>永远不冲突</strong>——读操作不改变寄存器内容，谁先谁后读到的都是同一个当前值，互相不干扰；</li><li><strong>写与写（WAW）</strong>：在本题这种<strong>按序</strong>五段流水线中，写回仍按程序顺序进行，次序不会乱，相邻指令间实际不会形成 WAW 冒险。</li></ul>
+<p>于是只需列出每条指令的"读集、写集"，逐对检查"写"有没有撞上别人的"读"。</p>
+<h3>第 1 步：列出每条指令读、写的寄存器</h3>
 <table><thead><tr><th>指令</th><th>读取寄存器</th><th>写入寄存器</th></tr></thead><tbody><tr><td>I1 add s2, s1, s0</td><td>s1, s0</td><td>s2</td></tr><tr><td>I2 load s3, 0(t2)</td><td>t2</td><td>s3</td></tr><tr><td>I3 add s2, s2, s3</td><td>s2, s3</td><td>s2</td></tr><tr><td>I4 store s2, 0(t2)</td><td>s2, t2</td><td>（写主存，不写寄存器）</td></tr></tbody></table>
-<h3>第二步：逐对检查</h3>
-<ul><li>I1 与 I3：I1 写 s2，I3 又读又写 s2 → RAW + WAW，有冒险。</li><li>I2 与 I3：I2 写 s3，I3 读 s3 → RAW，有冒险。</li><li>I2 与 I4：I2 只写 s3、读 t2；I4 只读 s2、t2 并写主存 → <strong>没有公共的"写→读"寄存器</strong>，无数据冒险。</li><li>I3 与 I4：I3 写 s2，I4（store）要从 s2 取数据 → RAW，有冒险。</li></ul>
+<p>注意 I4 是 store：它要把 s2 的值<strong>读</strong>出来写进主存，自己不写任何寄存器。</p>
+<h3>第 2 步：逐对检查</h3>
+<ul><li><strong>I1 与 I3</strong>：I1 写 s2，I3 要读 s2 → RAW，有冒险。</li><li><strong>I2 与 I3</strong>：I2 写 s3，I3 读 s3 → RAW，有冒险。</li><li><strong>I2 与 I4</strong>：I2 写 s3、读 t2；I4 读 s2、t2、写主存。两人唯一同用的是 t2，且<strong>都是读</strong>——读读相容，不构成冒险；s3 只有 I2 在写、无人读。<strong>无数据冒险</strong>。</li><li><strong>I3 与 I4</strong>：I3 写 s2，I4 要读 s2 → RAW，有冒险。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>把 t2 当成 I2 与 I4 的冲突</strong>：两条指令都"读"t2，多个读者相容，不构成冒险。</li><li><strong>漏判 I3 与 I4</strong>：store 也要从寄存器读数据（要存的数在 s2 里），写后读照样冒险。</li><li><strong>以为 store 写寄存器</strong>：store 的"目的地"是主存，不写任何寄存器。</li></ul>
-<blockquote>记忆锚点：先写后读（RAW）/先写后写（WAW）同一寄存器才有冒险；store 只读寄存器、只写主存。</blockquote></div></div>
+<ul><li><strong>把 t2 当成 I2 与 I4 的冲突点</strong>：两条指令都只"读" t2，多个读者相容——这正是 C 项成立的根据。</li><li><strong>漏判 I3 与 I4</strong>：store 并非"只写不用寄存器"，它要从 s2 取数送进主存，前写后读照样冒险。</li><li><strong>以为 store 会写寄存器</strong>：store 的目的地是主存，寄存器只出不进。</li></ul>
+<blockquote>记忆锚点：冒险只跟"写"过不去——前写后读才算数，读读永远相容；store 只读寄存器、只写主存。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -129,20 +129,25 @@ int findMin(int A[], int n, int B[], int m, int C[], int p) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三指针求三个升序集合的最小距离</h2>
-<h3>第一步（问 1）：基本设计思想</h3>
-<p>关键化简：D = |a−b| + |b−c| + |c−a| = <strong>2 ×（max(a,b,c) − min(a,b,c))</strong>——中间那个数的绝对值项两两抵消，距离只由最大值与最小值决定。问题转化为：在三个升序数组中各取一个数，使"最大值 − 最小值"最小。</p>
-<p>设三指针 i、j、k 分别指向三个数组开头，循环执行：</p>
-<ol><li>计算当前三元组的 D，更新最小值 Dmin；</li><li>把指向<strong>当前三个数中最小值</strong>的指针右移——只有抬高最小值才可能缩小 max−min，抬高最大值只会更糟；</li><li>任一指针到达数组末尾即停止（最小值所在数组已无更大的数可配合）；若某轮 Dmin 已经为 0，也不可能更小，可提前结束。</li></ol>
-<h3>第二步（问 2）：算法描述（C 语言，关键处注释）</h3>
-<ul><li>辅助函数：<code>abs</code> 求绝对值；<code>minjg(a,b,c)</code> 用 <code>a&lt;=b &amp;&amp; a&lt;=c</code> 判断 a 是否为最小值。</li><li>主体循环 <code>while (i&lt;n &amp;&amp; j&lt;m &amp;&amp; k&lt;p &amp;&amp; Dmin&gt;0)</code>：每轮 <code>D = abs(A[i]-B[j]) + abs(B[j]-C[k]) + abs(A[i]-C[k])</code>，<code>if (D &lt; Dmin) Dmin = D;</code>，再按最小值归属执行 <code>i++</code> / <code>j++</code> / <code>k++</code>。</li></ul>
-<p>用题给数据推演（a∈S₁, b∈S₂, c∈S₃，D = 2×(max−min)）：</p>
+<h3>第一步（问 1）：先把距离公式"压扁"——D 只由 max−min 决定</h3>
+<p><strong>机制：把三个数按大小排成 x ≤ y ≤ z，看每个绝对值项各贡献了什么。</strong> 三个绝对值项展开后是 6 个带符号的数相加：中间数 y 一次带正号、一次带负号，正好抵消；剩下最大数 z 贡献两次正、最小数 x 贡献两次负，于是</p>
+<p>D = |a−b| + |b−c| + |c−a| = <strong>2 ×（max(a,b,c) − min(a,b,c)）</strong></p>
+<p><strong>为什么要先做这一步化简？</strong> 不化简就得三重循环枚举全部三元组，O(n₁n₂n₃) 起步，达不到"尽可能高效"；化简后问题变成"三个升序数组各取一个数，让最大值与最小值之差最小"——最小值和最大值成了唯一的决策对象，三指针贪心就是从这里自然长出来的。</p>
+<p>设 i、j、k 分别指向三个数组开头，每轮做三件事：</p>
+<ol><li>计算当前三元组的 D，更新最小值 Dmin；</li><li><strong>把指向当前最小值的指针右移一格</strong>；</li><li>任一指针到达数组末尾就停；若某轮 Dmin 已为 0 也停——距离不可能为负，0 是全局下界。</li></ol>
+<p><strong>为什么动的必须是最小值的指针？</strong> 三个数组都升序、指针只会右移，所以动任何一个指针，那个位置的数只会变大：动最大值 → max 只升不降，max−min 只会拉大；动中间值 → min、max 都不动，差距不变，甚至可能把它顶成新的最大值、差距拉大；<strong>只有抬高最小值，才可能让 max−min 变小</strong>。</p>
+<p><strong>为什么移最小值不会漏掉最优解？</strong> 刚算过的三元组就是"以当前最小值为其余两数已定"情形下的最好结果：再看任何仍包含这个最小值的组合，另外两个数只会更大或不变，min 还是它、max 只升不降，差距都不会比刚才更小。所以放弃这些组合毫不可惜——更优解只可能藏在"最小值变大"的那一侧。</p>
+<p><strong>为什么某个指针到头就能停？</strong> 到头的指针刚把自己数组的最后一个元素送进来，且它正是当前三元组的最小值；此后它无法再变大，另外两个数只会更大——min 下不去、max 只会升，差距不可能再缩小，剩下的组合不用再试。</p>
+<h3>第二步（问 2）：算法描述（C 语言，与参考答案同口径）</h3>
+<ul><li>辅助函数 <code>abs(a)</code> 求绝对值；<code>minjg(a,b,c)</code> 用 <code>a&lt;=b &amp;&amp; a&lt;=c</code> 判断 a 是否为最小值（相等时按判断顺序移动其中一个指针，不会死循环）。</li><li>主体循环 <code>while (i&lt;n &amp;&amp; j&lt;m &amp;&amp; k&lt;p &amp;&amp; Dmin&gt;0)</code>：前半段是"三个指针都还在数组内"，后半段是"还没到 0 这个下界"。每轮 <code>D = abs(A[i]-B[j]) + abs(B[j]-C[k]) + abs(A[i]-C[k])</code>，<code>if (D &lt; Dmin) Dmin = D;</code>，再按最小值归属执行 <code>i++</code> / <code>j++</code> / <code>k++</code>。</li></ul>
+<p>用题给数据推演（D = 2×(max−min)）：</p>
 <table><thead><tr><th>轮</th><th>(a, b, c)</th><th>D</th><th>Dmin</th><th>动作</th></tr></thead><tbody><tr><td>1</td><td>(−1, −25, 2)</td><td>54</td><td>54</td><td>最小是 b，j 右移</td></tr><tr><td>2</td><td>(−1, −10, 2)</td><td>24</td><td>24</td><td>最小是 b，j 右移</td></tr><tr><td>3</td><td>(−1, 10, 2)</td><td>22</td><td>22</td><td>最小是 a，i 右移</td></tr><tr><td>4</td><td>(0, 10, 2)</td><td>20</td><td>20</td><td>最小是 a，i 右移</td></tr><tr><td>5</td><td>(9, 10, 2)</td><td>16</td><td>16</td><td>最小是 c，k 右移</td></tr><tr><td>6</td><td>(9, 10, 9)</td><td>2</td><td>2</td><td>i 右移后越界，结束</td></tr></tbody></table>
-<p>输出最小距离 <strong>2</strong>，对应三元组 <strong>(9, 10, 9)</strong>。</p>
-<h3>第三步（问 3）：复杂度分析</h3>
-<ul><li><strong>时间复杂度 O(n₁+n₂+n₃)</strong>：每个指针只单向前进，最多扫完自己的数组一次，总操作次数与三个数组长度之和成线性关系。</li><li><strong>空间复杂度 O(1)</strong>：仅用了 i、j、k、D、Dmin 等常量个辅助变量。</li></ul>
+<p>输出最小距离 <strong>2</strong>，对应三元组 <strong>(9, 10, 9)</strong>，与题目给的结果一致。</p>
+<h3>第三步（问 3）：时间与空间复杂度</h3>
+<ul><li><strong>时间 O(n₁+n₂+n₃)</strong>：每轮循环恰好有一个指针右移一格，指针从不回退，循环总次数不超过三个数组长度之和——每个元素至多被"当一次最小值"就轮过去了。</li><li><strong>空间 O(1)</strong>：只用了 i、j、k、D、Dmin 等常量个辅助变量，与数组规模无关。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>暴力三重循环</strong>：O(n₁n₂n₃) 结果正确但达不到"尽可能高效"的要求。</li><li><strong>移动错指针</strong>：右移"最大值"指针只会拉大 max−min，必须移动最小值指针。</li><li><strong>公式没化简</strong>：不点出 D = 2×(max−min)，就体现不出"三指针贪心"的设计思想。</li></ul>
-<blockquote>一句话：三指针齐头并进，谁小谁先走，max−min 越走越小。</blockquote></div></div>
+<ul><li><strong>暴力三重循环</strong>：结果正确但 O(n₁n₂n₃)，"尽可能高效"的分拿不到。</li><li><strong>移动最大值指针</strong>：max 只升不降，差距只会拉大——贪心方向反了。</li><li><strong>不化简公式直接开写</strong>：说不出"为什么动最小值指针"，设计思想这一问落空。</li><li><strong>忘记 <code>Dmin&gt;0</code> 提前退出</strong>：不算错，但丢了"0 是下界、不可能更优"这个收尾论据。</li></ul>
+<blockquote>一句话：先化简成 2×(max−min)，三指针齐头并进，谁小谁先走——只有抬高最小值才能缩小差距，谁到头或差为 0 就收工。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

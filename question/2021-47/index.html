@@ -107,22 +107,24 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：域名访问全过程中 DNS、ARP 与交换机自学习</h2>
-<h3>答题框架</h3>
-<p>先在草稿上还原 t0 → t1 的完整事件序列：<strong>ARP 找 DNS 服务器的 MAC → DNS 查询/应答 → ARP 找默认网关的 MAC → 发 HTTP 请求</strong>。三问都从这条时间线上取材。</p>
-<h3>第一问：除了 HTTP 还用了哪个应用层协议？如何封装？</h3>
-<p>浏览器手里只有域名 www.abc.com，必须先向本地域名服务器（192.168.1.126）发 <strong>DNS 查询</strong>。DNS 基于 UDP，封装链为：</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：域名访问全程中 DNS、ARP 与交换机自学习</h2>
+<h3>第 0 步：先立机制——一次 Web 访问前要先补齐哪些"地址"</h3>
+<p>H1 想把一个包发出去，帧里必须同时填好<strong>目的 IP</strong> 和<strong>目的 MAC</strong>。t₀ 时 H1 手里只有域名 www.abc.com，事件顺序被"缺什么补什么"推着走：</p>
+<ol><li><strong>域名 → IP</strong>：向本地域名服务器（192.168.1.126，与 H1 同网段）发 DNS 查询。但发帧还需要对方的 MAC，而 H1 的 <strong>ARP 表为空</strong> → 先<strong>广播 ARP 请求</strong>找 192.168.1.126 的 MAC（为什么必须广播：目的 MAC 未知，广播是唯一能问遍全网段的方式）；DNS 服务器<strong>单播</strong> ARP 应答——它从请求里已经拿到了 H1 的 MAC，可以定点回复。</li><li><strong>DNS 查询 / 应答</strong>（UDP）：拿到 Web 服务器的 IP。</li><li>Web 服务器在网外，包必须先交给<strong>默认网关</strong> 192.168.1.1（路由器 R）——H1 的 ARP 表里仍没有网关的 MAC → <strong>第二次 ARP 广播</strong>，路由器单播应答。</li><li>封装 <strong>HTTP 请求</strong>帧发出 → t₁。</li></ol>
+<p>为什么两次 ARP 找的不是同一个对象：DNS 服务器与 H1 同网段，可直接交付；www.abc.com 在网外，下一跳永远是网关。</p>
+<h3>第 1）问：另一个应用层协议与封装链</h3>
+<p>t₀ 到 t₁ 期间除 HTTP 外运行的协议是 <strong>DNS</strong>。DNS 基于 UDP，封装链：</p>
 <p><code>DNS 报文 → UDP 数据报 → IP 数据报 → 以太网帧</code></p>
-<p>对照记忆：HTTP 报文走 <code>HTTP → TCP → IP → 以太网帧</code>，差别在传输层。</p>
-<h3>第二问：t1 时刻 S 的交换表</h3>
-<p>交换机自学习规则：从端口 X 收到帧时，把"帧的<strong>源 MAC</strong> → 端口 X"写入交换表。逐帧记录：</p>
+<p>对照记忆：HTTP 报文走 <code>HTTP → TCP → IP → 以太网帧</code>，差别只在传输层。</p>
+<h3>第 2）问：t₁ 时刻 S 的交换表</h3>
+<p>自学习机制：交换机从端口 X 收到帧，就把"帧的<strong>源 MAC</strong> → X"写入交换表。为什么学的是源 MAC：交换机学习的目的是"以后往这个 MAC 发帧时知道从哪个端口出"，而回程方向与来帧相反——入端口的源 MAC 正是回程帧的去向。t₀ 到 t₁ 间触发学习的帧：</p>
 <table><thead><tr><th>触发学习的帧</th><th>进入端口</th><th>学到表项</th></tr></thead><tbody><tr><td>H1 的 ARP 查询广播</td><td>4</td><td>CC → 4</td></tr><tr><td>DNS 服务器的 ARP 应答</td><td>1</td><td>BB → 1</td></tr><tr><td>路由器 R 的 ARP 应答</td><td>2</td><td>AA → 2</td></tr></tbody></table>
-<p>（CC/BB/AA 即 <code>00-11-22-33-44-CC/BB/AA</code>。）此后的 DNS 查询/应答、HTTP 请求都是单播帧且表项已齐，只查表转发、不再新增。故 t1 时刻交换表为：<strong>CC→4、BB→1、AA→2</strong>。</p>
-<h3>第三问：H2 至少收到几个帧？</h3>
-<p>交换机对<strong>广播帧泛洪</strong>、对查到表项的单播帧定点转发。H2 挂在端口 3，只有泛洪才轮得到它。全程 H2 恰好赶上两次泛洪：H1 的两次 <strong>ARP 查询广播帧</strong>（一次找 DNS 服务器的 MAC，一次找网关 192.168.1.1 的 MAC），故至少收到 <strong>2 个帧</strong>，目的 MAC 均为 <code>FF-FF-FF-FF-FF-FF</code>。</p>
+<p>（CC/BB/AA 即 <code>00-11-22-33-44-CC/BB/AA</code>；ARP 应答虽是单播，源 MAC 同样触发学习。）之后的 DNS 查询/应答与 HTTP 请求都是表项已齐的单播帧，只查表转发、不再新增。故 t₁ 时刻交换表为：<strong>CC → 4、BB → 1、AA → 2</strong>。</p>
+<h3>第 3）问：H2 收到几个帧</h3>
+<p>交换机对<strong>广播帧泛洪</strong>（除入端口外全部转发）、对能查到表项的单播帧<strong>定点转发</strong>。H2 挂在端口 3，只有泛洪才轮得到它。时间线上 H2 恰好赶上两次泛洪——H1 的两次 <strong>ARP 查询广播帧</strong>（找 DNS 服务器 MAC、找网关 MAC），故至少收到 <strong>2 个帧</strong>，目的 MAC 均为 <code>FF-FF-FF-FF-FF-FF</code>。DNS/HTTP 都是单播帧，定点转发，H2 收不到。</p>
 <h3>易错点</h3>
-<ul><li><strong>把封装链答成 DNS → TCP → IP</strong>：DNS 用 UDP 不用 TCP。</li><li><strong>交换表漏记 BB 或 AA</strong>：ARP 应答虽是单播，但它的源 MAC 同样触发学习。</li><li><strong>认为 H2 会收到 DNS/HTTP 帧</strong>：这些是单播帧，交换机定点转发，H2 收不到。</li></ul>
-<blockquote>一句话：域名访问 = 先 DNS（UDP）后 HTTP（TCP）；交换表学的是"入端口的源 MAC"；H2 只能收到 ARP 查询广播帧，共 2 个，目的 MAC 全 F。</blockquote></div></div>
+<ul><li><strong>把封装链答成 DNS → TCP → IP</strong>：DNS 用 UDP 不用 TCP。</li><li><strong>交换表漏记 BB 或 AA</strong>：ARP 应答是单播，但源 MAC 照样触发学习。</li><li><strong>认为 H2 会收到 DNS/HTTP 帧</strong>：单播帧定点转发，泛洪的只有 ARP 查询。</li><li><strong>漏掉第二次 ARP</strong>：找 DNS 服务器和找默认网关是两次独立解析，各广播一次。</li></ul>
+<blockquote>一句话：域名访问 = 先 DNS（UDP）后 HTTP（TCP），中间夹两次 ARP 广播；交换表学"入端口的源 MAC"；H2 只收到 2 个目的 MAC 全 F 的 ARP 广播帧。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

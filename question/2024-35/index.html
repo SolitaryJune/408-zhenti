@@ -102,14 +102,14 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：VLAN 隔离广播域，ARP 表只会有同 VLAN 主机</h2>
-<p>答案：<strong>D</strong>。</p>
-<h3>第一步：读图确定各主机所在的 VLAN</h3>
-<p>交换机按端口划分 3 个 VLAN：VLAN1 含端口 1～5 与 13～17；VLAN2 含端口 6～8 与 18～20；VLAN3 含端口 9～12 与 21～24。各主机接入情况：</p>
+<p>答案：<strong>D</strong>（192.168.3.129 那条不可能出现）。</p>
+<h3>第一步：先立机制——ARP 表项从哪来，VLAN 挡住了什么</h3>
+<p>ARP 表靠<strong>广播</strong>建立：主机对某 IP 发 ARP 请求帧，请求在<strong>本广播域内泛洪</strong>，对应主机回 ARP 应答，双方把「IP，MAC，TTL」记入各自 ARP 表。VLAN 按端口把交换机切成多个广播域：广播帧（含 ARP 请求）只在同一 VLAN 内扩散，不同 VLAN 之间二层不通。所以 H4 的 ARP 表里只可能出现<strong>与它同 VLAN 主机</strong>的表项——判断每台主机的 VLAN 归属即可。</p>
+<h3>第二步：读图确定各主机的 VLAN</h3>
+<p>交换机按端口划分 3 个 VLAN：VLAN1 含端口 1～5 与 13～17；VLAN2 含端口 6～8 与 18～20；VLAN3 含端口 9～12 与 21～24。</p>
 <table><thead><tr><th>主机</th><th>接入端口</th><th>VLAN</th><th>IP 地址</th><th>MAC 地址</th></tr></thead><tbody><tr><td>H1</td><td>13</td><td>1</td><td>192.168.3.91</td><td>00-3E-C2-39-12-B5</td></tr><tr><td>H2</td><td>1</td><td>1</td><td>192.168.3.81</td><td>00-18-A2-3B-36-21</td></tr><tr><td>H3</td><td>2</td><td>1</td><td>192.168.3.125</td><td>00-E5-78-4A-09-B2</td></tr><tr><td>H4</td><td>5</td><td>1</td><td>192.168.3.12</td><td>00-35-6A-B1-4C-92</td></tr><tr><td>H5</td><td>8</td><td>2</td><td>192.168.3.251</td><td>00-1A-39-5B-E4-45</td></tr><tr><td>H6</td><td>9</td><td>3</td><td>192.168.3.129</td><td>00-08-6E-05-A7-82</td></tr><tr><td>H7</td><td>12</td><td>3</td><td>192.168.3.190</td><td>00-51-48-C9-63-A3</td></tr></tbody></table>
-<h3>第二步：明确 ARP 表项从哪来</h3>
-<p>ARP 请求帧是在<strong>本广播域内广播</strong>的；VLAN 的作用正是<strong>隔离广播域</strong>，广播帧不会跨 VLAN 扩散。H4 在 VLAN1，它的 ARP 表中只可能出现与它同 VLAN 主机的「IP，MAC，TTL」表项，即 H1、H2、H3（以及 H4 自己）。H4 与 H5、H6、H7 分属不同 VLAN，二层不通，不会出现它们的表项。</p>
 <h3>第三步：逐项核对</h3>
-<ul><li>A = 192.168.3.81 / 00-18-A2-3B-36-21 = H2（VLAN1）：可能出现</li><li>B = 192.168.3.91 / 00-3E-C2-39-12-B5 = H1（VLAN1）：可能出现</li><li>C = 192.168.3.125 / 00-E5-78-4A-09-B2 = H3（VLAN1）：可能出现</li><li>D = 192.168.3.129 / 00-08-6E-05-A7-82 = <strong>H6（VLAN3）</strong>：<strong>不可能出现</strong></li></ul>
+<ul><li>A = H2（VLAN1）：可能出现</li><li>B = H1（VLAN1）：可能出现</li><li>C = H3（VLAN1）：可能出现</li><li>D = <strong>H6（VLAN3）</strong>：ARP 广播到不了 VLAN3，<strong>不可能出现</strong>，选 <strong>D</strong>。</li></ul>
 <h3>易错点</h3>
 <ul><li><strong>按 IP 同网段误判</strong>：192.168.3.129 与 H4 的地址在同一 IP 网段，但被 VLAN 隔离，二层仍不可达，ARP 广播到不了 H6。</li><li><strong>只看 MAC 不查端口</strong>：D 的 MAC 属于接入端口 9 的 H6，端口 9 属 VLAN3。</li><li><strong>被 TTL 干扰</strong>：TTL 只是 ARP 表项的老化时间，与"会不会出现"无关。</li></ul>
 <blockquote>一句话结论：VLAN 隔离广播域，H4 的 ARP 表只含 VLAN1 主机（H1、H2、H3），H6 属 VLAN3 不可能出现，选 <strong>D</strong>。</blockquote></div></div>

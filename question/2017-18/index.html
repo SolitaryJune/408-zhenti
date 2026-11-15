@@ -102,15 +102,15 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：主存 MM 与控制存储器 CS 的对比</h2>
-<h3>第一步：列对比表</h3>
-<table><thead><tr><th>维度</th><th>主存 MM</th><th>控存 CS</th></tr></thead><tbody><tr><td>位置</td><td>CPU 外</td><td>CPU 内（微程序控制器中）</td></tr><tr><td>存放内容</td><td>指令和数据</td><td>微指令（微程序）</td></tr><tr><td>访问方式</td><td>按地址访问</td><td>按微地址访问</td></tr><tr><td>实现介质</td><td>RAM 和 ROM</td><td>ROM</td></tr></tbody></table>
-<h3>第二步：逐项核对找"错误"项</h3>
-<ul><li>A：MM 在 CPU 外，CS 在 CPU 内，与上表相符，正确。</li><li>B：说"MM 按地址访问，CS 按内容访问"——<strong>错</strong>。控存里的微指令也是按<strong>微地址</strong>逐条取出执行的；"按内容访问"是相联存储器（如 TLB）的特征。</li><li>C：MM 存指令和数据、CS 存微指令，正确。</li><li>D：MM 用 RAM 和 ROM 实现、CS 用 ROM 实现，正确。</li></ul>
-<h3>第三步：结论</h3>
-<p>错误的叙述是 B，<strong>答案：B</strong>。</p>
+<p><strong>答案：B</strong>（"MM 按地址访问，CS 按内容访问"错误）。</p>
+<h3>第零步：先立机制——控存是微程序控制器的"程序存放处"</h3>
+<p>采用微程序控制的 CPU 里，每条机器指令对应一段<strong>微程序</strong>，微程序由一串<strong>微指令</strong>组成，存放在 CPU 内部的<strong>控制存储器（CS）</strong>中。执行指令时，微地址寄存器给出微地址，从控存<strong>按微地址逐条取出</strong>微指令、发出微操作控制信号——微程序是顺序执行的，所以控存和主存一样<strong>按地址访问</strong>，只是这个地址叫"微地址"。控存内容出厂固化、只读不写，故用 ROM 实现。主存 MM 在 CPU 外、按主存地址访问、存指令和数据，用 RAM 和 ROM 实现。</p>
+<h3>第一步：对号入座</h3>
+<table><thead><tr><th>维度</th><th>主存 MM</th><th>控存 CS</th></tr></thead><tbody><tr><td>位置</td><td>CPU 外</td><td>CPU 内（微程序控制器中）</td></tr><tr><td>存放内容</td><td>指令和数据</td><td>微指令（微程序）</td></tr><tr><td>访问方式</td><td>按地址访问</td><td>按<strong>微地址</strong>访问</td></tr><tr><td>实现介质</td><td>RAM 和 ROM</td><td>ROM</td></tr></tbody></table>
+<p>A、C、D 与上表逐项相符；B 说"CS 按内容访问"——<strong>错</strong>。控存里的微指令按微地址顺序取出；"按内容访问"是<strong>相联存储器（CAM）</strong>的特征（TLB、Cache 标记比较用它），张冠李戴正是 B 的设错点。</p>
 <h3>易错点</h3>
-<ul><li><strong>把"按内容访问"张冠李戴到控存</strong>：那是相联存储器（CAM）、Cache 标记比较、TLB 的特征。</li><li><strong>以为 CS 也在 CPU 外</strong>：控存属于微程序控制器，位于 CPU 内部，程序员不能访问。</li></ul>
-<blockquote>记忆锚点：控存存微指令、在 CPU 内、按微地址访问。</blockquote></div></div>
+<ul><li><strong>把"按内容访问"安到控存头上</strong>：微程序顺序执行、给微地址取微指令，不需要也不存在按内容匹配。</li><li><strong>以为 CS 也在 CPU 外</strong>：控存属于微程序控制器，位于 CPU 内部，程序员不能访问。</li></ul>
+<blockquote>记忆锚点：控存 = CPU 内、ROM、存微指令、按<strong>微地址</strong>访问；"按内容访问"是相联存储器的专利。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

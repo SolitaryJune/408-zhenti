@@ -114,23 +114,24 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：机器级代码判 CISC、算代码长度、求 CF 标志、辨 shl 与 float</h2>
-<p><strong>答题框架</strong>：四个问分别对应 ①指令系统风格判别 ②用地址差算代码长度 ③补码加减器与借位标志 ④浮点格式与整数移位的区别。</p>
-<h3>第（1）问：RISC 还是 CISC</h3>
-<p>图中机器指令<strong>长短不一</strong>（不同指令占的字节数不同），不符合 RISC"指令定长、格式少、以 Load/Store 访存"的特征，所以计算机 M 是 <strong>CISC</strong>。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：CISC 判别、代码长度、cmp 的 CF 标志与 shl 不能移 float</h2>
+<p>答题框架：四个小问对应四块机制——①用 RISC/CISC 的<strong>指令系统特征</strong>判别 ②按字节编址下"末地址 − 首地址 + 1"算长度 ③补码加/减运算器如何产生进位/借位标志 ④整数移位与浮点表示的位串语义差异。</p>
+<h3>第（1）问：M 是 RISC 还是 CISC</h3>
+<p>先摆判据：<strong>RISC 的标志特征是指令定长、格式种类少、寻址方式少、只有 Load/Store 指令访存</strong>；CISC 反其道——指令长短不一、寻址方式复杂多样。看图中样例：<code>55</code>（1 字节）、<code>39 4D F4</code>（3 字节）、<code>D1 E2</code>（2 字节）、<code>C3</code>（1 字节）——<strong>指令长短不一</strong>，且 <code>cmp dword ptr [ebp-0Ch],ecx</code> 一条指令就带"寄存器间接 + 位移"寻址并直接访存。两者都不符合 RISC 特征，所以 M 是 <strong>CISC</strong>（x86 风格）。</p>
 <h3>第（2）问：机器指令代码共占多少字节</h3>
-<p>代码从第一条指令 push ebp 的 00401020H 开始，到最后一条指令 ret 的 0040107FH 结束（按字节编址）：</p>
+<p>机器代码<strong>连续存放</strong>、按字节编址，所以只看首尾：第一条 <code>push ebp</code> 在 00401020H，最后一条 <code>ret</code> 在 0040107FH，</p>
 <p><code>总字节数 = 0040107FH − 00401020H + 1 = 60H = 96 字节</code></p>
-<p>注意末尾要 <strong>+1</strong>：地址相减得到的是"间隔数"，首尾两条指令都要计入。</p>
+<p><strong>为什么末尾要 +1</strong>：地址相减得到的是"间隔数"（好比 5 根手指之间只有 4 个间隔），00401020H 自身这个字节也要计入，差 1 就少算一条指令的字节。</p>
 <h3>第（3）问：i=0 时 cmp 之后 CF 的内容</h3>
-<p>执行 f1(0)：n=0、i=0；由于 n 是 unsigned，条件中的 <code>n−1</code> 下溢为 FFFFFFFFH。cmp 指令做减法 <code>i − (n−1)</code> = <code>0 − FFFFFFFFH</code>。补码加/减运算器把减法化为"加补"：</p>
-<p><code>0 + FFFFFFFFH 各位取反(=00000000H) + 1 = 00000001H</code></p>
-<p>最高位无进位，进位输出 C = 0；减法的借位标志 CF = 进位输出取反，故 <strong>CF = 1</strong>（不够减、有借位）。</p>
+<p>执行 f1(0)：n=0、i=0。第 20 条 <code>cmp</code> 做减法 <code>i − (n−1)</code>，由于 n 是 unsigned，<code>n−1</code> 下溢为 FFFFFFFFH（模 2^32 运算，见题 43 第(1)问）。<strong>cmp 不写回结果，只做减法并设标志</strong>。</p>
+<p>减法在补码加/减运算器中化为"加负数的补码"：0 − FFFFFFFFH = 0 + (FFFFFFFH 按位取反 = 00000000H) + 1 = 00000001H，<strong>最高位进位输出 C = 0</strong>。</p>
+<p><strong>为什么减法的借位标志 CF = 进位输出取反？</strong> 无符号减法 A − B "够减" ⟺ A ≥ B ⟺ A + (2^32 − 1 − B) + 1 ≥ 2^32 ⟺ 这趟加法在最高位<strong>有进位</strong>。于是"无进位 ⟺ 不够减（有借位）"，硬件就把减法的 CF 接成进位输出取反。本题 C = 0 → <strong>CF = 1</strong>——直觉也对得上：0 &lt; FFFFFFFFH，确实不够减、要借位。</p>
 <h3>第（4）问：f2 中能否用 shl 实现 power × 2</h3>
-<p>不能。f2 中 power 是 float 型变量，其 32 位机器数按"符号 + 8 位阶码 + 23 位尾数"解释；shl 是整数移位指令，把整个位串左移 1 位（对整数等价于乘 2），但不能正确处理浮点数的阶码——左移后位型不再表示 2 倍的浮点值。浮点乘 2 应使用浮点乘法指令完成。</p>
+<p><strong>不能</strong>。先看整数为什么可以：补码每一位的位权是相邻低位的 2 倍，整体左移 1 位相当于所有位权升一级、空位补 0，数值恰好 ×2（不溢出时）——<code>shl</code> 移的是<strong>整个位串</strong>。</p>
+<p>而 float 的 32 位位串不是"数位"，是<strong>符号｜8 位阶码｜23 位尾数</strong>三段拼接；浮点 ×2 的正确动作是<strong>阶码加 1、尾数不动</strong>。用 shl 整体左移会把三段一起错位：符号位被阶码顶掉、阶码与尾数相互串位，得到的位串不再表示 2 倍的值。举个本题之外的实例看清破坏力：<code>1.0f</code> 的机器数是 3F800000H，浮点 ×2 应得 2.0f = 40000000H；而 shl 左移一位得 7F000000H，按 float 解读是 2^127——面目全非。所以 f2 中 power（float）×2 必须交给浮点乘法/浮点部件，不能挪用整数移位指令。</p>
 <h3>易错点</h3>
-<ul><li><strong>算代码长度忘了 +1</strong>：0040107FH − 00401020H = 5FH，加 1 才是 60H = 96。</li><li><strong>CF 直接取进位输出</strong>：减法的借位标志 CF 与加法进位 C 相反，本题 C=0 → CF=1。</li><li><strong>把整数移位套到 float 上</strong>：shl 移的是机器数位串，不是数值本身，阶码会被破坏。</li></ul>
-<blockquote>一句话：长短不一判 CISC，地址差 + 1 算长度，减法 CF = 进位取反，float 不能整体左移。</blockquote></div></div>
+<ul><li><strong>算代码长度忘了 +1</strong>：0040107FH − 00401020H = 5FH，加 1 才是 60H = 96 字节。</li><li><strong>CF 直接抄进位输出</strong>：减法借位与加法进位方向相反，本题 C=0 → CF=1；直接写 CF=0 是把加法规则套到了减法上。</li><li><strong>忘记先做 n−1 的下溢</strong>：cmp 比的是 i 与 FFFFFFFFH，不是 i 与 −1——unsigned 的模运算要先算进条件里。</li><li><strong>把"位串左移"当"数值乘 2"用于 float</strong>：float 的机器数是分段编码，×2 靠阶码 +1，不是移位。</li></ul>
+<blockquote>一句话：长短不一判 CISC，地址差 +1 算长度（96B），减法 CF = 进位输出取反（本题 CF=1），float ×2 动阶码不动位串、shl 用不得。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

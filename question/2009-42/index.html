@@ -129,17 +129,21 @@ int Search_k(LinkList list, int k) {
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单链表倒数第 k 个结点 —— 双指针一次遍历</h2>
-<h3>第一步：审题，确定效率目标</h3>
-<p>带头结点的单链表只给头指针 list，且<strong>不改变链表</strong>。要「尽可能高效」，就不能先遍历一遍求表长、再第二遍定位，目标是<strong>一次遍历、常数个辅助变量</strong>——这指向<strong>双指针（快慢指针）法</strong>。</p>
-<h3>第二步：问 1 —— 基本设计思想</h3>
-<p>设 p、q 两个指针，初始都指向第一个结点（list 的后继）。让 p 先沿链走 k 步，之后 p、q <strong>同步后移</strong>，两者始终保持 k 个结点的间距。当 p 到达链尾（为 NULL）时，q 恰好停在倒数第 k 个结点上。若 p 在走满 k 步之前就到达链尾，说明 k 超过表长，查找失败。</p>
-<h3>第三步：问 2 —— 详细实现步骤</h3>
-<ol><li>初始化：p = q = list 的后继（第一个结点），计数器 count = 0。</li><li>当 p 不为空时循环：若 count &lt; k，则 p 后移一步、count 加 1（p 先行）；否则 p、q 各后移一步（同步走）。</li><li>循环结束后：若 count = k，q 即倒数第 k 个结点，输出其 data 并返回 1；若 count &lt; k，说明 k 超出表长，返回 0。</li></ol>
-<h3>第四步：问 3 —— C 语言实现</h3>
-<table><thead><tr><th>行</th><th>代码</th></tr></thead><tbody><tr><td>1</td><td><code>typedef struct LNode { int data; struct LNode *link; } *LinkList;</code></td></tr><tr><td>2</td><td><code>int Search_k(LinkList list, int k) {</code></td></tr><tr><td>3</td><td><code>LinkList p = list-&gt;link, q = list-&gt;link;  // 初始指向第一个结点</code></td></tr><tr><td>4</td><td><code>int count = 0;</code></td></tr><tr><td>5</td><td><code>while (p != NULL) {</code></td></tr><tr><td>6</td><td><code>if (count &lt; k) { p = p-&gt;link; count++; }  // p 先前进 k 步</code></td></tr><tr><td>7</td><td><code>else { p = p-&gt;link; q = q-&gt;link; }  // 之后 p 和 q 同步前进</code></td></tr><tr><td>8</td><td><code>}</code></td></tr><tr><td>9</td><td><code>if (count == k) { printf("%d", q-&gt;data); return 1; }  // 链表长度大于等于 k</code></td></tr><tr><td>10</td><td><code>return 0;  // k 超出链表长度</code></td></tr><tr><td>11</td><td><code>}</code></td></tr></tbody></table>
+<h3>第 0 步：机制先行——「倒数第 k」为什么难，双指针为什么行</h3>
+<p>单链表只能沿 link 单向走、<strong>不能随机访问</strong>，「倒数第 k 个」没有现成地址可算。直觉做法是两趟：先数出表长 n，再从头走 n−k+1 步。但链表一遍走完之前<strong>无法先知 n</strong>，而题目要求「尽可能高效」——所以要把「倒数」换成另一种度量方式。</p>
+<p>双指针的机制一句话：<strong>用「距链尾的距离」定义「倒数」</strong>。让 p 先走 k 步，在链上制造出一段固定间隔，然后 p、q 同步前进、间隔保持；当 p 越过链尾（p == NULL）时，q 距链尾恰好 k 个结点——这正是倒数第 k 个。</p>
+<p>这套机制靠三条推理支撑，也是最容易被追问的三个「为什么」：</p>
+<ul><li><strong>为什么间隔是 k？</strong> p 先行阶段每步只动 p 不动 q，p 比 q 多走 1 步/次，走 k 次后两者恰好相差 k 步。</li><li><strong>为什么间隔一直不变？</strong>（循环不变量）同步阶段 p、q 每轮各前移 1 步，走过的步数始终相同，差值自然保持 k。</li><li><strong>为什么 p == NULL 时 q 就是倒数第 k 个？</strong> 设表长 n，p == NULL 说明 p 已越过最后一个结点；q 比 p 落后 k 步，故 q 停在第 n−k+1 个结点，从后往前数正是第 k 个。举例验证：表长 5、k = 2——p 先行 2 步后指向第 3 个结点；同步走 3 步后 p 变 NULL，q 从第 1 个走到第 4 个，倒数第 2 个恰是第 4 个。✔</li></ul>
+<p><strong>为什么用 count 判失败？</strong> count 只在 p 先行阶段累加。若表长不足 k，p 没走满 k 步就越过了链尾，循环结束时 count &lt; k——「间隔没能建成」就是 k 非法的信号，返回 0。</p>
+<h3>问 1：算法的基本设计思想</h3>
+<p>设 p、q 初始均指向第一个结点。p 先沿链走 k 步（若中途 p 为空，说明 k 超过表长，查找失败）；随后 p、q 同步后移、保持间隔 k；当 p 到达链尾（NULL）时，q 所指即倒数第 k 个结点。全程<strong>一遍遍历</strong>，时间 O(n)，辅助变量仅常数个——这比两趟法（先求表长再定位）少一整趟扫描，是「尽可能高效」的落点。</p>
+<h3>问 2：详细实现步骤</h3>
+<ol><li>初始化：p = list 的后继，q = list 的后继（带头结点，第一个数据结点是头结点的后继），计数器 count = 0。</li><li>当 p 不为空时循环：若 count &lt; k，只让 p 后移一步、count 加 1（p 先行建间隔）；否则 p、q 同时后移一步（间隔已建成，同步走）。</li><li>循环结束后：若 count = k，q 即倒数第 k 个结点，输出 q 的 data 域并返回 1；若 count &lt; k，说明 k 超出表长，返回 0。</li></ol>
+<h3>问 3：C 语言实现（关键处有注释）</h3>
+<table><thead><tr><th>行</th><th>代码</th></tr></thead><tbody><tr><td>1</td><td><code>typedef struct LNode { int data; struct LNode *link; } *LinkList;</code></td></tr><tr><td>2</td><td><code>int Search_k(LinkList list, int k) {</code></td></tr><tr><td>3</td><td><code>    LinkList p = list-&gt;link, q = list-&gt;link;  // 均指向第一个结点</code></td></tr><tr><td>4</td><td><code>    int count = 0;</code></td></tr><tr><td>5</td><td><code>    while (p != NULL) {</code></td></tr><tr><td>6</td><td><code>        if (count &lt; k) { p = p-&gt;link; count++; }   // p 先行，建间隔 k</code></td></tr><tr><td>7</td><td><code>        else { p = p-&gt;link; q = q-&gt;link; }         // 间隔建成，同步前进</code></td></tr><tr><td>8</td><td><code>    }</code></td></tr><tr><td>9</td><td><code>    if (count == k) { printf("%d", q-&gt;data); return 1; }  // 表长≥k，查找成功</code></td></tr><tr><td>10</td><td><code>    return 0;   // k 超出表长</code></td></tr><tr><td>11</td><td><code>}</code></td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>两趟遍历</strong>：先求表长再定位虽正确，但不满足「尽可能高效」的要求，按次优解扣分。</li><li><strong>丢边界</strong>：忘记判 k 大于表长的情况（count &lt; k 时必须返回 0）。</li><li><strong>起点弄错</strong>：带头结点的链表第一个结点是 list 的后继，不是 list 本身。</li></ul>
-<blockquote>一句话结论：双指针保持 k 的间距一次遍历定位倒数第 k 个结点，时间 O(n)、空间 O(1)。</blockquote></div></div>
+<ul><li><strong>两趟遍历</strong>：先求表长再定位，结果正确但违背「尽可能高效」，按次优解扣分。</li><li><strong>丢失败分支</strong>：count &lt; k 时必须返回 0，漏判会继续解引用空指针。</li><li><strong>起点弄错</strong>：带头结点的链表第一个数据结点是 list 的后继，从 list 本身出发整条间隔错一位。</li><li><strong>间隔语义记反</strong>：p 先行 k 步、p 触底时 q 距链尾 k 个结点，对应「倒数第 k」；不要在先行步数上多加或少加 1。</li></ul>
+<blockquote>一句话结论：p 先走 k 步建间隔，p、q 同步走到 p 越过链尾，q 即倒数第 k 个结点；一次遍历 O(n)、空间 O(1)，count 判 k 是否合法。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

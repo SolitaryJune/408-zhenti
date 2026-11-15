@@ -107,25 +107,32 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：给定数据通路的部件识别与控制信号取值</h2>
-<p>数据通路要点：①、② 分别是 GPRs 读地址端口 ra、rb 前的多路选择器（① 在 IR.rt 与 15 之间选择，② 在 IR.rs 与 0 之间选择）；扩展器把 IR11~0（12 位）扩成 16 位，送 ALU 的 B 端三选一多路选择器（输入 0=busB、1=常数 2、2=扩展器输出）；MARsrc 在 PC（0）与 ALU 输出（1）间选 MAR 来源；RegWsrc 在 MDR（0）与 ALU 输出（1）间选 busW；RegDst 在 0 与 IR.rt 间选写入端口号 rw。</p>
-<h3>第（1）问：①② 的部件名称（1 分）</h3>
-<p>①和②都是<strong>多路选择器（MUX）</strong>：多输入单输出，由控制信号选择把哪个输入送上端口。</p>
-<h3>第（2）问：ExtOp 至少几位（2 分）</h3>
-<p>扩展器输入固定是 IR11~0，需支持 <strong>3 种</strong>扩展情况：</p>
-<ol><li>I 型 imm8 为无符号数：对 IR7~0 零扩展（高位补 0）；</li><li>I 型 imm8 为带符号数：对 IR7~0 符号扩展（高位补 IR7）；</li><li>M 型 offset 为带符号数：对 IR11~0 符号扩展（高位补 IR11）。</li></ol>
-<p>三种情况须用不同编码区分，2 位编码有 4 种组合 ≥ 3 → ExtOp 至少 <strong>2 位</strong>。</p>
-<h3>第（3）问：取指周期 4 个信号（4 分）</h3>
-<p>取指要完成 M[PC] 读出送 IR，并在同一周期内完成 PC 增量：</p>
-<table><thead><tr><th>信号</th><th>取值</th><th>理由</th></tr></thead><tbody><tr><td>MARsrc</td><td>0</td><td>MAR←PC（选 PC 那路）</td></tr><tr><td>ALUAsrc</td><td>0</td><td>A←PC，让 ALU 计算加法</td></tr><tr><td>ALUBsrc</td><td>01</td><td>B←常数 2（输入 1，两位编码 01）</td></tr><tr><td>RegWr</td><td>0</td><td>取指不写通用寄存器</td></tr></tbody></table>
-<p>ALU 输出 PC+2 经 PCin 写回 PC，满足"取指周期内完成 PC 增量"。</p>
-<h3>第（4）问：左移指令执行周期（6 分）</h3>
-<p>左移是 R 型：R[rt]←R[rt] 左移 num 位，num 在 IR7~4。</p>
-<table><thead><tr><th>信号</th><th>取值</th><th>理由</th></tr></thead><tbody><tr><td>ALUBsrc</td><td>10</td><td>B←扩展器输出（输入 2，两位编码 10），其 bits 7~4 即 num</td></tr><tr><td>RegWsrc</td><td>1</td><td>结果来自 ALU 输出</td></tr><tr><td>RegDst</td><td>1</td><td>rw←IR.rt，目的寄存器是 rt</td></tr><tr><td>RegWr</td><td>1</td><td>允许写回</td></tr></tbody></table>
-<p><strong>ExtOp 可以与 M 型指令取值相同</strong>：num 位于 IR7~4，扩展器无论对 IR11~0 做符号扩展还是零扩展，都不会改变 IR7~4 这几位，故左移指令对 ExtOp 取值不敏感，可任意（含与 M 型相同）。</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：数据通路的部件识别与控制信号取值</h2>
+<h3>第 0 步：底层机制——数据通路 = 存储部件 + 运算部件 + 选择部件</h3>
+<p>先立模型。数据只能沿固定导线流动，这条通路由三类部件搭成：</p>
+<ul><li><strong>存储部件</strong>：PC、IR、GPRs（通用寄存器组，读端口 ra/rb、写端口 rw）、MAR、MDR；</li><li><strong>运算部件</strong>：ALU（A、B 两个输入端）、扩展器（把 IR11~0 这 12 位扩成 16 位，怎么扩由 ExtOp 控制）；</li><li><strong>选择部件</strong>：一组多路选择器（MUX）加写使能。<strong>MUX 决定"谁上路"，写使能决定"谁落笔"</strong>。</li></ul>
+<p>图中几处关键选择点（后面逐问对号入座）：</p>
+<table><thead><tr><th>选择点</th><th>输入选项</th><th>控制信号</th></tr></thead><tbody><tr><td>GPRs 读端口 ra</td><td>IR.rt 或 15（M 型访存基址固定 R15）</td><td>①（MUX）</td></tr><tr><td>GPRs 读端口 rb</td><td>IR.rs 或 0（M 型存数固定读 R0）</td><td>②（MUX）</td></tr><tr><td>GPRs 写端口 rw</td><td>0 或 IR.rt</td><td>RegDst</td></tr><tr><td>ALU 的 A 端</td><td>PC（输入 0）或 busA（输入 1）</td><td>ALUAsrc</td></tr><tr><td>ALU 的 B 端</td><td>busB（0）、常数 2（1）、扩展器输出（2）</td><td>ALUBsrc（两位编码 00/01/10）</td></tr><tr><td>MAR</td><td>PC（0）或 ALU 输出（1）</td><td>MARsrc</td></tr><tr><td>busW（写 GPRs 的数据）</td><td>ALU 输出（1）或 MDR（0）</td><td>RegWsrc</td></tr></tbody></table>
+<p><strong>预答一个总问题：为什么连"PC 加 2"都要用 ALU？</strong> 这条通路只有 ALU 一个运算部件，没有专用加法器——取指周期"顺路"让 A 端接 PC、B 端接常数 2，ALU 算出 PC+2 经 PCin 写回 PC。这也解释了取指周期 A、B 端选择信号的取值为什么是"接 PC"和"接常数 2"。</p>
+<h3>第（1）问（1 分）：①②是什么部件</h3>
+<p>都是<strong>多路选择器（MUX）</strong>。识别特征：多根输入线汇到一个选择符号、单线输出、由控制信号选通。为什么 GPRs 的读端口前必须放它：ra/rb 的来源不止一种——执行 R 型时来自 IR.rt/IR.rs，M 型访存时要固定成 15/0——端口只有一个，必须"选"。</p>
+<h3>第（2）问（2 分）：ExtOp 至少几位</h3>
+<p>扩展器的输入固定是 IR11~0，但"扩成 16 位"的正确做法取决于字段语义，共 <strong>3 种</strong>互不相同的动作：</p>
+<ol><li>I 型 imm8 为无符号数：对低 8 位 IR7~0 <strong>零扩展</strong>（bits15~8 补 0）；</li><li>I 型 imm8 为带符号数：对 IR7~0 <strong>符号扩展</strong>（bits15~8 补 IR7）；</li><li>M 型 offset 为带符号数：对 IR11~0 整体<strong>符号扩展</strong>（bits15~12 补 IR11）。</li></ol>
+<p><strong>为什么不能合并成两种？</strong> 若 I 型带符号 imm8 也按 IR11~0 整体做符号扩展，高位补的是 IR11（那是 rt 字段的最高位）而不是 IR7——例如 imm8=FFH（−1）会被扩成 000FH（+15）而不是 FFFFH（−1），数值全错。所以 I 型带符号必须单列。</p>
+<p><strong>为什么 1 位不够、2 位够？</strong> 1 位只有 2 种编码，装不下 3 种动作；2 位有 4 种 ≥ 3。故 ExtOp 至少 <strong>2 位</strong>。</p>
+<h3>第（3）问（4 分）：取指周期</h3>
+<p>叙事先行——取指周期要同时干两件事：把 M[PC] 读进 IR，并在同一周期完成 PC 增量（题设要求）。顺着数据流走一遍：MARsrc=0 让 MAR←PC；主存按该地址读出指令，经 DBus/MDR 写入 IR；与此同时 ALUAsrc=0 让 A 端接 PC、ALUBsrc=01 让 B 端接常数 2，ALU 输出 PC+2 经 PCin 写回 PC。</p>
+<p><strong>为什么 RegWr=0</strong>：取指不写 GPRs。此刻 IR 里是刚取来的指令本身，若写使能开着，指令字会被当成数据写进寄存器组，直接污染现场——写使能默认关闭、按需置 1 是控制信号设计的通行原则。</p>
+<table><thead><tr><th>信号</th><th>取值</th><th>作用</th></tr></thead><tbody><tr><td>MARsrc</td><td>0</td><td>MAR←PC，给出取指地址</td></tr><tr><td>ALUAsrc</td><td>0</td><td>A 端接 PC，供增量运算</td></tr><tr><td>ALUBsrc</td><td>01</td><td>B 端接常数 2（输入 1 的两位编码）</td></tr><tr><td>RegWr</td><td>0</td><td>本周期不写通用寄存器</td></tr></tbody></table>
+<h3>第（4）问（6 分）：左移指令执行周期</h3>
+<p>左移是 R 型：R[rt] ← R[rt] 左移 num 位，num 藏在 rs/num 字段即 IR7~4。数据流：① 选 IR.rt 作 ra，busA=R[rt] 进 A 端；移位量不在任何寄存器里、只在指令里 → 只能取自扩展器输出，ALUBsrc=10（B 端输入 2 的编码）；扩展器把 IR11~0 补满 16 位后其 bits7~4 恰是 num，移位部件从中取量；结果从 ALU 输出走 busW 写回 GPRs，目的寄存器是 rt。</p>
+<table><thead><tr><th>信号</th><th>取值</th><th>作用</th></tr></thead><tbody><tr><td>ALUBsrc</td><td>10</td><td>B 端接扩展器输出（输入 2），其 bits7~4 为 num</td></tr><tr><td>RegWsrc</td><td>1</td><td>busW←ALU 输出（本指令不访存，不经 MDR）</td></tr><tr><td>RegDst</td><td>1</td><td>rw←IR.rt，结果写回 rt</td></tr><tr><td>RegWr</td><td>1</td><td>结果落笔</td></tr></tbody></table>
+<p><strong>为什么 RegDst=1</strong>：目的寄存器是 rt，不是固定编号——正因为 R 型的写回位置随指令变，而 M 型固定用 R0/R15，RegDst 这个选择器才需要"IR.rt"这个输入。</p>
+<p><strong>ExtOp 可以与 M 型指令取值相同吗？——可以。</strong> 扩展器动的是 IR11~0 的高位：符号扩展补 IR11 的副本、零扩展补 0，都只改 bits15~12；IR7~4 在任何一种扩展下都原样保留在扩展结果的 bits7~4 上。左移量恰取自 bits7~4，两种扩展给出一模一样的移位量——左移指令对 ExtOp 取值<strong>不敏感</strong>，取任意值（含与 M 型相同的那个）都正确。</p>
 <h3>易错点</h3>
-<ul><li><strong>取指周期 MARsrc 选成 ALU 输出</strong>：ALU 输出是 PC+2，读指令必须用 PC 本身，对应 MARsrc=0。</li><li><strong>ALUBsrc 与一位信号混写</strong>：ALUBsrc 是 2 位编码（00/01/10 对应 busB/常数 2/扩展器），其余信号是一位 0/1。</li><li><strong>左移指令 RegDst 忘置 1</strong>：目的寄存器是 rt，不是 R0。</li><li><strong>以为左移必须指定符号/零扩展</strong>：扩展方式不影响 IR7~4，ExtOp 取值任意。</li></ul>
-<blockquote>答案：（3）MARsrc=0、ALUAsrc=0、ALUBsrc=01、RegWr=0；（4）ALUBsrc=10、RegWsrc=1、RegDst=1、RegWr=1，ExtOp 可与 M 型相同。</blockquote></div></div>
+<ul><li><strong>取指周期 MARsrc 选成 1</strong>：ALU 输出是 PC+2，读指令必须用 PC 本身，对应 MARsrc=0。</li><li><strong>ALUBsrc 写成一位</strong>：它面对 3 个输入，是两位编码 00/01/10；其余信号多为一位 0/1。</li><li><strong>左移指令 RegDst 忘置 1</strong>：结果要写 rt，写错就落到 R0。</li><li><strong>以为左移必须指定扩展方式</strong>：扩展只动高位、不影响 IR7~4，ExtOp 取值任意。</li></ul>
+<blockquote>记忆锚点：MUX 管"谁上路"、写使能管"谁落笔"；取指 = MAR←PC + ALU 算 PC+2；移位量藏在指令里 → 走扩展器 → ALUBsrc=10；扩展只动高位、IR7~4 永不动 → 左移不挑 ExtOp。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

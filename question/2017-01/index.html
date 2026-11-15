@@ -109,17 +109,16 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：循环执行次数与时间复杂度</h2>
 <p><strong>答案：B</strong>（O(n^1/2)，即 n 的平方根量级）。</p>
-<h3>第一步：看懂循环在累加什么</h3>
-<p><code>sum += ++i</code> 中 <code>++i</code> 先把 i 加 1 再参与加法。第 1 轮结束 i=1、sum=1；第 2 轮 i=2、sum=3；第 3 轮 sum=6……第 k 轮结束时 sum = 1+2+…+k = k(k+1)/2。</p>
+<h3>第零步：先立机制——这一轮循环到底在攒什么</h3>
+<p>复杂度由循环执行次数决定，而执行次数由 <code>sum</code> 的增长规律决定。每轮执行 <code>sum += ++i</code>：<code>++i</code> 先把 i 加 1，再加进 sum，所以第 1 轮加 1、第 2 轮加 2……第 k 轮加 k，第 k 轮结束时 sum = 1+2+…+k = k(k+1)/2（三角形数）。于是复杂度问题转化成：<strong>三角形数何时首次达到 n</strong>——循环退出时 k 是多少，执行次数就是多少。</p>
 <table><thead><tr><th>轮数 k</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>轮末 sum</td><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td></tr></tbody></table>
-<h3>第二步：解出循环执行轮数</h3>
-<p>循环条件是 <code>sum &lt; n</code>，所以循环恰好执行 K 轮等价于：(K−1)K/2 &lt; n 且 K(K+1)/2 ≥ n。由 K(K+1)/2 ≥ n 得 K ≈ √(2n)，即执行次数与 √n 同阶。</p>
-<p>数值验证：n=100 时 K=14（14×15/2=105 首次 ≥ 100，√200≈14.1）；n=1000000 时 K=1414。</p>
-<h3>第三步：下结论</h3>
-<p>执行次数 T(n) ≈ √(2n)，故时间复杂度为 <strong>O(n^1/2)</strong>，选 <strong>B</strong>。</p>
+<h3>第一步：解出循环轮数</h3>
+<p>循环条件 <code>sum &lt; n</code>：恰好执行 K 轮意味着 (K−1)K/2 &lt; n ≤ K(K+1)/2，即第 K 轮把 sum 顶过 n。由 K(K+1)/2 ≥ n 得 K ≈ √(2n)。数值验证：n=100 时 K=14（14×15/2=105 首次 ≥ 100，√200≈14.1）；n=1000000 时 K=1414。</p>
+<h3>第二步：为什么记作 O(n^1/2) 而不是别的</h3>
+<p>T(n) ≈ √(2n) = √2·n^1/2。大 O 只保留增长最快的因子，<strong>常数因子直接吸收</strong>——√2 与 n 无关，量级由 n^1/2 决定 → <strong>O(n^1/2)</strong>。再排除其余选项：对数 log n 增长远慢于 n^1/2（n=10⁶ 时 log₂n≈20，而这里要走 1414 轮），A 不可能；n 与 nlog n 又明显偏大，C、D 排除。</p>
 <h3>易错点</h3>
-<ul><li><strong>只盯循环变量 i 的写法</strong>：i 最终约等于 √(2n) 而不是 n，按 O(n) 估就会误选 C。</li><li><strong>忽略循环条件的位置</strong>：<code>while(sum &lt; n)</code> 每轮先判断再累加，执行 K 轮的边界是"三角形数首次 ≥ n"。</li></ul>
-<blockquote>一句话结论：三角形数 k(k+1)/2 首次达到 n 时 k ≈ √(2n)，所以是 O(n^1/2)。</blockquote></div></div>
+<ul><li><strong>只盯循环变量 i 的写法</strong>：i 最终约等于 √(2n) 而不是 n，按 O(n) 估就会误选 C。</li><li><strong>被系数吓住</strong>：算出 √(2n) 后纠结"2n 不是 n"，忘记常数进不了大 O，在 B 与其他项之间摇摆。</li><li><strong>忽略循环条件的位置</strong>：<code>while(sum &lt; n)</code> 先判断再累加，退出时刻是"三角形数首次 ≥ n"。</li></ul>
+<blockquote>一句话结论：第 k 轮攒到三角形数 k(k+1)/2，首次 ≥ n 时 k ≈ √(2n)；常数 √2 不影响量级，复杂度 O(n^1/2)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

@@ -107,28 +107,28 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：RIP/OSPF 选型、TTL、RIP 收敛与 BGP 选路（2024 大题）</h2>
-<p>题目背景：AS1 内部网关协议为 RIP（每 30 s 交换一次距离向量）；AS3 内任意两主机通信经过路由器数不超过 15 个；AS4 内可能超过 20 个。网络 136.5.16.0/20 由 AS2 的 R22、AS3 的 R33、AS4 的 R44 一侧可达。</p>
-<h3>第（1）问：AS4 应选哪个内部网关协议</h3>
-<p><strong>答题框架</strong>：先看协议的适用规模限制，再对照 AS4 的规模描述。</p>
-<p>RIP 规定最大距离为 15（16 表示不可达），只适合小网络；OSPF 没有跳数限制。AS4 内任意两主机通信经过的路由器数<strong>可能超过 20 个</strong>，超出 RIP 的 15 跳上限，故 AS4 应选择 <strong>OSPF</strong>。</p>
-<h3>第（2）问：AS3 内通信的初始 TTL 至少多少</h3>
-<p><strong>答题框架</strong>：TTL 每经过一个路由器减 1，减为 0 就丢弃；用「最多经过的路由器数 + 1」定下限。</p>
-<p>AS3 内通信最多经过 15 个路由器。若初始 TTL = 15，经过 15 个路由器后 TTL 减为 0，分组会在到达目的主机前被丢弃；因此初始 TTL 至少要 <strong>16</strong>，最坏情况下也能正常到达被接收。</p>
-<h3>第（3）问：R11～R16 均获正确路由至少需要多久</h3>
-<p><strong>答题框架</strong>：RIP 每 30 s 交换一次距离向量，且每轮交换发送的是<strong>更新前</strong>的路由表，信息一轮只前进一跳；对每个目的网络分别推演扩散轮数。</p>
-<ul><li><strong>210.2.3.0/24 直连 R14</strong>：初始距离向量交换（t = 0）后，邻居 R11、R15 即获得正确路由；t = 30 s 第一次周期交换后，R12（经 R11）、R13（经 R15）、R16（经 R15）也获得。此时 R11～R16 均正确 → <strong>至少 30 s</strong>。</li><li><strong>210.2.4.0/24 直连 R16</strong>：初始交换后 R13、R15 获得；t = 30 s 交换后 R12（经 R13）、R14（经 R15）获得，但 R11 的邻居 R12、R14 在那一轮交换的仍是各自旧表，R11 仍未获得；到 t = 60 s 第二次周期交换时 R11 才获得 → <strong>至少 60 s</strong>。</li></ul>
-<h3>第（4）问：BGP 会话类型与报文</h3>
-<p><strong>答题框架</strong>：先分清通信双方是否同属一个 AS，再对应外部/内部会话与报文类型。</p>
-<p>R44（AS4）与 R13（AS1）分属不同 AS，向 R13 通告到达网络 136.5.16.0/20 的路由由 <strong>BGP 外部会话（eBGP）</strong> 完成；通告使用 <strong>UPDATE 报文</strong>。R13 与 R14、R15 同属 AS1，R13 通过 <strong>BGP 内部会话（iBGP）</strong> 把该可达性信息通告给 R14 和 R15。</p>
-<h3>第（5）问：R14、R15 更新后的下一跳</h3>
-<p><strong>答题框架</strong>：BGP 选路先比 AS 路径条数（最短优先）；等长时再比到下一跳的 IGP 开销（AS1 内即 RIP 距离）。</p>
-<p>三条可达信息：经 R11 的 AS 路径 AS2 AS8 AS19（3 个 AS）；经 R13 的 AS4 AS10 AS19（3 个 AS）；经 R12 的 AS3 AS7 AS11 AS19（4 个 AS）——经 R12 的路径最长，先被淘汰。经 R11 与经 R13 的 AS 路径等长，比较到下一跳的 RIP 距离：</p>
-<table><thead><tr><th>路由器</th><th>到 R11</th><th>到 R13</th><th>选择的下一跳</th></tr></thead><tbody><tr><td>R14</td><td>1（直连）</td><td>2（经 R15）</td><td><strong>R11</strong></td></tr><tr><td>R15</td><td>2（经 R14）</td><td>1（直连）</td><td><strong>R13</strong></td></tr></tbody></table>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：一条路由的旅程——IGP 选型、TTL、RIP 扩散节奏与 BGP 选路</h2>
+<h3>第 0 步：机制先行——五问各挂在一个机制上</h3>
+<p>本题五个小问看似分散，其实各挂一个底层机制，先把机制立起来，答案都是自然推论：</p>
+<ul><li><strong>IGP 选型挂"协议规模上限"</strong>：RIP 规定最大距离 15（16 即"不可达"），超大规模网络会误报不可达；OSPF 没有跳数限制。</li><li><strong>TTL 挂"逐跳减一"</strong>：分组每被一个<strong>路由器</strong>转发，TTL 减 1；减到 0 即被丢弃，永远到不了目的主机。目的主机接收时不再减——所以初始 TTL 必须 ≥ 途经路由器数 + 1。</li><li><strong>RIP 收敛挂"逐跳扩散 + 每轮发旧表"</strong>：路由器只与<strong>邻居</strong>交换距离向量，信息一轮只能前进一跳；且每轮发出的是本轮开始<strong>之前</strong>的路由表（旧表），刚在这一轮学到的新信息要等下一轮才往外传。</li><li><strong>BGP 会话挂"跨不跨 AS"</strong>：不同 AS 的边界路由器之间是外部会话 eBGP；同一 AS 内部是内部会话 iBGP；承载路由通告的报文是 UPDATE。</li><li><strong>BGP 选路挂"决策次序"</strong>：无策略约束时，先比 AS 路径条数（短者胜）；等长再比到下一跳的 IGP 距离（短者胜）。</li></ul>
+<h3>第（1）问：AS4 选哪个 IGP（1 分）</h3>
+<p>AS4 内任意两主机通信<strong>可能超过 20 个路由器</strong>，超出 RIP 的 15 跳上限——超限路径会被 RIP 记成"不可达"，明明通的网却学不到。OSPF 无此限制 → AS4 选 <strong>OSPF</strong>。</p>
+<h3>第（2）问：AS3 内通信的初始 TTL（1 分）</h3>
+<p>AS3 内最多经过 15 个路由器。TTL 在这 15 个路由器处各被扣 1，扣掉 15 后必须还剩 ≥ 1 才能活着到达目的主机（若初始 TTL=15，到主机时恰好减成 0，分组在到达前被丢弃，无法被正常接收）→ 初始 TTL 至少 <strong>16</strong>。</p>
+<h3>第（3）问：R11~R16 均获正确路由至少多久（2 分）</h3>
+<p>用"逐跳扩散 + 每轮发旧表"推演两个直连网络的扩散轮数（t=0 为交换初始距离向量的时刻）：</p>
+<ul><li><strong>210.2.3.0/24 直连 R14</strong>：t=0 交换时 R14 把它写进初始向量，邻居 R11、R15 学得；t=30 第一次周期交换，R11、R15 发出的是"含此网"的旧表 → 邻居 R12（经 R11）、R13、R16（经 R15）学得。至此 6 台全部正确 → <strong>至少 30 s</strong>。</li><li><strong>210.2.4.0/24 直连 R16</strong>：t=0 时邻居 R13、R15 学得；t=30 时 R13、R15 发旧表 → R12（经 R13）、R14（经 R15）学得；但 R11 的邻居恰好是 R12 和 R14，它们<strong>在 t=30 这轮发出的仍是各自不含此网的旧表</strong>——旧表规则把 R11 挡到下一轮；t=60 第二次周期交换，R12、R14 的新表到达 R11 → 至此全部正确 → <strong>至少 60 s</strong>。</li></ul>
+<p>各轮学得情况对号（第二层核对表）：</p>
+<table><thead><tr><th>时刻</th><th>210.2.3.0/24 新学得</th><th>210.2.4.0/24 新学得</th></tr></thead><tbody><tr><td>t=0</td><td>R11、R15</td><td>R13、R15</td></tr><tr><td>t=30</td><td>R12、R13、R16（齐）</td><td>R12、R14</td></tr><tr><td>t=60</td><td>—（已齐）</td><td>R11（齐）</td></tr></tbody></table>
+<h3>第（4）问：BGP 会话类型与报文（3 分）</h3>
+<p>R44 属 AS4、R13 属 AS1，<strong>跨 AS</strong> 的可达性通告由 <strong>BGP 外部会话（eBGP）</strong> 完成，通告使用 <strong>UPDATE 报文</strong>；R13 把该信息传给 R14、R15 时，三方同属 AS1，走 <strong>BGP 内部会话（iBGP）</strong>。判别只看一件事：通信双方是否同属一个 AS。</p>
+<h3>第（5）问：R14、R15 更新后的下一跳（2 分）</h3>
+<p>三条候选信息的 AS 路径条数：经 R11 为 3 个（AS2 AS8 AS19）、经 R13 为 3 个（AS4 AS10 AS19）、经 R12 为 4 个（AS3 AS7 AS11 AS19）——先淘汰最长的经 R12。剩下两条<strong>等长</strong>，进入下一比较项：<strong>到下一跳的 IGP 距离</strong>（AS1 内部跑 RIP，即 RIP 跳数；三条路都经 iBGP 学得，"eBGP 优先于 iBGP"这一档区分不了，所以直接轮到它）：</p>
+<table><thead><tr><th>路由器</th><th>到 R11 的 RIP 距离</th><th>到 R13 的 RIP 距离</th><th>选择的下一跳</th></tr></thead><tbody><tr><td>R14</td><td>1（直连）</td><td>2（经 R15）</td><td><strong>R11</strong></td></tr><tr><td>R15</td><td>2（经 R14）</td><td>1（直连）</td><td><strong>R13</strong></td></tr></tbody></table>
 <p>所以 R14 路由表中下一跳是 <strong>R11</strong>，R15 路由表中下一跳是 <strong>R13</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>第（1）问答 RIP</strong>：忽略了「可能超过 20 个路由器」撞上 RIP 15 跳上限。</li><li><strong>第（2）问答 15</strong>：TTL 减到 0 就丢弃，等于最多路由器数时可能送不到目的主机，要再加 1。</li><li><strong>第（3）问两网都答 30 s</strong>：只推演了 210.2.3.0/24；R11 距 R16 三跳，210.2.4.0/24 要两轮周期交换（60 s）才能传到 R11。</li><li><strong>第（3）问忽略"交换旧表"</strong>：同一轮交换中各路由器发出的是更新前的距离向量，信息一轮只前进一跳。</li><li><strong>第（5）问直接按字典序或 IP 大小选</strong>：BGP 比的是 AS 路径条数，等长再比到下一跳的 IGP 开销。</li></ul>
-<blockquote>一句话结论：AS4 用 <strong>OSPF</strong>；初始 TTL 至少 <strong>16</strong>；210.2.3.0/24 全部正确至少 <strong>30 s</strong>、210.2.4.0/24 至少 <strong>60 s</strong>；R44→R13 走 <strong>eBGP（UPDATE 报文）</strong>，R13→R14/R15 走 <strong>iBGP</strong>；R14 下一跳 <strong>R11</strong>、R15 下一跳 <strong>R13</strong>。</blockquote></div></div>
+<ul><li><strong>第（1）问答 RIP</strong>：忽略"可能超过 20 个路由器"撞上 RIP 15 跳上限。</li><li><strong>第（2）问答 15</strong>：TTL 的减 1 只发生在路由器转发处，主机不减；TTL=0 即丢弃，等于"最多路由器数"还到不了主机，必须 +1。</li><li><strong>第（3）问两网都答 30 s</strong>：漏了"每轮发旧表"——R11 距 R16 三跳，且 t=30 时它的两个邻居发出的都是旧表，必须等第二轮（60 s）。</li><li><strong>第（4）问会话弄反</strong>：判别标准只有"跨不跨 AS"：跨 AS 用 eBGP，AS 内用 iBGP。</li><li><strong>第（5）问等长后乱选</strong>：按路由器名或 IP 排序都不对，要按"AS 路径条数 → 到下一跳的 IGP 距离"的次序比。</li></ul>
+<blockquote>一句话结论：AS4 用 OSPF；初始 TTL 至少 16；210.2.3.0/24 全齐至少 30 s、210.2.4.0/24 至少 60 s；R44→R13 走 eBGP（UPDATE 报文），R13→R14/R15 走 iBGP；R14 下一跳 R11、R15 下一跳 R13。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

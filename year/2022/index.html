@@ -274,13 +274,16 @@ for (int i = 1; i &lt; n; i *= 2)
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：三叉树的最小高度</h2>
 <h3>第一步：明确口径与思路</h3>
-<p>叶结点高度为 1，即高度按“层数”计：最底层叶为 1，向上每层加 1，根的高度等于总层数。要让 244 个结点的三叉树<strong>最矮</strong>，就让每层都放满，再看 244 落在哪一层容量之内。</p>
-<h3>第二步：逐层算容量</h3>
-<p>h 层三叉树最多容纳 1 + 3 + 9 + … + 3^(h−1) = <strong>(3^h − 1) / 2</strong> 个结点：</p>
+<p>叶结点高度为 1，即高度按“层数”计：最底层叶为 1，向上每层加 1，根的高度等于总层数。</p>
+<h3>第二步：为什么“最矮”等价于“逐层放满”</h3>
+<p>核心机制是一个<strong>容量上界</strong>：每个结点至多有 3 个孩子，所以第 t 层至多 3^(t−1) 个结点（第 1 层 1 个、第 2 层 3 个、第 3 层 9 个……），h 层三叉树最多容纳 1 + 3 + 9 + … + 3^(h−1) = <strong>(3^h − 1) / 2</strong> 个结点。</p>
+<p>由此推出两件事：</p>
+<ul><li><strong>下界</strong>：若总结点数超过满 (h−1) 层的容量，前 h−1 层就装不下，必有结点被挤到第 h 层——高度至少为 h。换句话说，结点一定时，树越高容量越富余；想最矮，就必须让每一层都不浪费名额（任何有空位的层都在白白消耗高度）。</li><li><strong>可达</strong>：满 (h−1) 层 + 第 h 层挂若干叶子总能构造出来，所以下界不是空谈。</li></ul>
+<p>于是问题变成：244 落在哪一层容量之内。</p>
 <table><thead><tr><th>h（层数）</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>最多结点数</td><td>1</td><td>4</td><td>13</td><td>40</td><td>121</td><td>364</td></tr></tbody></table>
-<p><strong>121 &lt; 244 ≤ 364</strong> ⇒ 5 层装不下，6 层装得下，最小高度为 6。</p>
+<p><strong>121 &lt; 244 ≤ 364</strong> ⇒ 满 5 层只装 121 个，244 装不下 ⇒ 高度至少 6；满 6 层装 364 ≥ 244 ⇒ 6 层装得下。最小高度为 6。</p>
 <h3>第三步：验证可构造性</h3>
-<p>前 5 层放满 121 个结点，第 6 层再放 123 个叶即可（第 5 层有 81 个结点，至多可挂 81 × 3 = 243 个孩子，放 123 个叶没有问题）。所以高度 6 是可达的，不是空谈下界。</p>
+<p>前 5 层放满 121 个结点，第 6 层再放 123 个叶即可（第 5 层有 81 个结点，至多可挂 81 × 3 = 243 个孩子，放 123 个叶没有问题）。所以高度 6 是可达的。</p>
 <h3>易错点</h3>
 <ul><li><strong>误用二叉树公式</strong>：拿 2^h − 1 ≥ 244 会算出 h ≥ 8（选项 A 的陷阱），题目是三叉树。</li><li><strong>搞错高度口径</strong>：若按“根高度为 1、叶高度为层数”本题同口径；但若多减一层会误得 5（选项 D）。</li><li><strong>只算“满树”才合法</strong>：只需容量足够即可构造，不要求每层都放满。</li></ul>
 <blockquote>高度至少 6，选 <strong>C</strong>。记忆锚点：m 叉树 h 层最多 (m^h − 1)/(m − 1) 个结点。</blockquote></div></div>
@@ -331,8 +334,10 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：哈夫曼树 T1 与定长编码树 T2</h2>
-<h3>第一步：两棵树长什么样</h3>
-<p>T1（哈夫曼编码树）：n 个字符为叶，频次小的离根远、频次大的离根近；没有度为 1 的结点，结点数恰为 <strong>2n − 1</strong>。T2（定长编码树）：所有字符码长相同 ⇒ 表示字符的结点处于同一层。</p>
+<h3>第一步：两棵树长什么样——机制先立起来</h3>
+<p>T1（哈夫曼编码树）的构造机制：每轮<strong>挑两棵权值（频次）最小的子树合并</strong>。这带来三个必然结果——</p>
+<ul><li><strong>为什么频次小的离根远</strong>：小权子树总是先被合并，先合并的就往下垫一层，高频字符天然靠近根、码长短；</li><li><strong>为什么没有度为 1 的结点</strong>：每步都是“两棵合成一棵”，从不出现独生子，树中只有度 2（内部）与度 0（叶）的结点；</li><li><strong>为什么结点数恰为 2n − 1</strong>：n 个叶合并成一棵树，每合并一次新增 1 个内部结点，共合并 n − 1 次 → n + (n − 1) = 2n − 1。</li></ul>
+<p>T2（定长编码树）：每个字符的<strong>码长 = 它作为叶的深度</strong>。定长编码码长相同 ⇒ 字符叶必然处于<strong>同一层</strong>；空位可留可补，所以 T2 形状不唯一、结点数不定。</p>
 <h3>第二步：逐项判断</h3>
 <ul><li><strong>A（结点数相同）</strong>：T1 恒为 2n − 1；T2 形状不唯一（n=3 时码长 2，树上可有 6～7 个结点），不一定相等，错。</li><li><strong>B（T1 一定更高）</strong>：T1 是含 n 个叶的二叉树，高度 ≥ ⌈log2 n⌉；T2 高度可取到 ⌈log2 n⌉。n=3、频次 {1, 1, 10} 时 T1 高度为 2，与 T2 相等，“一定大于”不成立，错。</li><li><strong>C（频次不同必不同层）</strong>：反例频次 {2, 2, 3, 3}：合并 2+2=4、3+3=6，四个字符都在第 2 层，频次却有 2 有 3，错。</li><li><strong>D（T2 中频次不同同层）</strong>：定长编码码长与频次无关，所有字符必在同一层，对。</li></ul>
 <h3>易错点</h3>
@@ -439,12 +444,15 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：AOE 网中活动的时间余量</h2>
+<h3>第零步：余量的机制——它是"活动能拖延多久而不耽误工期"</h3>
+<p>事件的最早时刻 ve(j)：事件的含义是"入边的活动<strong>全部完成</strong>"，所以谁最慢就等谁——正推时<strong>取最大</strong>。事件的最迟时刻 vl(i)：在<strong>不推迟总工期</strong>的前提下允许的最晚发生时刻，后继活动各有各的截止线，谁最急就迁就谁——逆推时<strong>取最小</strong>。</p>
+<p>任一活动（起点 i、终点 j）的余量 = vl(j) − ve(i) − 工期，含义是：活动最早可以在 ve(i) 开工，最晚必须在 vl(j) − 工期 开工，两者的差就是它<strong>可以拖延的最大时长</strong>。余量为 0 的活动就是关键活动，一秒都拖不得；题目问"时间余量最大"，就是找最能拖的那个活动。</p>
 <h3>第一步：算事件时间</h3>
 <p>活动与工期：a(1→2)=2、b(1→3)=5、c(2→3)=1、d(2→4)=3、e(3→4)=3、f(3→5)=4、g(3→6)=1、h(4→5)=1、i(4→6)=4、j(5→6)=1。</p>
 <p>最早 ve（正推取最大）：ve(1)=0；ve(2)=2；ve(3)=max(0+5, 2+1)=5；ve(4)=max(2+3, 5+3)=8；ve(5)=max(5+4, 8+1)=9；ve(6)=max(8+4, 5+1, 9+1)=12（工期 12）。</p>
 <p>最迟 vl（逆推取最小）：vl(6)=12；vl(5)=11；vl(4)=min(12−4, 11−1)=8；vl(3)=min(8−3, 11−4, 12−1)=5；vl(2)=min(5−1, 8−3)=4；vl(1)=min(4−2, 5−5)=0。</p>
 <h3>第二步：算活动余量</h3>
-<p>余量 = vl(终点) − ve(起点) − 工期：</p>
+<p>按"终点最迟 − 起点最早 − 工期"逐个代入：</p>
 <table><thead><tr><th>活动</th><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th><th>h</th><th>i</th><th>j</th></tr></thead><tbody><tr><td>余量</td><td>2</td><td>0</td><td>2</td><td>3</td><td>0</td><td>2</td><td>6</td><td>2</td><td>0</td><td>2</td></tr></tbody></table>
 <p>最大余量 = <strong>g（6）</strong>，选 <strong>B</strong>。</p>
 <h3>易错点</h3>
@@ -777,13 +785,14 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：32 位补码的表示范围</h2>
-<h3>第一步：记住补码范围公式</h3>
-<p>n 位补码（最高位为符号位，数值位 n − 1 位）的表示范围：</p>
+<h3>第一步：补码的机制——模运算下的记数方式</h3>
+<p>补码不是另一种数制，而是<strong>模 2^n 记数</strong>：n 位一共 2^n 个状态，把这个环从最高位处掰开——最高位为 0（前半环）表示 0 ~ 2^(n−1) − 1；<strong>最高位为 1（后半环）表示负数，真值 = 无符号解释值 − 2^n</strong>（减一次模）。</p>
+<p>范围由此直接读出：</p>
+<ul><li><strong>正方向上界</strong>：<code>0111...1</code>（数值位 n − 1 位全 1）= <strong>2^(n−1) − 1</strong>；</li><li><strong>负方向下界</strong>：位串 <code>1000...0</code>。<strong>为什么它表示 −2^(n−1)？</strong> 它的无符号值是 2^(n−1)，是负数，真值 = 2^(n−1) − 2^n = <strong>−2^(n−1)</strong>——这正是补码特有的最小负数。</li></ul>
+<p><strong>为什么范围不对称？</strong> 一共 2^n 个编码，0 要占掉一个，剩 2^n − 1 个分给正负两半：负数拿走 2^(n−1) 个（含最小负数），正数只剩 2^(n−1) − 1 个。原码、反码各有 ±0 两个编码（原码的 −0 是 <code>1000...0</code>，反码的 −0 是 <code>111...1</code>），白白占掉一个负数名额，所以负方向只到 −(2^(n−1) − 1)——补码把"两个零"合并，才多出一个最小负数。</p>
+<h3>第二步：代入 n = 32，各编码范围对号入座</h3>
 <table><thead><tr><th>编码</th><th>范围</th></tr></thead><tbody><tr><td>补码</td><td>-2^(n-1) 至 2^(n-1) - 1</td></tr><tr><td>原码 / 反码</td><td>-(2^(n-1) - 1) 至 2^(n-1) - 1</td></tr></tbody></table>
-<p>补码比原码、反码<strong>多表示一个最小负数</strong> <code>1000...0</code>，所以是不对称的。</p>
-<h3>第二步：代入 n = 32</h3>
-<p>数值位共 31 位：</p>
-<ul><li>正方向上界：<code>0111...1</code>（31 个 1）= <code>2^31 - 1</code>；</li><li>负方向下界：<code>1000...0</code> = <code>-2^31</code>（补码特有的最小负数）。</li></ul>
+<p>n = 32：正上界 <code>0111...1</code>（31 个 1）= 2^31 − 1，负下界 <code>1000...0</code> = −2^31。</p>
 <p>所以 32 位补码范围是 <strong>-2^31 至 2^31 - 1</strong>，<strong>答案：B</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>负边界写成 -2^32</strong>（A、C）：把总位数 32 当成数值位数，数值位其实只有 31 位。</li><li><strong>正边界写成 2^32 - 1</strong>（C、D）：同样是数值位算错成 32 位。</li><li><strong>和原码范围混淆</strong>：按原码应对称地写 -(2^31 - 1) 至 2^31 - 1，漏掉补码多出的那个最小负数。</li></ul>
@@ -839,6 +848,8 @@ for (int i = 1; i &lt; n; i *= 2)
 <p>按 2 的负幂拆：0.4375 = 0.25 + 0.125 + 0.0625 = <code>0.0111</code>（即 1/4 + 1/8 + 1/16）。</p>
 <p>所以 -0.4375 = <code>-0.0111</code>，规格化成 <code>-1.11 × 2^(-2)</code>（小数点右移 2 位）。</p>
 <h3>第二步：定符号位、阶码、尾数</h3>
+<p>IEEE 754 单精度把一个数拆成三段：<strong>符号 S（1 位）+ 阶码 E（8 位）+ 尾数 M（23 位）</strong>。两个最容易被追问的"为什么"先答掉：</p>
+<ul><li><strong>为什么整数位的 1 可以隐藏？</strong> 规格化后尾数一定是 <code>1.xxx</code> 形式，前导 1 恒定存在，存它是冗余——省出 1 位给小数部分，等于多赚 1 位精度。所以 M 只存小数点后的 <code>11</code>，再补 0 到 23 位。</li><li><strong>为什么阶码要加偏置 127？</strong> 真指数 e 可正可负（本题 −2），硬件里不想再用一位存指数符号，就统一加上 127 变成无符号数：E = e + 127 ≥ 0。这样两个浮点数比大小时，可以直接把位串当无符号整数比较，电路简单。</li></ul>
 <table><thead><tr><th>字段</th><th>取值</th><th>说明</th></tr></thead><tbody><tr><td>符号 S</td><td>1</td><td>负数</td></tr><tr><td>阶码 E</td><td>0111 1101</td><td>真值 -2 + 偏置 127 = 125</td></tr><tr><td>尾数 M</td><td>110 0000 ... 0</td><td>隐藏整数位 1 不存，存小数点后的 11 再补 0 到 23 位</td></tr></tbody></table>
 <h3>第三步：拼接并转十六进制</h3>
 <p><code>1</code> <code>01111101</code> <code>11000000000000000000000</code> → 每 4 位一组：</p>
@@ -1528,11 +1539,12 @@ for (int i = 1; i &lt; n; i *= 2)
 <h3>第一步：先给结论</h3>
 <p>答案：<strong>B</strong>，安全序列有 <strong>2 个</strong>：P0→P1→P2 与 P0→P2→P1。</p>
 <h3>第二步：用 Available 逐一检查 Need</h3>
-<p>可用资源 Available = (1, 3, 2)。判定条件：进程的尚需量 Need 三个分量都 ≤ Available。</p>
+<p>可用资源 Available = (1, 3, 2)。</p>
+<p><strong>为什么判据是 Need ≤ Available？</strong> 安全序列的定义是"按这个顺序执行，每个进程都能拿到它<strong>尚需的全部资源</strong>并顺利跑完"。银行家算法取最保守的假设——进程可能把它声明过的尚需量一次性全部要走；所以只有当 Available 现在就能满足某进程的全部尚需量（Need 三个分量都 ≤ Available）时，才敢保证它能完成并归还资源，序列才"安全"。</p>
 <table><thead><tr><th>进程</th><th>Need(A,B,C)</th><th>对 (1,3,2) 判定</th><th>结论</th></tr></thead><tbody><tr><td>P0</td><td>(0,2,1)</td><td>0≤1，2≤3，1≤2</td><td>满足</td></tr><tr><td>P1</td><td>(1,2,3)</td><td>C 分量 3 大于 2</td><td>不满足</td></tr><tr><td>P2</td><td>(0,1,3)</td><td>C 分量 3 大于 2</td><td>不满足</td></tr></tbody></table>
 <p>此时能立即运行的<strong>只有 P0</strong>，安全序列的第 1 位只能是 P0。</p>
 <h3>第三步：P0 完成后释放资源，再查一遍</h3>
-<p>P0 运行结束归还全部已分配资源 (2,0,1)：Available = (1,3,2) + (2,0,1) = <strong>(3,3,3)</strong>。再检查：</p>
+<p><strong>为什么归还 (2,0,1)？</strong> P0 跑完意味着它不再持有任何资源，已分配的全部释放回系统。P0 运行结束归还全部已分配资源 (2,0,1)：Available = (1,3,2) + (2,0,1) = <strong>(3,3,3)</strong>。再检查：</p>
 <ul><li>P1：Need (1,2,3) ≤ (3,3,3) → 满足；</li><li>P2：Need (0,1,3) ≤ (3,3,3) → 满足。</li></ul>
 <p>两者都能满足，后两位可以是 P1→P2，也可以是 P2→P1，各构成一个安全序列，共 2 个。</p>
 <h3>易错点</h3>
@@ -2419,18 +2431,21 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：判定顺序存储的二叉树是否为二叉搜索树</h2>
-<h3>答题框架</h3>
-<p>两问：基本设计思想 + C 代码实现。核心认知：判定 BST <strong>不能只比较“双亲与直接孩子”</strong>，必须比较“双亲与整棵子树的最值”——左子树的最大值要小于双亲，右子树的最小值要大于双亲。用辅助数组 <code>pmin</code>、<code>pmax</code> 自底向上传播即可，时间 O(n)。</p>
+<h3>第 0 步：先立机制——BST 的性质是“子树级”的，不是“父子级”的</h3>
+<p>二叉搜索树的定义最容易被读窄。它要求的不是“每个结点比左孩子大、比右孩子小”，而是<strong>比左子树里所有结点都大、比右子树里所有结点都小</strong>。树深不超过 1 时两句话等价；树一深，父子局部的检查就会漏判。题目图里的 T2 自己就藏着这样的例子：结点 35 与它的双亲 30 直接比较完全合法（右孩子 35 &gt; 30），但它挂在 50 的右子树里——50 的右子树必须全部大于 50，而 35 &lt; 50。这层“祖孙关系”用“双亲 vs 直接孩子”永远看不见，违规只能顺着子树最值浮上来。</p>
+<p>把定义压成可检查的形式：<strong>对每个结点，左子树的最大值 &lt; 结点值 &lt; 右子树的最小值</strong>——这与 BST 定义完全等价（最大值/最小值把整棵子树压缩成一个数，任何深层违规都会体现在最值上）。算法的全部工作，就是自底向上算出每个结点的子树最值，顺路完成检查。</p>
 <h3>第 1）问：基本设计思想</h3>
-<ol><li>建立与顺序存储数组等长的辅助数组 <code>pmin</code>、<code>pmax</code>，<code>pmin[k]</code>、<code>pmax[k]</code> 表示以 k 号结点为根的子树中的最小值、最大值。</li><li>初始化：<code>pmin[k] = pmax[k] = SqBiTNode[k]</code>（先认为子树最值就是结点自身）。</li><li>从最后一个下标向 1 <strong>倒序扫描</strong>（保证处理双亲时其子树信息已就绪）：值为 −1 的空位跳过；<code>m = (k−1)/2</code> 为双亲下标。k 为奇数是左孩子：若双亲值 &gt; <code>pmax[k]</code> 成立，则把 <code>pmin[k]</code> 传播给双亲；k 为偶数是右孩子：若双亲值 &lt; <code>pmin[k]</code> 成立，则把 <code>pmax[k]</code> 传播给双亲；任一检查失败立即返回 false。</li><li>循环完整结束（回到根）返回 true。</li></ol>
+<ol><li>建立与顺序存储数组等长的辅助数组 <code>pmin</code>、<code>pmax</code>：<code>pmin[k]</code>、<code>pmax[k]</code> 记录以 k 号结点为根的子树中的最小值、最大值。初始化 <code>pmin[k] = pmax[k] = SqBiTNode[k]</code>——对叶结点（以及“暂时只看见自己”的结点）来说，子树最值就是它自己。</li><li>从最后一个下标 k = ElemNum−1 向 1 <strong>倒序扫描</strong>。为什么倒序一定可行：顺序存储里下标 k 的双亲是 (k−1)/2，恒小于 k，也就是说<strong>所有孩子都排在双亲后面</strong>——倒序处理到任何结点时，它的左右子树的 pmin/pmax 已经算好。</li><li>值为 −1 的空位跳过。为什么可以放心跳过：题目规定结点值均为正整数，−1 只是“此处无结点”的占位符，不是值；拿去比较会凭空制造违规，混进最值更会污染整条传播链（空位自己的 pmin/pmax 虽被初始化为 −1，但因被跳过永远不会上传）。</li><li>对每个非空结点 k，求双亲 m = (k−1)/2。k 为奇数是左孩子：检查 <code>SqBiTNode[m] &gt; pmax[k]</code>（左子树最大值必须小于双亲——为什么看最大值：左子树里唯一可能顶破双亲上界的就是最大值），成立则把 <code>pmin[k]</code> 上传给 <code>pmin[m]</code>；k 为偶数是右孩子：检查 <code>SqBiTNode[m] &lt; pmin[k]</code>（右子树最小值必须大于双亲），成立则把 <code>pmax[k]</code> 上传给 <code>pmax[m]</code>。任一检查失败立即返回 false。</li><li>为什么检查通过后只朝一个方向传播？以左孩子为例：既然双亲值大于左子树的最大值，合并后的子树<strong>最大值就是双亲自己</strong>，<code>pmax[m]</code> 不用动，只需把最小值接力上去；右孩子对称。根结点无双亲、无检查对象，所以主循环到 k = 1 为止。</li><li>扫描完整结束（一路传到根都通过）返回 true。</li></ol>
 <h3>第 2）问：算法实现（与参考答案同口径）</h3>
-<ul><li>初始化：<code>for (k = 0; k &lt; bt.ElemNum; k++) pmin[k] = pmax[k] = bt.SqBiTNode[k];</code></li><li>主循环：<code>for (k = bt.ElemNum - 1; k &gt; 0; k--)</code>，空位用 <code>if (bt.SqBiTNode[k] != -1)</code> 跳过，<code>m = (k - 1) / 2;</code> 求双亲。</li><li>左孩子分支：<code>if (k % 2 == 1 &amp;&amp; bt.SqBiTNode[m] &gt; pmax[k]) pmin[m] = pmin[k];</code> —— 奇数下标 2m+1 是左孩子，合法才传播最小值。</li><li>右孩子分支：<code>else if (k % 2 == 0 &amp;&amp; bt.SqBiTNode[m] &lt; pmin[k]) pmax[m] = pmax[k];</code> —— 偶数下标 2m+2 是右孩子，合法才传播最大值。</li><li>失败出口：<code>else return false;</code>；全部通过后 <code>return true;</code>。</li></ul>
-<p>用题目数据验证：T1 依次检查 k=9（30 与 27）、k=6（60 与 80）、k=4、k=2、k=1 全部通过 ⇒ true；T2 在 k=10 通过后，k=4 处 30 是 50 的右孩子而 50 &lt; pmin[4]=30 不成立 ⇒ false。</p>
+<ul><li>初始化：<code>for (k = 0; k &lt; bt.ElemNum; k++) pmin[k] = pmax[k] = bt.SqBiTNode[k];</code></li><li>主循环：<code>for (k = bt.ElemNum - 1; k &gt; 0; k--)</code>，空位用 <code>if (bt.SqBiTNode[k] != -1)</code> 跳过，<code>m = (k - 1) / 2;</code> 求双亲。</li><li>左孩子分支：<code>if (k % 2 == 1 &amp;&amp; bt.SqBiTNode[m] &gt; pmax[k]) pmin[m] = pmin[k];</code> —— 奇数下标 2m+1 是左孩子。</li><li>右孩子分支：<code>else if (k % 2 == 0 &amp;&amp; bt.SqBiTNode[m] &lt; pmin[k]) pmax[m] = pmax[k];</code> —— 偶数下标 2m+2 是右孩子。</li><li>失败出口：<code>else return false;</code>；全部通过后 <code>return true;</code>。</li></ul>
+<h3>用题目数据走一遍</h3>
+<p>T1（ElemNum=10）：k=9 时 27 是 30 的左孩子，30 &gt; 27 成立，pmin[4]=27；k=6 时 80 是 60 的右孩子，60 &lt; 80 成立，pmax[2]=80；k=4 时 30 是 25 的右孩子，25 &lt; pmin[4]=27 成立，pmax[1]=30；k=2 时 60 是 40 的右孩子，40 &lt; 60 成立，pmax[0]=80；k=1 时 25 是 40 的左孩子，40 &gt; 30 成立 ⇒ <strong>true</strong>。</p>
+<p>T2（ElemNum=11）：k=10 时 35 是 30 的右孩子，30 &lt; 35 成立，pmax[4]=35；k=9~5 为 −1 空位跳过；k=4 时 30 是 50 的右孩子，要求 50 &lt; pmin[4]=30，不成立 ⇒ <strong>false</strong>。T2 里其实有两处违规：30 &lt; 50 是直接违规，在 k=4 先被抓住；35 &lt; 50 是深层违规——即使把 30 的值改大越过 50，pmin[4] 也会被 35 拉低，仍在 k=4 被抓住。</p>
 <h3>复杂度分析</h3>
-<p>每个下标只处理一次：时间复杂度 <strong>O(n)</strong>；pmin、pmax 两个辅助数组与 n 同规模：空间复杂度 <strong>O(n)</strong>。</p>
+<p>每个下标只入循环一次、做常数次比较与赋值：时间复杂度 <strong>O(n)</strong>；pmin、pmax 两个辅助数组与 n 同规模：空间复杂度 <strong>O(n)</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>只比较双亲与直接孩子</strong>：T2 中 30 与 50 直接看是“右孩子比双亲小”可抓到，但若错误藏得更深（如 35 &gt; 30 却越过了 50 的界限），必须靠子树最值传播才能抓住。</li><li><strong>顺序扫描（k 从 0 递增）</strong>：必须自底向上，否则处理双亲时子树的 pmin/pmax 还没算好，传播链断裂。</li><li><strong>忘记跳过 −1 空位</strong>：空位不是结点，拿去比较会误判；ElemNum 只限定扫描范围。</li><li><strong>左右孩子奇偶写反</strong>：奇数下标是左孩子、偶数下标是右孩子，分支判断一旦写反，检查与传播全错。</li></ul>
-<blockquote>一句话：pmin/pmax 自底向上传播子树最值，左孩子比 pmax、右孩子比 pmin，时间 O(n)、空间 O(n)。</blockquote></div></div>
+<ul><li><strong>只比较双亲与直接孩子</strong>：T2 的 35 与双亲 30 直接比较合法，但 35 &lt; 50（它待在 50 的右子树里）；深层违规必须靠 pmin/pmax 向上传播才抓得住。</li><li><strong>顺序扫描（k 从 0 递增）</strong>：孩子下标恒大于双亲下标，必须倒序才能“先子后父”；正序时处理双亲，子树的 pmin/pmax 还没算好，传播链断裂。</li><li><strong>忘记跳过 −1 空位</strong>：−1 是占位符不是值，拿去比较会误判，混进最值会污染传播；ElemNum 只限定扫描范围。</li><li><strong>左右孩子奇偶写反</strong>：奇数下标 2m+1 是左孩子、偶数下标 2m+2 是右孩子，分支一旦写反，检查与传播全错。</li></ul>
+<blockquote>一句话：pmin/pmax 自底向上传播子树最值，左孩子拿 pmax 比双亲、右孩子拿 pmin 比双亲，通过才传播、失败即返回，时间 O(n)、空间 O(n)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2484,15 +2499,17 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：用规模恒为 10 的大根堆找最小的 10 个数</h2>
+<h3>第 0 步：先立机制——“候选人守门”模型</h3>
+<p>n 超过 10 万，要把最小的 10 个挑出来。先看清两条低效路：全排序为了 10 个数把 10 万个数排干净，Θ(n log n)；逐个与“已选出的 10 个数”比较、再线性找该淘汰谁，一个数最多要 10 次比较才被裁决。</p>
+<p>高效的机制是维护一个<strong>规模恒为 10 的大根堆 H</strong> 当候选人池，让池中<strong>最差（最大）</strong>的候选人守在堆顶。每个新数 s 只需问一句话：“你比当前最差的候选人还小吗？”s 小于堆顶 → 池里最差的让位、s 入池；s 不小于堆顶 → s 连最差的候选都挤不掉，必然不在最终答案里，直接丢弃。绝大多数数因此只花一次比较就被裁决——这正是“平均比较次数尽可能少”的来源。</p>
+<p>为什么守门足够保证正确性？靠一个不变量：<strong>扫描进行到任何时刻，堆里恰好是“已经看过的数中最小的 10 个”</strong>（不足 10 个时由最大值占位）。若 s ≥ 堆顶：堆顶是当前最小 10 个数的最大者，s 比它还大，s 不可能进入“前 i 个数的最小 10 个”，丢弃后不变量保持；若 s &lt; 堆顶：新的最小 10 个恰好是“旧的 10 个去掉堆顶、换上 s”，删堆顶插 s 即可。扫描结束时，不变量直接就是答案。</p>
 <h3>第 1）问：算法思想</h3>
-<p>n 超过 10 万，全排序（O(n log n)）代价高；把每个数和维护中的 10 个候选逐一比较，一个数最多要 10 次比较才被淘汰，也不划算。高效做法是维护一个<strong>恰好 10 个元素的大根堆 H</strong>，让“当前最差的候选”守在堆顶：</p>
-<ol><li>初始化：H 中 10 个元素均为该数据类型可表示的最大值——此时任何实数都比堆顶小。</li><li>依次扫描 M 中每个数 s：若 s &lt; 堆顶，则删除堆顶，把 s 插入堆中并下沉调整；否则（s 不小于当前 10 个候选的最大者）直接丢弃。</li><li>扫描结束后，H 中恰为 M 中最小的 10 个数。</li></ol>
-<p>每个元素平均只花 1 次比较（与堆顶）就被裁决，绝大多数被直接淘汰，这正是“平均比较次数尽可能少”的来源。</p>
+<ol><li>初始化：H 的 10 个元素均为该数据类型可表示的最大值。为什么这样初始化：一开始“已见过的数”为空，用最大值占位使不变量平凡成立，且任何实数都比堆顶小，第一个数必然入堆——免去“先拿前 10 个数建堆”的特判。</li><li>依次扫描 M 中每个数 s：若 s &lt; 堆顶，删除堆顶，把 s 插入堆中并下沉调整；否则直接丢弃。</li><li>扫描结束后，H 中即为 M 中最小的 10 个数。</li></ol>
 <h3>第 2）问：复杂度</h3>
-<p>堆规模恒为 10：每个元素平均做 1 次堆顶比较，入选时下沉至多 log2 10 ≈ 3 层（常数），故平均时间复杂度 <strong>O(n)</strong>；辅助空间就是那 10 个元素组成的堆数组，与 n 无关，为 <strong>O(1)</strong>。</p>
+<ul><li>时间：每个元素先与堆顶比 1 次；真正入堆的元素还要在 10 个元素的堆里下沉，至多 3 层（10 个结点的完全二叉树高为 3）。平均有多少元素入堆？第 i 个数入堆当且仅当它是前 i 个数中最小的 10 个之一，概率为 10/i，对 i 求和约为 10·ln(n/10)——n = 10 万时约一百个，额外比较只有几百次的常数。故平均总比较次数约为 n 加小常数，平均时间复杂度 <strong>O(n)</strong>。</li><li>为什么说“比较次数尽可能少”：任何正确算法都至少需要 n−10 次比较——每个落选的数至少得“输”一次才有资格被淘汰；堆法贴着这条下界，而全排序要从 n·log2 n ≈ 170 万次起步。</li><li>空间：堆只有固定的 10 个元素，与 n 无关，额外空间复杂度 <strong>O(1)</strong>。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>用小根堆</strong>：小根堆顶是“当前最小”，没法快速淘汰不够小的数；必须用大根堆，让最大的候选守门。</li><li><strong>先建 n 个元素的堆</strong>：堆规模随 n 增大，空间 O(n)、违背题目对空间与效率的要求。</li><li><strong>忽略“平均”口径</strong>：最坏时每个入选元素都要下沉多层，但题目问平均，每元素常数次比较即可。</li><li><strong>忘记初始化为最大值</strong>：不初始化堆，就得先拿前 10 个数建堆再扫描，思路也正确但表述要完整；参考答案用最大值初始化更简洁。</li></ul>
-<blockquote>大根堆守门：比堆顶小才进堆，平均 O(n) 时间、O(1) 空间。</blockquote></div></div>
+<ul><li><strong>用小根堆</strong>：小根堆顶是“当前最小”，拿它守门既判不了“够不够小”，也无法快速找到该淘汰的最大者；必须大根堆，让最大的候选守门。</li><li><strong>先建 n 个元素的堆</strong>：堆规模随 n 增大，空间 O(n)、比较次数也远超 n，违背题目对效率的要求。</li><li><strong>忽略“平均”口径</strong>：最坏情形（数据递减到来）每个数都入堆、都要下沉，但题目问平均，每元素常数次比较即可。</li><li><strong>不初始化堆顶为最大值</strong>：就得先取前 10 个数建堆再扫描，思路也正确但表述必须完整；参考答案用最大值初始化更简洁，且不变量从第 0 步就成立。</li></ul>
+<blockquote>大根堆守门：比堆顶小才进堆，平均 O(n) 时间、O(1) 空间，比较次数贴着 n−10 的下界。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2545,30 +2562,31 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单总线数据通路上的标志位、暂存器与取指流程</h2>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单总线数据通路上的标志位、暂存器、寄存器堆与取指流程</h2>
 <h3>第 1）问：SF 与 OF 的逻辑表达式</h3>
-<p>FR 中标志直接从 ALU 结果取位：<strong>SF = F15</strong>（符号标志就是结果最高位）。</p>
-<p>记 <code>¬X</code> 表示对 X 取反、<code>·</code> 为逻辑与、<code>+</code> 为逻辑或。溢出只发生在"同号相加得异号"：</p>
-<ul><li><strong>A 加 B</strong>（两个正数相加得负 / 两个负数相加得正）：</li></ul>
-<p>  <code>OF = ¬A15 · ¬B15 · F15 + A15 · B15 · ¬F15</code></p>
-<ul><li><strong>A 减 B</strong>（正减负得负 / 负减正得正，即两个操作数异号而结果符号"不对"）：</li></ul>
-<p>  <code>OF = ¬A15 · B15 · F15 + A15 · ¬B15 · ¬F15</code></p>
-<p>减法表达式里 B15 不取反，是因为减一个负数相当于加一个正数，参与"同号判断"的是 B15 本身的相反角色。</p>
-<h3>第 2）问：为什么设暂存器 Y 和 Z</h3>
-<p>这是<strong>单总线</strong>数据通路：内部总线同一时刻只能传送<strong>一个</strong>数据。ALU 运算却需要两个输入、还会产生一个输出，三者都要过总线：</p>
-<ul><li><strong>Y</strong> 暂存 ALU 的一个输入操作数：先把总线上送来的第一个数锁存进 Y，腾出总线再送第二个操作数；</li><li><strong>Z</strong> 暂存 ALU 的输出：ALU 算出 F 时总线可能仍在传送别的数据，结果先锁进 Z，等总线空闲再 <code>Zout</code> 送上总线。</li></ul>
-<p>没有 Y、Z，第二个操作数与结果都无立身之地，总线上会"撞车"。</p>
+<p>先立机制。FR 里的标志是对 ALU 结果 F 的两种读法：SF 是<strong>直读</strong>——符号标志的定义就是结果的最高位，而 F 本就是 16 位补码结果，最高位即符号位，所以 <code>SF = F15</code>。OF 是<strong>判读</strong>——回答“这个补码结果还可信吗”。</p>
+<p>补码运算是模 2¹⁶ 的记数，16 位补码表示 −32768 ~ +32767。两个<strong>异号</strong>数相加永远不溢出：一正一负，和的绝对值被夹在两者之间，出不了范围；只有<strong>同号</strong>相加才可能越界，而一旦越界，模运算把结果“绕”回来，符号位必然与操作数相反。据此（记 <code>¬X</code> 为取反、<code>·</code> 为逻辑与、<code>+</code> 为逻辑或）：</p>
+<ul><li>A 加 B：操作数同号（A15 = B15）而结果符号相反（F15 = ¬A15）：</li></ul>
+<p>  <code>OF = ¬A15·¬B15·F15 + A15·B15·¬F15</code></p>
+<ul><li>A 减 B：把 A−B 看成 A 加上 (−B)。求补翻转了 B 的符号位，“实际相加的两数同号”就变成 A15 与 B15 <strong>相异</strong>；一旦溢出，结果符号与 A 相反（F15 = ¬A15）：</li></ul>
+<p>  <code>OF = ¬A15·B15·F15 + A15·¬B15·¬F15</code></p>
+<p>（用进位判溢出 C15⊕C16 同样正确，但本题限定表达式只含 A15、B15、F15，符号判读法恰好只用这三个量。）</p>
+<h3>第 2）问：为什么要设置暂存器 Y 和 Z</h3>
+<p>机制：这是<strong>单总线</strong>通路——内部总线一个时钟周期只能稳定传送<strong>一个</strong>数据。而一次 ALU 运算牵涉三个数据：两个输入、一个输出，不可能同时都在总线上：</p>
+<ul><li><strong>Y</strong> 锁存第一个输入：先 <code>Yin</code> 把总线上送来的第一个操作数存入 Y（Y 直连 ALU 的 A 端），下一周期总线腾出来，第二个操作数才能送上 B 端。</li><li><strong>Z</strong> 锁存输出：ALU 是组合逻辑，算出 F 的那个周期总线往往还忙着（正给 B 端送数），且 F 随输入变化、不能长存，必须先打进 Z；总线空闲后再 <code>Zout</code> 送往目的地。</li></ul>
+<p>没有 Y，第二个输入无处落脚；没有 Z，结果没有中转站——总线上必然“撞车”。</p>
 <h3>第 3）问：寄存器个数、rs/rd 来源与 rd 的连接</h3>
-<p><code>rs</code>、<code>rd</code> 都是 4 位 → <code>2^4 = 16</code>，GPRs 中最多 <strong>16 个</strong>通用寄存器。</p>
-<p><code>rs</code>、<code>rd</code> 是指令中"用哪个寄存器"的编号字段，都来自 <strong>IR</strong>（指令寄存器）。</p>
-<p>GPRs 内部有一个地址译码器和一个多路选择器：<strong>读</strong>寄存器用多路选择器从 16 个寄存器中选出 rs 指定的一个送到输出端；<strong>写</strong>寄存器要产生唯一的选择信号定位被写的寄存器，所以 <strong>rd 应连接地址译码器</strong>。</p>
+<p><code>rs</code>、<code>rd</code> 都是 4 位 → 2⁴ = 16，GPRs 中最多 <strong>16 个</strong>通用寄存器。</p>
+<p><code>rs</code>、<code>rd</code> 是指令中“用哪个寄存器”的编号字段，指令取回后整个存放在 <strong>IR</strong> 中，执行期间一直以 IR 为源，所以二者都来自 IR。</p>
+<p>GPRs 内部为什么“读用多路选择器、写用地址译码器”——因为两个方向的数据流形状不同：读，是 16 个寄存器的输出要<strong>汇成一路</strong>送内部总线，多路选择器干的就是“多选一”，由 rs 选中哪个寄存器上总线；写，要<strong>唯一激活</strong>目标寄存器的输入门——译码器把 4 位 rd 翻成 16 条“一字一线”的选通线，只有编号等于 rd 的那一条有效，恰好只有一个寄存器开门接收 GPRin 的数据。所以 <strong>rd 应连接地址译码器</strong>。</p>
 <h3>第 4）问：取指阶段的控制信号序列与时钟周期数</h3>
-<table><thead><tr><th>步骤</th><th>控制信号</th><th>作用</th><th>周期数</th></tr></thead><tbody><tr><td>1</td><td><code>PCout, MARin</code></td><td>PC 内容经内部总线送 MAR，MAR → 主存</td><td>1</td></tr><tr><td>2</td><td><code>Read</code></td><td>发主存读命令，等指令读出送入 MDR</td><td>5</td></tr><tr><td>3</td><td><code>MDRout, IRin</code></td><td>MDR 内容经总线送 IR</td><td>1</td></tr></tbody></table>
-<p>取指阶段（不考虑 PC 增量）至少需 1 + 5 + 1 = <strong>7 个时钟周期</strong>。</p>
+<p>先想数据怎么流，再排信号：取指（不考虑 PC 增量）要把 PC 所指的指令从主存搬进 IR，路径为 PC →（内部总线）→ MAR →（系统总线/主存）→ MDR →（内部总线）→ IR。三段中两段走内部总线、一段是主存读出；单总线一次只传一个数据，三段天然串行，没有可合并的余地——这就是“至少”的含义。</p>
+<table><thead><tr><th>步骤</th><th>控制信号</th><th>在做什么</th><th>周期</th></tr></thead><tbody><tr><td>1</td><td><code>PCout, MARin</code></td><td>PC 内容送 MAR（CPU 访存的地址出口只有 MAR）</td><td>1</td></tr><tr><td>2</td><td><code>Read</code></td><td>发主存读命令，等指令读出并进入 MDR</td><td>5</td></tr><tr><td>3</td><td><code>MDRout, IRin</code></td><td>MDR 内容送 IR</td><td>1</td></tr></tbody></table>
+<p>取指阶段至少需 1 + 5 + 1 = <strong>7 个时钟周期</strong>。</p>
 <h3>第 5）问：控制信号由谁产生、CU 的输入</h3>
-<p>控制信号由<strong>控制部件（CU，控制单元）</strong>产生。它需要知道"当前在执行哪条指令"以及"运算结果的状态"，所以图中 <strong>IR 和 FR</strong> 的输出信号连接到 CU 的输入端。</p>
+<p>控制信号由<strong>控制部件（CU）</strong>产生。CU 要为每条指令排出微操作序列，靠两类输入：一是“现在执行的是什么指令”——<strong>IR</strong> 的输出（操作码决定信号序列，地址字段决定动用哪些寄存器）；二是“上一条运算的结果状态”——<strong>FR</strong> 的输出（条件转移指令要靠 SF、OF、ZF 等标志决定分支走向）。所以图中 <strong>IR 和 FR</strong> 的输出信号连接到 CU 的输入端。</p>
 <h3>易错点</h3>
-<ul><li><strong>减法 OF 照抄加法式</strong>：减法的符号组合与加法不同，B15 不取反。</li><li><strong>Z 的作用说成"暂存第二个操作数"</strong>：Y 管输入、Z 管输出，分工别混。</li><li><strong>rd 连成多路选择器</strong>：多路选择器负责"读谁"，写寄存器靠地址译码器定位。</li><li><strong>周期数漏掉发读命令的等待</strong>：Read 要占 5 个周期，7 = 1 + 5 + 1。</li></ul>
+<ul><li><strong>减法 OF 照抄加法式</strong>：减法中“同号”的对象是 A 与 (−B)，条件变成 A15 与 B15 相异，B15 不取反；两式的四项各不相同。</li><li><strong>Y、Z 分工说反</strong>：Y 暂存 ALU 的输入、Z 暂存 ALU 的输出，别混。</li><li><strong>rd 连成多路选择器</strong>：多路选择器负责“读谁”，写寄存器靠地址译码器唯一选通。</li><li><strong>周期数漏掉等待</strong>：Read 固定占 5 个周期，7 = 1 + 5 + 1；单总线上三段只能串行，压不得更短。</li></ul>
 <blockquote>一句话结论：SF = F15；Y 暂存 ALU 输入、Z 暂存 ALU 输出；16 个寄存器、rd 连译码器；取指 <code>PCout,MARin → Read → MDRout,IRin</code> 共 7 个周期；CU 产生控制信号，IR 和 FR 接其输入。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2625,18 +2643,19 @@ for (int i = 1; i &lt; n; i *= 2)
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：磁盘扇区地址、平均访问时间与周期挪用 DMA</h2>
 <h3>第 1）问：扇区地址的 3 个字段与最少位数</h3>
-<p>扇区地址由 3 个字段定位一个扇区：<strong>柱面号（磁道号）、磁头号（盘面号）、扇区号</strong>。</p>
-<table><thead><tr><th>字段</th><th>需要区分的个数</th><th>最少位数</th></tr></thead><tbody><tr><td>柱面号（磁道号）</td><td>每盘面 20000 个磁道，2^14 = 16384 不够，2^15 = 32768 够</td><td>15 位</td></tr><tr><td>磁头号（盘面号）</td><td>4 个双面盘片 = 8 个盘面，2^3 = 8</td><td>3 位</td></tr><tr><td>扇区号</td><td>每磁道 500 个扇区，2^9 = 512 够（2^8 = 256 不够）</td><td>9 位</td></tr></tbody></table>
+<p>先立机制：一个扇区在盘上的位置由三个依次收窄的问题定位——<strong>哪个记录面</strong>（磁头号/盘面号）、该面的<strong>哪一圈磁道</strong>（柱面号/磁道号）、这条磁道上的<strong>第几个扇区</strong>（扇区号）。三段地址各管一维，合起来唯一确定一个扇区。</p>
+<p>为什么用“柱面号”而不是“磁道号”：所有盘面上半径相同的磁道构成一个圆柱面，所有磁头都装在同一小车上、<strong>同时</strong>指向同一柱面——寻道一次，8 个记录面的同号磁道全部就位。用柱面号统一描述“第几圈”，正是这个机械事实的反映。</p>
+<p>位数由“至少能区分多少个”决定，一律向上取幂：</p>
+<table><thead><tr><th>字段</th><th>要区分的个数</th><th>计算</th><th>最少位数</th></tr></thead><tbody><tr><td>柱面号（磁道号）</td><td>每盘面 20000 道</td><td>2¹⁴ = 16384 不够，2¹⁵ = 32768 够</td><td>15 位</td></tr><tr><td>磁头号（盘面号）</td><td>4 个双面盘片 = 8 个盘面</td><td>2³ = 8 恰好</td><td>3 位</td></tr><tr><td>扇区号</td><td>每磁道 500 扇区</td><td>2⁸ = 256 不够，2⁹ = 512 够</td><td>9 位</td></tr></tbody></table>
 <h3>第 2）问：一个扇区的平均访问时间</h3>
-<p>平均访问时间 = 平均寻道时间 + 平均旋转延迟 + 传输时间。</p>
-<p>转速 7200 RPM → 一转 = 60 × 10^3 / 7200 ≈ 8.333 ms：</p>
-<ul><li>平均寻道时间 = 5 ms；</li><li>平均旋转延迟 = 半转 ≈ 8.333 / 2 ≈ 4.167 ms；</li><li>传输一个扇区 = 一转的 1/500 ≈ 8.333 / 500 ≈ 0.017 ms。</li></ul>
-<p>合计 ≈ 5 + 4.167 + 0.017 ≈ <strong>9.18 ms</strong>。</p>
+<p>机制：一次访问 = 寻道 + 旋转延迟 + 传输，三项“平均”各有来历。寻道时间题目直接给定平均 5 ms；旋转延迟取决于“磁头到位那一刻，目标扇区在它前方多远”——这个距离在 0 到一转之间均匀分布，<strong>平均半转</strong>；传输时间是扇区数据扫过磁头的时间——每道 500 个扇区均分一圈，一个扇区就是<strong>一转的 1/500</strong>。</p>
+<p>转速 7200 RPM → 一转 = 60×10³ ÷ 7200 ≈ 8.333 ms，于是：</p>
+<p>平均访问时间 = 5 + 8.333/2 + 8.333/500 = 5 + 4.167 + 0.017 ≈ <strong>9.18 ms</strong></p>
 <h3>第 3）问：DMA 总线请求次数与优先权</h3>
-<p>每扇区 512 B，控制器数据缓冲区 64 位 = 8 B，每次挪用一个存储周期传走缓冲区里的 8 B：512 ÷ 8 = <strong>64 次总线请求</strong>。</p>
-<p><strong>可以</strong>获得总线使用权。周期挪用（周期窃取）方式下，CPU 与 DMA 同时请求主存时，<strong>DMA 优先</strong>：磁盘按转速连续吐出数据，若 DMA 抢不到总线，缓冲区来不及腾空，后面到达的数据会覆盖/丢失；而 CPU 延迟一个存储周期对程序影响极小。</p>
+<p>周期挪用（周期窃取）DMA 的机制：磁盘把数据送进控制器缓冲区，缓冲区<strong>装满一批</strong>，DMA 才向 CPU 申请一个存储周期把这一批搬进主存——搬运以缓冲区为单位，不是逐字节。缓冲区 64 位 = 8 B，每扇区 512 B → 512 ÷ 8 = <strong>64 次总线请求</strong>。</p>
+<p>CPU 与 DMA 同时请求主存时，<strong>DMA 可以优先获得总线使用权</strong>。为什么让 DMA 先走：磁盘按转速机械地连续吐数据，来多少就得接多少，不能暂停重放；若 DMA 让 CPU 插队一个存储周期，缓冲区里刚到的 8 B 还没搬走，下一批就来了，数据会被覆盖丢失。而 CPU 被推迟一个存储周期对程序执行几乎没有影响。两害相权，周期挪用规则规定冲突时 DMA 优先。</p>
 <h3>易错点</h3>
-<ul><li><strong>位数算成恰好够的幂</strong>：500 个扇区要用 9 位（2^8 不够），20000 个磁道要用 15 位（2^14 不够），一律"向上取幂"。</li><li><strong>把一整转当旋转延迟</strong>：平均旋转延迟是<strong>半转</strong>。</li><li><strong>漏加传输时间</strong>：9.18 = 5 + 4.167 + 0.017，少加任何一项都会偏。</li><li><strong>以为 DMA 一定让 CPU</strong>：周期挪用的原则恰恰是 DMA 优先，防的是磁盘数据丢失。</li></ul>
+<ul><li><strong>位数算成“恰好够的幂”</strong>：500 个扇区要 9 位（2⁸ 不够），20000 道要 15 位（2¹⁴ 不够），一律向上取幂。</li><li><strong>把一整转当旋转延迟</strong>：平均旋转延迟是<strong>半转</strong>——目标扇区初始位置均匀分布所致。</li><li><strong>漏加传输时间</strong>：9.18 = 5 + 4.167 + 0.017，三项缺一不可。</li><li><strong>以为 DMA 一定让 CPU</strong>：周期挪用的原则恰恰是 DMA 优先，防的是磁盘数据流不可暂停导致的丢失。</li></ul>
 <blockquote>一句话结论：地址 15 + 3 + 9 位；平均访问 ≈ 5 + 4.167 + 0.017 ≈ 9.18 ms；每扇区 64 次总线请求，同时请求时 DMA 优先。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2690,23 +2709,23 @@ for (int i = 1; i &lt; n; i *= 2)
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：目录项、共享索引结点与多级索引计算（2022-45）</h2>
-<h3>第一步：基本参数换算</h3>
-<p>块大小 4 KB = 4096 B，地址项 4 B → 每块可容纳 4096 ÷ 4 = <strong>1024</strong> 个地址。索引结点占 256 B，含 <strong>10 个直接地址项</strong>与一、二、三级间接地址项各 1 个。</p>
-<h3>第二步：第 1）问 目录文件 stu 的目录项内容</h3>
-<p>目录项只由<strong>文件名 + 索引结点号</strong>构成。stu 的目录内容里是它的两个孩子 course 与 doc：</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：目录项、共享索引结点与多级索引计算</h2>
+<h3>第 0 步：先立机制——目录、索引结点、多级索引各管什么</h3>
+<ul><li><strong>目录 = “文件名 → 索引结点号”的映射表</strong>。文件的大小、位置、时间等全部管理信息集中在索引结点里，目录项只存名字和结点号。这样设计的好处：改文件属性不必改目录；同一个文件还能以不同名字出现在不同目录里——第 2）问考的正是这一点。</li><li><strong>数据块号存在索引结点里，间接地址项指向“装满地址的块”</strong>。块大小 4 KB、地址项 4 B，一块索引块装 4096 ÷ 4 = <strong>1024</strong> 个地址。一级间接地址项指向一块索引块，覆盖 1024 个数据块；二级间接指向一块“装满索引块地址的块”，覆盖 1024 × 1024 个数据块。每加一级，寻址范围乘 1024——这就是多级索引的机制。</li><li><strong>打开文件 = 把索引结点从盘上读进内存</strong>。文件名只在目录里，数据块号只在索引结点里，不读结点就拿不到块号。</li></ul>
+<h3>第 1）问：目录文件 stu 的目录项内容</h3>
+<p>stu 的目录内容是它的两个孩子（名字和结点号）：</p>
 <table><thead><tr><th>文件名</th><th>索引结点号</th></tr></thead><tbody><tr><td>course</td><td>2</td></tr><tr><td>doc</td><td>10</td></tr></tbody></table>
-<h3>第三步：第 2）问 x 的值</h3>
-<p>题 45(b) 图中 doc 与 course1 的索引结点号<strong>同为 10</strong>，即两个文件共享同一个索引结点；索引结点中保存着文件占用的磁盘块号（course1 的数据在 30 号块），故 doc 占用的磁盘块 <strong>x = 30</strong>。</p>
-<h3>第四步：第 3）问 打开并读入 course1 需读几个磁盘块</h3>
-<p>course 的目录内容<strong>已在内存</strong> → 由目录项直接取得 course1 的索引结点号 10，<strong>不必再读目录块</strong>。打开文件需要从磁盘取其索引结点：每块可放 4096 ÷ 256 = 16 个索引结点，10 号结点在索引结点区第 0 块 → 读 <strong>1</strong> 块；再按索引结点中的地址读 <strong>30 号数据块</strong> → 读 <strong>1</strong> 块。<strong>共 2 个磁盘块</strong>。</p>
-<h3>第五步：第 4）问 course2 增长到 6 MB 需哪几级间接地址项</h3>
-<p>6 MB = 6 × 1024 KB ÷ 4 KB = <strong>1536</strong> 块。容量逐级累计：</p>
-<table><thead><tr><th>地址项</th><th>覆盖块数</th><th>累计</th></tr></thead><tbody><tr><td>直接地址项 10 个</td><td>10</td><td>10</td></tr><tr><td>一级间接 ×1</td><td>1024</td><td>10 + 1024 = 1034</td></tr><tr><td>二级间接 ×1</td><td>1024 × 1024</td><td>1034 + 1048576（足够）</td></tr></tbody></table>
-<p>1536 大于 1034 → 直接地址项与一级间接地址项不够，还需<strong>二级间接地址项</strong>（覆盖剩余 502 块）；三级用不到。</p>
+<h3>第 2）问：x 的值</h3>
+<p>45(b) 表中 doc 与 course1 的索引结点号<strong>同为 10</strong>——两个文件名指向同一个索引结点，即“名字是别名、结点才是文件身份”。索引结点 10 记录着这份数据的位置：course1 的数据在 30 号块，doc 打开的自然也是同一份数据，故 <strong>x = 30</strong>。</p>
+<h3>第 3）问：打开 course1 并读入内存要读几个磁盘块</h3>
+<p>course 的目录内容<strong>已在内存</strong> → 从 course 的目录项直接查到 course1 的结点号 10，<strong>一个目录块都不用读</strong>。打开文件需要把 course1 的索引结点从盘上调入内存：每块放 4096 ÷ 256 = 16 个索引结点，10 号结点落在索引结点区的第 0 块 → 读 <strong>1</strong> 块；结点中的地址指出数据在 30 号块（course1 只占 1 块，10 个直接地址项足够，无需读间接块）→ 读 <strong>1</strong> 块。共 <strong>2 个磁盘块</strong>。</p>
+<h3>第 4）问：6 MB 的 course2 需要哪几级间接地址项</h3>
+<p>6 MB = 6 × 1024 KB ÷ 4 KB = <strong>1536</strong> 块。按第 0 步的机制逐级累计覆盖能力：</p>
+<table><thead><tr><th>地址项</th><th>新增覆盖</th><th>累计</th></tr></thead><tbody><tr><td>直接地址项 × 10</td><td>10</td><td>10</td></tr><tr><td>一级间接 × 1</td><td>1024</td><td>10 + 1024 = 1034</td></tr><tr><td>二级间接 × 1</td><td>1024 × 1024</td><td>1034 + 1048576（足够）</td></tr></tbody></table>
+<p>1536 &gt; 1034：直接 + 一级不够装，<strong>还需使用二级间接地址项</strong>（剩余 1536 − 1034 = 502 块由二级覆盖）；三级用不到。</p>
 <h3>易错点</h3>
-<ul><li><strong>第 2）问当成新分配块</strong>：doc 与 course1 共享索引结点 10，同一结点记录同一数据块 30。</li><li><strong>第 3）问多算目录块</strong>：course 目录已在内存，不再读盘。</li><li><strong>第 4）问用错除数</strong>：每块地址数 = 4096 ÷ 4 = 1024，别拿索引结点大小 256 去除。</li></ul>
-<blockquote>索引容量阶梯：直接 10 → 加一级 1024 → 加二级 1024²；6 MB 文件共 1536 块，卡在 1034 之后。</blockquote></div></div>
+<ul><li><strong>第 2）问当成新分配块</strong>：doc 与 course1 共享索引结点 10，同一结点记录同一数据块 30。</li><li><strong>第 3）问多算目录块</strong>：course 目录已在内存，查 course1 的名字不读盘；也不要把“索引结点区”的定位当成一次额外读盘。</li><li><strong>第 4）问用错除数</strong>：每块装多少个<strong>地址</strong>用 4096 ÷ 4 = 1024；256 B 是索引结点的大小，除它得到的是“每块装几个索引结点”。</li><li><strong>间接级数判断错</strong>：一级间接的 1024 不是“1024 个直接地址项”，而是地址项指向的索引块里装了 1024 个数据块地址。</li></ul>
+<blockquote>索引容量阶梯：直接 10 → 加一级 ×1024 → 加二级 ×1024²；6 MB 文件共 1536 块，卡在 1034 之后，动用二级间接。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2832,25 +2851,24 @@ F;                   D;</code></pre></div></div></div></div>
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：设备选型、冲突域最远距离、DHCP 广播帧与 802.11 帧地址</h2>
-<p>（综合题 9 分，按问作答：先给答题框架，再填推导。）</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：设备选型、冲突域最远距离、DHCP 广播与 802.11 帧地址</h2>
 <h3>第 1 问：设备 1、设备 2 选谁</h3>
-<p><strong>框架：把"广播域/冲突域"线索翻译成设备特性，再对号入座。</strong></p>
-<ul><li>线索一：H1 与 H2 属于<strong>同一个广播域</strong>但<strong>不属于同一个冲突域</strong> → 设备 1 能<strong>隔离冲突域、不隔离广播域</strong>。三类候选中：路由器隔离广播域（不符）、集线器不隔离冲突域（不符），只有 <strong>100BaseT 以太网交换机</strong>满足——交换机每个端口一个冲突域，整个交换机仍是一个广播域。</li><li>线索二：H2 和 H3 属于<strong>同一个冲突域</strong> → 设备 2 <strong>不隔离冲突域</strong> → <strong>100BaseT 集线器（Hub）</strong>。</li></ul>
-<p>结论：设备 1 = 100BaseT 以太网交换机；设备 2 = 100BaseT 集线器。</p>
+<p>先立机制——三类设备对帧的转发方式不同，冲突域/广播域的差异全源于此。集线器（Hub）是<strong>物理层</strong>转发器：把一个端口收到的信号放大后向所有其他端口重发，所有端口共享同一介质，任意两个端口同时发送必然碰撞——整个 Hub 是<strong>一个</strong>冲突域，且广播、单播一律泛洪，也不隔离广播域。交换机是<strong>链路层</strong>设备：按目的 MAC 查表把帧送往单一端口，各端口独立跑 CSMA/CD——每个端口一个冲突域，但广播帧仍向所有端口泛洪，不隔离广播域。路由器是<strong>网络层</strong>设备：广播帧过不了路由器——隔离广播域。</p>
+<p>拿机制对线索：H1 与 H2 属于同一个广播域、不属于同一个冲突域 → 设备 1 必须“隔冲突、不隔广播” → <strong>100BaseT 以太网交换机</strong>（Hub 会让 H1/H2 同处一个冲突域，路由器会把二者分进不同广播域，均与线索矛盾）。H2 和 H3 属于同一个冲突域 → 设备 2 不隔离冲突域 → <strong>100BaseT 集线器</strong>。</p>
 <h3>第 2 问：H2 与 H3 的最远距离</h3>
-<p><strong>框架：最小帧长 → 争用期 → 单程时延上限 → 扣除设备延迟 → 乘传播速度。</strong></p>
-<ol><li>H2、H3 同处一个冲突域（Hub 连接），使用半双工 CSMA/CD；100BaseT 速率 100 Mbps。</li><li>争用期（往返时延上限）= 最小帧长 / 速率 = 64 × 8 bit ÷ 100 Mbps = <strong>5.12 μs</strong>。</li><li>单程上限 τ = 5.12 ÷ 2 = 2.56 μs，其中包含信号过设备 2 的额外 1.51 μs → 线路传播时延上限 = 2.56 − 1.51 = <strong>1.05 μs</strong>。</li><li>最远距离 d = 1.05 μs × 2 × 10^8 m/s = <strong>210 m</strong>。</li></ol>
+<p>机制：H2、H3 经 Hub 同处一个冲突域，半双工 CSMA/CD。为什么最小帧长能定距离上限——发送方必须<strong>在发完帧之前</strong>得知碰撞：碰撞信号从发送端传到冲突点再返回，最远要 2τ；若帧发完了碰撞消息还没回来，发送方会误判成功。所以“最小帧长的发送时间 ≥ 2τ”，反过来看，争用期（2τ 上限）= 最小帧长 ÷ 速率。</p>
+<ol><li>100BaseT 速率 100 Mb/s：争用期 = 64 × 8 bit ÷ 100 Mb/s = <strong>5.12 μs</strong>。</li><li>单程上限 τ = 5.12 ÷ 2 = 2.56 μs。这 2.56 μs 里既有线路传播、也含信号过设备 2 的额外 1.51 μs，扣掉后线路传播上限 = 2.56 − 1.51 = <strong>1.05 μs</strong>（τ 是单程，H2→H3 单程只穿过设备 2 一次，所以只减一次 1.51）。</li><li>最远距离 d = 1.05 μs × 2×10⁸ m/s = <strong>210 m</strong>。</li></ol>
 <h3>第 3 问：DHCP 报文 M 与广播帧去向</h3>
-<p><strong>框架：DHCP 四步交互 + 广播帧的泛洪规则。</strong></p>
-<ul><li>H4 首先发送的是 <strong>DHCP DISCOVER（发现）报文</strong>。</li><li>H4、H5、AP、DHCP 服务器、交换机 S、路由器接口 E0 同在 192.168.0.0/25 这个子网（一个广播域）。DISCOVER 以<strong>广播帧</strong>（目的 MAC 全 1）封装，交换机收到后从除入端口外的所有端口泛洪 → <strong>路由器 E0 接口能收到</strong>封装 M 的以太网帧。</li><li>S 向 DHCP 服务器转发的仍是这个广播帧，目的 MAC = <strong>FF-FF-FF-FF-FF-FF</strong>。</li></ul>
+<p>机制：DHCP 的四步交互是 Discover → Offer → Request → ACK。H4 刚接入，<strong>还没有 IP 地址，也不知道 DHCP 服务器的 IP 和 MAC</strong>——唯一能做的就是“全网喊话”：首先发送 <strong>DHCP Discover 报文</strong>（M），IP 层目的地址 255.255.255.255，链路层封装为目的 MAC 全 1 的<strong>广播帧</strong>。</p>
+<ul><li>H4、AP、交换机 S、路由器 E0 接口、DHCP 服务器同在 192.168.0.0/25 这一个广播域里。S 收到广播帧，按交换机规则从<strong>除入端口外的所有端口泛洪</strong> → 路由器 E0 接口<strong>能收到</strong>封装 M 的以太网帧（DHCP 服务器同样收到）。</li><li>S 向 DHCP 服务器转发的仍是这个广播帧，目的 MAC = <strong>FF-FF-FF-FF-FF-FF</strong>。路由器会收下该帧，但不会把这个 IP 受限广播再转发到别的网络。</li></ul>
 <h3>第 4 问：802.11 帧的地址 1、2、3</h3>
-<p><strong>框架：先判断帧的方向（"来自 AP"），再套地址表。</strong></p>
-<p>H5 收到的帧由 AP 发往站点："来自 AP" = 1、"去往 AP" = 0。此时地址 1 = 目的地址，地址 2 = AP 地址，地址 3 = 源地址。</p>
-<table><thead><tr><th>地址字段</th><th>含义</th><th>本题取值</th></tr></thead><tbody><tr><td>地址 1</td><td>目的地址</td><td>H5 的 MAC <code>00-11-11-11-11-E1</code></td></tr><tr><td>地址 2</td><td>AP 地址</td><td><code>00-11-11-11-11-C1</code></td></tr><tr><td>地址 3</td><td>源地址</td><td>H4 的 MAC <code>00-11-11-11-11-D1</code></td></tr></tbody></table>
+<p>机制：802.11 帧最多带 4 个地址字段，具体含义随 To DS / From DS 变化，但骨架不变——<strong>地址 1 = 本跳接收者</strong>（ACK 发给谁），<strong>地址 2 = 本跳发送者</strong>（谁负责重传），<strong>地址 3 = 端到端的源或目的</strong>（无线段只是路径的最后一跳，必须把真正的起点/终点带上，对端才知道来龙去脉）；地址 4 只在无线分布式系统（mesh）中用。</p>
+<p>H5 收到的帧由 AP 发往无线站点（“来自 AP”，From DS = 1）：</p>
+<table><thead><tr><th>地址字段</th><th>角色</th><th>本题取值</th></tr></thead><tbody><tr><td>地址 1</td><td>本跳接收者 = 目的站</td><td>H5 的 MAC <code>00-11-11-11-11-E1</code></td></tr><tr><td>地址 2</td><td>本跳发送者 = AP</td><td><code>00-11-11-11-11-C1</code></td></tr><tr><td>地址 3</td><td>端到端源 = H4</td><td>H4 的 MAC <code>00-11-11-11-11-D1</code></td></tr></tbody></table>
+<p>为什么地址 2 不是 H4：最后一跳是 AP 发出的，ACK 与重传都对着 AP；端到端源 H4 放在地址 3。</p>
 <h3>易错点</h3>
-<ul><li><strong>第 1 问把设备 1 当成集线器</strong>：Hub 连冲突域都不隔离，与"不属于同一个冲突域"矛盾。</li><li><strong>第 2 问忘扣 1.51 μs</strong>：Hub 的额外延迟也计入单程 2.56 μs，必须扣除；不扣会得 512 m。</li><li><strong>第 2 问忘除 2</strong>：5.12 μs 是往返（2τ），单程 τ = 2.56 μs。</li><li><strong>第 3 问以为 E0 收不到</strong>：广播帧会被交换机泛洪到所有端口，路由器接口在链路上必然收到（只是路由器不会把该 IP 广播转发到别的网络）。</li><li><strong>第 4 问地址 2、3 弄反</strong>："来自 AP"的帧：地址 2 一定是 AP 自己（00-…-C1），地址 3 才是真正源站 H4（00-…-D1）。</li></ul>
-<blockquote>一句话总括：交换机隔冲突不隔广播、Hub 全不隔；5.12 μs 争用期扣 Hub 剩 1.05 μs 得 210 m；DHCP 先发 DISCOVER 全 1 广播；来自 AP 的 802.11 帧 = 地址 1 目的、地址 2 AP、地址 3 源。</blockquote></div></div>
+<ul><li><strong>第 1 问把设备 1 当成集线器</strong>：Hub 连冲突域都不隔离，与“不属于同一个冲突域”直接矛盾。</li><li><strong>第 2 问忘扣 1.51 μs</strong>：设备延迟也在单程 2.56 μs 的预算里，必须扣除；不扣会得 512 m。</li><li><strong>第 2 问忘除 2</strong>：5.12 μs 是往返（2τ），单程 τ = 2.56 μs；也不能把 1.51 扣两次（单程只过一次设备 2）。</li><li><strong>第 3 问以为 E0 收不到</strong>：广播帧被交换机泛洪到所有端口，E0 在链路上必然收到——只是路由器不把该 IP 广播转发出去。</li><li><strong>第 4 问地址 2、3 弄反</strong>：“来自 AP”的帧地址 2 一定是 AP 自己（00-…-C1），地址 3 才是端到端源 H4（00-…-D1）。</li></ul>
+<blockquote>一句话总括：交换机隔冲突不隔广播、Hub 全不隔；5.12 μs 争用期扣设备延迟剩 1.05 μs 得 210 m；DHCP 先发 Discover 全 1 广播；来自 AP 的 802.11 帧 = 地址 1 目的、地址 2 AP、地址 3 源。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

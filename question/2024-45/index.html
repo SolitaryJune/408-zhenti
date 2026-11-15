@@ -107,15 +107,24 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚存中「页表项自身」的地址推算</h2>
-<p>答题框架：页大小定偏移位数 → 虚地址拆页号与偏移 → 页表项地址 = 页表始址 + 页号 × 4 → 页表自身也占虚页，其页框号看它实际装入的物理位置。</p>
-<h3>第（1）问：缺页处理后更新的那个页表项</h3>
-<ol><li>拆虚拟地址 <code>1234 5678H</code>：页大小 4 MB，页内偏移占低 22 位，即 <code>345678H</code>；高 10 位是页号——前两个半字节加第 3 个半字节的高 2 位，为 <code>048H</code>（十进制 72）。</li><li>转换后物理地址 <code>BAB4 5678H</code>：低 22 位偏移不变，高 10 位即页框号，为 <code>2EAH</code>。</li><li>页表项虚拟地址 = 页表始址（虚）<code>B8C0 0000H</code> + 页号 × 4 B：<code>048H</code> × 4 = <code>120H</code>，得 <code>B8C0 0120H</code>。</li><li>页表装入物理地址 <code>6540 0000H</code> 开始的连续空间，页表项在页表内偏移不变：物理地址 = <code>6540 0000H</code> + <code>120H</code> = <code>6540 0120H</code>。</li><li>该页表项中页框号更新后的值为 <code>2EAH</code>。</li></ol>
-<h3>第（2）问：页表自身所在的页</h3>
-<ol><li>页表始址（虚）<code>B8C0 0000H</code> 的高 10 位就是它所在页的页号：B、8、C 的二进制为 1011 1000 1100，取高 10 位 1011100011，即页号 <code>2E3H</code>（十进制 739）。</li><li>页表自身也是虚拟地址空间中的内容，它所在页的页表项就是进程 P 页表中的第 <code>2E3H</code> 项：虚拟地址 = <code>B8C0 0000H</code> + <code>2E3H</code> × 4 = <code>B8C0 0000H</code> + <code>B8CH</code> = <code>B8C0 0B8CH</code>。</li><li>该页装入的物理位置：页表从物理 <code>6540 0000H</code> 开始连续存放，<code>6540 0000H</code> 的高 10 位即页框号：6、5、4 的二进制为 0110 0101 0100，取高 10 位得 <code>195H</code>。</li></ol>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚存——先拆地址，再顺着页表走两次查</h2>
+<h3>第 0 步：机制先行——页式翻译只动高位，偏移直通</h3>
+<p>页式虚拟存储把虚地址空间和物理地址空间都切成等大的页/页框。本题页大小 4 MB = 2²² B，所以地址的<strong>低 22 位是页内偏移，剩余高 10 位是页号（虚）或页框号（物）</strong>。</p>
+<p>页式翻译的基本动作只有一步：拿虚地址高 10 位的页号去查页表，换成页框号；<strong>低 22 位的页内偏移原样直通、一字不改</strong>。本题的翻译结果印证了这一点：<code>1234 5678H</code> → <code>BAB4 5678H</code>，低 22 位 <code>345678H</code> 纹丝不动，变的只有高 10 位——这也顺带给出一个重要读法：<strong>页框号 = 物理地址的高 10 位</strong>。</p>
+<p>页表是什么：按页号索引的数组，第 p 项存放第 p 页的页框号，每项 4 字节。于是任何"某个页的页表项地址"都遵循同一个公式：<strong>页表项地址 = 页表始址 + 页号 × 4</strong>。</p>
+<h3>第（1）问：缺页处理后更新的那个页表项（3 分）</h3>
+<p><strong>第一步，拆出页号。</strong> <code>1234 5678H</code> 的二进制是 <code>0001 0010 0011 0100 …</code>，取高 10 位 <code>0001001000B</code> = <strong>048H</strong>（十进制 72）。注意 10 位页号横跨两个半字节再加第三个半字节的高 2 位，不是简单取前 3 个十六进制位。</p>
+<p><strong>第二步，页表项的虚拟地址。</strong> 第 048H 页的页表项就是页表数组的第 72 项：<code>B8C0 0000H + 72 × 4 = B8C0 0000H + 120H = B8C0 0120H</code>。</p>
+<p><strong>第三步，页表项的物理地址。</strong> 页表被整体装载到物理 <code>6540 0000H</code> 开始的连续空间：页表项在页表内部的相对位置（偏移 120H）不因装载而变，变的只是基址——所以物理地址 = <code>6540 0000H + 120H = 6540 0120H</code>。</p>
+<p><strong>第四步，页框号。</strong> 缺页处理后该页被放进页框 2EAH：翻译结果 <code>BAB4 5678H</code> 的高 10 位 <code>1011101010B</code> = <strong>2EAH</strong>，这就是要写进页表项的新页框号。</p>
+<h3>第（2）问：页表自身所在的页（4 分）</h3>
+<p><strong>为什么会有这一问？</strong> 页表自己也是存在主存里的数据，而且题目给的是它的<strong>虚拟</strong>始址 <code>B8C0 0000H</code>——CPU 要读写任何一个页表项，都得先对这条虚地址做同样的翻译：它落在哪个虚页？那个虚页又被放进了哪个页框？所以"页表所在页"的页表项，本身也是进程 P 页表中的一员。</p>
+<p><strong>页表所在页的页号</strong>：把页表始址 <code>B8C0 0000H</code> 当作一条普通虚地址拆——二进制 <code>1011 1000 1100 …</code> 的前 10 位是 <code>1011100011B</code> = <strong>2E3H</strong>（十进制 739）。顺带可验证：<code>B8C0 0000H</code> 低 22 位全 0，恰是页 2E3H 的页首，页表正好从页首开始放。</p>
+<p><strong>该页的页表项虚拟地址</strong>：它就是 P 页表的第 2E3H 项——<code>B8C0 0000H + 2E3H × 4 = B8C0 0000H + B8CH = B8C0 0B8CH</code>。</p>
+<p><strong>页框号</strong>：看页表实际装载位置。页表从物理 <code>6540 0000H</code> 连续存放，该地址的高 10 位 <code>0110010101B</code> = <strong>195H</strong>，即页表所在页被放进 195H 号页框。</p>
 <h3>易错点</h3>
-<ul><li><strong>页号换算出错</strong>：10 位页号横跨两个半字节再加第三个半字节的高 2 位，<code>1234 5678H</code> 的页号是 <code>048H</code>，不是 <code>123H</code>。</li><li><strong>两问混淆</strong>：第（1）问查的是「被访问页」的页表项（第 <code>048H</code> 项），第（2）问查的是「页表自身所在页」的页表项（第 <code>2E3H</code> 项），索引对象不同。</li><li><strong>页框号来源搞错</strong>：第（2）问的页框号要取页表实际装入位置 <code>6540 0000H</code> 的高 10 位，而不是页表始址虚地址的任何字段。</li></ul>
-<blockquote>结论：第（1）问页表项虚地址 <code>B8C0 0120H</code>、物理地址 <code>6540 0120H</code>、页框号 <code>2EAH</code>；第（2）问页号 <code>2E3H</code>、页表项虚地址 <code>B8C0 0B8CH</code>、页框号 <code>195H</code>。</blockquote></div></div>
+<ul><li><strong>页号拆位出错</strong>：10 位页号跨半字节，<code>1234 5678H</code> 的页号是 <code>048H</code>，不是 <code>123H</code>（取前 3 个十六进制位是 12 位，多了 2 位偏移位）。</li><li><strong>两问的索引对象混淆</strong>：第（1）问查的是"被访问页"的页表项（第 048H 项），第（2）问查的是"页表自身所在页"的页表项（第 2E3H 项）——先想清楚在查谁，再套公式。</li><li><strong>页框号取错来源</strong>：第（2）问的页框号取<strong>物理装载位置</strong> <code>6540 0000H</code> 的高 10 位，与页表的虚拟始址没有任何换算关系。</li><li><strong>忘了偏移直通</strong>：翻译前后低 22 位不变；若发现"偏移也变了"，说明方向已经错了。</li></ul>
+<blockquote>一句话结论：第（1）问页表项虚地址 <code>B8C0 0120H</code>、物理地址 <code>6540 0120H</code>、页框号 <code>2EAH</code>；第（2）问页号 <code>2E3H</code>、页表项虚地址 <code>B8C0 0B8CH</code>、页框号 <code>195H</code>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

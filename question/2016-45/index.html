@@ -107,22 +107,27 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚存 + Cache 的地址划分与块映射</h2>
-<p><strong>答案：（1）A=19、B=19、C=11、D=13、E=9、F=9、G=6，TLB 标记 B 存虚页号；（2）组号 3，H = 0 0000 1000B；（3）缺页处理开销大，因缺页要访问磁盘、Cache 缺失只需访问主存；（4）Cache—主存层次快可用直写，主存—外存层次磁盘太慢用回写以减少写盘次数。</strong></p>
-<h3>问（1）第一步：先定页内偏移，再逐段切分</h3>
-<p>页大小 8KB = 2^13 → <strong>D（页内偏移）= 13 位</strong>，虚地址与物理地址共用。</p>
-<table><thead><tr><th>字段</th><th>含义</th><th>计算</th><th>位数</th></tr></thead><tbody><tr><td>A</td><td>虚地址中 TLB 标记</td><td>32 − 13</td><td>19</td></tr><tr><td>B</td><td>TLB 表项的标记字段（全相联）</td><td>= 完整虚页号</td><td>19</td></tr><tr><td>C</td><td>物理地址中页框号</td><td>24 − 13</td><td>11</td></tr><tr><td>D</td><td>页内偏移</td><td>log2 8KB</td><td>13</td></tr><tr><td>E</td><td>Cache 标记</td><td>24 − 9 − 6</td><td>9</td></tr><tr><td>F</td><td>Cache 组索引</td><td>见问(1)第二步</td><td>9</td></tr><tr><td>G</td><td>块内偏移</td><td>log2 64B</td><td>6</td></tr></tbody></table>
-<h3>问（1）第二步：TLB 全相联与 Cache 组数的算法</h3>
-<ul><li>TLB <strong>全相联</strong>映射：任一表项可与任意虚页比较，所以标记字段 B 必须存<strong>完整虚页号</strong>（19 位）；</li><li>Cache：块 64B = 2^6 → <strong>G = 6 位</strong>；数据区 64KB、2 路组相联 → 组数 = 64KB ÷ (2 × 64B) = 512 = 2^9 → <strong>F = 9 位</strong>；物理地址 24 位，<strong>E = 24 − 9 − 6 = 9 位</strong>。</li></ul>
-<h3>问（2）：块号 4099 装入 Cache</h3>
-<p>组相联映射：<strong>组号 = 主存块号 mod 组数</strong> = 4099 mod 512 = <strong>3</strong>（512 × 8 = 4096，余 3）。行标记 H = 块号的高位部分 = 4099 ÷ 512 = <strong>8</strong>，写成 9 位二进制 = <strong>0 0000 1000B</strong>。</p>
-<h3>问（3）：两种缺失的开销比较</h3>
-<p><strong>缺页处理的时间开销大</strong>。缺页要<strong>访问磁盘</strong>（毫秒级），Cache 缺失只需<strong>访问主存</strong>（几十纳秒级），两者相差多个数量级。</p>
-<h3>问（4）：写策略为什么不同</h3>
-<ul><li><strong>Cache—主存层次</strong>：两者速度接近，直写同时更新主存的代价可以接受，且实现简单、一致性易保证；</li><li><strong>主存—外存层次</strong>：磁盘访问极慢，若每次修改都写盘代价巨大；回写只在页面被替换时才写盘，大幅减少磁盘访问次数、提高性能。</li></ul>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：页式虚存 + Cache 的地址分段与块映射</h2>
+<p><strong>答题框架</strong>：整道题是"一次访存要过三道查表关"——虚地址先经 TLB/页表换成物理地址，物理地址再经 Cache 取数。每一关的地址都被切成"索引段 + 标记段 + 偏移段"，A~G 无非是这些段在不同地址里的名字。先定偏移，再倒推其余字段，最后单独处理两个映射（TLB 全相联、Cache 2 路组相联）。</p>
+<h3>第 0 步：先立模型——地址怎么切，查表就怎么查</h3>
+<ul><li><strong>分页</strong>：虚地址 = 虚页号 + 页内偏移，物理地址 = 页框号 + 页内偏移。虚实变换只换"页号"那一头，<strong>页内偏移原样照搬</strong>——所以虚、物地址里的偏移段位数相同。</li><li><strong>TLB 全相联</strong>：任意虚页可放进任意表项。虚地址里<strong>没有索引段</strong>可供选表项，只能拿虚页号与每个表项的标记逐一比较——所以 TLB 表项的标记必须存<strong>完整虚页号</strong>，少存一位都会把别的页误判成命中。</li><li><strong>Cache 2 路组相联</strong>：物理地址切成 标记 E + 组号 F + 块内偏移 G 三段：组号选"进哪一组"，标记认"组里两行到底是谁"，偏移定位"块内第几字节"。</li></ul>
+<h3>问（1）：逐段切分 A~G</h3>
+<p><strong>先定偏移（一切计算的锚点）</strong>：页大小 8KB = 2^13 → <strong>D（页内偏移）= 13 位</strong>；主存块 64B = 2^6 → <strong>G（块内偏移）= 6 位</strong>。</p>
+<ul><li>虚地址 32 位：A（虚页号）= 32 − 13 = <strong>19 位</strong>；</li><li>物理地址 24 位：C（页框号）= 24 − 13 = <strong>11 位</strong>；</li><li>TLB 标记 B = 完整虚页号 = <strong>19 位</strong>（全相联的必然结果，见第 0 步）；</li><li>Cache：数据区 64KB、2 路、每块 64B → 组数 = 64KB ÷ (2 × 64B) = 512 = 2^9 → <strong>F（组号）= 9 位</strong>；E（标记）= 24 − 9 − 6 = <strong>9 位</strong>。</li></ul>
+<table><thead><tr><th>字段</th><th>含义</th><th>计算</th><th>位数</th></tr></thead><tbody><tr><td>A</td><td>虚地址中的虚页号</td><td>32 − 13</td><td>19</td></tr><tr><td>B</td><td>TLB 表项标记（全相联）</td><td>= 完整虚页号</td><td>19</td></tr><tr><td>C</td><td>物理地址中的页框号</td><td>24 − 13</td><td>11</td></tr><tr><td>D</td><td>页内偏移</td><td>log2 8KB</td><td>13</td></tr><tr><td>E</td><td>Cache 标记</td><td>24 − 9 − 6</td><td>9</td></tr><tr><td>F</td><td>Cache 组号</td><td>log2 512</td><td>9</td></tr><tr><td>G</td><td>块内偏移</td><td>log2 64B</td><td>6</td></tr></tbody></table>
+<p><strong>TLB 标记字段 B 中存放的是虚页号。</strong></p>
+<h3>问（2）：主存块 4099 映射到哪一组、H 存什么</h3>
+<p>组相联的映射规则是<strong>组号 = 主存块号 mod 组数</strong>——主存块按组数"轮流转"，取低位即知去处。4099 = 8 × 512 + 3 → <strong>组号 3</strong>。同一组将来会迎来无数个块号 mod 512 = 3 的块，区分"到底是谁"靠行内标记 H = 块号的高位部分 = 4099 ÷ 512 = 8，写成 9 位二进制（与 E 同宽，供比较器比对）就是 <strong>H = 0 0000 1000B</strong>。</p>
+<h3>问（3）：Cache 缺失与缺页，谁的开销大</h3>
+<p><strong>缺页处理的时间开销大。</strong> 两者的差异在于"去下一级取货"的对象与流程：</p>
+<ul><li>Cache 缺失：去<strong>主存</strong>取一个 64B 的块，几十纳秒量级；</li><li>缺页：去<strong>磁盘</strong>取一个 8KB 的页，毫秒量级；且缺页要陷入操作系统跑缺页处理程序（保护现场、选页淘汰、脏页还要写回磁盘），可能引发进程切换。</li></ul>
+<p>相差 4~5 个数量级，缺页远比 Cache 缺失昂贵。</p>
+<h3>问（4）：为什么 Cache 直写、页面回写</h3>
+<p>写策略的本质是"<strong>每次修改都同步下一级（直写），还是攒到替换时才同步（回写）</strong>"，选哪种取决于下一级有多贵：</p>
+<ul><li><strong>Cache—主存</strong>：主存写只要几十纳秒，与 Cache 访问同量级，直写让主存副本始终保持新鲜、实现简单，代价可以接受；</li><li><strong>主存—磁盘（页式虚存）</strong>：磁盘访问毫秒级、贵 4~5 个数量级，且页面往往被反复修改（时间局部性），每次都写盘无法承受；回写配合脏位，只在页面被替换时才写盘，大幅减少磁盘访问次数、提高性能。</li></ul>
 <h3>易错点</h3>
-<ul><li><strong>A 算成 20 位</strong>：忘记虚地址 32 位里已含 13 位页内偏移——虚页号 = 32 − 13 = 19。</li><li><strong>F 算成 10 位</strong>：用 64KB ÷ 64B = 1024 当组数——还要<strong>除以路数 2</strong>，64KB ÷ (2×64B) = 512 组。</li><li><strong>H 与组号颠倒</strong>：组号是块号的低位（4099 mod 512 = 3），标记是高位（4099 ÷ 512 = 8）。</li></ul>
-<blockquote>记忆锚点：偏移位 = log2(页/块大小)；组数 = Cache 数据区 ÷ (路数 × 块大小)；标记 = 剩余的高位。</blockquote></div></div>
+<ul><li><strong>A 算成 20 位</strong>：忘记虚地址 32 位里已含 13 位页内偏移——虚页号 = 32 − 13 = 19。</li><li><strong>F 算成 10 位</strong>：用 64KB ÷ 64B = 1024 当组数——还要<strong>除以路数 2</strong>，64KB ÷ (2×64B) = 512 组。</li><li><strong>H 与组号颠倒</strong>：组号是块号的低位（4099 mod 512 = 3），标记是高位（4099 ÷ 512 = 8）。</li><li><strong>B 写成页框号</strong>：TLB 在虚地址一侧工作，标记必须与虚页号比较；页框号是命中后 TLB 交付的结果。</li></ul>
+<blockquote>答案汇总：(1) A=19、B=19、C=11、D=13、E=9、F=9、G=6，B 存虚页号；(2) 组号 3，H = 0 0000 1000B；(3) 缺页开销大，因缺页访磁盘、Cache 缺失只访主存；(4) Cache—主存层次快可用直写，磁盘太慢须回写以减少写盘次数。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

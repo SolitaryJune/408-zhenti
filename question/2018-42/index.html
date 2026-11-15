@@ -107,21 +107,26 @@
     <button data-tab="anim">🎬 动画演示</button>
     <button data-tab="video">📺 解析视频</button>
   </div>
-  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：光通信骨干网的最小生成树与 TTL 判定</h2>
-<h3>第（1）问：最经济方案 = 最小生成树，共两种、总费用均 16</h3>
-<p>8 个城市连通需要 7 条边，最经济方案就是图的最小生成树。用 Kruskal 思路按边权从小到大选边：</p>
-<ol><li>权 2 的 5 条边全部可用：XA–BJ、XA–WH 连成块 {XA,BJ,WH}；TL–JN、QD–JN、QD–NJ 连成块 {TL,JN,QD,NJ}；</li><li>权 3 的边中：<strong>BJ–TL</strong> 恰好连接上述两大块，选入；<strong>CS–QD</strong> 把 CS 接入，选入；</li><li>WH–BJ、WH–QD、JN–NJ 都会成环，舍去；权 4 的边不再需要。</li></ol>
-<p>按上面顺序得到 7 条边：XA–BJ(2)、XA–WH(2)、TL–JN(2)、QD–JN(2)、QD–NJ(2)、BJ–TL(3)、CS–QD(3)，总费用 2+2+2+2+2+3+3 = <strong>16</strong>。</p>
-<p>注意「所有可能方案」：连接两大块的权 3 桥边有 <strong>BJ–TL</strong> 和 <strong>WH–QD</strong> 两条（BJ–JN 权 4 更贵不能选），二者任选其一都构成最小生成树，故共有<strong>两种方案</strong>，总费用均为 16：</p>
+  <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：光通信骨干网——最省钱方案为什么是最小生成树</h2>
+<h3>第 0 步：机制先行——最经济的连通方案必然是一棵树</h3>
+<p>8 个城市要用光纤连成一体，任何可行方案对应原图的一个<strong>连通子图</strong>。"最省钱"被两头夹死：</p>
+<ol><li><strong>边不能多</strong>：n 个顶点的连通图至少 n−1 条边；一旦多于 n−1 条，必含环，环上任意拆掉一条边图仍连通、费用立刻下降——所以最省钱方案不含环。</li><li><strong>边不能少</strong>：少于 n−1 条边必不连通。</li></ol>
+<p>两头合起来：最经济方案 = <strong>恰好 7 条边（n−1）+ 无环 + 连通</strong> = 生成树；费用最小的生成树就是<strong>最小生成树（MST）</strong>。于是第（1）问的"所有可能的最经济方案"翻译成人话就是：<strong>找出全部 MST</strong>。</p>
+<p>Kruskal 算法给出系统化做法：把边按权从小到大排队，逐条考察——<strong>不成环就选，成环就跳过</strong>。为什么跳过成环的边不亏：这条边的两端此刻已经被更便宜的边连通了，再选它只会花冤枉钱。</p>
+<h3>第（1）问：用 Kruskal 走一遍，并回答"为什么恰好两种"</h3>
+<p>题图共 12 条边，其中权 2 的恰 5 条。按权从小到大：</p>
+<ol><li><strong>权 2 的 5 条边全部入选</strong>：XA–BJ、XA–WH 把 {XA,BJ,WH} 连成一块；TL–JN、QD–JN、QD–NJ 把 {TL,JN,QD,NJ} 连成一块；CS 还是孤点。此时已选 5 条，还差 2 条，剩"两大块 + 一个孤点"待连通。</li><li><strong>权 3 的边里挑不成环的</strong>：BJ–TL 恰好把两大块连通，选；CS–QD 把 CS 接入，选。WH–BJ、JN–NJ 在各自块内成环，跳过；WH–QD 也想连两大块，但 BJ–TL 先到一步，再选就成环，跳过。凑满 7 条，总费用 2×5+3+3 = <strong>16</strong>。</li><li><strong>为什么恰好两种方案</strong>：那 5 条权 2 边在每棵 MST 里都躲不掉（各自块内它们就是最便宜且不成环的连接），真正有"选择权"的只有一件事——<strong>用哪条权 3 桥边把两个权 2 块连起来</strong>。候选恰有两条：<strong>BJ–TL</strong> 与 <strong>WH–QD</strong>（BJ–JN 权 4 更贵，选它总费用就不是最小）；二者等价且互斥（选了一条，另一条必成环）。所以 MST 恰好两棵，费用均 16：</li></ol>
 <table><thead><tr><th>方案</th><th>7 条边</th><th>总费用</th></tr></thead><tbody><tr><td>方案 1（桥边 WH–QD）</td><td>XA–BJ、XA–WH、WH–QD、QD–CS、QD–JN、QD–NJ、TL–JN</td><td>16</td></tr><tr><td>方案 2（桥边 BJ–TL）</td><td>XA–BJ、XA–WH、BJ–TL、TL–JN、JN–QD、QD–NJ、QD–CS</td><td>16</td></tr></tbody></table>
+<p>题目要求"用带权图表示"——作答时把两棵树的边与权值画出（或列出）并给出费用 16，缺一不可。</p>
 <h3>第（2）问：存储结构与算法名称</h3>
-<p>题图是无向带权图，用<strong>邻接矩阵或邻接表</strong>均可存储；求最小生成树可用 <strong>Prim 算法或 Kruskal 算法</strong>。</p>
-<h3>第（3）问：TTL = 5 的 IP 分组能否从 H1（TL）到 H2（BJ）</h3>
-<p>路由器<strong>转发</strong>分组时才把 TTL 减 1，减到 0 就丢弃。</p>
-<ul><li><strong>方案 2</strong>：TL 与 BJ 相邻（有边 BJ–TL），TL 路由器转发后 TTL = 4，BJ 路由器收到即可交付 H2，<strong>H2 可以收到</strong>。</li><li><strong>方案 1</strong>：TL 到 BJ 的路径为 TL → JN → QD → WH → XA → BJ，共 5 跳。TTL 变化：TL 转发后 4、JN 后 3、QD 后 2、WH 后 1、XA 后 0 —— TTL 减为 0 的分组在 XA 路由器被丢弃，<strong>H2 收不到</strong>。</li></ul>
+<p>题图是无向带权图，<strong>邻接矩阵或邻接表</strong>均可存储（8 个顶点规模很小，矩阵写起来更直观）；求 MST 用 <strong>Prim 算法或 Kruskal 算法</strong>都行——两者殊途同归：Prim 从一个点出发"长"树，Kruskal 从全局挑便宜边"合并"森林，本题上面走的是 Kruskal 的路线。</p>
+<h3>第（3）问：TTL = 5 能否从 TL 送进 BJ——先立 TTL 的规则</h3>
+<p>机制只有三条：TTL 记的是"还允许经过几个路由器"；<strong>只有路由器转发分组时才减 1</strong>（主机发出、主机接收都不减）；<strong>减到 0 的分组被丢弃</strong>。于是问题化为数跳数：</p>
+<ul><li><strong>方案 2</strong>：TL 与 BJ 相邻，TL 路由器转发一次，TTL 5→4，BJ 收到后直接交付 H2——<strong>H2 可以收到</strong>。</li><li><strong>方案 1</strong>：TL 到 BJ 只能走 TL → JN → QD → WH → XA → BJ，共 5 跳。5 个路由器逐跳减 1：TL 后 4、JN 后 3、QD 后 2、WH 后 1、XA 后 <strong>0</strong>——TTL 归 0 的分组在 XA 被丢弃，<strong>H2 收不到</strong>。</li></ul>
+<p>这正是参考答案"方案 1 距离过长"的准确含义：不是费用问题，是跳数超出了 TTL=5 的预算。</p>
 <h3>易错点</h3>
-<ul><li><strong>只给一棵生成树</strong>：题目问「所有可能的最经济方案」，漏掉桥边的第二种选择会丢一半分。</li><li><strong>把成环的边当必选</strong>：WH–BJ、WH–QD、JN–NJ 权值虽小但会成环；其中 WH–QD 又是另一棵 MST 的桥边，要认真区分。</li><li><strong>TTL 减 1 的时机</strong>：主机 H1 发出时 TTL = 5 未减；TL 是第一个减 1 的设备。按 5 跳减 5 次恰在 XA 归零被丢弃。</li><li><strong>第（1）问只答费用</strong>：必须同时给出用带权图表示的方案和总费用 16。</li></ul>
-<blockquote>一句话：两棵 MST 桥边二选一、总费用均 16；方案 2 相邻一跳可达，方案 1 五跳在 XA 处 TTL 归零被丢弃。</blockquote></div></div>
+<ul><li><strong>只给一棵生成树</strong>：题目问"所有可能的最经济方案"，桥边 BJ–TL / WH–QD 二选一产生两棵 MST，漏一棵丢一半分。</li><li><strong>把成环边当必选</strong>：WH–BJ、JN–NJ 权值小但块内成环；WH–QD 更特殊——在方案 1 里它是桥边，在方案 2 里它成环，同一张图里身份随选择而变。</li><li><strong>TTL 减 1 的时机</strong>：主机不减、路由器转发才减；5 跳减 5 次恰在最后一个路由器 XA 处归零被丢弃。</li><li><strong>第（1）问只报费用</strong>：必须同时给出方案的带权图表示和总费用 16。</li></ul>
+<blockquote>一句话：最省钱 = 无环连通 = MST；5 条权 2 边锁死，桥边 BJ–TL / WH–QD 二选一得两棵 MST 各 16；方案 2 一跳可达，方案 1 五跳在 XA 处 TTL 归零被丢弃。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

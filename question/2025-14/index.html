@@ -108,12 +108,12 @@
 <p>补码运算器做 x − y = x + [−y]补。y = 0111 0101B，按位取反加 1 得 [−y]补 = 1000 1011B = 8BH。</p>
 <h3>第三步：8 位竖式相加（从 bit0 到 bit7）</h3>
 <table><thead><tr><th>位</th><th>bit7</th><th>bit6</th><th>bit5</th><th>bit4</th><th>bit3</th><th>bit2</th><th>bit1</th><th>bit0</th></tr></thead><tbody><tr><td>[x]补</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>[−y]补</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr><tr><td>本位和</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td></tr></tbody></table>
-<p>逐位：bit0 1+1=进1得0；bit1 1+1+1=进1得1；bit2 0+0+1=1；bit3 0+1=1；bit4 0；bit5 1+0=1；bit6 0；bit7 1+1=进1得0。8 位结果 = 0010 1110B = 2EH = <strong>46</strong>，最高位进位被丢弃。</p>
+<p>逐位：bit0 1+1=进1得0；bit1 1+1+1=进1得1；bit2 0+0+1=1；bit3 0+1=1；bit4 0；bit5 1+0=1；bit6 0；bit7 1+1=进1得0。8 位结果 = 0010 1110B = 2EH = <strong>46</strong>，最高位进位被丢弃。<strong>为什么第 9 位进位可以扔？</strong> 8 位运算器是模 2^8 = 256 的记数系统，第 9 位根本不在寄存器里；丢掉它等于减 256，而 −210 ≡ 46 (mod 256)，2EH 正是 −210 在 8 位世界里的化身。</p>
 <h3>第四步：判 OF</h3>
 <ul><li>双高位法：最高位进位 C7 = 1，次高位进位 C6 = 0，OF = C7 与 C6 异或 = <strong>1</strong>；</li><li>符号判断：负数 + 负数 = 正数（0010 1110B 符号位 0），必然溢出；</li><li>真值核对：x − y = −93 − 117 = −210，超出 8 位补码范围 −128～127，确实溢出；机器数 2EH 按 8 位补码读回是 +46（即 −210 + 256）。</li></ul>
 <p>所以 x − y 的机器结果为 <strong>46、OF = 1</strong>，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>直接按真值减</strong>：得 −210 后写不出 8 位结果——运算器里只有 8 位机器数，结果就是 2EH。</li><li><strong>OF 判成 0</strong>：只看到「最高位有进位 CF=1」就完事；OF 是有符号溢出标志，负加负得正、C7 与 C6 相异才是溢出。</li><li><strong>[−y]补 求错</strong>：是对 y 的机器数取反加 1，不是对真值 117 直接写 −117 的十进制。</li></ul>
+<ul><li><strong>误选 A（24，0）</strong>：把减法做成了加法——A3H + 75H = 118H，取低 8 位得 18H = 24；异号相加不可能溢出，OF 正确地为 0。一步「减变加」错，数值和标志就全错。</li><li><strong>误选 B（24，1）</strong>：数值同样来自误加，OF 又把「最高位有进位」错当成溢出——CF 是无符号进位标志，有符号溢出看的是 C7 与 C6 是否相异。</li><li><strong>OF 判成 0</strong>（干扰项 C：46 对但标志错）：只看到「最高位有进位 CF=1」就完事；OF 是有符号溢出标志，负加负得正、C7 与 C6 相异才是溢出。</li><li><strong>[−y]补 求错</strong>：是对 y 的机器数取反加 1，不是对真值 117 直接写 −117 的十进制。</li></ul>
 <blockquote>一句话结论：x + [−y]补 = A3H + 8BH = 2EH（46），C7=1、C6=0，OF=1，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">

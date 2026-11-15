@@ -102,18 +102,18 @@
     <button data-tab="video">📺 解析视频</button>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：short 与 int 的机器数及相加</h2>
-<h3>第一步：写出 x 与 y 的机器数</h3>
-<p>x 为 int（32 位）：127 = 7FH，即 x = <code>0000007FH</code>（四个选项此项相同）。</p>
-<p>y 为 short（16 位）：-9 = -0009H，求补码：0009H 取反得 FFF6H，再加 1 得 <code>FFF7H</code>。注意 FFF9H 对应的是 -7，属于求补时出错的结果。</p>
-<h3>第二步：按 C 语言规则符号扩展后相加</h3>
-<p>z = x + y 中 short 自动转 int：FFF7H 符号扩展为 <code>FFFFFFF7H</code>（最高位为 1，高 16 位补全 1）。</p>
-<p>补码相加：0000007FH + FFFFFFF7H = 1 00000076H，最高位进位超出 32 位被丢弃，z = <code>00000076H</code>。</p>
-<table><thead><tr><th>变量</th><th>类型</th><th>机器数</th></tr></thead><tbody><tr><td>x</td><td>int</td><td>0000007FH</td></tr><tr><td>y</td><td>short</td><td>FFF7H</td></tr><tr><td>y 符号扩展</td><td>int</td><td>FFFFFFF7H</td></tr><tr><td>z</td><td>int</td><td>00000076H</td></tr></tbody></table>
-<h3>第三步：十进制验证并选答案</h3>
-<p>127 + (-9) = 118 = 76H，与 z = 00000076H 一致。逐项核对：A 中 y 错；B 中 y、z 都错；C 中 z 错；只有 <strong>D</strong> 全对，选 <strong>D</strong>。</p>
+<p>答案：<strong>D</strong>。</p>
+<h3>第 0 步：先立机制——补码就是模运算下的记数</h3>
+<p>16 位 short 的模是 2¹⁶ = 65536：最高位为 1 的位串代表负数，真值 = 无符号解释值 − 65536。求 −9 的 16 位补码，就是找 −9 在模 65536 下的代表：65536 − 9 = 65527 = <code>FFF7H</code>；用「取反加一」验算：0009H 取反得 FFF6H，加 1 得 FFF7H——两条路在数学上是同一件事，结果必然一致。（FFF9H = 65529 ≡ −7，正是漏加 1 的产物。）x = 127 = 7FH，按 32 位 int 写全：x = <code>0000007FH</code>，四个选项此项相同。</p>
+<h3>第 1 步：为什么要符号扩展——加法器只吃同宽输入</h3>
+<p>z = x + y 的加法在 32 位加法器里做，y 必须先扩成 32 位。扩展规则 = 左边补符号位：FFF7H 最高位是 1，补 1 得 <code>FFFFFFF7H</code>。<strong>为什么补 1 数值不变？</strong> 因为 −9 ≡ 65527 (mod 2¹⁶)，同时也 ≡ 2³² − 9 (mod 2³²)——同一个负数在更大模下的化身，补 1 只是换了个模把它写出来。若误补 0（零扩展），就成了 +65527，数值彻底改变。</p>
+<h3>第 2 步：相加并看进位</h3>
+<p>0000007FH + FFFFFFF7H = 1 00000076H。<strong>第 33 位的进位为什么可以扔？</strong> 32 位运算本来就是模 2³² 加法，丢掉 2³² 不影响 32 位内的余数——z = <code>00000076H</code>。十进制核对：127 + (−9) = 118 = 76H，吻合。</p>
+<h3>第 3 步：对号入座</h3>
+<p>A 的 y = FFF9H（求补漏加 1）错；B 的 y 错、z = FFFF0076H 也错——高 16 位照抄了 y 的符号位 FFFF，漏加了低 16 位相加产生的进位（正确应为 FFFF + 1 = 0000）；C 的 z 错；只有 <strong>D</strong> 三项全对。</p>
 <h3>易错点</h3>
-<ul><li><strong>求补漏加 1</strong>：得到 FFF9H（选项 A、B）。</li><li><strong>忽略符号扩展 / 保留进位</strong>：把 16 位结果直接拼进高位会得到形如 FFFF0076H 的错误值（选项 B）。</li><li><strong>只核对一个变量</strong>：必须 x、y、z 三个都验算，干扰项常是"两对一错"。</li></ul>
-<blockquote>结论：x = 0000007FH，y = FFF7H，z = 00000076H，选 D。</blockquote></div></div>
+<ul><li><strong>求补漏加 1</strong> → FFF9H，干扰项 A、B 的来路。</li><li><strong>高位漏加进位</strong> → z 形如 FFFF0076H，干扰项 B；高字必须参与 FFFF + 1 = 0000 的运算。</li><li><strong>只核对一个变量</strong>：干扰项常是「两对一错」，x、y、z 必须逐一验算。</li></ul>
+<blockquote>记忆锚点：补码真值 = 无符号值 − 模；负数扩展补 1（数值不变，只是换模）；模运算加法丢进位合法，但每位都要真的加到位。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>

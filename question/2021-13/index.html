@@ -106,7 +106,8 @@
 <h3>第一步：无符号读法</h3>
 <p>把三个机器数直接按无符号解释：x = <code>FFFDH</code> = 65533，y = <code>FFDFH</code> = 65503，z = <code>7FFCH</code> = 32764。大小顺序是 <strong>z &lt; y &lt; x</strong>——选项 A 说 z &lt; x &lt; y（需要 x &lt; y，实际 x 更大）、选项 B 说 x &lt; y &lt; z，都不成立，排除 A、B。</p>
 <h3>第二步：补码读法</h3>
-<p>最高位为 1 是负数，真值 = 机器数 − 2^16（借位减 10000H）：</p>
+<p>补码不是另一套数制，而是<strong>模运算下的记数方式</strong>：16 位共有 65536（2^16）个状态，把这个"状态环"从中间掰开——最高位为 0 的 0000H~7FFFH 表示 0 ~ +32767；<strong>最高位为 1 的 8000H~FFFFH 表示 −32768 ~ −1</strong>。所以判读就两句话：最高位为 1 → 负数；<strong>真值 = 无符号解释值 − 2^16</strong>。</p>
+<p><strong>为什么"减 2^16"是合法的？</strong> 因为补码的定义就是同余：位串 FFFDH 之所以代表 −3，是因为 −3 ≡ 65533 (mod 65536)。位串本身没有符号，"最高位为 1"恰是"这个余数对应负真值"的记号，从余数还原真值，减一次模即可。（用"取反加一"验算：FFFDH 取反加一得 0003H = 3 → 真值 −3，与减模一致。）</p>
 <table><thead><tr><th>变量</th><th>机器数</th><th>最高位</th><th>真值</th></tr></thead><tbody><tr><td>x</td><td>FFFDH</td><td>1</td><td>FFFDH − 10000H = <strong>−3</strong></td></tr><tr><td>y</td><td>FFDFH</td><td>1</td><td>FFDFH − 10000H = <strong>−33</strong></td></tr><tr><td>z</td><td>7FFCH</td><td>0</td><td>正数 <strong>32764</strong></td></tr></tbody></table>
 <p>顺序为 <strong>y(−33) &lt; x(−3) &lt; z(32764)</strong>，选 D；选项 C 说 x &lt; y &lt; z，第一步就错在 −3 &lt; −33 不成立。</p>
 <h3>易错点</h3>

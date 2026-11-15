@@ -101,6 +101,58 @@
     }, DELAYS[+E.speed.value - 1]);
   }
 
+  /* ---- 题目头自动注入：按自身 URL 从题库拉取题干/选项/答案 ---- */
+  function loadQuestionHeader(root){
+    try {
+      var m = (location.pathname || '').match(/anim\/([A-Za-z0-9._-]+)\.html/);
+      if (!m) return;
+      var id = m[1];
+      var ym = id.match(/(\d{4})/);
+      if (!ym) return;
+      fetch('../data/questions/' + ym[1] + '.json').then(function(r){
+        return r.ok ? r.json() : Promise.reject(new Error('http ' + r.status));
+      }).then(function(d){
+        var qs = Array.isArray(d) ? d : (d.questions || []);
+        var q = null;
+        for (var i = 0; i < qs.length; i++) if (qs[i].id === id) { q = qs[i]; break; }
+        if (!q) return;
+        var fixImg = function(h){
+          var s = String(h || '');
+          s = s.replace(/src=["'](\/?content-images\/)/g, 'src="../images/');
+          s = s.replace(/src=["'](images\/)/g, 'src="../images/');
+          return s;
+        };
+        var opts = '';
+        if (q.options && q.options.length) {
+          opts = '<div class="aw-qopts">' + q.options.map(function(o){
+            return '<div class="aw-qopt"><span class="aw-qletter">' + o.letter +
+              '</span><span class="aw-qtext">' + fixImg(o.html || '') + '</span></div>';
+          }).join('') + '</div>';
+        }
+        var tags = (q.tags || []).map(function(t){ return '<span class="aw-qtag">' + t + '</span>'; }).join(' ');
+        var ansTxt = q.answerLetter ? ('<b>' + q.answerLetter + '</b>') :
+          (q.answer && q.answer !== '略' ? '<b>' + String(q.answer).slice(0, 40) + '</b>' : '见下方结论卡');
+        var box = document.createElement('details');
+        box.className = 'aw-question';
+        box.open = true;
+        box.innerHTML = '<summary>📋 题目与选项 · ' + id + '（全屏时也在）</summary>' +
+          '<div class="aw-qbody">' +
+          '<div class="aw-qstem">' + fixImg(q.stemHtml || q.stem || '') + '</div>' + opts +
+          '<div class="aw-qmeta">参考答案：' + ansTxt + (tags ? '　' + tags : '') + '</div>' +
+          '</div>';
+        root.insertBefore(box, root.firstChild);
+        if (window.renderMathInElement) {
+          try {
+            window.renderMathInElement(box, {
+              delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }],
+              throwOnError: false,
+            });
+          } catch (e) {}
+        }
+      }).catch(function(){ /* file:// 打开或离线时静默跳过 */ });
+    } catch (e) {}
+  }
+
   function init(cfg){
     E.cfg = cfg;
     E.snaps = cfg.snaps;
@@ -111,6 +163,7 @@
     E.cur = 0; E.timer = null;
 
     var root = document.querySelector('.aw');
+    loadQuestionHeader(root);
     root.innerHTML =
       '<h1>' + (cfg.title || '') + '</h1>' +
       '<div class="sub">' + (cfg.subtitle || '') + '</div>' +

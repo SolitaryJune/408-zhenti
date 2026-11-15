@@ -32,8 +32,12 @@ body{
   box-shadow: 0 1px 3px rgba(15,23,42,.08), 0 8px 24px rgba(15,23,42,.05);
   margin-bottom: 14px;
 }
-/* 舞台 */
-.aw-stage{ min-height: 120px; }
+/* 舞台：内容由引擎装入 .aw-fit 并整体缩放适配；unsafe center 让内容在放大/缩小后始终视觉居中
+   （溢出时负偏移居中，配合引擎的 overflow 控制与 origin 补偿，不会出现不可滚动到的裁切） */
+.aw-stage{ min-height: 120px; display:grid; place-content:unsafe center; place-items:unsafe center; }
+/* 引擎内容壳：随内容收缩，引擎按可视区整体缩放（见 anim-engine.js fitStage） */
+.aw-fit{ width:fit-content; transform-origin:center center; }
+.aw-stage.aw-alignstart{ place-content:start; place-items:start; }
 .aw-scroll{ overflow-x: auto; padding-bottom: 4px; }
 .aw-row-label{ font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
 .aw-row-label b{ color:#213e48; }
@@ -95,6 +99,7 @@ body{
   font-size: 12.5px; padding: 6px 9px; border-radius: 8px; background:#f8edcb; border:1px solid #1b3a4b1a;
   font-family: "SF Mono", Menlo, monospace; line-height: 1.5;
 }
+.aw-log-line.aw-log-empty{ color:#94a3b8; }
 .aw-log-line.ok{ border-left: 3px solid var(--green); }
 .aw-log-line.miss{ border-left: 3px solid var(--red); background:#fff7f7; }
 .aw-log-line.shift{ border-left: 3px solid var(--amber); background:#f8edcb; }
@@ -173,4 +178,19 @@ body{
 @media (max-width:1080px){
   .aw-grid{grid-template-columns:1fr}
   .aw-side{position:static}
+}
+
+/* ===== v3：全屏高度利用率 ===== */
+@media (min-height: 860px) and (min-width: 1200px){
+  /* 舞台卡 = 视口高 - 200px 固定预算：宽屏下收紧页头余量（底部留白/两处外边距），
+     保证「页头 166px + 舞台卡(100vh-200px) + 卡底边距 + 页底留白」不超出视口（修 2024-07 页面级滚动） */
+  body{padding-bottom:16px}
+  .aw .sub{margin-bottom:10px}
+  .aw-question{margin-bottom:12px}
+  .aw-stage-card{height: calc(100vh - 200px); display:flex; flex-direction:column;}
+  .aw-stage-card .aw-stage{flex:1; overflow:auto;}
+  .aw-stage-card .aw-status{flex:none}
+  .aw-stage-card .aw-hint{flex:none}
+  .aw-sidecard{display:flex; flex-direction:column; max-height: calc(100vh - 200px); overflow:auto}
+  .aw-sidecard #awLog{max-height:none; flex:1; min-height:160px}
 }

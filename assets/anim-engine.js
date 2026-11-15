@@ -20,7 +20,73 @@
  */
 (function(){
   var DELAYS = [1400, 1000, 700, 450, 250];
+  /* 舞台内容自适应：内容小于舞台时整体放大（上限 2.5×），超出时缩小（下限 0.75×），
+     缩到下限仍放不下则顶对齐并交还滚动条 */
+  var MIN_SCALE = 0.75, MAX_SCALE = 2.5;
   var E = {};
+
+  /* 把舞台内容缩放到刚好放进可视区，并交由 CSS 网格（unsafe center）居中。
+     放大/缩小后视觉上始终居中；缩放触底（0.75×）仍放不下时：
+     收缩外壳到舞台宽（内部滚动区恢复自身滚动条、保持原字号），顶对齐并交还滚动条 */
+  function fitStage(){
+    var st = E.stage, fit = E.fit;
+    if(!st || !fit || !st.isConnected) return;
+    var cw = st.clientWidth, ch = st.clientHeight;
+    if(!cw || !ch) return;
+    fit.style.transform = 'none';
+    fit.style.maxWidth = 'none';
+    var dims = measureContent(fit), wA = dims.w, hA = dims.h;
+    var s = scaleFor(cw, ch, wA, hA);
+    if(s <= MIN_SCALE + 1e-9 && (wA > cw + 1 || hA > ch + 1)){
+      // 触底仍放不下：外壳钳到舞台宽，内部滚动区自己滚（保持 100% 字号），按外壳尺寸重算
+      fit.style.maxWidth = cw + 'px';
+      dims = measureContent(fit);
+      wA = dims.w; hA = dims.h;
+      s = scaleFor(cw, ch, wA, hA);
+    }
+    fit.style.transform = (Math.abs(s - 1) < 1e-9) ? '' : 'scale(' + s + ')';
+    var over = (wA * s > cw + 1) || (hA * s > ch + 1);
+    st.classList.toggle('aw-alignstart', over);
+    fit.style.transformOrigin = over ? 'top center' : 'center center';
+    // 视觉已放下 → 关滚动条（transform 的布局溢出会造成幻影滚动条）；触底 → 交还滚动条
+    st.style.overflowX = over ? 'auto' : 'hidden';
+    st.style.overflowY = over ? 'auto' : 'hidden';
+  }
+  /* 内容自然尺寸：外壳盒 + .aw-scroll 滚动溢出 + 可见子孙的视觉并集
+     （捕捉 transform 平移/负 margin 造成的左/上溢出；svg 子元素被其视口裁剪、
+       display:none / visibility:hidden / opacity:0 不渲染，均不计入） */
+  function measureContent(fit){
+    var w = Math.max(fit.offsetWidth, fit.scrollWidth);
+    var h = Math.max(fit.offsetHeight, fit.scrollHeight);
+    var scs = fit.querySelectorAll('.aw-scroll');
+    for(var i = 0; i < scs.length; i++){
+      w = Math.max(w, scs[i].scrollWidth);
+      h = Math.max(h, scs[i].scrollHeight);
+    }
+    var fr = fit.getBoundingClientRect();
+    var minL = fr.left, minT = fr.top, maxR = fr.right, maxB = fr.bottom;
+    var all = fit.querySelectorAll('*');
+    for(var j = 0; j < all.length; j++){
+      var k = all[j];
+      var tag = k.tagName;
+      if(tag === 'svg' || tag === 'SVG') continue;
+      var cs;
+      try { cs = getComputedStyle(k); } catch(e){ continue; }
+      if(cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') continue;
+      var r = k.getBoundingClientRect();
+      if(!r.width && !r.height) continue;
+      if(r.left < minL) minL = r.left;
+      if(r.top < minT) minT = r.top;
+      if(r.right > maxR) maxR = r.right;
+      if(r.bottom > maxB) maxB = r.bottom;
+    }
+    return { w: Math.max(w, Math.ceil(maxR - minL)), h: Math.max(h, Math.ceil(maxB - minT)) };
+  }
+  function scaleFor(cw, ch, w, h){
+    var s = Math.min(cw / w, ch / h);
+    if(!isFinite(s) || s <= 0) s = 1;
+    return Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
+  }
 
   function $(id){ return document.getElementById(id); }
   function el(tag, cls, html){
@@ -33,8 +99,8 @@
   function render(cur, animate){
     var sn = E.snaps[cur];
     if(!animate){ E.stage.classList.add('notrans'); }
-    if(E.render){ E.render(E.stage, sn, cur, animate); }
-    else if(sn.html != null){ E.stage.innerHTML = sn.html; }
+    if(E.render){ E.render(E.fit, sn, cur, animate); }
+    else if(sn.html != null){ E.fit.innerHTML = sn.html; }
     if(!animate){ void E.stage.offsetWidth; E.stage.classList.remove('notrans'); }
 
     E.count.innerHTML = E.counterLabel + ' <span>' + (sn.count != null ? sn.count : cur) + '</span>';
@@ -47,9 +113,11 @@
     }
     // 日志
     if(cur === 0){
-      E.log.innerHTML = '<div class="aw-log-line">（尚未开始）</div>';
+      E.log.innerHTML = '<div class="aw-log-line aw-log-empty">（尚未开始）</div>';
       E.ribbon.innerHTML = '<span style="font-size:12.5px;color:#94a3b8">随演示逐个点亮…</span>';
     } else {
+      var empty = E.log.querySelector('.aw-log-empty');
+      if(empty) empty.remove();   // 真实日志出现后清掉占位框
       var d = el('div', 'aw-log-line ' + (sn.cls || 'step'), sn.log || '');
       E.log.appendChild(d);
       E.log.scrollTop = E.log.scrollHeight;
@@ -67,6 +135,7 @@
       E.resultBox.classList.add('show');
     }
     if(cur >= E.snaps.length - 1) stopPlay();
+    fitStage();
   }
 
   function goto(t, animate){
@@ -77,9 +146,9 @@
     E.cur = t;
     if(E.cur === 0){
       // 重置：清空日志并整体重画
-      if(E.build) E.build(E.stage);
+      if(E.build) E.build(E.fit);
       render(0, false);
-      E.log.innerHTML = '<div class="aw-log-line">（尚未开始）</div>';
+      E.log.innerHTML = '<div class="aw-log-line aw-log-empty">（尚未开始）</div>';
       E.ribbon.innerHTML = '<span style="font-size:12.5px;color:#94a3b8">随演示逐个点亮…</span>';
       E.resultBox.classList.remove('show');
       return;
@@ -136,7 +205,8 @@
             : '见下方结论卡');
         var box = document.createElement('details');
         box.className = 'aw-question';
-        box.open = true;
+        // 高屏（全屏/大窗）默认折叠题目卡，把高度让给可视化舞台
+        box.open = !(window.innerHeight >= 860);
         box.innerHTML = '<summary>📋 题目与选项 · ' + id + '（全屏时也在）</summary>' +
           '<div class="aw-qbody">' +
           '<div class="aw-qstem">' + fixImg(q.stemHtml || q.stem || '') + '</div>' + opts +
@@ -169,9 +239,9 @@
       '<h1>' + (cfg.title || '') + '</h1>' +
       '<div class="sub">' + (cfg.subtitle || '') + '</div>' +
       '<div class="aw-grid">' +
-        '<div class="aw-main">' +
+          '<div class="aw-main">' +
           '<div class="aw-card aw-stage-card">' +
-            '<div class="aw-stage" id="awStage"></div>' +
+            '<div class="aw-stage" id="awStage"><div class="aw-fit" id="awFit"></div></div>' +
             '<div class="aw-status" id="awStatus"></div>' +
             '<div class="aw-hint">快捷键：← 上一步　→ 下一步　空格 播放/暂停</div>' +
           '</div>' +
@@ -197,7 +267,7 @@
       '</div>';
     loadQuestionHeader(root);
 
-    E.stage = $('awStage'); E.status = $('awStatus'); E.log = $('awLog');
+    E.stage = $('awStage'); E.fit = $('awFit'); E.status = $('awStatus'); E.log = $('awLog');
     E.ribbon = $('awRibbon'); E.count = $('awCount'); E.resultBox = $('awResult');
     E.big = E.resultBox.querySelector('.big'); E.desc = E.resultBox.querySelector('.desc');
     E.speed = $('awSpeed'); E.playBtn = $('awPlay');
@@ -215,6 +285,10 @@
       else if(e.key === 'ArrowLeft'){ stopPlay(); goto(E.cur - 1); }
       else if(e.key === ' '){ e.preventDefault(); togglePlay(); }
     });
+    window.addEventListener('resize', function(){
+      clearTimeout(E._rzT); E._rzT = setTimeout(fitStage, 80);
+    });
+    window.addEventListener('load', fitStage);
 
     goto(0, false);
   }

@@ -12,17 +12,17 @@
 /* ================== 题目专属区域（只改这里） ================== */
 /* 链接分配 + FAT：簇 4KB；dir(dir1→48)，dir1(file1→100, file2→200)；file1 链 100→106→108 */
 
-var td = 'border:1px solid #cbd5e1;padding:5px 12px;';
+var td = 'border:1px solid #5a7d8c66;padding:5px 12px;';
 
 function dirCard(title, rows, hlRow, inMem){
   var h = '<div style="display:inline-block;vertical-align:top;margin:0 8px;text-align:center">' +
-          '<div class="aw-row-label"><b>' + title + '</b>' + (inMem ? ' <span style="color:#2563eb">（已在内存）</span>' : '') + '</div>' +
+          '<div class="aw-row-label"><b>' + title + '</b>' + (inMem ? ' <span style="color:#1b3a4b">（已在内存）</span>' : '') + '</div>' +
           '<table style="border-collapse:collapse;font-size:13.5px;margin:0 auto">' +
-          '<tr><th style="' + td + 'background:#f1f5f9">文件名</th><th style="' + td + 'background:#f1f5f9">首簇号</th></tr>';
+          '<tr><th style="' + td + 'background:#f8edcb">文件名</th><th style="' + td + 'background:#f8edcb">首簇号</th></tr>';
   rows.forEach(function(r, i){
     var hl = (i === hlRow);
-    h += '<tr><td style="' + td + 'background:' + (hl ? '#dcfce7' : '#fff') + ';' + (hl ? 'font-weight:700' : '') + '">' + r[0] + '</td>' +
-         '<td style="' + td + 'background:' + (hl ? '#dcfce7' : '#fff') + ';' + (hl ? 'font-weight:700' : '') + '">' + r[1] + '</td></tr>';
+    h += '<tr><td style="' + td + 'background:' + (hl ? '#2f9e4424' : '#fff') + ';' + (hl ? 'font-weight:700' : '') + '">' + r[0] + '</td>' +
+         '<td style="' + td + 'background:' + (hl ? '#2f9e4424' : '#fff') + ';' + (hl ? 'font-weight:700' : '') + '">' + r[1] + '</td></tr>';
   });
   return h + '</table></div>';
 }
@@ -30,13 +30,13 @@ function dirCard(title, rows, hlRow, inMem){
 function fatTable(hlRow, hlCol){
   var rows = [[100, 106], [106, 108], [200, 201], [201, 202]];
   var h = '<div style="display:inline-block;vertical-align:top;margin:0 8px;text-align:center">' +
-          '<div class="aw-row-label"><b>FAT</b> <span style="color:#2563eb">（已在内存）</span></div>' +
+          '<div class="aw-row-label"><b>FAT</b> <span style="color:#1b3a4b">（已在内存）</span></div>' +
           '<table style="border-collapse:collapse;font-size:13.5px;margin:0 auto">' +
-          '<tr><th style="' + td + 'background:#f1f5f9">表项号（本簇）</th><th style="' + td + 'background:#f1f5f9">下一簇号</th></tr>';
+          '<tr><th style="' + td + 'background:#f8edcb">表项号（本簇）</th><th style="' + td + 'background:#f8edcb">下一簇号</th></tr>';
   rows.forEach(function(r, i){
     var hl0 = (i === hlRow && hlCol === 0), hl1 = (i === hlRow && hlCol === 1);
-    h += '<tr><td style="' + td + 'background:' + (hl0 ? '#dcfce7' : '#fff') + ';' + (hl0 ? 'font-weight:700' : '') + '">' + r[0] + '</td>' +
-         '<td style="' + td + 'background:' + (hl1 ? '#fef3c7' : '#fff') + ';' + (hl1 ? 'font-weight:700' : '') + '">' + r[1] + '</td></tr>';
+    h += '<tr><td style="' + td + 'background:' + (hl0 ? '#2f9e4424' : '#fff') + ';' + (hl0 ? 'font-weight:700' : '') + '">' + r[0] + '</td>' +
+         '<td style="' + td + 'background:' + (hl1 ? '#f8edcb' : '#fff') + ';' + (hl1 ? 'font-weight:700' : '') + '">' + r[1] + '</td></tr>';
   });
   return h + '</table></div>';
 }
@@ -63,7 +63,7 @@ function stageHtml(kind){
     h += fatTable(-1, null);
     h += note('<b>第 1 次访盘：读簇 48</b> → dir1 的目录文件 → file1 首簇号 100');
   } else if(kind === 3){
-    h += '<div style="margin:8px 0"><span style="display:inline-block;border:1px solid #d97706;border-radius:8px;padding:8px 16px;font-size:14.5px;background:#fef3c7">' +
+    h += '<div style="margin:8px 0"><span style="display:inline-block;border:1px solid #e07a2f;border-radius:8px;padding:8px 16px;font-size:14.5px;background:#f8edcb">' +
          '5000 ÷ 4096 = 1 余 904 → 第 5000 字节在 file1 的<b>链上第 2 个簇</b>（第 1 簇：0–4095，第 2 簇：4096–8191）</span></div>';
     h += dirCard('dir 目录文件', [['dir1', 48]], -1, true);
     h += dirCard('簇 48 · dir1 目录文件', [['file1', 100], ['file2', 200]], 0, false);
@@ -78,7 +78,7 @@ function stageHtml(kind){
     h += fatTable(0, 1);
     h += note('<b>第 2 次访盘：读簇 106</b> → 取得含第 5000 字节的数据块 ✓');
   } else {
-    h += '<div style="margin:8px 0"><span style="display:inline-block;border:1px solid #16a34a;border-radius:8px;padding:8px 16px;font-size:14.5px;background:#dcfce7">' +
+    h += '<div style="margin:8px 0"><span style="display:inline-block;border:1px solid #2f9e44;border-radius:8px;padding:8px 16px;font-size:14.5px;background:#2f9e4424">' +
          '全程访问的簇：<b>48</b>（dir1 目录）与 <b>106</b>（file1 数据），共 2 次访盘</span></div>';
     h += dirCard('dir 目录文件', [['dir1', 48]], -1, true);
     h += dirCard('簇 48 · dir1 目录文件', [['file1', 100], ['file2', 200]], -1, false);

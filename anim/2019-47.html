@@ -14,17 +14,17 @@
 var nd = {}, d1sub = null, d2sub = null, d3sub = null, info = null;
 
 var STYLES = {
-  green: { b: '#16a34a', bg: '#f0fdf4', c: '#15803d', op: 1 },
-  blue:  { b: '#2563eb', bg: '#eff6ff', c: '#1d4ed8', op: 1 },
-  amber: { b: '#d97706', bg: '#fffbeb', c: '#92400e', op: 1 },
-  dim:   { b: '#cbd5e1', bg: '#fff',    c: '#334155', op: .4 },
+  green: { b: '#2f9e44', bg: '#f0f7e6', c: '#276942', op: 1 },
+  blue:  { b: '#1b3a4b', bg: '#1b3a4b14', c: '#1b3a4b', op: 1 },
+  amber: { b: '#e07a2f', bg: '#fffbeb', c: '#92400e', op: 1 },
+  dim:   { b: '#5a7d8c66', bg: '#fff',    c: '#213e48', op: .4 },
 };
 function resetNodes(){
   ['NET','R','D1','D2','D3','H1','H2','H3','H4'].forEach(function(k){
     if(!nd[k]) return;
-    nd[k].style.borderColor = '#94a3b8';
+    nd[k].style.borderColor = '#b9cbd0';
     nd[k].style.background = '#fff';
-    nd[k].style.color = '#334155';
+    nd[k].style.color = '#213e48';
     nd[k].style.opacity = '1';
   });
 }
@@ -42,32 +42,32 @@ function apply(list){
 // 每步：节点高亮 + 设备1/2/3 副标签 + 底部结论行（下标对应 snaps）
 var LOOK = [
   { hl: [], d1: '待选型', d2: '待选型', d3: '待选型',
-    text: 'R 为路由器（接口已配 IP）。设备 1、2、3 可选以太网交换机（无 VLAN）或路由器，逐问推演。', c: '#334155' },
+    text: 'R 为路由器（接口已配 IP）。设备 1、2、3 可选以太网交换机（无 VLAN）或路由器，逐问推演。', c: '#213e48' },
   { hl: [['D1','amber'],['R','blue'],['D2','blue'],['D3','blue']], d1: '→ 路由器', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(1) 设备 1 连接三个不同子网（/30 链路 + LAN1 + LAN2），需按 IP 目的网络转发 → 选<b>路由器</b>；设备 2、3 只在本子网内连主机 → 选<b>以太网交换机</b>。', c: '#334155' },
+    text: '(1) 设备 1 连接三个不同子网（/30 链路 + LAN1 + LAN2），需按 IP 目的网络转发 → 选<b>路由器</b>；设备 2、3 只在本子网内连主机 → 选<b>以太网交换机</b>。', c: '#213e48' },
   { hl: [['D1','blue'],['H1','blue'],['H2','blue']], d1: '→ 路由器', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(2) LAN1 = 192.168.1.0/26：H1 是 .2/26、H2 是 .3/26，默认网关 .1 → 设备 1 接口 IF2 配 <b>192.168.1.1</b>。', c: '#334155' },
+    text: '(2) LAN1 = 192.168.1.0/26：H1 是 .2/26、H2 是 .3/26，默认网关 .1 → 设备 1 接口 IF2 配 <b>192.168.1.1</b>。', c: '#213e48' },
   { hl: [['D1','blue'],['H3','blue'],['H4','blue']], d1: '→ 路由器', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(2) LAN2 = 192.168.1.64/26：H3 是 .66/26、H4 是 .67/26，默认网关 .65 → IF3 配 <b>192.168.1.65</b>。', c: '#334155' },
+    text: '(2) LAN2 = 192.168.1.64/26：H3 是 .66/26、H4 是 .67/26，默认网关 .65 → IF3 配 <b>192.168.1.65</b>。', c: '#213e48' },
   { hl: [['R','amber'],['D1','amber']], d1: '路由器：IF1 = ? · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(2) R 与设备 1 之间是 /30 链路（192.168.1.252～255，可分配 .253/.254）：R 端已占 .253 → IF1 配 <b>192.168.1.254</b>。', c: '#334155' },
+    text: '(2) R 与设备 1 之间是 /30 链路（192.168.1.252～255，可分配 .253/.254）：R 端已占 .253 → IF1 配 <b>192.168.1.254</b>。', c: '#213e48' },
   { hl: [['D1','green']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(2) 小结：交换机接口不配 IP——只有设备 1（路由器）的三个接口需要 IP：<b>.254 / .1 / .65</b>。', c: '#15803d' },
+    text: '(2) 小结：交换机接口不配 IP——只有设备 1（路由器）的三个接口需要 IP：<b>.254 / .1 / .65</b>。', c: '#276942' },
   { hl: [['R','amber'],['NET','amber']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(3) 内网全部是 192.168.1.0/24 私有地址，Internet 上不可路由 → R 必须提供 <b>NAT（网络地址转换）</b>服务，H1～H4 才能访问 Internet。', c: '#334155' },
+    text: '(3) 内网全部是 192.168.1.0/24 私有地址，Internet 上不可路由 → R 必须提供 <b>NAT（网络地址转换）</b>服务，H1～H4 才能访问 Internet。', c: '#213e48' },
   { hl: [['H3','amber'],['H4','amber'],['D1','blue']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(4) H3 = 192.168.1.66/26 → 子网 192.168.1.64/26，主机位全 1 的直接广播地址 = <b>192.168.1.127</b> → 该数据报在 LAN2 内广播。', c: '#334155' },
+    text: '(4) H3 = 192.168.1.66/26 → 子网 192.168.1.64/26，主机位全 1 的直接广播地址 = <b>192.168.1.127</b> → 该数据报在 LAN2 内广播。', c: '#213e48' },
   { hl: [['H4','green'],['D1','blue'],['H3','dim'],['H1','dim'],['H2','dim']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '(4) 路由器隔离广播域：H1、H2 收不到；H3 是发送方，不接收自己发出的数据报 → <b>只有 H4 接收</b>。', c: '#15803d' },
+    text: '(4) 路由器隔离广播域：H1、H2 收不到；H3 是发送方，不接收自己发出的数据报 → <b>只有 H4 接收</b>。', c: '#276942' },
   { hl: [['D1','green'],['D2','green'],['D3','green'],['R','blue'],['NET','blue'],['H4','green']], d1: '路由器 · IF1 .254 · IF2 .1 · IF3 .65', d2: '→ 以太网交换机', d3: '→ 以太网交换机',
-    text: '汇总：(1) 设备 1 = 路由器，设备 2/3 = 交换机；(2) 仅设备 1 配 IP：.254 / .1 / .65；(3) R 提供 NAT；(4) 只有 H4 接收。', c: '#334155' },
+    text: '汇总：(1) 设备 1 = 路由器，设备 2/3 = 交换机；(2) 仅设备 1 配 IP：.254 / .1 / .65；(3) R 提供 NAT；(4) 只有 H4 接收。', c: '#213e48' },
 ];
 
 function nodeBox(t, subHtml){
   var d = AW.el('div', '');
-  d.style.cssText = 'padding:7px 14px;border:2px solid #94a3b8;border-radius:10px;background:#fff;' +
-    'font-weight:700;font-size:14px;color:#334155;text-align:center;transition:all .35s;line-height:1.4;';
-  d.innerHTML = t + (subHtml ? '<div style="font-size:11px;font-weight:400;color:#64748b;margin-top:2px"></div>' : '');
+  d.style.cssText = 'padding:7px 14px;border:2px solid #b9cbd0;border-radius:10px;background:#fff;' +
+    'font-weight:700;font-size:14px;color:#213e48;text-align:center;transition:all .35s;line-height:1.4;';
+  d.innerHTML = t + (subHtml ? '<div style="font-size:11px;font-weight:400;color:#586e72;margin-top:2px"></div>' : '');
   if(subHtml){
     var s = d.lastChild;
     s.innerHTML = subHtml;
@@ -79,11 +79,11 @@ function vline(label){
   var w = AW.el('div', '');
   w.style.cssText = 'display:flex;flex-direction:column;align-items:center;margin:0 auto;';
   var l = AW.el('div', '');
-  l.style.cssText = 'width:2px;height:14px;background:#94a3b8;';
+  l.style.cssText = 'width:2px;height:14px;background:#b9cbd0;';
   w.appendChild(l);
   if(label){
     var t = AW.el('div', '');
-    t.style.cssText = 'font-size:10.5px;color:#94a3b8;margin:1px 0 3px;white-space:nowrap;';
+    t.style.cssText = 'font-size:10.5px;color:#b9cbd0;margin:1px 0 3px;white-space:nowrap;';
     t.innerHTML = label;
     w.appendChild(t);
   }
@@ -155,7 +155,7 @@ AW.init({
         nd[h.key] = nodeBox(h.name, '');
         hc.appendChild(nd[h.key]);
         var ip = AW.el('div', '');
-        ip.style.cssText = 'font-size:10.5px;color:#64748b;margin-top:3px;text-align:center;line-height:1.45;font-family:Menlo,monospace;';
+        ip.style.cssText = 'font-size:10.5px;color:#586e72;margin-top:3px;text-align:center;line-height:1.45;font-family:Menlo,monospace;';
         ip.innerHTML = h.ip;
         hc.appendChild(ip);
         hostsRow.appendChild(hc);
@@ -166,8 +166,8 @@ AW.init({
     inner.appendChild(row);
 
     info = AW.el('div', '');
-    info.style.cssText = 'margin-top:14px;padding:10px 14px;border-radius:10px;background:#f8fafc;' +
-      'border:1px solid #e2e8f0;font-size:13.5px;line-height:1.75;color:#334155;';
+    info.style.cssText = 'margin-top:14px;padding:10px 14px;border-radius:10px;background:#f8edcb;' +
+      'border:1px solid #1b3a4b26;font-size:13.5px;line-height:1.75;color:#213e48;';
     inner.appendChild(info);
 
     wrap.appendChild(inner);

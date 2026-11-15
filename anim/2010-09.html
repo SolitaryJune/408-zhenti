@@ -46,19 +46,19 @@ function drawTree(root, marks, opts){
   (function edges(nd){
     if (!nd) return;
     ['l', 'r'].forEach(function(k){
-      if (nd[k]) s += '<line x1="' + px(nd.id) + '" y1="' + py(nd.id) + '" x2="' + px(nd[k].id) + '" y2="' + py(nd[k].id) + '" stroke="#cbd5e1" stroke-width="2"/>';
+      if (nd[k]) s += '<line x1="' + px(nd.id) + '" y1="' + py(nd.id) + '" x2="' + px(nd[k].id) + '" y2="' + py(nd[k].id) + '" stroke="#5a7d8c66" stroke-width="2"/>';
     });
     edges(nd.l); edges(nd.r);
   })(root);
   for (var id in pos){
     var p = pos[id];
     var m = marks && marks[id];
-    var fill = '#fff', stroke = '#cbd5e1', txt = '#0f172a';
-    if (m === 'ok'){ fill = '#dcfce7'; stroke = '#16a34a'; txt = '#14532d'; }
-    else if (m === 'hit'){ fill = '#16a34a'; stroke = '#16a34a'; txt = '#fff'; }
-    else if (m === 'path'){ fill = '#16a34a'; stroke = '#16a34a'; txt = '#fff'; }
-    else if (m === 'miss'){ fill = '#fee2e2'; stroke = '#dc2626'; txt = '#b91c1c'; }
-    else if (m === 'dim'){ fill = '#f8fafc'; stroke = '#e2e8f0'; txt = '#cbd5e1'; }
+    var fill = '#fff', stroke = '#5a7d8c66', txt = '#1b3a4b';
+    if (m === 'ok'){ fill = '#2f9e4424'; stroke = '#2f9e44'; txt = '#1e4d33'; }
+    else if (m === 'hit'){ fill = '#2f9e44'; stroke = '#2f9e44'; txt = '#fff'; }
+    else if (m === 'path'){ fill = '#2f9e44'; stroke = '#2f9e44'; txt = '#fff'; }
+    else if (m === 'miss'){ fill = '#e6394620'; stroke = '#e63946'; txt = '#a02830'; }
+    else if (m === 'dim'){ fill = '#f8edcb'; stroke = '#1b3a4b26'; txt = '#5a7d8c66'; }
     s += '<circle cx="' + px(id) + '" cy="' + py(id) + '" r="' + R + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>' +
          '<text x="' + px(id) + '" y="' + (py(id) + 5) + '" text-anchor="middle" font-size="13" font-weight="700" fill="' + txt + '" font-family="Menlo,Consolas,monospace">' + p.v + '</text>';
   }
@@ -75,7 +75,7 @@ function levelMarks(hitLv, prevLvs){
 
 var snaps = [{
   cls: 'step', tag: '规则', count: 0,
-  html: '<div style="font-size:14.5px;line-height:2;color:#334155">' +
+  html: '<div style="font-size:14.5px;line-height:2;color:#213e48">' +
         '长度 16 的有序表，折半查找一个<b>不存在的元素</b>：一路走到当前区间变空才判定失败。<br>' +
         '比较只发生在<b>判定树的内部结点</b>上，失败的比较次数 = 路径经过的内部结点个数。<br>' +
         '下面逐层构造判定树（mid = 区间两端位置之和整除 2），数最深失败路径。</div>',
@@ -87,7 +87,7 @@ var snaps = [{
     log: '构造判定树第 ' + (i + 1) + ' 层：' + L.lv.join('、') + '。',
     html: '<div class="aw-row-label"><b>判定树</b>（绿 = 已构造层，深绿 = 本层新加）</div>' +
           '<div style="overflow-x:auto">' + drawTree(TREE, levelMarks(L.lv, prev)) + '</div>' +
-          '<div style="font-size:13.5px;line-height:1.9;color:#334155;margin-top:6px">' + L.note + '</div>',
+          '<div style="font-size:13.5px;line-height:1.9;color:#213e48;margin-top:6px">' + L.note + '</div>',
   };
 })).concat([
   { cls: 'miss', tag: '最深失败路径', count: 6,
@@ -95,11 +95,11 @@ var snaps = [{
     html: '<div class="aw-row-label"><b>最深的失败路径</b>（绿色结点 = 每次比较）</div>' +
           '<div style="overflow-x:auto">' +
           drawTree(TREE, { k8: 'path', k12: 'path', k14: 'path', k15: 'path', k16: 'path' }, { xp: 50, yp: 64 }) + '</div>' +
-          '<div style="font-size:14px;line-height:2;color:#334155">查 16 时范围已缩到单点，比完仍不等 → 区间变空，<b style="color:#b91c1c">失败</b>。路径上内部结点 8、12、14、15、16 共 <b>5 个</b>，即最多比较 <b style="color:#dc2626;font-size:16px">5 次</b>。空位（外部结点）不发生比较。</div>' },
+          '<div style="font-size:14px;line-height:2;color:#213e48">查 16 时范围已缩到单点，比完仍不等 → 区间变空，<b style="color:#a02830">失败</b>。路径上内部结点 8、12、14、15、16 共 <b>5 个</b>，即最多比较 <b style="color:#e63946;font-size:16px">5 次</b>。空位（外部结点）不发生比较。</div>' },
   { cls: 'done', tag: '结论', count: 7, done: true, ribbon: { k: 6, ok: true },
     log: '失败最多比较 ⌈log2(n+1)⌉ = ⌈log2 17⌉ = 5 次 → 答案 B。',
-    html: '<div style="font-size:15px;line-height:2;color:#334155">' +
-          '失败最多比较次数 = 判定树高 = <b>上取整 log2(n+1)</b> = 上取整 log2 17 = <b style="color:#16a34a;font-size:18px">5</b> → 答案选 <b style="color:#16a34a;font-size:18px">B</b>。<br>' +
+    html: '<div style="font-size:15px;line-height:2;color:#213e48">' +
+          '失败最多比较次数 = 判定树高 = <b>上取整 log2(n+1)</b> = 上取整 log2 17 = <b style="color:#2f9e44;font-size:18px">5</b> → 答案选 <b style="color:#2f9e44;font-size:18px">B</b>。<br>' +
           '对照：成功查找最多也是 5 次；若误用 log2 n = 4 或把空位计一次比较，都会错。</div>' },
 ]);
 

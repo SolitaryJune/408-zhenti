@@ -5,36 +5,36 @@
 <title>2020-06 退出递归时输出的 DFS · 逆拓扑序列动画</title>
 <link rel="stylesheet" href="../assets/anim.css">
 <style>
-  .dfs-svg{width:100%;max-width:560px;display:block;margin:0 auto;background:#f8fafc;
+  .dfs-svg{width:100%;max-width:560px;display:block;margin:0 auto;background:#f8edcb;
     border:1px solid #1b3a4b38;border-radius:12px}
   .dfs-svg .dedge{transition:stroke .3s, stroke-width .3s}
   .dfs-svg .dnode circle{transition:fill .3s, stroke .3s}
   .dfs-svg .dnode text{font-weight:800;font-size:16px;text-anchor:middle;dominant-baseline:central;
     transition:fill .3s}
-  .dfs-svg .dnode.norm circle{fill:#ffffff;stroke:#94a3b8;stroke-width:2.5}
-  .dfs-svg .dnode.norm text{fill:#0f172a}
-  .dfs-svg .dnode.stk circle{fill:#dbeafe;stroke:#2563eb;stroke-width:3}
-  .dfs-svg .dnode.stk text{fill:#1d4ed8}
+  .dfs-svg .dnode.norm circle{fill:#ffffff;stroke:#b9cbd0;stroke-width:2.5}
+  .dfs-svg .dnode.norm text{fill:#1b3a4b}
+  .dfs-svg .dnode.stk circle{fill:#d9e3df;stroke:#1b3a4b;stroke-width:3}
+  .dfs-svg .dnode.stk text{fill:#1b3a4b}
   .dfs-svg .dnode.cur circle{fill:#e07a2f;stroke:#e07a2f;stroke-width:3}
   .dfs-svg .dnode.cur text{fill:#fff}
-  .dfs-svg .dnode.good circle{fill:#16a34a;stroke:#16a34a;stroke-width:2.5}
+  .dfs-svg .dnode.good circle{fill:#2f9e44;stroke:#2f9e44;stroke-width:2.5}
   .dfs-svg .dnode.good text{fill:#fff}
   .dstack{margin-top:10px;text-align:center;font-size:14px;font-weight:700;color:#1b3a4b}
-  .dstack code{background:#dbeafe;padding:2px 8px;border-radius:6px;color:#1d4ed8}
+  .dstack code{background:#d9e3df;padding:2px 8px;border-radius:6px;color:#1b3a4b}
   .dseq{margin-top:10px}
-  .dseq .cap{font-size:13px;color:#64748b;margin-bottom:4px}
+  .dseq .cap{font-size:13px;color:#586e72;margin-bottom:4px}
   .dseq .row{display:flex;gap:4px;width:max-content}
   .dseq .col{width:44px;display:flex;flex-direction:column;align-items:center}
-  .dseq .box{width:44px;height:44px;border:2px solid #cbd5e1;border-radius:10px;display:flex;
+  .dseq .box{width:44px;height:44px;border:2px solid #5a7d8c66;border-radius:10px;display:flex;
     align-items:center;justify-content:center;font-weight:800;font-size:18px;background:#fff;
     font-family:"SF Mono",Menlo,monospace}
-  .dseq .box.ok{background:#dcfce7;border-color:#16a34a;color:#14532d}
-  .dseq .box.hit{background:#16a34a;border-color:#16a34a;color:#fff;animation:aw-pop .45s ease}
+  .dseq .box.ok{background:#2f9e4424;border-color:#2f9e44;color:#1e4d33}
+  .dseq .box.hit{background:#2f9e44;border-color:#2f9e44;color:#fff;animation:aw-pop .45s ease}
   .dseq .box.dimc{opacity:.45}
-  .dseq .idx{margin-top:4px;font-size:11px;color:#94a3b8;font-family:monospace}
-  .dchk{margin-top:10px;text-align:center;font-size:13.5px;line-height:1.8;color:#334155;
-    background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px}
-  .dchk b{color:#15803d}
+  .dseq .idx{margin-top:4px;font-size:11px;color:#b9cbd0;font-family:monospace}
+  .dchk{margin-top:10px;text-align:center;font-size:13.5px;line-height:1.8;color:#213e48;
+    background:#f8edcb;border:1px solid #1b3a4b26;border-radius:10px;padding:8px 12px}
+  .dchk b{color:#276942}
 </style>
 </head>
 <body>
@@ -118,11 +118,11 @@ function build(stage){
     var ux = dx/len, uy = dy/len, r = 24;
     var sx = a[0] + ux*r, sy = a[1] + uy*r;
     var ex = b[0] - ux*(r + 7), ey = b[1] - uy*(r + 7);
-    var ln = el2(svgNS, 'line', { x1:sx, y1:sy, x2:ex, y2:ey, stroke:'#cbd5e1', 'stroke-width':2 });
+    var ln = el2(svgNS, 'line', { x1:sx, y1:sy, x2:ex, y2:ey, stroke:'#5a7d8c66', 'stroke-width':2 });
     ln.setAttribute('class', 'dedge');
     ln.id = 'de' + i;
     svg.appendChild(ln);
-    var tri = el2(svgNS, 'polygon', { points:arrowPts(ex, ey, ex + ux*7, ey + uy*7), fill:'#cbd5e1' });
+    var tri = el2(svgNS, 'polygon', { points:arrowPts(ex, ey, ex + ux*7, ey + uy*7), fill:'#5a7d8c66' });
     tri.id = 'dp' + i;
     svg.appendChild(tri);
   });
@@ -171,10 +171,10 @@ function edgeSet(list){
 function render(stage, sn, i){
   var hot = edgeSet(sn.hot), skip = edgeSet(sn.skip), done = edgeSet(sn.done);
   EDGES.forEach(function(e, k){
-    var col = '#cbd5e1', w = 2, dash = '';
-    if (done[k]){ col = '#16a34a'; w = 3; }
-    if (hot[k]){ col = '#d97706'; w = 3.5; }
-    if (skip[k]){ col = '#dc2626'; w = 2.5; dash = '6,4'; }
+    var col = '#5a7d8c66', w = 2, dash = '';
+    if (done[k]){ col = '#2f9e44'; w = 3; }
+    if (hot[k]){ col = '#e07a2f'; w = 3.5; }
+    if (skip[k]){ col = '#e63946'; w = 2.5; dash = '6,4'; }
     var ln = document.getElementById('de' + k);
     ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', w);
     ln.setAttribute('stroke-dasharray', dash);
@@ -199,7 +199,7 @@ function render(stage, sn, i){
   var row = document.getElementById('seqRow');
   var h = '';
   if (!outs.length){
-    h = '<span style="font-size:12.5px;color:#94a3b8;align-self:center">（尚未输出，序列将随退出递归逐个长出）</span>';
+    h = '<span style="font-size:12.5px;color:#b9cbd0;align-self:center">（尚未输出，序列将随退出递归逐个长出）</span>';
   } else {
     outs.forEach(function(ch, k){
       var cur = (k === outs.length - 1);

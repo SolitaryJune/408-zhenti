@@ -18,7 +18,7 @@ var R = 24;
 function drawDAG(marks){
   var s = '<svg width="640" height="290" style="max-width:100%;display:block;margin:0 auto">';
   s += '<defs><marker id="tparr" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">' +
-       '<path d="M0,0 L8,3.5 L0,7 z" fill="#94a3b8"/></marker></defs>';
+       '<path d="M0,0 L8,3.5 L0,7 z" fill="#b9cbd0"/></marker></defs>';
   EDGES.forEach(function(e){
     var p = POS[e[0]], q = POS[e[1]];
     var dx = q[0] - p[0], dy = q[1] - p[1], L = Math.sqrt(dx * dx + dy * dy);
@@ -26,15 +26,15 @@ function drawDAG(marks){
     var x1 = p[0] + ux * (R + 2), y1 = p[1] + uy * (R + 2);
     var x2 = q[0] - ux * (R + 6), y2 = q[1] - uy * (R + 6);
     var hi = marks && marks.edge && marks.edge[e[0] + e[1]];
-    s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (hi ? '#d97706' : '#94a3b8') + '" stroke-width="' + (hi ? 3 : 2.2) + '" marker-end="url(#tparr)"/>';
+    s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (hi ? '#e07a2f' : '#b9cbd0') + '" stroke-width="' + (hi ? 3 : 2.2) + '" marker-end="url(#tparr)"/>';
   });
   for (var k in POS){
     var m = marks && marks.node && marks.node[k];
-    var fill = '#fff', stroke = '#cbd5e1', txt = '#0f172a';
-    if (m === 'ok'){ fill = '#dcfce7'; stroke = '#16a34a'; txt = '#14532d'; }
-    else if (m === 'hit'){ fill = '#16a34a'; stroke = '#16a34a'; txt = '#fff'; }
-    else if (m === 'miss'){ fill = '#fee2e2'; stroke = '#dc2626'; txt = '#b91c1c'; }
-    else if (m === 'key'){ fill = '#fef3c7'; stroke = '#d97706'; txt = '#92400e'; }
+    var fill = '#fff', stroke = '#5a7d8c66', txt = '#1b3a4b';
+    if (m === 'ok'){ fill = '#2f9e4424'; stroke = '#2f9e44'; txt = '#1e4d33'; }
+    else if (m === 'hit'){ fill = '#2f9e44'; stroke = '#2f9e44'; txt = '#fff'; }
+    else if (m === 'miss'){ fill = '#e6394620'; stroke = '#e63946'; txt = '#a02830'; }
+    else if (m === 'key'){ fill = '#f8edcb'; stroke = '#e07a2f'; txt = '#92400e'; }
     s += '<circle cx="' + POS[k][0] + '" cy="' + POS[k][1] + '" r="' + R + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2.5"/>' +
          '<text x="' + POS[k][0] + '" y="' + (POS[k][1] + 6) + '" text-anchor="middle" font-size="17" font-weight="700" fill="' + txt + '" font-family="Menlo,Consolas,monospace">' + k + '</text>';
   }
@@ -44,11 +44,11 @@ function drawDAG(marks){
 function seqChips(arr, cur){
   var h = '<div style="display:flex;align-items:center;gap:6px;margin-top:6px">';
   arr.forEach(function(c, i){
-    var bg = (i === cur) ? 'background:#16a34a;border-color:#16a34a;color:#fff;animation:aw-pop .45s ease'
-                         : 'background:#dcfce7;border-color:#16a34a;color:#14532d';
+    var bg = (i === cur) ? 'background:#2f9e44;border-color:#2f9e44;color:#fff;animation:aw-pop .45s ease'
+                         : 'background:#2f9e4424;border-color:#2f9e44;color:#1e4d33';
     h += '<div class="aw-box ' + (i === cur ? 'hit' : 'ok') + '" style="width:40px;height:40px;font-size:16px">' + c + '</div>';
   });
-  h += '<span style="font-size:13px;color:#94a3b8;margin-left:6px">← 拓扑序列前缀</span></div>';
+  h += '<span style="font-size:13px;color:#b9cbd0;margin-left:6px">← 拓扑序列前缀</span></div>';
   return h;
 }
 
@@ -56,7 +56,7 @@ function indegRow(){
   var rows = [['a', 0], ['b', 1], ['c', 2], ['d', 2], ['e', 1]];
   var h = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">';
   rows.forEach(function(r){
-    h += '<span style="display:inline-block;background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;color:#334155">' +
+    h += '<span style="display:inline-block;background:#f8edcb;border:1.5px solid #5a7d8c66;border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;color:#213e48">' +
          r[0] + '：入度 ' + r[1] + '</span>';
   });
   return h + '</div>';
@@ -72,7 +72,7 @@ function snap(marks, cls, tag, log, count, extra, ribbon){
 
 var snaps = [
   snap({ seq: [], cur: -1 }, 'step', '图与入度', '边集：a→b、a→c、a→e、b→c、c→d、e→d；入度见表。', 0,
-        indegRow() + '<div style="font-size:13.5px;color:#334155;margin-top:8px">每步只能选<b>前驱全部输出完</b>的顶点。注意 <b style="color:#b91c1c">d 同时等 c 和 e</b>。'),
+        indegRow() + '<div style="font-size:13.5px;color:#213e48;margin-top:8px">每步只能选<b>前驱全部输出完</b>的顶点。注意 <b style="color:#a02830">d 同时等 c 和 e</b>。'),
   snap({ seq: ['a'], cur: 0, node: { a: 'hit' }, edge: { ac: 1, ab: 1, ae: 1 } }, 'ok', '输出 a', '只有 a 入度为 0 → a 必排第一。', 0, ''),
   snap({ seq: ['a','b'], cur: 1, node: { a: 'ok', b: 'hit' }, edge: { bc: 1 } }, 'step', '第二位取 b', 'a 之后可选 b 或 e。先走分支一：取 b（b 的唯一前驱 a 已输出）。', 0, ''),
   snap({ seq: ['a','b','c','e','d'], cur: 4, node: { a: 'ok', b: 'ok', c: 'ok', e: 'ok', d: 'hit' }, edge: { cd: 1, ed: 1 } },
@@ -84,8 +84,8 @@ var snaps = [
   { cls: 'done', tag: '结论', count: 3, done: true, ribbon: { k: 4, ok: true },
     log: '共 3 个不同拓扑序列 → 答案 B。',
     html: drawDAG({ node: { d: 'ok' } }) +
-          '<div style="font-size:15px;line-height:2;color:#334155">' +
-          '全部拓扑序列：<b>abced、abecd、aebcd</b>，共 <b style="color:#16a34a;font-size:18px">3</b> 个 → 答案选 <b style="color:#16a34a;font-size:18px">B</b>。<br>' +
+          '<div style="font-size:15px;line-height:2;color:#213e48">' +
+          '全部拓扑序列：<b>abced、abecd、aebcd</b>，共 <b style="color:#2f9e44;font-size:18px">3</b> 个 → 答案选 <b style="color:#2f9e44;font-size:18px">B</b>。<br>' +
           '锁死分支的关键：<b>d 有两个前驱 c 和 e</b>，所以 e 不可能排到 d 后面（排除 abcde），b 也无须紧跟 a。</div>' },
 ];
 

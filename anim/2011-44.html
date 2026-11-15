@@ -30,12 +30,12 @@ function mkBar(parent, title, segs){
   var box = AW.el('div', '');
   box.appendChild(AW.el('div', 'aw-row-label', title));
   var row = AW.el('div', '');
-  row.style.cssText = 'display:flex;width:max-content;min-width:520px;border-radius:10px;overflow:hidden;border:2px solid #cbd5e1;';
+  row.style.cssText = 'display:flex;width:max-content;min-width:520px;border-radius:10px;overflow:hidden;border:2px solid #5a7d8c66;';
   var parts = [];
   segs.forEach(function(s){
     var d = AW.el('div', '');
-    d.style.cssText = 'flex:' + s.bits + ';min-width:' + (s.bits * 26) + 'px;padding:8px 4px;text-align:center;background:#f1f5f9;color:#94a3b8;' +
-      'font-size:12.5px;font-weight:700;border-right:1px solid #e2e8f0;transition:all .25s;';
+    d.style.cssText = 'flex:' + s.bits + ';min-width:' + (s.bits * 26) + 'px;padding:8px 4px;text-align:center;background:#f8edcb;color:#b9cbd0;' +
+      'font-size:12.5px;font-weight:700;border-right:1px solid #1b3a4b26;transition:all .25s;';
     d.innerHTML = '<div style="font-size:12px">' + s.name + '</div><div style="font-size:11px;font-weight:400;opacity:.8">' + s.bits + ' 位' + (s.pos ? ' · ' + s.pos : '') + '</div>';
     row.appendChild(d); parts.push(d);
   });
@@ -47,7 +47,7 @@ function mkBar(parent, title, segs){
 // 状态卡（问3 / 问4 的流程行）
 function mkLine(parent, html){
   var d = AW.el('div', '');
-  d.style.cssText = 'border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:13px;color:#334155;line-height:1.7;transition:all .25s;';
+  d.style.cssText = 'border:1.5px solid #1b3a4b26;background:#f8edcb;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:13px;color:#213e48;line-height:1.7;transition:all .25s;';
   d.innerHTML = html;
   parent.appendChild(d);
   return d;
@@ -133,8 +133,8 @@ AW.init({
     refs.tw = [];
     TLBSET0.forEach(function(w, i){
       var c = AW.el('div', '');
-      c.style.cssText = 'border:2px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:7px 10px;min-width:104px;text-align:center;font-size:12.5px;color:#64748b;transition:all .25s;';
-      c.innerHTML = '<div style="font-size:11px;color:#94a3b8">第 0 组 · 路 ' + (i + 1) + '</div><div class="wv" style="margin-top:3px;font-family:Menlo,monospace;font-weight:700">？</div>';
+      c.style.cssText = 'border:2px solid #1b3a4b26;background:#f8edcb;border-radius:10px;padding:7px 10px;min-width:104px;text-align:center;font-size:12.5px;color:#586e72;transition:all .25s;';
+      c.innerHTML = '<div style="font-size:11px;color:#b9cbd0">第 0 组 · 路 ' + (i + 1) + '</div><div class="wv" style="margin-top:3px;font-family:Menlo,monospace;font-weight:700">？</div>';
       ways.appendChild(c); refs.tw.push(c);
     });
     refs.p4.appendChild(ways);
@@ -151,7 +151,7 @@ AW.init({
     var vis = function(node, show, focus){
       node.style.display = show ? '' : 'none';
       if(show && focus){ node.style.borderColor = '#f59e0b'; node.style.background = '#fffbeb'; }
-      else if(show){ node.style.borderColor = '#e2e8f0'; node.style.background = '#f8fafc'; }
+      else if(show){ node.style.borderColor = '#1b3a4b26'; node.style.background = '#f8edcb'; }
     };
 
     // 字段条显隐与点亮
@@ -166,7 +166,7 @@ AW.init({
       vis(refs.v3, true, ph === 4);
       vis(refs.pt, ph >= 5, ph === 5);
       if(ph >= 5){
-        refs.pt.innerHTML = '页表[001H]：有效位 = <b style="color:#15803d">1</b> ✓，页框号 = <b>04H</b> → 页面在主存中';
+        refs.pt.innerHTML = '页表[001H]：有效位 = <b style="color:#276942">1</b> ✓，页框号 = <b>04H</b> → 页面在主存中';
       }
       vis(refs.pa3, ph >= 6, ph === 6);
       if(ph >= 6){
@@ -178,7 +178,7 @@ AW.init({
       }
       vis(refs.cm3, ph >= 8, ph === 8);
       if(ph >= 8){
-        refs.cm3.innerHTML = '比较：<b style="color:#b91c1c">105H ≠ 04CH → Cache 不命中</b>（标记不匹配，需访主存）';
+        refs.cm3.innerHTML = '比较：<b style="color:#a02830">105H ≠ 04CH → Cache 不命中</b>（标记不匹配，需访主存）';
       }
     }
 
@@ -195,16 +195,16 @@ AW.init({
       refs.tw.forEach(function(c, i){
         var w = TLBSET0[i];
         var sel = hit && i === 3;
-        c.style.borderColor = sel ? '#16a34a' : (hit ? '#e2e8f0' : '#e2e8f0');
-        c.style.background = sel ? '#dcfce7' : '#f8fafc';
+        c.style.borderColor = sel ? '#2f9e44' : (hit ? '#1b3a4b26' : '#1b3a4b26');
+        c.style.background = sel ? '#2f9e4424' : '#f8edcb';
         c.querySelector('.wv').innerHTML = w.valid
           ? '有效 ' + w.valid + ' · 标记 ' + w.tag + '<br>页框 ' + w.frame
           : '有效 0 · —';
-        c.querySelector('.wv').style.color = sel ? '#15803d' : (w.valid ? '#334155' : '#94a3b8');
+        c.querySelector('.wv').style.color = sel ? '#276942' : (w.valid ? '#213e48' : '#b9cbd0');
       });
       vis(refs.cm4, hit, hit);
       if(hit){
-        refs.cm4.innerHTML = '比较：第 0 组第 4 路 <b style="color:#15803d">有效且标记 012H 匹配 → TLB 命中</b> → 页框号 <b>1FH</b>，页面在主存中 ✓（不必再查内存页表）';
+        refs.cm4.innerHTML = '比较：第 0 组第 4 路 <b style="color:#276942">有效且标记 012H 匹配 → TLB 命中</b> → 页框号 <b>1FH</b>，页面在主存中 ✓（不必再查内存页表）';
       }
     }
   },

@@ -21,12 +21,12 @@ var BOXES = [
 var S = [
   { act:'run',   opt:'', trans:'进程 P 正在 CPU 上运行。题问：哪种事件让它"下台"后进入<b>就绪</b>而不是<b>阻塞</b>？', tail:'' },
   { act:'run',   opt:'', trans:'判据：进程自己<b>等资源/等事件</b> → 阻塞；进程随时可运行、只是 CPU 被拿走 → 就绪。', tail:'' },
-  { act:'block', opt:'A', trans:'A：执行 P(wait) 操作——信号量值不足，申请失败，P 只能等待其他进程 V 它。', tail:'<b style="color:#b91c1c">等资源 → 运行→阻塞 ✗</b>' },
-  { act:'block', opt:'B', trans:'B：申请内存失败——在等"内存可用"这一事件。', tail:'<b style="color:#b91c1c">等资源 → 运行→阻塞 ✗</b>' },
-  { act:'block', opt:'C', trans:'C：启动 I/O 设备——发出 I/O 命令后要等 I/O 完成。', tail:'<b style="color:#b91c1c">等事件 → 运行→阻塞 ✗</b>' },
-  { act:'ready', opt:'D', trans:'D：被高优先级进程抢占——可剥夺调度下 CPU 被夺走，但 P 自身随时可运行。', tail:'<b style="color:#15803d">被抢 CPU → 运行→就绪 ✓ 对应选项 D</b>' },
+  { act:'block', opt:'A', trans:'A：执行 P(wait) 操作——信号量值不足，申请失败，P 只能等待其他进程 V 它。', tail:'<b style="color:#a02830">等资源 → 运行→阻塞 ✗</b>' },
+  { act:'block', opt:'B', trans:'B：申请内存失败——在等"内存可用"这一事件。', tail:'<b style="color:#a02830">等资源 → 运行→阻塞 ✗</b>' },
+  { act:'block', opt:'C', trans:'C：启动 I/O 设备——发出 I/O 命令后要等 I/O 完成。', tail:'<b style="color:#a02830">等事件 → 运行→阻塞 ✗</b>' },
+  { act:'ready', opt:'D', trans:'D：被高优先级进程抢占——可剥夺调度下 CPU 被夺走，但 P 自身随时可运行。', tail:'<b style="color:#276942">被抢 CPU → 运行→就绪 ✓ 对应选项 D</b>' },
   { act:'ready', opt:'', trans:'同类场景：时间片用完也是 运行→就绪。就绪进程"没毛病，就差一个 CPU"。', tail:'' },
-  { act:'ready', opt:'', trans:'结论：执行态 → 就绪态的事件是"被高优先级进程抢占"。', tail:'<b style="color:#15803d">答案：D</b>' },
+  { act:'ready', opt:'', trans:'结论：执行态 → 就绪态的事件是"被高优先级进程抢占"。', tail:'<b style="color:#276942">答案：D</b>' },
 ];
 
 var STATE_BOXES, TRANS_LINE, TAIL_LINE;
@@ -49,7 +49,7 @@ AW.init({
     BOXES.forEach(function(b, idx){
       if(idx > 0){
         var ar = AW.el('div', '', '⟷');
-        ar.style.cssText = 'font-size:22px;color:#94a3b8;flex:0 0 auto';
+        ar.style.cssText = 'font-size:22px;color:#b9cbd0;flex:0 0 auto';
         row.appendChild(ar);
       }
       var box = AW.el('div', 'aw-box', b.label);
@@ -65,7 +65,7 @@ AW.init({
     inner.appendChild(legend);
 
     TRANS_LINE = AW.el('div', 'aw-row-label', '');
-    TRANS_LINE.style.cssText = 'margin-top:14px;font-size:14.5px;color:#334155;line-height:1.7';
+    TRANS_LINE.style.cssText = 'margin-top:14px;font-size:14.5px;color:#213e48;line-height:1.7';
     inner.appendChild(TRANS_LINE);
 
     TAIL_LINE = AW.el('div', 'aw-row-label', '');
@@ -84,7 +84,7 @@ AW.init({
       box.className = 'aw-box' + (active ? ' hit' : '');
       box.innerHTML = b.label +
         (active ? '<div style="font-size:13px;font-weight:700;margin-top:4px">进程 P ●</div>'
-                : '<div style="font-size:11px;font-weight:400;color:#94a3b8">' + b.sub + '</div>');
+                : '<div style="font-size:11px;font-weight:400;color:#b9cbd0">' + b.sub + '</div>');
     });
     TRANS_LINE.innerHTML = (st.opt ? '<b>选项 ' + st.opt + '</b>　' : '') + st.trans;
     TAIL_LINE.innerHTML = st.tail;

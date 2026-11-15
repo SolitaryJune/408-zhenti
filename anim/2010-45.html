@@ -23,8 +23,8 @@ function pct(t){ return (t / SCALE_MAX * 100).toFixed(2) + '%'; }
 
 // 请求标记配色
 var MK = {
-  pend: ['待服务', '#dbeafe', '#2563eb', '#1d4ed8'],
-  serv: ['已服务', '#dcfce7', '#16a34a', '#14532d'],
+  pend: ['待服务', '#d9e3df', '#1b3a4b', '#1b3a4b'],
+  serv: ['已服务', '#2f9e4424', '#2f9e44', '#1e4d33'],
 };
 
 var ALL_SERV = { 50:'serv', 90:'serv', 30:'serv', 120:'serv' };
@@ -77,45 +77,45 @@ AW.init({
 
     // 参数说明
     var params = AW.el('div', '');
-    params.style.cssText = 'font-size:12.5px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;line-height:1.7;margin-bottom:12px;';
+    params.style.cssText = 'font-size:12.5px;color:#47616c;background:#f8edcb;border:1px solid #1b3a4b26;border-radius:10px;padding:8px 12px;line-height:1.7;margin-bottom:12px;';
     params.innerHTML = '参数：6000 r/min = 100 转/秒 → 每转 <b>10ms</b>；每道 100 扇区 → 读 1 扇区 <b>0.1ms</b>；随机分布 → 平均旋转延迟 <b>5ms</b>；相邻磁道移动 <b>1ms</b>';
     inner.appendChild(params);
 
     // 磁道轴
     refs.scale = AW.el('div', '');
     refs.scale.style.cssText = 'position:relative;height:104px;margin:6px 6px 0;';
-    refs.scale.appendChild(AW.el('div', '', '<div style="font-size:13px;color:#475569;margin-bottom:4px"><b>磁道轴</b>（CSCAN：只沿增大方向服务，扫到大端折回最小端再来一遍）</div>'));
+    refs.scale.appendChild(AW.el('div', '', '<div style="font-size:13px;color:#47616c;margin-bottom:4px"><b>磁道轴</b>（CSCAN：只沿增大方向服务，扫到大端折回最小端再来一遍）</div>'));
     var track = AW.el('div', '');
     track.style.cssText = 'position:relative;height:80px;';
     // 基线
     var base = AW.el('div', '');
-    base.style.cssText = 'position:absolute;left:0;right:0;bottom:26px;height:2px;background:#cbd5e1;border-radius:1px;';
+    base.style.cssText = 'position:absolute;left:0;right:0;bottom:26px;height:2px;background:#5a7d8c66;border-radius:1px;';
     track.appendChild(base);
     // 刻度
     TICKS.forEach(function(t){
       var d = AW.el('div', '', String(t));
-      d.style.cssText = 'position:absolute;bottom:2px;left:' + pct(t) + ';transform:translateX(-50%);font-size:11px;font-family:Menlo,Consolas,monospace;color:' + (t === 100 ? '#d97706;font-weight:700' : '#94a3b8') + ';';
+      d.style.cssText = 'position:absolute;bottom:2px;left:' + pct(t) + ';transform:translateX(-50%);font-size:11px;font-family:Menlo,Consolas,monospace;color:' + (t === 100 ? '#e07a2f;font-weight:700' : '#b9cbd0') + ';';
       track.appendChild(d);
     });
     // 请求标记
     refs.mk = {};
     REQ.forEach(function(t){
       var m = AW.el('div', '');
-      m.style.cssText = 'position:absolute;top:0;left:' + pct(t) + ';transform:translateX(-50%);min-width:38px;text-align:center;padding:4px 7px;border-radius:9px;font-size:12.5px;font-weight:700;font-family:Menlo,Consolas,monospace;background:#dbeafe;border:1.5px solid #2563eb;color:#1d4ed8;';
+      m.style.cssText = 'position:absolute;top:0;left:' + pct(t) + ';transform:translateX(-50%);min-width:38px;text-align:center;padding:4px 7px;border-radius:9px;font-size:12.5px;font-weight:700;font-family:Menlo,Consolas,monospace;background:#d9e3df;border:1.5px solid #1b3a4b;color:#1b3a4b;';
       track.appendChild(m);
       refs.mk[t] = m;
     });
     // 磁头
     refs.head = AW.el('div', '');
     refs.head.style.cssText = 'position:absolute;top:14px;left:' + pct(100) + ';transform:translateX(-50%);transition:left .7s cubic-bezier(.22,.8,.3,1);width:3px;z-index:2;';
-    refs.head.innerHTML = '<div style="width:3px;height:44px;background:#d97706;border-radius:2px;margin:0 auto"></div><div style="margin-top:2px;font-size:11px;font-weight:700;color:#92400e;white-space:nowrap;transform:translateX(-50%)">磁头</div>';
+    refs.head.innerHTML = '<div style="width:3px;height:44px;background:#e07a2f;border-radius:2px;margin:0 auto"></div><div style="margin-top:2px;font-size:11px;font-weight:700;color:#92400e;white-space:nowrap;transform:translateX(-50%)">磁头</div>';
     track.appendChild(refs.head);
     refs.scale.appendChild(track);
     inner.appendChild(refs.scale);
 
     // 时间累计
     refs.acc = AW.el('div', '');
-    refs.acc.style.cssText = 'margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13.5px;color:#334155;font-family:Menlo,Consolas,monospace;';
+    refs.acc.style.cssText = 'margin-top:8px;background:#f8edcb;border:1px solid #1b3a4b26;border-radius:10px;padding:9px 12px;font-size:13.5px;color:#213e48;font-family:Menlo,Consolas,monospace;';
     inner.appendChild(refs.acc);
     inner.appendChild(AW.el('div', 'aw-hint',
       '蓝色=待服务，绿色=已服务；琥珀色指针为磁头，随每步移动'));

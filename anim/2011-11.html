@@ -25,7 +25,7 @@ function heapTree(vals, hl){
       if (hl.miss === pos) cls += ' miss';
       inner = '<div class="' + cls + '" style="width:50px;height:40px;line-height:38px;font-size:16px">' + v + '</div>';
     }
-    var idx = v == null ? '' : '<div style="font-size:11px;color:#94a3b8">' + pos + '号</div>';
+    var idx = v == null ? '' : '<div style="font-size:11px;color:#b9cbd0">' + pos + '号</div>';
     return '<div style="width:54px">' + inner + idx + '</div>';
   }
   function row(items, gap){
@@ -36,7 +36,7 @@ function heapTree(vals, hl){
   h += row([1]);                    // 25
   h += row([2, 3], 68);             // 13, 10（对准各自孩子）
   h += row([4, 5, 6, 7], 8);        // 12, 9, 18, 空
-  return h + '<div style="font-size:11.5px;color:#94a3b8;margin-top:6px">格内为元素值，下方为按层编号；i 号的父结点是 ⌊i/2⌋ 号</div></div>';
+  return h + '<div style="font-size:11.5px;color:#b9cbd0;margin-top:6px">格内为元素值，下方为按层编号；i 号的父结点是 ⌊i/2⌋ 号</div></div>';
 }
 
 function arrRowOf(vals, hl){
@@ -62,40 +62,40 @@ var snaps = [
     log:'初始序列 25,13,10,12,9 已是大根堆；父结点编号 = ⌊子编号/2⌋。' },
 
   { cls:'shift', tag:'思路', count:0,
-    html:'<div style="font-size:14.5px;line-height:2.1;color:#334155">' +
+    html:'<div style="font-size:14.5px;line-height:2.1;color:#213e48">' +
          '尾部插入新元素只可能破坏「<b>它到根</b>」这一条路径上的堆性。<br>' +
-         '调整方法：把 18 放到 <b>6 号</b>位置（堆尾），然后<b style="color:#d97706">与父结点比较：更大就交换上浮，直到不大于父结点或到达根</b>。<br>' +
+         '调整方法：把 18 放到 <b>6 号</b>位置（堆尾），然后<b style="color:#e07a2f">与父结点比较：更大就交换上浮，直到不大于父结点或到达根</b>。<br>' +
          '18 的父结点：⌊6/2⌋ = 3 号（值 10）。</div>',
     log:'思路：放堆尾 → 与父结点比较上浮；18 的父结点是 3 号（10）。' },
 
   { cls:'shift', tag:'放入 18', count:0,
     html:'<div style="text-align:center">' + heapTree(V1, {hit:6}) + '</div>' +
-         '<div style="font-size:13.5px;color:#64748b;margin-top:8px">18 先放进堆尾（6 号），作为 3 号（10）的右孩子，准备上浮。</div>',
+         '<div style="font-size:13.5px;color:#586e72;margin-top:8px">18 先放进堆尾（6 号），作为 3 号（10）的右孩子，准备上浮。</div>',
     log:'18 放入 6 号（堆尾），父结点是 3 号的 10。' },
 
   { cls:'miss', tag:'第 1 次比较', count:1,
     html:'<div style="text-align:center">' + heapTree(V1, {hit:6, miss:3}) + '</div>' +
-         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:8px">' +
+         '<div style="font-size:14px;line-height:2;color:#213e48;margin-top:8px">' +
          '<b>第 1 次：18 vs 父结点 10（3 号）→ 18 &gt; 10，违反大根堆 → 交换</b>，18 上浮到 3 号。</div>',
     log:'第 1 次比较：18 > 10，交换，18 上浮到 3 号。（比较 1 次）' },
 
   { cls:'shift', tag:'交换后', count:1,
     html:'<div style="text-align:center">' + heapTree(V2, {hit:3}) + '</div>' +
-         '<div style="font-size:13.5px;color:#64748b;margin-top:8px">18 现在在 3 号，它的父结点是 ⌊3/2⌋ = 1 号（值 25）——路径还没走完，继续比。</div>',
+         '<div style="font-size:13.5px;color:#586e72;margin-top:8px">18 现在在 3 号，它的父结点是 ⌊3/2⌋ = 1 号（值 25）——路径还没走完，继续比。</div>',
     log:'交换完成，18 在 3 号；下一个比较对象是 1 号的 25。' },
 
   { cls:'ok', tag:'第 2 次比较', count:2,
     html:'<div style="text-align:center">' + heapTree(V2, {hit:3, miss:1}) + '</div>' +
-         '<div style="font-size:14px;line-height:2;color:#334155;margin-top:8px">' +
+         '<div style="font-size:14px;line-height:2;color:#213e48;margin-top:8px">' +
          '<b>第 2 次：18 vs 父结点 25（1 号）→ 18 &lt; 25，堆性满足 → 停止调整</b>。</div>',
     log:'第 2 次比较：18 < 25，满足堆性，调整结束。（比较 2 次）' },
 
   { cls:'done', tag:'结论', count:2, done:true,
     html:'<div class="aw-row-label">调整后的堆（数组 1~5 号）</div>' +
          '<div style="text-align:center">' + arrRowOf(V2, 'all') + '</div>' +
-         '<div style="font-size:15px;line-height:2.1;color:#334155;margin-top:10px">' +
+         '<div style="font-size:15px;line-height:2.1;color:#213e48;margin-top:10px">' +
          '18 越过一个更小的父结点（10）、被 25 拦住：共<b>比较 2 次</b>、交换 1 次。<br>' +
-         '答案选 <b style="color:#dc2626;font-size:18px">B</b>。</div>',
+         '答案选 <b style="color:#e63946;font-size:18px">B</b>。</div>',
     log:'结论：比较 2 次，调整后 25,13,18,12,9 仍是大根堆，答案 B。' },
 ];
 

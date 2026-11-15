@@ -20,11 +20,11 @@ var msgEl = null;
 
 /* 两行路线卡片：label=路线说明，badge=距离值；state 决定配色 */
 var ST = {
-  cur:  { bg:'#eff6ff', bd:'#2563eb', fg:'#1d4ed8' },  /* 当前使用的路由 */
-  cand: { bg:'#f8fafc', bd:'#cbd5e1', fg:'#334155' },  /* 备用路线 */
-  bad:  { bg:'#fee2e2', bd:'#dc2626', fg:'#b91c1c' },  /* 不可达 */
-  good: { bg:'#dcfce7', bd:'#16a34a', fg:'#14532d' },  /* 被选中 */
-  dim:  { bg:'#f8fafc', bd:'#e2e8f0', fg:'#94a3b8' }   /* 弃用 */
+  cur:  { bg:'#1b3a4b14', bd:'#1b3a4b', fg:'#1b3a4b' },  /* 当前使用的路由 */
+  cand: { bg:'#f8edcb', bd:'#5a7d8c66', fg:'#213e48' },  /* 备用路线 */
+  bad:  { bg:'#e6394620', bd:'#e63946', fg:'#a02830' },  /* 不可达 */
+  good: { bg:'#2f9e4424', bd:'#2f9e44', fg:'#1e4d33' },  /* 被选中 */
+  dim:  { bg:'#f8edcb', bd:'#1b3a4b26', fg:'#b9cbd0' }   /* 弃用 */
 };
 
 function build(stage){
@@ -40,23 +40,23 @@ function build(stage){
     var r = AW.el('div', '');
     r.style.cssText = 'display:flex;align-items:stretch;gap:12px;margin:10px 0;';
     var lab = AW.el('div', '');
-    lab.style.cssText = 'flex:0 0 auto;width:280px;border:2px solid #cbd5e1;border-radius:12px;' +
-      'background:#fff;padding:10px 14px;font-size:13.5px;font-weight:700;color:#0f172a;transition:all .25s;';
+    lab.style.cssText = 'flex:0 0 auto;width:280px;border:2px solid #5a7d8c66;border-radius:12px;' +
+      'background:#fff;padding:10px 14px;font-size:13.5px;font-weight:700;color:#1b3a4b;transition:all .25s;';
     lab.innerHTML = label;
     var bd = AW.el('div', '');
-    bd.style.cssText = 'flex:0 0 auto;min-width:150px;border:2px solid #cbd5e1;border-radius:12px;' +
-      'padding:10px 14px;font-size:15px;font-weight:800;font-family:Menlo,Consolas,monospace;color:#0f172a;transition:all .25s;';
+    bd.style.cssText = 'flex:0 0 auto;min-width:150px;border:2px solid #5a7d8c66;border-radius:12px;' +
+      'padding:10px 14px;font-size:15px;font-weight:800;font-family:Menlo,Consolas,monospace;color:#1b3a4b;transition:all .25s;';
     nodeEls[id] = { lab: lab, badge: bd };
     r.appendChild(lab);
     r.appendChild(bd);
     inner.appendChild(r);
   }
-  row('R3', '经 R3（R2 当前下一跳）<span style="display:block;font-size:11px;font-weight:400;color:#64748b;">R3 直连 201.1.2.0/25，距离 1</span>');
-  row('R1', '经 R1（备用下一跳）<span style="display:block;font-size:11px;font-weight:400;color:#64748b;">R1 经 R3 到该网络距离 2</span>');
+  row('R3', '经 R3（R2 当前下一跳）<span style="display:block;font-size:11px;font-weight:400;color:#586e72;">R3 直连 201.1.2.0/25，距离 1</span>');
+  row('R1', '经 R1（备用下一跳）<span style="display:block;font-size:11px;font-weight:400;color:#586e72;">R1 经 R3 到该网络距离 2</span>');
 
   msgEl = AW.el('div', '');
-  msgEl.style.cssText = 'margin-top:12px;width:100%;background:#f8fafc;border:1px solid #e2e8f0;' +
-    'border-radius:10px;padding:9px 12px;font-size:13px;color:#334155;min-height:40px;';
+  msgEl.style.cssText = 'margin-top:12px;width:100%;background:#f8edcb;border:1px solid #1b3a4b26;' +
+    'border-radius:10px;padding:9px 12px;font-size:13px;color:#213e48;min-height:40px;';
   inner.appendChild(msgEl);
 
   wrap.appendChild(inner);
@@ -87,7 +87,7 @@ var snaps = [
     msg:'R1 的周期性通告早已到过 R2：R1 自报距离 2 → R2 若改经 R1 转发，距离 = 2 + 1 = 3。',
     log:'R1 的旧通告给出一条备用路线：经 R1 = 2 + 1 = 3。' },
   { cls:'miss', tag:'坏消息', count:2, r3st:'bad', r3txt:'R3 通告：16', r1st:'cand', r1txt:'2 + 1 = 3（备用）',
-    msg:'R3 检测到 201.1.2.0/25 不可达，向 R2 通告距离 <b style="color:#b91c1c">16</b>（RIP 用 16 表示不可达）。',
+    msg:'R3 检测到 201.1.2.0/25 不可达，向 R2 通告距离 <b style="color:#a02830">16</b>（RIP 用 16 表示不可达）。',
     log:'R3 检测到网络不可达，向 R2 通告距离 16（RIP 中 16 = 不可达）。' },
   { cls:'miss', tag:'必须接受', count:3, r3st:'bad', r3txt:'16 + 1 = 17（不可达）', r1st:'cand', r1txt:'2 + 1 = 3（备用）',
     msg:'RIP 规则：新信息来自当前下一跳 R3，必须先接受 → 「经 R3」= 16 + 1 = 17，已不可达。',
@@ -96,7 +96,7 @@ var snaps = [
     msg:'比较备用路线：经 R1 = 2 + 1 = 3 &lt; 17 → R2 改选经 R1 转发。',
     log:'再比较其他下一跳的旧信息：经 R1 = 2 + 1 = 3，远小于 17 → 选经 R1。' },
   { cls:'done', tag:'完成', count:5, done:true, r3st:'dim', r3txt:'17（弃用）', r1st:'good', r1txt:'距离 3（最终）',
-    msg:'R2 更新后：目的 201.1.2.0/25，下一跳 R1，距离 <b style="color:#15803d">3</b>。',
+    msg:'R2 更新后：目的 201.1.2.0/25，下一跳 R1，距离 <b style="color:#276942">3</b>。',
     log:'R2 更新后距离 = 3（下一跳 R1）→ 选 B。坏消息传得慢：R2 暂时绕道 R1，随后全网逐步收敛。' },
 ];
 

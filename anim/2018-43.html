@@ -12,24 +12,24 @@
 /* ================== 题目专属区域（只改这里） ================== */
 
 function qcard(title, bodyHtml, accent){
-  var c = accent || '#2563eb';
-  return '<div style="border:1px solid #e2e8f0;border-left:4px solid ' + c + ';border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff">' +
-    '<div style="font-weight:700;font-size:14px;margin-bottom:6px;color:#0f172a">' + title + '</div>' +
-    '<div style="font-size:13.5px;line-height:1.85;color:#334155">' + bodyHtml + '</div></div>';
+  var c = accent || '#1b3a4b';
+  return '<div style="border:1px solid #1b3a4b26;border-left:4px solid ' + c + ';border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff">' +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:6px;color:#1b3a4b">' + title + '</div>' +
+    '<div style="font-size:13.5px;line-height:1.85;color:#213e48">' + bodyHtml + '</div></div>';
 }
 
 // 时间条：label 左对齐说明，us 为微秒数，pxPerUs 为比例尺
 function bar(label, us, color, pxPerUs){
   var w = Math.max(8, Math.round(us * pxPerUs));
   return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0">' +
-    '<span style="width:158px;font-size:12.5px;color:#64748b;text-align:right;flex:0 0 auto">' + label + '</span>' +
+    '<span style="width:158px;font-size:12.5px;color:#586e72;text-align:right;flex:0 0 auto">' + label + '</span>' +
     '<div style="height:22px;border-radius:6px;background:' + color + ';width:' + w + 'px;color:#fff;font-size:11.5px;font-weight:700;display:flex;align-items:center;padding:0 6px;white-space:nowrap;flex:0 0 auto">' + us + 'µs</div></div>';
 }
 
 var H1 = qcard('统一口径：先把"指令时间"算出来',
   '主频 500MHz → 时钟周期 = 1/500MHz = <b>2ns</b>；CPI = 4 → 一条指令 = 4 × 2ns = <b>8ns</b>。<br>' +
   '两个设备的接口缓冲寄存器都是 32 位 = <b>4B</b>：每装满 4B 必须取走一次，否则新数据冲掉旧数据。<br>' +
-  '设备 A：2MB/s · 设备 B：40MB/s。', '#64748b');
+  '设备 A：2MB/s · 设备 B：40MB/s。', '#586e72');
 
 var SNAPS = [
   { cls:'step', tag:'统一口径',
@@ -39,39 +39,39 @@ var SNAPS = [
     log:'（1）设备 A 装满 4B 需 4B÷2MB/s = 2µs → 最多间隔 2µs 查询一次',
     count:1,
     html: qcard('（1）设备 A · 定时查询的间隔',
-      '设备 A 速率 2MB/s，装满 4B 缓冲的时间 = 4B ÷ 2MB/s = <b>2µs</b>。要让数据不丢失，两次查询的间隔不能超过它 → <b>最多间隔 2µs 查询一次</b>。', '#16a34a') +
-      bar('A：装满 4B 缓冲', 2, '#16a34a', 200) },
+      '设备 A 速率 2MB/s，装满 4B 缓冲的时间 = 4B ÷ 2MB/s = <b>2µs</b>。要让数据不丢失，两次查询的间隔不能超过它 → <b>最多间隔 2µs 查询一次</b>。', '#2f9e44') +
+      bar('A：装满 4B 缓冲', 2, '#2f9e44', 200) },
   { cls:'ok', tag:'（1）CPU 占比',
     log:'（1）每次查询 10 条指令 = 80ns；80ns÷2µs = 4%',
     count:1,
     html: qcard('（1）CPU 用于设备 A 的时间占比（至少）',
-      '每次查询至少执行 10 条指令 = 10 × 8ns = <b>80ns</b>；每 2µs 查询一次 → 占比 = 80ns ÷ 2000ns = <b>4%</b>。', '#16a34a') +
+      '每次查询至少执行 10 条指令 = 10 × 8ns = <b>80ns</b>；每 2µs 查询一次 → 占比 = 80ns ÷ 2000ns = <b>4%</b>。', '#2f9e44') +
       bar('查询一次（10 条指令）', 0.08, '#fbbf24', 200) +
-      bar('查询间隔', 2, '#16a34a', 200) },
+      bar('查询间隔', 2, '#2f9e44', 200) },
   { cls:'miss', tag:'（2）不能中断',
     log:'（2）B 每 4B 到达 0.1µs，一次中断 ≥ 400×2ns = 0.8µs → 来不及，数据丢失',
     count:2,
     html: qcard('（2）设备 B · 能否采用中断方式？',
-      '4B 到达间隔 = 4B ÷ 40MB/s = <b>0.1µs</b>；一次中断响应+处理 ≥ 400 × 2ns = <b>0.8µs</b>。0.8µs &gt; 0.1µs：上一个数据还没处理完，下一个 4B 已经到达 → <b>数据丢失，不能采用中断 I/O 方式</b>。', '#dc2626') +
-      bar('B：4B 到达间隔', 0.1, '#2563eb', 300) +
-      bar('一次中断响应+处理', 0.8, '#dc2626', 300) },
+      '4B 到达间隔 = 4B ÷ 40MB/s = <b>0.1µs</b>；一次中断响应+处理 ≥ 400 × 2ns = <b>0.8µs</b>。0.8µs &gt; 0.1µs：上一个数据还没处理完，下一个 4B 已经到达 → <b>数据丢失，不能采用中断 I/O 方式</b>。', '#e63946') +
+      bar('B：4B 到达间隔', 0.1, '#1b3a4b', 300) +
+      bar('一次中断响应+处理', 0.8, '#e63946', 300) },
   { cls:'step', tag:'（3）DMA 一块的时间',
     log:'（3）DMA 每块 1000B：1000B÷40MB/s = 25µs，传送期间 CPU 不参与',
     count:3,
     html: qcard('（3）设备 B · DMA 方式：每块的传送时间',
-      '每次 DMA 传送 1000B：一块的传送时间 = 1000B ÷ 40MB/s = <b>25µs</b>。<b>传送期间由 DMA 控制器掌管总线，CPU 不参与</b>。', '#d97706') +
-      bar('DMA 传送一块', 25, '#d97706', 9) },
+      '每次 DMA 传送 1000B：一块的传送时间 = 1000B ÷ 40MB/s = <b>25µs</b>。<b>传送期间由 DMA 控制器掌管总线，CPU 不参与</b>。', '#e07a2f') +
+      bar('DMA 传送一块', 25, '#e07a2f', 9) },
   { cls:'ok', tag:'（3）CPU 占比',
     log:'（3）CPU 只做预处理+后处理 500×2ns = 1µs；1µs÷25µs = 4%',
     count:3,
     html: qcard('（3）CPU 用于设备 B 的时间占比（最多）',
-      'CPU 每块只投入预处理 + 后处理 = 500 × 2ns = <b>1µs</b>；每 25µs 一次 → 占比 = 1µs ÷ 25µs = <b>4%</b>。DMA 传送本身不占 CPU，这就是"最多"的含义。', '#d97706') +
+      'CPU 每块只投入预处理 + 后处理 = 500 × 2ns = <b>1µs</b>；每 25µs 一次 → 占比 = 1µs ÷ 25µs = <b>4%</b>。DMA 传送本身不占 CPU，这就是"最多"的含义。', '#e07a2f') +
       bar('预处理 + 后处理', 1, '#fbbf24', 9) +
-      bar('每块间隔', 25, '#d97706', 9) },
+      bar('每块间隔', 25, '#e07a2f', 9) },
   { cls:'done', tag:'完成',
     log:'（1）2µs、4%；（2）不能中断；（3）4%',
     count:3, done:true,
-    html: qcard('答案汇总', '（1）最多间隔 <b>2µs</b> 查询一次；CPU 用于设备 A 的时间占比至少 <b>4%</b>。<br>（2）设备 B <b>不能</b>采用中断方式：准备数据 0.1µs &lt; 中断处理 0.8µs，数据会丢失。<br>（3）CPU 用于设备 B 的时间占比最多 <b>4%</b>。', '#2563eb') },
+    html: qcard('答案汇总', '（1）最多间隔 <b>2µs</b> 查询一次；CPU 用于设备 A 的时间占比至少 <b>4%</b>。<br>（2）设备 B <b>不能</b>采用中断方式：准备数据 0.1µs &lt; 中断处理 0.8µs，数据会丢失。<br>（3）CPU 用于设备 B 的时间占比最多 <b>4%</b>。', '#1b3a4b') },
 ];
 
 AW.init({

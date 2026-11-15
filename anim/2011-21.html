@@ -51,28 +51,28 @@ function mkTable(stage){
   var thead = AW.el('thead', '');
   var htr = AW.el('tr', '');
   var th0 = AW.el('th', '', '中断级');
-  th0.style.cssText = 'background:#f1f5f9;color:#334155;padding:9px 6px;border-bottom:2px solid #cbd5e1;font-size:12.5px;text-align:left;';
+  th0.style.cssText = 'background:#f8edcb;color:#213e48;padding:9px 6px;border-bottom:2px solid #5a7d8c66;font-size:12.5px;text-align:left;';
   htr.appendChild(th0);
   refs.heads = [th0];
   LEVELS.forEach(function(lv){
     var th = AW.el('th', '', lv);
-    th.style.cssText = 'background:#f1f5f9;color:#334155;padding:9px 6px;border-bottom:2px solid #cbd5e1;font-size:14px;';
+    th.style.cssText = 'background:#f8edcb;color:#213e48;padding:9px 6px;border-bottom:2px solid #5a7d8c66;font-size:14px;';
     htr.appendChild(th); refs.heads.push(th);
   });
   thead.appendChild(htr); t.appendChild(thead);
   var tbody = AW.el('tbody', '');
   refs.rows = {}; refs.cells = {};
-  [['handle', '处理优先级（1 最高）', HANDLE, '#64748b'],
-   ['respond', '响应优先级（1 最高）', RESPOND, '#2563eb'],
+  [['handle', '处理优先级（1 最高）', HANDLE, '#586e72'],
+   ['respond', '响应优先级（1 最高）', RESPOND, '#1b3a4b'],
    ['mask', 'L₁ 的屏蔽位 Mᵢ', MASK, '']].forEach(function(cfg){
     var tr = AW.el('tr', '');
     var label = AW.el('td', '', cfg[1]);
-    label.style.cssText = 'padding:10px 8px;color:#334155;font-weight:700;font-size:12.5px;border-bottom:1px solid #e2e8f0;white-space:nowrap;';
+    label.style.cssText = 'padding:10px 8px;color:#213e48;font-weight:700;font-size:12.5px;border-bottom:1px solid #1b3a4b26;white-space:nowrap;';
     tr.appendChild(label);
     var cells = [];
     cfg[2].forEach(function(v){
       var td = AW.el('td', '');
-      td.style.cssText = 'padding:10px 6px;text-align:center;border-bottom:1px solid #e2e8f0;font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:800;font-size:15px;transition:all .2s;';
+      td.style.cssText = 'padding:10px 6px;text-align:center;border-bottom:1px solid #1b3a4b26;font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:800;font-size:15px;transition:all .2s;';
       tr.appendChild(td); cells.push(td);
     });
     refs.rows[cfg[0]] = tr; refs.cells[cfg[0]] = cells;
@@ -96,7 +96,7 @@ AW.init({
     stage.innerHTML = '';
     mkTable(stage);
     refs.note = AW.el('div', '');
-    refs.note.style.cssText = 'margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#334155;line-height:1.75;';
+    refs.note.style.cssText = 'margin-top:12px;background:#f8edcb;border:1px solid #1b3a4b26;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#213e48;line-height:1.75;';
     stage.appendChild(refs.note);
     refs.maskStr = AW.el('div', '');
     refs.maskStr.style.cssText = 'margin-top:8px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:18px;font-weight:800;min-height:26px;';
@@ -110,7 +110,7 @@ AW.init({
       refs.cells[k].forEach(function(td, ci){
         td.textContent = (k === 'handle' ? HANDLE : RESPOND)[ci];
         td.style.opacity = '1';
-        td.style.color = k === 'handle' ? '#64748b' : '#2563eb';
+        td.style.color = k === 'handle' ? '#586e72' : '#1b3a4b';
         td.style.background = 'transparent';
         td.style.borderRadius = '0';
       });
@@ -121,22 +121,22 @@ AW.init({
       td.textContent = filled ? MASK[ci] : '·';
       td.style.opacity = filled ? '1' : '.4';
       if(isCur){
-        td.style.background = MASK[ci] === '1' ? '#fee2e2' : '#dcfce7';
-        td.style.color = MASK[ci] === '1' ? '#b91c1c' : '#15803d';
+        td.style.background = MASK[ci] === '1' ? '#e6394620' : '#2f9e4424';
+        td.style.color = MASK[ci] === '1' ? '#a02830' : '#276942';
         td.style.borderRadius = '8px';
       } else if(filled){
-        td.style.color = MASK[ci] === '1' ? '#b91c1c' : '#15803d';
+        td.style.color = MASK[ci] === '1' ? '#a02830' : '#276942';
         td.style.background = 'transparent';
         td.style.borderRadius = '0';
       } else {
-        td.style.color = '#94a3b8';
+        td.style.color = '#b9cbd0';
         td.style.background = 'transparent';
       }
     });
     var s = '';
     for(var i = 0; i < 5; i++){ s += (i < sn.n) ? MASK[i] : '_'; }
     refs.maskStr.textContent = 'M₄M₃M₂M₁M₀ = ' + s + (sn.n === 5 ? '  →  01010' : '');
-    refs.maskStr.style.color = sn.n === 5 ? '#16a34a' : '#334155';
+    refs.maskStr.style.color = sn.n === 5 ? '#2f9e44' : '#213e48';
     refs.note.innerHTML = NOTES[Math.min(sn.count, NOTES.length - 1)];
   },
 

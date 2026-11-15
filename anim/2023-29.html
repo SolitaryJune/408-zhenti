@@ -19,7 +19,7 @@ var SEGS = [                   // 甘特图分段
   { p:'P2', s:43, e:75  },
   { p:'P1', s:75, e:115 },
 ];
-var COLOR = { P1:'#2563eb', P2:'#16a34a', P3:'#d97706' };
+var COLOR = { P1:'#1b3a4b', P2:'#2f9e44', P3:'#e07a2f' };
 var PROC = [
   { name:'P1', arrive:0,  prio:1,   burst:60 },
   { name:'P2', arrive:20, prio:10,  burst:42 },
@@ -39,9 +39,9 @@ function build(stage){
   var infoRow = AW.el('div', 'aw-cells');
   PROC.forEach(function(p){
     var c = AW.el('div', '');
-    c.style.cssText = 'border:2px solid #cbd5e1;border-radius:12px;padding:8px 14px;min-width:128px;font-size:13px;line-height:1.8;background:#fff;transition:border-color .2s;';
+    c.style.cssText = 'border:2px solid #5a7d8c66;border-radius:12px;padding:8px 14px;min-width:128px;font-size:13px;line-height:1.8;background:#fff;transition:border-color .2s;';
     c.innerHTML = '<b style="font-size:15px">' + p.name + '</b>　到达 ' + p.arrive + 'ms　优先级 <b>' + p.prio + '</b>' +
-                  '<br>剩余 <span class="rem" style="color:#2563eb;font-weight:700">' + p.burst + '</span> ms';
+                  '<br>剩余 <span class="rem" style="color:#1b3a4b;font-weight:700">' + p.burst + '</span> ms';
     infoRow.appendChild(c);
     cardEls[p.name] = c;
   });
@@ -51,7 +51,7 @@ function build(stage){
 
   // 甘特图
   var gantt = AW.el('div', '');
-  gantt.style.cssText = 'position:relative;width:353px;height:46px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;margin-top:2px;overflow:hidden;';
+  gantt.style.cssText = 'position:relative;width:353px;height:46px;background:#f8edcb;border:1px solid #1b3a4b26;border-radius:10px;margin-top:2px;overflow:hidden;';
   SEGS.forEach(function(sg){
     var d = AW.el('div', '');
     d.style.cssText = 'position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;opacity:0;transition:opacity .45s;';
@@ -70,7 +70,7 @@ function build(stage){
   axis.style.cssText = 'position:relative;width:353px;height:20px;';
   [0, 20, 30, 43, 75, 115].forEach(function(t){
     var lab = AW.el('div', '');
-    lab.style.cssText = 'position:absolute;font-size:11px;color:#64748b;font-family:monospace;transform:translateX(-50%);';
+    lab.style.cssText = 'position:absolute;font-size:11px;color:#586e72;font-family:monospace;transform:translateX(-50%);';
     lab.style.left = (t * SCALE + 2) + 'px';
     lab.textContent = t + 'ms';
     axis.appendChild(lab);
@@ -89,14 +89,14 @@ function render(stage, sn, i){
   PROC.forEach(function(p){
     var el = cardEls[p.name];
     var isDone = sn.doneArr && sn.doneArr.indexOf(p.name) >= 0;
-    el.style.borderColor = (sn.running === p.name) ? COLOR[p.name] : '#cbd5e1';
+    el.style.borderColor = (sn.running === p.name) ? COLOR[p.name] : '#5a7d8c66';
     var remSpan = el.querySelector('.rem');
     if(isDone){
       remSpan.textContent = '0（完成 ✓）';
-      remSpan.style.color = '#16a34a';
+      remSpan.style.color = '#2f9e44';
     } else {
       remSpan.textContent = sn.rem ? sn.rem[p.name] : p.burst;
-      remSpan.style.color = '#2563eb';
+      remSpan.style.color = '#1b3a4b';
     }
   });
 }

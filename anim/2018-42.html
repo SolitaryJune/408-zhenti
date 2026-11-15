@@ -5,27 +5,27 @@
 <title>2018-42 光通信骨干网 · Kruskal 求 MST 与 TTL 判定</title>
 <link rel="stylesheet" href="../assets/anim.css">
 <style>
-  .mst-svg{width:100%;max-width:880px;display:block;margin:0 auto;background:#f8fafc;
+  .mst-svg{width:100%;max-width:880px;display:block;margin:0 auto;background:#f8edcb;
     border:1px solid #1b3a4b38;border-radius:12px}
   .mst-svg .medge{transition:stroke .35s, stroke-width .35s}
   .mst-svg .mnode circle{transition:fill .3s, stroke .3s}
   .mst-svg .mnode text{font-weight:800;font-size:16px;text-anchor:middle;dominant-baseline:central}
-  .mst-svg .mnode .city{fill:#0f172a}
+  .mst-svg .mnode .city{fill:#1b3a4b}
   .mcost{margin-top:8px;text-align:center;font-size:14.5px;font-weight:700;color:#1b3a4b;line-height:1.8}
   .mcost code{background:#1b3a4b14;padding:2px 8px;border-radius:6px}
   .mttl{margin-top:12px}
-  .mttl .cap{font-size:13px;color:#64748b;margin-bottom:4px}
+  .mttl .cap{font-size:13px;color:#586e72;margin-bottom:4px}
   .mttl .row{display:flex;gap:4px;width:max-content}
   .mttl .col{width:52px;display:flex;flex-direction:column;align-items:center}
-  .mttl .ptr{height:20px;font-size:11.5px;font-weight:700;color:#2563eb;white-space:nowrap}
-  .mttl .box{width:52px;height:34px;border:2px solid #cbd5e1;border-radius:9px;display:flex;
+  .mttl .ptr{height:20px;font-size:11.5px;font-weight:700;color:#1b3a4b;white-space:nowrap}
+  .mttl .box{width:52px;height:34px;border:2px solid #5a7d8c66;border-radius:9px;display:flex;
     align-items:center;justify-content:center;font-weight:800;font-size:15px;background:#fff;
     font-family:"SF Mono",Menlo,monospace}
-  .mttl .box.ok{background:#dcfce7;border-color:#16a34a;color:#14532d}
-  .mttl .box.hit{background:#16a34a;border-color:#16a34a;color:#fff}
-  .mttl .box.miss{background:#fee2e2;border-color:#dc2626;color:#b91c1c}
+  .mttl .box.ok{background:#2f9e4424;border-color:#2f9e44;color:#1e4d33}
+  .mttl .box.hit{background:#2f9e44;border-color:#2f9e44;color:#fff}
+  .mttl .box.miss{background:#e6394620;border-color:#e63946;color:#a02830}
   .mttl .box.dim{opacity:.45}
-  .mttl .hop{margin-top:3px;font-size:11px;color:#94a3b8;font-family:monospace}
+  .mttl .hop{margin-top:3px;font-size:11px;color:#b9cbd0;font-family:monospace}
 </style>
 </head>
 <body>
@@ -119,12 +119,12 @@ function build(stage){
     var dx = b[0]-a[0], dy = b[1]-a[1], len = Math.sqrt(dx*dx + dy*dy);
     var ux = dx/len, uy = dy/len, r = 30;
     var ln = el2('line', { x1:a[0]+ux*r, y1:a[1]+uy*r, x2:b[0]-ux*r, y2:b[1]-uy*r,
-      stroke:'#cbd5e1', 'stroke-width':2 });
+      stroke:'#5a7d8c66', 'stroke-width':2 });
     ln.setAttribute('class', 'medge');
     ln.id = 'me' + i;
     svg.appendChild(ln);
     var lab = el2('text', { x:e[3], y:e[4], 'text-anchor':'middle', 'font-size':15,
-      'font-weight':700, fill:'#475569' });
+      'font-weight':700, fill:'#47616c' });
     lab.textContent = e[2];
     lab.id = 'ml' + i;
     svg.appendChild(lab);
@@ -133,7 +133,7 @@ function build(stage){
     var p = NP[name];
     var g = el2('g', {});
     g.setAttribute('class', 'mnode');
-    var c = el2('circle', { cx:p[0], cy:p[1], r:30, fill:'#ffffff', stroke:'#64748b', 'stroke-width':2.5 });
+    var c = el2('circle', { cx:p[0], cy:p[1], r:30, fill:'#ffffff', stroke:'#586e72', 'stroke-width':2.5 });
     c.id = 'mn' + name;
     var t = el2('text', { x:p[0], y:p[1] });
     t.textContent = name;
@@ -154,12 +154,12 @@ function render(stage, sn, i){
   var sel = edgeSet(sn.sel), rej = edgeSet(sn.rej), skip = edgeSet(sn.skip);
   var path = edgeSet(sn.path), alt = edgeSet(sn.alt);
   EDGES.forEach(function(e, k){
-    var col = '#cbd5e1', w = 2, labCol = '#475569';
-    if (skip[k]){ col = '#e2e8f0'; labCol = '#cbd5e1'; }
-    if (rej[k]){ col = '#dc2626'; w = 2.5; labCol = '#dc2626'; }
-    if (sel[k]){ col = '#16a34a'; w = 3.5; labCol = '#15803d'; }
-    if (alt[k]){ col = '#d97706'; w = 3.5; labCol = '#92400e'; }
-    if (path[k]){ col = '#2563eb'; w = 4; labCol = '#1d4ed8'; }
+    var col = '#5a7d8c66', w = 2, labCol = '#47616c';
+    if (skip[k]){ col = '#1b3a4b26'; labCol = '#5a7d8c66'; }
+    if (rej[k]){ col = '#e63946'; w = 2.5; labCol = '#e63946'; }
+    if (sel[k]){ col = '#2f9e44'; w = 3.5; labCol = '#276942'; }
+    if (alt[k]){ col = '#e07a2f'; w = 3.5; labCol = '#92400e'; }
+    if (path[k]){ col = '#1b3a4b'; w = 4; labCol = '#1b3a4b'; }
     var ln = document.getElementById('me' + k);
     ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', w);
     document.getElementById('ml' + k).setAttribute('fill', labCol);
@@ -171,15 +171,15 @@ function render(stage, sn, i){
   for (var name in NP){
     var c = document.getElementById('mn' + name);
     if (touched[name]){
-      c.setAttribute('fill', '#dcfce7'); c.setAttribute('stroke', '#16a34a');
+      c.setAttribute('fill', '#2f9e4424'); c.setAttribute('stroke', '#2f9e44');
     } else {
-      c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#64748b');
+      c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#586e72');
     }
   }
   // 费用行
   var n = (sn.sel || []).length;
   var html = '已选 <b>' + n + '</b> / 7 条边 · 当前费用 <code>' + sumSel(sn.sel) + '</code>';
-  if (sn.path) html += ' · <span style="color:#1d4ed8">蓝色 = TTL 转发路径</span>';
+  if (sn.path) html += ' · <span style="color:#1b3a4b">蓝色 = TTL 转发路径</span>';
   else if (sn.alt) html += ' · <span style="color:#92400e">琥珀 = 另一棵 MST 的桥边 WH–QD</span>';
   this._costLine.innerHTML = html;
   // TTL 演算行

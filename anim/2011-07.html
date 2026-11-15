@@ -18,7 +18,7 @@ var OPTS = [
       '<b>22</b> &lt; 95 → 走进 95 的左子树，区间收窄为 (−∞, 95)',
       '<b>91</b>：在 (22, 95) 内 → 22 的右子树，区间 (22, 95)',
       '<b>24</b>：在 (22, 91) 内 → 91 的左子树，区间 (22, 91)，<b>此后一切必须 &lt; 91</b>',
-      '<b>94</b>：想作 24 的右孩子（94 &gt; 24），但它落在区间 (24, 91) 之外 —— <b style="color:#b91c1c">94 &gt; 91，违反上界，矛盾！</b>',
+      '<b>94</b>：想作 24 的右孩子（94 &gt; 24），但它落在区间 (24, 91) 之外 —— <b style="color:#a02830">94 &gt; 91，违反上界，矛盾！</b>',
     ],
     note:'走到 91 的左子树后却冒出 94 &gt; 91，BST 性质被破坏。' },
   { L:'B', seq:['92','20','91','34','88','35'], fail:-1, ok:true,
@@ -62,8 +62,8 @@ function optSnap(o, k){
   var ptrs = {};
   if (o.fail >= 0) ptrs[o.fail + 1] = '✗ 越界';
   var verdict = o.ok
-    ? '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#16a34a">✓ 可能：逐点落位全部合法</div>'
-    : '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#dc2626">✗ 不可能：' + o.note + '</div>';
+    ? '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#2f9e44">✓ 可能：逐点落位全部合法</div>'
+    : '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#e63946">✗ 不可能：' + o.note + '</div>';
   return {
     cls: o.ok ? 'ok' : 'miss',
     tag: o.ok ? '选项 ' + o.L + ' 可能 ✓' : '选项 ' + o.L + ' 不可能 ✗',
@@ -72,23 +72,23 @@ function optSnap(o, k){
     ribbon: { k: k, ok: o.ok },
     html: '<div class="aw-row-label"><b>选项 ' + o.L + '</b>　查找路径序列（逐点带区间落位）</div>' +
           AW.cellRow(o.seq, classes, ptrs, 1) +
-          '<div style="font-size:13.5px;line-height:1.95;color:#334155;margin-top:8px">' +
+          '<div style="font-size:13.5px;line-height:1.95;color:#213e48;margin-top:8px">' +
           o.lines.join('<br>') + '</div>' + verdict,
   };
 }
 
 var snaps = [{
   cls:'step', tag:'方法', count:0,
-  html:'<div style="font-size:14.5px;line-height:2.1;color:#334155">' +
+  html:'<div style="font-size:14.5px;line-height:2.1;color:#213e48">' +
        '查找路径从根出发：比当前结点<b>小走左</b>、<b>大走右</b>，后一个关键字必须是前一个结点的孩子。<br>' +
-       '判定方法：给每个关键字<b>带上下界落位</b>——进左子树收窄上界、进右子树收窄下界；<b style="color:#b91c1c">落不进区间即不可能</b>。<br>' +
+       '判定方法：给每个关键字<b>带上下界落位</b>——进左子树收窄上界、进右子树收窄下界；<b style="color:#a02830">落不进区间即不可能</b>。<br>' +
        '下面对四个选项逐点落位。</div>',
   log:'方法：逐点带上下界 (lo, hi) 落位，越界即不可能。',
 }].concat(OPTS.map(optSnap)).concat([{
   cls:'done', tag:'结论', count:5, done:true,
-  html:'<div style="font-size:15px;line-height:2.1;color:#334155">' +
-       'B、C、D 逐点落位全部合法；只有 <b>A</b> 在进入 91 的左子树后出现 94 &gt; 91，<b style="color:#dc2626">越过上界</b>。<br>' +
-       '不可能是查找路径的序列是 <b style="color:#dc2626;font-size:18px">95, 22, 91, 24, 94, 71</b>，答案选 <b style="color:#dc2626;font-size:18px">A</b>。</div>',
+  html:'<div style="font-size:15px;line-height:2.1;color:#213e48">' +
+       'B、C、D 逐点落位全部合法；只有 <b>A</b> 在进入 91 的左子树后出现 94 &gt; 91，<b style="color:#e63946">越过上界</b>。<br>' +
+       '不可能是查找路径的序列是 <b style="color:#e63946;font-size:18px">95, 22, 91, 24, 94, 71</b>，答案选 <b style="color:#e63946;font-size:18px">A</b>。</div>',
   log:'结论：A 在第 5 个关键字 94 处越界，不可能；答案 A。',
 }]);
 

@@ -29,7 +29,7 @@ function dequeRow(arr, marks){
   var h = '<div style="display:flex;gap:6px">';
   for (var i = 0; i < chars.length; i++){
     h += '<div class="aw-col" style="width:44px">' +
-         '<div class="aw-ptr" style="color:' + (i === 0 ? '#16a34a' : 'transparent') + '">出口端→</div>' +
+         '<div class="aw-ptr" style="color:' + (i === 0 ? '#2f9e44' : 'transparent') + '">出口端→</div>' +
          '<div class="aw-box' + (cls[i] ? ' ' + cls[i] : '') + '">' + chars[i] + '</div></div>';
   }
   return h + '</div>';
@@ -44,10 +44,10 @@ function stripRows(o){
     }
     if (i === 0){
       h += '<div style="display:flex;align-items:center;gap:10px;margin:4px 0">' +
-           '<span style="font-size:13px;color:#334155;font-weight:700;width:118px">目标队形</span>' + dequeRow(o.strip[0], marks) + '</div>';
+           '<span style="font-size:13px;color:#213e48;font-weight:700;width:118px">目标队形</span>' + dequeRow(o.strip[0], marks) + '</div>';
     } else {
       h += '<div style="display:flex;align-items:center;gap:10px;margin:4px 0">' +
-           '<span style="font-size:13px;color:#64748b;width:118px">剥去 ' + o.seq.charAt(5 - i) + '（' + o.ends[i - 1] + '）</span>' +
+           '<span style="font-size:13px;color:#586e72;width:118px">剥去 ' + o.seq.charAt(5 - i) + '（' + o.ends[i - 1] + '）</span>' +
            dequeRow(o.strip[i], marks) + '</div>';
     }
   }
@@ -57,7 +57,7 @@ function stripRows(o){
 function buildChips(o){
   var h = '<div style="margin-top:10px">';
   o.build.forEach(function(b){
-    h += '<span style="display:inline-block;background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:3px 9px;margin:3px;font-size:13px;font-weight:700;color:#1e40af">' + b + '</span>';
+    h += '<span style="display:inline-block;background:#1b3a4b14;border:1.5px solid #1b3a4b;border-radius:8px;padding:3px 9px;margin:3px;font-size:13px;font-weight:700;color:#1e40af">' + b + '</span>';
   });
   return h + '</div>';
 }
@@ -71,7 +71,7 @@ function okSnap(o, i){
           dequeRow(o.seq, { 0: 'hit' }) +
           '<div class="aw-row-label" style="margin-top:12px"><b>剥离检验</b>：最后入队的必在两端之一，逐个剥掉</div>' +
           stripRows(o) +
-          '<div style="font-size:15px;font-weight:800;color:#16a34a;margin-top:8px">✓ 每一层都落在端点，可达</div>' +
+          '<div style="font-size:15px;font-weight:800;color:#2f9e44;margin-top:8px">✓ 每一层都落在端点，可达</div>' +
           buildChips(o),
   };
 }
@@ -90,16 +90,16 @@ var snapC2 = {
   log: '选项 C：bca 里 c 夹在中间——轮到 c 入队时队里只有 a、b，c 只能落到两端，不可达。',
   html: '<div class="aw-row-label">剩余队形 <b>bca</b>：轮到 c 入队时它必须落在两端</div>' +
         dequeRow('bca', { 1: 'miss' }) +
-        '<div style="font-size:14px;line-height:2;color:#334155;margin-top:10px">' +
+        '<div style="font-size:14px;line-height:2;color:#213e48;margin-top:10px">' +
         '轮到 c 入队时，队里只有 a、b（队形仅 <b>ab</b> 或 <b>ba</b>），c 从左端或右端进去只能得到 ' +
-        '<b>cab、abc、cba、bac</b> 四种，<b style="color:#b91c1c">绝无 bca</b>。<br>' +
+        '<b>cab、abc、cba、bac</b> 四种，<b style="color:#a02830">绝无 bca</b>。<br>' +
         '把出口端换到另一侧等价于检验逆序 <b>eacbd</b>：剥 e、剥 d 后剩 acb，c 同样卡在中间。<br>' +
-        '<b style="color:#dc2626">✗ 选项 C 不可达。</b></div>',
+        '<b style="color:#e63946">✗ 选项 C 不可达。</b></div>',
 };
 
 var snaps = [{
   cls: 'step', tag: '规则', count: 0,
-  html: '<div style="font-size:14.5px;line-height:2;color:#334155">' +
+  html: '<div style="font-size:14.5px;line-height:2;color:#213e48">' +
         '两端都可<b>入队</b>，但只有固定一端能<b>出队</b>；a~e 全部入队后才出队。<br>' +
         '于是出队序列 = 最终队形从「出口端」的读数。<br>' +
         '判定口诀：<b style="color:#92400e">最后入队的元素必在两端之一</b>，剥掉它再查倒数第二个……逐层剥离，卡在中间即不可达。</div>',
@@ -112,10 +112,10 @@ okSnap(OPTS[3], 4),
 {
   cls: 'done', tag: '结论', count: 6, done: true,
   log: 'A、B、D 剥离检验全通过；C 在剩 bca 时卡死 → 不可得的出队序列是 dbcae，选 C。',
-  html: '<div style="font-size:15px;line-height:2;color:#334155">' +
+  html: '<div style="font-size:15px;line-height:2;color:#213e48">' +
         'A（bacde）、B（dbace）、D（ecbad）都能由左右端交替入队构造出来；只有 C（dbcae）在剩 <b>bca</b> 时卡死——' +
         'c 入队时只能落两端，排不出中间位。<br>' +
-        '不可能得到的出队序列是 <b style="color:#dc2626;font-size:18px">dbcae</b>，答案选 <b style="color:#dc2626;font-size:18px">C</b>。</div>',
+        '不可能得到的出队序列是 <b style="color:#e63946;font-size:18px">dbcae</b>，答案选 <b style="color:#e63946;font-size:18px">C</b>。</div>',
 }];
 
 AW.init({

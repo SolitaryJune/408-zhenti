@@ -38,11 +38,11 @@ function opChips(ops, failIdx){
   ops.forEach(function(o, i){
     var base = 'display:inline-block;border-radius:8px;padding:3px 9px;margin:3px 2px;font-size:13px;font-weight:700;';
     if (i === failIdx) {
-      h += '<span style="' + base + 'background:#fee2e2;border:1.5px solid #dc2626;color:#b91c1c;animation:aw-pop .45s ease">' + o + ' ✗</span>';
+      h += '<span style="' + base + 'background:#e6394620;border:1.5px solid #e63946;color:#a02830;animation:aw-pop .45s ease">' + o + ' ✗</span>';
     } else if (o.charAt(0) === '退') {
-      h += '<span style="' + base + 'background:#fef3c7;border:1.5px solid #d97706;color:#92400e">' + o + '</span>';
+      h += '<span style="' + base + 'background:#f8edcb;border:1.5px solid #e07a2f;color:#92400e">' + o + '</span>';
     } else {
-      h += '<span style="' + base + 'background:#eff6ff;border:1.5px solid #2563eb;color:#1e40af">' + o + '</span>';
+      h += '<span style="' + base + 'background:#1b3a4b14;border:1.5px solid #1b3a4b;color:#1e40af">' + o + '</span>';
     }
   });
   return h + '</div>';
@@ -51,24 +51,24 @@ function opChips(ops, failIdx){
 // 违规瞬间的栈内视图（传入自底向上的数组）
 function stackViz(arr){
   var h = '<div style="display:inline-block;text-align:center;margin:6px 18px 0 0;vertical-align:top">';
-  h += '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px">栈顶 ↑</div>';
-  h += '<div style="display:inline-flex;flex-direction:column;gap:4px;border:2px solid #cbd5e1;border-radius:10px;padding:6px">';
+  h += '<div style="font-size:12px;color:#b9cbd0;margin-bottom:4px">栈顶 ↑</div>';
+  h += '<div style="display:inline-flex;flex-direction:column;gap:4px;border:2px solid #5a7d8c66;border-radius:10px;padding:6px">';
   for (var i = arr.length - 1; i >= 0; i--){
     var cls = (i === arr.length - 1) ? 'aw-box miss' : 'aw-box dim';
     h += '<div class="' + cls + '" style="width:40px;height:34px;font-size:15px">' + arr[i] + '</div>';
   }
-  return h + '</div><div style="font-size:12px;color:#94a3b8;margin-top:4px">栈底</div></div>';
+  return h + '</div><div style="font-size:12px;color:#b9cbd0;margin-top:4px">栈底</div></div>';
 }
 
 function optionSnap(o, i){
   var failIdx = o.ok ? -1 : 9;   // D 的违规操作是「退d③」（下标 9）
   var verdict = o.ok
-    ? '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#16a34a">✓ 可行：最大连续退栈 ' + o.run + ' 次（允许 2 次）</div>'
-    : '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#dc2626">✗ 不可行：退 d 已是第 3 次连续退栈，违反约束</div>';
+    ? '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#2f9e44">✓ 可行：最大连续退栈 ' + o.run + ' 次（允许 2 次）</div>'
+    : '<div style="margin-top:10px;font-size:15px;font-weight:800;color:#e63946">✗ 不可行：退 d 已是第 3 次连续退栈，违反约束</div>';
   var extra = o.ok ? '' : stackViz(['b','c','d']) +
-    '<div style="display:inline-block;vertical-align:top;max-width:430px;font-size:13.5px;line-height:1.9;color:#334155">' +
+    '<div style="display:inline-block;vertical-align:top;max-width:430px;font-size:13.5px;line-height:1.9;color:#213e48">' +
     '弹出 a 后，为让 f 先出只能依次压入 b、c、d、e、f；此后栈顶依次是 e、d、c、b，<b>只能一直退栈</b>：' +
-    '退 f①、退 e② 之后栈顶是 d，再退就<b style="color:#b91c1c">连续第 3 次退栈</b>，违规。</div>';
+    '退 f①、退 e② 之后栈顶是 d，再退就<b style="color:#a02830">连续第 3 次退栈</b>，违规。</div>';
   return {
     cls: o.ok ? 'ok' : 'miss',
     tag: o.ok ? o.L + ' 可行 ✓' : o.L + ' 不可行 ✗',
@@ -84,16 +84,16 @@ function optionSnap(o, i){
 
 var snaps = [{
   cls: 'step', tag: '规则', count: 0,
-  html: '<div style="font-size:14.5px;line-height:2;color:#334155">' +
-        '进栈次序固定为 <b>a b c d e f</b>，进出栈可交替，但<b style="color:#b91c1c">不允许连续 3 次退栈</b>（2 连退合法）。<br>' +
+  html: '<div style="font-size:14.5px;line-height:2;color:#213e48">' +
+        '进栈次序固定为 <b>a b c d e f</b>，进出栈可交替，但<b style="color:#a02830">不允许连续 3 次退栈</b>（2 连退合法）。<br>' +
         '判定方法：出栈序列给定后操作序列<b>唯一确定</b>——下一个要出的字符不在栈顶，就把未进栈的元素压到它出现为止再弹出。<br>' +
         '下面对四个选项逐一模拟，看最长的那段连续退栈有没有达到 3 次。</div>',
 }].concat(OPTS.map(optionSnap)).concat([{
   cls: 'done', tag: '结论', count: 5, done: true,
   log: 'A、B、C 最大 2 连退合法；D 被迫 5 连退 → 不可能的出栈序列是 afedcb，选 D。',
-  html: '<div style="font-size:15px;line-height:2;color:#334155">' +
-        'A、B、C 的最大连续退栈都是 <b>2 次</b>，合法；D 出 a 后必须压满 b~f，<b style="color:#b91c1c">被迫 5 连退</b>，第 3 连退即违规。<br>' +
-        '所以不可能得到的出栈序列是 <b style="color:#dc2626;font-size:18px">afedcb</b>，答案选 <b style="color:#dc2626;font-size:18px">D</b>。</div>',
+  html: '<div style="font-size:15px;line-height:2;color:#213e48">' +
+        'A、B、C 的最大连续退栈都是 <b>2 次</b>，合法；D 出 a 后必须压满 b~f，<b style="color:#a02830">被迫 5 连退</b>，第 3 连退即违规。<br>' +
+        '所以不可能得到的出栈序列是 <b style="color:#e63946;font-size:18px">afedcb</b>，答案选 <b style="color:#e63946;font-size:18px">D</b>。</div>',
 }]);
 
 AW.init({

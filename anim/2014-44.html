@@ -54,15 +54,15 @@ AW.init({
     // 前三问结论卡
     var qWrap = AW.el('div', '');
     var qTexts = [
-      '(1) M 按<b style="color:#15803d">字节编址</b>：相邻指令地址差 4，一条指令 32 位 = 4 字节 → 每个地址单位代表 1 字节。',
-      '(2) 数组 A 每个元素占 <b style="color:#15803d">4 字节 = 32 位</b>：sll 把 i 左移 2 位即 i×4 → 元素地址间隔 4B。',
-      '(3) bne 机器代码 1446FFFAH：OP=000101、Rs=R2、Rd=R6，OFFSET = <b style="color:#d97706">FFFAH = −6</b>（16 位补码）。',
-      '(3) 转移目标地址 = <b style="color:#d97706">(PC + 4) + OFFSET × 4</b>：08048118H + (−6)×4 = 08048100H = loop。',
+      '(1) M 按<b style="color:#276942">字节编址</b>：相邻指令地址差 4，一条指令 32 位 = 4 字节 → 每个地址单位代表 1 字节。',
+      '(2) 数组 A 每个元素占 <b style="color:#276942">4 字节 = 32 位</b>：sll 把 i 左移 2 位即 i×4 → 元素地址间隔 4B。',
+      '(3) bne 机器代码 1446FFFAH：OP=000101、Rs=R2、Rd=R6，OFFSET = <b style="color:#e07a2f">FFFAH = −6</b>（16 位补码）。',
+      '(3) 转移目标地址 = <b style="color:#e07a2f">(PC + 4) + OFFSET × 4</b>：08048118H + (−6)×4 = 08048100H = loop。',
     ];
     var qEls = [];
     qTexts.forEach(function(t){
       var c = AW.el('div', '');
-      c.style.cssText = 'display:none;font-size:13.5px;line-height:1.8;color:#334155;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;margin-bottom:8px';
+      c.style.cssText = 'display:none;font-size:13.5px;line-height:1.8;color:#213e48;background:#f8edcb;border:1.5px solid #1b3a4b26;border-radius:10px;padding:8px 12px;margin-bottom:8px';
       c.innerHTML = t;
       qWrap.appendChild(c);
       qEls.push(c);
@@ -72,16 +72,16 @@ AW.init({
     var tbl = AW.el('table', '');
     tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px';
     var thead = '<tr>' + ['编号','地址','机器代码','汇编代码','注释'].map(function(h){
-      return '<th style="border:1.5px solid #e2e8f0;background:#f1f5f9;padding:6px 8px;text-align:left">' + h + '</th>';
+      return '<th style="border:1.5px solid #1b3a4b26;background:#f8edcb;padding:6px 8px;text-align:left">' + h + '</th>';
     }).join('') + '</tr>';
     var rowEls = [];
     var tbody = '';
     INS.forEach(function(ins){
-      tbody += '<tr><td style="border:1.5px solid #e2e8f0;padding:6px 8px;font-weight:700">' + ins.no +
-        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px;font-family:Menlo,Consolas,monospace">' + ins.addr +
-        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px;font-family:Menlo,Consolas,monospace">' + ins.code +
-        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px">' + ins.asm +
-        '</td><td style="border:1.5px solid #e2e8f0;padding:6px 8px;color:#64748b">' + ins.note + '</td></tr>';
+      tbody += '<tr><td style="border:1.5px solid #1b3a4b26;padding:6px 8px;font-weight:700">' + ins.no +
+        '</td><td style="border:1.5px solid #1b3a4b26;padding:6px 8px;font-family:Menlo,Consolas,monospace">' + ins.addr +
+        '</td><td style="border:1.5px solid #1b3a4b26;padding:6px 8px;font-family:Menlo,Consolas,monospace">' + ins.code +
+        '</td><td style="border:1.5px solid #1b3a4b26;padding:6px 8px">' + ins.asm +
+        '</td><td style="border:1.5px solid #1b3a4b26;padding:6px 8px;color:#586e72">' + ins.note + '</td></tr>';
     });
     tbl.innerHTML = thead + tbody;
     var bodies = tbl.querySelectorAll('tbody tr');
@@ -89,7 +89,7 @@ AW.init({
 
     // 相关分析文字面板
     var dep = AW.el('div', '');
-    dep.style.cssText = 'display:none;font-size:13.5px;line-height:1.8;color:#334155;background:#fffbeb;border:2px solid #d97706;border-radius:12px;padding:10px 14px;margin-top:14px;min-height:52px';
+    dep.style.cssText = 'display:none;font-size:13.5px;line-height:1.8;color:#213e48;background:#fffbeb;border:2px solid #e07a2f;border-radius:12px;padding:10px 14px;margin-top:14px;min-height:52px';
 
     inner.appendChild(qWrap); inner.appendChild(tbl); inner.appendChild(dep);
     wrap.appendChild(inner);
@@ -119,9 +119,9 @@ AW.init({
     var rowEls = this._rowEls;
     st.rows.forEach(function(s, r){
       var e = rowEls[r];
-      if (s === 'hot'){ e.style.background = '#fffbeb'; e.style.boxShadow = 'inset 3px 0 0 #d97706'; }
-      else if (s === 'bad'){ e.style.background = '#fff8f8'; e.style.boxShadow = 'inset 3px 0 0 #dc2626'; }
-      else if (s === 'ok'){ e.style.background = '#f6fef9'; e.style.boxShadow = 'inset 3px 0 0 #16a34a'; }
+      if (s === 'hot'){ e.style.background = '#fffbeb'; e.style.boxShadow = 'inset 3px 0 0 #e07a2f'; }
+      else if (s === 'bad'){ e.style.background = '#fff8f8'; e.style.boxShadow = 'inset 3px 0 0 #e63946'; }
+      else if (s === 'ok'){ e.style.background = '#f6fef9'; e.style.boxShadow = 'inset 3px 0 0 #2f9e44'; }
       else if (s === 'dim'){ e.style.opacity = '.45'; e.style.background = ''; e.style.boxShadow = ''; }
       else { e.style.background = ''; e.style.boxShadow = ''; e.style.opacity = '1'; }
     });

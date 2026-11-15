@@ -23,32 +23,32 @@ var MSGS = [
 ];
 // 时间轴分段（宽度为视觉示意，2MSL 段不成比例）
 var SEGS = [
-  { w: '12%', label: '① FIN 上路 0→25ms', color: '#dbeafe' },
-  { w: '12%', label: '② ACK+FIN 回程 25→50ms', color: '#dcfce7' },
-  { w: '12%', label: '③ 最后 ACK 50→75ms', color: '#fef3c7' },
-  { w: '56%', label: 'TIME_WAIT：2MSL = 1600ms（示意不成比例）', color: '#fee2e2' },
+  { w: '12%', label: '① FIN 上路 0→25ms', color: '#d9e3df' },
+  { w: '12%', label: '② ACK+FIN 回程 25→50ms', color: '#2f9e4424' },
+  { w: '12%', label: '③ 最后 ACK 50→75ms', color: '#f8edcb' },
+  { w: '56%', label: 'TIME_WAIT：2MSL = 1600ms（示意不成比例）', color: '#e6394620' },
 ];
 var TICKS = ['0', '25', '50', '75', '1650 ms'];
 
 // sn 字段：cSt/sSt 泳道文本与颜色、msg 已点亮报文数、seg 高亮段、cur 时刻(ms)
 var STEPS = [
   { cls:'step',  tag:'起点', log:'数据传输结束，C 主动请求断开连接。计时起点 t = 0：C 发出 FIN 段。',
-    cSt:['ESTABLISHED', '#e2e8f0', '#334155'], sSt:['ESTABLISHED', '#e2e8f0', '#334155'],
+    cSt:['ESTABLISHED', '#1b3a4b26', '#213e48'], sSt:['ESTABLISHED', '#1b3a4b26', '#213e48'],
     msg:0, seg:-1, cur:0 },
   { cls:'step',  tag:'第 1 次挥手', log:'t = 0：C 发出 FIN → 进入 FIN_WAIT-1，等待 S 的确认。',
-    cSt:['FIN_WAIT-1', '#dbeafe', '#1d4ed8'], sSt:['ESTABLISHED', '#e2e8f0', '#334155'],
+    cSt:['FIN_WAIT-1', '#d9e3df', '#1b3a4b'], sSt:['ESTABLISHED', '#1b3a4b26', '#213e48'],
     msg:1, seg:0, cur:0 },
   { cls:'shift', tag:'半个 RTT', log:'t = 25 ms：S 收到 FIN。最短口径：CLOSE_WAIT 期间无数据可传 → S 立即回 ACK 并同时发出自己的 FIN，进入 LAST_ACK（四次挥手压缩成三次报文）。',
-    cSt:['FIN_WAIT-1', '#dbeafe', '#1d4ed8'], sSt:['LAST_ACK', '#fef3c7', '#92400e'],
+    cSt:['FIN_WAIT-1', '#d9e3df', '#1b3a4b'], sSt:['LAST_ACK', '#f8edcb', '#92400e'],
     msg:2, seg:1, cur:25 },
   { cls:'shift', tag:'1 个 RTT', log:'t = 50 ms：C 收到 ACK + FIN，回最后一个 ACK → 进入 TIME_WAIT，启动 2MSL = 2 × 800 = 1600 ms 定时器。',
-    cSt:['TIME_WAIT（2MSL 计时）', '#fef3c7', '#92400e'], sSt:['LAST_ACK', '#fef3c7', '#92400e'],
+    cSt:['TIME_WAIT（2MSL 计时）', '#f8edcb', '#92400e'], sSt:['LAST_ACK', '#f8edcb', '#92400e'],
     msg:3, seg:2, cur:50 },
   { cls:'ok',    tag:'S 关闭完成', log:'t = 75 ms：S 收到最后一个 ACK → 进入 CLOSED。S 耗时 = 0.5 RTT + 1 RTT = 1.5 RTT = 75 ms。',
-    cSt:['TIME_WAIT（2MSL 计时）', '#fef3c7', '#92400e'], sSt:['CLOSED ✓', '#dcfce7', '#15803d'],
+    cSt:['TIME_WAIT（2MSL 计时）', '#f8edcb', '#92400e'], sSt:['CLOSED ✓', '#2f9e4424', '#276942'],
     msg:3, seg:3, cur:75, ribbon:{k:1, ok:true} },
   { cls:'done',  tag:'C 关闭完成', log:'t = 50 + 1600 = 1650 ms：C 的 2MSL 定时器到期 → 进入 CLOSED。C 耗时 = 1 RTT + 2MSL = 1650 ms。',
-    cSt:['CLOSED ✓', '#dcfce7', '#15803d'], sSt:['CLOSED ✓', '#dcfce7', '#15803d'],
+    cSt:['CLOSED ✓', '#2f9e4424', '#276942'], sSt:['CLOSED ✓', '#2f9e4424', '#276942'],
     msg:3, seg:3, cur:1650, ribbon:{k:2, ok:true}, done:true },
 ];
 
@@ -62,7 +62,7 @@ function laneRow(labelText, st){
   lab.style.width = '76px';
   lab.style.fontSize = '13px';
   lab.style.fontWeight = '700';
-  lab.style.color = '#334155';
+  lab.style.color = '#213e48';
   lab.style.textAlign = 'right';
   var chip = AW.el('div', '', st[0]);
   chip.style.padding = '7px 14px';
@@ -102,9 +102,9 @@ AW.init({
       row.style.margin = '5px 0 5px 88px';
       row.style.padding = '7px 12px';
       row.style.borderRadius = '10px';
-      row.style.border = '1px solid #e2e8f0';
-      row.style.background = '#f8fafc';
-      row.style.color = '#94a3b8';
+      row.style.border = '1px solid #1b3a4b26';
+      row.style.background = '#f8edcb';
+      row.style.color = '#b9cbd0';
       row.style.fontSize = '13.5px';
       row.style.transition = 'all .3s';
       row.textContent = m.text;
@@ -120,13 +120,13 @@ AW.init({
     segRow.style.height = '26px';
     segRow.style.borderRadius = '8px';
     segRow.style.overflow = 'hidden';
-    segRow.style.border = '1px solid #e2e8f0';
+    segRow.style.border = '1px solid #1b3a4b26';
     this._segs = [];
     SEGS.forEach(function(s){
       var seg = AW.el('div', '', s.label);
       seg.style.width = s.w;
-      seg.style.background = '#f1f5f9';
-      seg.style.color = '#94a3b8';
+      seg.style.background = '#f8edcb';
+      seg.style.color = '#b9cbd0';
       seg.style.fontSize = '11px';
       seg.style.display = 'flex';
       seg.style.alignItems = 'center';
@@ -142,7 +142,7 @@ AW.init({
     tickRow.style.display = 'flex';
     tickRow.style.justifyContent = 'space-between';
     tickRow.style.fontSize = '12px';
-    tickRow.style.color = '#64748b';
+    tickRow.style.color = '#586e72';
     tickRow.style.fontFamily = 'monospace';
     tickRow.style.fontWeight = '700';
     TICKS.forEach(function(t){
@@ -165,15 +165,15 @@ AW.init({
     MSGS.forEach(function(m, j){
       var row = self._msgs[j];
       var on = j < sn.msg;
-      row.style.color = on ? '#334155' : '#94a3b8';
-      row.style.background = on ? (m.from === 'C' ? '#eff6ff' : '#f0fdf4') : '#f8fafc';
-      row.style.borderColor = on ? (m.from === 'C' ? '#93c5fd' : '#86efac') : '#e2e8f0';
+      row.style.color = on ? '#213e48' : '#b9cbd0';
+      row.style.background = on ? (m.from === 'C' ? '#1b3a4b14' : '#f0f7e6') : '#f8edcb';
+      row.style.borderColor = on ? (m.from === 'C' ? '#93c5fd' : '#86efac') : '#1b3a4b26';
       row.style.fontWeight = on ? '700' : '400';
     });
     this._segs.forEach(function(seg, j){
       var on = j === sn.seg;
-      seg.style.background = on ? SEGS[j].color : '#f1f5f9';
-      seg.style.color = on ? '#334155' : '#94a3b8';
+      seg.style.background = on ? SEGS[j].color : '#f8edcb';
+      seg.style.color = on ? '#213e48' : '#b9cbd0';
       seg.style.fontWeight = on ? '700' : '400';
     });
   },

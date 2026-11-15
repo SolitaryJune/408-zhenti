@@ -777,6 +777,22 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
     if(e.key === 'ArrowLeft' && prev){ e.preventDefault(); location.href = prev.href; }
     if(e.key === 'ArrowRight' && next){ e.preventDefault(); location.href = next.href; }
   });
+
+  /* ---------- 整张模式页：单题模式智能跳到当前正在看的题 ---------- */
+  document.addEventListener('click', function(e){
+    var link = e.target.closest && e.target.closest('a.js-single-link');
+    if(!link || document.body.dataset.mode !== 'paper') return;
+    var cards = [].slice.call(document.querySelectorAll('.qcard'));
+    if(!cards.length) return;
+    var mid = window.innerHeight / 2, current = cards[0];
+    for(var i = 0; i < cards.length; i++){
+      if(cards[i].getBoundingClientRect().top <= mid) current = cards[i];
+    }
+    if(current && current.dataset.qid){
+      e.preventDefault();
+      location.href = link.getAttribute('href').replace(/question\/[^/]+\/$/, 'question/' + current.dataset.qid + '/');
+    }
+  });
 })();
 
 /* ===== 搜索页 ===== */
@@ -871,7 +887,7 @@ def toolbar(rel: str, mode: str, year: int | str | None, focus_qid: str | None =
     if not year:
         latest = max(YEARS)
         ms = (f'<a href="{rel}year/{latest}/">整张模式</a>'
-              '<a href="#" onclick="return false" style="opacity:.5">单题模式</a>')
+              f'<a href="{rel}question/{latest}-01/">单题模式</a>')
         return f"""
 <div class="toolbar-wrap"><div class="toolbar">
   <div class="mode-switch" aria-label="浏览模式">{ms}</div>
@@ -879,11 +895,11 @@ def toolbar(rel: str, mode: str, year: int | str | None, focus_qid: str | None =
     paper_href = f"{rel}year/{year}/" + (f"?focus={focus_qid}" if focus_qid else "")
     if mode == "paper":
         ms = f'<a href="{paper_href}" class="active">整张模式</a>'
-        ms += (f'<a href="{rel}question/{cur_qid}/">单题模式</a>' if cur_qid
-               else '<a href="#" onclick="return false" style="opacity:.5">单题模式</a>')
+        ms += (f'<a href="{rel}question/{cur_qid}/" class="js-single-link">单题模式</a>' if cur_qid
+               else f'<a href="{rel}question/{int(year)}-01/" class="js-single-link">单题模式</a>')
     else:
         ms = (f'<a href="{paper_href}">整张模式</a>'
-              f'<a href="#" class="active" onclick="return false">单题模式</a>')
+              f'<a href="{rel}question/{cur_qid}/" class="active">单题模式</a>')
     return f"""
 <div class="toolbar-wrap"><div class="toolbar">
   <div class="mode-switch" aria-label="浏览模式">{ms}</div>

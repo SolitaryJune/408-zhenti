@@ -3,13 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-41 calMulMax 算法动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261115a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261115b">
 </head>
 <body>
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261115a"></script>
+<script src="../assets/anim-engine.js?v=20261115c"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
+// 每步的执行状态（与参考答案代码逐步对应；i=-1 表示扫描结束）
+// （引擎 render 的 this 是引擎状态而非本配置对象，故存为页面变量 ST_DATA 供 render 读取）
+var ST_DATA = [
+  null,
+  null,
+  { i: 3, minS: 6, maxS: 6, res: ['?','?','?','36'], mul: 'A[3]×maxSuffix = 6×6' },
+  { i: 2, minS: -9, maxS: 6, res: ['?','?','81','36'], mul: 'A[2]×minSuffix = (-9)×(-9)' },
+  { i: 1, minS: -9, maxS: 6, res: ['?','24','81','36'], mul: 'A[1]×maxSuffix = 4×6' },
+  { i: 0, minS: -9, maxS: 6, res: ['6','24','81','36'], mul: 'A[0]×maxSuffix = 1×6' },
+  { i: -1, minS: -9, maxS: 6, res: ['6','24','81','36'], mul: '' },
+];
+
 AW.init({
   title: 'calMulMax：后缀最值一遍扫描求最大乘积',
   subtitle: '题例 A = <code>{1, 4, -9, 6}</code> · 从右向左维护后缀最小/最大值 · 目标 res = <code>{6, 24, 81, 36}</code>',
@@ -57,16 +69,8 @@ AW.init({
     stage.appendChild(wrap);
   },
 
-  // 每步的执行状态（与参考答案代码逐步对应；i=-1 表示扫描结束）
-  STATES: [
-    null,
-    null,
-    { i: 3, minS: 6, maxS: 6, res: ['?','?','?','36'], mul: 'A[3]×maxSuffix = 6×6' },
-    { i: 2, minS: -9, maxS: 6, res: ['?','?','81','36'], mul: 'A[2]×minSuffix = (-9)×(-9)' },
-    { i: 1, minS: -9, maxS: 6, res: ['?','24','81','36'], mul: 'A[1]×maxSuffix = 4×6' },
-    { i: 0, minS: -9, maxS: 6, res: ['6','24','81','36'], mul: 'A[0]×maxSuffix = 1×6' },
-    { i: -1, minS: -9, maxS: 6, res: ['6','24','81','36'], mul: '' },
-  ],
+  // 每步的执行状态：见页首 ST_DATA（引擎 render 的 this 非本配置对象）
+  STATES: ST_DATA,
 
   snaps: [
     { cls:'shift', tag:'审题', log:'对每个 i 求 max{A[i]·A[j] | j≥i}。暴力枚举 O(n²)；题例 A={1,4,-9,6} → res={6,24,81,36}', count:0 },
@@ -80,7 +84,7 @@ AW.init({
 
   render: function(stage, sn, i){
     var A = ['1','4','-9','6'];
-    var st = this.STATES[i] || null;
+    var st = ST_DATA[i] || null;
     if (!st){
       this._aWrap.innerHTML = '';
       this._aWrap.appendChild(AW.cellRow(A, ['','','',''], null, 1));

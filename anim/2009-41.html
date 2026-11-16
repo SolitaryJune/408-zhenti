@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2009-41 动画 · 贪心求最短路径的两个反例</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261115a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261115b">
 </head>
 <body>
 <!-- ============================================================
@@ -11,7 +11,7 @@
      外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
 ============================================================= -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261115a"></script>
+<script src="../assets/anim-engine.js?v=20261115c"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -69,14 +69,19 @@ function mkGraph(pos, edges, wpos, edgeStore, nodeStore, wStore, svg){
 function build(stage){
   stage.innerHTML = '';
   var wrap = AW.el('div', 'aw-scroll');
+  // 两张固定尺寸 SVG 并排两列（宽屏下整组由引擎居中并放大，纵向堆叠会高瘦、横向留白）
+  wrap.style.cssText = 'display:flex;gap:36px;align-items:flex-start;justify-content:center';
+  var col1 = AW.el('div', ''); col1.style.flex = '0 0 auto';
+  var col2 = AW.el('div', ''); col2.style.flex = '0 0 auto';
   var lb1 = AW.el('div', 'aw-row-label', '<b>图（1）</b>　初始顶点 1 · 目标顶点 4　（边权标在旁）');
   svg1 = mkSvg(470, 200);
   mkGraph(P1, E1, W1, l1, n1, w1, svg1);
   var lb2 = AW.el('div', 'aw-row-label', '<b>图（2）</b>　初始顶点 1 · 目标顶点 3');
   svg2 = mkSvg(330, 210);
   mkGraph(P2, E2, W2, l2, n2, w2, svg2);
-  wrap.appendChild(lb1); wrap.appendChild(svg1);
-  wrap.appendChild(lb2); wrap.appendChild(svg2);
+  col1.appendChild(lb1); col1.appendChild(svg1);
+  col2.appendChild(lb2); col2.appendChild(svg2);
+  wrap.appendChild(col1); wrap.appendChild(col2);
   stage.appendChild(wrap);
 }
 

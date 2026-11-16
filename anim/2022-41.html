@@ -3,11 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-41 顺序存储二叉树的 BST 判定</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261115a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261115b">
+<style>
+  /* T1 / T2 两组数组并排成两列（makeRows 每组装进一个列容器），
+     画布窄于两列总宽时由引擎 fitStage 整体缩小，无需滚动 */
+  #awStage .aw-scroll > div{
+    display:grid; grid-template-columns:auto auto; column-gap:48px;
+    align-content:start; justify-content:center;
+  }
+</style>
 </head>
 <body>
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261115a"></script>
+<script src="../assets/anim-engine.js?v=20261115c"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -35,11 +43,13 @@ var UPD = [
 var g1 = [], g2 = [];   // 每棵树 3 行（数组值 / pmin / pmax）的 cellRow
 
 function makeRows(stage, inner, header, base){
-  inner.appendChild(AW.el('div', 'aw-row-label', header));
+  // 一棵示例装进一个列容器：inner 为两列网格时，col 即左/右两列（T1 | T2）
+  var col = AW.el('div', '');
+  col.appendChild(AW.el('div', 'aw-row-label', header));
   var rows = [];
   var labels = ['<b>数组 SqBiTNode</b>', '<b>pmin（子树最小）</b>', '<b>pmax（子树最大）</b>'];
   for (var r = 0; r < 3; r++){
-    inner.appendChild(AW.el('div', 'aw-row-label', labels[r]));
+    col.appendChild(AW.el('div', 'aw-row-label', labels[r]));
     var cells = [];
     for (var j = 0; j < base.length; j++) cells.push('');
     var row = AW.cellRow(cells, cells, null, 1);
@@ -47,9 +57,10 @@ function makeRows(stage, inner, header, base){
     for (var j2 = 0; j2 < base.length; j2++){
       row.children[j2].children[2].textContent = String(j2);
     }
-    inner.appendChild(row);
+    col.appendChild(row);
     rows.push(row);
   }
+  inner.appendChild(col);
   return rows;
 }
 

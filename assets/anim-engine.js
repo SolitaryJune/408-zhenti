@@ -187,8 +187,8 @@
         if (!q) return;
         var fixImg = function(h){
           var s = String(h || '');
-          s = s.replace(/src=["'](\/?content-images\/)/g, 'src="../images/');
-          s = s.replace(/src=["'](images\/)/g, 'src="../images/');
+          s = s.replace(/(\/?content-images\/)/g, '../images/');
+          s = s.replace(/(["'\s(])((?!\.\.\/)images\/)/g, '$1../images/');
           return s;
         };
         var opts = '';

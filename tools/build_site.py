@@ -37,9 +37,10 @@ def esc(s: str) -> str:
 
 
 def imgfix(html: str, rel: str) -> str:
-    """把题面里的 content-images/ 引用改写为本地相对路径。"""
-    return html.replace('src="/content-images/', f'src="{rel}images/').replace(
-        "src=\"content-images/", f'src="{rel}images/')
+    """把题面里的 content-images/ 引用改写为本地相对路径（src/srcset 通吃）。"""
+    s = html.replace("/content-images/", rel + "images/")   # 绝对站根引用
+    s = s.replace("content-images/", rel + "images/")        # 剩余裸相对引用
+    return s
 
 
 def md2html(md: str) -> str:

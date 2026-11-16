@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-35 算法动画：IP AND 掩码</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261115a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261115b">
 </head>
 <body>
 <!-- ============================================================
@@ -11,7 +11,7 @@
      外壳与控件全部由 assets/anim-engine.js 提供。
 ============================================================= -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261115a"></script>
+<script src="../assets/anim-engine.js?v=20261115c"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -98,25 +98,26 @@ AW.init({
 
   render: function(stage, sn, i){
     var inner = this._inner;
+    var st = STATES[i] || STATES[STATES.length - 1];   // 高亮状态与 snaps 一一对应
     inner.innerHTML = '';
 
     inner.appendChild(AW.el('div', 'aw-row-label', '<b>IP 地址</b> 183.80.72.48（每格一个字节）'));
-    inner.appendChild(byteRow(IP_BYTES, sn.ipC));
+    inner.appendChild(byteRow(IP_BYTES, st.ipC));
 
     inner.appendChild(AW.el('div', 'aw-row-label', '<b>子网掩码</b> 255.255.192.0 = /18（前 18 位为 1）'));
-    inner.appendChild(byteRow(MASK_BYTES, sn.maskC));
+    inner.appendChild(byteRow(MASK_BYTES, st.maskC));
 
     inner.appendChild(AW.el('div', 'aw-row-label', '<b>按位与（网络地址）</b>'));
-    inner.appendChild(byteRow(sn.andVals, sn.andC));
+    inner.appendChild(byteRow(st.andVals, st.andC));
 
-    if (sn.detail){
+    if (st.detail){
       inner.appendChild(AW.el('div', 'aw-row-label', '<b>第三字节按位展开</b>：IP 的 72'));
-      inner.appendChild(bitRow(BIT3_IP, sn.detail.ip, WEIGHTS));
+      inner.appendChild(bitRow(BIT3_IP, st.detail.ip, WEIGHTS));
       inner.appendChild(AW.el('div', 'aw-row-label', '子网掩码的 192（按位与 ↓）'));
-      inner.appendChild(bitRow(BIT3_MASK, sn.detail.mask, WEIGHTS));
-      if (sn.detail.and){
+      inner.appendChild(bitRow(BIT3_MASK, st.detail.mask, WEIGHTS));
+      if (st.detail.and){
         inner.appendChild(AW.el('div', 'aw-row-label', '<b>与结果 = 64</b>（高位保留、低位清零）'));
-        inner.appendChild(bitRow(BIT3_AND, sn.detail.and, WEIGHTS));
+        inner.appendChild(bitRow(BIT3_AND, st.detail.and, WEIGHTS));
       }
     }
   },

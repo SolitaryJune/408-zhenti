@@ -21,7 +21,7 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 YEARS = list(range(2009, 2027))
-ASSET_VER = "20261115a"
+ASSET_VER = "20261116a"
 
 SUBJECTS = {
     "数据结构": {"cls": "ds", "color": "#e07a2f", "bg": "#e07a2f1f"},

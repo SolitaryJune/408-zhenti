@@ -52,5 +52,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：哈夫曼树求最小 WPL</h2>
+<p>答案：<strong>B</strong>。</p>
+<h3>第一步：明确方法与它的"为什么"</h3>
+<p>5 个叶结点权值 10, 12, 16, 21, 30。WPL = Σ(叶权值 × 叶到根的路径长度)，路径上每条边记 1。哈夫曼树的构造规则：每次从森林中取<strong>两个最小</strong>的权值合并，新权值放回森林，重复到只剩一棵树。</p>
+<p><strong>为什么专挑最小的两个合并？</strong> 直观地看：越晚参与合并的结点，离根越近、路径越短；越早被合并的结点，被一层层"垫"在底下、路径越长。让权值小的叶走长路、权值大的叶走近路，总和才最小——这正是"贪心"能取到最小 WPL 的原因。</p>
+<h3>第二步：逐步合并</h3>
+<table><thead><tr><th>步</th><th>森林中权值</th><th>取出</th><th>合并</th></tr></thead><tbody><tr><td>1</td><td>10,12,16,21,30</td><td>10,12</td><td>22</td></tr><tr><td>2</td><td>16,21,22,30</td><td>16,21</td><td>37</td></tr><tr><td>3</td><td>22,30,37</td><td>22,30</td><td>52</td></tr><tr><td>4</td><td>37,52</td><td>37,52</td><td>89</td></tr></tbody></table>
+<h3>第三步：求 WPL</h3>
+<p>WPL = 所有<strong>非叶结点</strong>（合并结果）权值之和 = 22 + 37 + 52 + 89 = <strong>200</strong>。</p>
+<p><strong>为什么非叶求和就等于 WPL？</strong> 每次合并产生的新权值 = 它两棵子树中全部叶权值之和。一个叶权值每经过一次合并就被计入一次，而它从叶到根恰好经历<strong>深度次</strong>合并——所以 Σ(叶权值 × 叶深度) 与 Σ(各次合并值) 算的是同一个账，只是后者不用画树，更快且不易错。</p>
+<p>（验算：画树后 10、12 各在深度 3，16、21、30 各在深度 2：10×3 + 12×3 + 16×2 + 21×2 + 30×2 = 30 + 36 + 32 + 42 + 60 = 200 ✓，两条路结果一致。）</p>
+<h3>易错点</h3>
+<ul><li><strong>选 A（89）</strong>：把最后一次合并值（树根权值）当成 WPL——WPL 是全部合并值之和。</li><li><strong>每次没取最小两个</strong>：合并顺序错，WPL 会偏大，对应 208、289 这类干扰值。</li><li><strong>重复使用已合并的权值</strong>：合并后小权值"消失"，只留新结点继续参战。</li></ul>
+<blockquote>结论：WPL = 22 + 37 + 52 + 89 = 200，答案 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

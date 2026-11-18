@@ -73,5 +73,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：双层循环的时间复杂度——数"内层总共执行了多少次"</h2>
+<p><strong>答案：B（O(n)）</strong>。计数模型只有一句话：这段程序里唯一随 n 增长的动作是 <code>count++</code>，它的执行总次数 = 内层循环体的运行总次数，其余都是常数开销——所以时间复杂度就是"内层总共执行了多少次"的数量级。</p>
+<h3>第一步：看清外层循环的范围</h3>
+<p>外层条件是 <code>i * i &lt;= n</code>。<strong>为什么 i 最大只到 √n？</strong> 因为它等价于 <code>i &lt;= √n</code>，而 i 每轮只加 1、逐个试探到平方超过 n 为止——这是"给 i 定上限"的判停条件，不是让 i 翻倍跳跃。所以外层不是跑 n 次，而是只跑 k = ⌊√n⌋ 次——这是本题第一个陷阱。</p>
+<h3>第二步：累加内层执行次数</h3>
+<p>外层第 i 轮时，内层 <code>j = 1..i</code> 执行 i 次。取 n = 36（k = 6）验证：</p>
+<table><thead><tr><th>i</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>内层执行次数</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr><tr><td>count 累计</td><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td></tr></tbody></table>
+<p>总计 = 1 + 2 + … + k = k(k+1)/2 ≈ (√n)²/2 = <strong>n/2</strong>。系数 1/2 不影响数量级，故时间复杂度为 O(n)。</p>
+<h3>易错点</h3>
+<ul><li><strong>见两层循环就选 O(n²)</strong>（干扰项 D）：内层上限是 i 而不是 n；累加 1+2+…+√n 恰好是"平方项自乘"，量级被压回 n。</li><li>**把 <code>i*i &lt;= n</code> 读成 <code>i &lt;= n</code>**：那才会得到 O(n²) 级的错误判断——判停条件没读懂，上限直接放大 n^1.5 倍。</li><li><strong>误选 A（O(log n)）</strong>：把外层趟数当成对数级（误以为 i 会指数式逼近 n，实际 i 每次 +1），又漏掉内层还要线性累加——只数了趟数、没数总工作量。</li><li><strong>误选 C（O(n log n)）</strong>：套"外层 n × 内层 log n"的模板，两头都没对着本题：外层只跑到 √n，内层跑的是 i 次（从 1 累到 √n），不是 log n 次。</li><li><strong>纠结低阶项与系数</strong>：n/2 + √n/2 里的 √n 是低阶项，大 O 只看最高阶。</li></ul>
+<blockquote>结论：外层跑 k = ⌊√n⌋ 次，总次数 k(k+1)/2 = Θ(n)，选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

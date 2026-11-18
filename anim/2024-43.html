@@ -168,5 +168,35 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：从位段到控制信号——add/slli/lw 在同一条数据通路上走一遍</h2>
+<h3>第 0 步：机制先行——一条指令如何变成数据通路上的动作</h3>
+<p>机器指令是<strong>位段的拼装</strong>：32 位定长，操作码 <code>IR[6:0]</code> 决定"这是哪条指令"（add=0110011、slli=0010011、lw=0000011，三条互不相同），功能码 <code>IR[14:12]</code> 在需要时进一步细分，rd、rs1、rs2 各占 5 位指名寄存器编号；lw 的 <code>IR[31:20]</code> 是 12 位补码偏移 imm，slli 的 <code>IR[24:20]</code> 是移位量 shamt。</p>
+<p>取指之后，控制器按位段译码，产生控制信号指挥数据通路这条"流水线"：rs1 读出的内容走 A 进 ALU 左输入；rs2 读出的内容走 B 进多路选择器（MUX）的 0 端；<code>IR[31:20]</code> 先过扩展器（Ext=0 零扩展、Ext=1 符号扩展）再进 MUX 的 1 端；ALUBsrc 决定 MUX 放行哪一路；ALUctr（000 加、001 减、010 逻辑左移）决定 ALU 做什么运算，同时产出 F、OF、SF、ZF、CF。</p>
+<p>于是每一问的解法都是同一句口诀：<strong>看指令需要什么操作数、什么运算，就把 MUX 拨到对应挡位、给 ALUctr 对应编码</strong>。</p>
+<h3>第（1）问：寄存器个数与 shamt 位数（2 分）</h3>
+<p>rs1、rs2 字段各占 5 位，5 位二进制能表示 2⁵ = 32 个不同编号，所以最多有 <strong>32 个通用寄存器</strong>。shamt 占 5 位：字长 32 位，逻辑左移的移位位数有效范围是 0~31，恰好 32 种取值，5 位编码正好覆盖——超过 31 的移位量对 32 位数没有意义。寄存器编号与移位位数"巧合地"同为 5 位，本质是同一个原理：<strong>32 种取值需要 5 个比特</strong>。</p>
+<h3>第（2）问：ALUBsrc 取值、加法结果与标志位（5 分）</h3>
+<p>add 的功能是 <code>R[rd] ← R[rs1] + R[rs2]</code>：两个操作数都是<strong>寄存器</strong>内容，第二个操作数要选 rs2 读出的 B，而不是扩展器输出的立即数 → MUX 走 0 端，<strong>ALUBsrc = 0</strong>。</p>
+<p>加法 <code>87654321H + 98765432H</code> 按字节从低到高逐段算：最低字节 <code>21H+32H=53H</code>，无进位；<code>43H+54H=97H</code>，无进位；<code>65H+76H=DBH</code>，无进位；最高字节 <code>87H+98H=11FH</code>——本位留下 <code>1FH</code>，并向第 33 位<strong>溢出一位进位</strong>。所以：</p>
+<ul><li><strong>F = 1FDB9753H</strong>：ALU 输出端是 32 位结果，第 33 位的进位不进 F；</li><li><strong>CF = 1</strong>：CF 记录的就是"最高位向前的进位"，那个 11FH 里多出来的 1；</li><li><strong>OF = 1</strong>：两个操作数的符号位都是 1（补码意义下都是负数），负数加负数，真值只会更负，结果符号位理应还是 1；现在结果符号位却是 0（1FDB9753H 首位是 0001）——<strong>"同号相加得异号"是有符号溢出的铁证</strong>。它的电路根源是：进位进入符号位（0）与进位传出符号位（1）不一致，ALU 对两者做异或得 OF=1。</li><li>若该 add 处理的是<strong>无符号整数</strong>，应根据 <strong>CF</strong> 判断溢出：无符号数没有"符号"概念，它的"溢出"就是和超出 0 ~ 2³²−1，表现恰好是最高位产生进位；而 OF 盯的是补码（有符号）范围。两套标志、两种视角——本题两者恰好都为 1。</li></ul>
+<p>逐位验算对号（第二层核对）：</p>
+<table><thead><tr><th>权值</th><th>16⁷</th><th>16⁶</th><th>16⁵</th><th>16⁴</th><th>16³</th><th>16²</th><th>16¹</th><th>16⁰</th></tr></thead><tbody><tr><td>加数 1</td><td>8</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td></tr><tr><td>加数 2</td><td>9</td><td>8</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td></tr><tr><td>和</td><td>1</td><td>F</td><td>D</td><td>B</td><td>9</td><td>7</td><td>5</td><td>3</td></tr></tbody></table>
+<h3>第（3）问：slli 的 Ext 为什么 0、1 都可以（2 分）</h3>
+<p>slli 需要的只是 <code>IR[31:20]</code> 中的<strong>低 5 位</strong> shamt：32 位移位量只可能取 0~31，移位器只读这 5 位，扩展器补出来的高 27 位<strong>根本不参与运算</strong>。既然"高位补 0"和"高位补 1"两种结果在使用时毫无区别，这个信号对本指令就是无效的——控制器填 0 还是 1 都行，硬件功能不受影响。</p>
+<h3>第（4）问：lw 的 Ext 与 ALUctr（2 分）</h3>
+<p>lw 的功能是 <code>R[rd] ← M[R[rs1] + imm]</code>。imm 是<strong>补码</strong>表示的偏移量，可为负：地址计算是带符号的加法，若按零扩展，负偏移会被错读成一个巨大的正数；而补码扩展的规则是<strong>高位补符号位、数值不变</strong>（FFFH 的"欠账"没变，只是换了个更大的模来记账）→ <strong>Ext = 1</strong>。有效地址 <code>R[rs1] + imm</code> 是一次加法 → <strong>ALUctr = 000</strong>。</p>
+<h3>第（5）问：A040 A103H 为什么一定是 lw、访存地址是多少（2 分）</h3>
+<p><code>A040 A103H</code> = <code>1010 0000 0100 0000 1010 0001 0000 0011B</code>，按位段拆开：</p>
+<table><thead><tr><th>位段</th><th>IR[31:20]</th><th>IR[19:15]</th><th>IR[14:12]</th><th>IR[11:7]</th><th>IR[6:0]</th></tr></thead><tbody><tr><td>值</td><td>A04H（imm）</td><td>00001（rs1=01H）</td><td>010</td><td>00010（rd）</td><td>0000011</td></tr></tbody></table>
+<p><strong>"一定"的底气来自操作码的唯一性</strong>：三条指令的操作码互不相同（add 0110011、slli 0010011、lw 0000011），操作码一锁定，指令身份就唯一。机器码的操作码 <code>0000011</code> 与 lw 吻合（功能码 <code>010</code> 也与 lw 一致），与 add、slli 均不符——所以它只能是 lw。</p>
+<p>地址计算：imm = <code>A04H</code> = <code>1010 0000 0100B</code>，最高位为 1，是负数——<code>A04H ≡ −1532 (mod 1000H)</code>（1000H − A04H = 5FCH = 1532）。符号扩展到 32 位，就是同一个负数在更大模下的化身 <code>FFFF FA04H</code>，数值不变。有效地址 = <code>R[01H] + FFFFFA04H = FFFFA2D0H + FFFFFA04H = FFFF 9CD4H</code>（32 位截断进位）。</p>
+<h3>易错点</h3>
+<ul><li><strong>F 答成 33 位</strong>：进位 1 是给 CF 的，ALU 输出端 F 只保留 32 位 <code>1FDB9753H</code>。</li><li><strong>OF/CF 混用</strong>：有符号数溢出看 OF（判据"同号相加得异号"），无符号数溢出看 CF，别答反。</li><li><strong>slli 的 Ext 答死值</strong>：关键不在"必须零扩展"，而在"扩展出的高位不被使用"，信号无效才两可。</li><li><strong>imm 按无符号读</strong>：把 A04H 当 2564 加进去，地址会错成 <code>FFFFACD4H</code>；最高位 1 是负数记号，必须符号扩展。</li><li><strong>第（5）问只凭"像 lw"下结论</strong>：要落实到位段逐位比对——操作码与功能码同时吻合，且与另两条指令的编码不符，才配得上"一定"二字。</li></ul>
+<blockquote>一句话结论：32 个寄存器、shamt 5 位；ALUBsrc=0，F=1FDB9753H，OF=CF=1，无符号看 CF；slli 的 Ext 0/1 均可；lw 的 Ext=1、ALUctr=000；A040A103H 因操作码 0000011（加功能码 010）唯一命中 lw，有效地址 FFFF9CD4H。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

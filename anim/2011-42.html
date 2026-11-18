@@ -104,5 +104,30 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：等长升序序列的中位数（折半舍弃法）</h2>
+<h3>第 1 问：算法的基本设计思想</h3>
+<p>分别取当前两个<strong>等长</strong>升序子序列 A′、B′ 的中位数 a 和 b（各取第 ⌈n/2⌉ 个元素，n 为当前子序列长度）：</p>
+<ol><li>若 <strong>a = b</strong>，它就是两序列全体元素的中位数，直接返回；</li><li>若 <strong>a &lt; b</strong>，中位数只可能更大：舍弃 A′ <strong>最前面</strong>的 ⌊n/2⌋ 个元素和 B′ <strong>最后面</strong>的 ⌊n/2⌋ 个元素；</li><li>若 <strong>a &gt; b</strong>，对称地：舍弃 A′ <strong>最后面</strong>的 ⌊n/2⌋ 个元素和 B′ <strong>最前面</strong>的 ⌊n/2⌋ 个元素。</li></ol>
+<p>（谁留谁丢有讲究：<strong>较大的中位数每轮都保留</strong>，较小的中位数只在长度为奇数时保留——为什么，见下面的三个"为什么"。）</p>
+<p>每轮两个子序列长度都减半且仍等长，重复上述过程；当两个子序列<strong>各剩一个元素</strong>时，取两者中<strong>较小</strong>者即为所求中位数。</p>
+<p>这套"比一比、丢一半"为什么不会丢掉真答案？把最可能追问的三个"为什么"提前答掉：</p>
+<ul><li><strong>为什么 a &lt; b 就敢丢 A′ 前半段、B′ 后半段？</strong> 全局中位数 m 一定被夹在 [a, b] 之间：严格小于 a 的元素，A′ 里只有"中位数以前"那半段，B′ 里也至多"中位数以前"那半段（它们都 &lt; b），两侧合计至多 n−1 个，而第 n 小的 m 前面必须排满 n−1 个元素，故 m ≥ a；对称地 m ≤ b。于是被丢的 A′ 前 ⌊n/2⌋ 个都严格小于 a ≤ m，被丢的 B′ 后 ⌊n/2⌋ 个都严格大于 b ≥ m——全都不可能是 m。</li><li><strong>为什么较大的中位数每轮必留、较小的看奇偶？</strong> m 可能恰好等于某个中位数（样例第 3 轮的 11 就是被保留的那个），丢掉它答案就没了。长度为奇数时两个中位数的内侧恰好各隔 ⌊n/2⌋ 个元素，丢半伤不到它们，都保留；长度为偶数时较小中位数内侧只有 ⌊n/2⌋−1 个元素，要两侧丢得一样多就得把它捎上（对应代码 <code>start1 = m1 + 1</code> / <code>start2 = m2 + 1</code>）。此时丢它安全：严格小于它的元素两侧合计至多 n−2 个，它的名次到不了第 n；可能等于 m 的较大中位数已被保留。</li><li><strong>为什么"等长"是前提？</strong> 整个算法依赖"每轮两侧丢弃个数相等、剩余长度仍相等"，m 的位置关系才逐轮保持；一旦不等长，⌊n/2⌋ 的对称舍弃就错位了——这正是易错点第一条的根源。</li></ul>
+<p>收尾为什么取<strong>较小</strong>者：两序列各剩 1 个时全体只剩 2 个元素，中位数是第 ⌈2/2⌉ = 1 小的那个——正是两者中较小的。</p>
+<h3>第 2 问：算法实现要点（C/C++）</h3>
+<p>用四个下标变量维护两个「子序列」：<code>start1, end1, start2, end2</code>，中位数下标取 <code>m1 = (start1 + end1) / 2</code>、<code>m2 = (start2 + end2) / 2</code>。关键语句：</p>
+<ul><li>循环条件 <code>while (start1 != end1 || start2 != end2)</code>：两序列各剩一个元素时退出；</li><li><code>if (A[m1] == B[m2]) return A[m1];</code> ——情况 1 直接命中；</li><li><strong>a &lt; b</strong>：奇偶要区分——<code>(start1 + end1) % 2 == 0</code>（长度奇数）时 <code>start1 = m1</code>（中位数保留），否则 <code>start1 = m1 + 1</code>；同时一律 <code>end2 = m2</code>（b 保留在 B′ 尾部）；</li><li><strong>a &gt; b</strong>：对称——长度奇数时 <code>end1 = m1</code>、<code>start2 = m2</code>，长度偶数时 <code>end1 = m1</code>、<code>start2 = m2 + 1</code>；</li><li>循环结束后 <code>return A[start1] &lt; B[start2] ? A[start1] : B[start2];</code> 取较小者。</li></ul>
+<p>以题干样例演示（A=(11,13,15,17,19)，B=(2,4,6,8,20)）：</p>
+<table><thead><tr><th>轮次</th><th>A′（中位数 a）</th><th>B′（中位数 b）</th><th>判定</th><th>舍弃</th></tr></thead><tbody><tr><td>1</td><td>(11,13,<strong>15</strong>,17,19)，a=15</td><td>(2,4,<strong>6</strong>,8,20)，b=6</td><td>a &gt; b</td><td>弃 A 后 2 个、B 前 2 个</td></tr><tr><td>2</td><td>(11,<strong>13</strong>,15)，a=13</td><td>(6,<strong>8</strong>,20)，b=8</td><td>a &gt; b</td><td>弃 A 后 1 个、B 前 1 个</td></tr><tr><td>3</td><td>(<strong>11</strong>,13)，a=11</td><td>(<strong>8</strong>,20)，b=8</td><td>a &gt; b</td><td>弃 A 后 1 个、B 前 1 个</td></tr><tr><td>收尾</td><td>(11)</td><td>(20)</td><td>各剩 1 个</td><td>取较小者 <strong>11</strong></td></tr></tbody></table>
+<p>合并序列 (2,4,6,8,11,13,15,17,19,20) 的第 5 个元素恰为 11，验证无误。</p>
+<h3>第 3 问：时间复杂度与空间复杂度</h3>
+<p>每轮循环两个子序列长度同时<strong>减半</strong>，共 O(log₂n) 轮、每轮 O(1) 次比较：时间复杂度 <strong>O(log₂n)</strong>；只用常数个下标辅助变量，未搬动任何元素：空间复杂度 <strong>O(1)</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>舍弃后不等长</strong>：长度为奇数时若把中位数也丢掉（<code>start1 = m1 + 1</code> 一刀切），两个子序列长度不再相等，后续 ⌊n/2⌋ 舍弃会错位——必须按 <code>(start + end) % 2</code> 区分奇偶，保证中位数留在保留侧。</li><li><strong>收尾取错方向</strong>：两序列各剩一个元素时应取<strong>较小</strong>者，不是任取或取平均。</li><li><strong>混淆「第 ⌈L/2⌉ 个」的下标</strong>：L 个元素的升序序列中位数下标是 ⌊(start+end)/2⌋，与参考代码一致。</li></ul>
+<blockquote>结论：等长中位数用「比中位数、舍两半」——每轮等长减半，O(log₂n) 时间、O(1) 空间，是本题的最优解法。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

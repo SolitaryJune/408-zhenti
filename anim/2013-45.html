@@ -138,5 +138,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：博物馆 500 人参观的信号量设计（7 分）</h2>
+<p><strong>答题框架</strong>：题干包含两件事——①<strong>互斥</strong>：出入口一次仅过一人 → 互斥信号量 <code>mutex</code>；②<strong>同步</strong>：馆内最多 500 人 → 计数信号量 <code>empty</code> 表示空位数。核心原则：<strong>先申请空位、再申请门锁</strong>，出门后逆序释放。</p>
+<h3>第 1 问：信号量含义与初值</h3>
+<ul><li><code>mutex</code>：互斥信号量，控制<strong>出入口</strong>的互斥使用，初值为 <strong>1</strong>；</li><li><code>empty</code>：同步信号量，表示博物馆<strong>可容纳的剩余人数（空位数）</strong>，初值为 <strong>500</strong>。</li></ul>
+<h3>第 2 问：参观者进程完整代码</h3>
+<ol><li><code>P(empty);</code> —— 申请一个空位，馆满（已 500 人）则在此阻塞等待；</li><li><code>P(mutex);</code> —— 申请出入口使用权；</li><li><code>进门;</code></li><li><code>V(mutex);</code> —— 进门后立刻释放出入口，让其他人可进出；</li><li><code>参观;</code></li><li><code>P(mutex);</code> —— 再次申请出入口，准备出门；</li><li><code>出门;</code></li><li><code>V(mutex);</code> —— 释放出入口；</li><li><code>V(empty);</code> —— 腾出一个空位，唤醒等待进馆的参观者。</li></ol>
+<p>配对关系：<code>P(empty)</code>/<code>V(empty)</code> 控制容量同步；两次 <code>P(mutex)</code>/<code>V(mutex)</code> 分别包住“进门”和“出门”两个临界区。</p>
+<h3>为什么必须先 P(empty) 再 P(mutex)</h3>
+<p>若反过来先 <code>P(mutex)</code> 再 <code>P(empty)</code>：馆满时某访客已握住门锁却在等空位，出入口被锁死，馆内的人<strong>出不了门</strong>、空位永远不会产生 → 死锁。先拿空位再过门，等待发生在 mutex 之外，安全。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉 <code>V(empty)</code></strong>：只放人进不管释放空位，馆很快“假满”，无人能再进。</li><li><strong>初值互换</strong>：mutex 初值是 <strong>1</strong>（互斥），empty 初值是 <strong>500</strong>（容量），别写反。</li><li><strong>参观也包进 mutex</strong>：进门后不立刻 <code>V(mutex)</code>，出入口长时间被占，吞吐量骤降。</li></ul>
+<blockquote>一句话结论：mutex 初值 1 管出入口互斥，empty 初值 500 管容量同步；进程按 <code>P(empty)→P(mutex)→进门→V(mutex)→参观→P(mutex)→出门→V(mutex)→V(empty)</code> 展开。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

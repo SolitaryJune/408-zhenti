@@ -78,5 +78,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：SMTP 的能力边界</h2>
+<p>答案：<strong>A（仅 I、II 和 III 正确）</strong>。SMTP 是「<strong>推</strong>」协议，只负责发信方向，且只支持 7 比特 ASCII 内容。</p>
+<h3>第一步：逐条判定</h3>
+<table><thead><tr><th>叙述</th><th>判定</th><th>理由</th></tr></thead><tbody><tr><td>I. 只支持 7 比特 ASCII 内容</td><td>对</td><td>SMTP 报文只能传 ASCII 码；传中文/图片要靠 MIME 扩展（MIME 改变的是数据表示，传输仍走 SMTP）</td></tr><tr><td>II. 支持邮件服务器之间发送</td><td>对</td><td>发送方服务器 → 接收方服务器就是用 SMTP 推送</td></tr><tr><td>III. 支持用户代理向邮件服务器发送</td><td>对</td><td>发件人投递邮件：用户代理 →(SMTP)→ 发送方邮件服务器</td></tr><tr><td>IV. 支持邮件服务器向用户代理发送</td><td>错</td><td>收信是用户主动「拉」，用 POP3 / IMAP，SMTP 不管这一段</td></tr></tbody></table>
+<h3>第二步：邮件收发的完整分工</h3>
+<p>发信一路 SMTP「推」到底：用户代理 →(SMTP)→ 发送方邮件服务器 →(SMTP)→ 接收方邮件服务器；最后一段「拉」由收件人发起：接收方邮件服务器 →(POP3 / IMAP)→ 用户代理。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 SMTP 全程包办</strong>：IV 的「服务器推给用户代理」恰是 POP3/IMAP 的职责，B、C、D 都因含 IV 而错。</li><li><strong>把 MIME 当 SMTP 升级版</strong>：MIME 扩展的是邮件数据的格式（头部增加字段、正文编码），传输协议仍是 SMTP，所以 I 依然正确。</li><li><strong>漏选 II</strong>：服务器之间的中转是 SMTP 最经典的应用场景（监听端口 25）。</li></ul>
+<blockquote>记忆锚点：SMTP 只管「推」——UA→服务器、服务器→服务器；「拉」交给 POP3/IMAP；内容只支持 7 位 ASCII（多媒体靠 MIME）。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

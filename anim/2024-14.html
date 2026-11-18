@@ -63,5 +63,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：按范围与精度选数据表示方法</h2>
+<p><strong>答案：C（α 用 32 位整数，β 用双精度浮点数）</strong></p>
+<h3>第一步：先立判据——范围看阶码，精度看尾数</h3>
+<p>浮点数能表示多大（范围）由<strong>阶码位数</strong>决定；能精确到多细（精度）由<strong>尾数位数</strong>决定：规格化数是 <code>1.f × 2^E</code>，有效位 = 隐含首位 1 + 尾数位数。整数的有效位就是它的二进制位数。判据：先看范围装不装得下，再看有效位够不够精确。</p>
+<h3>第二步：看 α 的范围 —— 32 位整数够用且最快</h3>
+<p>32 位补码整数的表数范围是 <code>-2^31 ~ 2^31-1</code>，完全覆盖 α 的 ±<code>2^20</code>；整数按原值<strong>精确</strong>存储、无精度损失，且整数运算比浮点运算快。所以 α 用 <strong>32 位整数</strong>，既保精度又提速。</p>
+<h3>第三步：看 β 的范围 —— 32 位整数装不下</h3>
+<p>±<code>2^40</code> 远超 32 位整数的 ±<code>2^31</code>，"两个都用 32 位整数"直接排除。</p>
+<h3>第四步：为什么单精度保不住、双精度保得住</h3>
+<p>±<code>2^40</code> 内的整数最多需要 <strong>41 个二进制位</strong>（<code>2^40</code> 本身就是 1 后跟 40 个 0，共 41 位）。单精度浮点的有效位是 <strong>24 位</strong>（23 位尾数 + 1 位隐含首位），24 位以内的整数都能精确表示，再往上就出现表示不了的整数——<code>2^40</code> 一带大量整数会被舍入，精度丢失。双精度的有效位是 <strong>53 位</strong>（52 位尾数 + 1 位隐含首位），<code>2^40 &lt; 2^53</code>，±<code>2^40</code> 内每个整数都能精确表示，且硬件浮点单元直接支持、运算快。所以 β 用<strong>双精度浮点数</strong>，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 B（β 用单精度）</strong>：只看到单精度的表数范围够大，忘了<strong>精度由尾数位数决定</strong>，41 位有效位的需求远超 24 位。</li><li><strong>选 A（β 用 32 位整数）</strong>：只顾速度，忘了 32 位整数装不下 ±<code>2^40</code>。</li><li>混淆"表数范围"与"表数精度"：范围看<strong>阶码</strong>，精度看<strong>尾数</strong>。</li></ul>
+<blockquote>一句话结论：范围窄的整数用 32 位 int（精确又快）；超出 int 范围又要求精确表示时，选有效位足够的双精度浮点（53 位 ≥ 41 位）——选 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

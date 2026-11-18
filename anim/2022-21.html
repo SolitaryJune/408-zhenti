@@ -57,5 +57,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：中断 I/O 方式的特点与适用条件</h2>
+<h3>第一步：中断 I/O 的工作方式</h3>
+<p>CPU 启动外设后不再空等，转去执行其他程序；外设把数据准备好后向 CPU 发<strong>中断请求</strong>，CPU 响应后在<strong>中断服务程序</strong>里用 I/O 指令把数据取走——数据传送由软件（程序）完成。适合键盘、针式打印机等中低速字符型设备。</p>
+<h3>第二步：逐项核对</h3>
+<table><thead><tr><th>选项</th><th>判断</th><th>理由</th></tr></thead><tbody><tr><td>A 适用于键盘、针式打印机等字符型设备</td><td>正确</td><td>中低速、数据量小、随机性强，正合适</td></tr><tr><td>B 数据传送通过软件完成</td><td>正确</td><td>传送靠执行中断服务程序（软件），没有 DMA 硬件通路</td></tr><tr><td>C 外设准备数据的时间应小于中断处理时间</td><td><strong>不正确</strong></td><td>方向反了：应<strong>大于</strong>中断处理时间</td></tr><tr><td>D 外设准备数据时 CPU 可运行其他进程</td><td>正确</td><td>CPU 与外设并行，这正是中断方式的优点</td></tr></tbody></table>
+<h3>第三步：为什么 C 错</h3>
+<p>中断 I/O 要高效，须保证 CPU 执行完一次中断服务后，外设的下一个数据刚好备好——即外设准备数据的时间应<strong>大于</strong> CPU 的中断处理时间。若外设准备更快，CPU 服务不过来，只能等待或造成数据覆盖/丢失，中断方式就不适用了。</p>
+<p><strong>答案：C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把"大于"记成"小于"</strong>：外设慢、CPU 快，"准备时间小于处理时间"意味着 CPU 来不及取。</li><li><strong>以为传送靠硬件</strong>：中断 I/O 的传送仍由软件逐字/逐字节完成，靠硬件通路的是 DMA。</li></ul>
+<blockquote>一句话结论：中断 I/O 适合中低速设备、软件传送、CPU 可并行；约束是外设准备时间大于中断处理时间，选 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

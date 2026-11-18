@@ -147,5 +147,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：由处理优先级求 L₁ 的中断屏蔽字</h2>
+<h3>第一步：先给答案</h3>
+<p><strong>答案：D（01010）</strong>。屏蔽字 M₄M₃M₂M₁M₀，Mᵢ = 1 表示屏蔽 Lᵢ。L₁ 的处理程序要屏蔽<strong>自己以及处理优先级比自己低</strong>的级，开放比自己高的级。</p>
+<h3>第二步：理清两种优先级</h3>
+<table><thead><tr><th>级别</th><th>L₄</th><th>L₃</th><th>L₂</th><th>L₁</th><th>L₀</th></tr></thead><tbody><tr><td>响应优先级（题给：L₀→L₁→L₂→L₃→L₄ 从高到低）</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td></tr><tr><td>处理优先级（题给：L₄→L₀→L₂→L₁→L₃ 从高到低）</td><td><strong>1</strong></td><td><strong>5</strong></td><td><strong>3</strong></td><td><strong>4</strong></td><td><strong>2</strong></td></tr></tbody></table>
+<p>响应优先级决定"同时来请求先响应谁"，处理优先级靠<strong>屏蔽字</strong>实现：某级的处理程序运行时，把处理优先级不高于自己的级全部屏蔽。</p>
+<h3>第三步：逐位填 L₁ 的屏蔽字</h3>
+<p>L₁ 的处理优先级排第 4，比它高的只有 L₄、L₀、L₂，比它低的只有 L₃：</p>
+<ul><li>M₄ = <strong>0</strong>：L₄ 处理优先级最高，开放（可打断 L₁）；</li><li>M₃ = <strong>1</strong>：L₃ 比自己低，屏蔽；</li><li>M₂ = <strong>0</strong>：L₂ 比自己高，开放；</li><li>M₁ = <strong>1</strong>：屏蔽自己，防止自重复响应；</li><li>M₀ = <strong>0</strong>：L₀ 处理优先级第 2，开放。</li></ul>
+<p>得到 M₄M₃M₂M₁M₀ = <strong>01010</strong>，选 D。</p>
+<h3>第四步：验证</h3>
+<p>L₁ 处理程序运行期间：来 L₃ 请求 → 被屏蔽，不响应；来 L₄、L₀、L₂ 请求 → 均可打断 L₁，这与"处理优先级 L₄ &gt; L₀ &gt; L₂ &gt; L₁ &gt; L₃"完全吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>按响应优先级填</strong>：屏蔽字改写的是<strong>处理</strong>优先级，与响应优先级无关；A（11110）这类答案就是把两者混了。</li><li><strong>方向弄反</strong>（屏蔽高的、开放低的）：那样低优先级反而能打断高优先级，处理优先级被颠倒。</li></ul>
+<blockquote>记忆锚点：屏蔽字规则——"屏蔽自己 + 处理优先级比我低的，开放比我高的"。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

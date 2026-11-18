@@ -150,5 +150,33 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：sum+=a[i] 的机器级落地——寻址链、小端读数与分页切分</h2>
+<h3>第 0 步：机制先行——数组寻址公式如何拆成四条指令</h3>
+<p><code>sum += a[i]</code> 在机器上要做两件事：先<strong>找到</strong> a[i]，再做<strong>累加</strong>。找元素的通用公式是：地址 = 首地址 + 下标 × sizeof(元素)。int 型元素占 4 字节，而"×4"在硬件上有更便宜的等价动作——<strong>左移 2 位</strong>（2² = 4），这就是指令序列开头那条 slli 的由来。于是四条指令正好构成一条流水：</p>
+<p><code>slli</code>（算字节偏移 i×4）→ <code>add</code>（加首地址，得元素地址）→ <code>lw</code>（按地址取数）→ <code>add</code>（累加进 sum）。</p>
+<h3>第（1）问：三个变量各在哪个寄存器（3 分）</h3>
+<p>顺藤摸瓜，看每条指令"喂进来的是什么、产出的是什么"：</p>
+<ul><li><code>slli r4, r2, 2</code>：被移的是 r2，算的是 i×4——只有<strong>下标</strong>才需要乘 4，所以 <strong>r2 存变量 i</strong>；</li><li><code>add r4, r3, r4</code>：把 i×4 加到 r3 上才凑齐元素地址——加的对象必然是<strong>首地址</strong>，所以 <strong>r3 存数组 a 的首地址</strong>；</li><li><code>lw r5, 0(r4)</code>：取出的 a[i] 落进 r5；</li><li><code>add r1, r1, r5</code>：把 a[i] 累加进 r1——<strong>r1 存变量 sum</strong>。</li></ul>
+<p>即：数组 a 首地址 → r3，变量 i → r2，变量 sum → r1。</p>
+<h3>第（2）问：地址、机器数、页号与跨页（5 分）</h3>
+<p>已知 i=5，R[r1] = 0000 1332H（sum），R[r3] = 0013 DFF0H（首地址）。</p>
+<p><strong>① a[i] 的地址</strong>：<code>R[r3] + i×4 = 0013DFF0H + 14H = 0013 E004H</code>。</p>
+<p><strong>② a[i] 的机器数</strong>——先想明白小端为什么"倒着拼"：小端规则是<strong>数的最低有效字节放在最低地址</strong>。看题 44 图：地址 E004~E007 依次是 <code>DC EC FF FF</code>，即最低字节 DC 放在 E004、最高字节 FF 放在 E007。写机器数的习惯是从最高位写到最低位，所以要<strong>从高地址往低地址读</strong>：FF、FF、EC、DC → <strong>FFFF ECDCH</strong>。</p>
+<p><strong>③ sum 的机器数</strong>——为什么必须按补码解释：FFFFECDCH 符号位为 1，是负数，真值 = FFFFECDCH − 1_0000_0000H = <strong>−1324H = −4900</strong>；sum 旧值 00001332H = 4914，故 sum = 4914 + (−4900) = 14，机器数写 32 位补码 = <strong>0000 000EH</strong>。（机器实际做的是 32 位截断加法：0x1332 + 0xFFFFECDC = 0x1_0000_000E，丢弃第 33 位进位后恰是 0000000EH——人算与机算殊途同归，但人必须按补码语义来读。）</p>
+<p><strong>④ a[i] 所在页的页号</strong>——为什么取高 20 位：页大小 4 KB = 2¹²，地址低 12 位是页内偏移，切掉偏移剩下的<strong>高 20 位</strong>就是页号。<code>0013E004H</code> = 页号 <code>0013EH</code> + 页内偏移 <code>004H</code> → 页号 <strong>0013EH</strong>。</p>
+<p><strong>⑤ 数组 a 至少占几页</strong>：a 的首地址 0013DFF0H 落在页 0013DH，距页末还剩 <code>1000H − FF0H = 10H</code> 即 16 B，恰好放下 a[0]~a[3]；a[4] 从 0013E000H 起已进入页 0013EH（a[5] 就在这一页）。数组从 0013DH 跨到 0013EH，<strong>至少存放在 2 页中</strong>——"至少"的依据是本次执行只动用了 a[0]~a[5] 这 6 个元素（24 B），更长的数组可能跨更多页。</p>
+<h3>第（3）问：slli 的机器码与 short 版本（2 分）</h3>
+<p>拼机器码按位段装填：高 7 位 <code>0000000</code>、shamt=2 → <code>00010</code>、rs1=r2 → <code>00010</code>、功能码 <code>010</code>、rd=r4 → <code>00100</code>、操作码 <code>0010011</code>：</p>
+<p><code>0000000 00010 00010 010 00100 0010011B</code> = <code>0000 0000 0010 0001 0010 0010 0001 0011B</code></p>
+<p>为什么 4 位一组就能变成十六进制：每 4 位二进制恰好对应 1 个十六进制位，上面 8 组依次是 0、0、2、1、2、2、1、3 → <strong>0021 2213H</strong>。</p>
+<p>若数组 a 改为 short 类型：short 占 <strong>2 字节</strong>，偏移公式变成 i×2，而"×2 = 左移 1 位"，移位量从 2 改成 1 → 汇编形式为 <strong><code>slli r4, r2, 1</code></strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>小端拼反</strong>：把 <code>DC EC FF FF</code> 顺读成 <code>DCECFFFFH</code>——小端是"低位字节在低地址"，拼数要<strong>倒序</strong>连。</li><li><strong>sum 忘按补码/截断</strong>：把 FFFFECDCH 当无符号大数、或保留第 33 位进位，都会答错；它是 −4900，和要按 32 位补码落笔。</li><li><strong>页号夹带偏移</strong>：页号只取高 20 位，<code>0013E004H</code> 的页号是 <code>0013EH</code>，别写成 <code>0013E00H</code>。</li><li><strong>"至少 2 页"说不出依据</strong>：证据链是"首地址距页末只剩 16 B（恰容 a[0]~a[3]），a[4] 起进下一页"。</li><li><strong>机器码位段串位</strong>：slli 的 shamt 与 rs1 都在 <code>IR[24:20]</code> 附近，装填时按 <code>高7位|shamt|rs1|功能码|rd|操作码</code> 的顺序逐段对位，别错格。</li></ul>
+<blockquote>一句话结论：首地址→r3、i→r2、sum→r1；a[i] 地址 0013E004H、机器数 FFFFECDCH、sum = 0000000EH、页号 0013EH、至少 2 页；机器码 00212213H，short 版为 <code>slli r4, r2, 1</code>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

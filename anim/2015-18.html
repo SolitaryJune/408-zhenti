@@ -100,5 +100,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：4 体交叉存储器的访存冲突判断</h2>
+<h3>第一步：先给答案</h3>
+<p>答案：<strong>D</strong>（8000 和 8004）。</p>
+<h3>第二步：体号规则</h3>
+<p>4 体交叉编址：<strong>体号 = 地址 mod 4</strong>，相邻地址依次落在不同存储体。流水线方式依次启动各体访问；同一存储体的两次启动必须间隔，<strong>时间上紧挨着访问同一体会冲突</strong>。</p>
+<h3>第三步：给地址序列算体号</h3>
+<table><thead><tr><th>访问次序</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr></thead><tbody><tr><td>地址</td><td>8005</td><td>8006</td><td>8007</td><td>8008</td><td>8001</td><td>8002</td><td>8003</td><td>8004</td><td>8000</td></tr><tr><td>体号 mod 4</td><td>1</td><td>2</td><td>3</td><td>0</td><td>1</td><td>2</td><td>3</td><td>0</td><td>0</td></tr></tbody></table>
+<p>前 8 次访问里同体号的两次（如 8008 与 8004 都在体 0）之间都隔了 3 次其他体的访问，流水来得及完成，不冲突；而第 8 次（8004，体 0）与第 9 次（8000，体 0）<strong>连续两次访问体 0</strong>——前一访问尚未完成，同一体无法再次启动 → 冲突。</p>
+<h3>易错点</h3>
+<ul><li><strong>只看体号相同就选 A（8004 和 8008）</strong>：忽略"时间上相邻"这个条件——两者中间隔了 8001、8002、8003 三次访问。</li><li><strong>体号算错</strong>：4 体交叉就是 mod 4，8004 和 8000 的体号都是 0；注意 mod 4 只看末两位（能被 4 整除的体 0）。</li><li><strong>冲突含义想偏</strong>：冲突不是"地址相同"，而是"同一存储体来不及腾出来再次被请求"。</li></ul>
+<blockquote>冲突 = 时间上相邻（或间隔太近）的两次访问落在同一存储体。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

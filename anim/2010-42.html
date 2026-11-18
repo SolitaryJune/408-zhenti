@@ -103,5 +103,28 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：三次逆置原地实现循环左移 p 个位置</h2>
+<h3>第 0 步：先看清问题结构——要的是"两段换位"</h3>
+<p>把数组切成两段：a = 前 p 个元素（下标 0～p−1），b = 后 n−p 个元素（下标 p～n−1），整个数组就是拼接串 ab；循环左移 p 位 = 把 ab 变成 <strong>ba</strong>——两段整体换位、段内顺序不动。直接把 b 搬到前面，要开一块与 b 同大的辅助数组；而"逆置"操作自带一条恒等式，能让我们<strong>原地</strong>完成：对两段拼接 XY 整体逆置，等于<strong>段序翻转、各段内部各自翻转</strong>，即 (XY)R = YR XR。</p>
+<h3>第 1 问：为什么恰好是三次逆置</h3>
+<p>对 aR bR 再整体逆置一次，套恒等式：(aR bR)R = (bR)R (aR)R = <strong>b a</strong>。</p>
+<p><strong>为什么 (bR)R = b？</strong> 逆置是自反操作——翻过去再翻回来，元素各回原位。所以先把 a、b 各自翻掉（得 aR bR），再整体翻一次：段序换位正是我们要的 ab→ba，而两段各自的"二次翻转"又把内容翻了回来。三次逆置，一步一个恒等式兜底。</p>
+<p>以 n=6、p=2 演示：</p>
+<table><thead><tr><th>操作</th><th>结果</th></tr></thead><tbody><tr><td>初始</td><td>x0 x1 x2 x3 x4 x5</td></tr><tr><td>逆置前 p 个</td><td>x1 x0 x2 x3 x4 x5</td></tr><tr><td>逆置后 n−p 个</td><td>x1 x0 x5 x4 x3 x2</td></tr><tr><td>整体逆置</td><td>x2 x3 x4 x5 x0 x1</td></tr></tbody></table>
+<p>末行正是 (x2, x3, x4, x5, x0, x1)，即循环左移 2 位。</p>
+<h3>第 2 问：算法描述（C 语言）</h3>
+<p>逆置函数 <code>Reverse(int R[], int from, int to)</code>：下标 <code>i</code> 从 <code>from</code> 起，<strong>只走到区间中点</strong>（循环次数为区间长度的一半），循环体做两端逐对交换——<code>temp = R[from+i]; R[from+i] = R[to-i]; R[to-i] = temp;</code>（关键注释：只翻半段，翻过头等于没翻）。</p>
+<p>主函数 <code>Converse(int R[], int n, int p)</code> 依次三次调用：</p>
+<ol><li><code>Reverse(R, 0, p-1);   // 逆置前 p 个元素</code></li><li><code>Reverse(R, p, n-1);   // 逆置后 n-p 个元素</code></li><li><code>Reverse(R, 0, n-1);   // 逆置整个数组</code></li></ol>
+<h3>第 3 问：复杂度——为什么已经到顶</h3>
+<ul><li><strong>时间 O(n)</strong>：三次逆置的对换次数分别约 p/2、(n−p)/2、n/2，总代价 ∝ p + (n−p) + n = 2n。下界也是 Ω(n)：每个元素至少要被触碰一次，不可能更省——三次逆置恰好贴着下界。</li><li><strong>空间 O(1)</strong>：全程只借一个临时变量 <code>temp</code>，没开任何与 n 同阶的辅助数组——题目"时间、空间都尽可能高效"两头都占。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>区间边界写错</strong>：前段 0～p−1 共 p 个、后段 p～n−1 共 n−p 个；把 <code>p-1</code> 写成 <code>p</code>，会把下标为 p 的元素卷进前段，三步之后结果错。</li><li><strong>逆置函数翻过头</strong>：循环必须止于区间中点；若一路翻到 <code>to</code>，每对元素被交换两次、等于没翻。</li><li><strong>以为必须开辅助数组</strong>：直接平移 b 要 O(n) 辅助空间；三次逆置是原地解法。</li></ul>
+<blockquote>结论：三次逆置 = 先局部翻、再整体翻，恒等式 (aR bR)R = ba 保证正确；时间 O(n)、空间 O(1)。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

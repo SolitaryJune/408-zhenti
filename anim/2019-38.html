@@ -115,5 +115,22 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TCP 快速重传的触发时刻</h2>
+<p><strong>答案：C（t3）</strong></p>
+<h3>第一步：分清"首次确认"与"重复确认"</h3>
+<p>ack_seq=100 的含义是"期望下一个收到的字节序号是 100"。客户在 t0 收到 ack_seq=100，这是对前面数据的<strong>第一次确认</strong>，不算重复确认。随后客户发送 seq=100 的段，但该段<strong>丢失</strong>，服务器始终没收到它。</p>
+<h3>第二步：数出重复确认的个数</h3>
+<p>服务器此后依次收到 seq=200、300、400：由于期望的 100 一直没到，每收到一个乱序段就把 ack_seq=100 <strong>重复发一次</strong>：</p>
+<table><thead><tr><th>时刻</th><th>客户收到</th><th>性质</th></tr></thead><tbody><tr><td>t0</td><td>ack_seq=100</td><td>首次确认（不计入重复）</td></tr><tr><td>t1</td><td>ack_seq=100</td><td>第 1 个重复确认</td></tr><tr><td>t2</td><td>ack_seq=100</td><td>第 2 个重复确认</td></tr><tr><td>t3</td><td>ack_seq=100</td><td>第 3 个重复确认</td></tr></tbody></table>
+<h3>第三步：套用快速重传规则</h3>
+<p>快速重传（Fast Retransmit）的触发条件：<strong>收到 3 个重复确认就立即重传</strong>，不等超时计时器到期。第 3 个重复确认恰好在 t3 到达，所以客户在 <strong>t3</strong> 重新发送 seq=100 段，选 <strong>C</strong>。t4 是超时时刻——如果没有快速重传机制，才需要等到 t4 才重传。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 t0 的确认计入重复个数</strong>：于是"第 3 个重复确认"被数到 t2，误选 B。t0 那次是首次确认，重复确认从 t1 开始数。</li><li><strong>以为必须等超时</strong>：t4 是超时重传的时刻，恰恰是快速重传要避免的情形。</li></ul>
+<blockquote>3 个重复确认一到（t3）立即重传 seq=100，选 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

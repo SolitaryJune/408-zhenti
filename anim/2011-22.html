@@ -109,5 +109,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：定时查询下 CPU 用于 I/O 的时间占比</h2>
+<h3>第一步：先给答案</h3>
+<p><strong>答案：C（0.20%）</strong>。思路三步：时钟周期 → 一次查询耗时 → 每秒累计，再除以 1 秒。</p>
+<h3>第二步：可复现推导</h3>
+<table><thead><tr><th>步骤</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>1. 时钟周期</td><td>主频 50MHz → 1 ÷ (50 × 10⁶)</td><td><strong>20ns</strong></td></tr><tr><td>2. 一次查询耗时</td><td>查询程序至少 500 个时钟周期 → 500 × 20ns</td><td><strong>10μs</strong></td></tr><tr><td>3. 每秒总查询耗时</td><td>每秒至少查询 200 次 → 200 × 10μs = 2000μs</td><td><strong>2ms</strong></td></tr><tr><td>4. 占比</td><td>2ms ÷ 1000ms（每秒）</td><td><strong>0.2%</strong></td></tr></tbody></table>
+<h3>第三步：理清题面三个量</h3>
+<ul><li><strong>主频 50MHz</strong>：决定 1 个时钟周期多长，20ns；</li><li><strong>500 时钟周期/次</strong>：查询程序"至少"耗时 500 周期，按最小值 10μs 计，题目求"至少"占比；</li><li><strong>200 次/秒</strong>：为保证设备 A 数据不丢失的最低查询频率。</li></ul>
+<p>所以 CPU 每秒花在设备 A 上的时间至少 200 × 10μs = 2ms，占 1 秒的 2ms/1000ms = 0.2%。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 B（0.05%）</strong>：只算了一次查询占比（10μs/20ms?）或漏乘 200 次/秒——占比必须"每秒总耗时 ÷ 每秒总时间"。</li><li><strong>选 D（0.50%）</strong>：把 500 个周期当 500μs 或把查询次数当成 500 次——单位换算要盯紧：周期是 ns 级，500 × 20ns = 10μs。</li><li><strong>选 A（0.02%）</strong>：多除了一次 10（如把主频按 500MHz 或把 2ms 错写成 0.2ms）。</li></ul>
+<blockquote>记忆锚点：占比 = 每秒查询次数 × 单次查询周期数 × 时钟周期 ÷ 1s = 200 × 500 × 20ns ÷ 1s = 0.2%。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

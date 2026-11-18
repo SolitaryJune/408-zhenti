@@ -143,5 +143,32 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：求二叉树带权路径长度 WPL 的算法设计</h2>
+<h3>先立机制：WPL 到底在算什么</h3>
+<p>WPL = 所有<strong>叶结点</strong>的（结点深度 × 权值）之和。它把"成本"拆成两半：<strong>权值</strong>存在叶结点里，<strong>深度</strong>却不存在任何结点里——深度等于从根走到该结点经过的边数，只随遍历过程"顺路"产生。所以本题的核心是：<strong>遍历走到哪儿，深度就得跟到哪儿</strong>。两条路线都能做到：</p>
+<ul><li><strong>先序递归</strong>：递归每下降一层，就给参数 <code>deep</code> 加 1 再传下去——深度天然"挂在"递归参数上；</li><li><strong>层次遍历</strong>：队列逐层出队，用 <code>lastNode</code> 哨兵标记"本层最后一个结点"，跨过它就把 <code>deep</code> 加 1。</li></ul>
+<p>有了这条主线，三问就是把它落实成代码。</p>
+<h3>第 1 问：算法基本设计思想</h3>
+<p><strong>方法一（先序递归，推荐）</strong>：从根出发先序遍历，参数 <code>deep</code> 记当前结点深度，根为 0。访问到结点时：若是叶结点（左、右孩子均为空），把 <code>deep × weight</code> 累加进 <code>wpl</code>；否则递归左、右子树且 <code>deep + 1</code>。</p>
+<ul><li><strong>为什么深度能当参数传</strong>：树中结点的深度由"根到它的唯一路径"决定，先序递归正是沿这条路径走，每层递归调用对应路径上多走一条边——参数 <code>deep</code> 就是这条路径的长度，不需要任何额外存储。</li><li><strong>为什么只在叶结点累加</strong>：WPL 的定义只统计叶结点，内部结点的权值不计入。</li></ul>
+<p><strong>方法二（层次遍历）</strong>：用队列逐层遍历，<code>deep</code> 记当前层数。<strong>为什么要 <code>lastNode</code> 哨兵</strong>：普通出队是一个"结点流"，队列里相邻两个出队结点可能属于不同层，光看出队顺序分不清层边界；让 <code>lastNode</code> 指向本层最后入队的结点，出队遇到它就说明本层走完，把它更新为本层出队期间最后入队的 <code>newlastNode</code>（即下一层最后一个），<code>deep</code> 加 1。遇到叶结点同样累加 <code>deep × weight</code>。</p>
+<h3>第 2 问：结点的数据类型定义</h3>
+<p>二叉链表结点只需"权值 + 左右孩子指针"两个字段族：</p>
+<p><code>typedef struct BiTNode { int weight; struct BiTNode *lchild, *rchild; } BiTNode, *BiTree;</code></p>
+<h3>第 3 问：算法描述（方法一）</h3>
+<p><code>int wpl_PreOrder(BiTree root, int deep)</code> 的逻辑：</p>
+<ol><li><code>root == NULL</code> 返回 0——空指针没有权值也没有深度，贡献为 0（同时防止空指针访问崩溃）；</li><li>左右孩子均为空（叶结点）时返回 <code>deep * root-&gt;weight</code>；</li><li>否则返回 <code>wpl_PreOrder(root-&gt;lchild, deep+1) + wpl_PreOrder(root-&gt;rchild, deep+1)</code>。</li></ol>
+<p>调用入口 <code>WPL(root) = wpl_PreOrder(root, 0)</code>。关键注释点：根深度为 0、仅在叶结点累加、递归下探时深度加 1。</p>
+<h3>正确性演示（示例树）</h3>
+<p>示例树：根 A0（深 0）有两个孩子；左孩子（深 1）下挂叶 L1（权 2，深 2）与内部结点 A1（深 2），A1 下叶 L2（权 3）、L3（权 4）深 3；右孩子（深 1）下叶 L4（权 5，深 2）。</p>
+<table><thead><tr><th>访问次序</th><th>结点</th><th>深度</th><th>是否叶</th><th>累加</th><th>wpl</th></tr></thead><tbody><tr><td>1</td><td>A0</td><td>0</td><td>否</td><td>—</td><td>0</td></tr><tr><td>2</td><td>左孩子</td><td>1</td><td>否</td><td>—</td><td>0</td></tr><tr><td>3</td><td>L1</td><td>2</td><td>是</td><td>2×2=4</td><td>4</td></tr><tr><td>4</td><td>A1</td><td>2</td><td>否</td><td>—</td><td>4</td></tr><tr><td>5</td><td>L2</td><td>3</td><td>是</td><td>3×3=9</td><td>13</td></tr><tr><td>6</td><td>L3</td><td>3</td><td>是</td><td>4×3=12</td><td>25</td></tr><tr><td>7</td><td>右孩子</td><td>1</td><td>否</td><td>—</td><td>25</td></tr><tr><td>8</td><td>L4</td><td>2</td><td>是</td><td>5×2=10</td><td><strong>35</strong></td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>把内部结点的权值也累加</strong>：WPL 只算<strong>叶结点</strong>；本题内部结点没有有效权值。</li><li><strong>深度起点记错</strong>：本题按根深度为 0 计算；若按 1 起算须全文口径一致，否则每个叶子都多算一层。</li><li><strong>层次遍历漏掉 lastNode</strong>：没有哨兵就感知不到换层，<code>deep</code> 停在第 1 层，所有累加全错。</li><li><strong>忘了传深度参数</strong>：不开参数就只能靠全局变量或额外结构记深度，逻辑易乱。</li><li><strong>空树不判 NULL</strong>：<code>root == NULL</code> 返回 0，防止空指针崩溃。</li></ul>
+<blockquote>复杂度：两种方法都使每个结点恰好被访问一次，时间 O(n)；递归法空间 O(h)（栈深等于树高），层次法空间 O(n)（队列最长时是宽度最大的一层）。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

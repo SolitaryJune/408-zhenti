@@ -141,5 +141,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：结构体边界对齐 + 小端方式定位字节</h2>
+<p>答案：D（34H 所在单元地址为 2020 FE06H）。</p>
+<h3>第一步：先立机制——为什么要对齐、小端是什么</h3>
+<p><strong>边界对齐的硬件根源</strong>：CPU 访存按固定宽度（这里 int 按 4 字节整字边界）取数，成员起始地址落在对齐倍数上时，一个总线周期就能取到完整数据；不齐则要拆成两次访存再拼接，有的机器干脆不支持。所以编译器给每个成员安排"起始地址 = 其长度的倍数"，空隙用填充字节补上——<strong>填充不是浪费，是给硬件提速</strong>。</p>
+<p><strong>小端方式的机制</strong>：多字节数要拆成字节序列存放，小端规定<strong>最低有效字节（LSB）放最低地址</strong>——正好与 2019-15 讲过的大端相反（大端 = MSB 在低地址，LSB 落在 EA+字节数−1）。机器数 1234 0000H 按书写顺序是 12、34、00、00 四个字节，12 是最高有效字节，末尾的 00 是 LSB。</p>
+<h3>第二步：按对齐规则排地址</h3>
+<p>x1 是 short（2B），占偏移 0~1；x2 是 int（4B），起始地址必须是 4 的倍数——紧接偏移 2 的 2020 FE02H 不是 4 的倍数，编译器填充 2 字节，x2 从偏移 4（2020 FE04H）开始。</p>
+<table><thead><tr><th>成员</th><th>类型</th><th>占用地址</th></tr></thead><tbody><tr><td>x1</td><td>short（2B）</td><td>2020 FE00H ~ FE01H</td></tr><tr><td>填充</td><td>—</td><td>2020 FE02H ~ FE03H</td></tr><tr><td>x2</td><td>int（4B）</td><td>2020 FE04H ~ FE07H</td></tr></tbody></table>
+<h3>第三步：按小端把 34H 放进 x2 的四个单元</h3>
+<p>低位字节放低地址，从 FE04H 起依次放 00、00、34、12，34H 落在 <strong>2020 FE06H</strong>，选 D。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘记对齐填充</strong> → 让 x2 从 FE02H 直接开始，34H 会被算到 FE04H（误选 B）。</li><li><strong>大小端弄反</strong> → 按大端存，12H 在 FE04H、34H 在 FE05H（误选 C）。</li><li><strong>忽略 int 的对齐要求</strong>：int 占 4B，起始地址必须是 4 的倍数。</li></ul>
+<blockquote>先对齐排地址，再按"低位在低地址"倒着放：00、00、34、12 依次进 FE04H～FE07H，34H 在 2020 FE06H。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

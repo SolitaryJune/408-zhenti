@@ -169,5 +169,28 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：分页地址变换与 FIFO / CLOCK 置换</h2>
+<h3>第 0 步：先立机制——地址是"页号拼偏移"，置换是"从本进程 4 个页框里挑牺牲者"</h3>
+<p>分页方式下，逻辑地址天然切成两段：<strong>高位是页号，低位是页内偏移</strong>。本题页大小 1KB = 2^10 B → 低 10 位是偏移；1KB 写成十六进制是 400H，所以"逻辑地址 ÷ 400H"的商即页号、余数即偏移，与按位切分完全等价。物理地址同理拼装：<strong>页框号 × 400H + 偏移</strong>——页框号占高位、偏移低位照抄。</p>
+<p>本题进程被<strong>固定分配</strong> 4 个页框（局部置换：牺牲者只能从本进程自己的页框里挑，不能动别人的）。访问 17CAH 时对应页若不在页表中 → <strong>缺页</strong>，须按指定算法淘汰一页腾位。两种算法的区别只在"挑谁"：FIFO 看<strong>进来的时间</strong>，CLOCK 看<strong>最近用没用过</strong>。</p>
+<h3>第 1 问：17CAH 对应的页号</h3>
+<p>17CAH ÷ 400H：5 × 400H = 1400H，17CAH − 1400H = 3CAH → <strong>页号 5，页内偏移 3CAH</strong>。进程最多需要 6 页（页号 0～5），5 号页合法；但页表里只装了 0～3 页 → 5 号页不在其中，<strong>缺页</strong>。</p>
+<h3>第 2 问：FIFO 置换下的物理地址</h3>
+<p>FIFO 的唯一依据是<strong>装入时刻</strong>——谁最早进内存谁被淘汰，访问位多少与它无关。四个页的装入时刻：0 页 130、2 页 200、1 页 230、3 页 260 → 最早的是 <strong>0 号页（130）</strong>，淘汰它。0 号页占的是 <strong>7 号页框</strong>，5 号页装入：</p>
+<p>物理地址 = 7 × 400H + 3CAH = 1C00H + 3CAH = <strong>1FCAH</strong>。</p>
+<h3>第 3 问：CLOCK 置换下的物理地址</h3>
+<p>CLOCK 是给页"第二次机会"的 FIFO 改良：访问位记录"近期是否被用过"；指针顺时针扫，扫到访问位为 1 的页 → <strong>清 0、放行</strong>（它最近被用过，再给一次机会）；扫到 0 → <strong>淘汰</strong>。</p>
+<p><strong>为什么第一圈扫完回到起点必中？</strong> 一圈之内把沿途所有 1 都清成了 0；指针转回起点时，起点已是 0——最多两圈必有结果。</p>
+<p>指针当前指向 2 号页框，按图顺时针次序为 2 号框（页 2）→ 4 号框（页 1）→ 7 号框（页 0）→ 9 号框（页 3），四个访问位全为 1：</p>
+<table><thead><tr><th>检查次序</th><th>页框（页）</th><th>访问位</th><th>动作</th></tr></thead><tbody><tr><td>1</td><td>2 号框（页 2）</td><td>1</td><td>清 0，指针下移</td></tr><tr><td>2</td><td>4 号框（页 1）</td><td>1</td><td>清 0，指针下移</td></tr><tr><td>3</td><td>7 号框（页 0）</td><td>1</td><td>清 0，指针下移</td></tr><tr><td>4</td><td>9 号框（页 3）</td><td>1</td><td>清 0，指针下移</td></tr><tr><td>5</td><td>2 号框（页 2）</td><td>已清成 0</td><td><strong>淘汰页 2</strong></td></tr></tbody></table>
+<p>5 号页装入 <strong>2 号页框</strong>：物理地址 = 2 × 400H + 3CAH = 800H + 3CAH = <strong>0BCAH</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>页号换算绕远路</strong>：在十六进制里按 400H 除最稳（商 5 余 3CAH）；转十进制硬除再转回易错。</li><li><strong>FIFO 看错字段</strong>：FIFO 只认装入时刻，130 最早就淘汰 0 号页；被"访问位全 1"带偏是典型失误。</li><li><strong>CLOCK 不回头</strong>：第一圈清完 0 必须回到指针起点再确认，第五次检查才选中 2 号框；直接拿最后清零的 9 号框当牺牲者是高频错误。</li></ul>
+<blockquote>结论：页号 5、偏移 3CAH；FIFO 得 1FCAH；CLOCK 清零一圈后回到 2 号框得 0BCAH。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

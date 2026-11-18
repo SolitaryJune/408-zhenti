@@ -159,5 +159,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：Kruskal 第 2 条边与 Prim 第 2 条边的差异</h2>
+<p><strong>答案：C（V2,V3）</strong></p>
+<h3>第一步：把图的边按权排序</h3>
+<p>图共 6 条边：<code>(V1,V4)=5</code>、<code>(V1,V3)=8</code>、<code>(V2,V3)=8</code>、<code>(V3,V4)=8</code>、<code>(V1,V2)=10</code>、<code>(V2,V4)=11</code>。</p>
+<p>排序：<strong>5 &lt; 8 = 8 = 8 &lt; 10 &lt; 11</strong>，权 8 的三条边是并列的候选。</p>
+<h3>第二步：模拟 Kruskal（全局选最小且不成环的边）</h3>
+<ul><li>第 1 条：全局最小 <code>(V1,V4)=5</code>。</li><li>第 2 条：轮到权 8 的边，<code>(V1,V3)</code>、<code>(V2,V3)</code>、<code>(V3,V4)</code> 与已选边都不构成回路，<strong>三者都可能</strong>成为第 2 条。</li></ul>
+<h3>第三步：模拟 Prim（从 V4 出发，选横切边的最小者）</h3>
+<ul><li>第 1 条：从 V4 的邻边 <code>(V4,V1)=5</code>、<code>(V4,V3)=8</code>、<code>(V4,V2)=11</code> 中选 <code>(V4,V1)=5</code>，树集 {V1,V4}。</li><li>第 2 条：横切边只剩 <code>(V1,V3)=8</code>、<code>(V4,V3)=8</code>、<code>(V1,V2)=10</code>、<code>(V4,V2)=11</code>，最小为 8，<strong>只能选 <code>(V1,V3)</code> 或 <code>(V3,V4)</code></strong>，绝不可能选 <code>(V2,V3)</code>——横切边必须一端在树集内、一端在树外，而 <code>(V2,V3)</code> 的两端 V2、V3 都在树外，它压根不是横切边。</li></ul>
+<h3>第四步：取差集</h3>
+<p>"Kruskal 第 2 次可能选中"的集合：{(V1,V3), (V2,V3), (V3,V4)}；"Prim 第 2 次可能选中"的集合：{(V1,V3), (V3,V4)}。差集为 <strong>(V2,V3)</strong>，选 C。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A 或 D</strong>：<code>(V1,V3)</code>、<code>(V3,V4)</code> 两家都可能第 2 次选中，不满足"不是 Prim 第 2 次选中"的条件。</li><li><strong>误选 B</strong>：<code>(V1,V4)</code> 是两家共同的第 1 条边。</li><li><strong>忘记 Prim 只看横切边</strong>：Prim 的候选边必须一端在树集内、一端在树集外，<code>(V2,V3)</code> 不满足。</li></ul>
+<blockquote>记忆点：Kruskal 按"全局最小 + 不成环"选边，Prim 按"横切边最小"选边；权并列时各自都可能取到不同边，差集才是答案。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

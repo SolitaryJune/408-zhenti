@@ -133,5 +133,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：VLAN 隔离下 H3 能收到哪些帧</h2>
+<p><strong>答案：B（仅 F1、F3）</strong>。方法：先从图里读出每个主机属于哪个 VLAN，再对每个帧判断"源在哪个 VLAN、目的是单播还是广播"。</p>
+<h3>第一步：读图定 VLAN</h3>
+<p>从图中的端口连接关系（涂黑的端口为已用端口）：</p>
+<table><thead><tr><th>主机</th><th>MAC 尾字节</th><th>所在 VLAN</th></tr></thead><tbody><tr><td>H1</td><td>01</td><td>VLAN1（端口 13）</td></tr><tr><td>H2</td><td>02</td><td>VLAN1（端口 2）</td></tr><tr><td>H3</td><td>03</td><td>VLAN1（端口 5）</td></tr><tr><td>H4</td><td>04</td><td>VLAN2（端口 8）</td></tr><tr><td>H5</td><td>05</td><td>VLAN2（端口 9）</td></tr><tr><td>H6</td><td>06</td><td>VLAN2（端口 12）</td></tr></tbody></table>
+<p>VLAN 之间二层隔离：跨 VLAN 的帧交换机直接丢弃，不同 VLAN 之间不能直接通信。</p>
+<h3>第二步：逐帧判定（H3 在 VLAN1）</h3>
+<table><thead><tr><th>帧</th><th>SA（源）</th><th>DA（目的）</th><th>判定</th></tr></thead><tbody><tr><td>F1</td><td>H1（VLAN1）</td><td>…-03 = H3（VLAN1）</td><td>同 VLAN 单播，交换机查表向端口 5 转发 → H3 <strong>收到</strong></td></tr><tr><td>F2</td><td>H5（VLAN2）</td><td>H3（VLAN1）</td><td>跨 VLAN，直接丢弃 → H3 <strong>收不到</strong></td></tr><tr><td>F3</td><td>H2（VLAN1）</td><td>FF-FF-FF-FF-FF-FF</td><td>广播只在 VLAN1 内泛洪 → H3 <strong>收到</strong></td></tr><tr><td>F4</td><td>H6（VLAN2）</td><td>FF-FF-FF-FF-FF-FF</td><td>广播只在 VLAN2 内泛洪 → H3 <strong>收不到</strong></td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>以为 DA 是 H3 就一定能收到</strong>：F2 的目的确实是 H3，但源在 VLAN2，跨 VLAN 隔离让它根本到不了 H3（干扰项 A、C 的陷阱）。</li><li><strong>以为广播全网泛洪</strong>：广播域被 VLAN 划分切开了，F4 只在 VLAN2 里转一圈（干扰项 D 的陷阱）。</li></ul>
+<blockquote>一句话结论：H3 只能收到"本 VLAN 发来的单播"和"本 VLAN 内的广播"，即 F1、F3，选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

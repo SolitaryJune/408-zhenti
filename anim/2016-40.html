@@ -120,5 +120,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：迭代解析中本地域名服务器的查询次数</h2>
+<p><strong>答案：C（0, 4）。</strong></p>
+<h3>第一步：分清谁在发查询</h3>
+<p>迭代方式下，主机 H4 只把解析请求交给本地域名服务器 201.1.1.1，之后由 <strong>201.1.1.1 自己</strong>逐级向各级域名服务器发查询。题目数的是"域名服务器 201.1.1.1 发出的查询"，H4 发出的那一次不计入。</p>
+<h3>第二步：最少次数</h3>
+<p>若 201.1.1.1 的缓存中已存有 www.abc.xyz.com 的记录（此前有主机解析过且未过期），可直接应答 H4，发出 <strong>0</strong> 次查询。</p>
+<h3>第三步：最多次数</h3>
+<p>缓存未命中时逐级迭代，共 4 次：</p>
+<ol><li>问<strong>根</strong>域名服务器 → 得到 com 顶级域服务器地址；</li><li>问 <strong>com 顶级域</strong>服务器 → 得到 xyz.com 权威服务器地址；</li><li>问 <strong>xyz.com 权威</strong>服务器 → 得到子域 abc.xyz.com 的权威服务器地址；</li><li>问 <strong>abc.xyz.com 权威</strong>服务器 → 得到 www.abc.xyz.com 的 IP 地址，交回 H4。</li></ol>
+<h3>易错点</h3>
+<ul><li><strong>选 B/D（最少 1 次）</strong>：漏掉缓存命中——本地服务器缓存过该域名时一次都不用问。</li><li><strong>选 A/B（最多 3 次）</strong>：把 abc.xyz.com 当成由 com 直接授权，少算了一层子域委托。</li></ul>
+<blockquote>迭代解析是本地服务器逐级亲自问：根、顶级域、两级权威服务器最多 4 次；缓存命中最少 0 次。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

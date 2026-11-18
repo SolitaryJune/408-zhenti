@@ -100,5 +100,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：时间片轮转下队尾进程 P 的周转时间</h2>
+<p>答案：<strong>C</strong>（250 ms）。</p>
+<h3>第一步：排清轮转次序</h3>
+<p>时间片 5 ms，10 个进程都处于就绪队列，P 在队尾且所需 CPU 时间最短（25 ms = 5 个时间片）。其余 9 个进程所需时间不小于 25 ms，大于一个时间片，所以在 P 完成之前它们每次轮到都用满完整时间片，不会中途退出队列。</p>
+<h3>第二步：逐轮推演（每轮 = 其余 9 进程 × 5 ms + P × 5 ms）</h3>
+<table><thead><tr><th>轮次</th><th>其余 9 进程占用</th><th>P 的时间片</th><th>P 累计完成</th></tr></thead><tbody><tr><td>1</td><td>0～45 ms</td><td>45～50 ms</td><td>5 ms</td></tr><tr><td>2</td><td>50～95 ms</td><td>95～100 ms</td><td>10 ms</td></tr><tr><td>3</td><td>100～145 ms</td><td>145～150 ms</td><td>15 ms</td></tr><tr><td>4</td><td>150～195 ms</td><td>195～200 ms</td><td>20 ms</td></tr><tr><td>5</td><td>200～245 ms</td><td>245～250 ms</td><td>25 ms（完成）</td></tr></tbody></table>
+<p>每轮长 50 ms，P 每轮都排在末尾执行；第 5 个时间片在 250 ms 末结束，P 完成。</p>
+<h3>第三步：计算周转时间</h3>
+<p>周转时间 = 完成时间 − 到达时间 = 250 − 0 = <strong>250 ms</strong>，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏算排队等待</strong>：只用 25 ms 当周转时间，或算成 45 + 25 = 70 ms——忽略了 P 完成前还要反复排在队尾轮转。</li><li><strong>以为有进程提前结束留出空档</strong>：P 需时最短（25 ms），其余进程到 250 ms 时最多才执行 25 ms，都不可能提前退出，轮转节奏始终是 45 ms + 5 ms。</li></ul>
+<blockquote>一句话结论：P 每轮垫底，5 轮共 5 × 50 ms，250 ms 完成——周转时间 <strong>250 ms</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

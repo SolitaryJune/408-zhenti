@@ -88,5 +88,31 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：三种 I/O 方式的时间账——节拍模型</h2>
+<h3>第 0 步：机制先行——I/O 的核心矛盾与统一口径</h3>
+<p>I/O 的核心矛盾一句话：<strong>设备按自己的速率一格一格地产出（或取走）数据，CPU 必须赶在下一格到来之前处理完上一格</strong>。接口里的 32 位数据缓冲寄存器就是那"一格"：32 位 = <strong>4B</strong>，每装满 4B 就必须被取走一次，否则下一批数据会把旧数据冲掉——设备速率决定了"格子多久满一次"，这就是 CPU 出场的节拍。</p>
+<p>统一口径（三问共用）：</p>
+<ul><li>主频 500MHz → 时钟周期 = 1/500MHz = <strong>2ns</strong>；CPI = 4 → 一条指令 = 4 × 2ns = <strong>8ns</strong>。</li><li>设备速率换算出节拍：设备 A 装满一格要 4B ÷ 2MB/s = <strong>2µs</strong>；设备 B 装满一格要 4B ÷ 40MB/s = <strong>0.1µs</strong>。</li></ul>
+<p>三问的结构完全一致：<strong>CPU 一次介入的成本 ÷ 设备的到达节拍</strong>。</p>
+<h3>第（1）问：定时查询——为什么是 2µs 与 4%</h3>
+<p>定时查询 = CPU 每隔固定时间主动问一次"数据好了吗"。两条约束：</p>
+<ul><li><strong>间隔上限</strong>：两次查询的间隔一旦超过 2µs，缓冲就被新数据冲掉 → <strong>最多间隔 2µs 查询一次</strong>。</li><li><strong>每次成本</strong>：每次查询至少 10 条指令 × 8ns = <strong>80ns</strong>。</li></ul>
+<p>占比 = 80ns ÷ 2µs = <strong>4%</strong>。<strong>为什么问"至少"？</strong> 两个"至少"叠加：每次查询至少 80ns（10 条指令是下限），间隔又不得大于 2µs（否则丢数据），所以单位时间里 CPU 花在设备 A 上的份额至少是 80ns/2µs = 4%——间隔取满 2µs 时才取到这个最小值。</p>
+<h3>第（2）问：中断方式——服务速度跟不上到达速度就不能用</h3>
+<p>中断 I/O 的机制：每来一格数据，设备向 CPU 发中断，CPU 花 400 个时钟周期 = 400 × 2ns = <strong>0.8µs</strong> 做响应和处理。可行性判据就是两个速率的比较：</p>
+<ul><li>到达节拍 0.1µs/格，服务节拍 0.8µs/格；</li><li>0.8µs &gt; 0.1µs：一格还没处理完，后面 8 格已经到了，缓冲被覆盖 → 数据必然丢失 → 设备 B <strong>不能</strong>采用中断 I/O 方式。</li></ul>
+<p>对比着看更清楚：设备 A 的节拍是 2µs/格，远大于 0.8µs，中断来得及——"能不能用中断"不是方式好坏的问题，是设备速率的问题。</p>
+<h3>第（3）问：DMA——CPU 只在块的首尾出场</h3>
+<p>DMA 的机制：整块数据的搬运交给 DMA 控制器，<strong>传送期间 CPU 照常执行程序</strong>；CPU 只在块开始时做<strong>预处理</strong>（初始化 DMA 控制器、写入主存起始地址与块长），块结束时做<strong>后处理</strong>（校验、收尾）。所以 25µs 的传送时间<strong>不算 CPU 的时间</strong>：</p>
+<ul><li>传送一块 1000B ÷ 40MB/s = <strong>25µs</strong>（由设备速率决定，与 CPU 无关）；</li><li>CPU 每块只投入预处理 + 后处理 = 500 × 2ns = <strong>1µs</strong>；</li><li>占比 = 1µs ÷ 25µs = <strong>4%</strong>。</li></ul>
+<p><strong>为什么问"最多"？</strong> 预处理/后处理是每块固定 1µs，而块与块的到达最密只能是背靠背连续传送（设备 40MB/s 打满、一块接一块），此时每 25µs 出一块、CPU 出 1µs，4% 就是封顶值；设备一旦有空闲，占比只会更低。与第（1）问的"至少"正好镜像。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 MB/s 当成 Mb/s</strong>：40MB/s 下 4B 的到达间隔是 0.1µs，不是 0.8µs。</li><li><strong>第（3）问把 25µs 传送计入 CPU 时间</strong>：搬运由 DMA 控制器完成，CPU 只承担预处理/后处理的 1µs。</li><li><strong>"至少/最多"的来由没想清</strong>：第（1）问的"至少"来自"间隔 ≤ 2µs + 每次 ≥ 80ns"；第（3）问的"最多"来自"每块固定 1µs ÷ 块间隔最小 25µs"。</li><li><strong>忘记换算</strong>：10 条指令、400 周期、500 周期都要先乘时钟周期 2ns 换算成 ns/µs，再与设备时间比较。</li></ul>
+<blockquote>三问一个节奏：设备节拍（装满一格/到达间隔/一块的传送时间）作分母，CPU 一次介入的时间作分子；80ns/2µs = 4%，0.8µs &gt; 0.1µs 判死中断，1µs/25µs = 4%。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

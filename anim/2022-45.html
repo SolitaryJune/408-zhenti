@@ -162,5 +162,27 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：目录项、共享索引结点与多级索引计算</h2>
+<h3>第 0 步：先立机制——目录、索引结点、多级索引各管什么</h3>
+<ul><li><strong>目录 = “文件名 → 索引结点号”的映射表</strong>。文件的大小、位置、时间等全部管理信息集中在索引结点里，目录项只存名字和结点号。这样设计的好处：改文件属性不必改目录；同一个文件还能以不同名字出现在不同目录里——第 2）问考的正是这一点。</li><li><strong>数据块号存在索引结点里，间接地址项指向“装满地址的块”</strong>。块大小 4 KB、地址项 4 B，一块索引块装 4096 ÷ 4 = <strong>1024</strong> 个地址。一级间接地址项指向一块索引块，覆盖 1024 个数据块；二级间接指向一块“装满索引块地址的块”，覆盖 1024 × 1024 个数据块。每加一级，寻址范围乘 1024——这就是多级索引的机制。</li><li><strong>打开文件 = 把索引结点从盘上读进内存</strong>。文件名只在目录里，数据块号只在索引结点里，不读结点就拿不到块号。</li></ul>
+<h3>第 1）问：目录文件 stu 的目录项内容</h3>
+<p>stu 的目录内容是它的两个孩子（名字和结点号）：</p>
+<table><thead><tr><th>文件名</th><th>索引结点号</th></tr></thead><tbody><tr><td>course</td><td>2</td></tr><tr><td>doc</td><td>10</td></tr></tbody></table>
+<h3>第 2）问：x 的值</h3>
+<p>45(b) 表中 doc 与 course1 的索引结点号<strong>同为 10</strong>——两个文件名指向同一个索引结点，即“名字是别名、结点才是文件身份”。索引结点 10 记录着这份数据的位置：course1 的数据在 30 号块，doc 打开的自然也是同一份数据，故 <strong>x = 30</strong>。</p>
+<h3>第 3）问：打开 course1 并读入内存要读几个磁盘块</h3>
+<p>course 的目录内容<strong>已在内存</strong> → 从 course 的目录项直接查到 course1 的结点号 10，<strong>一个目录块都不用读</strong>。打开文件需要把 course1 的索引结点从盘上调入内存：每块放 4096 ÷ 256 = 16 个索引结点，10 号结点落在索引结点区的第 0 块 → 读 <strong>1</strong> 块；结点中的地址指出数据在 30 号块（course1 只占 1 块，10 个直接地址项足够，无需读间接块）→ 读 <strong>1</strong> 块。共 <strong>2 个磁盘块</strong>。</p>
+<h3>第 4）问：6 MB 的 course2 需要哪几级间接地址项</h3>
+<p>6 MB = 6 × 1024 KB ÷ 4 KB = <strong>1536</strong> 块。按第 0 步的机制逐级累计覆盖能力：</p>
+<table><thead><tr><th>地址项</th><th>新增覆盖</th><th>累计</th></tr></thead><tbody><tr><td>直接地址项 × 10</td><td>10</td><td>10</td></tr><tr><td>一级间接 × 1</td><td>1024</td><td>10 + 1024 = 1034</td></tr><tr><td>二级间接 × 1</td><td>1024 × 1024</td><td>1034 + 1048576（足够）</td></tr></tbody></table>
+<p>1536 &gt; 1034：直接 + 一级不够装，<strong>还需使用二级间接地址项</strong>（剩余 1536 − 1034 = 502 块由二级覆盖）；三级用不到。</p>
+<h3>易错点</h3>
+<ul><li><strong>第 2）问当成新分配块</strong>：doc 与 course1 共享索引结点 10，同一结点记录同一数据块 30。</li><li><strong>第 3）问多算目录块</strong>：course 目录已在内存，查 course1 的名字不读盘；也不要把“索引结点区”的定位当成一次额外读盘。</li><li><strong>第 4）问用错除数</strong>：每块装多少个<strong>地址</strong>用 4096 ÷ 4 = 1024；256 B 是索引结点的大小，除它得到的是“每块装几个索引结点”。</li><li><strong>间接级数判断错</strong>：一级间接的 1024 不是“1024 个直接地址项”，而是地址项指向的索引块里装了 1024 个数据块地址。</li></ul>
+<blockquote>索引容量阶梯：直接 10 → 加一级 ×1024 → 加二级 ×1024²；6 MB 文件共 1536 块，卡在 1034 之后，动用二级间接。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

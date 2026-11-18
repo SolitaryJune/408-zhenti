@@ -68,5 +68,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：磁盘 I/O 流程中换算柱面/磁头/扇区的是谁</h2>
+<p><strong>答案：C</strong> —— 计算柱面号、磁头号、扇区号的程序是<strong>设备驱动程序</strong>。</p>
+<h3>第一步：认清四层软件各自的职责</h3>
+<table><thead><tr><th>层次</th><th>职责</th></tr></thead><tbody><tr><td>用户程序</td><td>提出逻辑请求，如“读文件第 n 块”</td></tr><tr><td>系统调用处理程序</td><td>校验参数、组织 I/O 请求，转入设备相关层</td></tr><tr><td>设备驱动程序</td><td><strong>设备相关</strong>：把抽象请求翻译成设备能执行的具体参数——磁盘驱动据此计算<strong>柱面号、磁头号、扇区号</strong>并发出读写命令</td></tr><tr><td>中断处理程序</td><td>I/O 完成后的善后：保存现场、传数据、唤醒等待进程</td></tr></tbody></table>
+<h3>第二步：判断依据</h3>
+<p>柱面号/磁头号/扇区号是磁盘设备<strong>自身特有</strong>的物理参数，只有最贴近硬件的设备驱动程序才了解磁盘的几何结构；上层软件只认识“逻辑块号”。所以这个换算一定发生在设备驱动程序层。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 B</strong>：系统调用处理程序只做参数检查与请求转发，不涉及设备细节。</li><li><strong>误选 D</strong>：中断处理程序在 I/O <strong>完成之后</strong>才工作，那时数据位置早已确定，用不着它算。</li></ul>
+<blockquote>一句话结论：设备相关的“逻辑块号 → CHS（柱面/磁头/扇区）”换算由<strong>设备驱动程序</strong>完成，选 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

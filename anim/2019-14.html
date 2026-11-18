@@ -56,5 +56,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：缺页处理的流程与返回点</h2>
+<p>答案：<strong>D</strong>。</p>
+<h3>第一步：理清缺页处理链路</h3>
+<p>缺页属于<strong>故障类异常</strong>：CPU 在<strong>地址转换</strong>时查页表，发现要访问的页不在主存（有效位为 0），产生页故障。完整流程：CPU 检测并转异常 → 执行操作系统提供的<strong>缺页处理程序</strong> → 根据页故障地址（虚页号）从外存调入所缺页 → 更新页表 → <strong>重新执行被中断的那条指令</strong>。</p>
+<h3>第二步：逐项核对</h3>
+<ul><li>A：缺页是地址转换时 CPU 检测到的一种异常 —— 正确。</li><li>B：缺页处理由操作系统提供的缺页处理程序完成 —— 正确，CPU 只负责"发现与转交"。</li><li>C：缺页处理程序根据页故障地址从外存读入所缺失的页 —— 正确。</li><li>D：说"回到发生缺页指令的<strong>下一条</strong>指令执行" —— <strong>错误</strong>。发生缺页的指令并没有执行成功，处理完后必须<strong>回到该指令重新执行</strong>，这次访存才能完成；返回下一条会使这次访问凭空丢失。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>与自陷（trap）类异常混淆</strong>：自陷是"执行完本条指令后转入处理程序、返回下一条"；缺页是故障类，"处理完要重执本条"。</li><li><strong>以为缺页调页由硬件完成</strong>：发现靠硬件（MMU 查页表），调页、更新页表全靠操作系统软件。</li></ul>
+<blockquote>记忆锚点：缺页 = 指令"没做完被打断"，处理完回来要"从头再做"。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

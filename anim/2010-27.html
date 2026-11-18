@@ -168,5 +168,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：Peterson 算法的互斥与饥饿分析</h2>
+<p><strong>答案：D（能保证进程互斥进入临界区，不会出现饥饿现象）。</strong></p>
+<h3>第一步：读懂代码结构</h3>
+<p>两进程完全对称：先举旗 <code>flag[i]=TRUE</code>，再把 <code>turn</code> 设为<strong>对方</strong>编号（表示"你先请"），然后在 <code>while(flag[对方] &amp;&amp; turn==对方);</code> 处等待。变量 <code>turn</code> 的含义是"谦让之后轮到谁"。</p>
+<h3>第二步：为什么互斥成立</h3>
+<p>设两进程同时竞争：P0 执行 <code>turn=1</code>，P1 执行 <code>turn=0</code>（P1 后写，覆盖 P0 的值），<code>turn</code> 最终为 0：</p>
+<table><thead><tr><th>进程</th><th>等待条件</th><th>终值下的判断</th><th>结果</th></tr></thead><tbody><tr><td>P0</td><td>flag[1] 且 turn==1</td><td>turn=0，条件不成立</td><td><strong>放行</strong></td></tr><tr><td>P1</td><td>flag[0] 且 turn==0</td><td>两条件都成立</td><td><strong>等待</strong></td></tr></tbody></table>
+<p><code>turn</code> 只有一个终值，两个 while 条件<strong>不可能同时为假</strong>，任一时刻至多一人进入临界区——互斥成立。</p>
+<h3>第三步：为什么不会饥饿</h3>
+<p>P1 等待的根源是 <code>flag[0]=TRUE</code>。P0 用完临界区后执行 <code>flag[0]=FALSE</code>，P1 的 while 条件立刻不成立而进入——等待者最多等对方用完<strong>一次</strong>临界资源；若只有一方想进入（对方 flag 为 FALSE），它更是直接通过检查。等待都是有限的，故不会饥饿。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 turn 被覆盖会破坏互斥</strong>：恰恰相反，"后写者生效"保证了终值唯一，正是互斥的支柱。</li><li><strong>把"要等一会儿"当成饥饿</strong>：饥饿指<strong>无限期</strong>等待；这里 P1 在 P0 退出后立即进入，等待有限。</li></ul>
+<blockquote>记忆锚点：flag 保证"退出即放行"，turn 保证"竞争只出一人"——两者合起来：互斥成立且无饥饿。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

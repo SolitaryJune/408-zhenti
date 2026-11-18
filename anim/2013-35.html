@@ -128,5 +128,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：报文交换与分组交换的总时间</h2>
+<p>答案：<strong>D（报文交换 1600ms、分组交换 801ms）</strong>。两段链路、存储转发，差别在于「整段传」还是「切片流水传」。</p>
+<h3>第一步：报文交换</h3>
+<p>8Mb 报文整体传输，经过 2 段链路（甲→路由器、路由器→乙），每段都要<strong>完整收完后才能转发</strong>。</p>
+<ul><li>单段发送时延 = 8Mb ÷ 10Mbps = 0.8s = 800ms</li><li>总时间 = 2 × 800 = <strong>1600ms</strong></li></ul>
+<h3>第二步：分组交换</h3>
+<ul><li>分组数 = 8Mb ÷ 10kb = 800 个；每个分组的发送时延 = 10kb ÷ 10Mbps = 1ms</li><li>第 1 个分组走完全程（2 段链路）需 2 × 1 = 2ms</li><li>此后路由器与甲并行工作，<strong>每过 1ms 到达乙 1 个分组</strong>（流水线）</li><li>总时间 = 首分组走完 2ms + 其余 799 个分组的到达间隔 799ms = (800 + 2 − 1) × 1ms = <strong>801ms</strong></li></ul>
+<p>通用公式：T = (分组数 N + 链路数 k − 1) × 单分组发送时延。</p>
+<h3>第三步：为什么分组交换快</h3>
+<p>报文交换下路由器要收完 800ms 才能动第 2 段链路；分组交换下第 1ms 起路由器就开始向乙转发，两段链路几乎全程并行，省下 (800 − 1)ms。</p>
+<h3>易错点</h3>
+<ul><li><strong>报文交换漏乘链路数</strong>：只算一段 800ms，会错选 C 类答案——存储转发下每段链路都要整段重发一遍。</li><li><strong>分组数公式记错</strong>：写成 800 × 2 = 1600ms 或 (800 + 2) × 1 = 802ms；正确口径是「首分组走完 + N−1 个发送间隔」。</li><li><strong>忽视题设</strong>：本题明确忽略传播时延、分组头开销与拆装时间，若题目给了开销要按有效数据重算。</li></ul>
+<blockquote>流水线思维：分组交换总时间 ≈ 首分组走完 k 段链路的时间 + (N−1) × 单分组发送时延。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

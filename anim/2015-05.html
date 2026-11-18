@@ -150,5 +150,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：有向图从 v0 出发 DFS 的不同序列个数</h2>
+<p><strong>答案：D（5 个）</strong></p>
+<h3>第一步：整理邻接关系</h3>
+<p>有向图 G：<code>V={v0,v1,v2,v3}</code>，<code>E={⟨v0,v1⟩,⟨v0,v2⟩,⟨v0,v3⟩,⟨v1,v3⟩}</code>。</p>
+<table><thead><tr><th>顶点</th><th>能直接到达</th></tr></thead><tbody><tr><td>v0</td><td>v1, v2, v3（次序可任选）</td></tr><tr><td>v1</td><td>v3</td></tr><tr><td>v2</td><td>无</td></tr><tr><td>v3</td><td>无</td></tr></tbody></table>
+<p>DFS 深度优先：访问某顶点后先递归访问它的全部可达未访问邻接点，回溯后再访问下一邻接点；起点固定为 v0。</p>
+<h3>第二步：按"第一个访问谁"分类枚举</h3>
+<ul><li><strong>先访问 v1</strong>：v1 只能去 v3，v3 无出边，回溯到 v0 后只剩 v2 → <code>v0,v1,v3,v2</code>（1 种）</li><li><strong>先访问 v2</strong>：v2 无出边，回溯到 v0；第二个可任选 v1 或 v3 → <code>v0,v2,v1,v3</code>、<code>v0,v2,v3,v1</code>（2 种）</li><li><strong>先访问 v3</strong>：v3 无出边，回溯到 v0；第二个可任选 v1 或 v2 → <code>v0,v3,v1,v2</code>、<code>v0,v3,v2,v1</code>（2 种）</li></ul>
+<p>合计 1+2+2 = <strong>5 种</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏数"先访问 v2/v3"的情形</strong>：以为 DFS 必须按编号顺序访问邻居（那样只剩 1 种）。DFS 的邻接点访问次序取决于存储结构，题目问的是"可能得到"的不同序列个数。</li><li><strong>忘记回溯后继续访问剩余邻居</strong>：如 <code>v0,v1,v3</code> 之后必须回到 v0 再访问 v2，否则序列不完整。</li><li><strong>忽略 v1→v3 的约束</strong>：v1 在前时 v3 一定紧跟其后（v1 的唯一出边），所以 <code>v0,v1,v2,v3</code> 是不存在的。</li></ul>
+<blockquote>记忆点：分类标准取"v0 之后第一个访问的顶点"，每类再枚举回溯后的选择，1+2+2=5。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

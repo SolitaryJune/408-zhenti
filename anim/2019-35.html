@@ -124,5 +124,24 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：滑动窗口的窗口大小约束</h2>
+<p><strong>答案：B（3）</strong></p>
+<h3>第一步：算出序号空间</h3>
+<p>分组序号采用 3 bit 编号，可提供 2^3 = <strong>8</strong> 个不同序号（0～7）。序号是循环使用的，所有窗口约束都来自一句话：<strong>新旧帧不能共用同一序号而不被察觉</strong>。</p>
+<h3>第二步：写出总约束式</h3>
+<p>滑动窗口协议（后退 N 帧、选择重传都满足）的一般约束是：</p>
+<p><strong>发送窗口 W_S + 接收窗口 W_R ≤ 2^n</strong></p>
+<p>若两窗口之和超过序号空间，接收窗口就会与发送窗口在序号空间上"重叠"：发送方超时重传的<strong>旧帧</strong>落入接收窗口内，会被当成<strong>新帧</strong>收下，造成重复接收。</p>
+<h3>第三步：代入求最大接收窗口</h3>
+<p>已知 W_S = 5，n = 3，则 W_R ≤ 8 − 5 = <strong>3</strong>，即接收窗口最大是 3，选 <strong>B</strong>。</p>
+<table><thead><tr><th>参数</th><th>值</th></tr></thead><tbody><tr><td>序号空间 2^3</td><td>8</td></tr><tr><td>发送窗口 W_S</td><td>5</td></tr><tr><td>接收窗口最大 W_R</td><td>8 − 5 = 3</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>套用选择重传的对称公式 W_R ≤ 2^(n-1) = 4</strong>：误选 C 的来源。2^(n-1) 只在发送窗口也取到最大时才成立；本题发送窗口已固定为 5，必须用总量约束 8 − 5 = 3。</li><li><strong>以为接收窗口只能为 1</strong>：那是后退 N 帧协议（GBN）的特例，题目问的是滑动窗口协议的一般情形。</li><li><strong>忘记扣掉发送窗口</strong>：直接把序号空间 8 当成答案（同类题的常见干扰项）。</li></ul>
+<blockquote>序号 3 bit → 空间 8；W_S + W_R ≤ 2^n → 8 − 5 = 3，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

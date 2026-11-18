@@ -152,5 +152,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：无符号整数比较 bgt 的转移条件</h2>
+<p><strong>答案：C</strong>，即"CF 与 ZF 都取反后相或 = 1"，等价于 <strong>CF = 0 且 ZF = 0</strong>（无借位且结果非零）。</p>
+<h3>第一步：比较的底层机制——一次减法 + 标志位判读</h3>
+<p>硬件没有专门的"比较器"：A 与 B 的大小是在 ALU 里做一次减法 A − B，再看标志位判读的。对<strong>无符号数</strong>，判读靠两个标志：</p>
+<ul><li><strong>CF（进位/借位）</strong>：无符号减法<strong>不够减</strong>（A &lt; B）时必须向更高位借位，CF 置 1；够减（A ≥ B）则 CF = 0。所以 <strong>CF = 0 ⟺ A ≥ B</strong>——这就是"减法判大小"的原理，也是无符号比较不用 SF/OF 的原因；</li><li><strong>ZF（零标志）</strong>：差为 0（A = B）时置 1。CF = 0 只保证"A ≥ B"，要挑出<strong>严格大于</strong>，还须排除相等这一种。</li></ul>
+<p>两者合并：大于 ⟺ CF = 0 <strong>且</strong> ZF = 0，写成表达式即 <strong>(CF + ZF) 取反 = 1</strong>——正是选项 C。</p>
+<h3>第二步：三种情形对号入座</h3>
+<table><thead><tr><th>比较结果</th><th>CF</th><th>ZF</th><th>(CF+ZF) 取反</th><th>转移？</th></tr></thead><tbody><tr><td>A &gt; B（够减、差非零）</td><td>0</td><td>0</td><td><strong>1</strong></td><td>转移</td></tr><tr><td>A &lt; B（不够减，借位）</td><td>1</td><td>0</td><td>0</td><td>不转移</td></tr><tr><td>A = B（差为零）</td><td>0</td><td>1</td><td>0</td><td>不转移</td></tr></tbody></table>
+<h3>第三步：为什么不用 SF 和 OF</h3>
+<p>SF 记结果的符号位、OF 记<strong>带符号</strong>运算是否溢出，只有把操作数当<strong>带符号数</strong>解释时它们才有意义。无符号数没有"符号"概念，大小全凭借位与零这两个标志判定——混入 OF 的 A、混入 SF 的 B 和 D 方向就错了。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉 ZF</strong>：只写"CF = 0"会把 A = B 也误判为"大于"——大于必须排除相等。</li><li><strong>带符号、无符号标志混用</strong>：SF、OF 服务于带符号比较（如 jg 一类指令），CF、ZF 服务于无符号比较，两套体系不能混搭。</li></ul>
+<blockquote>记忆锚点：无符号大于 = 无借位且非零 = CF 与 ZF 全 0 = "(CF + ZF)" 取反为 1。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -158,5 +158,22 @@ function edgeSet2(list){
 }
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：表达式共享 DAG 的最少顶点数</h2>
+<p><strong>答案：A（5 个）。</strong> 把表达式画成 DAG 的核心：<strong>相同的操作数与公共子表达式只画一个顶点</strong>，多处引用共享它。</p>
+<h3>第一步：先看不共享的表达式树</h3>
+<p>表达式 <code>((x+y)*((x+y)/x))</code> 完全展开成二叉树需要：运算符 4 个（*、/、+、+），操作数 5 个（x、y、x、y、x），共 <strong>9 个结点</strong>——这正是选项 D 的干扰来源。</p>
+<h3>第二步：合并公共子表达式</h3>
+<ul><li>子表达式 <code>(x+y)</code> 出现 2 次 → 两个 + 结点合并为 1 个；</li><li>操作数 <code>x</code> 出现 3 次、<code>y</code> 出现 2 次 → 各合并为 1 个结点。</li></ul>
+<h3>第三步：数合并后的 DAG 顶点</h3>
+<table><thead><tr><th>顶点</th><th>说明</th></tr></thead><tbody><tr><td>x</td><td>3 处共用 1 个</td></tr><tr><td>y</td><td>2 处共用 1 个</td></tr><tr><td>+</td><td>两处 (x+y) 共用 1 个</td></tr><tr><td>*</td><td>根，1 个</td></tr><tr><td>/</td><td>1 个</td></tr></tbody></table>
+<p>共 <strong>5 个顶点</strong>。结构：t = +(x,y)；根 * 的左孩子是 t、右孩子是 /；/ 的左孩子也是 t、右孩子是 x。读回验证：*( t, /(t, x) ) = ((x+y)*((x+y)/x))，与原表达式一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 D（9）</strong>：画成不共享的表达式树，忘了 DAG 的本职就是合并公共子式。</li><li><strong>选 B（6）</strong>：只合并了两个 (x+y)，忘了 x、y 本身也是重复出现的操作数结点，合并必须做到底。</li><li><strong>题目问"至少"</strong>：只要还存在重复顶点，就还能继续共享减结点，不能提前停手。</li></ul>
+<blockquote>记忆：DAG 顶点 = 不同操作数种类 + 不同子式个数；本题 x、y、+、*、/ 各一个 = 5。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

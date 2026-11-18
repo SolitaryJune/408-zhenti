@@ -90,5 +90,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：信号量值为负时的进程计数</h2>
+<p><strong>答案：A（m=5，n=2）</strong>。8 个进程都执行代码片段「wait(S) → 代码Q → signal(S)」，S 初值 5。用两条性质：S 为负时，其绝对值 = 因执行 wait(S) 被阻塞的进程数；每执行一次 wait(S)（无论通过还是阻塞）S 都减 1。</p>
+<h3>第一步：先数被阻塞的进程 n</h3>
+<p>某时刻 S = -2 &lt; 0，其绝对值就是挂在该信号量等待队列上的进程数，所以 <strong>n = 2</strong>。</p>
+<h3>第二步：数已执行到代码 Q 的进程 m</h3>
+<p>从 S=5 递减到 S=-2，共减少了 5-(-2)=7，即已有 <strong>7 个进程执行过 wait(S)</strong>：</p>
+<table><thead><tr><th>执行次序</th><th>第 1~5 次</th><th>第 6、7 次</th></tr></thead><tbody><tr><td>wait 时 S 的变化</td><td>5→4→3→2→1→0</td><td>0→-1→-2</td></tr><tr><td>结果</td><td>S ≥ 0，均通过，进入代码Q</td><td>S &lt; 0，均被阻塞</td></tr></tbody></table>
+<p>通过 wait 进入代码 Q 的进程 = 7 - 2 = <strong>m = 5</strong> 个；第 8 个进程尚未执行 wait，不计入任何一方。</p>
+<h3>第三步：排除干扰项</h3>
+<table><thead><tr><th>选项</th><th>m、n</th><th>错因</th></tr></thead><tbody><tr><td>A</td><td>5、2</td><td>✓ 正确</td></tr><tr><td>B</td><td>5、3</td><td>把 n 算成 3（如误按"S 的绝对值再加 1"计算）</td></tr><tr><td>C</td><td>6、2</td><td>把尚未执行 wait 的第 8 个进程也算进了 m</td></tr><tr><td>D</td><td>7、1</td><td>把"执行过 wait 的 7 个"误当成 m</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>把 S=-2 读成阻塞 3 个</strong>：S 的绝对值本身就是阻塞数，n=2。</li><li><strong>把 m 数成 7</strong>：7 是"执行过 wait(S) 的进程数"，其中 2 个被阻塞在 wait 上，根本没执行到代码 Q。</li><li><strong>忘了还有第 8 个进程</strong>：它没执行 wait(S)，既不是"通过"也不是"阻塞"。</li></ul>
+<blockquote>结论：m=5，n=2，选 <strong>A</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

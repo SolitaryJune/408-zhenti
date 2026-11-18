@@ -60,5 +60,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：int/float/double 类型转换的精度取舍</h2>
+<p>答案：<strong>B</strong>（仅 I 和 III 为真）。</p>
+<h3>第一步：抓住各转换的"精度规则"</h3>
+<ul><li>float 有 24 位二进制有效位，能<strong>精确表示</strong>绝对值不超过 2^24（16 777 216）的整数。</li><li>float → int：<strong>截断小数</strong>，必然丢掉小数部分。</li><li>float → double：double 有效位更多，转换<strong>无损</strong>；再转回 float 得到原值。</li><li>double 大数加小数：double 只有 53 位有效位，两数相差悬殊时，小数落不到大数的末位有效格子里，被完全"吸收"。</li></ul>
+<h3>第二步：逐式判定</h3>
+<table><thead><tr><th>表达式</th><th>分析</th><th>结果</th></tr></thead><tbody><tr><td>I. i==(int)(float)i</td><td>i = 785 &lt; 2^24，int→float 精确，转回仍是 785</td><td>真</td></tr><tr><td>II. f==(float)(int)f</td><td>f = 1567.8，(int)f 截断为 1567，再变回 1567.0，比原值少了 0.8</td><td>假</td></tr><tr><td>III. f==(float)(double)f</td><td>float→double 无损、double→float 舍入回原值</td><td>真</td></tr><tr><td>IV. (d+f)−d==f</td><td>d = 1.5×10^100 的相邻可表示数间隔远大于 1567.8，d+f 舍入后仍等于 d，(d+f)−d = 0</td><td>假</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>以为 int→float 总会丢精度</strong>：只有绝对值超过 2^24 的整数才丢，785 远没到。</li><li><strong>以为 float→double→float 有"往返损耗"</strong>：float 的可表示数是 double 的子集，往返无损。</li><li><strong>漏看 IV 的数量级</strong>：1.5×10^100 与 1567.8 相加，小数根本进不了双精度数的有效位，减回来只剩 0。</li></ul>
+<blockquote>记忆锚点：整数往返看 2^24；小数取整必截尾；升精度无损、降精度舍入；大数吃小数——为真的只有 I 和 III，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

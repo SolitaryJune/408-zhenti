@@ -61,5 +61,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：多进程共享一个文件时，两张打开文件表各管什么</h2>
+<p><strong>答案：B。</strong></p>
+<h3>第一步：厘清两张打开文件表的分工</h3>
+<ul><li><strong>系统打开文件表</strong>：全系统只有一张。每被打开的文件 F 占<strong>一个</strong>表项，存放 F 的属性（FCB 信息）、共享计数、读写函数入口等<strong>文件级</strong>信息。</li><li><strong>进程（用户）打开文件表</strong>：每个进程一张。表项记录该进程自己打开 F 的方式（读/写）、读写指针等<strong>进程级</strong>信息，并用指针指向系统表中 F 的那个表项。</li></ul>
+<h3>第二步：逐项判断</h3>
+<ul><li><strong>A 错</strong>：打开方式由各进程自己决定，可以用"写"方式打开，共享并不等于只读。</li><li><strong>B 对</strong>：文件 F 在全系统只登记一次，系统打开文件表中<strong>仅有一个</strong>表项包含 F 的属性；其余进程都通过指针共享它，共享只是让该表项的引用计数加 1。</li><li><strong>C 错</strong>：各进程用户表表项记录各自的打开方式和读写指针，内容可以不同——这正是共享的意义之一。</li><li><strong>D 错</strong>：某进程关闭 F 时，系统表表项的共享计数减 1；计数<strong>减到 0</strong> 时系统才删除该表项，而不是一关闭就删。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>误选 D</strong>：把"进程关闭"当成"文件关闭"。只有最后一个使用 F 的进程关闭后，系统表表项才被删除。</li><li><strong>误选 C</strong>：用户表表项属于进程私有信息，不同进程打开方式、读写位置都允许不同。</li></ul>
+<blockquote>一句话结论：文件级信息（属性）在系统打开文件表中全局唯一一份，进程级信息（打开方式、读写指针）在各自用户表中各留一份。选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

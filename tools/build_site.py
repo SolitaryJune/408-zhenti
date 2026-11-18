@@ -17,11 +17,12 @@
 import json
 import re
 import html as htmllib
+import struct
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 YEARS = list(range(2009, 2027))
-ASSET_VER = "20261116a"
+ASSET_VER = "20261118a"
 
 SUBJECTS = {
     "数据结构": {"cls": "ds", "color": "#e07a2f", "bg": "#e07a2f1f"},
@@ -36,11 +37,61 @@ def esc(s: str) -> str:
     return htmllib.escape(s, quote=False)
 
 
+def img_size(path: Path):
+    """读取 PNG/JPEG/GIF 的实际像素尺寸（不依赖 Pillow）。"""
+    try:
+        with path.open("rb") as f:
+            d = f.read(32)
+            if d[:8] == b"\x89PNG\r\n\x1a\n":
+                return struct.unpack(">II", d[16:24])
+            if d[:6] in (b"GIF87a", b"GIF89a"):
+                return struct.unpack("<HH", d[6:10])
+            if d[:2] == b"\xff\xd8":
+                f.seek(2)
+                while True:
+                    b = f.read(1)
+                    if not b:
+                        return None
+                    if b != b"\xff":
+                        continue
+                    m = f.read(1)
+                    while m == b"\xff":
+                        m = f.read(1)
+                    if m in (b"\xd8", b"\xd9"):
+                        continue
+                    ln = struct.unpack(">H", f.read(2))[0]
+                    if m[0] in (0xC0, 0xC1, 0xC2, 0xC3):
+                        f.read(1)
+                        h, w = struct.unpack(">HH", f.read(4))
+                        return w, h
+                    f.seek(ln - 2, 1)
+    except OSError:
+        return None
+    return None
+
+
+def fix_img_dims(html: str) -> str:
+    """把 next/image 遗留的占位 width/height（一律 1200×800）改成图片真实尺寸，避免加载前后跳动。"""
+    def repl(m):
+        tag = m.group(0)
+        sm = re.search(r'<img\b[^>]*\ssrc="([^"]+)"', tag)
+        if not sm or "images/" not in sm.group(1):
+            return tag
+        name = sm.group(1).split("images/", 1)[1].split("?", 1)[0]
+        dim = img_size(PROJECT / "images" / name)
+        if not dim:
+            return tag
+        tag = re.sub(r'\swidth="\d+"', f' width="{dim[0]}"', tag)
+        tag = re.sub(r'\sheight="\d+"', f' height="{dim[1]}"', tag)
+        return tag
+    return re.sub(r"<img\b[^>]*>", repl, html)
+
+
 def imgfix(html: str, rel: str) -> str:
     """把题面里的 content-images/ 引用改写为本地相对路径（src/srcset 通吃）。"""
     s = html.replace("/content-images/", rel + "images/")   # 绝对站根引用
     s = s.replace("content-images/", rel + "images/")        # 剩余裸相对引用
-    return s
+    return fix_img_dims(s)
 
 
 def md2html(md: str) -> str:
@@ -280,9 +331,10 @@ img{max-width:100%}
 /* ===== 学习区（讲解/动画）===== */
 .study{border-top:1px dashed var(--teal-soft);margin-top:16px;padding-top:14px}
 .study-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.study-tabs button{border:0;cursor:pointer;background:#5a7d8c40;color:var(--teal);border-radius:8px;
-  padding:8px 13px;font-size:12px;font-weight:800;font-family:inherit}
+.study-tabs button,.study-tabs a{border:0;cursor:pointer;background:#5a7d8c40;color:var(--teal);border-radius:8px;
+  padding:8px 13px;font-size:12px;font-weight:800;font-family:inherit;text-decoration:none;display:inline-block}
 .study-tabs button.on{color:var(--white);background:var(--teal)}
+.study-tabs a:hover{color:var(--white);background:var(--teal)}
 .study-pane{display:none}
 .study-pane.on{display:block}
 .explain{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
@@ -395,6 +447,11 @@ footer .wrap{width:min(1220px,100% - 64px);margin:0 auto}
   .question-navigation{gap:10px}
   .anim-frame{min-height:420px;height:56vh}
 }
+/* ===== 题图自适应：按真实宽高比显示，不放大、不超高 ===== */
+.question-body img,.answer-content img,.ref-answer img,.explain img,
+.qstem img,.aw-qstem img{max-width:100%;width:auto;height:auto;max-height:72vh}
+.choice-text img{max-width:100%;width:auto;height:auto;max-height:150px}
+.question-body .markdown-image,.answer-content .markdown-image{display:flex;justify-content:center;margin:10px 0}
 """
 
 # ---------------------------------------------------------------- JS
@@ -950,8 +1007,11 @@ def sheet_trigger() -> str:
 </button>"""
 
 
-def render_study(q: dict, rel: str) -> str:
-    """文字讲解 / 动画演示（可全屏）/ 解析视频三个面板（答案在 answer-region 内）。"""
+def render_study(q: dict, rel: str, preload: bool = False) -> str:
+    """文字讲解 / 动画演示（可全屏）/ 解析视频三个面板（答案在 answer-region 内）。
+
+    preload=True（单题模式）时动画 iframe 直接加载，点开即看，无需等切换后现拉。
+    """
     explain_file = PROJECT / "data" / "explain" / f"{q['id']}.md"
     anim_file = PROJECT / "anim" / f"{q['id']}.html"
     if explain_file.exists():
@@ -959,12 +1019,16 @@ def render_study(q: dict, rel: str) -> str:
     else:
         explain_html = '<p style="color:#586e72">讲解编写中，敬请期待。</p>'
     if anim_file.exists():
+        if preload:
+            frame = f'<iframe class="anim-frame" src="{rel}anim/{q["id"]}.html" loading="eager" title="交互动画"></iframe>'
+        else:
+            frame = f'<iframe class="anim-frame" data-lazy="{rel}anim/{q["id"]}.html" loading="lazy" title="交互动画"></iframe>'
         anim_pane = f"""
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
   <a class="video-link" style="border-color:var(--teal-soft);color:var(--teal)" href="{rel}anim/{q['id']}.html" target="_blank" rel="noopener noreferrer">↗ 新窗口打开动画</a>
 </div>
-<iframe class="anim-frame" data-lazy="{rel}anim/{q['id']}.html" loading="lazy" title="交互动画"></iframe>"""
+{frame}"""
     else:
         anim_pane = '<div class="anim-empty">🎬 该题的交互演示正在由生成流水线制作，完成后自动替换。</div>'
 
@@ -972,13 +1036,15 @@ def render_study(q: dict, rel: str) -> str:
                   f'<span aria-hidden="true">▶</span>本题解析视频（B 站）</a>'
                   if q["videoUrl"] else
                   '<p style="color:#586e72;font-size:13px">该题暂无对应的 B 站讲解视频（原站早年大题未收录）。</p>')
+    video_tab = (f'<a data-tab="video" href="{esc(q["videoUrl"])}" target="_blank" rel="noopener noreferrer">📺 解析视频</a>'
+                 if q["videoUrl"] else '<button data-tab="video">📺 解析视频</button>')
 
     return f"""
 <div class="study">
   <div class="study-tabs">
     <button data-tab="explain">📝 文字讲解</button>
     <button data-tab="anim">🎬 动画演示</button>
-    <button data-tab="video">📺 解析视频</button>
+    {video_tab}
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain">{explain_html}</div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">{anim_pane}</div></div>
@@ -1049,7 +1115,7 @@ def render_card(q: dict, rel: str, focus: bool = False) -> str:
     if q["videoUrl"]:
         parts.append(f'<div class="video-link-row"><a class="video-link" href="{esc(q["videoUrl"])}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶</span>本题解析视频（B 站）</a></div>')
     parts.append(f'<span class="card-page-number">{q["number"]}</span>')
-    parts.append(render_study(q, rel))
+    parts.append(render_study(q, rel, preload=focus))
     parts.append('</article>')
     return "\n".join(parts)
 
@@ -1252,8 +1318,32 @@ def build(meta: dict, all_q: list[dict]) -> None:
     (adir2 / "style.css").write_text(CSS, encoding="utf-8")
     (adir2 / "app.js").write_text(APP_JS, encoding="utf-8")
 
+    # ---------- 动画页注入「文字讲解」（与动画同页，可折叠） ----------
+    n_explain = 0
+    for q in all_q:
+        af = adir / f"{q['id']}.html"
+        ef = PROJECT / "data" / "explain" / f"{q['id']}.md"
+        if not af.exists() or not ef.exists():
+            continue
+        src = af.read_text(encoding="utf-8")
+        block = (
+            "<!-- AW_EXPLAIN_START -->\n"
+            '<details class="aw-explain" open>\n'
+            '<summary><span class="aw-explain-title">📝 文字讲解</span>'
+            '<span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>\n'
+            f'<div class="aw-explain-body">{md2html(ef.read_text(encoding="utf-8"))}</div>\n'
+            "</details>\n<!-- AW_EXPLAIN_END -->"
+        )
+        if "<!-- AW_EXPLAIN_START -->" in src:
+            src = re.sub(r"<!-- AW_EXPLAIN_START -->.*?<!-- AW_EXPLAIN_END -->", lambda m: block,
+                         src, flags=re.S)
+        else:
+            src = src.replace("</body>", block + "\n</body>", 1)
+        af.write_text(src, encoding="utf-8")
+        n_explain += 1
+
     print(f"站点已生成：首页 1 + 年份页 {len(by_year)} + 单题页 {len(all_q)}"
-          f" + 知识点/搜索/错题本 3 + 动画占位 {n_placeholder}")
+          f" + 知识点/搜索/错题本 3 + 动画占位 {n_placeholder} + 动画讲解注入 {n_explain}")
 
 
 def main():

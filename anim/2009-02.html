@@ -88,5 +88,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：由出队顺序反推栈的最小容量</h2>
+<h3>第一步：把题意翻译成进出栈序列</h3>
+<p>每个元素<strong>出栈后立即入队</strong>，所以出队顺序就是出栈顺序：b, d, c, f, e, a, g；而入栈顺序固定为 a ~ g。问题变成：支持这组出栈序列的最小栈深是多少。求最小容量的标准策略是<strong>按需进栈</strong>：想出栈谁，才把它（连同压在它上面的元素）压进来，能不压就不压。</p>
+<h3>第二步：逐步模拟</h3>
+<table><thead><tr><th>操作</th><th>栈内（右为栈顶）</th><th>已出队</th><th>栈深</th></tr></thead><tbody><tr><td>进 a、进 b</td><td>a b</td><td>—</td><td>2</td></tr><tr><td>出 b</td><td>a</td><td>b</td><td>1</td></tr><tr><td>进 c、进 d</td><td>a c d</td><td>b</td><td><strong>3</strong></td></tr><tr><td>出 d、出 c</td><td>a</td><td>b d c</td><td>1</td></tr><tr><td>进 e、进 f</td><td>a e f</td><td>b d c</td><td><strong>3</strong></td></tr><tr><td>出 f、出 e、出 a</td><td>空</td><td>b d c f e a</td><td>0</td></tr><tr><td>进 g、出 g</td><td>空</td><td>b d c f e a g</td><td>1</td></tr></tbody></table>
+<h3>第三步：看最大栈深</h3>
+<p>峰值出现在「c、d 连压」和「e、f 连压」两个时刻，都是 <strong>3</strong>。为什么必须连压：d 要先于 c 出栈，而 c 已入栈，只能压上 d 等 d 先走；f 对 e 同理。容量为 2 时 d 根本进不去，序列无法完成，所以<strong>容量至少为 3</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误算成 2</strong>：只盯着「大多数时候栈里只有 1～2 个元素」，忽略了峰值瞬间。</li><li><strong>误算成 4 以上</strong>：把 a ~ g 全部先压完再出栈，那样出栈序是 g…a，根本得不到要求的序列。</li></ul>
+<blockquote>结论：答案选 <strong>C（栈的容量至少是 3）</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

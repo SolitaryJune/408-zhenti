@@ -68,5 +68,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：read 系统调用的三个判断</h2>
+<p><strong>答案：A（仅Ⅰ、Ⅱ）</strong>。</p>
+<h3>第一步：理解 read 的执行流程</h3>
+<p>用户进程调用 read 读取磁盘文件时：先通过陷入指令把请求交给内核 → CPU 从<strong>用户态切换到核心态</strong>，由内核执行系统调用 → 内核检查所需数据是否已在内存（缓冲区/页缓存）中 → 若不在，发起磁盘 I/O，进程<strong>阻塞（睡眠）等待</strong>数据到来；I/O 完成后被唤醒继续执行。</p>
+<h3>第二步：逐条判断</h3>
+<ul><li><strong>Ⅰ 正确</strong>：数据不在内存时必须等待磁盘传输完成，调用 read 的进程主动进入睡眠（阻塞）状态，让出 CPU。</li><li><strong>Ⅱ 正确</strong>：系统调用要执行特权指令、访问内核数据结构，必须先由用户态切入核心态，这是系统调用的固有过程。</li><li><strong>Ⅲ 错误</strong>：read 的参数是<strong>文件描述符 fd</strong>（open 时返回的编号），而不是文件名。文件名只在 open 系统调用中使用，之后内核靠打开文件表项定位文件，read 只需要 fd、缓冲区地址和长度。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>把Ⅲ当对</strong>：混淆 open 与 read 的参数——open 用文件名，read 用 fd。</li><li><strong>误判Ⅰ</strong>：以为请求 I/O 的进程仍继续运行——同步 read 在数据未就绪时必然阻塞等待。</li></ul>
+<blockquote>结论：Ⅰ、Ⅱ 正确，Ⅲ 错误，选 <strong>A</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

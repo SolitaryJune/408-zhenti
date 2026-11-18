@@ -58,5 +58,20 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：哪些指令只能在内核态执行</h2>
+<p><strong>答案：B。</strong> 只有 I/O 指令属于特权指令，只能在内核态执行；trap、设置断点、数据传送这三类指令用户态都能执行。</p>
+<h3>第一步：抓住特权指令的判据</h3>
+<p>判断一条指令是否特权，不看它"是否少见"，而看<strong>它一旦被用户程序滥用，会不会破坏系统或侵犯其他进程</strong>。凡直接操纵硬件设备、影响系统全局状态的指令（I/O 指令、开/关中断、置时钟、清内存等）都必须收归内核态，用户态执行会被硬件拒绝。</p>
+<h3>第二步：逐项检验四个选项</h3>
+<table><thead><tr><th>选项</th><th>指令</th><th>用户态能否执行</th></tr></thead><tbody><tr><td>A</td><td>trap 指令</td><td>能，它的作用正是主动陷入内核态</td></tr><tr><td>B</td><td>I/O 指令</td><td>不能，是特权指令</td></tr><tr><td>C</td><td>数据传送指令</td><td>能，寄存器与内存间搬数据</td></tr><tr><td>D</td><td>设置断点指令</td><td>能，调试用，断点陷入由系统接管</td></tr></tbody></table>
+<p><strong>A（trap 指令）</strong>：即访管/陷入指令，用户程序靠它发起系统调用、从用户态进入内核态，它本身就是用户态可执行的指令。<strong>C（数据传送指令）</strong>：普通指令，用户程序的每条语句都在用。<strong>D（设置断点指令）</strong>：用于程序调试，断点处的陷入处理由系统接管，但"下断点"这条指令用户态就能执行。<strong>B（I/O 指令）</strong>：直接驱动设备，若用户态可用，任何程序都能绕过操作系统随意读写设备、破坏系统，故只能在内核态执行。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 trap 当特权指令</strong>：trap 是"进入内核的门"，门槛本身在门外，选 A 正中陷阱。</li><li><strong>把设置断点指令当特权指令</strong>：断点中断的处理程序在内核态，但设置断点的指令用户态可用。</li><li><strong>误以为普通指令也要保护</strong>：数据传送指令只动用户自己的数据，不威胁系统全局。</li></ul>
+<blockquote>记忆锚点：I/O、开/关中断、置时钟、清内存这类"碰硬件、动全局"的指令都是特权指令。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

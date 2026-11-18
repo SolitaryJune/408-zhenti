@@ -90,5 +90,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：交叉编址主存读取 double 的存储周期数</h2>
+<h3>第一步：定位 x 的 8 个字节</h3>
+<p>主存按字节编址，4 个 64M×8 位芯片低位交叉编址：地址低 2 位选芯片（芯片号 = 地址 mod 4），每个芯片一次读出 1 字节。double 占 8 字节，首地址 804001AH，末地址 8040021H。</p>
+<table><thead><tr><th>字节</th><th>1A</th><th>1B</th><th>1C</th><th>1D</th><th>1E</th><th>1F</th><th>20</th><th>21</th></tr></thead><tbody><tr><td>芯片号</td><td>2</td><td>3</td><td>0</td><td>1</td><td>2</td><td>3</td><td>0</td><td>1</td></tr></tbody></table>
+<h3>第二步：确定一个周期能读多少</h3>
+<p>4 个芯片共用地址总线的高位地址：一个存储周期里各芯片只能各读出"高位地址相同"的那 1 个字节，拼成一个对齐的 4 字节组（32 位）。对齐组为 8040018H～1BH、804001CH～1FH、8040020H～23H。</p>
+<table><thead><tr><th>存储周期</th><th>读出的对齐组</th><th>属于 x 的字节</th></tr></thead><tbody><tr><td>1</td><td>8040018H～1BH</td><td>1A、1B</td></tr><tr><td>2</td><td>804001CH～1FH</td><td>1C、1D、1E、1F</td></tr><tr><td>3</td><td>8040020H～23H</td><td>20、21</td></tr></tbody></table>
+<h3>第三步：合计</h3>
+<p>x 的 8 个字节横跨 3 个对齐组，需 3 个存储周期，<strong>答案：C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>按"任意 4 字节都能一次读"算成 2</strong>：以为 1A～1D、1E～21 各读一次即可，忽略了交叉编址下 4 个芯片共享高位地址，同一周期只能读出一个对齐的 4 字节组。</li><li><strong>芯片号算错</strong>：1AH 的低 2 位是 10B（芯片 2），要看二进制的最低两位。</li><li><strong>忘了 double 占 8 字节</strong>：按 4 字节算就会少一个周期。</li></ul>
+<blockquote>记忆锚点：低位交叉编址一次并行读出的 32 位一定是对齐的 4 字节组；起始地址未对齐就要多花周期。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

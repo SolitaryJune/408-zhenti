@@ -66,5 +66,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：改进型 CLOCK 算法的淘汰次序</h2>
+<h3>第一步：明确两个标志的含义</h3>
+<p>页表项中 <strong>A（访问位）</strong>：最近是否被访问过；<strong>M（修改位）</strong>：是否被修改过。淘汰页面时的追求有两点：换出<strong>最近不常用</strong>的页，并且<strong>写回磁盘的代价越小越好</strong>（改过的页必须写回，没改过的直接丢弃）。</p>
+<h3>第二步：按淘汰代价给四类页排序</h3>
+<ul><li><strong>(0,0)</strong>：既没访问又没修改——最"冷"、又不用写回，代价最小，<strong>最先淘汰</strong>；</li><li><strong>(0,1)</strong>：没访问但修改过——虽然冷，但淘汰前必须先写回磁盘，代价次之；</li><li><strong>(1,0)</strong>：访问过但没修改——还算"热"，不过可以不写回直接丢弃；</li><li><strong>(1,1)</strong>：访问过又修改过——最热、还要写回，<strong>最不该淘汰</strong>。</li></ul>
+<h3>第三步：得出结论</h3>
+<p>淘汰次序为 <strong>(0,0) → (0,1) → (1,0) → (1,1)</strong>，选 <strong>A</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把修改位放在访问位之前</strong>：误选 B——改进型 CLOCK 首先看重访问位（未访问的 A=0 优先于已访问的 A=1）。</li><li><strong>认为 (1,0) 比 (0,1) 先淘汰</strong>：恰恰相反——(0,1) 虽然冷但要写回，(1,0) 虽然热但丢弃无代价，算法里 (0,1) 排在 (1,0) 前面。</li><li><strong>记成 (1,1) 优先</strong>：访问过 + 修改过的页最不可能被淘汰，它排最后。</li></ul>
+<blockquote>记忆口诀：先看 A 再看 M，按 00、01、10、11 的次序淘汰。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

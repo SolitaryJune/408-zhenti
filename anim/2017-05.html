@@ -89,5 +89,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：由后序序列＋树形反推结点层次</h2>
+<p><strong>答案：B</strong>（与 a 同层的是 d）。</p>
+<h3>第零步：先立机制——后序"左·右·根"决定谁排最后</h3>
+<p>后序遍历中，任何结点都要等它的整棵子树输出完才轮到自己，所以<strong>序列最后一位一定是整棵树的根 f</strong>。同理，把 f 的左右子树切开之后，每段的末位就是该子树的根——后序的"末位定根"在每一层都成立。</p>
+<h3>第一步：按树形切分左右子树</h3>
+<p>切分位置不能猜，由题图决定：根有两个孩子，两个孩子各只带一个孩子，各孙子也各只带一个孩子，共 1+2+2+2 = 7 个结点，左右子树各 3 个。于是后序 <code>e a c b d g f</code> 切成：左子树 <code>e a c</code>，右子树 <code>b d g</code>。</p>
+<h3>第二步：单链子树自底向上定层</h3>
+<p><strong>为什么单链的后序恰好是"从叶到根"？</strong> 链上每层只有一个孩子，后序 = "孩子子树的后序 + 自己"，递归展开就是：叶子、叶子的父亲、……、子树根，逐层向上。所以左段 <code>e a c</code> → c（第 2 层，左子树根）、a（第 3 层）、e（第 4 层）；右段 <code>b d g</code> → g（第 2 层）、d（第 3 层）、b（第 4 层）。</p>
+<table><thead><tr><th>层号</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>结点</td><td>f</td><td>c、g</td><td><strong>a、d</strong></td><td>e、b</td></tr></tbody></table>
+<h3>第三步：回答问题并核对干扰项</h3>
+<p>a 在第 3 层，同层的只有 <strong>d</strong> → 选 <strong>B</strong>。其余三项为什么不对：f 是根（第 1 层）；c、g 在第 2 层——它们与 a 同在一条（子）链上却高一层，把"同子树/同链"误当"同层"，正是误选 C、D 的来源；f 则是最高的祖先。</p>
+<h3>易错点</h3>
+<ul><li><strong>跳过"树形定切分"这一步</strong>：不先由图确定左 3 右 3，后序就没法切，切错一段层次全错。</li><li><strong>层次数错起点</strong>：根是第 1 层，a、d 在第 3 层而不是第 2 层。</li><li><strong>混淆"同层"与"同子树"</strong>：c、g 与 a 同在半边子树里，但层号不同。</li></ul>
+<blockquote>一句话结论：后序末位定根 → 树形定左右段 → 单链段后序自叶向根逐层读出，a、d 同在第 3 层。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

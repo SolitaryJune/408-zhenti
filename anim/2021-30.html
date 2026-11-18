@@ -56,5 +56,23 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：删除文件时内核做什么、不做什么</h2>
+<p><strong>答案：A。</strong> 删除目录 dir 下的文件 file1，内核不必完成"删除 file1 的快捷方式"。</p>
+<h3>第一步：列出删除文件的内核动作</h3>
+<p>删除一个文件，内核的标准动作是：</p>
+<ol><li>在目录 dir 中找到并<strong>删除 file1 对应的目录项</strong>（即选项 D）；</li><li><strong>释放 file1 的文件控制块 FCB（索引结点）</strong>（即选项 B）；</li><li><strong>回收 file1 占用的磁盘空间</strong>，包括数据块和索引块（即选项 C）。</li></ol>
+<p>B、C、D 都是删除文件必须完成的工作。</p>
+<h3>第二步：分析选项 A</h3>
+<p>快捷方式（符号链接）是<strong>另一个独立的文件/目录项</strong>，其中保存的是指向 file1 的路径信息。删除 file1 时：</p>
+<ul><li>内核的删除动作只作用于 file1 自身的目录项、FCB 和磁盘空间；</li><li>指向它的快捷方式并不会被联动删除（之后访问该链接才会发现目标失效）；若把"删快捷方式"当成删除 file1 的必要步骤，反而违背了链接机制的语义。</li></ul>
+<p>所以"删除 file1 的快捷方式"不是内核删除文件必须完成的工作，选 A。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为快捷方式会被联动删除</strong>：符号链接与目标文件是两个独立条目，删除目标不影响链接文件本身。</li><li><strong>把"释放磁盘空间"漏掉</strong>：只删目录项是"假删除"，真正的删除必须释放 FCB 并回收磁盘块，否则空间泄漏。</li></ul>
+<blockquote>记忆锚点：删除文件三件套——删目录项、释放 FCB、回收磁盘块；快捷方式不在其列。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

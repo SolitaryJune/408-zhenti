@@ -103,5 +103,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：拓扑序列个数的枚举</h2>
+<p><strong>答案：B。</strong></p>
+<h3>第一步：整理图与入度</h3>
+<p>边集：a→b、a→c、a→e、b→c、c→d、e→d。入度：a 为 0，b、e 各为 1，c、d 各为 2。关键点：<strong>d 同时等待 c 和 e</strong>，两者都输出后 d 才能输出。</p>
+<h3>第二步：按规则逐层枚举</h3>
+<p>拓扑排序每一步只能从「前驱已全部输出」的顶点中选一个：</p>
+<table><thead><tr><th>已输出</th><th>此时可选</th><th>走向</th></tr></thead><tbody><tr><td>空</td><td>a（唯一 0 入度）</td><td>输出 a</td></tr><tr><td>a</td><td>b、e</td><td>两条分支</td></tr><tr><td>a, b</td><td>c、e</td><td>选 c：后续被锁死；选 e：再选 c</td></tr><tr><td>a, b, c</td><td>e</td><td>只能 e，再 d → abced</td></tr><tr><td>a, b, e</td><td>c</td><td>只能 c，再 d → abecd</td></tr><tr><td>a, e</td><td>b</td><td>只能 b，再 c、d → aebcd</td></tr></tbody></table>
+<h3>第三步：汇总</h3>
+<p>共得到 3 个拓扑序列：<strong>abced、abecd、aebcd</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉 abecd 或 aebcd</strong>：以为 b 必须紧跟 a；其实 a 输出后 e 也立刻可选。</li><li><strong>多算 abcde</strong>：d 排在 e 前面是非法的，因为 e→d 这条边要求 e 先输出。</li></ul>
+<blockquote>结论：不同的拓扑序列共 3 个，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

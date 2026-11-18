@@ -161,5 +161,29 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：指令编码、控制信号序列与时钟周期数</h2>
+<p><strong>答题框架</strong>：先立总机制——指令执行 = 公共的取指阶段 + 按操作码分支的执行阶段；图 a 中每行是一拍内同时有效的控制信号。单总线的关键约束是：<strong>同一拍至多允许一个部件往总线上"发"数，但允许多个部件同时"收"</strong>——后面数周期、安排信号全靠它。第 1 问按位段切分求指令数，第 2 问按图 b 拼位串，第 3 问按"这一拍要完成什么数据流动"定信号取值，第 4 问按"一拍一个发送者 + 依赖不能合并"数周期。</p>
+<h3>第 1 问：最多可定义多少条指令</h3>
+<p>先看位段怎么切：目的、源1、源2 三个操作数各占"1 位寻址方式 + 2 位寄存器号"（<strong>为什么寄存器号是 2 位</strong>：R0~R3 共 4 个寄存器，2 位恰好编号 0~3），共 3 × 3 = 9 位；剩下的 16 − 9 = <strong>7 位</strong>给操作码。7 位操作码可区分 2 的 7 次方 = <strong>128 条</strong>指令——"最多"就是把每一位都用满、不留非法码。</p>
+<h3>第 2 问：三条指令的机器代码</h3>
+<p>拼装规则：按图 b 从左到右依次填 OP、Md、Rd、Ms1、Rs1、Ms2、Rs2。<strong>为什么未用字段填 0</strong>：指令字长定死 16 位，译码器只按固定位段切分；单地址指令没有源 1、源 2（末 6 位），二地址指令没有源 2（末 3 位），这些位置没有操作数可填，约定补 0 占位。寻址方式位 0 = 寄存器直接、1 = 寄存器间接——<code>sub R3,(R1),R2</code> 的源 1 写作 (R1)，含义是"R1 里放的是地址"，故 Ms1 = 1。</p>
+<table><thead><tr><th>指令</th><th>OP</th><th>Md Rd</th><th>Ms1 Rs1</th><th>Ms2 Rs2</th><th>机器代码</th></tr></thead><tbody><tr><td>inc R1</td><td>0000001</td><td>0 01</td><td>0 00</td><td>0 00</td><td><code>0000 0010 0100 0000</code> = 0240H</td></tr><tr><td>shl R2,R1</td><td>0000010</td><td>0 10</td><td>0 01</td><td>0 00</td><td><code>0000 0100 1000 1000</code> = 0488H</td></tr><tr><td>sub R3,(R1),R2</td><td>0000011</td><td>0 11</td><td>1 01</td><td>0 10</td><td><code>0000 0110 1110 1010</code> = 06EAH</td></tr></tbody></table>
+<p>（inc 是单地址指令——末 6 位为 0；shl 是二地址指令——末 3 位为 0；sub 用满三地址。）</p>
+<h3>第 3 问：图 a 中 ①~⑧ 的控制信号或取值</h3>
+<p>读图 a 的方法：每个标号出现在某一拍的某个信号位上，先问"这一拍要把数据从哪送到哪、部件做什么动作"，再定取值。</p>
+<table><thead><tr><th>标号</th><th>位置与这一拍要完成的动作</th><th>取值</th><th>为什么是这个值</th></tr></thead><tbody><tr><td>①</td><td>取指阶段 MUXop</td><td>0</td><td>下条指令地址 = (PC)+2，必须选常数 2 这一路输入（选 1 会取到总线上的 (PC)）</td></tr><tr><td>②</td><td>取指阶段 SRop</td><td>mov</td><td>(PC)+2 原样过移位器送上总线写回 PC，不移位</td></tr><tr><td>③</td><td>shl 的 ALUop</td><td>mova</td><td>(R1) 先经 ALU <strong>直送</strong>（数值不变）进 SR，真正的 ×2 由 SR 左移完成</td></tr><tr><td>④</td><td>shl 的 SRop</td><td>left</td><td>左移一位 = (R1)×2</td></tr><tr><td>⑤</td><td>sub 的 MEMop</td><td>read</td><td>源 1 是 (R1)（间接寻址），((R1)) 在主存里，须发读命令取回 MDR</td></tr><tr><td>⑥</td><td>sub 的 ALUop</td><td>sub</td><td>完成 (R2) − ((R1))：A 端来自 T，B 端经 MUX 取 MDR</td></tr><tr><td>⑦</td><td>sub 的 SRop</td><td>mov</td><td>减法结果不需移位，直送</td></tr><tr><td>⑧</td><td>sub 中取值 1 的信号</td><td>SRout</td><td>结果要上总线写回 R0，必须打开 SR 输出的三态门</td></tr></tbody></table>
+<p>顺带看懂取指阶段第一拍：PCout = 1 让 (PC) 上总线，MARin 与 Tin 同时为 1——<strong>"一拍一个发送者"限制的是发送端，接收端可以并列多个</strong>，一次总线传输同时喂了 MAR（发起访存）和 T（ALU 的 A 端口）两个去处。</p>
+<h3>第 4 问：执行阶段至少需要多少个时钟周期</h3>
+<p>先立两条硬约束：<strong>其一</strong>，单总线同一拍只允许一个部件往总线上发数；<strong>其二</strong>，有依赖的动作不能合并——必须先给 MAR 装地址才能发读命令，必须等 MDR 收到数据才能 MDRout，ALU 的 A 端口只认 T，T 必须先装载。</p>
+<p>指令"sub R1, R3, (R2)"（(R3) − ((R2)) → R1）的执行阶段：</p>
+<table><thead><tr><th>周期</th><th>微操作</th><th>控制信号</th><th>为什么必须单独一拍</th></tr></thead><tbody><tr><td>1</td><td>(R2) → MAR，启动主存读</td><td>R2out、MARin、MEMop=read</td><td>地址先装进 MAR，读才有目标</td></tr><tr><td>2</td><td>(R3) → T</td><td>R3out、Tin</td><td>总线第 1 拍已被 (R2) 占用，只能挪到这一拍</td></tr><tr><td>3</td><td>((R2)) 经 MUX 到 B 端，ALU 相减，结果进 SR</td><td>MDRout、MUXop=1、ALUop=sub、SRop=mov</td><td>MDR 读完才有数，此时总线让给 MDR</td></tr><tr><td>4</td><td>结果上总线写回 R1</td><td>SRout、R1in</td><td>结果在第 3 拍末才产生，且第 3 拍总线已被 MDR 占用</td></tr></tbody></table>
+<p>→ 至少 <strong>4 个时钟周期</strong>，四拍环环相扣，无可合并。</p>
+<p>指令"inc R1"（(R1) + 1 → R1）：周期 1：(R1) → T（R1out、Tin）；周期 2：ALU 做 A+1，结果经 SR 上总线写回 R1（ALUop=inc、SRop=mov、SRout、R1in）→ 至少 <strong>2 个时钟周期</strong>。<strong>为什么不能 1 拍</strong>：ALU 的 A 端口只认 T，(R1) 必须先落入 T 才能参与运算；而总线上同一拍只能有一个发送者，取数与回写不可能同拍完成。</p>
+<blockquote>三步法：拼格式 → 对信号（看这一拍的数据流向）→ 数周期（一拍一个发送者 + 依赖不能合并）。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

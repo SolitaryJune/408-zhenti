@@ -152,5 +152,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：确认帧从物理层能到达哪些主机</h2>
+<p><strong>答案：D（仅 H2、H3）。</strong></p>
+<h3>第一步：认清两种设备的转发规则</h3>
+<p>Hub（物理层）收到信号后向其余所有端口广播；Switch（数据链路层）按自学习 MAC 地址表转发：表中已有目的 MAC 就<strong>定向转发</strong>，没有才洪泛。</p>
+<h3>第二步：跟踪两个帧的路径</h3>
+<ol><li><strong>数据帧（H2→H4）</strong>：Switch 收到后登记"MAC H2 ↔ H2 端口"；表中没有 H4，向 H1、R2、Hub 洪泛；Hub 再广播给 H3、H4，H4 收到（H1 也收到了数据帧）。</li><li><strong>确认帧（H4→H2）</strong>：H4 发出后，Hub 无条件广播 → 同在 Hub 上的 <strong>H3 从物理层收到</strong>；Switch 从上行口收到，查表发现 H2 的端口已知 → <strong>只从 H2 端口定向转发</strong>，<strong>H2 收到</strong>。</li></ol>
+<h3>易错点</h3>
+<ul><li><strong>选 C（把 H1 算进去）</strong>：H1 收到的是先前洪泛的<strong>数据帧</strong>；确认帧因 Switch 已学到 H2 的位置而被过滤，H1 收不到。</li><li><strong>把 Switch 当 Hub 用</strong>：若 Switch 洪泛确认帧，R2 也能收到；但交换机查地址表定向转发，这正是它与集线器的本质区别。</li><li><strong>忽略前一帧的学习作用</strong>：没有 H2 先发的数据帧，Switch 表中就没有 H2，确认帧会被洪泛——题干"先发数据帧"是关键铺垫。</li></ul>
+<blockquote>Hub 广播一切，Switch 查表定向：确认帧经 Hub 到 H3、经 Switch 到 H2，除 H4 外仅 H2、H3 收到。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

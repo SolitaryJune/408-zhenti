@@ -216,5 +216,36 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：补码算术右移与 5 段流水线的阻塞推演</h2>
+<h3>第 0 步：先立好"游戏规则"——本题所有拍数都由两条规则推出</h3>
+<p>5 段流水线：IF 取指 → ID 译码/读寄存器 → EX 执行/计算有效地址 → M 访存 → WB 写回。题目附加的三个条件拧成两条规则：</p>
+<ul><li><strong>规则一（数据相关的代价）</strong>：没有转发技术，且同一寄存器的读写不能在同一时钟周期进行 → 后条指令在 ID 段读某寄存器，最早要排在写该寄存器的 WB 的<strong>下一拍</strong>。</li><li><strong>规则二（按序发射）</strong>：前一条指令还没完成发射（进入 ID）之前，后一条指令不能超前取指/前进 → 一处阻塞会沿流水线<strong>向后传染</strong>。</li></ul>
+<p>无阻塞时的拍数公式也顺带说清：第 1 条指令第 5 拍走完 WB，此后每个时钟周期流出一条 → k 条指令共 5 + (k−1) = <strong>k＋4</strong> 拍。</p>
+<h3>第 1 问：执行 SHR R1 后 R1 的内容</h3>
+<p>SHR 是<strong>算术右移</strong>：右移一位、最高位补符号位，数值上等价于补码值 ÷2 再向下取整。先把 −513 写成 16 位补码：513 = 2⁹＋1，原码 = <code>1000 0010 0000 0001</code>（8201H），取反加一 → 补码 <code>1111 1101 1111 1111</code> = FDFFH（验证：65536 − 513 = 65023 = FDFFH，两条路一致）。</p>
+<p>右移、高位补符号位 1：<code>1111 1101 1111 1111</code> → <code>1111 1110 1111 1111</code> = <strong>FEFFH</strong>。用"÷2 向下取整"验证：⌊−513 ÷ 2⌋ = −257，而 −257 = 65536 − 257 = FEFFH ✓。</p>
+<p>为什么负数右移要补 1 而不是补 0：补码是模 65536 的记数，负数高位往左全是"1"；算术右移把符号位复制回来，才能保持"仍是负数、值恰为除以 2"。若按逻辑右移补 0，FDFFH 会变成 <code>0111 1110 1111 1111</code> = 7EFFH（正数 32511），数值完全错了。</p>
+<h3>第 2 问：4 条指令无阻塞的时钟周期数</h3>
+<p>k = 4：4 + (5−1) = <strong>8 个时钟周期</strong>（第 5 拍第一条指令完成，之后每拍流出一条）。</p>
+<h3>第 3 问：I3 的 ID 段、I4 的 IF 段为什么被阻塞</h3>
+<p>指令序列：I1 <code>LOAD R1,[a]</code>、I2 <code>LOAD R2,[b]</code>、I3 <code>ADD R1,R2</code>、I4 <code>STORE R2,[x]</code>（ADD 按 (Rs)+(Rd)→Rd，和存入 R2）。</p>
+<ul><li><strong>I3 的 ID 被阻塞</strong>：I3 要在 ID 段同时读出 R1 和 R2；R1 由 I1 在第 5 拍 WB、R2 由 I2 在第 6 拍 WB。按规则一，最早第 7 拍才能读 → I3 第 3 拍完成取指后一直堵着，ID 推迟到第 7 拍。</li><li><strong>I4 的 IF 被阻塞</strong>：I3 一直没完成发射（第 7 拍才进入 ID）；按规则二，I4 不能越过 I3 取指 → IF 同样拖到第 7 拍。</li></ul>
+<table><thead><tr><th>指令</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th></tr></thead><tbody><tr><td>I1</td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I2</td><td></td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I3</td><td></td><td></td><td>IF</td><td>—</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td></tr><tr><td>I4</td><td></td><td></td><td></td><td>—</td><td>—</td><td>—</td><td>IF</td><td>—</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td></tr></tbody></table>
+<p>（"—"为等待拍；I4 的 ID 也要按规则一排在 I3 第 10 拍写回 R2 之后，故在第 11 拍。）</p>
+<h3>第 4 问：x = x * 2 + a 至少需要多少个时钟周期</h3>
+<p>先把语句翻译成指令。2×x 用 SHL 最省（<code>SHL Rd</code> 的功能就是 2×(Rd)→Rd，一条指令完成乘 2）；用 <code>ADD R1,R1</code> 也一样（R1←R1＋R1 = 2×R1），相关结构相同、总拍数不变。序列如下（ADD 的和按 (Rs)+(Rd)→Rd 落入 Rd，故最后存 R2）：</p>
+<ol><li>I1 <code>LOAD R1,[x]</code>　2. I2 <code>LOAD R2,[a]</code>　3. I3 <code>SHL R1</code>　4. I4 <code>ADD R1,R2</code>　5. I5 <code>STORE R2,[x]</code></li></ol>
+<p>用两条规则逐条推演：</p>
+<ul><li>I3 要读 R1，等 I1 第 5 拍写回 → ID 排第 6 拍（取指后堵第 4、5 拍）；</li><li>I4 要读 R1，等 I3 第 9 拍写回 → ID 排第 10 拍；I4 的 IF 等 I3 第 6 拍发射后才能取指，排第 6 拍；</li><li>I5 要读 R2，等 I4 第 13 拍写回 → ID 排第 14 拍；I5 的 IF 等 I4 完成发射（第 10 拍进入 ID）后才取指，排第 11 拍（I5 的 ID 反正要等第 14 拍，取指晚一两拍不影响总拍数）。</li></ul>
+<table><thead><tr><th>指令</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th></tr></thead><tbody><tr><td>I1</td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I2</td><td></td><td>IF</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I3</td><td></td><td></td><td>IF</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>I4</td><td></td><td></td><td></td><td>—</td><td>—</td><td>IF</td><td>—</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td><td></td><td></td><td></td><td></td></tr><tr><td>I5</td><td></td><td></td><td></td><td></td><td></td><td></td><td>—</td><td>—</td><td>—</td><td>—</td><td>IF</td><td>—</td><td>—</td><td>ID</td><td>EX</td><td>M</td><td>WB</td></tr></tbody></table>
+<p>I5 的 WB 在第 17 拍完成 → 至少 <strong>17 个时钟周期</strong>。为什么是"至少"：每个 ID 的推迟都由规则一强制、每处 IF 的推迟由规则二强制，已经没有任何一拍可以再压缩。</p>
+<h3>易错点</h3>
+<ul><li><strong>算术右移补 0</strong> → 错成 7EFFH；SHR 必须补符号位，才等价于 ÷2。</li><li><strong>无阻塞拍数公式记错</strong>：写成 5×4 = 20 或 4＋5 = 9；正确是 k＋(5−1) = 8。</li><li><strong>漏掉"读写不同拍"</strong>：把 I3 的 ID 排在第 6 拍（与 I2 的 WB 同拍读 R2）就不满足条件——使用者必须排在写者 WB 的下一拍。</li><li><strong>漏掉按序发射的传染</strong>：把 I4 的 IF 排第 4 拍、I5 的 IF 排第 7 拍，总拍数就会少算。</li></ul>
+<blockquote>记忆锚点：无转发 + 读写异拍 → 使用者的 ID = 写者 WB 的下一拍；按序发射 → 阻塞向后传染到 IF；无阻塞 k 条 = k＋4 拍。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

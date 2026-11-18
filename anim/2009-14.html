@@ -79,5 +79,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：组相联映射的 Cache 组号计算</h2>
+<p>答案：<strong>C（装入第 4 组）</strong>。</p>
+<h3>第 0 步：先立机制——主存块往 Cache 的哪里放</h3>
+<p>Cache 与主存之间<strong>以块为单位</strong>交换信息（本题每块 32B），所以第一步永远是「把字节地址折算成主存块号」——映射规则作用在<strong>块号</strong>上，不是单元号上。2 路组相联的摆放规则可以概括为「<strong>组间直接映射、组内全相联</strong>」：Cache 16 块分成 16 ÷ 2 = 8 组，主存块号 mod 组数决定它只能进哪个组；进了组以后放组内 0、1 两行中的哪一行，由替换算法现场决定。</p>
+<h3>第 1 步：定位主存块</h3>
+<p>主存块号 = ⌊129 ÷ 32⌋ = <strong>4</strong>（块 4 覆盖 128～159 号单元）。</p>
+<h3>第 2 步：映射取模</h3>
+<p>组号 = 主存块号 mod 组数 = 4 mod 8 = <strong>4</strong>，即主存块 4 只能进 Cache 第 4 组，组内位置不固定。</p>
+<table><thead><tr><th>步骤</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>主存块号</td><td>129 ÷ 32 取整</td><td>4</td></tr><tr><td>Cache 组数</td><td>16 ÷ 2（块数 ÷ 路数）</td><td>8</td></tr><tr><td>Cache 组号</td><td>4 mod 8</td><td>4</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>直接拿单元号取模</strong>：129 mod 8 = 1，得干扰项 B——映射按块进行，字节地址必须先除以块大小折算成块号。</li><li><strong>忘除以路数</strong>：把 16 当组数；组数永远是「块数 ÷ 路数」。</li><li><strong>混淆映射方式</strong>：直接映射是「块号 mod Cache 总块数」，组相联是「块号 mod 组数」——本题两者算出的数值恰好都是 4，但口径不同，不能靠背结果。</li></ul>
+<blockquote>记忆锚点：先折块号，再 mod 组数；组间直接映射、组内全相联，组内行号归替换算法管。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

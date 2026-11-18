@@ -59,5 +59,20 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：执行态变为阻塞态的条件</h2>
+<h3>第一步：先给结论</h3>
+<p>答案：<strong>D</strong>（仅 I、III、IV）。</p>
+<h3>第二步：逐项判断</h3>
+<ul><li><strong>I. 进程 P 读文件</strong>：文件在磁盘上，读文件要启动 I/O 并等待数据到达，进程在此期间无法继续推进 → 转阻塞态。</li><li><strong>II. 进程 P 的时间片用完</strong>：这是运行进程被剥夺 CPU，进程并没有等待任何事件，转为<strong>就绪态</strong>等待下次调度，不会进阻塞态。</li><li><strong>III. 进程 P 申请外设</strong>：外设可能正被其他进程占用，申请不到就必须等待 → 转阻塞态。</li><li><strong>IV. 进程 P 执行 wait() 操作</strong>：若信号量值不足（所等资源不可用），进程自我阻塞，挂到该信号量的等待队列 → 转阻塞态。</li></ul>
+<h3>第三步：区分「就绪」与「阻塞」</h3>
+<p>两种状态都在等待，区别在等待的对象：就绪态等的是 <strong>CPU（处理机资源）</strong>；阻塞态等的是 <strong>CPU 之外的某事件</strong>（I/O 完成、资源可用、信号量通知）。题目问的是「可能导致」，I、III、IV 在条件满足时会阻塞；II 无论何时都只变就绪。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 II 也算进去</strong>：时间片用完是「执行态→就绪态」，与阻塞无关。</li><li><strong>认为 IV 一定阻塞</strong>：wait() 在信号量值足够时立即通过、不阻塞；但题目只问可能性，故计入。</li></ul>
+<blockquote>转换口诀：等 CPU → 就绪；等别的事件 → 阻塞。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -109,5 +109,38 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：基址寻址里的补码符号扩展与大端存放</h2>
+<p>答案：<strong>D</strong>（EFFF FF15H）。</p>
+<h3>第 0 步：先把 FF12H 这个数"读对"——为什么是负数、为什么减 10000H</h3>
+<p>形式地址 FF12H 是 <strong>16 位补码</strong>。补码不是另一种数制，它是<strong>模运算下的记数方式</strong>：16 位一共 65536 个状态（0000H~FFFFH），把这个环从中间掰开——最高位为 0（0000H~7FFFH）表示 0 ~ +32767；<strong>最高位为 1（8000H~FFFFH）表示 −32768 ~ −1</strong>。</p>
+<p>所以判断就一句话：<strong>最高位为 1 → 负数；真值 = 无符号解释值 − 65536</strong>。</p>
+<p>FF12H 按无符号读是 65298，是负数，真值 = 65298 − 65536 = <strong>−238 = −EEH</strong>。</p>
+<p><strong>为什么"减 10000H"是合法的？</strong> 这正是补码的定义：位串 FF12H 代表 −238，是因为 −238 ≡ 65298 (mod 65536)。从位串求真值，减一次模即可。</p>
+<p><strong>"取反加一"同样对，还能互相印证</strong>：FF12H 取反得 00EDH，加 1 得 00EEH = 238 → 真值 −238。两条路结果必然一致——"取反加一"与"减模"在数学上是同一件事，选顺手的用。</p>
+<h3>第 1 步：为什么要符号扩展——32 位加法器不吃 16 位输入</h3>
+<p>EA = (BR) + A，BR = F000 0000H 是 <strong>32 位</strong>的，加法在 32 位加法器里做，−238 必须先写成 <strong>32 位补码</strong>：FFFF FF12H（高 16 位全补 1，低 16 位照抄）。</p>
+<p>规则：<strong>补码扩展 = 左边补符号位</strong>——负数补 1，正数补 0。</p>
+<p><strong>为什么补符号位数值不变？</strong> 直觉：给一个负补码数往左多写一串 1，它"欠的账"没变。数学上：FF12H ≡ −238 (mod 2¹⁶)，FFFF FF12H ≡ −238 (mod 2³²)——同一个负数在更大模下的化身。</p>
+<p><strong>反例正是干扰项 A</strong>：若补 0（零扩展），FF12H 变成 0000 FF12H = <strong>+65298</strong>，数值从 −238 变成 +65298，EA 就算成 F000 FF12H 了。</p>
+<p>（正数为什么补 0 没问题？正数没有"欠账"，左边加 0 不改变值——所以规则统一写成"补符号位"。）</p>
+<h3>第 2 步：算 EA——进位为什么可以扔</h3>
+<pre><code>  F000 0000H
++ FFFF FF12H
+= 1 EFFF FF12H   ← 第 33 位的进位</code></pre>
+<p>32 位机器只有 32 位地址线，第 33 位的 1 自然丢弃——<strong>模 2³² 运算本来就允许丢进位</strong>，丢掉 2³² 不影响 32 位内的余数。EA = <strong>EFFF FF12H</strong>。</p>
+<h3>第 3 步：大端方式决定 LSB 在哪</h3>
+<p>操作数 1234 FF00H 共 4 字节：12（MSB，最高有效字节）、34、FF、00（LSB，最低有效字节）。</p>
+<p><strong>大端 = 最高有效字节放最低地址</strong>，从 EA 开始依次摆放：</p>
+<table><thead><tr><th>地址</th><th>EFFF FF12H</th><th>EFFF FF13H</th><th>EFFF FF14H</th><th>EFFF FF15H</th></tr></thead><tbody><tr><td>内容</td><td>12（MSB）</td><td>34</td><td>FF</td><td>00（LSB）</td></tr></tbody></table>
+<p>LSB = 00H 落在 <strong>EA + 3 = EFFF FF15H</strong>，选 <strong>D</strong>。</p>
+<p>（若是小端，LSB 在 EA 本身——正是干扰项 B 的位置。）</p>
+<h3>易错点</h3>
+<ul><li><strong>零扩展代替符号扩展</strong> → F000 FF12H（干扰项 A）。FF12H 是负数，高位必须补 1。</li><li><strong>大小端弄反</strong> → EFFF FF12H（干扰项 C）。大端 = MSB 在低地址，所以 LSB 在最高地址 EA+3。</li><li><strong>不明白为什么减 10000H</strong> → 补码真值 = 无符号值 − 模（最高位为 1 时）；模就是"状态总数"65536。</li></ul>
+<blockquote>记忆锚点：负补码真值 = 无符号值 − 2ⁿ；符号扩展 = 高位补符号位、数值不变；大端 = MSB 在低地址 → <strong>LSB 在 EA + 字节数 − 1</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

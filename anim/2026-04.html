@@ -246,5 +246,25 @@ AW.init({
   },
 });
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：森林转二叉树的最小高度</h2>
+<p><strong>答案：B（6）</strong></p>
+<h3>第一步：转化规则决定「深度从哪来」</h3>
+<p>森林 F 转二叉树：第一棵树的根作二叉树的根，第 j 棵树的根是第 j−1 棵树根的右孩子——5 个树根连成一条右链，第 j 棵树的根必然落在二叉树第 j 层；每棵树内部按「左孩子、右兄弟」转化，树内结点还要继续往深处挂。</p>
+<h3>第二步：先求每棵树自己的最小转化高度</h3>
+<p>设 h(n) 为 n 个结点的树转成二叉树后的最小高度。树根的第一个孩子转成根的左子树，其余孩子转成根的右链，结点分得越均衡整体越矮：</p>
+<table><thead><tr><th>n</th><th>2</th><th>3</th><th>4</th><th>5</th><th>7</th></tr></thead><tbody><tr><td>h(n) 最小</td><td>2</td><td>3</td><td>3</td><td>4</td><td>4</td></tr></tbody></table>
+<p>例如 n=7：根的第一个孩子挂 4 个结点的子树（转化后高 3），第二个孩子挂 2 个结点的子树（转化后高 2），整棵转化后高 1 + max(3, 1+2) = 4。</p>
+<h3>第三步：树根右链叠加，大树排前面</h3>
+<p>第 j 棵树中最深结点落在二叉树第 j + h − 1 层。把转化高度大的树排在前面才能压低最大值，按 7,5,4,3,2 排列：</p>
+<table><thead><tr><th>次序 j</th><th>树大小</th><th>该树最深点所在层</th></tr></thead><tbody><tr><td>1</td><td>7</td><td>1 + 4 − 1 = 4</td></tr><tr><td>2</td><td>5</td><td>2 + 4 − 1 = 5</td></tr><tr><td>3</td><td>4</td><td>3 + 3 − 1 = 5</td></tr><tr><td>4</td><td>3</td><td>4 + 3 − 1 = 6</td></tr><tr><td>5</td><td>2</td><td>5 + 2 − 1 = 6</td></tr></tbody></table>
+<p>最大层数为 6。又因为第 5 棵树的根永远在第 5 层（右链长度固定），而它至少含 2 个结点、内部至少再下探 1 层，任何排列高度都不可能低于 6。故高度至少是 6，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>只算树根右链得 5</strong>：右链只确定 5 个根的层数，每棵树内部还有结点要往深挂。</li><li><strong>树序随意放</strong>：小树放前面会把大树挤向更深的层，例如按 2,3,4,5,7 排列时最大层数达 7。</li><li><strong>高估单棵树的转化高度</strong>：树高（如 7 结点的链形树高 7）不等于转化高度，要按「左孩子、右兄弟」重新算，本题各树的最小转化高度是 2,3,3,4,4。</li></ul>
+<blockquote>一句话结论：5 个树根成右链占第 1 至 5 层，结点最多的树排前面、内部再叠一层，最小高度为 6，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

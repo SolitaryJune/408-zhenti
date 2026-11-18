@@ -84,5 +84,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：有向图的拓扑序列判定</h2>
+<p>答案：<strong>D</strong>，<code>3, 1, 4, 2, 6, 5</code>。</p>
+<h3>第一步：数出每个顶点的入度</h3>
+<p>由题图，边为：3→1、1→2、1→4、3→6、4→2、4→6、2→5、6→5。入度表：</p>
+<table><thead><tr><th>顶点</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>入度</td><td>1</td><td>2</td><td>0</td><td>1</td><td>2</td><td>2</td></tr><tr><td>来自</td><td>3</td><td>1,4</td><td>—</td><td>1</td><td>2,6</td><td>3,4</td></tr></tbody></table>
+<p>拓扑排序每一步<strong>只允许输出当前入度为 0 的顶点</strong>，输出后把它发出的边全部删除。</p>
+<h3>第二步：一步步删除</h3>
+<table><thead><tr><th>步骤</th><th>输出</th><th>删边后各点入度（仅列存留点）</th><th>当前入度为 0 的候选</th></tr></thead><tbody><tr><td>1</td><td>3</td><td>1:0，4:1，2:2，5:2，6:1</td><td>只有 3</td></tr><tr><td>2</td><td>1</td><td>4:0，2:1，5:2，6:1</td><td>只有 1</td></tr><tr><td>3</td><td>4</td><td>2:0，6:0，5:2</td><td>2 和 6（可任选）</td></tr><tr><td>4</td><td>2</td><td>5:1，6:0</td><td>只有 6</td></tr><tr><td>5</td><td>6</td><td>5:0</td><td>只有 5</td></tr><tr><td>6</td><td>5</td><td>全部输出完</td><td>序列 3,1,4,2,6,5</td></tr></tbody></table>
+<h3>第三步：排除其他选项</h3>
+<ul><li><strong>A、B</strong>（第 3 个就输出 2）：此时 4 尚未输出，边 4→2 还在，2 的入度是 1 不为 0，<strong>非法</strong>。</li><li><strong>C</strong>（3,1,4,2,5,6）：输出 2 后边 6→5 还在，5 的入度是 1 不为 0，不能在 6 之前输出 5，<strong>非法</strong>。</li><li><strong>D</strong>：每一步输出的点在当时入度都是 0，<strong>合法</strong>（在"候选 2 和 6"处选了 2）。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>忘了删除出边</strong>：输出一个点后必须把它指向的所有边删掉，否则后续入度全错。</li><li><strong>候选不止一个时以为序列唯一</strong>：拓扑序列不唯一（第 3 步后选 6 先走也能排出合法序列），做题只需验证"每步入度为 0"。</li><li><strong>只看首结点</strong>：四个选项都以 3、1 开头，真正的区分点在第 3 位之后。</li></ul>
+<blockquote>记忆锚点：合法拓扑序列 = 每个元素输出时入度必为 0；检查选项就是逐位模拟删边。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

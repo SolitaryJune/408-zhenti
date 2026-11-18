@@ -136,5 +136,29 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：指令系统与五段流水线综合分析（按问展开）</h2>
+<p>答题框架：先用"地址间隔 × 指令字长"定编址单位，再用移位指令定元素大小，然后从机器码低 16 位解出 OFFSET 并验证转移公式，最后逐条排查数据相关与控制冒险。</p>
+<h3>第 1 问：存储器编址单位</h3>
+<p>指令地址依次为 08048100H、08048104H、08048108H……相邻指令地址相差 4；每条指令是 32 位定长 = 4 字节。地址加 1 对应 1 个存储单元，4 个单元正好放 1 条指令 → 每个地址单位是 1 字节，M 按<strong>字节编址</strong>。</p>
+<h3>第 2 问：数组 A 每个元素占多少位</h3>
+<p>指令 1 <code>sll R4, R2, 2</code> 把 i（R2）左移 2 位，即 i × 4；指令 2 <code>add R4, R4, R3</code> 得到元素地址 = 首地址 + i × 4。相邻元素地址间隔 4 字节，按字节编址 → 每个元素占 <strong>4 字节 = 32 位</strong>。</p>
+<h3>第 3 问：OFFSET 的值与转移目标地址公式</h3>
+<p>指令 6 bne 的机器代码为 <code>1446FFFAH</code>：按格式 OP(6) | Rs(5) | Rd(5) | OFFSET(16) 拆开，Rs = R2、Rd = R6，低 16 位 OFFSET = <code>FFFAH</code>，补码值为 <strong>−6</strong>。</p>
+<p>转移目标是 loop 即 08048100H：bne 位于 08048114H，取指后 PC 自动加 4 变为 08048118H；08048100H − 08048118H = −24 = −6 × 4。所以转移目标地址公式为：</p>
+<p><strong>目标地址 = (PC + 4) + OFFSET × 4</strong></p>
+<p>即以"下一条指令地址"为基准、以 4 字节（1 条指令的长度）为偏移单位。</p>
+<h3>第 4 问：流水线阻塞与冒险</h3>
+<p>数据相关（硬件不采取转发，后一条要用前一条刚写入的寄存器，必须等到对方写回后才能读到）：</p>
+<table><thead><tr><th>被阻塞指令</th><th>相关来源</th><th>相关寄存器</th></tr></thead><tbody><tr><td>指令 2 add R4,R4,R3</td><td>指令 1 sll 刚写 R4</td><td>R4</td></tr><tr><td>指令 3 load R5,0(R4)</td><td>指令 2 刚算出 R4（作访存基址）</td><td>R4</td></tr><tr><td>指令 4 add R1,R1,R5</td><td>指令 3 刚 load 出 R5</td><td>R5</td></tr><tr><td>指令 6 bne R2,R6,loop</td><td>指令 5 刚把 R2 加 1</td><td>R2</td></tr></tbody></table>
+<p>因数据相关而阻塞的指令：<strong>2、3、4、6</strong>。发生控制冒险的是<strong>指令 6</strong>（bne 是分支指令，条件判定前不知道下一条指令的地址）。</p>
+<p>指令 1 不因与指令 5 的数据相关而阻塞：指令 1 读的 R2 由<strong>上一轮循环</strong>的指令 5 写入；分支指令 bne 的执行引起 3 个时钟周期阻塞，这段等待足以让指令 5 完成对 R2 的写回，因此下一轮指令 1 在译码取数阶段读 R2 时它已就绪，不会再阻塞。</p>
+<h3>易错点</h3>
+<ul><li><strong>编址单位答成"字"</strong>：若按字编址，地址间隔 4 意味着一条指令占 4 字（16 字节），与 32 位定长矛盾。</li><li><strong>OFFSET 漏乘 4</strong>：字节差是 −24，OFFSET 字段存的是"以指令为单位的偏移"−6，两者相差 4 倍。</li><li><strong>漏掉指令 6 的数据相关</strong>：bne 判断用的 R2 由指令 5 刚写入，指令 6 既数据相关又控制冒险。</li></ul>
+<blockquote>记忆锚点：地址差 4 + 指令 4 字节 → 字节编址；左移 2 位 = ×4 → 元素 32 位；目标 = (PC+4) + OFFSET×4；相关阻塞 2、3、4、6，控制冒险在 bne。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

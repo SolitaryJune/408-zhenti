@@ -68,5 +68,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：动态优先数调度与饥饿</h2>
+<h3>第 0 步：先把调度器的行为模型立起来</h3>
+<p>调度策略只有一句话：<strong>每次调度，选就绪队列中优先数（priority）最小的进程运行</strong>——数越小，优先级越高。这是一个"每次取全队列最小值"的确定性策略：某进程能不能上 CPU，只取决于"决策那一刻，队列里有没有比它优先数更小的进程"。饥饿的根源与解药都要从这个模型里找。</p>
+<h3>第（1）问：为什么 priority = nice 会饥饿</h3>
+<p>nice 是进程创建时由用户指定的<strong>静态优先数，一经设定不再改变</strong>。对某个 nice 较大的进程 P：</p>
+<ul><li>它在队列里等再久，自己的优先数也不会变——等待本身不产生任何补偿；</li><li>而系统会源源不断创建新进程，用户又可能给它们指定更小的 nice；只要<strong>每次调度决策时队列里总存在优先数比 P 更小的进程</strong>，P 就一次次落选；</li><li>"总能找到比我小的"长期成立，P 就长期得不到 CPU——这就是饥饿现象。</li></ul>
+<p>饥饿的机制在于：<strong>优先级静态 + 调度确定性取最小</strong>，等待时间对决策毫无影响，故饥饿可能发生（题问"可能"，存在这样的进程到达序列即可）。</p>
+<h3>第（2）问：动态优先数计算方法</h3>
+<p>设计方法：<code>priority = nice + k1 × cpuTime - k2 × waitTime</code>，其中 <strong>k1 &gt; 0，k2 &gt; 0</strong> 为可调参数。</p>
+<p><strong>为什么这样设计</strong>——让优先数随行为动态涨落，消除"静态钉死"：</p>
+<ul><li><strong>cpuTime 是惩罚项</strong>：进程处于执行态时 cpuTime 定时加 1、waitTime 置 0。连续占用 CPU 越久，priority 越大（优先级越低），会被就绪进程顶下去，防止 CPU 被单个进程长期霸占；</li><li><strong>waitTime 是补偿项</strong>：进程处于就绪态时 cpuTime 置 0、waitTime 定时加 1。等待越久，priority 越小（优先级越高）。</li><li><strong>为什么必须置 0</strong>：就绪态把 cpuTime 清零，惩罚只针对"本次连续占用"，不让历史负担永远压着一个进程；执行态把 waitTime 清零，刚运行过的进程不带走旧的等待补偿，防止它靠老本反复插队。k1、k2 取正保证两项方向正确（符号写反公式就失效）。</li></ul>
+<p><strong>为什么这样就能避免饥饿</strong>：等待时间没有上界，−k2 × waitTime 使 P 的优先数随等待<strong>单调下降、无下界</strong>；同时在运行的进程优先数因 cpuTime 上升。所以 P 迟早成为全队列优先数最小者而被调度——每个就绪进程都能在有限时间内获得 CPU。</p>
+<p><strong>waitTime 的作用</strong>：对长时间等待的进程做动态补偿——随等待时间减小优先数、提升优先级，使长时间等待的进程有机会被调度，从而避免饥饿。</p>
+<blockquote>一句话记忆：cpuTime 惩罚"跑得久"的进程，waitTime 补偿"等得久"的进程；置 0 让惩罚只管本次、补偿只给等待。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

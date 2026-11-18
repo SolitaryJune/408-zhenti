@@ -72,5 +72,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TCP 连接释放时客户的状态迁移</h2>
+<h3>结论</h3>
+<p>答案：<strong>B（TIME_WAIT）</strong>。客户（主动关闭方）收到服务器的 FIN 段并发回 ACK 后，进入 TIME_WAIT 状态。</p>
+<h3>第一步：分清主动方与被动方</h3>
+<p>客户<strong>首先</strong>发送 FIN 请求断开 → 客户是<strong>主动关闭方</strong>，服务器是<strong>被动关闭方</strong>。两方的状态序列不同，选项 A 就是被动方专属状态。</p>
+<h3>第二步：客户侧状态链</h3>
+<table><thead><tr><th>事件</th><th>客户进入的状态</th></tr></thead><tbody><tr><td>发出 FIN</td><td>FIN_WAIT_1</td></tr><tr><td>收到服务器的 ACK</td><td>FIN_WAIT_2</td></tr><tr><td>收到服务器的 FIN，回送 ACK</td><td>TIME_WAIT</td></tr><tr><td>等待 2MSL 超时</td><td>CLOSED</td></tr></tbody></table>
+<p>题设"收到服务器发送的 FIN 段并向服务器发送了 ACK 段"恰好对应第三行 → <strong>TIME_WAIT</strong>。</p>
+<h3>第三步：逐项核对</h3>
+<ul><li><strong>A CLOSE_WAIT</strong>：被动方（服务器）收到客户 FIN 并回 ACK 后进入的状态，客户不会进入 → 错。</li><li><strong>C FIN_WAIT_1</strong>：客户刚发出 FIN、尚未收到任何回应时的状态 → 错。</li><li><strong>D FIN_WAIT_2</strong>：客户收到 ACK 但<strong>尚未收到对方 FIN</strong> 时的状态（半关闭，服务器仍可发数据）→ 错。</li><li><strong>B TIME_WAIT</strong>：收完对方 FIN、回完最后一个 ACK 后进入，停留 2MSL → 对。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>背反状态归属</strong>：CLOSE_WAIT、LAST_ACK 只属于被动关闭方；FIN_WAIT_1、FIN_WAIT_2、TIME_WAIT 只属于主动关闭方。</li><li><strong>把 TIME_WAIT 记成服务器状态</strong>：TIME_WAIT 总出现在主动关闭方一侧。</li><li><strong>忽略 2MSL</strong>：TIME_WAIT 等待 2MSL 才 CLOSED，保证最后的 ACK 丢失可重传、本连接的旧报文自然消亡。</li></ul>
+<blockquote>一句话：主动方一条链 FIN_WAIT_1 → FIN_WAIT_2 → TIME_WAIT（2MSL）→ CLOSED；收完 FIN 回完 ACK 就进 TIME_WAIT。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

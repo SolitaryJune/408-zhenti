@@ -549,5 +549,24 @@
 
   applyCase('A');
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：KMP 匹配的比较次数</h2>
+<h3>第一步：先求 next 表</h3>
+<p>模式串 S = <code>abaabc</code>（m = 6），采用教材版定义（next[1] = 0，next[j] = S[1..j−1] 最长相等前后缀长度 + 1）：</p>
+<table><thead><tr><th>j</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>S[j]</td><td>a</td><td>b</td><td>a</td><td>a</td><td>b</td><td>c</td></tr><tr><td>next[j]</td><td>0</td><td>1</td><td>1</td><td>2</td><td>2</td><td>3</td></tr></tbody></table>
+<p>关键的是 next[6]：S[1..5] = <code>abaab</code>，其最长相等前后缀是 <code>ab</code>（长度 2），所以 next[6] = 2 + 1 = <strong>3</strong>。</p>
+<h3>第二步：模拟匹配，逐次数比较</h3>
+<p><strong>第一趟（6 次比较）</strong>：i 从 1 开始，T[1..5] = <code>abaab</code> 与 S[1..5] 逐位相等，比较 5 次全部 ✓；第 6 次比较 T[6] = <code>a</code> vs S[6] = <code>c</code>，<strong>失配</strong>。</p>
+<p><strong>失配处理（不占比较次数）</strong>：i 不回退，j 回退为 next[6] = 3；已匹配的 <code>abaab</code> 里前缀 <code>ab</code> 恰好也出现在主串刚匹配段的尾部（T[4..5]），所以 S[1..2] 与 T[4..5] 天然对齐，这两位<strong>不必重比</strong>。</p>
+<p><strong>第二趟（4 次比较）</strong>：T[6] ↔ S[3]、T[7] ↔ S[4]、T[8] ↔ S[5]、T[9] ↔ S[6]，4 次全部 ✓，j 增至 7 &gt; 6，匹配成功，位置为 T[4..9]。</p>
+<h3>第三步：合计</h3>
+<p>总比较次数 = 6 + 4 = <strong>10</strong>，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏数失配的那次比较</strong>：T[6] 与 S[6] 的失配也是一次"单个字符间的比较"，必须计入。</li><li><strong>误以为要重比 S[1]、S[2]</strong>：如果按朴素匹配思想把模式串右移一格重新从 S[1] 比，会算出偏大的次数（12 次正是这么来的）——KMP 的意义就是靠 next 跳过这些重复比较。</li><li><strong>next 表求错</strong>：注意 next[j] 看的是 S[1..j−1] 的边界，不是 S[1..j]。</li></ul>
+<blockquote>计数口径：每一次"单个字符之间"的比较都计入，包括失配的那一次与最后成功的那一次。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

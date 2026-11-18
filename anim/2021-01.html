@@ -108,5 +108,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：带头结点单循环链表删除首元结点</h2>
+<p>答案：<strong>D</strong>。</p>
+<h3>第一步：明确删的是谁、删要做什么</h3>
+<p>h 是头指针，指向<strong>头结点</strong>；第一个元素存放在首元结点（即 <code>h-&gt;next</code> 所指结点）中。删除它需要三步：先用 q 保存待删结点的地址，再让前驱（头结点）的 next 越过它，最后 <code>free(q)</code> 释放——<strong>先保存再摘链</strong>，顺序不能反。</p>
+<h3>第二步：逐项排查</h3>
+<table><thead><tr><th>选项</th><th>做法与问题</th></tr></thead><tbody><tr><td>A</td><td>先执行 <code>h-&gt;next=h-&gt;next-&gt;next</code> 再 <code>q=h-&gt;next</code>：q 拿到的是<strong>新首元</strong>（原第 2 个结点），<code>free(q)</code> 释放错结点，原首元直接丢失</td></tr><tr><td>B</td><td><code>q=h-&gt;next; h-&gt;next=h-&gt;next-&gt;next; free(q);</code> 删除动作本身对，但<strong>没维护尾指针 p</strong>：若链表只有 1 个元素结点，被删结点恰是尾结点，释放后 p 悬空</td></tr><tr><td>C</td><td><code>if (p != q) p = h;</code> 条件<strong>写反</strong>：正常情况（p≠q，尾结点好好在）反而把 p 改成 h，真正的尾结点失联</td></tr><tr><td>D</td><td><code>if (p == q) p = h;</code> 只有删除的恰是尾结点（链表仅 1 个元素）时才把 p 修正为 h，一般、特例都正确</td></tr></tbody></table>
+<h3>第三步：为什么必须考虑 p==q</h3>
+<p>单循环链表的尾结点 next 指回头结点。删除首元结点并不影响尾结点——<strong>除非首元结点本身就是尾结点</strong>（链表只有 1 个元素）。此时删除后链表只剩头结点，p 必须改指 h，否则 p 悬空，后续操作全错。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 B</strong>：只背"删除三步曲"，漏掉题目专门给出的尾指针 p 的维护。</li><li><strong>选 C</strong>：把"删的是尾结点才修 p"写成"不是尾结点才修 p"。</li><li><strong>先 free 后用</strong>：free 之前必须已改好 next，且用 q 保存过待删地址。</li></ul>
+<blockquote>结论：<code>q=h-&gt;next; h-&gt;next=q-&gt;next; if(p==q) p=h; free(q);</code> —— 答案 <strong>D</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

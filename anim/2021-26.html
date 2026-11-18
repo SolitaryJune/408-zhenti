@@ -119,5 +119,20 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：SSTF 磁盘调度求磁头移动总道数</h2>
+<p><strong>答案：C（41 个磁道）。</strong> 最短寻道时间优先（SSTF）每次都选择"离当前磁头最近"的请求服务，逐次累加移动距离即可。</p>
+<h3>第一步：列出每次选择的比较过程</h3>
+<p>磁头起点 184，请求序列 184，187，176，182，199：</p>
+<table><thead><tr><th>步骤</th><th>当前位置</th><th>各请求距当前位置</th><th>选中</th><th>移动道数</th></tr></thead><tbody><tr><td>1</td><td>184</td><td>184 距 0</td><td>184</td><td>0</td></tr><tr><td>2</td><td>184</td><td>182 距 2，187 距 3，176 距 8，199 距 15</td><td>182</td><td>2</td></tr><tr><td>3</td><td>182</td><td>187 距 5，176 距 6</td><td>187</td><td>5</td></tr><tr><td>4</td><td>187</td><td>176 距 11，199 距 12</td><td>176</td><td>11</td></tr><tr><td>5</td><td>176</td><td>只剩 199</td><td>199</td><td>23</td></tr></tbody></table>
+<h3>第二步：合计</h3>
+<p>总移动距离 = 0 + 2 + 5 + 11 + 23 = <strong>41</strong>（磁道），服务顺序为 184 → 182 → 187 → 176 → 199。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉与磁头同道的请求 184</strong>：它距离为 0、最先被服务，漏掉它起点就乱了。</li><li><strong>惯性单向扫描</strong>：SSTF 不像 SCAN 那样沿一个方向扫到底；182 之后应就近折返去 187、176，而不是继续冲向大号磁道。</li><li><strong>182 与 187 比错</strong>：从 184 出发，182 距离 2 比 187 距离 3 更近，先取 182 是本题最易错的一步。</li></ul>
+<blockquote>记忆锚点：SSTF = 每步在剩余请求中选最近者，累加绝对距离；磁头会就近来回摆动。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

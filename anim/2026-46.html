@@ -158,5 +158,28 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：inode 定位、一次间接访盘与删除目录的元数据操作</h2>
+<h3>第 0 步：底层机制——这套文件系统怎么"记账"</h3>
+<p>三类记账结构，访问与删除的每一步都由它们决定：</p>
+<ol><li><strong>索引节点表</strong>：所有 inode 顺序排布在从 100 号盘块开始的 4096 个连续块中，<strong>inode 号 = 表内序号（从 0 起）</strong>——定位 inode 是纯算术：表首位置 + 序号 × 128B。</li><li><strong>两张位图</strong>：盘块位图、inode 位图，1=占用 0=空闲。<strong>它们是"谁被占用"的唯一权威</strong>——释放空间 = 清位，旧数据不必擦：位不清，块永远不会再被分配；位清了，旧数据留在盘上也无所谓。</li><li><strong>目录</strong>：目录项 =（文件名，inode 号），<strong>名字与实体分离</strong>——文件全部的位置信息（直接地址项 5 个，一/二/三次间接地址项各 1 个）都记在 inode 里。</li></ol>
+<p>预答一个总问题：<strong>为什么删除操作只动位图和目录，不擦数据块？</strong> 分配器判断"哪块空闲"只看位图；把位清 0 空间就算回收，擦旧数据是多余动作。</p>
+<h3>第（1）问（3 分）</h3>
+<p><strong>① file 的 inode 在几号盘块。</strong> inode 1000 前面排着 1000 个 inode（号从 0 起，偏移按 1000×128 算而不是 1001×128），表内字节偏移 1000×128 = 128000 B；每块 4096 ÷ 128 = 32 个 inode，128000 B 落在表内第 ⌊128000/4096⌋ = 31 个相对块；表首在 100 号块 → 绝对块号 100+31 = <strong>131</strong>。</p>
+<table><thead><tr><th>步骤</th><th>算式</th><th>结果</th></tr></thead><tbody><tr><td>每块装多少 inode</td><td>4096 ÷ 128</td><td>32 个</td></tr><tr><td>表内字节偏移</td><td>1000 × 128</td><td>128000 B</td></tr><tr><td>表内相对块号</td><td>⌊128000 ÷ 4096⌋</td><td>31</td></tr><tr><td>绝对盘块号</td><td>100 + 31</td><td><strong>131</strong></td></tr></tbody></table>
+<p><strong>② 访问偏移 21460 的字节最多访盘几次。</strong> 机制链：字节偏移 → 逻辑块号 → 地址项映射。21460 ÷ 4096 = 5 余 980 → 逻辑块 5（21460 &lt; 30KB，访问合法）；直接地址项 5 个只覆盖逻辑块 0~4（字节 0~20479），块 5 落在<strong>一次间接区</strong>——要先读 inode 的"一次间接地址项"指向的<strong>间接地址块</strong>（数据块号存在它里面），再读数据块。inode 已在内存（题设），省掉了读 inode 本身那一次 → <strong>最多访问 2 个盘块</strong>（间接块 1 次 + 数据块 1 次）。</p>
+<p><strong>③ 最多能创建多少文件。</strong> 每个文件对应一个 inode → 文件数上限 = inode 总数 = 4096 块 × 32 个/块 = <strong>128K = 131072 个</strong>。题设磁盘与位图空间足够大，唯一瓶颈就是 inode 表——创建文件时分配的正是 inode。</p>
+<h3>第（2）问（5 分）：删除 dir1 要对哪些元数据做什么</h3>
+<p>机制先行——删除目录 = 拆断"名字 → inode → 盘块"整条链，且要<strong>顺着子树拆到底</strong>（dir1 下面还挂着 file）：</p>
+<ol><li><strong>摘名字</strong>：目录文件 dir 中 dir1 的目录项删除——名字链从这里断开；</li><li><strong>释放 dir1 自己的空间</strong>：dir1 的目录文件（里面存着 file 的目录项）占用的盘块 → 盘块位图清 0；</li><li><strong>释放 file 的空间</strong>：file 的数据块（30 KB 占 8 个数据块）→ 盘块位图清 0；file 的 inode 中一次间接地址指向的间接块（8 &gt; 5，逻辑块 5~7 挂在一次间接下，这个间接块确实存在）→ 盘块位图清 0；</li><li><strong>释放 inode</strong>：dir1 的 inode 201、file 的 inode 1000 → inode 位图清 0。</li></ol>
+<table><thead><tr><th>元数据</th><th>操作</th></tr></thead><tbody><tr><td>盘块位图</td><td>dir1 占用的盘块所对应的位修改为 0</td></tr><tr><td>盘块位图</td><td>file 占用的盘块所对应的位修改为 0</td></tr><tr><td>盘块位图</td><td>file 的索引节点中一次间接地址指向的盘块所对应的位修改为 0</td></tr><tr><td>索引节点位图</td><td>dir1 的索引节点（201）所对应的位修改为 0</td></tr><tr><td>索引节点位图</td><td>file 的索引节点（1000）所对应的位修改为 0</td></tr><tr><td>目录文件 dir</td><td>删除与 dir1 对应的目录项</td></tr></tbody></table>
+<p><strong>为什么 dir 的 inode（100）与其位图位不动</strong>：删除的是 dir1 子树，dir 还活着。<strong>为什么不用单独删 file 的目录项</strong>：它住在 dir1 的目录文件里，dir1 的内容盘块整块回收，它随之消失。</p>
+<h3>易错点</h3>
+<ul><li><strong>inode 定位忘加表首</strong>：只算出相对块 31，忘了 +100 得 131。</li><li><strong>偏移多乘一次</strong>：inode 号从 0 起，偏移按 1000×128 算，不是 1001×128。</li><li><strong>直接区范围算错</strong>：5 个直接项只管前 20480 字节，21460 已越界进一次间接区——访盘 2 次而非 1 次。</li><li><strong>删除漏项</strong>：最容易漏"一次间接地址指向的盘块"的位图回收与"父目录 dir 中的目录项"两处。</li></ul>
+<blockquote>结论：（1）file 的 inode 在 131 号盘块；访问偏移 21460 最多访盘 2 次；最多建 128K=131072 个文件；（2）盘块位图 3 处、inode 位图 2 处清 0，并删除 dir 中 dir1 的目录项。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

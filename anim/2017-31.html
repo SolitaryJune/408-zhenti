@@ -94,5 +94,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：硬链接下的打开文件结构（fd、inode 与读写指针）</h2>
+<h3>第一步：硬链接意味着什么</h3>
+<p>f2 是 f1 的硬链接 → 目录中两个<strong>目录项指向同一个索引结点（inode）</strong>，文件数据只有一份，改名字不影响 inode。</p>
+<h3>第二步：理清打开文件的三层结构</h3>
+<ol><li><strong>进程的用户打开文件表</strong>：每个进程一张，<code>fd1</code>、<code>fd2</code> 分别是各自表中的一项（III 正确）；</li><li>表项记录<strong>读写指针</strong>（默认指向文件头）等本次打开的信息——两个进程各开各的，指针<strong>各自独立</strong>，不会自动保持相同（I 错误）；</li><li><strong>内存索引结点表</strong>（系统级）：f1、f2 指向唯一的 inode，内存中也共享同一个内存索引结点（II 正确）。</li></ol>
+<h3>第三步：逐项结论</h3>
+<ul><li>I：读写指针随"打开动作"走，不随文件走 → 错；</li><li>II：硬链接共享同一 inode → 对；</li><li>III：fd 各指各的用户打开文件表项 → 对。</li></ul>
+<p>组合为仅 II、III，即 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为读写指针相同</strong>（对应 C、D）：指针属于各自的打开文件表项；两个进程若各自读，位置互不干扰。</li><li><strong>以为 f1、f2 是两份文件</strong>：硬链接不是副本，inode 与数据都只有一份。</li></ul>
+<blockquote>答案：<strong>B</strong>（仅 II、III）。目录项 → inode 多对一；打开表项 → 读写指针一对一。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

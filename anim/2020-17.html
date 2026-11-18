@@ -65,5 +65,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：理想情况下 CPI 为 1 的处理器</h2>
+<p>答案：B（单周期 CPU 与基本流水线 CPU）。</p>
+<h3>第一步：先立机制——CPI 数的是"完成节奏"，不是"单条指令耗时"</h3>
+<p>CPI = 执行一条指令所需的平均时钟周期数，衡量的是<strong>稳态下平均每拍完成几条指令</strong>。判断四个处理器，关键看一件事：<strong>指令之间是否重叠执行</strong>。"理想情况"指不考虑流水线冒险、访存停顿等损失，只看处理器结构本身。</p>
+<h3>第二步：逐个处理器核对（核心是流水线那条）</h3>
+<ul><li><strong>I 单周期 CPU</strong>：把数据通路拉长到一个时钟周期里，取指到写回一气呵成，一拍恰好完成一条 → CPI = 1（代价是时钟周期很长）。</li><li><strong>II 多周期 CPU</strong>：一条指令拆成多拍逐阶段走，任何时刻只有一条指令在推进，<strong>阶段之间不重叠</strong> → 一条指令占多拍，CPI &gt; 1。</li><li><strong>III 基本流水线 CPU</strong>：把处理过程分成若干阶段，不同指令的各阶段<strong>重叠</strong>在不同硬件上。这正是最容易被追问的点——"流水线里一条指令不也要走好几拍吗？为什么 CPI 还是 1？"因为流水线装满后<strong>每个时钟周期都有一条指令流出</strong>：单条指令的耗时没变，但完成节奏变成每拍一条，按完成节奏算 CPI = 1。</li><li><strong>IV 超标量流水线 CPU</strong>：多条流水线并行发射，一拍流出<strong>多条</strong>指令 → CPI &lt; 1，是"优于 1"而不是"等于 1"。</li></ul>
+<table><thead><tr><th>处理器</th><th>是否重叠</th><th>理想 CPI</th></tr></thead><tbody><tr><td>单周期</td><td>一拍全做完</td><td>1</td></tr><tr><td>多周期</td><td>一条占多拍</td><td>&gt;1</td></tr><tr><td>基本流水线</td><td>稳态每拍流出一条</td><td>1</td></tr><tr><td>超标量</td><td>并行发射多条</td><td>&lt;1</td></tr></tbody></table>
+<p>CPI 恰好为 1 的是 I 和 III，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把超标量也算成 1</strong> → 误选 D：一拍多条，CPI &lt; 1。</li><li><strong>把多周期当成 1</strong> → 误选 A、C：每条指令要经历多个周期，CPI &gt; 1。</li><li><strong>误以为流水线 CPI = 阶段数</strong>：阶段数影响单条指令耗时与时钟周期长短，稳态完成节奏仍是每拍一条。</li></ul>
+<blockquote>单周期"一拍做完一条"，基本流水线"一拍流出一条"，两者理想 CPI 都是 1；多周期一条占多拍，超标量一拍多条。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -60,5 +60,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：802.11 中 SIFS 与 DIFS 各等在什么帧之前</h2>
+<p><strong>答案：A（IFS1 最长）。</strong></p>
+<h3>第一步：分清图中四个 IFS 各站在哪帧前面</h3>
+<ul><li>IFS1：H 发 <strong>RTS</strong> 之前；</li><li>IFS2：AP 发 <strong>CTS</strong> 之前；</li><li>IFS3：H 发 <strong>DATA</strong> 之前；</li><li>IFS4：AP 发 <strong>ACK</strong> 之前。</li></ul>
+<h3>第二步：802.11 的两类帧间间隔</h3>
+<ul><li><strong>SIFS</strong>（短帧间间隔）：最短。用来分隔<strong>属于同一次对话的各帧</strong>——ACK 帧、CTS 帧、由过长 MAC 帧分片后的数据帧等都用 SIFS。</li><li><strong>DIFS</strong>（DCF 帧间间隔）：最长（在 SIFS 基础上再加 2 个时隙）。站点要<strong>主动发起新的帧交换</strong>（发送数据帧、RTS 等管理帧）之前，必须先等 DIFS。</li></ul>
+<h3>第三步：对号入座</h3>
+<p>RTS → CTS → DATA → ACK 是<strong>同一次对话</strong>的四个帧：CTS、DATA、ACK 都是"接话"的后续帧，前面只等最短的 SIFS，即 IFS2 = IFS3 = IFS4 = SIFS。而 RTS 是 H <strong>主动发起新的帧交换</strong>的第一帧，属于"开口"，它之前必须等最长的 DIFS，即 IFS1 = DIFS（图上 IFS1 的空白段也明显画得更长）。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 IFS2/IFS4</strong>：以为 ACK/CTS 等短控制帧前面的间隔最长。恰恰相反——应答越紧急，用的间隔越短（SIFS），以便趁信道空闲立即回应。</li><li><strong>误选 IFS3</strong>：DATA 虽由 H 发出，但它不是新对话，而是收到 CTS 后同一对话的后续帧，仍用 SIFS。</li></ul>
+<blockquote>一句话结论：<strong>开口（RTS/新数据帧）等 DIFS，接话（CTS/DATA/ACK）等 SIFS</strong>，最长的是 IFS1，选 <strong>A</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

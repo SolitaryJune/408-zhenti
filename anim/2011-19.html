@@ -63,5 +63,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：指令执行的叙述——挑出错误的那个</h2>
+<h3>第一步：先给答案</h3>
+<p><strong>答案：C</strong>。题目前提要圈住：<strong>不采用 Cache 和指令预取、处于"开中断"状态</strong>——A、B、D 都是在这个前提下成立的正确叙述，只有 C 错。</p>
+<h3>第二步：逐项推理</h3>
+<p><strong>A（对）</strong>：没有 Cache、没有指令预取，CPU 每条指令都必须<strong>亲自访存取指令</strong>，所以每个指令周期至少访问内存一次（若指令还涉及操作数，访存次数更多）。</p>
+<p><strong>B（对）</strong>：时钟周期是 CPU 工作的<strong>最小时间单位</strong>，指令周期由若干机器周期（每个机器周期又由若干时钟周期）构成，因此指令周期 ≥ 一个时钟周期必然成立。</p>
+<p><strong>C（错）</strong>：空操作指令虽然"什么也不做"，但它<strong>照样要经过取指、译码</strong>。取指阶段结束时会执行 PC 加 1（或加指令长度），<strong>PC 的内容发生了改变</strong>，否则下一条指令永远取不到。"任何寄存器内容都不会被改变"不成立。</p>
+<p><strong>D（对）</strong>：CPU 在<strong>每条指令执行结束时</strong>（执行周期结束前）采样中断请求线；既然处于开中断状态且有外部中断源，外部中断就可能在此处打断当前程序。</p>
+<h3>第三步：抓住 C 的本质</h3>
+<p>判断这类叙述的关键是把"执行"与"取指"分开看：NOP 的<strong>执行段</strong>确实不动任何寄存器，但一条指令的生命周期还包括取指——<strong>取指必改 PC</strong>，这是程序顺序执行的根本机制。</p>
+<h3>易错点</h3>
+<ul><li><strong>认为 A 错</strong>：忽略"无 Cache、无预取"的前提；若有 Cache 命中或预取，某些指令周期可以不访存。</li><li><strong>认为 NOP 真的"什么都不改"</strong>：PC 一定在变，这是 C 成为错误叙述的原因。</li></ul>
+<blockquote>记忆锚点：NOP 也要取指，取指必改 PC——"什么都不变"的叙述必错。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

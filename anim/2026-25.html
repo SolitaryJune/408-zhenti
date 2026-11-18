@@ -70,5 +70,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：用户级线程、内核级线程与线程共享资源</h2>
+<p><strong>答案：D（同一进程的不同线程共享该进程虚拟地址空间中的堆）</strong>。本题考两组事实：线程由谁创建、线程之间什么私有什么共享。</p>
+<h3>第一步：线程由谁创建</h3>
+<ul><li><strong>内核级线程</strong>：在内核中实现，由操作系统创建、调度和管理，内核能看到它们。</li><li><strong>用户级线程</strong>：由用户程序通过线程库（如早期的 POSIX 线程库）在用户态创建和管理，<strong>操作系统根本不知道它的存在</strong>。所以 A 错——"均由操作系统创建"不成立。</li><li>映射关系是"<strong>多个用户级线程 → 一个或少量内核级线程</strong>"（多对一、多对多模型）。反方向不成立：一个用户级线程某一时刻只能运行在某个内核级线程之上，不能同时映射到多个内核级线程，所以 B 错。</li></ul>
+<h3>第二步：线程间什么私有、什么共享</h3>
+<p>同一进程内的所有线程共享进程的：<strong>虚拟地址空间</strong>（代码段、数据段、<strong>堆</strong>）、全局变量、打开的文件等；每个线程<strong>私有</strong>：自己的栈、寄存器现场（程序计数器等）和线程控制块。</p>
+<ul><li><strong>C 错</strong>：每个内核级线程被调度进入内核时都需要<strong>自己独立的内核栈</strong>（保存中断现场、内核函数调用链），同一进程的不同内核级线程内核栈互不相同，不能共用。</li><li><strong>D 对</strong>：堆属于进程虚拟地址空间，同一进程的不同线程天然共享（这正是 malloc 分配的内存可被同进程各线程访问的原因）。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>"多对多"记反</strong>：是多个用户线程映射到少量内核线程，不是"一个用户线程映射到多个内核线程"。</li><li><strong>以为同进程的线程共用内核栈</strong>：内核栈属于内核级线程私有，与用户栈、寄存器一样是线程私有的。</li><li><strong>把"共享地址空间"与"共享一切"混淆</strong>：栈和寄存器现场始终是线程私有的。</li></ul>
+<blockquote>结论：用户级线程由线程库创建、内核栈线程私有、堆由同进程线程共享，选 <strong>D</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

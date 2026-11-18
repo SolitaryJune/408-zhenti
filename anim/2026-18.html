@@ -90,5 +90,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：主存块映射到哪个 Cache 组</h2>
+<p><strong>答案：C（组号 32）</strong></p>
+<h3>第一步：先立模型——组相联把 Cache 分组，主存块按块号循环入组</h3>
+<p>组相联是直接映射与全相联的折中：把 Cache 的行分成若干<strong>组</strong>，主存块不限定到某一行、只限定到某一个组，规则是<strong>组号 = 主存块号 mod 组数</strong>。为什么用块号取模？因为主存块按顺序连续编号，"mod 组数"正是把它们循环均分到各组的办法——效果上等于取块号二进制的低位作组号；至于块最终落在组内哪一行，由替换算法在组内 4 行里挑、硬件靠 tag 比对确认，与算组号无关。所以动手顺序不是拿地址直接运算，而是先把地址两层拆开：<strong>按块大小切出块号，再对块号取模得组号</strong>。</p>
+<h3>第二步：三步计算</h3>
+<ol><li><strong>组数</strong> = 1024 行 ÷ 4 路 = <strong>256 组</strong>（组号 0~255，每组 4 行）。</li><li><strong>主存块号</strong>：按字节编址、块大小 32 B，地址 1028 所在块 = 1028 div 32 = <strong>32</strong>（块内偏移 1028 mod 32 = 4，不参与映射）。</li><li><strong>组号</strong> = 32 mod 256 = <strong>32</strong>，选 <strong>C</strong>。</li></ol>
+<p>用地址拆分视角验算：1028 = <code>0000 0100 0000 0100B</code>，低 5 位是块内偏移，其后 8 位（2⁸ = 256 组）是组号字段——1028 右移 5 位得 32，低 8 位仍是 32，两条路一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>拿地址直接 mod 组数</strong> → 1028 mod 256 = 16（干扰项 B）：地址 ≠ 块号，组号字段在地址的"块号"段而不在最低位段，必须先除以块大小。</li><li><strong>拿块内偏移当组号</strong> → 1028 mod 32 = 4（干扰项 A）：偏移只负责块内定位，与块到组的映射无关。</li><li><strong>块大小看错成 16 B</strong> → 块号变 64（干扰项 D）。</li><li><strong>忘除以路数</strong>：把 1024 行当成 1024 组——本题 32 mod 1024 恰好也是 32，碰对答案但模型已错，换个块号就露馅。</li></ul>
+<blockquote>记忆锚点：组相联 = 组间按"块号 mod 组数"循环入组 + 组内全相联；先除块大小得块号，再 mod 组数得组号。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

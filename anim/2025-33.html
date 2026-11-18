@@ -101,5 +101,28 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：电路交换 / 分组交换 / 报文交换的端到端传送时间</h2>
+<p><strong>答案：B</strong>（<code>T_ms &gt; T_ps &gt; T_cs</code>）。</p>
+<h3>第一步：统一文件大小</h3>
+<p>题干给定 1 M = 10⁶ B，故 2 MB = 2×10⁶ B = 1.6×10⁷ bit（16 Mb）。三段链路速率 10 / 100 / 1000 Mbps，其中 H1 接入链路的 10 Mbps 最慢，是整条路径的瓶颈。</p>
+<h3>第二步：电路交换 T_cs</h3>
+<p>建连 32 μs 后，整条报文以 10 Mbps 连续流过电路，R1、R2 不做存储转发：</p>
+<p><code>T_cs = 32 μs + 1.6×10⁷ bit ÷ 10 Mbps = 32 μs + 1.6 s = 1.600032 s</code></p>
+<h3>第三步：分组交换 T_ps</h3>
+<p>2×10⁶ B ÷ 400 B = 5000 个分组，每组 400 B = 3200 bit。首分组过三段链路分别用 320 μs、32 μs、3.2 μs，共 355.2 μs；此后流水线推进，但瓶颈仍是第一段——H1 每 320 μs 才发出一个分组。最后一个分组还要在 R1、R2 各存储转发一次：</p>
+<p><code>T_ps = 5000 × 320 μs + 32 μs + 3.2 μs = 1.6 s + 35.2 μs = 1.6000352 s</code></p>
+<h3>第四步：报文交换 T_ms</h3>
+<p>整个 2 MB 报文在 R1、R2 都要「收完再整段转发」，三段速率不同要分别计算发送时延再相加：</p>
+<p><code>T_ms = 1.6 s + 0.16 s + 0.016 s = 1.776 s</code></p>
+<h3>第五步：比较排序</h3>
+<p>1.776 s &gt; 1.6000352 s &gt; 1.600032 s，即 T_ms &gt; T_ps &gt; T_cs。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为分组交换必然最快</strong>：若漏掉「H1 发送 5000 个分组要被 10 Mbps 卡住」，只按首分组 355.2 μs 后每 3.2 μs 到达一个来推算，会得到 T_ps 远小于 T_cs 的错误排序（A 项正是这么来的）。本题三段速率在两种方式下相同，分组交换只比电路交换多付 32 + 3.2 μs 的存储转发时延。</li><li><strong>误选 C（Tms&gt;Tcs&gt;Tps）</strong>：把 T_ps 算成 1.6 s——漏掉最后一个分组在 R1、R2 的两次存储转发（32 + 3.2 μs），于是 T_cs 反超了 T_ps。</li><li><strong>误选 D（Tps&gt;Tms&gt;Tcs）</strong>：把报文交换"整段转发"的逐段开销错安到分组交换头上（给 T_ps 重复计入三段的发送时延），把最大的 1.776 s 记在了 T_ps 名下。</li><li><strong>报文交换漏算逐段时延</strong>：报文交换在 R1、R2 各要整段收完再转发，必须把三段的发送时延全加上。</li><li><strong>单位错</strong>：把 1 M 按 2²⁰ 处理，或把 Mb 与 MB 混用，结果都会算错。</li></ul>
+<blockquote>一句话结论：<code>T_ms(1.776 s) &gt; T_ps(1.6000352 s) &gt; T_cs(1.600032 s)</code>，选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

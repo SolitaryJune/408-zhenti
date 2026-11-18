@@ -130,5 +130,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：单缓冲下读入并分析 2 个数据块的最短时间</h2>
+<p><strong>答案：C</strong> —— 最短时间是 <strong>300</strong>。</p>
+<h3>第一步：明确单缓冲的约束</h3>
+<p>系统缓冲区一次只能装<strong>一个</strong>数据块：读入时占用缓冲区，传送（缓冲区 → 用户工作区）完成后缓冲区才腾空；分析则只占用<strong>用户工作区</strong>，与缓冲区无关——这正是可以并行的突破口。</p>
+<h3>第二步：排出最短时间线</h3>
+<table><thead><tr><th>时刻</th><th>活动</th><th>占用</th></tr></thead><tbody><tr><td>0~100</td><td>读入块 1</td><td>缓冲区</td></tr><tr><td>100~105</td><td>传送块 1</td><td>缓冲区→工作区</td></tr><tr><td>105~195</td><td><strong>分析块 1</strong></td><td>工作区</td></tr><tr><td>105~205</td><td><strong>读入块 2</strong>（与上面并行）</td><td>缓冲区</td></tr><tr><td>205~210</td><td>传送块 2</td><td>缓冲区→工作区</td></tr><tr><td>210~300</td><td>分析块 2</td><td>工作区</td></tr></tbody></table>
+<p>关键在 105 时刻：传送块 1 结束后缓冲区腾空，<strong>读块 2 立即开始</strong>，与“分析块 1”并行，重叠段取 max(90, 100) = 100。</p>
+<h3>第三步：合计</h3>
+<p>总时间 = 100 + 5 + 100 + 5 + 90 = <strong>300</strong>，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 D（390）</strong>：按 2 × (100+5+90) 完全串行计算，漏掉了“分析块 1 与读块 2 并行”这一优化。</li><li><strong>选 B（295）</strong>：让读块 2 与分析块 1 重叠，却忘了读块 2 必须等<strong>缓冲区在 105 腾空</strong>后才能开始，不能与传送块 1 同时进行。</li><li><strong>误以为工作区与缓冲区可同时占用</strong>：并行成立的前提是分析用工作区、读入用缓冲区，两者互不冲突。</li></ul>
+<blockquote>一句话结论：传送块 1 后缓冲区腾空 → 分析块 1（90）与读块 2（100）并行，总时间 100+5+100+5+90 = <strong>300</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

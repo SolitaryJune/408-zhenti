@@ -188,5 +188,21 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：UDP 校验和 = 回卷求和后按位取反</h2>
+<p>答案：<strong>C</strong>（1110 0000 1000 0011）。</p>
+<h3>第一步：先立机制——为什么回卷、为什么取反</h3>
+<p>UDP 校验和对所有 16 位字做<strong>反码求和</strong>：直接相加，最高位溢出的进位<strong>回卷</strong>加到最低位，最后对和<strong>按位取反</strong>。为什么回卷：反码记数本质是<strong>模 65535 的加法</strong>（全 1 的 <code>1111 1111 1111 1111</code> 与全 0 同表示 0），溢出的第 17 位代表 2 的 16 次方，而它 ≡ 1 (mod 65535)，卷回最低位正好完成取模——丢掉则结果差 1。为什么取反：校验和的定义就是"全部 16 位字（含校验和）的反码总和为全 1"，发送方存反码，接收方把它们加回去应得全 1，否则判错。</p>
+<h3>第二步：反码求和（注意回卷进位）</h3>
+<table><thead><tr><th>步骤</th><th>二进制</th><th>说明</th></tr></thead><tbody><tr><td>中间结果</td><td><code>1011 1001 1011 0110</code></td><td>题目给定</td></tr><tr><td>加最后 16 位数</td><td><code>0110 0101 1100 0101</code></td><td>题目给定</td></tr><tr><td>直接相加</td><td><code>1 0001 1111 0111 1011</code></td><td>第 17 位溢出一个进位 1</td></tr><tr><td>回卷进位</td><td><code>0001 1111 0111 1011</code> + <code>1</code> = <code>0001 1111 0111 1100</code></td><td>溢出的 1 加到最低位</td></tr><tr><td>按位取反</td><td><code>1110 0000 1000 0011</code></td><td>最终校验和</td></tr></tbody></table>
+<h3>第三步：核对选项</h3>
+<p>回卷后的和 = <code>0001 1111 0111 1100</code>（恰是干扰项 B，还没取反）；对它按位取反得 <code>1110 0000 1000 0011</code>，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 B</strong>：B 是回卷后的"和"，忘了最后还要<strong>按位取反</strong>才是校验和。</li><li><strong>误选 A</strong>：A = <code>0001 1111 0111 1011</code> 是<strong>没有回卷</strong>进位 1 的和，取反前就丢了进位。</li><li><strong>误选 D</strong>：D = <code>1110 0000 1000 0100</code> 是"先丢进位再取反"的结果——两次错误叠加，正好是 A 的反码。</li></ul>
+<blockquote>一句话结论：回卷求和得 <code>0001 1111 0111 1100</code>，取反得校验和 <code>1110 0000 1000 0011</code>，选 <strong>C</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

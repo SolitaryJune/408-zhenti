@@ -65,5 +65,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：浮点数加减运算中阶码与尾数的溢出判断</h2>
+<h3>第一步：先给答案</h3>
+<p>答案：<strong>D</strong>（I、II、III、IV 全部正确）。</p>
+<h3>第二步：对照浮点加减流程逐条判断</h3>
+<p>流程：对阶 → 尾数加减 → 规格化（左规/右规）→ 舍入 → 判溢出。</p>
+<table><thead><tr><th>叙述</th><th>分析</th><th>结论</th></tr></thead><tbody><tr><td>I 对阶不引起阶码上溢或下溢</td><td>对阶是<strong>小阶向大阶看齐</strong>：小阶的阶码不断加 1，最大加到等于大阶为止，而大阶本来就是合法值，故不会上溢；阶码全程不减，也不会下溢</td><td>对</td></tr><tr><td>II 右规和尾数舍入都可能引起阶码上溢</td><td>尾数加减后若溢出需右规（尾数右移、阶码 +1）；舍入产生进位时也要再右规。阶码一路加下去就可能超出最大表示值</td><td>对</td></tr><tr><td>III 左规可能引起阶码下溢</td><td>尾数每左移一位，阶码减 1；减到比最小阶码还小就是下溢</td><td>对</td></tr><tr><td>IV 尾数溢出时结果不一定溢出</td><td>尾数"溢出"只是中间状态：右规一次（尾数右移 1 位、阶码 +1）即可回到规格化范围，只要阶码没有上溢，结果就正确</td><td>对</td></tr></tbody></table>
+<h3>第三步：抓住溢出的真正判据</h3>
+<p>浮点运算是否溢出，最终只看<strong>阶码是否上溢</strong>（结果超出可表示范围，需置溢出标志/中断）。尾数溢出可以用右规挽救，不等于结果溢出。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 IV 错</strong>：把"尾数溢出"与"运算结果溢出"混为一谈——右规后结果完全可能正常。</li><li><strong>忽略舍入的连锁反应</strong>：舍入不只丢精度，进位引发的右规同样能把阶码推向上溢。</li><li><strong>以为对阶可能上溢</strong>：对阶的方向只有一个（小阶增大到大阶），封顶于大阶，天然安全。</li></ul>
+<blockquote>判溢出只看阶码：右规/舍入可能上溢，左规可能下溢，对阶两不沾。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

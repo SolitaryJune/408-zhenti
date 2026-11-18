@@ -67,5 +67,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：小端方式下的指令机器代码</h2>
+<p><strong>答案：A</strong>（<code>C7 45 FC C0 FF FF FF</code>）。</p>
+<h3>第一步：认清机器代码的结构</h3>
+<p><code>int i = 0;</code> 的机器代码 <code>C7 45 FC 00 00 00 00</code> 共 7 字节：前 3 字节 <code>C7 45 FC</code> 是操作码、寻址方式与位移量字段，与 i 的数值无关；后 4 字节 <code>00 00 00 00</code> 就是 32 位立即数 0 的补码。换成 <code>int i = -64;</code> 后，只有后 4 字节变化。</p>
+<h3>第二步：求 −64 的 32 位补码</h3>
+<p>64 = <code>0000 0040H</code>；按位取反得 <code>FFFF FFBFH</code>，末位加一得 <code>FFFF FFC0H</code>。所以 −64 的补码机器数（从高位到低位）为 <code>FF FF FF C0</code>。</p>
+<h3>第三步：按小端方式落到字节序列</h3>
+<p>小端方式：<strong>低位字节放在低地址</strong>。把 <code>FFFFFFC0H</code> 从低位到高位拆字节：最低位字节 <code>C0</code> 放在最低地址，其后依次 <code>FF</code>、<code>FF</code>、<code>FF</code>。</p>
+<p>拼接：<code>C7 45 FC</code> + <code>C0 FF FF FF</code> = <code>C7 45 FC C0 FF FF FF</code>。</p>
+<h3>易错点</h3>
+<ul><li><strong>大端小端搞反</strong>（选项 C、D）：把高位字节 <code>FF</code> 排在了前面。口诀：小端 = 低位字节在低地址（"低位在前"）。</li><li><strong>半字节颠倒</strong>（选项 B）：把 <code>C0</code> 误写成 <code>0C</code>——C0 是 1100 0000，0C 是 0000 1100，完全不同。</li><li><strong>补码只算 8 位</strong>：<code>C0H</code> 恰好也是 −64 的 8 位补码，但这里机器数必须写成完整 32 位 <code>FFFFFFC0H</code> 再拆字节，才能确定后面跟三个 <code>FF</code>。</li></ul>
+<blockquote>三步走：求补码 → 从低位到高位拆字节 → 小端"低位字节在低地址"排队。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

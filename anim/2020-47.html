@@ -175,5 +175,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：私网 Web 服务器如何被外网访问——NAT 的"出"与"进"</h2>
+<h3>第 1 问：卡在哪，就配哪</h3>
+<p><strong>机制：先看清网络格局。</strong> 两个局域网都用私网段 <code>192.168.1.0/24</code>，而且<strong>重复使用</strong>——Web 服务器和 H2 同为 <code>192.168.1.2</code>，H1 和 H3 同为 <code>192.168.1.3</code>，R2、R3 的内网口同为 <code>192.168.1.1</code>。这不冲突：私网地址只在各自 NAT 边界之内有效，两个私网互不知晓对方的存在。但代价是：<strong>私网地址在公网上不可路由</strong>，外面的世界里根本没有"192.168.1.2"这个门牌。</p>
+<p>所以"H2、H3 访问不了 Web 服务器"的病根在<strong>入口</strong>：外网的数据报进不了 R2 身后的私网。药方是在 <strong>R2</strong> 上给 Web 服务器挂一个公网门牌——静态 NAT 端口映射：</p>
+<table><thead><tr><th>外网 IP 地址</th><th>外网端口号</th><th>内网 IP 地址</th><th>内网端口号</th></tr></thead><tbody><tr><td><code>203.10.2.2</code></td><td>80</td><td><code>192.168.1.2</code></td><td>80</td></tr></tbody></table>
+<p><strong>为什么门牌是 R2 自己的接口地址 <code>203.10.2.2</code>？</strong> 数据报要进这个私网，必须先到达<strong>直连私网的 NAT 路由器 R2</strong>，所以目的地址必须是 R2 公网侧收得到的地址——题给的公网互连链路 <code>203.10.2.0/30</code> 上属于 R2 的正是 <code>203.10.2.2</code>。<strong>为什么外网端口号是 80</strong>：Web 服务走 HTTP，默认端口号 80；外网发往 <code>203.10.2.2:80</code> 的数据报由 R2 按静态表把目的改写为 <code>192.168.1.2:80</code> 送进私网。（H2/H3 的出网流量则由 R3 做 NAPT：源地址换成 R3 的公网地址 <code>203.10.2.6</code>——这是第 2 问的伏笔。）</p>
+<h3>第 2 问：数据报 P 的三段旅程</h3>
+<p><strong>答题框架：源地址看"出口改没改"，目的地址看"入口改没改"——改写只发生在私网两侧的 NAT 路由器上；中间的 R1 在公网侧只查表转发，不改地址。</strong></p>
+<table><thead><tr><th>位置</th><th>源 IP 地址</th><th>目的 IP 地址</th></tr></thead><tbody><tr><td>H2 发送时</td><td><code>192.168.1.2</code></td><td><code>203.10.2.2</code></td></tr><tr><td>经过 R3 转发后</td><td><code>203.10.2.6</code></td><td><code>203.10.2.2</code></td></tr><tr><td>经过 R2 转发后</td><td><code>203.10.2.6</code></td><td><code>192.168.1.2</code></td></tr></tbody></table>
+<ul><li><strong>H2 发送时</strong>：源填自己的私网地址 <code>192.168.1.2</code>；目的填 Web 服务器对外的公网门牌 <code>203.10.2.2</code>。<strong>为什么目的不能填 <code>192.168.1.2</code></strong>：一来 H2 自己就占着这个地址，二来它只在 R3 的私网内有效、出不了公网。数据报先送到默认网关 R3（内网口 <code>192.168.1.1</code>）。</li><li><strong>经过 R3 转发后</strong>：R3 是 H2 所在私网的<strong>出口</strong>，做源地址转换：源 <code>192.168.1.2</code> → <code>203.10.2.6</code>（R3 的公网接口地址），目的不变。<strong>为什么必须改源</strong>：源若是私网地址，Web 服务器的回包（目的 <code>192.168.1.2</code>）在公网上无法路由，永远回不到 H2。</li><li><strong>经过 R2 转发后</strong>：目的 <code>203.10.2.2</code> 命中 R2 的静态映射 → R2 做<strong>目的地址转换</strong>：目的 → <code>192.168.1.2</code>，送进自己身后的私网，送达 Web 服务器。<strong>为什么源 <code>203.10.2.6</code> 不改</strong>：它是合法公网地址，而且是服务器回包的归宿——改了，回包就找不到 R3 了。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>H2 发送时目的写成 <code>192.168.1.2</code></strong>：私网地址出不了公网，且与 H2 自身地址重号；必须写公网门牌 <code>203.10.2.2</code>。</li><li><strong>R3 转发后源仍是 <code>192.168.1.2</code></strong>：出口必须把源换成公网地址，否则回程无法路由。</li><li><strong>R2 转发后又去改源</strong>：R2 只按静态表改目的；源 <code>203.10.2.6</code> 是回程的钥匙，全程不变。</li><li><strong>把映射配在 R1 或 R3 上</strong>：服务器在 R2 身后，能把它"领进门"的只有直连私网的 R2；R3 的私网里根本没有服务器。</li></ul>
+<blockquote>一句话：一进一出各归各的 NAT——<strong>R3 出口改源</strong>（<code>192.168.1.2</code> → <code>203.10.2.6</code>），<strong>R2 入口改目的</strong>（<code>203.10.2.2</code> → <code>192.168.1.2</code>）；外网能"进"的前提是 R2 上的静态映射 <code>203.10.2.2:80 ⇄ 192.168.1.2:80</code>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -112,5 +112,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：大根堆插入元素的比较次数</h2>
+<p><strong>答案：B（2 次）。</strong></p>
+<h3>第一步：明确插入调整的方式</h3>
+<p>序列 25, 13, 10, 12, 9（按层编号 1~5）已是<strong>大根堆</strong>。在尾部插入 18 后它占据第 6 号位置——编号 i 的父结点是 ⌊i/2⌋，故 18 的父结点是 3 号（元素 10）。插入只会破坏「新结点到根」这一条路径上的堆性，调整方法就是<strong>自底向上与父结点比较，大了就交换（上浮），直到不大于父结点或到达根</strong>。</p>
+<h3>第二步：逐步模拟（树形：25 的孩子是 13、10；13 的孩子是 12、9）</h3>
+<table><thead><tr><th>步骤</th><th>比较</th><th>结果</th></tr></thead><tbody><tr><td>放入 18</td><td>18 成为 10 的右孩子（6 号）</td><td>准备上浮</td></tr><tr><td>第 1 次</td><td>18 vs 父 10：18 &gt; 10</td><td><strong>交换</strong>，18 上浮到 3 号</td></tr><tr><td>第 2 次</td><td>18 vs 父 25（1 号）：18 &lt; 25</td><td>满足堆性，<strong>停止</strong></td></tr></tbody></table>
+<p>调整后的堆：25, 13, 18, 12, 9。整个过程<strong>比较 2 次</strong>，选 <strong>B</strong>。</p>
+<h3>第三步：为什么恰好是 2 次</h3>
+<p>18 &gt; 10 但 18 &lt; 25：上浮一层后被 25 拦住。若新元素大于所有祖先（如插入 30），则要一路换到根，比较 ⌈log₂(n+1)⌉ 量级次；本题 18 只「越过」了一个更小的父结点，所以 2 次就停。</p>
+<h3>易错点</h3>
+<ul><li><strong>误把交换次数当比较次数</strong>：本题只发生 1 次交换，但交换前后的两次比较（18&gt;10、18&lt;25）都要计入，答案不是 1。</li><li><strong>忘记第二次比较</strong>：有人认为 18 换上来后「到根了」就结束——不对，3 号的父结点 1 号（25）仍然在路径上，必须再比一次。</li></ul>
+<blockquote>记忆锚点：堆插入 = 「放到尾部 + 与父结点逐层比较上浮」，比较次数 = 上浮路径上比较的次数，本题 2 次。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -66,5 +66,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：混合索引方式的最大文件长度</h2>
+<p><strong>答案：C（1057KB）。</strong></p>
+<h3>第一步：先算"一个索引块装几个地址"</h3>
+<p>磁盘块 256B，地址项 4B，所以一个索引块能容纳 256 ÷ 4 = <strong>64 个地址项</strong>。这个 64 是所有间接层数的基数。</p>
+<h3>第二步：分层数数据块</h3>
+<table><thead><tr><th>地址项</th><th>个数</th><th>能索引的数据块数</th><th>小计</th></tr></thead><tbody><tr><td>直接地址</td><td>4</td><td>4 × 1</td><td>4</td></tr><tr><td>一级间接</td><td>2</td><td>2 × 64</td><td>128</td></tr><tr><td>二级间接</td><td>1</td><td>1 × 64 × 64</td><td>4096</td></tr></tbody></table>
+<p>合计 4 + 128 + 4096 = <strong>4228 个数据块</strong>。</p>
+<h3>第三步：换算文件长度</h3>
+<p>4228 × 256B = 1082368B = 1082368 ÷ 1024 = <strong>1057KB</strong>，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉二级间接</strong>：只算 4+128 = 132 块，得 33KB，正是干扰项 A。</li><li><strong>间接层数乘错</strong>：二级间接要连乘两次 64（64×64 = 4096）——先由地址项指向索引块，再由索引块指向数据块；少乘一层或位置放错就会凑出 B、D 这类干扰值。</li><li><strong>单位换算错</strong>：算出 1082368B 后忘除以 1024 换成 KB。</li></ul>
+<blockquote>记忆锚点：一级乘一次 64，二级乘两次 64；最后统一除 1024 化成 KB。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

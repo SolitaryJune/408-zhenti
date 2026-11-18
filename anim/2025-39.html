@@ -93,5 +93,22 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：UDP 与 TCP 拿到一次时间查询服务各需几个 RTT</h2>
+<p><strong>答案：B</strong>（UDP 8 ms，TCP 16 ms）。</p>
+<h3>第一步：UDP——无连接，1 个 RTT</h3>
+<p>UDP 不需要握手：客户在 t = 0 直接发出查询请求，0.5 RTT（4 ms）后服务器收到并立即应答，再过 4 ms 客户拿到时间。总耗时 = 1 RTT = <strong>8 ms</strong>。</p>
+<h3>第二步：TCP——先握手（1 RTT），再传数据（1 RTT）</h3>
+<p>三次握手：t = 0 客户发 SYN，4 ms 后到达服务器；服务器回 SYN+ACK，t = 8 ms（即 1 个 RTT）到达客户，客户端连接建立，客户此后才被允许发送数据；客户随即发出 ACK 并携带查询请求，请求 4 ms 后（t = 12 ms）到达服务器；服务器立即响应，t = 16 ms 客户收到时间。</p>
+<p>总耗时 = 握手 1 RTT + 请求/响应 1 RTT = 2 RTT = <strong>16 ms</strong>。</p>
+<h3>第三步：对比</h3>
+<p>UDP 8 ms &lt; TCP 16 ms：UDP 一个往返直接拿结果；TCP 要先花一个 RTT 建立连接，才能开始请求。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A（8，8）</strong>：UDP 算对了，但 TCP 漏算了三次握手的 1 个 RTT——握手期间客户不能发数据，这 1 个 RTT 是纯开销，必须先付。</li><li><strong>误选 D（16，16）</strong>：TCP 算对了，但把 UDP 也当成要先"建立联系"花 2 个 RTT——UDP 无连接，无需任何准备阶段，1 个 RTT 就是它的最少耗时。</li><li><strong>误选 C（16，8）</strong>：两头同时错——UDP 被多算 1 个 RTT，TCP 又漏算握手。</li><li><strong>单程与往返混淆</strong>：RTT = 8 ms 指一来一回，单程传播时延是 4 ms，别把 8 ms 当单程。</li></ul>
+<blockquote>一句话结论：UDP = 1 RTT = <strong>8 ms</strong>；TCP = 握手 1 RTT + 请求/响应 1 RTT = <strong>16 ms</strong>，选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

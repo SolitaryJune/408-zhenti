@@ -63,5 +63,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：MMU 地址转换过程中检测哪些事件</h2>
+<p><strong>答案：B（Cache 缺失）</strong></p>
+<h3>第一步：MMU 在做什么</h3>
+<p>MMU（存储管理单元）的任务是把 CPU 给出的<strong>虚拟地址</strong>翻译成<strong>物理地址</strong>：先查 TLB，未命中再查内存中的页表，最后拼接出物理地址。转换过程中会逐项检测三类事件。</p>
+<h3>第二步：转换过程中检测的三类事件</h3>
+<ul><li><strong>TLB 缺失</strong>：TLB 中查不到该虚页号 → 检测后转去查内存页表（甚至触发缺页），属于转换过程的一部分。</li><li><strong>页面缺失</strong>：页表项有效位为 0，该页不在主存 → 触发<strong>缺页异常</strong>，由 MMU 在查表时检测，转操作系统调页。</li><li><strong>访问越权</strong>：页表项中有读/写/执行等权限位，操作与权限不符（如写只读页）→ 触发<strong>保护异常</strong>。</li></ul>
+<h3>第三步：Cache 缺失与 MMU 无关</h3>
+<p>Cache 缺失是拿到物理地址之后访问 Cache 时，由 Cache 的<strong>标记比较电路</strong>发现"该块不在 Cache 中"而产生的，属于访存阶段的事件，不属于 MMU 的地址转换过程。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 C 或 D</strong>：以为"缺页、TLB 缺失是 OS 或其他硬件处理的"——它们恰恰都是在 MMU 查表/查 TLB 时检测出来的。</li><li><strong>混淆两个阶段</strong>：MMU 管"地址翻译与权限检查"，Cache 管"数据在不在高速缓存"，是访存路径上两个不同部件的职责。</li></ul>
+<blockquote>一句话结论：访问越权、页面缺失、TLB 缺失都在 MMU 转换/查表过程中检测；Cache 缺失由 Cache 自己的标记比较检测——选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

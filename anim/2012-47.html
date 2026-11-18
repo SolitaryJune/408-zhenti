@@ -128,5 +128,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TCP 抓包分析——从 40 字节十六进制读出方向、握手、填充与跳数</h2>
+<h3>第 0 步：先建立"读包"的方法——按头部结构逐字段切</h3>
+<p>抓包题的全部信息都在那 40 字节里，按题 47-a 图（IP 头）与题 47-b 图（TCP 头）的结构切开读：</p>
+<ul><li><strong>IP 头（前 20B）</strong>：首字节 <code>45</code> = 版本 4、头长 5×4B = 20B；第 3~4 字节是<strong>总长度</strong>；第 9 字节是 <strong>TTL</strong>；第 10 字节协议 06 = TCP；末 8 字节是源、目的 IP。先把两个地址认熟：<code>c0 a8 00 08</code> = 192.168.0.8（主机 H）、<code>d3 44 47 50</code> = 211.68.71.80（服务器 S）——<strong>源 IP 是谁，分组就是谁发的</strong>。</li><li><strong>TCP 头</strong>：源/目的端口、序号、确认号、数据偏移、标志位。数据偏移的单位是 <strong>4B</strong>（为什么 ×4：TCP 头长必须是 4 字节的整数倍，偏移字段数的是 32 位字的个数），<code>70</code> → 7×4 = 28B 头，<code>50</code> → 20B 头。标志位低 6 位依次为 FIN、SYN、RST、PSH、ACK、URG：<code>02</code> = SYN、<code>12</code> = SYN+ACK、<code>10</code> = ACK、<code>18</code> = PSH+ACK。</li><li><strong>确认号的语义</strong>（本题两处要用）：确认号 = 期望收到的下一个字节的序号（累积确认）。<strong>SYN 报文要消耗一个序号</strong>，所以对 SYN 的确认号 = 对方 ISN＋1；对数据的确认号 = 已收到的最后一个字节序号＋1。</li></ul>
+<h3>第 1 问：哪些是 H 发的、哪些完成握手、哪些填充</h3>
+<ul><li><strong>方向</strong>：1、3、4 号源 IP = <code>c0 a8 00 08</code> → 由 <strong>H 发送</strong>；2、5 号源 IP = <code>d3 44 47 50</code> → S 发送。</li><li><strong>握手</strong>：1 号标志 <code>02</code>（SYN，序号 846b41c5）→ 2 号 <code>12</code>（SYN+ACK，确认号 846b41c6 = 846b41c5＋1，正是"SYN 占一个序号"）→ 3 号 <code>10</code>（ACK，确认号 e0599ff0 = 对方 ISN e0599fef＋1）。SYN、SYN+ACK、ACK 三次握手齐备，且确认号逐个回扣对方序号 → <strong>1、2、3 号完成连接建立</strong>。</li><li><strong>填充</strong>：机制在以太网帧——MAC 帧数据字段最短 46B（最小帧长 64B − 目的/源地址与长度 14B − FCS 4B = 46B），IP 数据报不足 46B 就在帧层补填充。逐包看 IP 总长度：1、2 号 <code>0030H</code> = 48B（不填），3、5 号 <code>0028H</code> = 40B（<strong>补 6B</strong>），4 号 <code>0038H</code> = 56B（不填）→ <strong>填充的是 3、5 号</strong>。为什么填充不影响后续计算：填充加在帧的数据字段末尾、属于链路层，IP 总长度字段仍是 40，接收方按总长度上交 IP 层后把填充丢弃。</li></ul>
+<h3>第 2 问：S 已经收到的应用层数据字节数</h3>
+<p>分组携带的应用数据 = IP 总长度 − IP 头长 − TCP 头长（TCP 头长 = 数据偏移 × 4B）：</p>
+<ul><li>1、2 号：48 − 20 − 7×4 = 0；3、5 号：40 − 20 − 20 = 0——都是纯控制段，不带数据；</li><li>只有 4 号带数据：56 − 20 − 20 = <strong>16B</strong>（标志 <code>18</code> = PSH+ACK，序号 846b41c6，这 16 字节从 846b41c6 编起）。</li></ul>
+<p>但"H 发了"不等于"S 收到"，要看 5 号（S 发回的 ACK）的确认号：<code>846b41d6</code> = 846b41c6 ＋ 16。按累积确认，确认号之前的字节已全部收齐 → S 已收到应用层数据 <strong>16 字节</strong>。</p>
+<h3>第 3 问：该分组到达 H 时经过了多少个路由器</h3>
+<p>TTL 的机制：分组每被一台<strong>路由器</strong>转发一次，TTL 减 1；两端主机收发都不减 → 捕获时的 TTL − 发出时的 TTL = 路由器数。47-b 表与 5 号分组的标识字段同为 <code>6811H</code>，即 5 号在 S 发出时的样子：TTL = <code>40H</code> = 64；H 捕获到的 5 号 TTL = <code>31H</code> = 49；64 − 49 = <strong>15 台路由器</strong>。两端都是主机、主机不减 TTL，所以差值不需要再加 1 或减 1。</p>
+<h3>易错点</h3>
+<ul><li><strong>TCP 头一律按 20B 算</strong>：1、2 号的数据偏移是 7，头长 28B（含选项）；算数据量必须用数据偏移 × 4。</li><li><strong>把"+1 的确认号"当笔误</strong>：SYN 消耗一个序号，SYN 与数据的确认号都指"下一个期望字节"，这是 TCP 的规定。</li><li><strong>把填充算进 IP 总长度</strong>：填充在帧层、不改变 IP 总长度字段，也不计入应用数据。</li><li><strong>TTL 差值再 ±1</strong>：只有路由器转发时减 1，两端主机不减，15 就是路由器台数。</li></ul>
+<blockquote>记忆锚点：源 IP 定方向；标志位＋确认号回扣定握手；IP 总长度 − 头部长定数据与填充（46B 下限定填充）；TTL 差值定跳数。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

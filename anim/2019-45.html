@@ -87,5 +87,26 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：递归函数 f1 的机器级代码（五问全解）</h2>
+<h3>第 0 步：先立模型——这次递归在机器上是怎么走起来的</h3>
+<ul><li><strong>函数调用模型</strong>：<code>call</code> 指令做两件事——把<strong>返回地址</strong>（call 自己的下一条指令地址）压栈，再跳到函数入口；函数体用 <code>ebp+8</code> 访问实参 n；<code>ret</code> 从栈顶弹回返回地址。递归就是这套机制的嵌套：每层调用各有一个栈帧。第 16 行 call 的目标 <code>00401000</code> 正是第 1 行 <code>push ebp</code> 所在的 f1 入口，所以它是递归调用。</li><li><strong>相对寻址模型</strong>：CPU 取指后 PC 已自动指向<strong>下一条</strong>指令（顺序执行是默认），所以相对转移的基准是下一条指令地址：<strong>目标地址 = 下一条指令地址 + 偏移量</strong>；偏移量是带符号补码，负数表示往低地址（向前）跳。</li><li><strong>溢出模型</strong>：int 是 32 位补码 = 模 2³² 的记数方式，范围 [−2³¹, 2³¹−1]；乘法器内部算的是 64 位真积，写回 32 位寄存器只保留<strong>低 32 位</strong>，等价于真积 mod 2³²。三个模型立好，五问都是顺推。</li></ul>
+<h3>第（1）问：调用次数与递归调用指令</h3>
+<p>f1 只在 n &gt; 1 时执行 <code>return n*f1(n-1)</code>。计算 f(10) 的调用链为 f1(10)→f1(9)→…→f1(1)：n 从 10 逐层减 1，每层进入一次 f1，n=1 走 <code>else return 1</code> 不再 call，所以共调用 <strong>10 次</strong>；每次递归调用自身都由<strong>第 16 行 call 指令</strong>完成。</p>
+<h3>第（2）问：条件转移与必跳转指令</h3>
+<p>分类机制看"跳不跳由什么决定"：条件转移要先由 <code>cmp</code>（第 11 行）建立标志位，<strong>跳不跳看标志</strong>；而 <code>call</code> 必须转去函数入口、<code>ret</code> 必须按栈顶返回地址跳回、<code>jmp</code> 是无条件转移——三者的转移目标在指令里已经确定，<strong>必然跳转</strong>。所以：条件转移只有<strong>第 12 行 jle</strong>（<code>7E 17</code>，n≤1 时跳向 00401035H 的 else 分支）；一定跳转的是<strong>第 16 行 call、第 20 行 jmp、第 30 行 ret</strong>。</p>
+<h3>第（3）问：返回地址、偏移量与大小端</h3>
+<ol><li><strong>第 17 行地址</strong>：第 16 行 call 在 00401025H，机器码 <code>E8 D6 FF FF FF</code> 长 5 字节（1 字节操作码 E8 + 4 字节偏移量），故下一条指令地址 = 00401025H + 5 = <strong>0040102AH</strong>。这个地址同时就是 call 压栈的返回地址——"下一条指令地址"在相对寻址和调用返回里是同一个值。</li><li><strong>偏移量</strong>：目标 = 下一条 + 偏移量 ⇒ 偏移量 = 00401000H − 0040102AH = −2AH。负位移用 32 位补码：2³² − 2AH = <strong>FFFF FFD6H</strong>（为什么是补码：偏移量是带符号数，−42 表示往低地址跳回 f1 入口）。</li><li><strong>大小端</strong>：机器码中偏移量按 <code>D6 FF FF FF</code> 存放——最低有效字节 D6 在最低地址，故 M 采用<strong>小端方式</strong>。</li></ol>
+<h3>第（4）问：为什么返回 1932053504</h3>
+<p>int 为 32 位补码，上限 2³¹−1 = 2147483647；而 f(13) = 6227020800 &gt; 2³¹−1，<strong>真积已超出 int 表示范围</strong>。机器保留 64 位乘积的低 32 位（模 2³²）：6227020800 − 4294967296 = 1932053504，恰为题给返回值（本例低 32 位 &lt; 2³¹，按补码读回仍是正数）。修改办法：把 f1 的<strong>形参、局部变量和返回值都改为 double</strong>（53 位尾数可精确表示 2⁵³ 内的整数，6227020800 &lt; 2⁵³；或改用足够宽的整数类型如 64 位整数）。</p>
+<h3>第（5）问：OF=1 的条件与自陷指令</h3>
+<p>64 位真积 = 高 32 位 : 低 32 位。真积能放进 32 位补码 ⟺ 真积在 [−2³¹, 2³¹−1] ⟺ <strong>把低 32 位算术左"伸"32 位后数值不变</strong>，即高 32 位恰是低 32 位的符号扩展。因此判据是：<strong>高 32 位不是低 32 位的符号扩展 ⇒ 真积溢出 ⇒ OF=1</strong>。为什么还要加指令：OF 只是把"溢出"记在标志位上，imul 本身不会自动触发异常；要让 CPU 在溢出发生点转入异常处理，编译器应在 imul 后加一条<strong>溢出自陷指令</strong>——它检测到 OF=1 即自陷，转入溢出异常处理程序。</p>
+<h3>易错点</h3>
+<ul><li><strong>偏移量从本指令地址算起</strong>：基准是"下一条指令地址"（=返回地址 0040102AH），不是 call 自身地址。</li><li><strong>把 FFFFFFD6H 当正数</strong>：它是 −2AH 的 32 位补码，负偏移 = 往低地址跳（跳回函数入口），这正是递归调用的方向。</li><li><strong>溢出只答"int 装不下"</strong>：要能写出还原算式——保留低 32 位 = 真积 mod 2³²（6227020800−4294967296=1932053504）。</li><li><strong>大小端看错对象</strong>：判据是多字节数据（偏移量）在内存里的<strong>字节存放顺序</strong>，不是指令的排列顺序。</li><li><strong>OF 判据说成"结果为负"</strong>：OF 看的是真积是否超出 32 位补码范围，等价说法是"高 32 位 ≠ 低 32 位的符号扩展"。</li></ul>
+<blockquote>大题锚点：call = 压返回地址（下一条指令地址）+ 跳转；偏移量 = 目标 − 下一条；溢出值 = 真值 mod 2³²；OF=1 ⟺ 高 32 位不是低 32 位的符号扩展；最低有效字节在最低地址 = 小端。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

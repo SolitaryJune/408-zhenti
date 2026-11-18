@@ -64,5 +64,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：按计算/I/O 比例设置进程优先级</h2>
+<p><strong>答案：B（P₃ &gt; P₂ &gt; P₁）。</strong></p>
+<h3>第一步：目标决定排序标准</h3>
+<p>要提高系统资源利用率，就要让 CPU 和 I/O 设备这两类硬件<strong>尽量同时干活</strong>。I/O 繁忙型进程正是"并行发动机"：给它高优先级，它抢到 CPU 后算一小段就发起 I/O，设备转起来；它阻塞等 I/O 时又立刻把 CPU 让给别人，CPU 也不空闲。反过来让 CPU 繁忙型优先，它会长期霸占 CPU，设备大量空转。所以排序标准只有一条：<strong>I/O 时间占比越高，优先级越高</strong>。</p>
+<h3>第二步：对号入座</h3>
+<table><thead><tr><th>进程</th><th>计算</th><th>I/O</th><th>特征</th><th>优先级</th></tr></thead><tbody><tr><td>P₃</td><td>15%</td><td>85%</td><td>I/O 繁忙型</td><td>最高</td></tr><tr><td>P₂</td><td>50%</td><td>50%</td><td>均衡型</td><td>居中</td></tr><tr><td>P₁</td><td>90%</td><td>10%</td><td>CPU 繁忙型</td><td>最低</td></tr></tbody></table>
+<p>即 <strong>P₃ &gt; P₂ &gt; P₁</strong>，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A（P₁ &gt; P₂ &gt; P₃）</strong>：直觉上"计算量大的先跑"，实际 P₁ 长期占用 CPU，P₃ 的 I/O 设备大量空转，整机利用率反而最低——与题目目标背道而驰。</li><li><strong>误选 D（P₁ &gt; P₂ = P₃）</strong>：把"最耗 CPU"当成"最该优先"。优先级要给"能让设备并行起来"的进程，不是给"最需要 CPU"的进程；且 P₂ 与 P₃ 的 I/O 占比相差悬殊（50% 对 85%），划等号没有依据。</li><li><strong>误选 C（P₂ &gt; P₁ = P₃）</strong>：以为均衡型进程"两头都占"收益最大。但 P₂ 的 I/O 占比不及 P₃，让 P₂ 插队只会推迟 P₃ 发起 I/O，降低设备并行度；P₁ 与 P₃ 一个 CPU 型、一个 I/O 型，特征截然相反，同等对待同样没有依据。</li></ul>
+<blockquote>一句话结论：I/O 繁忙者优先（P₃ &gt; P₂ &gt; P₁），CPU 与设备才能最大程度并行，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

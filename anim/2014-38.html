@@ -120,5 +120,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TCP 超时后 10 个 RTT 内拥塞窗口的演化</h2>
+<h3>结论：答案 A（10KB）</h3>
+<p>TCP 发送窗口 = <strong>min(拥塞窗口 cwnd, 接收窗口 rwnd)</strong>。这道题一半考"超时后 cwnd 怎么长"，一半考"最后被接收窗口卡住"。</p>
+<h3>第一步：超时瞬间，先重置</h3>
+<p>t 时刻超时，此时 cwnd = 8KB：</p>
+<ul><li><strong>ssthresh = cwnd ÷ 2 = 4KB</strong>；</li><li><strong>cwnd 重置为 1KB</strong>（1 个 MSS），重新进入慢开始。</li></ul>
+<h3>第二步：逐 RTT 推 cwnd（一直有数据可发）</h3>
+<p>慢开始阶段每 RTT 翻倍，达到 ssthresh = 4KB 后改用拥塞避免，每 RTT 加 1KB：</p>
+<table><thead><tr><th>时刻</th><th>cwnd (KB)</th><th>阶段</th></tr></thead><tbody><tr><td>超时重置</td><td>1</td><td>慢开始</td></tr><tr><td>1 个 RTT 后</td><td>2</td><td>慢开始（×2）</td></tr><tr><td>2 个 RTT 后</td><td>4</td><td>慢开始（×2），到达 ssthresh，转拥塞避免</td></tr><tr><td>3 个 RTT 后</td><td>5</td><td>拥塞避免（+1）</td></tr><tr><td>4 个 RTT 后</td><td>6</td><td>拥塞避免（+1）</td></tr><tr><td>5 个 RTT 后</td><td>7</td><td>拥塞避免（+1）</td></tr><tr><td>6 个 RTT 后</td><td>8</td><td>拥塞避免（+1）</td></tr><tr><td>7 个 RTT 后</td><td>9</td><td>拥塞避免（+1）</td></tr><tr><td>8 个 RTT 后</td><td>10</td><td>拥塞避免（+1）</td></tr><tr><td>9 个 RTT 后</td><td>11</td><td>拥塞避免（+1）</td></tr><tr><td>10 个 RTT 后</td><td>12</td><td>拥塞避免（+1）</td></tr></tbody></table>
+<h3>第三步：被接收窗口封顶</h3>
+<p>乙每次确认都告知<strong>接收窗口 rwnd = 10KB</strong>，所以 10 个 RTT 后：</p>
+<p>发送窗口 = min(cwnd, rwnd) = min(12KB, 10KB) = <strong>10KB</strong>，选 <strong>A</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘了 min</strong>：把 cwnd = 12KB 当成发送窗口，误选 B（12KB）——发送窗口还要和接收窗口取小。</li><li><strong>慢开始数错</strong>：cwnd 从 1 翻倍是 1→2→4（到达 4 后停止翻倍），不是 1→2→4→8；8 已经超时过的值，重新爬升到 ssthresh=4 就必须转拥塞避免。</li><li><strong>ssthresh 取错</strong>：ssthresh 是超时时刻 cwnd 的一半（8÷2=4），且本轮不再变化；不是减 1 也不是 1KB。</li></ul>
+<blockquote>记忆锚点：超时 → ssthresh 减半、cwnd 归 1；慢开始翻倍到 ssthresh，之后每 RTT 加 1；<strong>最终发送窗口永远 min(cwnd, rwnd)</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

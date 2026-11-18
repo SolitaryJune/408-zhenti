@@ -84,5 +84,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：强制类型转换中的截断与符号扩展</h2>
+<p><strong>答案：B（j = -32 759）</strong></p>
+<h3>第一步：先立机制——位串不变，"解释"才定值</h3>
+<p>整型转换的底层规则：赋值只搬<strong>位模式</strong>，数值由"用什么宽度和符号去解释这个位模式"决定。把 n 位补码看成<strong>模 2^n 的记数</strong>：最高位为 0 是普通正数；最高位为 1 时真值 = 无符号值 − 2^n——因为位串 b 与它表示的负数 x 满足 x ≡ b (mod 2^n)，减一次模即得真值。宽位赋给窄位是<strong>截断</strong>（直接砍掉高位），窄位赋给宽位是<strong>符号扩展</strong>（高位补符号位），补符号位数值不变——那是同一个负数在更大模下的化身。</p>
+<h3>第二步：把 32777 写成十六进制</h3>
+<p>32777 = 0x8000 + 9 = <strong>8009H</strong>。作为 32 位 int，它的位模式（书写序，高位在左）是 <code>00 00 80 09</code>，最高位 0，是正数。</p>
+<h3>第三步：short si = i —— 截断，不报溢出</h3>
+<p>int（32 位）赋给 short（16 位）时<strong>直接截取低 16 位</strong>：si 的位模式为 <code>8009H</code>。这一步其实发生了溢出（32777 超出 short 的 -32 768～32 767 范围），但 C 语言不报错、默默截断——截断从不保证数值不变，这正是题眼。</p>
+<p>再用有符号 short 解释这个位模式：最高位是 1，si 是负数，真值 = 32777 − 65536 = <code>8009H − 10000H</code> = <strong>-32 759</strong>。</p>
+<h3>第四步：int j = si —— 符号扩展，数值不变</h3>
+<p>16 位赋给 32 位时做<strong>符号扩展</strong>：<code>8009H</code> → <code>FFFF 8009H</code>（高 16 位全部补符号位 1）。位模式变了，但按 int 解释的<strong>数值不变</strong>，仍是 -32 759，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 D（32 777）</strong>：误以为"截断后再扩展"数值不变，忽略了 <code>8009H</code> 按 short 解释是负数；或做了零扩展（高位补 0），把 -32 759 变成 +32777。</li><li><strong>选 A（-32 777）</strong>：直接给 32777 添负号，把"补码解释"当成"取相反数"。</li><li><strong>选 C（32 759）</strong>：算出了 32759 却丢了符号位。</li></ul>
+<blockquote>一句话结论：截断只砍高位、解释位模式才定值（<code>8009H</code> → -32 759）；符号扩展保证值不变——选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

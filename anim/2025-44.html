@@ -139,5 +139,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：补码除法器的初始寄存器内容与除法异常</h2>
+<h3>第 0 步：先立机制——补码除法为什么要有 64 位被除数容器和三个寄存器</h3>
+<p>除法器面对的不对称是：被除数 d[i] 与除数 x 都是 32 位，但<strong>相除前被除数要先符号扩展成 64 位</strong>——商最多 32 位（放在原低位），余数占高位，"高位 R + 低位 Q"合成一个 64 位的被除数容器，除法过程中 R、Q 联合逐位左移、每步试一位商。这正是 <code>scov R1</code>（符号扩展）与 {R0, R1} 双寄存器存在的理由：<strong>符号扩展把负被除数高位的"欠账"如实带进 64 位容器</strong>——负数高位补 1、数值不变，同一个负数在更大模下的化身。</p>
+<h3>第（1）问：R、Q、Y 的初始内容、计数器与 ALU 运算</h3>
+<p>按机器级代码推 idiv 执行前的现场：<code>mov R1, (R3+R4*4)</code> 把 d[i] = 87654321H 取入 R1（最高位是 1，负数）；<code>scov R1</code> 对 R1 按符号扩展成 64 位 → {R0, R1} = FFFF FFFF 8765 4321H；除数 x = 0xFF 已在 R2。三个寄存器的初值如下：</p>
+<table><thead><tr><th>寄存器</th><th>初始内容</th><th>为什么</th></tr></thead><tbody><tr><td>R</td><td>FFFFFFFFH</td><td>64 位被除数的高 32 位 = 符号扩展补出的全 1（被除数为负，高位补符号位 1）</td></tr><tr><td>Q</td><td>87654321H</td><td>64 位被除数的低 32 位 = d[i] 原样</td></tr><tr><td>Y</td><td>000000FFH</td><td>除数 x = 0xFF（正数，无需扩展）</td></tr></tbody></table>
+<ul><li><strong>计数器在哪个部件</strong>：除法是按"步"进行的——每步做一次加/减、移一位、记一位商；发号施令的是<strong>控制逻辑</strong>，它必须记住"现在到第几步"，所以计数器 Cn 位于<strong>控制逻辑</strong>中（ALU 只管算，不记步数）。</li><li><strong>ALUop 控制的运算有哪几种</strong>：整个除法过程每步只做两件事——试商时<strong>减</strong>（余数减除数）、不够减时<strong>加</strong>回去（恢复/调整余数），配合移位完成；所以 ALUop 控制的只有<strong>加法和减法</strong>两种运算。</li></ul>
+<h3>第（2）问：除法异常的情形与响应操作</h3>
+<p><strong>机制</strong>：除法异常只有两类来源——① 商根本无定义（除数为 0）；② 商有定义但<strong>装不下</strong>（超出 32 位补码表示范围）。补码能表示的最小数是 −2³¹，其绝对值恰比最大可表示数 2³¹−1 大 1，于是唯一"装不下"的组合是 (−2³¹) ÷ (−1) = +2³¹；除数取其他非零值时，商的绝对值都不会超过 2³¹−1。</p>
+<table><thead><tr><th>情形</th><th>d[i]（被除数）</th><th>x（除数）</th><th>为什么异常</th></tr></thead><tbody><tr><td>除 0 异常</td><td>表示范围内的任意值</td><td>0000 0000H</td><td>除数为 0，商无定义</td></tr><tr><td>商溢出异常</td><td>8000 0000H</td><td>FFFF FFFFH</td><td>−2³¹ ÷ (−1) = +2³¹，超出 int 表示范围</td></tr></tbody></table>
+<p>发生除法异常后，异常响应过程中 CPU 需要依次完成（每步都有"不做会怎样"的理由）：</p>
+<ol><li><strong>保存断点和程序状态</strong>——不保存现场，异常处理完就回不到被中断的程序；</li><li><strong>关中断</strong>——响应期间若再被新中断打断，现场会被嵌套覆盖；</li><li><strong>跳转到异常处理程序执行</strong>——转入除法异常的处理程序。</li></ol>
+<h3>易错点</h3>
+<ul><li><strong>R 答成 00000000H</strong>：符号扩展看被除数最高位，87654321H 最高位为 1，高 32 位全补 1。</li><li><strong>溢出情形写错组合</strong>：只有最小负数 −2³¹（8000 0000H）除以 −1（FFFF FFFFH）时商 +2³¹ 才装不下；除数是其他非零值时商都在范围内。</li><li><strong>计数器位置答成 ALU 或寄存器</strong>：计步数是"控制"的事，计数器在控制逻辑里。</li><li><strong>响应操作漏「关中断」</strong>：标准三步是保存断点和程序状态、关中断、转异常处理程序。</li></ul>
+<blockquote>一句话结论：R = FFFFFFFFH（符号扩展全 1）、Q = 87654321H、Y = 000000FFH；计数器在控制逻辑中；ALU 只做加、减。x = 0000 0000H（d[i] 任意），或 d[i] = 8000 0000H 且 x = FFFF FFFFH 时触发除法异常；响应 = 保存断点和程序状态 → 关中断 → 转异常处理程序。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -62,5 +62,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TLB / Cache / Page 命中组合的可能性判断</h2>
+<p>答案：<strong>D</strong>（TLB 命中、Cache 命中、Page 未命中不可能发生）。</p>
+<h3>第一步：理清三级结构与关键规则</h3>
+<p>一次访存涉及三级查找：<strong>TLB</strong>（页表项的高速副本）→ <strong>Page</strong>（页面是否已调入主存）→ <strong>Cache</strong>（主存数据块副本）。</p>
+<p>关键规则：<strong>TLB 缓存的是"已调入主存的页面"的有效页表项</strong>——页面没进主存（缺页）时页表项无效，根本不会被 TLB 收留。因此：</p>
+<blockquote>TLB 命中 ⇒ 页面必在主存 ⇒ Page 必命中；TLB 未命中则对 Page、Cache 没有任何约束（单箭头，逆推不成立）。</blockquote>
+<h3>第二步：逐项检验</h3>
+<table><thead><tr><th>组合</th><th>可能性</th><th>理由</th></tr></thead><tbody><tr><td>A. TLB✗ Cache✗ Page✗</td><td>可能</td><td>访问一个从未调入的页面</td></tr><tr><td>B. TLB✗ Cache✓ Page✓</td><td>可能</td><td>页表项不在 TLB（可能刚被替换出），但页面在内存、数据在 Cache</td></tr><tr><td>C. TLB✓ Cache✗ Page✓</td><td>可能</td><td>TLB 给出物理地址，但该数据块恰好不在 Cache</td></tr><tr><td>D. TLB✓ Cache✓ Page✗</td><td><strong>不可能</strong></td><td>TLB 命中已保证 Page 命中，与"Page 未命中"矛盾</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>以为 TLB 未命中就要缺页</strong>：TLB 未命中只是要再去主存查一次页表，页面多半还在内存。</li><li><strong>把 Cache 命中与 Page 命中互相挂钩</strong>：二者彼此独立，谁也推不出谁。</li><li><strong>忽略 TLB 缓存内容的有效性</strong>：TLB 不会缓存无效（缺页）页表项，这是 D 自相矛盾的根源。</li></ul>
+<blockquote>记忆锚点：TLB 命中 ⇒ Page 命中（单向）；反方向与 Cache 方向都不成立——不可能的组合是 D。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

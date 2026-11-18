@@ -74,5 +74,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：掩码与默认网关配置不当造成的通信故障</h2>
+<p><strong>答案：C（H1 不能与 H3 进行正常 IP 通信）。</strong></p>
+<h3>第一步：按掩码划分子网</h3>
+<p>两组主机的子网掩码都是 255.255.255.128（/25）：H1（192.168.3.2）、H2（192.168.3.3）落在 192.168.3.0/25（可用 .1~.126）；H3（192.168.3.251）、H4（192.168.3.252）落在 192.168.3.128/25（可用 .129~.254）。</p>
+<h3>第二步：逐项判断</h3>
+<ol><li><strong>A 错</strong>：H1 与 H2 同属 192.168.3.0/25，同网段直接交付，可正常通信。</li><li><strong>B 错</strong>：H4 的默认网关 192.168.3.254 正是图中 R2 的接口 E1，H4 可以访问 Internet，"H2 与 H4 均不能"不成立。</li><li><strong>D 错</strong>：H3 与 H4 同属 192.168.3.128/25，直接交付。</li><li><strong>C 对</strong>：H1 用掩码判断 H3 不在同一子网，把分组交给默认网关 <strong>192.168.3.1</strong>；但图中 LAN 里只有 R2 的接口 192.168.3.254，<strong>没有任何设备配置 192.168.3.1</strong>，网关不可达，H1 与 H3 无法通信。</li></ol>
+<h3>易错点</h3>
+<ul><li><strong>默认网关只是主机上的一个配置值</strong>：LAN 中没有对应接口，它就形同虚设，ARP 解析不到。</li><li><strong>误以为同在 192.168.3.0/24 就能互通</strong>：主机按掩码判断"同网段直发、异网段交网关"，H1 与 H3 恰好被 /25 切开。</li></ul>
+<blockquote>H1 与 H3 被 /25 掩码分进两个子网，而 H1 的网关 192.168.3.1 在图中根本不存在，故无法通信，选 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

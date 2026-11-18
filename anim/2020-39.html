@@ -96,5 +96,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：SYN、FIN 各"吃掉"一个序号</h2>
+<p><strong>答案：C（4000 字节）。</strong></p>
+<h3>第一步：在序号轴上标出三个关键点</h3>
+<p>TCP 对<strong>每一个字节</strong>按序编号，且 <strong>SYN 和 FIN 各消耗一个序号</strong>：</p>
+<ul><li>三次握手第一次的 SYN 段序号 = 1000，它占掉 1000 号 → 应用层数据<strong>第一个字节序号 = 1001</strong>；</li><li>FIN 段序号 = 5001，FIN 也占一个序号，它的序号 = 已发数据最后一字节的序号 + 1 → 数据<strong>最后一个字节序号 = 5000</strong>。</li></ul>
+<h3>第二步：数一数数据字节</h3>
+<p>数据字节占据序号 1001 ～ 5000：</p>
+<table><thead><tr><th>序号</th><th>1000</th><th>1001</th><th>…</th><th>5000</th><th>5001</th></tr></thead><tbody><tr><td>归属</td><td>SYN</td><td>数据首字节</td><td>应用层数据</td><td>数据末字节</td><td>FIN</td></tr></tbody></table>
+<p>字节数 = 5000 − 1001 + 1 = <strong>4000</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 B（4001）</strong>：只记得 SYN 占号、忘了 FIN 也占号（把数据末字节算到 5001）；或反过来只扣 FIN 不扣 SYN（把首字节算成 1000）。</li><li><strong>选 A（4002）</strong>：SYN、FIN 都不占号，直接用 5001 − 1000 + 1。</li><li><strong>选 D（3999）</strong>：知道"FIN 序号 5001 表示最后数据字节是 5000"，却又多减了 1。</li></ul>
+<blockquote>一句话结论：SYN 和 FIN 各消耗一个序号，数据占据 1001 ～ 5000 号，共 <strong>4000 字节</strong>，选 <strong>C</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

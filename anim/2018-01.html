@@ -96,5 +96,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：操作数栈与运算符栈协同求值</h2>
+<p><strong>答案：B（S1 栈顶为 15）。</strong></p>
+<h3>第一步：明确 F() 的取数与运算口径</h3>
+<p>S1 自底向上是 5、8、3、2（栈顶 2），S2 自底向上是 *、-、+（栈顶 +）。F() 依次：先弹出的操作数记为 a（栈顶那个），再弹出的是 b，从 S2 弹出栈顶运算符 op，计算 <strong>b op a</strong>，结果压回 S1。每次调用消耗 2 个操作数、1 个运算符，3 次调用正好把 S2 清空。</p>
+<h3>第二步：逐次模拟三次 F()</h3>
+<table><thead><tr><th>次数</th><th>a（先弹）</th><th>b（后弹）</th><th>op</th><th>计算 b op a</th><th>S1 变化</th><th>S1 栈顶</th></tr></thead><tbody><tr><td>第 1 次</td><td>2</td><td>3</td><td>+</td><td>3 + 2 = 5</td><td>5,8,5</td><td>5</td></tr><tr><td>第 2 次</td><td>5</td><td>8</td><td>-</td><td>8 - 5 = 3</td><td>5,3</td><td>3</td></tr><tr><td>第 3 次</td><td>3</td><td>5</td><td>*</td><td>5 × 3 = 15</td><td>5,15</td><td>15</td></tr></tbody></table>
+<p>第 1 次：弹出 a=2、b=3 与 op=+，得 3+2=5 压回，S1 变为 5,8,5；第 2 次：弹出 a=5、b=8 与 op=-，得 8-5=3，S1 变为 5,3；第 3 次：弹出 a=3、b=5 与 op=*，得 5×3=15。故 S1 栈顶保存的值是 15，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 a、b 的角色弄反</strong>：若按「先弹的当 b、后弹的当 a」算，第 2 次会得 5-8=-3，最终 -15，误选 A。</li><li><strong>认为运算符按书写顺序使用</strong>：S2 的栈顶是 +，最先参与运算的就是 +；运算符栈的弹出顺序是 +、-、*。</li><li><strong>漏掉结果回压 S1</strong>：每次 F() 的结果都要参与下一次运算，不回压会算不下去。</li></ul>
+<blockquote>一句话：先弹的给 a、后弹的给 b，按 b op a 计算并压回操作数栈；三次调用后栈顶 15，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

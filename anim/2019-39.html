@@ -109,5 +109,23 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：三次握手段的确认序列号</h2>
+<p>答案：<strong>D（2047）</strong>。</p>
+<h3>第 0 步：先立机制——确认号在"数"什么，SYN 为什么占序号</h3>
+<p>TCP 确认号 ack 的语义固定：<strong>期望对方发来的下一个字节的序号 = 对方已占用掉的最后一个序号 + 1</strong>。确认号机制只认"字节位置"，它本是为数据字节设计的。</p>
+<p>握手段的特殊之处：<strong>SYN 标志虽不携带数据，也要消耗一个序号</strong>。为什么要这样设计？——"连接请求"这件事本身也需要被对方<strong>确认</strong>。如果 SYN 不占一个序号，对方的确认号就只能表达"第几个数据字节收到了"，无法表达"你的连接请求我收到了"；让 SYN 占据一个序号后，ack = SYN 的 seq + 1 就专门表示"这个连接请求已可靠收到"。（同理，释放连接的 FIN 也占一个序号。）</p>
+<h3>第 1 步：逐步推三次握手</h3>
+<table><thead><tr><th>握手</th><th>方向</th><th>seq</th><th>ack</th></tr></thead><tbody><tr><td>第一次</td><td>甲→乙</td><td>2018（SYN=1，占 2018 号）</td><td>—</td></tr><tr><td>第二次</td><td>乙→甲</td><td>2046（SYN=1，占 2046 号）</td><td>2018 + 1 = 2019</td></tr><tr><td>第三次</td><td>甲→乙</td><td>2019</td><td>2046 + 1 = <strong>2047</strong></td></tr></tbody></table>
+<p>第二次握手中，乙用 ack=2019 确认了甲的 SYN；第三次握手轮到甲确认乙的 SYN——乙的 SYN 占了序号 2046，所以甲的确认号 = 2046 + 1 = 2047。</p>
+<h3>第 2 步：对准提问</h3>
+<p>题目问的是<strong>第三次握手 TCP 段的确认序列号</strong>，即 2047，选 <strong>D</strong>。（顺带记住：第三段自己的 seq 是 2019，因为甲的 SYN 已把 2018 号用掉。）</p>
+<h3>易错点</h3>
+<ul><li><strong>忘记 SYN 占序号、不做 +1</strong> → 误选 C（2046）：确认号必须越过被确认的那个序号。</li><li><strong>把发送序号当确认号</strong> → 误选 B（2019）：2019 是第三段自己的 seq，不是 ack 字段。</li><li><strong>张冠李戴到甲方</strong> → 误选 A（2018）：2018 是甲的初始序号，与"确认乙的 SYN"无关。</li></ul>
+<blockquote>记忆锚点：SYN、FIN 各占一个序号；确认号 = 对方最后占用的序号 + 1。乙初始序号 2046 → 第三次握手 ack = 2047，选 D。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

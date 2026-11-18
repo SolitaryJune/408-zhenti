@@ -70,5 +70,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：驱动程序的职责与 I/O 控制方式</h2>
+<p><strong>答案：D（错误的是 D）</strong>。块设备和字符设备驱动程序<strong>不采用相同的 I/O 控制方式</strong>。本题找"错误"项，其余三项都是驱动程序的标准描述。</p>
+<h3>第一步：驱动程序是什么、干什么</h3>
+<p>驱动程序是系统中直接操纵设备控制器的底层软件，向上与设备独立性软件衔接，向下对硬件发命令。它的标准职责：<strong>包含启动设备的代码</strong>（A 对）、<strong>包含一组针对具体设备的读/写控制代码</strong>（B 对）。</p>
+<h3>第二步：为什么 C 是对的</h3>
+<p>设备种类五花八门，但设备独立性软件不可能为每种设备写一套调用逻辑。因此系统规定：<strong>设备独立性软件与驱动程序之间定义统一（标准）的接口</strong>，驱动程序按统一接口实现，上层才能"以同样的方式"调用千差万别的设备——这正是设备独立性的实现基础。</p>
+<h3>第三步：为什么 D 错</h3>
+<table><thead><tr><th>设备类型</th><th>数据单位</th><th>常用 I/O 控制方式</th></tr></thead><tbody><tr><td>块设备</td><td>成块（如 4 KB）</td><td><strong>DMA 方式</strong>（一块传完才中断一次）</td></tr><tr><td>字符设备</td><td>按字节</td><td><strong>中断驱动方式</strong>（每个字节都中断）</td></tr></tbody></table>
+<p>两者数据传送单位与速度特征差别巨大，控制方式必然不同：块设备若逐字节中断，效率不可接受；字符设备数据量小、随机性强，用 DMA 反而不合算。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为"都是驱动，控制方式应该统一"</strong>：统一的是<strong>驱动与内核之间的接口</strong>（C），不是底层 I/O 控制方式（D）——"接口统一"和"控制方式相同"是两码事。</li><li><strong>误认为启动设备/读写代码不属于驱动</strong>：操纵控制器启动、完成具体读写正是驱动最核心的代码。</li></ul>
+<blockquote>结论：块设备常用 DMA、字符设备常用中断驱动，控制方式不同，选 <strong>D</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

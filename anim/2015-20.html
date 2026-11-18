@@ -65,5 +65,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：磁盘访问一个扇区的平均存取时间</h2>
+<h3>第一步：先给答案</h3>
+<p>答案：<strong>B</strong>（约 12.2 ms）。</p>
+<h3>第二步：三成分公式与逐步计算</h3>
+<p>平均存取时间 = 平均寻道时间 + 平均旋转延迟 + 传输时间。三段对应磁头的三个动作阶段：先沿径向移到目标磁道（寻道），再等目标扇区转到磁头下方（旋转延迟），最后把扇区内容扫过读写头（传输）。</p>
+<ol><li><strong>转速换算</strong>：7200 r/min ÷ 60 = 120 r/s → 转一圈 = 1000/120 ≈ <strong>8.33 ms</strong></li><li><strong>平均旋转延迟</strong> = 转半圈 = 8.33 ÷ 2 ≈ <strong>4.17 ms</strong>。<strong>为什么平均恰好是半圈？</strong> 请求到达时磁头停在哪个角度是随机的，目标扇区可能在 0～一圈的任意角距离上且机会均等：运气最好等 0（目标就在磁头下方），运气最差等一整圈，等待时间的期望就是一圈的一半。</li><li><strong>传输一个扇区</strong> = 一圈时间 ÷ 每道扇区数 = 8.33 ÷ 1000 ≈ <strong>0.008 ms</strong>。读写从扇区起始处开始，扫完一个扇区要转过一整圈的千分之一，这就是传输时间。</li></ol>
+<h3>第三步：求和</h3>
+<p>8 + 4.17 + 0.008 ≈ <strong>12.2 ms</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘记除以 2</strong>：平均旋转延迟是转<strong>半圈</strong>（4.17 ms），不是一整圈（8.33 ms）；8 + 8.33 ≈ 16.3 正是干扰项 C。</li><li><strong>忽略传输时间</strong>：一个扇区只有 0.008 ms，虽小也要算上；若读的是"一个磁道"，传输时间才是一整圈 8.33 ms（那样 8 + 4.17 + 8.33 ≈ 20.5，恰是干扰项 D）。</li><li><strong>转速换算错</strong>：先除以 60 化成每秒转数，再取倒数得每转时间。</li></ul>
+<blockquote>平均存取时间 = 寻道 + 半圈 + 传输；半圈 = 60000 ÷（转速 rpm × 2）ms。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

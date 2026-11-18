@@ -195,5 +195,21 @@ AW.init({
   },
 });
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：权值全 1 的图怎么求单源最短路径</h2>
+<p>答案：<strong>B</strong>（仅 III）。边权全为 1 时，路径长度就是边数；<strong>广度优先搜索按层扩展，首次到达某顶点用的边数一定最少</strong>，所以 BFS 一定能求出从源点到其余各顶点的最短路径。Prim、Kruskal 是最小生成树算法，与此无关。</p>
+<h3>第一步：Prim、Kruskal 求的是什么</h3>
+<p>两者都构造<strong>最小生成树（MST）</strong>：目标是「用总权值最小的 n−1 条边连通全部顶点」。MST 管的是<strong>总造价</strong>，不管<strong>单源距离</strong>，最小生成树不等于最短路径树。</p>
+<h3>第二步：权全 1 也救不了 MST（反例）</h3>
+<p>四顶点 s、a、b、t，共 5 条边：s–a、s–b、a–b、a–t、b–t（权全 1）。Kruskal 可能选出 s–a、a–b、b–t 这棵生成树；此时 s 到 t 要走 3 条边，而真实最短路径 s–a–t（或 s–b–t）只要 2 条边。<strong>为什么 MST 会输？</strong> 生成树只求"总造价最小地连通全图"，为了省下 a–t 这条边，反而牺牲了 s 到 t 的单源距离。所以 I、II 都<strong>不一定</strong>能求出最短路径。</p>
+<h3>第三步：为什么 BFS 一定行</h3>
+<p>BFS 从源点出发：先访问所有距离为 1 的顶点，再访问距离为 2 的……第 k 层顶点的边数恰为 k。权全 1 时「边数最少」就是「路径最短」，每个顶点<strong>首次被访问</strong>时的路径即最短路径。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 MST 当最短路径树</strong>：I、II 两个干扰项全部源于这一混淆。</li><li><strong>忽略「权值均为 1」这个前提</strong>：正因为全 1，BFS 才能担此重任；若边权任意，就得用 Dijkstra。</li><li><strong>以为要 III 之外还要 I</strong>：MST 的边未必落在最短路径上，二者没有包含关系。</li></ul>
+<blockquote>无权（或全 1 权）图的单源最短路径用 BFS；MST 算法管总造价，不管单源距离 —— 答案 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

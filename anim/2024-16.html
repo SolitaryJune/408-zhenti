@@ -63,5 +63,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：Cache-主存 与 主存-外存 两层次逐项对比</h2>
+<p><strong>答案：D</strong></p>
+<h3>第一步：抓住题眼</h3>
+<p>页式虚拟存储下有两级存储层次：<strong>Cache-主存</strong>（弥合速度差）与 <strong>主存-外存</strong>（弥合容量差）。逐项对比四个属性，找"错误"项。</p>
+<h3>第二步：逐项核对</h3>
+<ul><li><strong>A 正确</strong>：Cache-主存之间以<strong>主存块</strong>为单位交换；主存-外存之间以<strong>页</strong>为单位交换（题干限定页式）。</li><li><strong>B 正确</strong>：Cache 访问在纳秒级，替换决策必须由<strong>硬件</strong>完成；缺页处理要启动磁盘 I/O、保存进程上下文，替换由操作系统<strong>软件</strong>完成。</li><li><strong>C 正确</strong>：两层都可采用<strong>回写法</strong>：Cache 用脏位标记被修改的块，换出时写回主存；虚拟存储用脏页标志，页面淘汰时写回磁盘。</li><li><strong>D 错误</strong>：Cache-主存可用直接映射、组相联、全相联；而主存-外存层次中，任何一个虚拟页可以调入<strong>任意</strong>一个空闲的物理页框，采用的是<strong>全相联映射</strong>，对应关系由页表（软件数据结构）给出。"通常采用直接映射"错误。</li></ul>
+<h3>第三步：为什么页映射不能是直接映射</h3>
+<p>直接映射要求"每个页只能放到唯一固定的页框"，毫无放置灵活性，程序各段会激烈冲突；全相联虽然要查页表，但换取了任意放置的灵活性，这正是虚拟存储"按需调页"的设计基础。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 B</strong>：以为两层的替换算法都由硬件做——缺页涉及磁盘 I/O 与进程切换，只能由 OS 完成。</li><li><strong>误选 C</strong>：以为磁盘写入都用写穿法——每写一页就写盘代价太大，实际用回写法 + 脏页标志。</li><li><strong>混淆映射方式</strong>：页式存储是全相联（任意页框），直接映射/组相联是 Cache 的概念。</li></ul>
+<blockquote>一句话结论：交换单位（块/页）、替换实现（硬/软）、写策略（回写）两层次的说法都成立；只有映射方式不同——页是全相联映射，D 错。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -232,5 +232,20 @@ AW.init({
 });
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：哈夫曼树 T1 与定长编码树 T2</h2>
+<h3>第一步：两棵树长什么样——机制先立起来</h3>
+<p>T1（哈夫曼编码树）的构造机制：每轮<strong>挑两棵权值（频次）最小的子树合并</strong>。这带来三个必然结果——</p>
+<ul><li><strong>为什么频次小的离根远</strong>：小权子树总是先被合并，先合并的就往下垫一层，高频字符天然靠近根、码长短；</li><li><strong>为什么没有度为 1 的结点</strong>：每步都是“两棵合成一棵”，从不出现独生子，树中只有度 2（内部）与度 0（叶）的结点；</li><li><strong>为什么结点数恰为 2n − 1</strong>：n 个叶合并成一棵树，每合并一次新增 1 个内部结点，共合并 n − 1 次 → n + (n − 1) = 2n − 1。</li></ul>
+<p>T2（定长编码树）：每个字符的<strong>码长 = 它作为叶的深度</strong>。定长编码码长相同 ⇒ 字符叶必然处于<strong>同一层</strong>；空位可留可补，所以 T2 形状不唯一、结点数不定。</p>
+<h3>第二步：逐项判断</h3>
+<ul><li><strong>A（结点数相同）</strong>：T1 恒为 2n − 1；T2 形状不唯一（n=3 时码长 2，树上可有 6～7 个结点），不一定相等，错。</li><li><strong>B（T1 一定更高）</strong>：T1 是含 n 个叶的二叉树，高度 ≥ ⌈log2 n⌉；T2 高度可取到 ⌈log2 n⌉。n=3、频次 {1, 1, 10} 时 T1 高度为 2，与 T2 相等，“一定大于”不成立，错。</li><li><strong>C（频次不同必不同层）</strong>：反例频次 {2, 2, 3, 3}：合并 2+2=4、3+3=6，四个字符都在第 2 层，频次却有 2 有 3，错。</li><li><strong>D（T2 中频次不同同层）</strong>：定长编码码长与频次无关，所有字符必在同一层，对。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>以为哈夫曼树一定更高</strong>：最高频字符码长可以只有 1 位，n=3 时两树同高，B 就错在这里。</li><li><strong>只记得 2n − 1</strong>：它只属于哈夫曼树（无度为 1 结点），不能套到定长编码树上判断 A。</li><li><strong>低估“同层”的可能性</strong>：哈夫曼合并中两组不同频次可以同步合并（如 2+2 与 3+3），同层不等于同频次。</li></ul>
+<blockquote>定长编码“码长相同 ⇒ 同层”，选 <strong>D</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

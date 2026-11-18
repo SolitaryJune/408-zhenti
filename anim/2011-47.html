@@ -102,5 +102,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：从以太网帧读地址，到 ARP、RTT 与路由器改头</h2>
+<p>大题答题框架：先"<strong>读帧</strong>"拿到第（1）问的两个地址，再"<strong>找协议</strong>"答第（2）问的 ARP，接着"<strong>数 RTT</strong>"答第（3）问，最后"<strong>过路由器</strong>"检查第（4）问 IP 头被改了哪些字段。</p>
+<h3>（1）问：Web 服务器的 IP 与默认网关的 MAC</h3>
+<ol><li>题 47-b 帧的以太网类型字段表明载荷是 IP 分组；该分组是主机发往 Web 服务器的 HTTP 请求，因此 <strong>IP 首部中的目的 IP 地址就是 Web 服务器的 IP：64.170.98.32</strong>。</li><li>目的 IP 属于另一个网络，主机不能直接填服务器的 MAC——帧的<strong>目的 MAC 填的是默认网关的 MAC</strong>。从帧首部读出：<strong>00-21-27-21-51-ee</strong>。</li><li>区分：帧里的<strong>源 MAC</strong> 是本主机自己的 00-15-C5-C1-5E-28，别把两者填反。</li></ol>
+<h3>（2）问：用什么协议确定目的 MAC</h3>
+<ol><li>主机只知道下一跳（默认网关）的 <strong>IP 地址</strong>，要解析出对应的 MAC，用 <strong>ARP 协议</strong>：在本网络内广播 ARP 请求。</li><li>ARP 请求是<strong>广播</strong>的，封装它的以太网帧目的 MAC 为全 1：<strong>FF-FF-FF-FF-FF-FF</strong>。</li></ol>
+<h3>（3）问：持续非流水线方式需要多少 RTT</h3>
+<ol><li>计时起点是"发出 Web 请求"（GET rfc.html），此时 <strong>TCP 连接已建立，不另计建连的 RTT</strong>。</li><li>HTTP/1.1 持续连接 + <strong>非流水线</strong>：收到前一个对象的响应后才能发下一个请求，<strong>每个对象独占 1 个 RTT</strong>。</li><li>rfc.html 用 1 个 RTT；5 个 JPEG 小图逐个请求-响应，5 × 1 = 5 个 RTT。</li><li>合计 1 + 5 = <strong>6 个 RTT</strong>。</li></ol>
+<h3>（4）问：路由器 R 转发时修改 IP 分组头的哪些字段</h3>
+<ol><li><strong>源 IP 地址</strong>：主机用的是私有地址 10.2.128.100，出公网时被 R 改写为公有地址（NAT）。</li><li><strong>生存时间 TTL</strong>：每经过一台路由器 <strong>TTL 减 1</strong>。</li><li><strong>首部校验和</strong>：源 IP 与 TTL 都变了，IP 首部校验和必须<strong>重新计算</strong>。</li></ol>
+<p>注意题目只问 <strong>IP 分组头</strong>：以太网帧的源/目的 MAC 虽然每段链路都在换，但不属于 IP 头；传输层端口与校验和也不列入答案。</p>
+<h3>易错点</h3>
+<ul><li><strong>（1）把网关 MAC 当成服务器 MAC</strong>：MAC 地址只在一段链路内有效，跨网段的帧目的 MAC 永远是网关的。</li><li><strong>（2）把两种"全 1"混为一谈</strong>：FF-FF-FF-FF-FF-FF 是 <strong>MAC</strong> 广播地址；IP 广播地址是 255.255.255.255，本题问的是帧的目的 MAC。</li><li><strong>（3）多算成 7 个 RTT</strong>：多加了 TCP 建连的 1 个 RTT——题干起点已是"发出 Web 请求"。</li><li><strong>（4）漏掉首部校验和</strong>：改了源 IP 和 TTL 却不重算校验和，分组会在下一跳被丢弃。</li></ul>
+<blockquote>一句话结论：（1）64.170.98.32 与 00-21-27-21-51-ee；（2）ARP，FF-FF-FF-FF-FF-FF；（3）6 个 RTT；（4）源 IP（NAT 改写）、TTL 减 1、首部校验和重算。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

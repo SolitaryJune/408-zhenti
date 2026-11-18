@@ -64,5 +64,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：减法指令的 CF 与 OF</h2>
+<p><strong>答案：A</strong>（CF = 0，OF = 0）。</p>
+<h3>第一步：无符号视角定 CF</h3>
+<p>CF 是进位/借位标志，减法中 CF = 1 表示无符号数不够减（发生借位）。</p>
+<p>(R1) = <code>FFFF FFFFH</code> = 4294967295，(R2) = <code>FFFF FFF0H</code> = 4294967280。大数减小数，够减，无借位 → <strong>CF = 0</strong>。</p>
+<p>电路口径验证：减法化作加法，(R1) + (R2)取反 + 1 = <code>FFFF FFFFH</code> + <code>0000 000FH</code> + 1 = <code>1 0000 000FH</code>，最高位进位输出 Cout = 1；减法时 CF = Cout ⊕ 1 = <strong>0</strong>。两种算法一致。</p>
+<h3>第二步：有符号视角定 OF</h3>
+<p>OF = 1 表示带符号运算溢出。(R1) = −1，(R2) = −16：</p>
+<p>−1 − (−16) = <strong>15</strong>，结果 <code>0000 000FH</code> 在 int 表示范围内 → <strong>OF = 0</strong>。</p>
+<p>双进位法验证：符号位的进位输入与进位输出都为 1，1 ⊕ 1 = 0，无溢出。</p>
+<h3>第三步：写出结果并排除干扰</h3>
+<p>指令结果 (R3) = <code>0000 000FH</code>。B、D 的 CF = 1 来自"减法必有借位"的误解；C、D 的 OF = 1 来自"负数减负数会溢出"的误解——<strong>同号相减永远不会溢出</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把加法器的最高进位直接当 CF</strong>：减法时 CF = 进位输出与 1 异或（本题 Cout = 1 恰对应 CF = 0）。</li><li><strong>看到两个 <code>FF</code> 开头的数就以为溢出</strong>：溢出看真值结果是否越界，−1 − (−16) = 15 完全装得下。</li></ul>
+<blockquote>口径分工：CF 管无符号（借位），OF 管有符号（越界）；本题两者都不成立。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

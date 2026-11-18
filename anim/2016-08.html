@@ -83,5 +83,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：Dijkstra 最短路径的“收编”次序</h2>
+<p>答案：<strong>B（5, 2, 3, 6, 4）</strong>。</p>
+<h3>第一步：读图列出边与权值</h3>
+<p>从顶点 1 出发，图中的有向边为：<code>1→2(5)</code>、<code>1→5(4)</code>、<code>2→3(2)</code>、<code>2→5(6)</code>、<code>5→4(7)</code>、<code>5→6(5)</code>、<code>5→3(6)</code>、<code>6→3(2)</code>、<code>4→1(2)</code>。</p>
+<h3>第二步：按 Dijkstra 逐轮“收编”</h3>
+<p>规则：每轮从未定顶点中挑 dist 最小者定案，再用它的出边松弛邻居。</p>
+<table><thead><tr><th>轮次</th><th>收编顶点（dist）</th><th>该轮松弛后的 dist</th></tr></thead><tbody><tr><td>初始</td><td>—</td><td>2:5，5:4，3:∞，4:∞，6:∞</td></tr><tr><td>1</td><td><strong>5</strong>（4）</td><td>4:11，6:9，3:10</td></tr><tr><td>2</td><td><strong>2</strong>（5）</td><td>3:7（经 2 更短，10 改为 7）</td></tr><tr><td>3</td><td><strong>3</strong>（7）</td><td>3 无出边</td></tr><tr><td>4</td><td><strong>6</strong>（9）</td><td>6→3 的终点已定案</td></tr><tr><td>5</td><td><strong>4</strong>（11）</td><td>全部定案</td></tr></tbody></table>
+<h3>第三步：读出次序</h3>
+<p>各顶点按最短距离从小到大定案：4、5、7、9、11，对应目标顶点依次为 <strong>5, 2, 3, 6, 4</strong>，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>第一轮误选顶点 2</strong>：只看到 1→2=5 就急着定案，漏了 1→5=4 更小——第一轮必须全局比最小。</li><li><strong>忘了松弛会改判</strong>：顶点 3 最初是 10，若不经过 2 的松弛（5+2=7），会把它错排到 6 之后。</li><li><strong>当成无向图</strong>：4→1、6→3 的方向不能反着用，反了会多出假路径。</li></ul>
+<blockquote>记忆锚点：Dijkstra 每轮“挑最小 dist、定案、松弛出边”，定案次序就是 dist 值从小到大的次序。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

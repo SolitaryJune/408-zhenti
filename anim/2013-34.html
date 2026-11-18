@@ -118,5 +118,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：曼彻斯特编码解码（10BaseT 波形）</h2>
+<p>答案：<strong>A（0011 0110）</strong>。10BaseT 是以太网，物理层采用曼彻斯特编码：每个码元正中间必有跳变，以太网规定<strong>中间低→高（上升沿）表示 0，中间高→低（下降沿）表示 1</strong>。</p>
+<h3>第一步：先定规则</h3>
+<p>曼彻斯特编码把每个比特编成一个码元，码元正中间的跳变既作时钟同步又携带数据。以太网口径：<strong>正中间上升沿 = 0，正中间下降沿 = 1</strong>。注意只认「正中间」那一跳，码元边界处的电平变化不携带数据。</p>
+<h3>第二步：逐码元读中间跳变</h3>
+<p>图中共 8 个码元（9 条虚线为码元边界），各码元前半/后半电平与中间跳变如下：</p>
+<table><thead><tr><th>码元</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr></thead><tbody><tr><td>前半·后半</td><td>低·高</td><td>低·高</td><td>高·低</td><td>高·低</td><td>低·高</td><td>高·低</td><td>高·低</td><td>低·高</td></tr><tr><td>中间跳变</td><td>升</td><td>升</td><td>降</td><td>降</td><td>升</td><td>降</td><td>降</td><td>升</td></tr><tr><td>比特</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td></tr></tbody></table>
+<p>得比特串 <code>0011 0110</code>，选 <strong>A</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>跳变方向约定记反</strong>：按「上升沿 = 1」去读会得出 <code>1100 1001</code>，说明出题人按以太网口径命题，必须记牢「中升 0、中降 1」。</li><li><strong>在码元边界处读跳变</strong>：比如 0→0 的边界上有一次下降（前码元后半高接后码元前半低），它不是数据信息；把边界跳变也当数据就会读出 B、C 这类错串。</li><li><strong>相位对半错位</strong>：从码元中间起读、把两个半码元当成一个码元，解码全部错位。</li></ul>
+<blockquote>口诀：以太网曼彻斯特——「中间升 0、中间降 1」，只认码元正中间那一跳。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

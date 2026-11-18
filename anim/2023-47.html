@@ -120,5 +120,29 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：FTP 数据连接上的 TCP 序号与拥塞窗口推演</h2>
+<p><strong>答题框架</strong>：先分清 FTP 两种连接的持久性 → 用「SYN / FIN 各占 1 个序号」定位数据边界 → 按「慢启动每个确认加 1 MSS、拥塞避免每轮加 1 MSS」推演拥塞窗口 → 把 RTT 排成时间线求总时长与平均速率。</p>
+<h3>第 1 问：FTP 的连接类型</h3>
+<ul><li><strong>控制连接：持久的</strong>——整个会话期间一直保持。为什么这样设计？登录后客户端要连续发多条命令（切换目录、查目录、传文件……），命令是细碎的交互，若每条命令都握手一次，开销全耗在建立连接上，所以命令通道建一次用到底。</li><li><strong>数据连接：非持久的</strong>——每传一个文件建一次、传完就拆。为什么？文件传输是"一批大块数据"的一次性搬运，且服务器可能要主动向客户端发起数据传送（端口、方向都不固定），按文件建连接让控制与数据彻底分离，互不干扰。</li><li>H 登录 FTP 服务器时交换的是用户名、密码等<strong>命令</strong>，走的是<strong>控制连接</strong>（服务器 21 号端口）。</li></ul>
+<h3>第 2 问：序号计算</h3>
+<p>先答关键机制：<strong>为什么 SYN、FIN 各占 1 个序号？</strong> TCP 要对连接的建立和释放本身做可靠确认——接收方回的 ACK 确认号 = 对方序号 + 1，才能"点收"这个 SYN/FIN 报文段；所以 SYN 和 FIN 虽然不携带应用数据，也要各消耗一个序号，让确认号有位可指。</p>
+<ul><li>数据连接初始序号 ISN = 100，SYN 占掉 100 这个号，F 的第 1 个字节序号 = 100 + 1 = <strong>101</strong>。</li><li>F 共 18000 B，占序号 101～18100。数据发完后 H 发 FIN，FIN 排在最后一个数据字节之后，序号 = <strong>18101</strong>，同样占 1 个序号；断开时服务器第二次挥手（ACK 段）是对 H 的 FIN 的确认，确认号 = 18101 + 1 = <strong>18102</strong>。</li></ul>
+<h3>第 3 问：拥塞窗口推演（MSS = 1000 B，ssthresh = 4 MSS）</h3>
+<p>先把两种增法的机制说透：</p>
+<ul><li><strong>慢启动为什么"每收到 1 个确认 cwnd 加 1 MSS"？</strong> 这叫自时钟：发出去 1 个 MSS、收到它的确认，说明网络腾出了 1 个 MSS 的空间，于是再注入 1 个 MSS。一轮下来窗口翻倍——不是盲目翻倍，而是"确认几个就补几个"的指数试探。</li><li><strong>拥塞避免为什么改回"每轮 RTT 只加 1 MSS"？</strong> 窗口到达阈值后再翻倍很快会过冲丢包，改为加性增：<strong>收齐本轮窗口对应的全部确认（整轮）才加 1 MSS</strong>，线性探测上限。</li></ul>
+<p>推演（每轮"发段 → 5 ms 到服务器 → 确认 5 ms 返回"）：</p>
+<table><thead><tr><th>时刻 (ms)</th><th>H 的动作</th><th>收到的确认</th><th>cwnd</th></tr></thead><tbody><tr><td>10</td><td>握手完成，发段1（101~1100）</td><td>—</td><td>1 MSS</td></tr><tr><td>20</td><td>发段2、段3</td><td>ack = 1101</td><td>2 MSS</td></tr><tr><td>30</td><td>发段4 ~ 段7（3101~7100）</td><td>ack = 2101 → <strong>3 MSS</strong>；ack = 3101 → 4 MSS = ssthresh，转拥塞避免</td><td>4 MSS</td></tr><tr><td>40</td><td>发段8 ~ 段12（7101~12100）</td><td>ack = 4101~7101 <strong>收齐 cwnd=4 这一整轮的 4 个确认</strong> → 加 1</td><td>5 MSS</td></tr><tr><td>50</td><td>发段13 ~ 段18（12101~18100）</td><td>ack = 8101~12101 收齐一轮 → 加 1</td><td>6 MSS</td></tr></tbody></table>
+<p>于是：收到确认序号 <strong>2101</strong> 时（慢启动期，逐个确认加 1）cwnd = <strong>3 MSS</strong>；收到确认序号 <strong>7101</strong> 时，4101~7101 四个确认恰好把 cwnd=4 这一轮收齐，拥塞避免整轮加 1，cwnd = <strong>5 MSS</strong>。</p>
+<h3>第 4 问：总时间与平均发送速率</h3>
+<p>RTT = 10 ms（单程 5 ms），忽略段的传输时延：t = 0 发 SYN；t = 10 ms 握手完成并发出第 1 段；按第 3 问的时间线，t = 50 ms 发出最后一批段13~18（累计 18 段 × 1000B = 18000B 全部发出）；t = 55 ms 服务器收齐 F；t = <strong>60 ms</strong> H 收到最后一个确认 ack = 18101，F 被确认全部接收。</p>
+<p><strong>至少需要 60 ms</strong>——这是无差错、无丢包、无排队延迟的理想情形：握手 1 个 RTT 不可省，最后一个确认必须单程走回 H 才算"确认已接收"，也省不掉。<strong>为什么速率的分母是 60 ms？</strong> 题目问"从请求建立连接到确认全部接收<strong>期间</strong>"的平均发送速率，握手与最后确认都在期间内，分子 18000 B、分母 60 ms，得 <strong>3×10^5 B/s</strong>（0.3 MB/s，即 2.4 Mb/s）。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘掉 SYN / FIN 各占 1 个序号</strong>：把首字节当成 100、把第二次挥手的确认号当成 18101——根源是没意识到确认号要"点收"SYN/FIN 本身。</li><li><strong>拥塞避免继续翻倍</strong>：cwnd = 4 已达阈值，此后整轮加 1 MSS（4 → 5 → 6），不是翻到 8。</li><li><strong>以为每个 ACK 都让拥塞避免加 1</strong>：加性增按"轮"计，收齐整轮确认才加 1；逐个确认加 1 是慢启动的规则。</li><li><strong>总时间漏掉握手或最后确认</strong>：数据从 t = 10 ms 才开始发；"确认 F 已被服务器全部接收"要等最后一个 ACK 回到 H。</li><li><strong>速率忘换算</strong>：3×10^5 B/s 乘 8 才是 2.4 Mb/s。</li></ul>
+<blockquote>SYN 占 1 号 → 首字节 101；FIN 占 1 号 → 确认号 18102；慢启动逐确认 +1、到阈值后整轮 +1，cwnd 路径 1→2→3→4→5→6；总时长 60 ms，平均速率 3×10^5 B/s。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

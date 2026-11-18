@@ -209,5 +209,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：OSPF 链路状态信息 → R1 路由表、TTL 计算、LSI 更新（9 分大题）</h2>
+<p><strong>答题总框架</strong>：先把题 42 表读成一张带代价的环形拓扑（R1—R2 Metric 3，R2—R4 Metric 4，R4—R3 Metric 6，R3—R1 Metric 2；四个直连子网 192.1.1.0/24@R1、192.1.6.0/24@R2、192.1.7.0/24@R4、192.1.5.0/24@R3），第 1 问用最短路径填表再聚合，第 2 问查表转发数 TTL，第 3 问往 LSI 里补一条直连信息。</p>
+<h3>第 1 问：R1 的路由表（要求路由项尽可能少）</h3>
+<p><strong>思路</strong>：对每个 192.1.x.x 子网比较两条环路的代价，确定下一跳与接口；下一跳、接口相同的表项用超网聚合。</p>
+<ul><li>到 <strong>192.1.6.0/24</strong>：走 R1→R2 代价 3+1 = <strong>4</strong>；绕行 R1→R3→R4→R2 代价 2+6+4+1 = 13。→ 下一跳 10.1.1.2，接口 L0。</li><li>到 <strong>192.1.7.0/24</strong>：走 R1→R2→R4 代价 3+4+1 = <strong>8</strong>；绕行 R1→R3→R4 代价 2+6+1 = 9。→ 下一跳也是 10.1.1.2，接口 L0。</li><li>两者<strong>下一跳和接口完全相同</strong> → 聚合成 <strong>192.1.6.0/23</strong>（恰好覆盖 192.1.6.0 ～ 192.1.7.255），路由项由 4 个减为 3 个。</li><li>到 <strong>192.1.5.0/24</strong>：走 R1→R3 代价 2+1 = <strong>3</strong>；绕行 R1→R2→R4→R3 代价 3+4+6+1 = 14。→ 下一跳 10.1.1.10，接口 L1。</li><li><strong>192.1.1.0/24</strong> 是直连网络 → 接口 E0。</li></ul>
+<table><thead><tr><th>目的网络</th><th>下一跳</th><th>接口</th></tr></thead><tbody><tr><td>192.1.1.0/24</td><td>直连</td><td>E0</td></tr><tr><td>192.1.6.0/23</td><td>10.1.1.2</td><td>L0</td></tr><tr><td>192.1.5.0/24</td><td>10.1.1.10</td><td>L1</td></tr></tbody></table>
+<h3>第 2 问：192.1.1.130 → 192.1.7.211 的转发与 TTL</h3>
+<p><strong>思路</strong>：目的地址先最长前缀匹配查 R1 路由表，再沿着路径数"经过几个路由器"。</p>
+<ul><li>192.1.7.211 落在 <strong>192.1.6.0/23</strong> 内 → R1 从 <strong>L0 接口</strong>转发给下一跳 10.1.1.2（R2）。</li><li>R2 查表：192.1.7.0/24 挂在 R4 上（R2—R4 链路 Metric 4）→ 转给 R4；R4 直连 192.1.7.0/24 → 交付主机。完整路径：<strong>主机 → R1 → R2 → R4 → 主机</strong>。</li><li>TTL 在每个路由器处减 1：R1 处 64→63，R2 处 63→62，R4 处 62→61 → 主机收到 <strong>TTL = 61</strong>。</li></ul>
+<h3>第 3 问：R1 增加 Metric 为 10 的 Internet 链路后 LSI 怎么改</h3>
+<p><strong>思路</strong>：LSI 里"直连网络 Net"部分记录前缀与代价。连接 Internet 的链路在路由语义上就是一条默认路由，其网络前缀写为 0.0.0.0/0。所以 R1 的 LSI 需增加：</p>
+<ul><li><strong>前缀 Prefix = 0.0.0.0/0</strong></li><li><strong>Metric = 10</strong></li></ul>
+<h3>易错点</h3>
+<ul><li><strong>聚合写成 192.1.6.0/24 或 /22</strong>：覆盖 6 与 7 两个 /24 恰好是 /23；用"第三字节 6、7 → 二进制 0000011x"验证。</li><li><strong>TTL 只减 2 次</strong>：以为 192.1.7.0/24 挂在 R2 上就到站了——实际挂在 R4，必须再过一跳，64−3 = 61。</li><li><strong>第 3 问写成具体 IP</strong>：Internet 链路的前缀是默认路由 <strong>0.0.0.0/0</strong>，不是某个网络地址；Metric 用题干给的 10。</li></ul>
+<blockquote>记忆锚点：OSPF 大题三步曲——读表画拓扑定代价、最短路填表再聚合（少一跳同下一跳就合并）、按路径数路由器减 TTL。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

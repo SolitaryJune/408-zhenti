@@ -64,5 +64,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：哪些操作会使进程从用户态切换到内核态</h2>
+<p><strong>答案：B</strong> —— 仅 I（整数除以零）和 III（read 系统调用）会引起用户态 → 内核态。</p>
+<h3>第一步：进入内核态的三条通道</h3>
+<p>用户态转内核态只能由<strong>中断 / 异常 / 陷入</strong>触发，硬件强制转入内核执行：</p>
+<ol><li><strong>内部中断（异常）</strong>：除零、非法指令、缺页等由当前指令引发；</li><li><strong>外部中断</strong>：时钟中断、I/O 完成中断等；</li><li><strong>系统调用</strong>：用户程序执行陷入指令，主动请求内核服务。</li></ol>
+<h3>第二步：逐项判断</h3>
+<ul><li><strong>I 整数除以零</strong>：算术运算异常，硬件自动陷入内核处理 → 转内核态；</li><li><strong>II sin() 函数调用</strong>：这是<strong>库函数</strong>，整个计算在用户态的库代码中完成，不执行特权指令 → 不转内核态；</li><li><strong>III read 系统调用</strong>：执行陷入指令进入内核执行读盘服务 → 转内核态。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>误选 D</strong>：把 sin() 当成系统调用。普通数学库函数是用户态代码，<strong>库函数 ≠ 系统调用</strong>；只有真正执行陷入指令请求内核服务时才切内核态。</li></ul>
+<blockquote>一句话结论：异常（除零）与系统调用（read）进内核态，库函数（sin）留在用户态，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

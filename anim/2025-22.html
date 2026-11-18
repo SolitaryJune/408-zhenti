@@ -72,5 +72,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：外部中断与内部异常的区分</h2>
+<h3>第一步：明确「外部中断请求」的来源</h3>
+<p>外部中断请求来自 <strong>CPU 之外</strong>的部件或设备，经中断请求线（INTR、NMI）送入 CPU，与当前执行的程序无关，是异步事件；而由<strong>正在执行的指令本身</strong>引发的（除 0、溢出、缺页、陷入/断点指令等）属于<strong>内部异常</strong>。</p>
+<h3>第二步：逐项判断</h3>
+<table><thead><tr><th>选项</th><th>事件来源</th><th>判断</th></tr></thead><tbody><tr><td>A DMA 传送结束</td><td>DMA 控制器在 CPU 外部，整块数据传完后向 CPU 发中断请求，请 CPU 做后处理</td><td><strong>外部中断请求</strong></td></tr><tr><td>B 总线事务结束</td><td>总线操作的常规时序事件，总线自己握手完成即可，不发中断请求</td><td>否</td></tr><tr><td>C 页故障的处理结束</td><td>页故障本身是内部异常；「处理结束」只是异常处理完返回断点</td><td>否</td></tr><tr><td>D 执行断点指令</td><td>程序主动执行的陷入指令，由指令执行引发</td><td>内部异常</td></tr></tbody></table>
+<p>DMA 传送结束中断是「外部部件请求 CPU 服务」的教科书例子：DMA 控制器独立于 CPU 完成整块传送，之后主动向 CPU 发中断请求。所以选 <strong>A</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 DMA 结束当异常</strong>：DMA 结束中断由 CPU 外部的 DMA 控制器发出，是典型的外部中断。</li><li><strong>把断点指令当外部事件</strong>：断点、自陷指令由程序自己执行触发，属于内部异常（陷入）。</li><li><strong>被「页故障」绕晕</strong>：页故障是内部异常，它的「处理结束」更不是新的中断请求。</li></ul>
+<blockquote>一句话结论：只有 A 是 CPU 外部部件（DMA 控制器）送来的中断请求，选 A。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

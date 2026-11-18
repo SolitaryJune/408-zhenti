@@ -70,5 +70,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：共享页在两个进程页表中的表现</h2>
+<p><strong>答案：B（VA1 和 VA2 映射到的物理地址相同）</strong>。共享页的本质只有一句：<strong>两个页表项指向同一个物理页框</strong>。其他一切都是各自进程的"私有视角"。</p>
+<h3>第一步：画出共享页的映射关系</h3>
+<p>进程 1 用 VA1 访问 S：VA1 → PT1 的页表项 → 物理页框 F；进程 2 用 VA2 访问 S：VA2 → PT2 的页表项 → 同一物理页框 F。F 只有一份，这就是"共享"。</p>
+<h3>第二步：逐项判断</h3>
+<ul><li><strong>A 错</strong>：VA1、VA2 是页 S 在两个进程<strong>各自虚拟地址空间</strong>中的起始地址，两个地址空间相互独立，S 挂在哪里由各自的地址空间布局决定，一般不同，也不必相同。</li><li><strong>B 对</strong>：共享页在两个页表项里记录的是<strong>同一个物理页框号</strong>，所以 VA1、VA2 经各自页表转换后得到<strong>相同的物理地址</strong>。</li><li><strong>C 错</strong>：页表项 ≠ 只有页框号。页表项通常还含访问位、修改位、保护位等控制位；两个进程对 S 的访问历史、访问权限可以不同，页表项内容不必相同——"页框号相同"推不出"整个页表项相同"。</li><li><strong>D 错</strong>：页表项本身存放在各自进程的页表中，PT1 和 PT2 位于内存的不同位置，S 在两张页表里的页表项所在位置不同，谈不上"虚拟地址相同"。</li></ul>
+<h3>第三步：抓住正确口径</h3>
+<p>判断共享类题目只抓两点：① 物理页框号必须相同（共享本体）；② 虚拟地址、页表项的其他控制位属于各进程的私有视角，可以不同。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为共享就要"虚拟地址也相同"</strong>：共享的是物理页，不是虚拟地址。</li><li><strong>以为页表项内容也相同</strong>：页框号相同不代表访问位、修改位、保护位等也相同。</li></ul>
+<blockquote>结论：VA1、VA2 可以不同，但都映射到同一物理页框，选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -184,5 +184,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：森林与二叉树遍历的对应 + 由两序重建二叉树求后序</h2>
+<p><strong>答案：C</strong>（T 的后根遍历 = b, f, e, d, c, a）。</p>
+<h3>第一步：先立机制——森林是怎么变成二叉树的</h3>
+<p>森林转二叉树用<strong>孩子—兄弟表示法</strong>：每个结点的<strong>第一个孩子</strong>改为它的左孩子，<strong>兄弟</strong>依次链成右链；各棵树的根互为兄弟，第一棵树的根是二叉树根。在这个结构里"左子树 = 孩子们、右子树 = 兄弟们"，两种遍历因此严丝合缝：</p>
+<ul><li>二叉树<strong>先序</strong>（根→左→右）：访问根 → 走"孩子们"（= 该树按先根长出各子树）→ 走"兄弟们"（= 后面的树按先根）→ 恰是森林的<strong>先根遍历</strong>；</li><li>二叉树<strong>中序</strong>（左→根→右）：先走完"孩子们"，再访问根，再走"兄弟们"（每棵树先诸子树、后树根，再下一棵树）→ 恰是森林的<strong>中根遍历</strong>。</li></ul>
+<p>所以 T：先序 = a b c d e f，中序 = b a d f e c，不用真把森林画出来。</p>
+<h3>第二步：先序定根、中序分左右，递归重建 T</h3>
+<p>为什么两序能定树？<strong>先序永远最先访问根</strong>，所以先序段第一个字符必是根；<strong>中序是"左→根→右"</strong>，根在中序段里把序列切成左右两半。每递归一次规模缩小一层：</p>
+<ol><li>先序第一个 <strong>a 是根</strong>；中序里 a 左侧 {b} 是左子树，右侧 {d, f, e, c} 是右子树。</li><li>左子树：先序 b、中序 b → <strong>b 是 a 的左孩子</strong>（叶子）。</li><li>右子树：先序 c d e f、中序 d f e c → 根 <strong>c</strong>；c 在中序段末尾 → c 无右孩子。</li><li>c 的左子树：先序 d e f、中序 d f e → 根 <strong>d</strong>；d 左侧为空 → d 无左孩子，{f, e} 是 d 的右子树。</li><li>先序 e f、中序 f e → 根 <strong>e</strong>，左孩子 <strong>f</strong>（叶子），无右孩子。</li></ol>
+<p>树形：a 左 b、右 c；c→d→e→f 为方向交替的单链（c 的左、d 的右、e 的左）。</p>
+<h3>第三步：左→右→根，写出后序</h3>
+<p>b（a 的整棵左子树）→ 右子树里先走最深的 f、e、d → 输出 c → 最后根 a。<strong>后序 = b, f, e, d, c, a</strong>，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>对应关系记反</strong> → 误选 A：A 正是 F 的中根序列原样；先根↔先序、中根↔中序，森林的后根才对应二叉树的中序。</li><li><strong>单链方向画错</strong> → 误选 D：c 只有左孩子 d、d 只有右孩子 e、e 只有左孩子 f，方向一错后序就倒。</li><li><strong>定根/切分次序乱</strong> → 误选 B：每次递归都要先在先序段取第一个字符作根，再回中序段切左右。</li></ul>
+<blockquote>记忆：对应关系来自孩子—兄弟表示；重建靠"先序定根、中序分左右"；后序 = 左→右→根。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

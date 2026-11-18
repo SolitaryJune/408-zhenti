@@ -68,5 +68,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：哪个 MAC 协议会对收到的帧发确认</h2>
+<p><strong>答案：D（CSMA/CA）</strong></p>
+<h3>第一步：审题眼</h3>
+<p>"对正确接收到的数据帧进行<strong>确认</strong>"= 接收方收好一帧后要回送一个 <strong>ACK 确认帧</strong>。在四个候选中找把"确认机制"写进协议本身的那个。</p>
+<h3>第二步：逐项排查</h3>
+<ul><li><strong>CSMA</strong>：载波侦听多路访问，只规定"发前先听、信道忙就退避等待"，<strong>没有任何确认机制</strong>。</li><li><strong>CDMA</strong>：码分多址，是<strong>信道划分（复用）技术</strong>，让多个站用不同码片序列在同一信道同时通信，根本不涉及帧确认。</li><li><strong>CSMA/CD</strong>：有线以太网，靠发送方<strong>边发边检测冲突</strong>，发现冲突就停发退避重传；接收方不回 ACK。</li><li><strong>CSMA/CA</strong>：802.11 无线网。无线信道误码率高、又无法边发边检测冲突，所以协议规定<strong>接收方正确收到帧必须回 ACK</strong>，发送方超时收不到 ACK 就重传。</li></ul>
+<h3>第三步：为什么只有无线才确认</h3>
+<p>有线以太网的冲突能被发送方当场检测到，不需要确认兜底；无线网冲突不可检测，只能靠"<strong>确认 + 重传</strong>"保证帧不丢——这正是 CSMA/CA 中 CA（Avoidance）机制的一部分。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 CDMA 当成 CSMA 一家</strong>：CDMA 是复用技术，不是带确认的 MAC 协议。</li><li><strong>以为 CSMA/CD 也发确认</strong>：以太网的差错处理是校验出错就丢弃 + 交给上层（如 TCP）重传，MAC 层不发 ACK。</li></ul>
+<blockquote>一句话结论：MAC 协议中内建"收到即回 ACK"机制的只有 <strong>CSMA/CA</strong>，选 D。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

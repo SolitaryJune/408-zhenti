@@ -84,5 +84,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：停等协议最大信道利用率的完整周期</h2>
+<p><strong>答案：D（40%）。</strong></p>
+<h3>第一步：把"一个周期"画完整</h3>
+<p>停等协议下，甲从<strong>开始发送一个数据帧</strong>到<strong>收完对应的确认帧</strong>才算一个周期。已知：数据帧长 = 确认帧长 = 1000 B，速率 10 kbps，单向传播时延 200 ms。</p>
+<ul><li>发送数据帧的发送时延 t1 = 1000 × 8 bit ÷ 10 kbps = 8000 bit ÷ 10000 bit/s = <strong>800 ms</strong>；</li><li>数据帧传播到乙：<strong>200 ms</strong>；</li><li>乙收完后<strong>立即回确认帧</strong>，确认帧同样 1000 B，发送时延也是 <strong>800 ms</strong>（最易漏掉的一段）；</li><li>确认帧传播回甲：<strong>200 ms</strong>。</li></ul>
+<p>周期 T = 800 + 200 + 800 + 200 = <strong>2000 ms</strong>。</p>
+<h3>第二步：算利用率</h3>
+<p>一个周期内甲只发得出一个数据帧，真正"占用信道发数据"的时间只有 t1 = 800 ms：</p>
+<p>U = t1 ÷ T = 800 ÷ 2000 = <strong>40%</strong>。</p>
+<h3>第三步：用干扰项反推漏了哪段</h3>
+<table><thead><tr><th>干扰项</th><th>来源</th></tr></thead><tbody><tr><td>80%</td><td>只算 800/(800+200)，漏掉确认帧的发送与回程</td></tr><tr><td>66.7%</td><td>800/(800+200+200)，漏掉<strong>确认帧的发送时延 800 ms</strong></td></tr><tr><td>44.4%</td><td>800/1800，漏掉回程传播 200 ms</td></tr><tr><td>40%</td><td>完整周期 2000 ms，正确</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>漏算确认帧的发送时延</strong>：确认帧虽短在题中与数据帧等长（1000 B），也要发 800 ms。</li><li><strong>把 RTT 只算一次</strong>：周期里有<strong>两段</strong>传播（去程 + 回程），各 200 ms。</li><li><strong>单位混乱</strong>：1000 B = 8000 bit，除以 10 kbps（= 10^4 bit/s）得 0.8 s，不是 80 ms。</li></ul>
+<blockquote>一句话结论：U = 数据帧发送时延 ÷ 完整周期 = 800 ÷ (800+200+800+200) = <strong>40%</strong>，选 <strong>D</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

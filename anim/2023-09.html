@@ -92,5 +92,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：散列表删除后查找失败的平均查找长度</h2>
+<p>答案：<strong>C</strong>（1.8）。关键在「删除」的处理方式：线性探测再散列下<strong>不能物理置空</strong>——那会掐断探测链，通常做<strong>标记删除</strong>：该位置仍算「占用」，探测时会穿过它继续走。</p>
+<h3>第一步：先插入三个关键字</h3>
+<p>H(k) = (k+4) % 5，表长 5：</p>
+<table><thead><tr><th>关键字</th><th>散列地址</th><th>过程</th><th>结果</th></tr></thead><tbody><tr><td>2022</td><td>(2022+4)%5 = 1</td><td>HT[1] 空</td><td>放入 HT[1]</td></tr><tr><td>12</td><td>(12+4)%5 = 1</td><td>冲突，线性探测 HT[2]</td><td>放入 HT[2]</td></tr><tr><td>25</td><td>(25+4)%5 = 4</td><td>HT[4] 空</td><td>放入 HT[4]</td></tr></tbody></table>
+<p>删除 25：HT[4] 打删除标记（占位，不再算有效关键字）。</p>
+<h3>第二步：逐地址模拟查找失败</h3>
+<p>失败 = 从散列地址出发逐格比较，直到遇到<strong>真正空</strong>的格子（标记格不算空）：</p>
+<table><thead><tr><th>起始地址</th><th>探测路径</th><th>比较次数</th></tr></thead><tbody><tr><td>0</td><td>HT[0] 空，即失败</td><td>1</td></tr><tr><td>1</td><td>HT[1]、HT[2]、HT[3] 空</td><td>3</td></tr><tr><td>2</td><td>HT[2]、HT[3]</td><td>2</td></tr><tr><td>3</td><td>HT[3]</td><td>1</td></tr><tr><td>4</td><td>HT[4]（标记，继续）、HT[0] 空</td><td>2</td></tr></tbody></table>
+<h3>第三步：求平均</h3>
+<p>散列函数值域 0..4 共 5 个起点等概率：ASL = (1 + 3 + 2 + 1 + 2) ÷ 5 = 9 ÷ 5 = <strong>1.8</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 25 直接置空</strong>：H=4 处 1 次就「假失败」，算出 (1+3+2+1+1)/5 = 1.6，正是干扰项 B。</li><li><strong>起点个数数错</strong>：失败 ASL 按散列函数值域逐个地址取（0..4 共 5 个），等概率平均。</li><li><strong>插入时漏了 12 的冲突</strong>：12 的地址也是 1，探测才落到 HT[2]，这影响后面 H=1、H=2 的比较次数。</li></ul>
+<blockquote>线性探测删元素要打标记：探测链不断，失败探测才会「穿过」删除位置 —— 答案 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

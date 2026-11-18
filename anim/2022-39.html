@@ -187,5 +187,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：四次挥手中 C、S 进入 CLOSED 的最短时间</h2>
+<p><strong>答案：D（C 1650 ms，S 75 ms）</strong></p>
+<h3>第一步：明确"最短"口径</h3>
+<p>求「至少」多久：CLOSE_WAIT 期间不再传数据、FIN_WAIT-2 不停留——S 收到 C 的 FIN 后<strong>立即</strong>把 ACK 和自己的 FIN 一并回过去，四次挥手压缩成"三段报文"。设 t = 0 为 C 发出 FIN 的时刻，RTT = 50 ms，MSL = 800 ms。</p>
+<h3>第二步：C 的时间线（主动关闭方）</h3>
+<table><thead><tr><th>时刻</th><th>事件</th><th>C 的状态</th></tr></thead><tbody><tr><td>0 ms</td><td>C 发出 FIN</td><td>FIN_WAIT-1</td></tr><tr><td>25 ms（半个 RTT）</td><td>S 收到 FIN，立即回 ACK + FIN</td><td>（仍在 FIN_WAIT-1）</td></tr><tr><td>50 ms（1 个 RTT）</td><td>C 收到 ACK + FIN，回最后一个 ACK</td><td>进入 TIME_WAIT，启动 2MSL 定时器</td></tr><tr><td>50 + 2×800 = <strong>1650 ms</strong></td><td>定时器到期</td><td><strong>CLOSED</strong></td></tr></tbody></table>
+<p>C 耗时 = 1 RTT + 2 MSL = 50 + 1600 = <strong>1650 ms</strong>。</p>
+<h3>第三步：S 的时间线（被动关闭方）</h3>
+<table><thead><tr><th>时刻</th><th>事件</th></tr></thead><tbody><tr><td>25 ms</td><td>收到 C 的 FIN，发 ACK + FIN，进入 LAST_ACK</td></tr><tr><td>75 ms（0.5 RTT + 1 RTT）</td><td>收到 C 最后的 ACK → <strong>CLOSED</strong></td></tr></tbody></table>
+<p>S 耗时 = 0.5 RTT + 1 RTT = 1.5 RTT = <strong>75 ms</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 A/C（C 850 ms）</strong>：把 TIME_WAIT 算成 1 个 MSL。TIME_WAIT 必须等 <strong>2×MSL</strong> = 1600 ms。</li><li><strong>选 B（S 50 ms）</strong>：S 要收到 C 对"自己那条 FIN 的确认"才能关闭，最后那个 ACK 从 C 出发再走半个 RTT（25 ms），所以是 75 ms。</li><li><strong>忽略主动方的 2MSL 等待</strong>：C 主动关闭，必须停在 TIME_WAIT 计满 2MSL 才进 CLOSED——这正是 C（1650 ms）远大于 S（75 ms）的原因。</li></ul>
+<blockquote>口诀：主动方 = 1 RTT + 2MSL；被动方 ≈ 1.5 RTT。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

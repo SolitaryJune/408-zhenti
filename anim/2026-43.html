@@ -152,5 +152,31 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：定长 16 位指令的格式切分与编码分析</h2>
+<h3>第 0 步：底层机制——译码器怎么"读"指令、运算落在哪个模里</h3>
+<p><strong>译码分两级</strong>。定长 16 位指令进来，译码器第一步只看最高 4 位（bits15~12）：0000 → R 型，0100 → I 型，1110/1111 → M 型——这一步决定"剩下 12 位按哪种格式切"；第二步才按型的格式解读字段：R 型切 rt、rs/num、op1（功能 R[rt]←R[rt] op1 R[rs] 或 R[rt]←R[rt] op1 num），I 型切 rt、imm8（R[rt]←R[rt] op2 imm8），M 型切 offset（12 位，R[0]←M[R15+offset] 或 M[R15+offset]←R[0]）。<strong>字段只在自己"型"的语境里存在</strong>。</p>
+<p><strong>运算落在 16 位寄存器里</strong>。通用寄存器 16 位，加法按模 2¹⁶ 进行——第 17 位的进位在寄存器里无处存放，自然丢弃。</p>
+<p><strong>访存按字节编址</strong>。每个地址对应 1 字节；16 位变量占两个连续字节；M 型的 offset 是 12 位、基址固定用 R15、数据寄存器固定用 R0。</p>
+<p>下面四问全部从这三条机制里长出来。</p>
+<h3>第（1）问（2 分）：主存单元与寄存器宽度</h3>
+<ul><li>主存单元 <strong>8 位</strong>："按字节编址"的定义就是每个地址对应 1 字节。</li><li>通用寄存器 <strong>16 位</strong>："16 位计算机"指机器字长 16 位，通用寄存器存放机器字。相互印证：存储器地址是 16 位，M 型指令拿 R[r] 的全部 16 位当访存地址——寄存器若不足 16 位，地址就表达不全。</li></ul>
+<h3>第（2）问（2 分）：op1/op2、op2/op3 编码能否相同</h3>
+<ul><li><strong>op1 与 op2 可以相同</strong>。op1 在 R 型最低 4 位（bits3~0），op2 在 I 型最高 4 位（bits15~12）。为什么位置不同就够？第一级译码只读 bits15~12：读到 0000 才按 R 型切分、bits3~0 才被当作 op1 解释；读到 0100 则按 I 型切分、bits3~0 归 imm8 所有。op1 与 op2 的编码值永远不会被同一级译码放在一起比较，同码无歧义。</li><li><strong>op2 与 op3 不可以相同</strong>。两者同占 bits15~12 的第一级分型字段——译码器第一步就要靠它们区分"加立即数"与"取数/存数"，同码则连"是哪种型"都定不了，后 12 位按 imm8 还是 offset 切分就无从谈起。题给编码 0100 与 1110、1111 恰好互异。</li></ul>
+<h3>第（3）问（2 分）：指令 0000 0010 1001 0001</h3>
+<p>两级译码：高 4 位 0000 → R 型；rt = 0010 = 2，rs/num = 1001 = 9，op1 = 0001 = 加 → <strong>R2 ← R2 + R9</strong>。</p>
+<p>计算 ABCDH + F001H = 19BCEH。<strong>为什么 R2 写 9BCEH 而不是 19BCEH</strong>：R2 只有 16 位，第 17 位的进位按模 2¹⁶ 丢弃——这不是"舍入"，是寄存器宽度决定的必然。所以 <strong>R2 = 9BCEH</strong>。</p>
+<p><strong>为什么 R9 不变</strong>：R9 只是源操作数，本指令的目的寄存器是 rt=2，加法不写源 → <strong>R9 = F001H</strong>。</p>
+<h3>第（4）问（4 分）：y = 16*x − 5 的四条指令</h3>
+<p>先把数学拆成机器动作。x、y 均为 16 位，按字节编址下各占 2 字节、从低地址向高地址连续存放，x 的地址在 R15 → x 在 M[R15]、y 在 M[R15+2]（为什么不是 R15+1：16 位变量占 2 字节）。y = 16*x − 5 = (x 左移 4 位) − 5（为什么左移 4 位等于乘 16：左移 1 位 ×2，4 位即 2⁴ = 16，比反复相加高效，且题给指令恰有左移）；减 5 做成加 −5，imm8 用 8 位补码——减法统一成加法。中间结果都放 R0，因为 M 型指令固定以 R0 为数据寄存器、R15 为基址寄存器。</p>
+<table><thead><tr><th>指令</th><th>功能</th><th>字段填空</th><th>说明</th></tr></thead><tbody><tr><td>I1</td><td>R0 ← M[R15+0]，取 x</td><td>① = <strong>1110</strong></td><td>op3=取数 1110；offset=0，12 位全 0</td></tr><tr><td>I2</td><td>R0 ← R0 左移 4 位（乘 16）</td><td>② = <strong>0000 0100</strong></td><td>R 型：op1=0010（左移）、rt=0000、num=0100</td></tr><tr><td>I3</td><td>R0 ← R0+(−5)</td><td>③ = <strong>1111 1011</strong></td><td>op2=0100、rt=0000、imm8=−5 的 8 位补码</td></tr><tr><td>I4</td><td>M[R15+2] ← R0，存 y</td><td>④ = <strong>0000 0000 0010</strong></td><td>op3=存数 1111；offset=2，写满 12 位</td></tr></tbody></table>
+<ul><li><strong>为什么 I1 的 offset 全 0 也要写满 12 位</strong>：定长指令、字段宽度固定，"0"也是 12 位的 0000 0000 0000。</li><li><strong>为什么 ② = 0000 0100</strong>：② 对应 R 型中间 8 位 rs/num 字段 = rt(0000) + num(0100)，num=4 即左移 4 位。</li><li><strong>为什么 ③ = 1111 1011</strong>：+5 = 0000 0101，取反加一得 1111 1011，这是 8 位补码下的 −5。</li><li><strong>为什么 ④ 是 12 位</strong>：offset 字段宽 12 位，2 要写成 0000 0000 0010。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>第（3）问忘记截断进位</strong>：答案 9BCEH，不是 19BCEH——16 位寄存器只装得下低 16 位。</li><li><strong>y 的偏移写成 1</strong>：按字节编址、16 位变量占 2 字节，y 在 R15+2。</li><li><strong>③ 忘了符号</strong>：−5 的 8 位补码是 1111 1011，不是 0000 0101。</li><li><strong>第（2）问想当然</strong>：字段位置不同就能同码，同占一个操作码字段就必须互异。</li></ul>
+<blockquote>记忆锚点：译码两级走——先高 4 位分型、再按型切字段；运算在 16 位模里进行、进位自然丢；offset 与 imm8 按字段宽度写全、负数用补码。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

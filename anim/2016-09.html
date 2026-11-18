@@ -59,5 +59,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：步长为 3 的跳跃查找与折半查找的比较次数</h2>
+<p>答案：<strong>B（当 x 接近数组开头处）</strong>。</p>
+<h3>第一步：先算清两种算法各花多少次比较</h3>
+<p>折半查找：每比一次区间减半，n 大于 1000 时约需 <code>log2(n)</code> ≈ <strong>10 次左右</strong>，且与 x 的位置关系不大。</p>
+<p>本题算法：<code>while</code> 循环每轮比较一次 <code>A[k] 与 x</code> 并令 k 加 3；循环结束后最多再比较 <code>A[k]</code>、<code>A[k-1]</code>、<code>A[k-2]</code> 三次。设 while 跑了 t 轮，总比较次数约为 <code>t + 3</code>。<strong>t 由 x 的位置决定：x 越靠前 t 越小。</strong></p>
+<h3>第二步：逐项估算</h3>
+<table><thead><tr><th>情形</th><th>while 轮数 t</th><th>总比较次数</th><th>与折半（约 10 次）相比</th></tr></thead><tbody><tr><td>x 接近开头</td><td>0~1</td><td>约 1~5 次</td><td>更少</td></tr><tr><td>x 在中间</td><td>约 n/6 ≈ 170 以上</td><td>远大于 10</td><td>更多</td></tr><tr><td>x 接近结尾</td><td>约 n/3 ≈ 340 以上</td><td>远大于 10</td><td>更多</td></tr><tr><td>x 不在数组且比所有元素大</td><td>约 n/3</td><td>约 n/3+3</td><td>更多</td></tr></tbody></table>
+<h3>第三步：下结论</h3>
+<p>只有“x 接近数组开头”能让 while 几乎不跑，总比较次数明显少于折半的约 10 次，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A</strong>：以为 x 不在数组中就不用找、次数自然少。实际上若 x 比所有元素都大，while 要一路加 3 跑到底，比较次数反而更多。</li><li><strong>低估折半</strong>：折半约 10 次看似不多，但跳跃查找在中后段要跑上百轮，两者差距悬殊。</li><li><strong>漏数 while 的比较</strong>：循环条件里的 <code>A[k] 与 x</code> 每轮都是一次真实比较，不能只数末尾那 3 次。</li></ul>
+<blockquote>记忆锚点：跳跃查找“靠前快、靠后慢”；折半查找“对谁都约 log2n 次”。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

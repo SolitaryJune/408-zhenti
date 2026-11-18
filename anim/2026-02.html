@@ -144,5 +144,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：双向链表 p2 指针整体改链的代码判定</h2>
+<p><strong>答案：D</strong></p>
+<h3>第一步：把题意翻译成指针等式</h3>
+<p>结点中 p2 指向直接前驱、p1 指向直接后继。目标：对 L 的每个结点，把它的 p2 改为指向「p1 所指结点的直接后继」，即当 <code>cu-&gt;p1</code> 存在时执行 <code>cu-&gt;p2 = cu-&gt;p1-&gt;p1</code>；当 <code>cu-&gt;p1</code> 为 NULL（尾结点）时，p1 所指结点不存在，其直接后继也不存在，按题意 p2 应置 NULL。头结点也是 L 的结点（cu 从 head 出发），同样要处理。</p>
+<h3>第二步：找每个选项的致命点</h3>
+<table><thead><tr><th>选项</th><th>致命点</th></tr></thead><tbody><tr><td>A</td><td>尾结点的 <code>cu-&gt;p1</code> 为 NULL，仍执行 <code>cu-&gt;p1-&gt;p1</code>，解引用空指针出错</td></tr><tr><td>B</td><td>循环条件要求 <code>cu-&gt;p2 != NULL</code>，而头结点的 p2 初值是 NULL，循环一次都不执行</td></tr><tr><td>C</td><td>尾结点处 <code>cu-&gt;p1</code> 为 NULL 时 if 不成立、cu 也不更新，死循环</td></tr><tr><td>D</td><td><code>cu-&gt;p1</code> 为 NULL 时置 <code>cu-&gt;p2 = NULL</code> 并让 cu 前进，处理完整条链后正常结束</td></tr></tbody></table>
+<h3>第三步：用一条 3 结点链验证 D</h3>
+<p>设 head 指向头结点，链为 head→a1→a2→a3→NULL，cu 从 head 出发：</p>
+<table><thead><tr><th>cu</th><th>判断</th><th>本步修改</th></tr></thead><tbody><tr><td>head</td><td>p1 = a1 非空</td><td>head 的 p2 改为 a2</td></tr><tr><td>a1</td><td>p1 = a2 非空</td><td>a1 的 p2 改为 a3</td></tr><tr><td>a2</td><td>p1 = a3 非空</td><td>a2 的 p2 改为 NULL（a3 的 p1 是 NULL）</td></tr><tr><td>a3</td><td>p1 = NULL</td><td>a3 的 p2 置 NULL，cu = a3 的 p1 = NULL，循环结束</td></tr></tbody></table>
+<p>每个结点都被正确改写，遍历沿 p1 进行、修改 p2 不影响前进路线，D 正确。</p>
+<h3>易错点</h3>
+<ul><li><strong>忽略头结点</strong>：头结点没有前驱，p2 初值是 NULL，这正是 B 选项循环条件直接失效的原因。</li><li><strong>忽略尾结点</strong>：尾结点的 p1 为 NULL，是 A 崩溃、C 死循环的共同根源。</li><li><strong>误以为必须单独处理倒数第二个结点</strong>：<code>cu-&gt;p1-&gt;p1</code> 在 cu 为倒数第二个结点时值为 NULL，直接赋值即可，D 的 if 分支天然涵盖。</li></ul>
+<blockquote>一句话结论：能同时正确处理「头结点 p2 初值 NULL」与「尾结点 p1 为 NULL」的只有 D。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -74,5 +74,27 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：判断无向图是否存在 EL 路径（欧拉路径）</h2>
+<h3>第 0 步：先立机制——为什么"奇度顶点 0 或 2 个"就能一笔画</h3>
+<p>把 EL 路径想成<strong>一笔画</strong>：沿路径每经过一个顶点一次，就从它身上用掉两条边（一进一出），只有起点和终点例外——各有一条边只用了"一半"。于是路径中间的顶点必须全是偶度，允许奇度的只有起点、终点这两个位置：</p>
+<ul><li>奇度顶点 <strong>0 个</strong>：起点与终点重合，路径闭合成<strong>欧拉回路</strong>——它同样包含所有边且长度为 |E|，也是一条 EL 路径；</li><li>奇度顶点 <strong>2 个</strong>：这两个奇度点正好一个当起点、一个当终点，EL 路径从其中一点画到另一点。</li></ul>
+<p><strong>为什么奇度顶点不可能是 1 个、3 个？</strong> 所有顶点度数之和 = 2|E|（每条边给两个端点各贡献 1 度），必为偶数；偶度顶点贡献偶数，所以"度数总和的奇偶性 = 奇度顶点个数的奇偶性"，奇度顶点永远有偶数个。"不大于 2 的偶数"就只剩 0 和 2 两个候选——这正是题目条件的来历。</p>
+<p>题目已给定"无向连通图、|E|&gt;0"，连通性不必再查，判定只剩一件事：<strong>数出奇度顶点的个数</strong>。</p>
+<h3>第 1）问：基本设计思想</h3>
+<p>机制落到邻接矩阵上：无向图的邻接矩阵对称，每条与顶点 i 相连的边都在第 i 行贡献一个 1（图无自环，对角线不用单独处理），所以<strong>顶点 i 的度 = 第 i 行元素之和</strong>。逐行求度，用 count 累计奇度顶点个数：count 为 0 或 2 → 返回 1，否则返回 0。</p>
+<h3>第 2）问：算法实现（与参考答案同口径）</h3>
+<p><code>int IsExistEL(MGraph G)</code> 的骨架：</p>
+<ul><li>外层 <code>for (i = 0; i &lt; G.numVertices; i++)</code>：内层先把 <code>degree</code> 清零，再 <code>for (j = 0; j &lt; G.numVertices; j++) degree += G.Edge[i][j];</code></li><li><code>if (degree % 2 != 0) count++;</code> —— 奇度顶点计数。</li><li>循环结束后 <code>if (count == 0 || count == 2) return 1; else return 0;</code></li></ul>
+<p>关键注释点：degree 初始化清零、奇度判断、<code>count==0 || count==2</code> 的最终判定。</p>
+<h3>第 3）问：复杂度</h3>
+<p>双重循环把矩阵的 n² 个元素<strong>每个看一次</strong>，与实际边数无关——邻接矩阵的开销由"矩阵多大"决定，不由"边有多少"决定，时间复杂度 <strong>O(n²)</strong>（n 为 numVertices）。辅助变量只有 degree、count、i、j 常数个，输入矩阵本身不算额外空间，空间复杂度 <strong>O(1)</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉"0 也算存在"</strong>：奇度顶点为 0 时是欧拉回路，首尾相接、同样包含所有边且长度为 |E|，条件必须写成 <code>count==0 || count==2</code>。</li><li><strong>度数统计不完整</strong>：无向图邻接矩阵对称，整行求和即可；只加一半会数错。</li><li><strong>复杂度写成 O(n+e)</strong>：那是邻接表的口径——邻接表只存实际边才与 e 有关；邻接矩阵必须扫全表。</li><li><strong>忘记初始化</strong>：degree 每行开始前必须清零，否则会累加到上一个顶点的度上。</li></ul>
+<blockquote>记忆锚点：一笔画只允许起点终点各"欠"一条边 → 奇度顶点 0 或 2 个；矩阵第 i 行行和 = 顶点 i 的度；扫全矩阵 = O(n²) 时间、O(1) 空间。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

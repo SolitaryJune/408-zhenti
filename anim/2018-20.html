@@ -88,5 +88,20 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：流水线 CPU 的时钟周期</h2>
+<p><strong>答案：D（100ps）。</strong></p>
+<h3>第一步：先立机制——为什么周期由"最慢一段 + 寄存器延时"决定</h3>
+<p>流水线把一条指令的执行切成 5 段，段与段之间用流水段寄存器隔开，<strong>所有段共用同一个时钟节拍</strong>：每个节拍里，各段同时开工、各自处理自己那一道指令，节拍结束时把结果写入下一级的段寄存器。节拍长度必须迁就最慢的要求——只要有一段在一个周期里干不完活，或写不完段寄存器，流水线就会撞车。所以时钟周期 ≥ 最长段耗时 + 段寄存器延时，与其他段多快无关：流水线的节拍永远是"短板"说了算。</p>
+<h3>第二步：逐段核对</h3>
+<table><thead><tr><th>功能段</th><th>耗时</th><th>+ 段寄存器延时 20ps</th><th>合计</th></tr></thead><tbody><tr><td>A</td><td>80ps</td><td>20ps</td><td><strong>100ps</strong></td></tr><tr><td>B</td><td>50ps</td><td>20ps</td><td>70ps</td></tr><tr><td>C</td><td>50ps</td><td>20ps</td><td>70ps</td></tr><tr><td>D</td><td>70ps</td><td>20ps</td><td>90ps</td></tr><tr><td>E</td><td>50ps</td><td>20ps</td><td>70ps</td></tr></tbody></table>
+<p>最大值是 A 段的 <strong>100ps</strong>，故 CPU 时钟周期至少为 100ps。</p>
+<h3>易错点</h3>
+<ul><li><strong>取最长段 80ps 就交卷</strong>（选项 C）：漏加段寄存器写入的 20ps——每个周期都包含"干活 + 把结果锁存进段寄存器"两个动作。</li><li><strong>把五段加总或求平均</strong>：加总（300ps）是<strong>非流水线</strong>执行一条指令的总时间；流水线各段并行推进，周期只由最慢一段决定，与总和无关。</li><li><strong>忽略 D 段</strong>：70 + 20 = 90ps 也超过 80ps——就算漏看 A 段，80ps 同样不够。</li></ul>
+<blockquote>口诀：流水线时钟周期 = 最慢段耗时 + 段寄存器延时 = 80 + 20 = 100ps。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -151,5 +151,23 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <script>/* aw-ok */</script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：单缓冲与双缓冲的耗时计算</h2>
+<p><strong>答案：B（单缓冲 1550μs、双缓冲 1100μs）</strong>。已知：10 个磁盘块；读入缓冲区 T = 100μs，缓冲区送用户区 M = 50μs，CPU 分析 C = 50μs。</p>
+<h3>第一步：单缓冲——读入 T 与「传送+分析」并行，传送 M 与读入不能并行</h3>
+<p>同一个缓冲区"读入"与"送出"不能同时进行，所以 M 每块都要单独花；而 CPU 分析不占缓冲区，可与下一块的读入重叠。</p>
+<ul><li>第 1 块必须老老实实串行：T + M + C = 100 + 50 + 50 = 200μs；</li><li>从第 2 块起，每块只增加 max(T, C) + M = 100 + 50 = 150μs；</li><li>总时间 = 200 + 9 × 150 = <strong>1550μs</strong>。</li></ul>
+<h3>第二步：双缓冲——读入与「传送+分析」完全并行</h3>
+<p>两块缓冲区轮流使用：CPU 用 buf2 的数据传送、分析时，磁盘可同时往 buf1 读入。</p>
+<ul><li>每块周期 = max(T, M + C) = max(100, 100) = 100μs；</li><li>第 1 块仍需 T + M + C = 200μs 才分析完；</li><li>总时间 = 200 + 9 × 100 = <strong>1100μs</strong>。</li></ul>
+<h3>第三步：公式归纳（可直接套用）</h3>
+<table><thead><tr><th>结构</th><th>总时间公式</th><th>本题代入</th></tr></thead><tbody><tr><td>单缓冲</td><td>(T+M+C) + (n−1) × [max(T,C)+M]</td><td>200 + 9 × 150 = 1550μs</td></tr><tr><td>双缓冲</td><td>(T+M+C) + (n−1) × max(T, M+C)</td><td>200 + 9 × 100 = 1100μs</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>单缓冲算成 200 + 9 × 100 = 1100</strong>：漏掉 M——单缓冲下"送用户区"不能与"读下一块"重叠，M 必须每块单独支付。</li><li><strong>双缓冲算成 1000</strong>：忘记了首块仍是完整的 T + M + C，不能把 10 块全按 100μs 算。</li><li><strong>两种结构都把首块当成并行</strong>：第一块没有前一块的分析可重叠，两种结构的"首块代价"都是 T + M + C。</li></ul>
+<blockquote>记忆点：单缓冲每块 max(T,C)+M，双缓冲每块 max(T,M+C)，首块都是 T+M+C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

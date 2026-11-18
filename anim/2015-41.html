@@ -162,5 +162,29 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：单链表按绝对值去重（以空间换时间）</h2>
+<h3>第 0 步：先立机制——去重的本质是"在线的成员查询"</h3>
+<p>整道题反复回答的其实只有一个问题：<strong>当前结点的绝对值，前面出现过没有？</strong> 判断"出现过没有"有两条路：</p>
+<ul><li><strong>两两比较</strong>：每个结点都要和它前面的所有结点比一遍，时间 O(m²)——题目要求"时间尽可能高效"，这条路被排除；</li><li><strong>桶登记</strong>：题给 |data| ≤ n，绝对值只可能取 0~n 这 <strong>n+1 种</strong>值——值域有限，就可以开一个 n+1 的数组当"签到表"，绝对值当下标，登记与查询都是 O(1)。</li></ul>
+<p><strong>为什么保留的一定是第一次出现的结点</strong>：扫描从链头到链尾单向进行，一个绝对值第一次被遇到时签到表还是 0，结点被保留并登记；此后再遇到，签到表已是 1，一律摘链删除——"先到先登记"天然保证了保留的是首次出现。</p>
+<p><strong>为什么一趟扫描就够</strong>：每个结点只需查一次表，而签到表随扫描即时更新，既不用回头看已处理部分，也不用预先知道全表内容。</p>
+<h3>问题（1）：算法的基本设计思想</h3>
+<p>按第 0 步的机制落笔：申请大小为 <strong>n+1</strong> 的辅助数组 q（下标对应绝对值 0~n），全部初始化为 0；从头到尾<strong>只扫描链表一趟</strong>，对每个结点取 <code>m = |data|</code>——<code>q[m] = 0</code> 说明首次出现，保留结点并置 <code>q[m] = 1</code>；<code>q[m] = 1</code> 说明重复，修改前驱的 link 摘链并 free。用 O(n) 空间把"判断是否重复"变成 O(1) 查表，总时间从 O(m²) 降到 O(m)，这就是<strong>以空间换时间</strong>。</p>
+<p>示例（即题图）：<code>21 → 15 → 15 → −7 → 15</code> 去重后为 <code>21 → 15 → −7</code>——第二个 15 与末尾的 15 都是重复，−7 的绝对值 7 是首次出现故保留。</p>
+<h3>问题（2）：结点数据类型定义</h3>
+<ul><li>结点结构：<code>typedef struct node { int data; struct node *link; } NODE;</code>——<code>data</code> 存整数（|data| ≤ n），<code>link</code> 指向后继；</li><li>指针别名：<code>typedef NODE *PNODE;</code></li></ul>
+<h3>问题（3）：算法描述（与参考答案一致的 C 语言实现）</h3>
+<ol><li>函数入口：<code>void func(PNODE h, int n)</code>，h 指向链表的头结点；</li><li>申请辅助空间：<code>q = (int *)malloc(sizeof(int) * (n + 1));</code>——n+1 个单元，下标 0~n 正好覆盖全部可能的绝对值；</li><li>初始化：用 for 循环把 <code>q[0..n]</code> 全部置 0（<code>*(q + i) = 0;</code>）；</li><li>一趟扫描：<code>while (p-&gt;link != NULL)</code>，取绝对值 <code>m = p-&gt;link-&gt;data &gt; 0 ? p-&gt;link-&gt;data : -p-&gt;link-&gt;data;</code>；</li><li>若 <code>*(q + m) == 0</code>：首次出现——登记 <code>*(q + m) = 1;</code> 并保留结点 <code>p = p-&gt;link;</code>；</li><li>否则重复出现：<code>r = p-&gt;link; p-&gt;link = r-&gt;link; free(r);</code>——此时 <strong>p 不动</strong>，继续检查新的 <code>p-&gt;link</code>；</li><li>扫描结束后 <code>free(q);</code> 释放辅助数组。</li></ol>
+<p><strong>为什么删除结点时 p 必须原地不动</strong>：p 始终指向"已处理部分的最后一个结点"，待检查的是 <code>p-&gt;link</code>。摘链后 <code>p-&gt;link</code> 指向的是<strong>还没检查过</strong>的新结点；若再执行 <code>p = p-&gt;link</code>，这个新结点就被跳过了。只有保留结点（<code>p = p-&gt;link</code>）时，p 才前进一格。</p>
+<h3>问题（4）：时间与空间复杂度</h3>
+<p>链表从头到尾扫一遍，每个结点只做常数次操作（查一次表、至多摘一次链）：<strong>时间复杂度 O(m)</strong>（m 为链表结点数）；辅助数组占 n+1 个单元：<strong>空间复杂度 O(n)</strong>（n 为给定的绝对值上限）。</p>
+<h3>易错点</h3>
+<ul><li><strong>删除结点时让 p 后移</strong>：<code>p-&gt;link</code> 已换成未检查的新结点，再后移会漏检一个结点——删除分支里 p 必须原地不动（机理见第（3）问）。</li><li><strong>用两重循环两两比较</strong>：空间 O(1) 但时间 O(m²)，违背"时间尽可能高效"的题眼；本题的空间换时间正是为了避免它。</li><li><strong>辅助数组开成 n 而不是 n+1</strong>：|data| ≤ n 意味着绝对值可以<strong>取到 n</strong>，下标要覆盖 0~n 共 n+1 个值，少开一个会越界。</li><li><strong>忘记释放 q</strong>：算法结束前应 <code>free(q)</code>，避免内存泄漏。</li></ul>
+<blockquote>记忆锚点：值域有限 → 桶数组签到；从前往后扫、先登记后查询 → 自然保留首次出现；删除时 p 不动、保留时 p 才走；时间 O(m)、空间 O(n)。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

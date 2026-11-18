@@ -63,5 +63,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：分段共享中的共享段表（找错误项）</h2>
+<p>答案：<strong>B</strong>。</p>
+<h3>第一步：认清共享段表</h3>
+<p>共享段表是<strong>全系统唯一一张</strong>表，登记所有被共享的段：每个共享段只占<strong>一个</strong>表项，表项中有共享本段的<strong>进程计数</strong>等字段。</p>
+<h3>第二步：逐项核对</h3>
+<table><thead><tr><th>项</th><th>分析</th><th>判断</th></tr></thead><tbody><tr><td>A</td><td>共享的意义就是物理内存只存一份段 S，各进程映射到同一副本</td><td>正确</td></tr><tr><td>B</td><td>段号是各进程自己地址空间内的编号，S 在 P1、P2 中完全可以不同</td><td>错误，当选</td></tr><tr><td>C</td><td>段 S 在共享段表中只有一个表项，P1、P2 共享该表项</td><td>正确</td></tr><tr><td>D</td><td>由共享计数控制：全部进程都不再使用（计数减到 0）才回收</td><td>正确</td></tr></tbody></table>
+<h3>第三步：为什么 B 错</h3>
+<p>分段系统中每个进程对自己的地址空间<strong>独立编号</strong>，"段号"只是进程内的局部序号。P1 划分了 8 个段、P2 划分了 5 个段，它们共享段 S 的段号没有理由强制相同——共享靠的是段表项都指向同一物理副本，而不是段号一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>默认"共享就必须同段号"</strong>：恰好说反，各进程段号空间互不相干。</li><li><strong>忽视共享计数字段</strong>：回收时机由"都不再使用"决定，而不是某一个进程释放。</li></ul>
+<blockquote>一句话结论：物理一份、表项一个、段号各自编——错在"应该具有相同的段号"，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

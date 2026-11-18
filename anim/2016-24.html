@@ -74,5 +74,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：三作业在单 CPU + 单输入/单输出设备上的最少完工时间</h2>
+<h3>第一步：理清约束</h3>
+<p>每个作业都要<strong>输入 2ms → 计算 3ms → 输出 4ms</strong>；输入设备、CPU、输出设备各只有 1 台，但<strong>三者可以同时工作</strong>（并行），作业间也可以接力流水。</p>
+<h3>第二步：先求下界</h3>
+<p>任何作业最早也要"输入 2ms + 计算 3ms"完成后才能开始输出，即<strong>输出最早从第 5ms 开始</strong>；而输出设备必须不重叠地做完 3 × 4 = 12ms 的输出。故总完工时间 ≥ 5 + 12 = <strong>17ms</strong>，选 <strong>B</strong>。</p>
+<h3>第三步：构造恰好达到 17ms 的调度</h3>
+<table><thead><tr><th>时间段</th><th>输入设备</th><th>CPU</th><th>输出设备</th></tr></thead><tbody><tr><td>0–2</td><td>J1 输入</td><td>—</td><td>—</td></tr><tr><td>2–4</td><td>J2 输入</td><td>J1 计算</td><td>—</td></tr><tr><td>4–5</td><td>J3 输入</td><td>J1 计算</td><td>—</td></tr><tr><td>5–6</td><td>J3 输入</td><td>J2 计算</td><td>J1 输出</td></tr><tr><td>6–8</td><td>—</td><td>J2 计算</td><td>J1 输出</td></tr><tr><td>8–9</td><td>—</td><td>J3 计算</td><td>J1 输出</td></tr><tr><td>9–11</td><td>—</td><td>J3 计算</td><td>J2 输出</td></tr><tr><td>11–13</td><td>—</td><td>—</td><td>J2 输出</td></tr><tr><td>13–17</td><td>—</td><td>—</td><td>J3 输出</td></tr></tbody></table>
+<p>三台设备互不冲突、每作业三段依次衔接，第 17ms 全部完成。</p>
+<h3>易错点</h3>
+<ul><li><strong>完全串行算出 27ms</strong>：(2+3+4)×3=27，对应 D 项——忽略了设备可以重叠。</li><li><strong>只让计算与 I/O 部分重叠算出 22ms</strong>：对应 C 项——输出没有从最早可能的 5ms 连续排满。</li><li><strong>忘记输出最早 5ms 才能开始</strong>：以为从 0 就能三设备齐转，算出 12ms 之类偏小值。</li></ul>
+<blockquote>下界 5 + 3×4 = 17ms，且可构造调度达到，故最少 17ms，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -95,5 +95,21 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：DMA 方式下数据传输通路的位置</h2>
+<p><strong>答案：C（设备接口和主存之间）</strong></p>
+<h3>第一步：DMA 的分工</h3>
+<p>DMA（直接存储器存取）方式下，传送的<strong>初始化</strong>（主存起始地址、传送字数、传送方向）和<strong>结束处理</strong>由 CPU 完成；中间的数据传送完全由 <strong>DMA 控制器</strong>接管总线控制权并控制完成，CPU 不执行任何传送指令。</p>
+<h3>第二步：数据从哪到哪</h3>
+<p>设备把数据送入<strong>设备接口</strong>的数据缓冲寄存器；DMA 控制器取得总线使用权后，直接把接口缓冲寄存器中的数据写入<strong>主存</strong>（或反向读出）。数据通路是：</p>
+<p>设备 → 设备接口 ↔ DMA 控制器 ↔ 主存</p>
+<p>数据<strong>不经过 CPU</strong>（不进 CPU 的通用寄存器，也无需 CPU 执行指令搬移）——这正是 DMA 比程序查询和中断方式更节省 CPU 的关键。</p>
+<h3>第三步：排除干扰项</h3>
+<ul><li><strong>A（CPU 和主存之间）</strong>：那是取指令、访存指令的数据通路，与 DMA 无关。</li><li><strong>B（CPU 和 DMA 控制器之间）</strong>：CPU 与 DMA 控制器之间只传命令/状态（初始化参数、DMA 请求、结束信号），不传设备数据。</li><li><strong>D（设备接口和 DMA 控制器之间）</strong>：接口与控制器之间是请求/应答等局部信号，批量数据传送发生在接口缓冲寄存器与主存之间。</li></ul>
+<blockquote>一句话结论：DMA 的数据通路是"设备接口 ↔ 主存"的直达通道，绕开 CPU——选 C。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

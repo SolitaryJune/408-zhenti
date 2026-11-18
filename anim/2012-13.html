@@ -101,5 +101,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：unsigned short 扩展为 unsigned int 的机器数</h2>
+<p><strong>答案：B</strong>——无符号数加长位数采用零扩展，y 的机器数为 <code>0000 FFFAH</code>。</p>
+<h3>第一步：先写出 x 的 16 位机器数</h3>
+<p>x = 65530，而 65535 的十六进制是 <code>FFFFH</code>，故 x = FFFFH − 5H = <code>FFFAH</code>（16 位无符号数）。</p>
+<h3>第二步：短的无符号数加长 → 高位补 0</h3>
+<p>把 16 位的 unsigned short 赋给 32 位的 unsigned int，数值不变，只需在高位补 0（零扩展）：16 位的 <code>FFFA</code> 变成 32 位的 <code>0000 FFFA</code>。</p>
+<p><strong>为什么补 0 数值就不变？</strong> 无符号数没有符号位，它的值就是各位权重之和：FFFAH = 15×16³ + 15×16² + 15×16 + 10 = 65530。高位补 0 不新增任何权重项，值当然纹丝不动——扩展前后的位串只在"高位多几个 0"，权重和一字不差。</p>
+<p><strong>那有符号数为什么反而要补符号位？</strong> 因为补码位串是<strong>按模 2ⁿ 解释</strong>的：FFFAH 当 signed short 读时代表 −6（65530 − 65536 = −6）。把它放进 32 位的更大模里，要仍然表示同一个负数，高位必须补 1 得 <code>FFFF FFFA</code>（= 2³² − 6，在模 2³² 下同样代表 −6）才与原数同余；若补 0 就变成了 +65530。所以扩展规则取决于<strong>类型解释</strong>：无符号补 0，有符号补符号位——本题 x 是 unsigned short，走补 0 这条路。</p>
+<h3>第三步：对照干扰项，确认来源</h3>
+<p>若 x 是 <strong>signed short</strong> 且值为负数，加长时按符号扩展高位补 1，才会得到 <code>FFFF FFFA</code>（选项 D）——但本题 x 是 unsigned，根本没有符号位，一律补 0。选项 A、C 里的 <code>7FFA</code> 则是十进制转十六进制就错了的结果。</p>
+<p>答案选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误用符号扩展</strong>：<code>FFFF FFFA</code> 是把 65530 当负数补 1 的结果；unsigned 类型扩展永远补 0。</li><li><strong>见到最高位是 1 就按负数处理</strong>：FFFA 的最高位虽是 1，但 unsigned 类型没有符号位，65530 就是它的大小。</li><li><strong>十进制转十六进制出错</strong>：65530 = FFFFH − 5H = FFFAH，不是 7FFAH（7FFAH = 32762）。</li></ul>
+<blockquote>记忆点：无符号扩展补 0，有符号扩展补符号位。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -173,5 +173,35 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TCP 建连、慢开始传输与挥手全流程推演</h2>
+<h3>第 0 步：底层机制——四套规则叠在一起</h3>
+<p>这题的所有数字都从四条机制里长出来，先把它们立住：</p>
+<ol><li><strong>序号记账</strong>：SYN 和 FIN 各<strong>消耗一个序号</strong>（哪怕不携带数据）；确认号 ack_seq = "期望对方发来的下一个字节序号" = 已正确收到的最后序号 + 1。全题所有"+1"都源于这两条。</li><li><strong>慢开始</strong>：cwnd 从 1 MSS 起步，<strong>每收到一个新确认加 1 MSS</strong>（"每轮翻倍"只是效果，机制是按确认个数加）；cwnd 达到阈值 ssthresh = 8 MSS 才转入拥塞避免。</li><li><strong>发送窗口 = min(cwnd, rwnd)</strong>：拥塞控制与流量控制两道闸门取小。本题 rwnd 恒为 1000 B = 2 MSS，是个硬顶。</li><li><strong>计时颗粒</strong>：忽略传输时延后，"发一批 → 确认回来"恰是一个 RTT = 5 ms，时间轴就是一格一格的 RTT。</li></ol>
+<h3>第（1）问（2 分）：三次握手与确认号</h3>
+<table><thead><tr><th>次序</th><th>方向</th><th>标志</th><th>seq</th><th>ack_seq</th></tr></thead><tbody><tr><td>第一次</td><td>C→Si</td><td>SYN=1</td><td>1000</td><td>—</td></tr><tr><td>第二次</td><td>Si→C</td><td>SYN=1, ACK=1</td><td>2000</td><td><strong>1001</strong></td></tr><tr><td>第三次</td><td>C→Si</td><td>ACK=1</td><td>1001</td><td>2001</td></tr></tbody></table>
+<p>建立连接需 <strong>3 次握手</strong>。C 收到的 SYN=1、ACK=1 段是第二次握手段：Si 确认"你的序号 1000（SYN）已收到"，确认号指向下一个期望字节 → ack_seq = 1000+1 = <strong>1001</strong>。</p>
+<p><strong>为什么确认 1001 而不是 1000</strong>：SYN 占一个序号，确认号永远指向"已收齐之后的下一字节"——这也是为什么握手后 C 的数据从 1001 编号、Si 的从 2001 编号。</p>
+<h3>第（2）问（2 分）：拥塞窗口与发送窗口</h3>
+<p>叙事：连接建立后 cwnd = 1 MSS。C 发第 1 段（seq 1001~1500）→ Si 逐段确认，C 收到 ack_seq=1501 → cwnd 加到 2 MSS；C 按发送窗口 min(2 MSS, rwnd=1000 B) = 2 MSS 连发第 2、3 段（seq 1501~2000、2001~2500）；题给的"ACK=1，seq=2001，ack_seq=2001，rwnd=1000"正是 Si 对第 2 段的确认（ack_seq=2001 表示 1001~2000 已收齐）。</p>
+<p>此刻 C 已收到 <strong>2 个新确认</strong>（1501 与 2001）→ cwnd = 1+2 = <strong>3 MSS = 1500 B</strong>；发送窗口 = min(1500 B, 1000 B) = <strong>1000 B = 2 MSS</strong>。</p>
+<p><strong>为什么不是"一轮翻倍"到 4 MSS</strong>：慢开始加窗的单位是"确认个数"，此刻只数到 2 个确认。<strong>为什么发送窗口不取 3 MSS</strong>：rwnd = 1000 B 的闸门更紧，min 取小。</p>
+<h3>第（3）问（4 分）：四次挥手与最后一个报文段</h3>
+<p>文件发完，C 已用掉序号 1001~3000，下一序号 3001：</p>
+<table><thead><tr><th>次序</th><th>方向</th><th>标志</th><th>seq</th><th>ack_seq</th></tr></thead><tbody><tr><td>挥手一</td><td>C→Si</td><td>FIN=1</td><td>3001</td><td>2001</td></tr><tr><td>挥手二</td><td>Si→C</td><td>ACK=1</td><td>2001</td><td><strong>3002</strong></td></tr><tr><td>挥手三</td><td>Si→C</td><td>FIN=1, ACK=1</td><td><strong>2001</strong></td><td><strong>3002</strong></td></tr><tr><td>挥手四</td><td>C→Si</td><td>ACK=1</td><td>3002</td><td>3002</td></tr></tbody></table>
+<p>释放连接需 <strong>4 次挥手</strong>。C 收到的最后一个段是<strong>挥手三</strong>（挥手四是 C 发出去的）：Si 从未发送数据、确认段又不封装数据，其 seq 停在 2000+1 = <strong>2001</strong>；ack_seq = 3001+1 = <strong>3002</strong>——C 的 FIN 占用了序号 3001；FIN = <strong>1</strong>。</p>
+<p><strong>为什么挥手 4 次而握手 3 次</strong>：被动方收到 FIN 时可能还有数据没发完，必须先单独 ACK、等自己的数据发完再发 FIN——两步合不得（本题 Si 虽无数据可发，两段仍分开）。<strong>为什么挥手三的 seq 还是 2001</strong>：序号只在真正消耗序号（数据、SYN、FIN）时前进；Si 的挥手二只有 ACK、不占序号，序号原地停在 2001，到挥手三才被 FIN 消耗。</p>
+<h3>第（4）问（1 分）：何时确认文件送达</h3>
+<p>一格 RTT 一拍地数：</p>
+<table><thead><tr><th>轮次</th><th>时刻</th><th>动作</th><th>轮末状态</th></tr></thead><tbody><tr><td>RTT1</td><td>0~5 ms</td><td>三次握手</td><td>cwnd = 1 MSS，连接就绪</td></tr><tr><td>RTT2</td><td>5~10 ms</td><td>发 1 MSS（窗口 min(1, 2) = 1 MSS）</td><td>确认到达，cwnd = 2 MSS，剩 1500 B</td></tr><tr><td>RTT3</td><td>10~15 ms</td><td>发 2 MSS（窗口 min(2, 2) = 2 MSS）</td><td>确认到达，cwnd = 4 MSS，剩 500 B</td></tr><tr><td>RTT4</td><td>15~20 ms</td><td>发最后 1 MSS</td><td>对全部数据的确认到达 C</td></tr></tbody></table>
+<p>cwnd 全程 1→2→3→4，未触及阈值 8 MSS，不进入拥塞避免（且发送窗口始终被 rwnd 顶在 2 MSS）。第 4 个 RTT 末（20 ms）C 收到覆盖全部数据的确认，据此确认 Si 已成功收到文件 → <strong>4 × 5 ms = 20 ms</strong>。</p>
+<p><strong>为什么不是 3 个 RTT</strong>：计时从"请求建立连接"起，握手占掉第 1 个 RTT。</p>
+<h3>易错点</h3>
+<ul><li><strong>确认号漏 +1</strong>：ack_seq 永远是"最后收到的序号 +1"，SYN、FIN 各占一个序号——1001、2001、3002 全部来自这条规则。</li><li><strong>cwnd 按"轮"翻倍提前翻</strong>：机制是每收到一个新确认加 1 MSS；收到 2 个确认时是 3 MSS 而不是 4 MSS。</li><li><strong>发送窗口忘取 min</strong>：rwnd = 1000 B 是硬顶，窗口是 2 MSS 而不是 3 MSS。</li><li><strong>最后一问漏算握手轮</strong>：时间从请求建连算起，握手占第 1 个 RTT，共 4 个 RTT = 20 ms。</li></ul>
+<blockquote>一句话结论：3 次握手 ack_seq=1001；收到第 2 个确认时 cwnd=3 MSS、发送窗口被 rwnd 限为 2 MSS=1000 B；4 次挥手，最后收到 seq=2001、ack_seq=3002、FIN=1；握手 1 轮 + 慢开始 3 轮 = 4×5 ms = 20 ms。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -109,5 +109,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：IP 数据报分片的字段计算</h2>
+<h3>结论</h3>
+<p>答案：<strong>B（796, 1）</strong>。第 2 个分片的总长度字段为 796，MF 标志位为 1。</p>
+<h3>第一步：算出数据总量与每片上限</h3>
+<p>总长度 1580 B、首部 20 B → 数据部分 = <code>1580 − 20 = 1560 B</code>。<br/>MTU = 800 B → 每片"总长度"不能超过 800，即每片数据 ≤ <code>800 − 20 = 780 B</code>。<br/>关键约束：<strong>除最后一个分片外，每片数据长度必须是 8 B 的整数倍</strong>（片偏移以 8 B 为单位）。780 ÷ 8 = 97.5，故每片数据最多取 <code>97 × 8 = 776 B</code>。</p>
+<h3>第二步：依次切片</h3>
+<table><thead><tr><th>分片</th><th>数据长度</th><th>总长度（20+数据）</th><th>MF</th><th>片偏移（数据字节起点÷8）</th></tr></thead><tbody><tr><td>第 1 片</td><td>776 B</td><td>796 B</td><td>1</td><td>0</td></tr><tr><td>第 2 片</td><td>776 B</td><td>796 B</td><td>1</td><td>97</td></tr><tr><td>第 3 片</td><td>8 B</td><td>28 B</td><td>0</td><td>194</td></tr></tbody></table>
+<p>切走 776 B 后剩 <code>1560 − 776 = 784 B</code>，仍超过 776，所以第 2 片仍装 776 B；最后剩 <code>784 − 776 = 8 B</code> 给第 3 片。</p>
+<h3>第三步：读出第 2 片的字段</h3>
+<p>第 2 片总长度 = <code>20 + 776 = 796</code>；它后面还有第 3 片 → <strong>MF = 1</strong>（MF=1 表示"后面还有分片"）。</p>
+<h3>易错点</h3>
+<ul><li><strong>每片数据取 780 B</strong>：忽略了"除最后一片外数据长必须是 8 的倍数"，780 不是 8 的倍数。</li><li><strong>总长度字段填 800</strong>：800 是 MTU 上限，每片总长度 = 首部 + 数据，第 2 片装 776 B 数据时总长只有 796。</li><li><strong>MF 填 0</strong>：第 2 片后面还有第 3 片，必须为 1；只有最后一片的 MF 才是 0。</li></ul>
+<blockquote>一句话：每片数据 = 776 B（8 的倍数且 ≤ MTU−20），第 2 片总长 796、MF = 1。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

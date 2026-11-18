@@ -115,5 +115,19 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：TCP 慢启动到达指定发送窗口的时间</h2>
+<h3>第一步：理清"发送窗口"由谁决定</h3>
+<p>答案：A（25ms）。<br/>发送窗口 = min(拥塞窗口 cwnd, 接收窗口 rwnd)。连接建立成功时 cwnd = 1KB（1 个 MSS），乙的接收缓存 64KB 对应 rwnd = 64KB；64KB 远大于本题要达到的 32KB，所以全程瓶颈都是 cwnd，只需按慢启动推演。</p>
+<h3>第二步：逐个 RTT 推演（慢启动每过一个 RTT 翻倍）</h3>
+<table><thead><tr><th>经过的 RTT 数</th><th>结束时 cwnd</th><th>累计时间</th></tr></thead><tbody><tr><td>0（刚建立）</td><td>1KB</td><td>0ms</td></tr><tr><td>1</td><td>2KB</td><td>5ms</td></tr><tr><td>2</td><td>4KB</td><td>10ms</td></tr><tr><td>3</td><td>8KB</td><td>15ms</td></tr><tr><td>4</td><td>16KB</td><td>20ms</td></tr><tr><td>5</td><td>32KB</td><td>25ms</td></tr></tbody></table>
+<p>从 1KB 翻倍到 32KB 需要 5 次翻倍，即经过 5 个 RTT：5 × 5ms = <strong>25ms</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>多数一轮（误选 B，30ms）</strong>：发送窗口在第 5 个 RTT 结束时就"达到"32KB，不必再等一轮。</li><li><strong>用错增长规律（误选 C/D，160ms 或 165ms）</strong>：那是拥塞避免阶段"每 RTT 加 1KB"的线性增长口径；慢启动是指数翻倍。</li><li><strong>忽略 min(cwnd, rwnd)</strong>：本题 rwnd = 64KB 不是瓶颈；若接收缓存更小，会先撞到接收窗口上限。</li></ul>
+<blockquote>记忆锚点：慢启动每 RTT 翻倍，1→2→4→8→16→32 共 5 跳，5 × RTT = 25ms。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

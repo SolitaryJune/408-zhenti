@@ -191,5 +191,20 @@ AW.init({
   }
 });
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：判断哪组编码不是前缀编码</h2>
+<p>答案：<strong>D</strong>，因为 <code>110</code> 是 <code>1100</code> 的前缀。</p>
+<h3>第一步：明确前缀编码的定义</h3>
+<p>前缀编码：<strong>任何一个编码都不是另一个编码的前缀</strong>。这样译码时从左往右扫描，每个码字读到哪里结束都不会产生歧义（哈夫曼编码天然满足）。判别方法就是<strong>两两比较</strong>：看短码是否恰好是某个长码的开头。</p>
+<h3>第二步：逐组检查</h3>
+<table><thead><tr><th>选项</th><th>编码</th><th>检查结果</th></tr></thead><tbody><tr><td>A</td><td><code>01, 0000, 0001, 001, 1</code></td><td><code>0000/0001/001</code> 都以 00 开头、互不为前缀；<code>01</code> 不是任何码的开头；<code>1</code> 开头的只有它自己 → 是前缀编码</td></tr><tr><td>B</td><td><code>011, 000, 001, 010, 1</code></td><td>三个 3 位码 <code>000/001/010</code> 互不为前缀，<code>011</code>、<code>1</code> 也不做别人的开头 → 是前缀编码</td></tr><tr><td>C</td><td><code>000, 001, 010, 011, 100</code></td><td><strong>等长编码</strong>，长度相同就谁也做不了谁的前缀 → 是前缀编码</td></tr><tr><td>D</td><td><code>0, 100, 110, 1110, 1100</code></td><td><code>110</code> 恰好是 <code>1100</code> 的<strong>前 3 位</strong> → 冲突，<strong>不是</strong>前缀编码</td></tr></tbody></table>
+<p>D 选项的冲突：收到码流 <code>…1100…</code>，译码器读完 <code>110</code> 就会判断出一个字符，而它其实可能是码字 <code>1100</code> 的开头——歧义就出在这里。</p>
+<h3>易错点</h3>
+<ul><li><strong>只检查相邻两个码</strong>：前缀冲突可能出现在任意两个码之间，要两两比对（D 的冲突对是 <code>110</code> 与 <code>1100</code>）。</li><li><strong>以为"短码=1 位"才危险</strong>：本题只有 D 出问题，但起冲突的是 3 位码与 4 位码，不是单码 <code>0</code>——<code>0</code> 开头的码在 D 里并不存在。</li><li><strong>误以为等长编码特殊</strong>：等长（选项 C）天然互不为前缀，是前缀编码的特例。</li></ul>
+<blockquote>记忆锚点：前缀编码 = 任何码字不做其他码字的"开头"；判别就是逐对找"短码是长码前缀"的冲突对。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -167,5 +167,26 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：CSMA/CD 的冲突检测时界与停等式有效速率</h2>
+<h3>第 0 步：先立机制——"边发边听"，一切结论都是传播时延 τ 的推论</h3>
+<p>CSMA/CD 的检测原理是<strong>边发送边监听</strong>：站点把信号送上电缆的同时盯着线路，一旦收到的波形与自己发出的对不上（叠上了别人的信号），立即判定冲突、停发。所以"检测到冲突"的时刻，完全由<strong>冲突信号何时传到自己这里</strong>决定。先算单程传播时延：</p>
+<p>τ = 2km ÷ 200000km/s = 0.00001s = <strong>0.01ms（10μs）</strong>。</p>
+<h3>第 1 问：均检测到冲突的最短 / 最长时间</h3>
+<p><strong>最短 = τ = 0.01ms。</strong> 甲、乙<strong>同时</strong>开始发送：两信号同速相向而行，恰在链路正中间相遇（t = τ/2 = 5μs 冲突发生），冲突效应再从中点各传 τ/2 回两端 → t = τ 时甲、乙<strong>同时</strong>检测到。</p>
+<p><strong>最长 = 2τ = 0.02ms。</strong> 极限是"卡点"：甲先发，乙拖到甲的信号<strong>即将到达</strong>（t ≈ τ）时才发——乙一开口就迎面撞上、立即检测到；但冲突信号从乙传回甲还需 τ，甲要到 t = 2τ 才检测到。"两台主机均检测到"以最晚者计 → 最长 2τ。</p>
+<p><strong>为什么最短不是 τ/2？</strong> τ/2 只是冲突<strong>发生</strong>的时刻；"检测到"要等冲突效应传回自己，两端各再加 τ/2，合计 τ。</p>
+<h3>第 2 问：有效数据传输速率</h3>
+<p><strong>先把一个周期的时间轴摆出来</strong>（题目规定停等节奏：乙每收妥一帧立即回 64B 确认，甲收到确认才能发下一帧）：</p>
+<table><thead><tr><th>分量</th><th>为什么必须计入</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>甲发送 1518B 帧</td><td>帧的各位要逐个推上信道</td><td>1518×8 ÷ 10Mbps</td><td>1.2144ms</td></tr><tr><td>传播 τ</td><td>最后一位还要走 τ 才到乙——乙收完整帧才可能回确认</td><td>—</td><td>0.01ms</td></tr><tr><td>乙发送 64B 确认</td><td>确认帧同样要逐位发送</td><td>64×8 ÷ 10Mbps</td><td>0.0512ms</td></tr><tr><td>传播 τ</td><td>确认帧传回甲</td><td>—</td><td>0.01ms</td></tr><tr><td>周期合计</td><td></td><td></td><td><strong>1.2856ms</strong></td></tr></tbody></table>
+<p><strong>为什么分子是 1500B 不是 1518B</strong>：以太网帧 1518B = 6B 目的地址 + 6B 源地址 + 2B 类型 + <strong>1500B 数据</strong> + 4B FCS，前后 18B 是协议开销（前导码题目说明不计）。每个周期真正交付的有效数据只有 1500B。</p>
+<p>有效数据传输速率 = 1500 × 8 ÷ 1.2856ms ≈ <strong>9.33 Mbps</strong>——比信道 10Mbps 少的部分，正是往返传播与确认帧这些"占时间却不运数据"的开销。</p>
+<h3>易错点</h3>
+<ul><li><strong>最短答成 τ/2</strong>：那是冲突发生时刻，"均检测到"要等信号回传，合计 τ。</li><li><strong>最长时间起算点混乱</strong>：题目从"开始发送数据时刻"起算，最长即 2τ = 0.02ms。</li><li><strong>分子用 1518B</strong>：18B 帧头帧尾是开销，有效数据只有 1500B。</li><li><strong>分母漏项</strong>：发送、往返传播、确认发送缺一不可，漏任何一项都会使分母变小、速率虚高。</li></ul>
+<blockquote>结论：最短 0.01ms、最长 0.02ms；一个周期 1.2856ms 运 1500B，有效速率约 9.33 Mbps。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

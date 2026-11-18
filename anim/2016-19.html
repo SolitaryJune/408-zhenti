@@ -116,5 +116,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：无转发流水线的数据冒险定位</h2>
+<p><strong>答案：B（I2 和 I3）。</strong></p>
+<h3>第一步：列出每条指令"读哪些、写哪些"</h3>
+<table><thead><tr><th>指令</th><th>源寄存器（读）</th><th>目的寄存器（写）</th></tr></thead><tbody><tr><td>I1: add R1,R2,R3</td><td>R2、R3</td><td>R1</td></tr><tr><td>I2: add R5,R2,R4</td><td>R2、R4</td><td>R5</td></tr><tr><td>I3: add R4,R5,R3</td><td>R5、R3</td><td>R4</td></tr><tr><td>I4: add R5,R2,R6</td><td>R2、R6</td><td>R5</td></tr></tbody></table>
+<p>数据冒险（RAW，先写后读）：后条指令要<strong>读</strong>的寄存器，恰好是前条指令要<strong>写</strong>的。</p>
+<h3>第二步：逐对检查</h3>
+<ul><li><strong>I1 与 I2</strong>：I2 读 R2、R4，写 R5；I1 只写 R1，无交集 → 无冒险（排除 A）。</li><li><strong>I2 与 I3</strong>：I3 要读 <strong>R5</strong>，而 R5 正是 I2 的目的寄存器 → <strong>RAW 冒险</strong>。按五段流水线排布：I3 在译码段（第 4 拍）读 R5，I2 却要到写回段（第 6 拍）才写入新值，无转发通路时 I3 读到的是旧值。</li><li><strong>I2 与 I4</strong>：两条都<strong>写</strong> R5（写-写相关 WAW）；顺序流动的流水线按序写回不会出错，也不是"先写后读"型数据冒险。</li><li><strong>I3 与 I4</strong>：I4 写 R5 发生在 I3 读 R5 <strong>之后</strong>（程序顺序先读后写）→ 不冲突。</li></ul>
+<h3>第三步：无转发时怎么办</h3>
+<p>I3 必须在译码段暂停等待，直到 I2 写回 R5 之后才能读到新值——即插入气泡（暂停）。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 C（I2 和 I4）</strong>：被"都写 R5"迷惑——这是 WAW 相关，顺序五段流水线按序写回不构成数据冒险。</li><li><strong>只看寄存器名相同</strong>：I1、I2、I4 都读 R2，但整个序列中 R2 没有被任何指令写过，同名不等于有冒险。</li><li><strong>忽略时序方向</strong>：I4 写 R5 在 I3 读 R5 之后，"先读后写"不产生错误数据。</li></ul>
+<blockquote>判据一句话：后条指令读的寄存器 = 前条指令写的寄存器（RAW）才是数据冒险；本题只有 I2 写 R5 → I3 读 R5。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

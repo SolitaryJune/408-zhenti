@@ -137,5 +137,25 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：前趋图 → 信号量：一条边一个信号量，起点 signal、终点 wait</h2>
+<h3>第零步：机制——信号量是怎么表达"先后"的</h3>
+<p>信号量是<strong>一个计数器加一个等待队列</strong>：<code>signal(S)</code>（V 操作）把计数加 1，含义是"前驱完成，发出一张许可"，队列里有等待者就放行一个；<code>wait(S)</code>（P 操作）把计数减 1 申请许可，<strong>没许可（减完仍为负）就阻塞入队</strong>，直到别人 signal 才被唤醒。于是"wait 得以通过 ⟺ 前驱已经完成"——先后关系就这样被机械化了。</p>
+<p><strong>为什么同步信号量的初值必须是 0？</strong> 初值是"开工前预发的许可数"。同步语义下，许可只能由前驱<strong>做完</strong>才产生，开工前一张都不该有——预发了（初值 1）等于取消约束，后继不等前驱也能跑。初值 1 是互斥信号量的用法，两者不要混。</p>
+<p><strong>本题的前趋关系</strong>：C 之前有 A、B 两条边，E 之前有 C、D 两条边，共 <strong>4 条边</strong> → 设 4 个同步信号量 <code>S_AC</code>、<code>S_BC</code>、<code>S_CE</code>、<code>S_DE</code>，初值均为 0，分别对应 A→C、B→C、C→E、D→E。</p>
+<p><strong>为什么 C 的两个前驱必须用两个信号量、不能合用一个？</strong> C 要"A <strong>和</strong> B 都完成"才能跑——这是 AND 汇合，要领两张<strong>不同</strong>的许可。若 A、B 都 signal 同一个信号量，计数升到 2 之后 C 一次 wait 就放行——B 没完成 C 也跑了，约束失效。</p>
+<h3>第一步：各操作的伪代码（wait 在开工之前，signal 在做完之后）</h3>
+<table><thead><tr><th>操作</th><th>代码</th></tr></thead><tbody><tr><td>A</td><td><code>A; signal(S_AC);</code></td></tr><tr><td>B</td><td><code>B; signal(S_BC);</code></td></tr><tr><td>C</td><td><code>wait(S_AC); wait(S_BC); C; signal(S_CE);</code></td></tr><tr><td>D</td><td><code>D; signal(S_DE);</code></td></tr><tr><td>E</td><td><code>wait(S_CE); wait(S_DE); E;</code></td></tr></tbody></table>
+<p>五个操作写在 <code>cobegin … coend</code> 之间并发启动，谁先谁后完全由信号量调度：C 要<strong>两次 wait 都通过</strong>（领到 A、B 各一张许可）才执行；E 要领到 C、D 各一张许可才执行。</p>
+<p><strong>为什么 wait 必须放在操作之前、signal 必须放在操作之后？</strong> wait 是"领许可开工"，先领后干；signal 是"我干完了，放行后继"，先干再放。位置写反就成了"没干完就放行"或"干完了才申请开工"，同步语义整体颠倒。</p>
+<h3>第二步：自查一遍</h3>
+<ul><li>追踪信号量的值：四个初值全 0；A 完成 → <code>S_AC</code>=1，B 完成 → <code>S_BC</code>=1；C 两次 wait 后两者归 0，C 完成 → <code>S_CE</code>=1；D 完成 → <code>S_DE</code>=1；E 两次 wait 归 0。<strong>全部执行完后四个信号量回到 0</strong>——每条边恰好"许可产生一次、消耗一次"，无遗漏、无多余。</li><li>本题各操作之间只约束<strong>先后</strong>，没有共享资源需要保护 → 只有<strong>同步关系、没有互斥关系</strong>，不需要互斥信号量（这也是题意里"说明所用信号量"的答案要点）。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>初值设成 1</strong>：那是互斥锁的用法；同步信号量初值为 0，许可由前驱的 signal 产生。</li><li><strong>wait/signal 位置写反</strong>：后继<strong>先 wait 再做事</strong>，前驱<strong>先做事再 signal</strong>。</li><li><strong>把 A→C、B→C 合成一个信号量</strong>：两次 signal 后计数为 2，C 一次 wait 就放行，"等齐 A 和 B"的 AND 语义丢了。</li><li><strong>漏掉 C→E 这条边</strong>：只写 A、B→C 的话，E 可能在 C 之前执行。</li></ul>
+<blockquote>一句话：每条前趋边一个信号量、初值 0；前驱做完 signal，后继开工前 wait；多前驱汇合 = 多个 wait 依次领齐许可。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -59,5 +59,23 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：海量数据（10TB）应选用的排序方法</h2>
+<p>答案：<strong>D（归并排序）</strong>。</p>
+<h3>第一步：看清题眼“10TB”</h3>
+<p>内存容量通常只有 GB 量级，10TB 的数据文件<strong>不可能整体装入内存</strong>——凡要求全部数据驻留内存的排序方法都直接出局。</p>
+<h3>第二步：排除内部排序选项</h3>
+<p>希尔排序、堆排序、快速排序都是典型的<strong>内部排序</strong>：排序过程要反复随机访问全部记录，前提是数据在内存中。对 10TB 的文件它们无从下手，排除 A、B、C。</p>
+<h3>第三步：为什么是归并排序</h3>
+<p>归并排序只需<strong>顺序读取</strong>两个有序段并把它们合并，正好扬外存之长（顺序 I/O 快）避其短（随机访问慢），是外部排序的标准骨架：</p>
+<ol><li><strong>生成初始归并段</strong>：分批读入能装进内存的一段数据，用任意内部排序方法排好序后写回外存；</li><li><strong>多路归并</strong>：逐趟把多个有序段归并成更大的有序段，直到整个文件有序。</li></ol>
+<p>所以对 10TB 数据应采用基于归并的<strong>外部排序</strong>，选 <strong>D</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>只比时间复杂度</strong>：快排平均 O(nlogn) 看似优秀，但“数据在内存”这一前提根本不成立。</li><li><strong>以为堆排序也能凑合</strong>：堆排序要频繁随机跳转（上浮下沉），外存最怕随机 I/O。</li><li><strong>混淆“段内排序”与“整体方法”</strong>：生成归并段时段内部用什么内排都行，但整体框架必须是归并。</li></ul>
+<blockquote>记忆锚点：数据装不下内存 → 外部排序 → 归并思想（生成归并段 + 多路归并）。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

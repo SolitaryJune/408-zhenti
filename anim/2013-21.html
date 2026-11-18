@@ -76,5 +76,22 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：磁盘读一个扇区的平均时间</h2>
+<p><strong>答案：B（9.4ms）。</strong></p>
+<h3>第一步：一次读盘的时间由四段拼成</h3>
+<p>磁头先移动到目标磁道（寻道），再等目标扇区转到磁头正下方（旋转延迟），数据读出后沿总线传走（传输），控制器处理命令本身还要占一点时间（控制器延迟）。四段依次发生，所以：</p>
+<p>平均存取时间 = 平均寻道时间 + 平均旋转延迟 + 传输时间 + 控制器延迟。</p>
+<h3>第二步：逐段计算——为什么旋转延迟取"半圈"</h3>
+<ul><li><strong>平均寻道</strong>：6ms（题目给定）。</li><li><strong>平均旋转延迟</strong>：转速 10000rpm，转一圈 = 60 ÷ 10000 s = 6ms。寻道结束时磁头停在扇区相对哪个位置完全随机，等待时间在 0 ~ 6ms 之间<strong>均匀分布</strong>，平均恰为中点 3ms（半圈）——"平均"二字指的就是这个期望值，它也正是本题与最大干扰项 D 之间的分水岭。</li><li><strong>传输 4KB</strong>：4KB ÷ 20MB/s ≈ 0.2ms。</li><li><strong>控制器延迟</strong>：0.2ms（题目给定）。</li></ul>
+<h3>第三步：求和</h3>
+<p>6 + 3 + 0.2 + 0.2 = <strong>9.4ms</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>旋转延迟算成一整圈（6ms）→ 12.4ms（选 D）</strong>：把"最坏要等一整圈"当成了"平均等待"。等待均匀分布在 0~6ms，平均只取半圈。</li><li><strong>漏掉传输时间和控制器延迟 → 9ms（选 A）</strong>：只算寻道 + 旋转；题目给出的每一段时间都要入账。</li><li><strong>既算整圈又漏后两项 → 12ms（选 C）</strong>：6 + 6 = 12ms，双重出错。</li><li><strong>只漏控制器延迟</strong>：得 9.2ms，同样属于分解不完整——0.2ms 虽小但明确给出。</li></ul>
+<blockquote>一句话结论：6（寻道）+ 3（半圈旋转：0~6ms 均匀分布取中点）+ 0.2（传输）+ 0.2（控制器）= 9.4ms，选 B。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

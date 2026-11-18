@@ -140,5 +140,24 @@ AW.init({
 });
 /* ================== 题目专属区域结束 ================== */
 </script>
+<!-- AW_EXPLAIN_START -->
+<details class="aw-explain" open>
+<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<div class="aw-explain-body"><h2>本题讲解：链路断开后重算路由，再充分路由聚合</h2>
+<p><strong>答案：B（4 项）</strong>。方法：三步走——先按断开后的拓扑重算每个目的网络走哪个接口，再对"同一接口"的路由做聚合，最后数最终表里的项数。</p>
+<h3>第一步：t1 时刻重算（R1–R2 断开，费用 2 变无穷）</h3>
+<p>R1 以自己为根跑一遍最短路（链路状态算法），到各目的网络的最优路径变为：</p>
+<table><thead><tr><th>目的网络</th><th>路径</th><th>费用</th><th>接口</th></tr></thead><tbody><tr><td>199.10.20.0/27</td><td>R1→R3→R2</td><td>6+5=11</td><td>S2（原走 S1，<strong>改变</strong>）</td></tr><tr><td>199.10.20.32/27</td><td>R1→R3</td><td>6</td><td>S2</td></tr><tr><td>199.10.20.64/26</td><td>R1→R4</td><td>3</td><td>S3</td></tr><tr><td>199.10.20.128/25</td><td>R1→R4</td><td>3</td><td>S3</td></tr><tr><td>199.10.21.125/32（服务器）</td><td>直连</td><td>—</td><td>S4</td></tr><tr><td>0.0.0.0/0（Internet）</td><td>直连</td><td>—</td><td>S0</td></tr></tbody></table>
+<p>此时仍 6 项。</p>
+<h3>第二步：充分路由聚合（同接口才能聚合）</h3>
+<ol><li><strong>聚合一</strong>：0/27 与 32/27 都走 S2，且二进制前 26 位相同 → 合并为 <code>199.10.20.0/26</code> → S2（费用取大者 11），剩 5 项。</li><li><strong>聚合二</strong>：64/26 与 128/25 都走 S3 → 聚合为超网 <code>199.10.20.0/24</code> → S3。它多覆盖的 0~63 段不会被转错——表里还留着更长的 <code>/26</code> 项，按<strong>最长前缀匹配</strong>，去 0~63 的分组仍走 S2，转发结果与明细路由完全一致，剩 4 项。</li></ol>
+<h3>第三步：数最终路由项</h3>
+<table><thead><tr><th>目的网络</th><th>接口</th></tr></thead><tbody><tr><td>199.10.20.0/26</td><td>S2</td></tr><tr><td>199.10.20.0/24</td><td>S3</td></tr><tr><td>199.10.21.125/32</td><td>S4</td></tr><tr><td>0.0.0.0/0</td><td>S0</td></tr></tbody></table>
+<p>共 <strong>4 项</strong>，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘了 0/27 要改道</strong>：仍写 S1 就会漏掉"两个 /27 同走 S2 才能聚合"这一步。</li><li><strong>以为聚合必须严丝合缝</strong>：64/26 与 128/25 拼起来是 64~255，不是整齐的 CIDR 块，但只要最长前缀匹配下转发不出错，就可以聚合成超网 199.10.20.0/24。</li><li><strong>把直连项丢了</strong>：服务器 /32 与默认路由 0.0.0.0/0 一直存在，最终也要计入。</li></ul>
+<blockquote>一句话结论：断链后 0/27 改走 S2，两个 /27 聚合成 /26、两个 R4 侧网聚合成 /24 超网，加上直连的 /32 与默认路由，共 <strong>4 项</strong>，选 <strong>B</strong>。</blockquote></div>
+</details>
+<!-- AW_EXPLAIN_END -->
 </body>
 </html>

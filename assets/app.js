@@ -449,3 +449,13 @@
   subjectSel.addEventListener('change', function(){ ensureData(render); });
   render();
 })();
+
+/* ---------- 从动画页「上下题」跳回时自动打开动画 tab ---------- */
+(function(){
+  if(location.hash !== '#anim') return;
+  var btn = document.querySelector('.study-tabs [data-tab="anim"]');
+  if(!btn) return;
+  btn.click();
+  var study = btn.closest('.study');
+  if(study) setTimeout(function(){ study.scrollIntoView({block:'center'}); }, 100);
+})();

@@ -22,7 +22,7 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 YEARS = list(range(2009, 2027))
-ASSET_VER = "20261118a"
+ASSET_VER = "20261118b"
 
 SUBJECTS = {
     "数据结构": {"cls": "ds", "color": "#e07a2f", "bg": "#e07a2f1f"},
@@ -907,6 +907,16 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
   subjectSel.addEventListener('change', function(){ ensureData(render); });
   render();
 })();
+
+/* ---------- 从动画页「上下题」跳回时自动打开动画 tab ---------- */
+(function(){
+  if(location.hash !== '#anim') return;
+  var btn = document.querySelector('.study-tabs [data-tab="anim"]');
+  if(!btn) return;
+  btn.click();
+  var study = btn.closest('.study');
+  if(study) setTimeout(function(){ study.scrollIntoView({block:'center'}); }, 100);
+})();
 """
 
 FOOTER_TXT = """本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
@@ -1120,6 +1130,71 @@ def render_card(q: dict, rel: str, focus: bool = False) -> str:
     return "\n".join(parts)
 
 
+QNAV_STYLE = """<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>"""
+
+QNAV_SCRIPT = """<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>"""
+
+
+def qnav_html(q: dict, prev_id, next_id) -> str:
+    """动画页顶部「上一题 / 本题 / 下一题」切换条（iframe 内点击跳父页面并自动打开动画 tab）。"""
+    qid = q["id"]
+
+    def side(target, arrow_left):
+        if not target:
+            return ('<span class="is-disabled">← 上一题</span>' if arrow_left
+                    else '<span class="is-disabled">下一题 →</span>')
+        if arrow_left:
+            return f'<a href="{target}.html" data-q="../question/{target}/">← <b>{target}</b></a>'
+        return f'<a href="{target}.html" data-q="../question/{target}/"><b>{target}</b> →</a>'
+
+    return (
+        "<!-- AW_QNAV_START -->\n" + QNAV_STYLE + "\n"
+        '<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">\n  '
+        + side(prev_id, True) + "\n  "
+        + f'<a class="aw-qnav-cur" href="../question/{qid}/" data-q="../question/{qid}/" data-no-anim="1">{qid} · 本题</a>\n  '
+        + side(next_id, False)
+        + "\n</nav>\n" + QNAV_SCRIPT + "\n<!-- AW_QNAV_END -->"
+    )
+
+
 def anim_placeholder(q: dict) -> str:
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><title>{q['id']} 动画制作中</title>
@@ -1318,6 +1393,28 @@ def build(meta: dict, all_q: list[dict]) -> None:
     (adir2 / "style.css").write_text(CSS, encoding="utf-8")
     (adir2 / "app.js").write_text(APP_JS, encoding="utf-8")
 
+    # ---------- 动画页注入「上一题/下一题」切换条 ----------
+    ids = [q["id"] for q in all_q]
+    pos = {qid: i for i, qid in enumerate(ids)}
+    n_qnav = 0
+    for q in all_q:
+        af = adir / f"{q['id']}.html"
+        if not af.exists():
+            continue
+        i = pos[q["id"]]
+        prev_id = ids[i - 1] if i > 0 else None
+        next_id = ids[i + 1] if i < len(ids) - 1 else None
+        src = af.read_text(encoding="utf-8")
+        if "<!-- AW_QNAV_START -->" in src:
+            src = re.sub(r"<!-- AW_QNAV_START -->.*?<!-- AW_QNAV_END -->", lambda m: qnav_html(q, prev_id, next_id),
+                         src, flags=re.S)
+        elif '<div class="aw"></div>' in src:
+            src = src.replace('<div class="aw"></div>', qnav_html(q, prev_id, next_id) + '\n<div class="aw"></div>', 1)
+        else:
+            src = src.replace("<body>", "<body>\n" + qnav_html(q, prev_id, next_id), 1)
+        af.write_text(src, encoding="utf-8")
+        n_qnav += 1
+
     # ---------- 动画页注入「文字讲解」（与动画同页，可折叠） ----------
     n_explain = 0
     for q in all_q:
@@ -1343,7 +1440,8 @@ def build(meta: dict, all_q: list[dict]) -> None:
         n_explain += 1
 
     print(f"站点已生成：首页 1 + 年份页 {len(by_year)} + 单题页 {len(all_q)}"
-          f" + 知识点/搜索/错题本 3 + 动画占位 {n_placeholder} + 动画讲解注入 {n_explain}")
+          f" + 知识点/搜索/错题本 3 + 动画占位 {n_placeholder} + 动画讲解注入 {n_explain}"
+          f" + 动画切题条 {n_qnav}")
 
 
 def main():

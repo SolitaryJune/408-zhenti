@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-45 · 文件系统目录项与多级索引推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -210,8 +212,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：目录项、共享索引结点与多级索引计算</h2>
 <h3>第 0 步：先立机制——目录、索引结点、多级索引各管什么</h3>
 <ul><li><strong>目录 = “文件名 → 索引结点号”的映射表</strong>。文件的大小、位置、时间等全部管理信息集中在索引结点里，目录项只存名字和结点号。这样设计的好处：改文件属性不必改目录；同一个文件还能以不同名字出现在不同目录里——第 2）问考的正是这一点。</li><li><strong>数据块号存在索引结点里，间接地址项指向“装满地址的块”</strong>。块大小 4 KB、地址项 4 B，一块索引块装 4096 ÷ 4 = <strong>1024</strong> 个地址。一级间接地址项指向一块索引块，覆盖 1024 个数据块；二级间接指向一块“装满索引块地址的块”，覆盖 1024 × 1024 个数据块。每加一级，寻址范围乘 1024——这就是多级索引的机制。</li><li><strong>打开文件 = 把索引结点从盘上读进内存</strong>。文件名只在目录里，数据块号只在索引结点里，不读结点就拿不到块号。</li></ul>
@@ -229,7 +231,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>第 2）问当成新分配块</strong>：doc 与 course1 共享索引结点 10，同一结点记录同一数据块 30。</li><li><strong>第 3）问多算目录块</strong>：course 目录已在内存，查 course1 的名字不读盘；也不要把“索引结点区”的定位当成一次额外读盘。</li><li><strong>第 4）问用错除数</strong>：每块装多少个<strong>地址</strong>用 4096 ÷ 4 = 1024；256 B 是索引结点的大小，除它得到的是“每块装几个索引结点”。</li><li><strong>间接级数判断错</strong>：一级间接的 1024 不是“1024 个直接地址项”，而是地址项指向的索引块里装了 1024 个数据块地址。</li></ul>
 <blockquote>索引容量阶梯：直接 10 → 加一级 ×1024 → 加二级 ×1024²；6 MB 文件共 1536 块，卡在 1034 之后，动用二级间接。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

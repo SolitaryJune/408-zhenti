@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2026-39 等长子网划分定位 · 位拆解动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -152,22 +154,22 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：等长子网划分后定位地址所在子网</h2>
 <p><strong>答案：C（123.4.5.192/27）</strong>。方法：三步走——定前缀长度、定子网块大小、把地址的主机位归零得网络地址。</p>
 <h3>第一步：确定子网前缀</h3>
-<table><thead><tr><th>步骤</th><th>计算</th></tr></thead><tbody><tr><td>原网络 123.4.4.0/22</td><td>主机号占 <code>32 − 22 = 10</code> 位</td></tr><tr><td>划 32 个等长子网</td><td><code>32 = 2^5</code>，借 5 位作子网号</td></tr><tr><td>新前缀</td><td><code>22 + 5 = 27</code>，掩码 <code>255.255.255.224</code></td></tr></tbody></table>
+<table><thead><tr><th>步骤</th><th>计算</th></tr></thead><tbody><tr><td>原网络 123.4.4.0/22</td><td>主机号占 <code>32 − 22 = 10</code> 位</td></tr><tr><td>划 32 个等长子网</td><td><code>32 = 2<sup>5</sup></code>，借 5 位作子网号</td></tr><tr><td>新前缀</td><td><code>22 + 5 = 27</code>，掩码 <code>255.255.255.224</code></td></tr></tbody></table>
 <h3>第二步：算子网块大小并定位</h3>
-<p>每块地址数 = <code>2^(32−27) = 32</code> 个。123.4.4.0/22 覆盖 123.4.4.0 ~ 123.4.7.255，从 123.4.4.0 起每 32 个地址一块。</p>
+<p>每块地址数 = <code>2<sup>32−27</sup> = 32</code> 个。123.4.4.0/22 覆盖 123.4.4.0 ~ 123.4.7.255，从 123.4.4.0 起每 32 个地址一块。</p>
 <p>关注第四字节：<code>211 = 11010011</code>（二进制）。/27 的子网位包含第四字节的<strong>高 3 位</strong>（<code>110</code>），低 5 位是主机号。</p>
 <h3>第三步：主机位归零得网络地址</h3>
 <p><code>11010011</code> → 保留高 3 位、低 5 位归零 → <code>11000000</code> = <code>192</code>。</p>
 <p>所以所在子网是 <code>123.4.5.192/27</code>，块范围为 123.4.5.192 ~ 123.4.5.223，211 落在其中，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>借位数算错</strong>：以为是"分 32 个子网所以前缀 +5"之外的别的数；记住 <code>2^n ≥ 子网数</code>，n = 5。</li><li><strong>主机位没归零</strong>：直接把 211 抄进网络地址（123.4.5.211 不可能是网络地址，排除法也能排除部分选项）。</li><li><strong>误选 /28</strong>：/28 每块只有 16 个地址，是再往下细分的结果，与"32 个等长子网"不符。</li><li><strong>忽略所在范围</strong>：123.4.5.211 的第三字节是 5，答案必须在 123.4.5.x，不可能在 123.4.4.x（排除 A、B）。</li></ul>
+<ul><li><strong>借位数算错</strong>：以为是"分 32 个子网所以前缀 +5"之外的别的数；记住 <code>2<sup>n</sup> ≥ 子网数</code>，n = 5。</li><li><strong>主机位没归零</strong>：直接把 211 抄进网络地址（123.4.5.211 不可能是网络地址，排除法也能排除部分选项）。</li><li><strong>误选 /28</strong>：/28 每块只有 16 个地址，是再往下细分的结果，与"32 个等长子网"不符。</li><li><strong>忽略所在范围</strong>：123.4.5.211 的第三字节是 5，答案必须在 123.4.5.x，不可能在 123.4.4.x（排除 A、B）。</li></ul>
 <blockquote>一句话结论：借 5 位变 /27，211 的第四字节 <code>11010011</code> 归零后三位得 <code>192</code>，即 <strong>123.4.5.192/27</strong>，选 <strong>C</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

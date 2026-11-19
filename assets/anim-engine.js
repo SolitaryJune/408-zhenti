@@ -25,6 +25,28 @@
   var MIN_SCALE = 0.75, MAX_SCALE = 2.5;
   var E = {};
 
+  /* 上标：2^n / 2^{n-1} / 2^(n-1) → <sup>…</sup>（跳过 HTML 标签与 pre/script 内容；行内 code 也转换） */
+  var SUP_RE = /\^\{([^}]+)\}|\^\(([^)]+)\)|\^([+\-\u2212]?[A-Za-z0-9]+)/g;
+  function supfix(html){
+    var s = String(html == null ? '' : html);
+    var parts = s.split(/(<[^>]+>)/);
+    var out = '', depth = 0;
+    for (var i = 0; i < parts.length; i++){
+      var p = parts[i];
+      if (p && p.charAt(0) === '<'){
+        var t = p.toLowerCase();
+        if (/^<(pre|script|style)\b/.test(t) && !/\/>$/.test(t)) depth++;
+        else if (/^<\/(pre|script|style)>/.test(t)) depth = Math.max(0, depth - 1);
+        out += p;
+      } else {
+        out += depth ? p : p.replace(SUP_RE, function(m, a, b, c){
+          return '<sup>' + (a || b || c) + '</sup>';
+        });
+      }
+    }
+    return out;
+  }
+
   /* 把舞台内容缩放到刚好放进可视区，并交由 CSS 网格（unsafe center）居中。
      放大/缩小后视觉上始终居中；缩放触底（0.75×）仍放不下时：
      收缩外壳到舞台宽（内部滚动区恢复自身滚动条、保持原字号），顶对齐并交还滚动条 */
@@ -100,16 +122,16 @@
     var sn = E.snaps[cur];
     if(!animate){ E.stage.classList.add('notrans'); }
     if(E.render){ E.render(E.fit, sn, cur, animate); }
-    else if(sn.html != null){ E.fit.innerHTML = sn.html; }
+    else if(sn.html != null){ E.fit.innerHTML = supfix(sn.html); }
     if(!animate){ void E.stage.offsetWidth; E.stage.classList.remove('notrans'); }
 
     E.count.innerHTML = E.counterLabel + ' <span>' + (sn.count != null ? sn.count : cur) + '</span>';
     if(cur === 0 && !sn.log){
-      E.status.textContent = E.introText;
+      E.status.innerHTML = supfix(E.introText);
     } else {
       var cls = sn.cls || 'step';
       var tag = sn.tag ? '<span class="tag t-' + cls + '">' + sn.tag + '</span>' : '';
-      E.status.innerHTML = tag + (sn.log || '');
+      E.status.innerHTML = supfix(tag + (sn.log || ''));
     }
     // 日志
     if(cur === 0){
@@ -118,7 +140,7 @@
     } else {
       var empty = E.log.querySelector('.aw-log-empty');
       if(empty) empty.remove();   // 真实日志出现后清掉占位框
-      var d = el('div', 'aw-log-line ' + (sn.cls || 'step'), sn.log || '');
+      var d = el('div', 'aw-log-line ' + (sn.cls || 'step'), supfix(sn.log || ''));
       E.log.appendChild(d);
       E.log.scrollTop = E.log.scrollHeight;
       if(sn.ribbon){
@@ -130,8 +152,8 @@
       }
     }
     if(sn.done && E.result){
-      E.big.textContent = E.result.big;
-      E.desc.innerHTML = E.result.html;
+      E.big.innerHTML = supfix(E.result.big);
+      E.desc.innerHTML = supfix(E.result.html);
       E.resultBox.classList.add('show');
     }
     if(cur >= E.snaps.length - 1) stopPlay();
@@ -205,13 +227,15 @@
             : '见下方结论卡');
         var box = document.createElement('details');
         box.className = 'aw-question';
-        // 高屏（全屏/大窗）默认折叠题目卡，把高度让给可视化舞台
-        box.open = !(window.innerHeight >= 860);
-        box.innerHTML = '<summary>📋 题目与选项 · ' + id + '（全屏时也在）</summary>' +
+        // 内嵌 iframe 里默认展开题目卡；独立页在高屏下默认折叠，把高度让给舞台
+        var framed = false;
+        try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+        box.open = framed || !(window.innerHeight >= 860);
+        box.innerHTML = supfix('<summary>📋 题目与选项 · ' + id + '（全屏时也在）</summary>' +
           '<div class="aw-qbody">' +
           '<div class="aw-qstem">' + fixImg(q.stemHtml || q.stem || '') + '</div>' + opts +
           '<div class="aw-qmeta">参考答案：' + ansTxt + (tags ? '　' + tags : '') + '</div>' +
-          '</div>';
+          '</div>');
         root.insertBefore(box, root.firstChild);
         if (window.renderMathInElement) {
           try {
@@ -236,8 +260,8 @@
 
     var root = document.querySelector('.aw');
     root.innerHTML =
-      '<h1>' + (cfg.title || '') + '</h1>' +
-      '<div class="sub">' + (cfg.subtitle || '') + '</div>' +
+      '<h1>' + supfix(cfg.title || '') + '</h1>' +
+      '<div class="sub">' + supfix(cfg.subtitle || '') + '</div>' +
       '<div class="aw-grid">' +
           '<div class="aw-main">' +
           '<div class="aw-card aw-stage-card">' +

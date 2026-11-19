@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-39 UDP 与 TCP 最少服务时间推演动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：协议时序推演（UDP 一问一答 vs TCP 握手+问答）
-     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var S = {};   // 持久 DOM 引用
@@ -141,8 +143,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：UDP 与 TCP 拿到一次时间查询服务各需几个 RTT</h2>
 <p><strong>答案：B</strong>（UDP 8 ms，TCP 16 ms）。</p>
 <h3>第一步：UDP——无连接，1 个 RTT</h3>
@@ -155,7 +157,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>误选 A（8，8）</strong>：UDP 算对了，但 TCP 漏算了三次握手的 1 个 RTT——握手期间客户不能发数据，这 1 个 RTT 是纯开销，必须先付。</li><li><strong>误选 D（16，16）</strong>：TCP 算对了，但把 UDP 也当成要先"建立联系"花 2 个 RTT——UDP 无连接，无需任何准备阶段，1 个 RTT 就是它的最少耗时。</li><li><strong>误选 C（16，8）</strong>：两头同时错——UDP 被多算 1 个 RTT，TCP 又漏算握手。</li><li><strong>单程与往返混淆</strong>：RTT = 8 ms 指一来一回，单程传播时延是 4 ms，别把 8 ms 当单程。</li></ul>
 <blockquote>一句话结论：UDP = 1 RTT = <strong>8 ms</strong>；TCP = 握手 1 RTT + 请求/响应 1 RTT = <strong>16 ms</strong>，选 <strong>B</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

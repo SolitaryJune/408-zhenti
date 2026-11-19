@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2020 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2020">
 <header class="site-header">
@@ -794,19 +794,19 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1pJSWBhEe4/?p=14" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：同一个机器数 C800 0000H 的两种身份</h2>
-<p><strong>答案：A</strong>。x 按 int（补码）解释时为 −7×2^27。</p>
+<p><strong>答案：A</strong>。x 按 int（补码）解释时为 −7×2<sup>27</sup>。</p>
 <h3>第一步：先立机制——机器数只是"位串"，值取决于解释方式</h3>
 <p>32 位串 <code>C800 0000H</code> 本身没有正负属性：按 int 读，它是<strong>补码</strong>（模运算记数）；按 float 读，它是 <strong>IEEE 754</strong> 三段式。同一串位算两遍，再看哪个选项接得住。</p>
 <h3>第二步：按 int（补码）读</h3>
-<p>补码的机制：n 位串按无符号读出的值 v，代表的是 v mod 2^n 这个同余类；最高位为 1 时，取区间 [−2^31, 2^31) 里的代表元作真值，即 <strong>真值 = v − 2^32</strong>。<strong>为什么可以减模</strong>？减去一次模不改变同余类，只是把代表元换到负数区间。<code>C800 0000H</code> 无符号值 3355443200，减 2^32 得 −939524096 = <strong>−7×2^27</strong>（用"取反加一"印证：数值部分变为 3800 0000H = 7×2^27，取负，两条路必然一致）。恰是选项 A。</p>
+<p>补码的机制：n 位串按无符号读出的值 v，代表的是 v mod 2<sup>n</sup> 这个同余类；最高位为 1 时，取区间 [−2<sup>31</sup>, 2<sup>31</sup>) 里的代表元作真值，即 <strong>真值 = v − 2<sup>32</sup></strong>。<strong>为什么可以减模</strong>？减去一次模不改变同余类，只是把代表元换到负数区间。<code>C800 0000H</code> 无符号值 3355443200，减 2<sup>32</sup> 得 −939524096 = <strong>−7×2<sup>27</sup></strong>（用"取反加一"印证：数值部分变为 3800 0000H = 7×2<sup>27</sup>，取负，两条路必然一致）。恰是选项 A。</p>
 <h3>第三步：按 float（IEEE 754）读</h3>
 <p>把 32 位切成三段：数符 1 位 = 1；阶码 8 位 = 1001 0000B = 144；尾数 23 位全 0。</p>
-<ul><li><strong>为什么阶码要减 127</strong>：阶码字段存的是"真实指数 + 127"（移码），好让硬件按无符号数直接比大小；真指数 = 144 − 127 = 17。</li><li><strong>为什么尾数全 0 还要隐含 1</strong>：规格化要求有效数字形如 1.xxxxx，二进制下最高位恒为 1，干脆不存、省出一位精度——所以有效数字 = 1.0。</li><li>x = (−1) × 1.0 × 2^17 = <strong>−2^17</strong>。</li></ul>
-<table><thead><tr><th>解释方式</th><th>读出的值</th><th>对应选项</th></tr></thead><tbody><tr><td>int（补码）</td><td>−7×2^27</td><td>A</td></tr><tr><td>float（IEEE 754）</td><td>−2^17</td><td>无（B 是 −2^16）</td></tr></tbody></table>
+<ul><li><strong>为什么阶码要减 127</strong>：阶码字段存的是"真实指数 + 127"（移码），好让硬件按无符号数直接比大小；真指数 = 144 − 127 = 17。</li><li><strong>为什么尾数全 0 还要隐含 1</strong>：规格化要求有效数字形如 1.xxxxx，二进制下最高位恒为 1，干脆不存、省出一位精度——所以有效数字 = 1.0。</li><li>x = (−1) × 1.0 × 2<sup>17</sup> = <strong>−2<sup>17</sup></strong>。</li></ul>
+<table><thead><tr><th>解释方式</th><th>读出的值</th><th>对应选项</th></tr></thead><tbody><tr><td>int（补码）</td><td>−7×2<sup>27</sup></td><td>A</td></tr><tr><td>float（IEEE 754）</td><td>−2<sup>17</sup></td><td>无（B 是 −2<sup>16</sup>）</td></tr></tbody></table>
 <p>四个选项里只有 A 接得住：B 与 float 结果差一个 2 的幂；C、D 是正数，与最高位为 1 矛盾。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉偏置 127</strong>：144 是"真实指数+127"，不减会得 2^144。</li><li><strong>漏掉隐含前导 1</strong>：尾数全 0 时有效数字是 1.0，不是 0。</li><li><strong>把 −2^17 误选成 B</strong>：B 写的是 −2^16，阶码差 1。</li><li><strong>忘记数符</strong>：C、D 都是正数，与符号位 1 直接矛盾。</li></ul>
-<blockquote>同一个 32 位串，按 int 读出 −7×2^27，按 float 读出 −2^17；四个选项里只有 A 对得上。</blockquote></div></div>
+<ul><li><strong>漏掉偏置 127</strong>：144 是"真实指数+127"，不减会得 2<sup>144</sup>。</li><li><strong>漏掉隐含前导 1</strong>：尾数全 0 时有效数字是 1.0，不是 0。</li><li><strong>把 −2<sup>17</sup> 误选成 B</strong>：B 写的是 −2<sup>16</sup>，阶码差 1。</li><li><strong>忘记数符</strong>：C、D 都是正数，与符号位 1 直接矛盾。</li></ul>
+<blockquote>同一个 32 位串，按 int 读出 −7×2<sup>27</sup>，按 float 读出 −2<sup>17</sup>；四个选项里只有 A 对得上。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -975,13 +975,13 @@
 <h3>第一步：先立机制——指令字如何切位段</h3>
 <p>16 位定长指令字像一张固定格式的表格，从高位到低位切成<strong>操作码 | 寻址方式 | 地址码</strong>三段。题设"操作码位数和寻址方式位数固定"，意味着这三段的切法对<strong>所有</strong>指令一致，单地址指令的地址码位数 = 16 − 操作码位数 − 寻址方式位数，不能再多也不能再少。</p>
 <h3>第二步：把位数账算清</h3>
-<ul><li><strong>操作码</strong>：要给 48 条指令各一个唯一编号。5 位只有 2^5 = 32 个编码，装不下；6 位有 64 个，够用 → <strong>6 位</strong>。</li><li><strong>寻址方式</strong>：4 种 → 2^2 = 4 个编码 → <strong>2 位</strong>。</li><li><strong>地址码</strong>：16 − 6 − 2 = <strong>8 位</strong>。</li></ul>
+<ul><li><strong>操作码</strong>：要给 48 条指令各一个唯一编号。5 位只有 2<sup>5</sup> = 32 个编码，装不下；6 位有 64 个，够用 → <strong>6 位</strong>。</li><li><strong>寻址方式</strong>：4 种 → 2<sup>2</sup> = 4 个编码 → <strong>2 位</strong>。</li><li><strong>地址码</strong>：16 − 6 − 2 = <strong>8 位</strong>。</li></ul>
 <table><thead><tr><th>字段</th><th>需求</th><th>位数</th></tr></thead><tbody><tr><td>操作码</td><td>32 &lt; 48 ≤ 64</td><td>6</td></tr><tr><td>寻址方式</td><td>4 种</td><td>2</td></tr><tr><td>地址码</td><td>16 − 6 − 2</td><td>8</td></tr></tbody></table>
 <h3>第三步：直接寻址为什么是 0～255</h3>
 <p>直接寻址时，地址码字段<strong>本身就是主存单元的地址</strong>——地址是"门牌号"，没有正负、不参与符号运算，按<strong>无符号数</strong>解释：0000 0000B ～ 1111 1111B，即 0～255，选 <strong>A</strong>。</p>
 <p><strong>为什么不是补码范围 −128～127</strong>：那是"带符号数"的口径，适用于立即数或相对寻址的偏移量（选项 C 正是拿它设的陷阱）；地址码只表达"去哪个单元"，不存在负地址。</p>
 <h3>易错点</h3>
-<ul><li><strong>操作码位数算少</strong> → 以为 5 位够：2^5 = 32 &lt; 48，必须 6 位。</li><li><strong>把补码范围当寻址范围</strong> → 误选 C：−128～127 是立即数/相对偏移的口径，不是地址。</li><li><strong>位数算错</strong> → 0～1023 需要 10 位地址码（B）、−512～511 是 10 位补码（D），8 位都给不出来。</li></ul>
+<ul><li><strong>操作码位数算少</strong> → 以为 5 位够：2<sup>5</sup> = 32 &lt; 48，必须 6 位。</li><li><strong>把补码范围当寻址范围</strong> → 误选 C：−128～127 是立即数/相对偏移的口径，不是地址。</li><li><strong>位数算错</strong> → 0～1023 需要 10 位地址码（B）、−512～511 是 10 位补码（D），8 位都给不出来。</li></ul>
 <blockquote>位数账：6（操作码）+ 2（寻址方式）+ 8（地址码）= 16，直接寻址 = 地址码按无符号解释，0～255。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -1810,15 +1810,15 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1pJSWBhEe4/?p=32" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：文件数量上限由谁决定——索引结点号</h2>
-<p><strong>答案：B（2^32）。</strong></p>
+<p><strong>答案：B（2<sup>32</sup>）。</strong></p>
 <h3>第一步：拆开目录项看"谁是文件的唯一标识"</h3>
 <p>目录项 64 字节 = <strong>4 字节索引结点号 + 60 字节文件名</strong>。每个文件必须对应一个索引结点，文件名只是给人看的别名；所以<strong>能创建的文件数量上限 = 索引结点号能表示的不同值的个数</strong>。</p>
 <h3>第二步：算两边，取瓶颈</h3>
-<ul><li>索引结点号：4 字节 = 32 位 → 最多 <code>2^32</code> 个不同编号（2 的 32 次方）。</li><li>文件名：60 字节的小写英文字母串，组合数 26^60（约等于 2^282），远大于 2^32，不构成瓶颈。</li></ul>
-<p>瓶颈在索引结点号上，该文件系统能创建的文件数量上限为 <code>2^32</code>，选 <strong>B</strong>。</p>
+<ul><li>索引结点号：4 字节 = 32 位 → 最多 <code>2<sup>32</sup></code> 个不同编号（2 的 32 次方）。</li><li>文件名：60 字节的小写英文字母串，组合数 26<sup>60</sup>（约等于 2<sup>282</sup>），远大于 2<sup>32</sup>，不构成瓶颈。</li></ul>
+<p>瓶颈在索引结点号上，该文件系统能创建的文件数量上限为 <code>2<sup>32</sup></code>，选 <strong>B</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>选 C（2^60）</strong>：把文件名的 60 字节当成 60 位二进制编号空间，忽略了文件名的自由度根本用不完，且文件必须挂在索引结点上。</li><li><strong>选 D（2^64）</strong>：把 64 字节目录项整体当成一个编号，混淆了"表项长度"与"字段宽度"。</li><li><strong>选 A（2^26）</strong>：把"小写字母共 26 种"误当成位数来源。</li></ul>
-<blockquote>一句话结论：目录项里唯一标识文件的是索引结点号——4 字节 32 位，上限 2^32。选 <strong>B</strong>。</blockquote></div></div>
+<ul><li><strong>选 C（2<sup>60</sup>）</strong>：把文件名的 60 字节当成 60 位二进制编号空间，忽略了文件名的自由度根本用不完，且文件必须挂在索引结点上。</li><li><strong>选 D（2<sup>64</sup>）</strong>：把 64 字节目录项整体当成一个编号，混淆了"表项长度"与"字段宽度"。</li><li><strong>选 A（2<sup>26</sup>）</strong>：把"小写字母共 26 种"误当成位数来源。</li></ul>
+<blockquote>一句话结论：目录项里唯一标识文件的是索引结点号——4 字节 32 位，上限 2<sup>32</sup>。选 <strong>B</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2105,7 +2105,7 @@
 <h3>第三步：用干扰项反推漏了哪段</h3>
 <table><thead><tr><th>干扰项</th><th>来源</th></tr></thead><tbody><tr><td>80%</td><td>只算 800/(800+200)，漏掉确认帧的发送与回程</td></tr><tr><td>66.7%</td><td>800/(800+200+200)，漏掉<strong>确认帧的发送时延 800 ms</strong></td></tr><tr><td>44.4%</td><td>800/1800，漏掉回程传播 200 ms</td></tr><tr><td>40%</td><td>完整周期 2000 ms，正确</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>漏算确认帧的发送时延</strong>：确认帧虽短在题中与数据帧等长（1000 B），也要发 800 ms。</li><li><strong>把 RTT 只算一次</strong>：周期里有<strong>两段</strong>传播（去程 + 回程），各 200 ms。</li><li><strong>单位混乱</strong>：1000 B = 8000 bit，除以 10 kbps（= 10^4 bit/s）得 0.8 s，不是 80 ms。</li></ul>
+<ul><li><strong>漏算确认帧的发送时延</strong>：确认帧虽短在题中与数据帧等长（1000 B），也要发 800 ms。</li><li><strong>把 RTT 只算一次</strong>：周期里有<strong>两段</strong>传播（去程 + 回程），各 200 ms。</li><li><strong>单位混乱</strong>：1000 B = 8000 bit，除以 10 kbps（= 10<sup>4</sup> bit/s）得 0.8 s，不是 80 ms。</li></ul>
 <blockquote>一句话结论：U = 数据帧发送时延 ÷ 完整周期 = 800 ÷ (800+200+800+200) = <strong>40%</strong>，选 <strong>D</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2880,4 +2880,4 @@ cobegin {
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

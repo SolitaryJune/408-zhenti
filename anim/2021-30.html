@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2021-30 · 删除文件时内核做什么</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -104,8 +106,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：删除文件时内核做什么、不做什么</h2>
 <p><strong>答案：A。</strong> 删除目录 dir 下的文件 file1，内核不必完成"删除 file1 的快捷方式"。</p>
 <h3>第一步：列出删除文件的内核动作</h3>
@@ -119,7 +121,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>以为快捷方式会被联动删除</strong>：符号链接与目标文件是两个独立条目，删除目标不影响链接文件本身。</li><li><strong>把"释放磁盘空间"漏掉</strong>：只删目录项是"假删除"，真正的删除必须释放 FCB 并回收磁盘块，否则空间泄漏。</li></ul>
 <blockquote>记忆锚点：删除文件三件套——删目录项、释放 FCB、回收磁盘块；快捷方式不在其列。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

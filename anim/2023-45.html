@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2023-45 swap 指令实现临界区互斥：错误演示与修正</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -191,8 +193,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：用 swap 指令实现临界区互斥</h2>
 <p><strong>先立机制</strong>：lock 是线程间<strong>共享</strong>的锁变量，按题面约定 <strong>lock = TRUE 表示临界区被占用，lock = FALSE 表示空闲</strong>；key 是每个线程<strong>私有</strong>的申请变量。swap 是一条硬件原子指令：一个指令周期内一步完成 key 与 lock 的内容互换，中途不可被打断。</p>
 <h3>第 1 问：找出错误语句并改正（不增加语句条数）</h3>
@@ -207,7 +209,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把 if 与 while 混为一谈</strong>：进入区必须"循环尝试"直到抢到 FALSE，一次判断只适合"要么拿到要么放弃"的场合。</li><li><strong>记反 lock 的语义</strong>：本题 TRUE = 占用、FALSE = 空闲，释放置 FALSE——要按题面约定，不能套自己背的模板。</li><li><strong>以为函数调用也能原子</strong>：原子性来自硬件单指令，函数封装再"一体化"也只是多条指令的拼接；这正是 TSL/swap 类指令存在的意义。</li><li><strong>只改 while 忘改退出区（或反之）</strong>：两处错误独立扣分，进入区管"怎么进"，退出区管"怎么放"，缺一不可。</li></ul>
 <blockquote>进入区用 while 循环交换（swap 把检查与占锁合成一步，FALSE 只会被换走一次）、退出区置 lock = FALSE；newSwap 是多条指令的普通函数，检查与上锁可被中断拆开，不能替代硬件 swap。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

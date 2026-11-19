@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2020-47 NAT 配置与数据报 P 的逐跳地址变换</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -36,6 +36,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -57,7 +59,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var ND = {}, srcBox, dstBox, posLabel, natCells;
@@ -223,8 +225,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：私网 Web 服务器如何被外网访问——NAT 的"出"与"进"</h2>
 <h3>第 1 问：卡在哪，就配哪</h3>
 <p><strong>机制：先看清网络格局。</strong> 两个局域网都用私网段 <code>192.168.1.0/24</code>，而且<strong>重复使用</strong>——Web 服务器和 H2 同为 <code>192.168.1.2</code>，H1 和 H3 同为 <code>192.168.1.3</code>，R2、R3 的内网口同为 <code>192.168.1.1</code>。这不冲突：私网地址只在各自 NAT 边界之内有效，两个私网互不知晓对方的存在。但代价是：<strong>私网地址在公网上不可路由</strong>，外面的世界里根本没有"192.168.1.2"这个门牌。</p>
@@ -238,7 +240,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>H2 发送时目的写成 <code>192.168.1.2</code></strong>：私网地址出不了公网，且与 H2 自身地址重号；必须写公网门牌 <code>203.10.2.2</code>。</li><li><strong>R3 转发后源仍是 <code>192.168.1.2</code></strong>：出口必须把源换成公网地址，否则回程无法路由。</li><li><strong>R2 转发后又去改源</strong>：R2 只按静态表改目的；源 <code>203.10.2.6</code> 是回程的钥匙，全程不变。</li><li><strong>把映射配在 R1 或 R3 上</strong>：服务器在 R2 身后，能把它"领进门"的只有直连私网的 R2；R3 的私网里根本没有服务器。</li></ul>
 <blockquote>一句话：一进一出各归各的 NAT——<strong>R3 出口改源</strong>（<code>192.168.1.2</code> → <code>203.10.2.6</code>），<strong>R2 入口改目的</strong>（<code>203.10.2.2</code> → <code>192.168.1.2</code>）；外网能"进"的前提是 R2 上的静态映射 <code>203.10.2.2:80 ⇄ 192.168.1.2:80</code>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

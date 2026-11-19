@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2017-41 动画：表达式树转中缀表达式</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 2017-41 表达式树中序遍历加括号（算法/过程类） -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var NODES = [
@@ -196,8 +198,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：表达式树转等价中缀表达式（中序遍历 + 动态括号）</h2>
 <p>答案要点：<strong>中序遍历为骨架，非根非叶的结点在遍历左子树前补 <code>(</code>、遍历右子树后补 <code>)</code></strong>，两棵示例树分别输出 <code>(a+b)*(c*(-d))</code> 与 <code>(a*b)+(-(c-d))</code>。</p>
 <h3>第一问：为什么是"中序遍历 + 括号"——先把机制立起来</h3>
@@ -228,7 +230,7 @@ void BtreeToE(BTree *root) { BtreeToExp(root, 1); } // 根深度为 1</code></pr
 <h3>易错点</h3>
 <ul><li><strong>根也加括号</strong>：输出 <code>((a+b)*(c*(-d)))</code>，多一层冗余——<code>deep &gt; 1</code> 判定正是为排除根。</li><li><strong>叶结点也套括号</strong>：<code>(a)+(b)</code> 不合题意——叶子是原子，加括号说明没分清"操作数"与"子表达式"。</li><li><strong>单目减按双目处理</strong>：<code>−</code> 左孩子为空，中序遍历自然跳过，输出 <code>-d</code>，不能人为补左操作数。</li><li><strong>不处理括号</strong>：输出 <code>a+b*c*-d</code>，次序信息全丢——本题考的正是"遍历骨架之外还要补括号"这半截。</li></ul>
 <blockquote>一句话结论：中序遍历给出中缀骨架，"非根非叶结点前后补括号"补回树形结构信息；入口 <code>BtreeToE(root)</code> 调 <code>BtreeToExp(root, 1)</code>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

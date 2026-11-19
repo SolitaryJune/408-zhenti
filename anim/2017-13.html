@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2017-13 交叉编址主存读取 double 的存储周期数</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 AW.init({
@@ -138,8 +140,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：交叉编址主存读取 double 的存储周期数</h2>
 <h3>第一步：定位 x 的 8 个字节</h3>
 <p>主存按字节编址，4 个 64M×8 位芯片低位交叉编址：地址低 2 位选芯片（芯片号 = 地址 mod 4），每个芯片一次读出 1 字节。double 占 8 字节，首地址 804001AH，末地址 8040021H。</p>
@@ -152,7 +154,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>按"任意 4 字节都能一次读"算成 2</strong>：以为 1A～1D、1E～21 各读一次即可，忽略了交叉编址下 4 个芯片共享高位地址，同一周期只能读出一个对齐的 4 字节组。</li><li><strong>芯片号算错</strong>：1AH 的低 2 位是 10B（芯片 2），要看二进制的最低两位。</li><li><strong>忘了 double 占 8 字节</strong>：按 4 字节算就会少一个周期。</li></ul>
 <blockquote>记忆锚点：低位交叉编址一次并行读出的 32 位一定是对齐的 4 字节组；起始地址未对齐就要多花周期。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

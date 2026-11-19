@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-41 拓扑序列唯一性的判定算法</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -213,8 +215,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：拓扑序列唯一性的判定——把「唯一」翻译成「每步候选唯一」</h2>
 <h3>第 0 步：机制先行——拓扑序列是怎么一步步生成的，"唯一"卡在哪一环</h3>
 <p>拓扑序列的生成机制：每一轮从当前图中挑一个<strong>入度为 0</strong> 的顶点输出，然后删掉它——它的出边随之消失，其后继顶点入度减 1，如此重复直到删空。为什么必须挑入度 0 的？拓扑序要求每条边 u→v 中 u 排在 v 前面，也就是输出任何顶点之前，它的所有前驱都已输出——"入度为 0"正是"所有前驱已输出"在图上的表现。</p>
@@ -263,7 +265,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>只判有环、不判并列</strong>：只写"入度为 0 的顶点不存在返回 0"，漏掉"多于 1 个也返回 0"——题目问的是<strong>唯一</strong>，这是本题最常见丢分点。</li><li><strong>逐行求和当入度</strong>：邻接矩阵按行是出度、按列才是入度，方向搞反全盘皆错。</li><li><strong>删完忘更新后继</strong>：只标记被删顶点不给后继减 1，下一轮会误判"0 个入度 0"成有环。</li><li><strong>删除标记用 0</strong>：入度本来就有可能从 1 减到 0，用 −1 做删除标记才能与"自然变成 0"区分开。</li></ul>
 <blockquote>记忆锚点：拓扑排序 = 每轮摘一个入度 0 的顶点；唯一 ⇔ 每轮候选恰好一个；0 个 = 有环、多于 1 个 = 分叉，两者都返回 0。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

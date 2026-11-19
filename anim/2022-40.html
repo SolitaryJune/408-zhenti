@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-40 算法动画：HTTP/1.1 取回页面与图像的 RTT 推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      2022-40：持久连接 + 慢开始 cwnd 限制下，4 个 RTT 收齐全部内容
-     外壳与控件全部由 assets/anim-engine.js 提供。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -140,8 +142,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：HTTP/1.1 持久连接取回页面与图像至少要几个 RTT</h2>
 <p><strong>答案：B（40 ms）</strong></p>
 <h3>第一步：两个前提</h3>
@@ -153,7 +155,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>选 A（30 ms）</strong>：按"每对象 1 RTT"的理想模型算成 3 RTT，忽略了<strong>拥塞窗口的限制</strong>——图像 3 MSS 在 cwnd = 2 MSS 的一轮里发不完，必须分两轮。</li><li><strong>以为要重建连接</strong>：HTTP/1.0 非持久连接才要为图像再握手（多 2 RTT）；HTTP/1.1 默认持久连接直接复用。</li><li><strong>忽略慢开始起步</strong>：cwnd 从 1 MSS 逐步翻倍（1→2→4），不是一开始就能以任意窗口发送。</li></ul>
 <blockquote>记忆口径：HTTP/1.1 持久连接只握一次手；第三个 RTT 只能发 2 MSS，最后一个 MSS 拖到第 4 个 RTT 才到齐。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

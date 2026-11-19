@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2018-15 小端方式的指令机器代码</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 AW.init({
@@ -115,8 +117,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：小端方式下的指令机器代码</h2>
 <p><strong>答案：A</strong>（<code>C7 45 FC C0 FF FF FF</code>）。</p>
 <h3>第一步：认清机器代码的结构</h3>
@@ -129,7 +131,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>大端小端搞反</strong>（选项 C、D）：把高位字节 <code>FF</code> 排在了前面。口诀：小端 = 低位字节在低地址（"低位在前"）。</li><li><strong>半字节颠倒</strong>（选项 B）：把 <code>C0</code> 误写成 <code>0C</code>——C0 是 1100 0000，0C 是 0000 1100，完全不同。</li><li><strong>补码只算 8 位</strong>：<code>C0H</code> 恰好也是 −64 的 8 位补码，但这里机器数必须写成完整 32 位 <code>FFFFFFC0H</code> 再拆字节，才能确定后面跟三个 <code>FF</code>。</li></ul>
 <blockquote>三步走：求补码 → 从低位到高位拆字节 → 小端"低位字节在低地址"排队。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

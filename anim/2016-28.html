@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2016-28 分段地址转换：越界检查</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 /* 段表 + 逻辑地址(段号2, 段内地址400) 逐步做检查 */
@@ -116,8 +118,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：分段地址转换的越界检查</h2>
 <h3>第一步：转换流程</h3>
 <p>逻辑地址（段号 2，段内地址 400）。分段系统的转换顺序：<strong>查段表 → 状态检查 → 权限检查 → 越界检查</strong>（段内地址必须满足 0 ≤ 段内地址 &lt; 段长），任何一步不过都触发异常，地址加法根本做不了。</p>
@@ -129,7 +131,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>直接加出 4400</strong>（B 项）：忘了分段的偏移量合法范围是 0 ≤ W &lt; 段长，必须先比段长。</li><li><strong>误判段缺失</strong>（A 项）：段 2 状态明确是"在内存"，不在内存的是段 1。</li><li><strong>误判越权</strong>（C 项）：权限为"读写"，题目访问与之无冲突。</li></ul>
 <blockquote>答案：<strong>D</strong>。段内地址 400 ≥ 段长 300，触发越界异常。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

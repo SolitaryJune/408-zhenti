@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2020-44 Cache 结构与缺失计数</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -36,6 +36,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -57,7 +59,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var NBLK = 64; // 数组 s 占 64 个主存块
@@ -221,8 +223,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：把主存地址切干净——Cache 结构、缺失计数与缺失处理</h2>
 <h3>第 1）问：标记、LRU 位、修改位</h3>
 <p><strong>机制：组相联映射下，主存地址从低位到高位切成三段——块内地址 | 组索引 | 标记</strong>，每段的位数都由块大小、组数、地址总长推出来：</p>
@@ -238,7 +240,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>LRU 位算成 8 位</strong>：8 种使用次序 3 位就够（2³ = 8），不是每位 1 位、每行 8 位。</li><li><strong>以为直写也有修改位</strong>：修改位是回写策略的产物，直写下行与主存永远一致，不需要。</li><li><strong>把写 <code>s[k]</code> 也计入缺失</strong>：读先把块调进来，写命中；缺失只按块第一次被访问计。</li><li><strong>不验证首址是否 64 的倍数</strong>：本题 <code>0080 00C0H</code> 恰好对齐才有 64 次；不对齐就是 65 次。</li><li><strong>组索引、块内地址切错位置</strong>：都是 6 位，但块内地址是<strong>最低</strong> 6 位，组索引是<strong>中间</strong> 6 位。</li></ul>
 <blockquote>记忆锚点：地址切分 20 | 6 | 6；LRU 3 位（8 种次序）；直写无脏位；4096B 恰占 64 块、每块缺 1 次 → 64 次；缺失处理 = 调块 + 置有效位 + 填标记 + 按偏移取数。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

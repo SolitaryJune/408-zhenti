@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2012-36 动画 · GBN 序号比特数推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .aw-seg{ height:34px; border:2px solid #5a7d8c66; border-radius:8px; display:flex; align-items:center; justify-content:center;
     font-size:12px; font-weight:700; color:#586e72; background:#fff; transition:all .25s; white-space:nowrap; }
@@ -40,6 +40,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -61,7 +63,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var segEls = [], winEls = [], fxEl = null;
@@ -168,24 +170,24 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：GBN 序号比特数与信道利用率</h2>
 <h3>结论：答案 B（4 比特）</h3>
-<p>要让信道利用率最高，发送方必须<strong>连续不断</strong>发帧。用<strong>最短帧 128 B</strong> 的最坏情况算：填满「一去一回」管道需要的帧数最多，再由 GBN 窗口约束 <code>W ≤ 2^n − 1</code> 定出 n。</p>
+<p>要让信道利用率最高，发送方必须<strong>连续不断</strong>发帧。用<strong>最短帧 128 B</strong> 的最坏情况算：填满「一去一回」管道需要的帧数最多，再由 GBN 窗口约束 <code>W ≤ 2<sup>n</sup> − 1</code> 定出 n。</p>
 <p><strong>为什么必须按最短帧算？</strong> 利用率"最高"意味着确认回来之前发送方一刻不停；帧越短、发送时延 Tf 越小，同样 668 ms 的往返管道里要塞的帧数就越多——长帧（512 B，Tf = 256 ms）只要 5 帧多，短帧（128 B，Tf = 64 ms）要 10 帧多。序号比特数是按最坏需求设计的，所以取帧长下限 128 B。</p>
 <h3>第一步：算时间</h3>
 <table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>帧发送时延 Tf</td><td>128×8 bit ÷ 16 kbps</td><td>64 ms</td></tr><tr><td>单向传播时延 Tp</td><td>题目给定</td><td>270 ms</td></tr><tr><td>ACK 发送时延 Ta</td><td>确认帧与数据帧等长</td><td>64 ms</td></tr></tbody></table>
 <p>第 1 帧从开始发送到它的确认完全回到发送方：<code>Tf + Tp + Ta + Tp = 64 + 270 + 64 + 270 = 668 ms</code>。</p>
 <h3>第二步：算窗口与比特数</h3>
-<p>这 668 ms 内发送方一刻不能停，需要连发的帧数 <code>W ≥ 668 ÷ 64 ≈ 10.44</code>，取 <strong>W ≥ 11</strong>。GBN 发送窗口受序号空间限制：<code>2^n − 1 ≥ 11</code>，即 <code>2^n ≥ 12</code>：</p>
-<p><strong>为什么窗口上限是 2^n − 1 而不是 2^n？</strong> 序号共 2^n 个、GBN 接收窗口为 1。若发送窗口开满 2^n，发送方可以在一个确认都没收到的情况下把 0 ~ 2^n−1 号帧全部发完；此时一旦最老的累计确认丢失，重传的 0 号帧和"下一轮新发"的 0 号帧撞用同一序号，接收方无法分辨新旧帧，出了错就无法挽回。留出 1 个序号作隔离带，新帧序号就绝不会与未确认旧帧重合——这就是 <code>W ≤ 2^n − 1</code> 的由来。</p>
-<ul><li>n = 3：<code>2^3 − 1 = 7</code>，小于 11，不够；</li><li>n = 4：<code>2^4 − 1 = 15 ≥ 11</code>，可行。</li></ul>
+<p>这 668 ms 内发送方一刻不能停，需要连发的帧数 <code>W ≥ 668 ÷ 64 ≈ 10.44</code>，取 <strong>W ≥ 11</strong>。GBN 发送窗口受序号空间限制：<code>2<sup>n</sup> − 1 ≥ 11</code>，即 <code>2<sup>n</sup> ≥ 12</code>：</p>
+<p><strong>为什么窗口上限是 2<sup>n</sup> − 1 而不是 2<sup>n</sup>？</strong> 序号共 2<sup>n</sup> 个、GBN 接收窗口为 1。若发送窗口开满 2<sup>n</sup>，发送方可以在一个确认都没收到的情况下把 0 ~ 2<sup>n</sup>−1 号帧全部发完；此时一旦最老的累计确认丢失，重传的 0 号帧和"下一轮新发"的 0 号帧撞用同一序号，接收方无法分辨新旧帧，出了错就无法挽回。留出 1 个序号作隔离带，新帧序号就绝不会与未确认旧帧重合——这就是 <code>W ≤ 2<sup>n</sup> − 1</code> 的由来。</p>
+<ul><li>n = 3：<code>2<sup>3</sup> − 1 = 7</code>，小于 11，不够；</li><li>n = 4：<code>2<sup>4</sup> − 1 = 15 ≥ 11</code>，可行。</li></ul>
 <p>故帧序号至少 <strong>4 比特</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>按 512 B 长帧算</strong>：Tf = 256 ms，此时 W ≥ 5、n = 3 就够——但帧长可以短到 128 B，要保证<strong>任何帧长下</strong>利用率都能最高，必须按最坏情况（最短帧）设计。</li><li><strong>漏掉 ACK 的发送时延</strong>：题目明说「接收方总是以与数据帧等长的帧进行确认」，Ta = Tf = 64 ms，不能当成瞬间到达。</li><li><strong>窗口上限记成 2^n</strong>：GBN 发送窗口最大是 <code>2^n − 1</code>，不是 <code>2^n</code>。</li></ul>
-<blockquote>一句话：最短帧定出最大需求 11 帧，<code>2^n − 1 ≥ 11</code> → n 至少为 4。</blockquote></div>
-</details>
+<ul><li><strong>按 512 B 长帧算</strong>：Tf = 256 ms，此时 W ≥ 5、n = 3 就够——但帧长可以短到 128 B，要保证<strong>任何帧长下</strong>利用率都能最高，必须按最坏情况（最短帧）设计。</li><li><strong>漏掉 ACK 的发送时延</strong>：题目明说「接收方总是以与数据帧等长的帧进行确认」，Ta = Tf = 64 ms，不能当成瞬间到达。</li><li><strong>窗口上限记成 2<sup>n</sup></strong>：GBN 发送窗口最大是 <code>2<sup>n</sup> − 1</code>，不是 <code>2<sup>n</sup></code>。</li></ul>
+<blockquote>一句话：最短帧定出最大需求 11 帧，<code>2<sup>n</sup> − 1 ≥ 11</code> → n 至少为 4。</blockquote></div>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

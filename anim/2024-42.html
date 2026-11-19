@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-42 散列表：平方探测构造与查找</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -178,8 +180,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：平方探测散列表——同一套探查规则贯穿插入与查找</h2>
 <h3>第 0 步：机制先行——散列表怎么放、怎么找，"探到空"为什么就是失败</h3>
 <p>散列存储的思想：用散列函数直接算出关键字该放的地址。本题 H(key) = (key×3) % 11，算出的 H0 若已被占用（冲突），就沿探查序列 H1, H2, H3, … 找下一个位置，规则为 <strong>Hk = (H0 + k²) % 11</strong>——偏移量是 k 的平方：1, 4, 9, 16, …，不是 1, 2, 3。</p>
@@ -198,7 +200,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>偏移用 k 不用 k²</strong>：第 2 次探查该跳 4 格（不是 2 格）、第 4 次跳 16 格——查 8 时算不到地址 7 就会答错。</li><li><strong>探到空单元不敢下结论</strong>，继续往下探甚至探遍全表——既多余又可能被扣分；只插不删的表，空位"永远空"。</li><li><strong>装填因子分母写错</strong>：α = 7/11，分母是表长 11，不是别的数。</li><li><strong>比较序列写成地址序列</strong>：题目要的是每次<strong>比较的关键字</strong>（3, 18, 14），不是探查经过的地址（9, 10, 2）。</li></ul>
 <blockquote>记忆锚点：插入与查找共用一条 k² 探查链；探到空 = 失败（只插不删 ⇒ 空位永远空）；α = 元素个数/表长 = 7/11。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2021 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2021">
 <header class="site-header">
@@ -770,12 +770,12 @@ free(q);</code></pre></div></span><span class="choice-mark" aria-hidden="true"><
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：PFLOPS 的量级换算</h2>
 <p>答案：D（9.3 亿亿次）。</p>
 <h3>第一步：认清词头 P</h3>
-<p>FLOPS 的词头阶梯：<code>K=10^3</code> → <code>M=10^6</code> → <code>G=10^9</code> → <code>T=10^12</code> → <code>P=10^15</code> → <code>E=10^18</code>。P（Peta）= 10 的 15 次方，中文说法是"千万亿"。</p>
+<p>FLOPS 的词头阶梯：<code>K=10<sup>3</sup></code> → <code>M=10<sup>6</sup></code> → <code>G=10<sup>9</sup></code> → <code>T=10<sup>12</sup></code> → <code>P=10<sup>15</sup></code> → <code>E=10<sup>18</sup></code>。P（Peta）= 10 的 15 次方，中文说法是"千万亿"。</p>
 <h3>第二步：完成换算</h3>
-<p>93.0146 PFLOPS = 93.0146 × 10^15 次/秒 = 9.30146 × 10^16 ≈ 9.3 × 10^16 次/秒。而"亿"= 10^8，"亿亿"= 10^16，所以 9.3 × 10^16 就是 <strong>9.3 亿亿次</strong>，选 D。</p>
+<p>93.0146 PFLOPS = 93.0146 × 10<sup>15</sup> 次/秒 = 9.30146 × 10<sup>16</sup> ≈ 9.3 × 10<sup>16</sup> 次/秒。而"亿"= 10<sup>8</sup>，"亿亿"= 10<sup>16</sup>，所以 9.3 × 10<sup>16</sup> 就是 <strong>9.3 亿亿次</strong>，选 D。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 P 当成 10 的 12 次方</strong>：10^12 是 T（Tera），对应选项 A 的 9.3×10^13（93 TFLOPS 量级，差了 3 个数量级）。</li><li><strong>换算后忘了整理系数</strong>：9.3×10^15（选项 B）与 9.3 千万亿次（选项 C）其实是同一个数，都相当于把 93.0146 PFLOPS 看成了 9.3 PFLOPS，缩小了 10 倍。</li></ul>
-<blockquote>记忆点：P = 10 的 15 次方（千万亿）；"亿亿" = 10 的 16 次方；93 P ≈ 9.3 × 10^16 = 9.3 亿亿次/秒。</blockquote></div></div>
+<ul><li><strong>把 P 当成 10 的 12 次方</strong>：10<sup>12</sup> 是 T（Tera），对应选项 A 的 9.3×10<sup>13</sup>（93 TFLOPS 量级，差了 3 个数量级）。</li><li><strong>换算后忘了整理系数</strong>：9.3×10<sup>15</sup>（选项 B）与 9.3 千万亿次（选项 C）其实是同一个数，都相当于把 93.0146 PFLOPS 看成了 9.3 PFLOPS，缩小了 10 倍。</li></ul>
+<blockquote>记忆点：P = 10 的 15 次方（千万亿）；"亿亿" = 10 的 16 次方；93 P ≈ 9.3 × 10<sup>16</sup> = 9.3 亿亿次/秒。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -827,13 +827,13 @@ free(q);</code></pre></div></span><span class="choice-mark" aria-hidden="true"><
 <h3>第一步：无符号读法</h3>
 <p>把三个机器数直接按无符号解释：x = <code>FFFDH</code> = 65533，y = <code>FFDFH</code> = 65503，z = <code>7FFCH</code> = 32764。大小顺序是 <strong>z &lt; y &lt; x</strong>——选项 A 说 z &lt; x &lt; y（需要 x &lt; y，实际 x 更大）、选项 B 说 x &lt; y &lt; z，都不成立，排除 A、B。</p>
 <h3>第二步：补码读法</h3>
-<p>补码不是另一套数制，而是<strong>模运算下的记数方式</strong>：16 位共有 65536（2^16）个状态，把这个"状态环"从中间掰开——最高位为 0 的 0000H~7FFFH 表示 0 ~ +32767；<strong>最高位为 1 的 8000H~FFFFH 表示 −32768 ~ −1</strong>。所以判读就两句话：最高位为 1 → 负数；<strong>真值 = 无符号解释值 − 2^16</strong>。</p>
-<p><strong>为什么"减 2^16"是合法的？</strong> 因为补码的定义就是同余：位串 FFFDH 之所以代表 −3，是因为 −3 ≡ 65533 (mod 65536)。位串本身没有符号，"最高位为 1"恰是"这个余数对应负真值"的记号，从余数还原真值，减一次模即可。（用"取反加一"验算：FFFDH 取反加一得 0003H = 3 → 真值 −3，与减模一致。）</p>
+<p>补码不是另一套数制，而是<strong>模运算下的记数方式</strong>：16 位共有 65536（2<sup>16</sup>）个状态，把这个"状态环"从中间掰开——最高位为 0 的 0000H~7FFFH 表示 0 ~ +32767；<strong>最高位为 1 的 8000H~FFFFH 表示 −32768 ~ −1</strong>。所以判读就两句话：最高位为 1 → 负数；<strong>真值 = 无符号解释值 − 2<sup>16</sup></strong>。</p>
+<p><strong>为什么"减 2<sup>16</sup>"是合法的？</strong> 因为补码的定义就是同余：位串 FFFDH 之所以代表 −3，是因为 −3 ≡ 65533 (mod 65536)。位串本身没有符号，"最高位为 1"恰是"这个余数对应负真值"的记号，从余数还原真值，减一次模即可。（用"取反加一"验算：FFFDH 取反加一得 0003H = 3 → 真值 −3，与减模一致。）</p>
 <table><thead><tr><th>变量</th><th>机器数</th><th>最高位</th><th>真值</th></tr></thead><tbody><tr><td>x</td><td>FFFDH</td><td>1</td><td>FFFDH − 10000H = <strong>−3</strong></td></tr><tr><td>y</td><td>FFDFH</td><td>1</td><td>FFDFH − 10000H = <strong>−33</strong></td></tr><tr><td>z</td><td>7FFCH</td><td>0</td><td>正数 <strong>32764</strong></td></tr></tbody></table>
 <p>顺序为 <strong>y(−33) &lt; x(−3) &lt; z(32764)</strong>，选 D；选项 C 说 x &lt; y &lt; z，第一步就错在 −3 &lt; −33 不成立。</p>
 <h3>易错点</h3>
 <ul><li><strong>无符号读法记反 x 与 y</strong>：FFFDH 比 FFDFH 大 30（1EH），所以无符号时 x &gt; y，A、B 两个顺序都对不上。</li><li><strong>求负数真值时算错</strong>：FFDFH 取反加一得 0021H = 33，故 y = −33；用"机器数 − 10000H"验算结果一致。</li><li><strong>忘了先看最高位</strong>：z 的最高位是 0111 开头，是正数，不需要变换。</li></ul>
-<blockquote>口诀：最高位 0，无符号与补码同值；最高位 1，真值 = 机器数 − 2^16。同一串位，两种读法，顺序不同。</blockquote></div></div>
+<blockquote>口诀：最高位 0，无符号与补码同值；最高位 1，真值 = 机器数 − 2<sup>16</sup>。同一串位，两种读法，顺序不同。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2590,12 +2590,12 @@ else
 <p>位数题不要背结论，先问"这个东西一次必须完整装下/送出什么"：</p>
 <ul><li><strong>ALU</strong>：一次对两个操作数完成一次运算，操作数是一个字 → ALU 宽度 = 字长 = <strong>16 位</strong>；</li><li><strong>IR</strong>：一条指令必须一口气取进 IR 才能译码 → IR = 指令字长。定长指令字 16 位 → <strong>16 位</strong>；</li><li><strong>MAR</strong>：地址沿地址线一位一位送出，MAR 的每一位都要有对应的地址线 → MAR = 地址线条数 = <strong>20 位</strong>；</li><li><strong>MDR</strong>：数据沿数据线搬运，数据线只有 8 位，一次总线事务只能搬 1 字节 → MDR = 数据线条数 = <strong>8 位</strong>。</li></ul>
 <p>（为什么 16 位指令装得进 8 位 MDR？分两次：先取高字节经 MDR 转存 IR，再取低字节——这正是"按字节编址 + 8 位数据线"的机器取一条指令的真实过程。）</p>
-<p>可寻址空间同理：20 位地址线能给出 2^20 个不同地址，按字节编址 → <strong>2^20 B = 1 MB</strong>。空间由地址线根数决定，与字长无关。</p>
+<p>可寻址空间同理：20 位地址线能给出 2<sup>20</sup> 个不同地址，按字节编址 → <strong>2<sup>20</sup> B = 1 MB</strong>。空间由地址线根数决定，与字长无关。</p>
 <h3>第 1）问：答案</h3>
-<p>ALU 16 位；可寻址主存 2^20 B = 1 MB；IR 16 位、MAR 20 位、MDR 8 位。</p>
+<p>ALU 16 位；可寻址主存 2<sup>20</sup> B = 1 MB；IR 16 位、MAR 20 位、MDR 8 位。</p>
 <h3>第 2）问：编码空间账</h3>
 <p>三种格式共享<strong>前 6 位</strong>这个公共字段：CPU 取来指令先看前 6 位——是 <code>000000</code> 就按 R 型处理，真正的操作编码藏在其后的 op1 里；否则这 6 位就是操作码（在 I 型里叫 op2、在 J 型里叫 op3，是<strong>同一个字段的两个名字</strong>，不会同时出现）。</p>
-<ul><li>R 型：op1 有 4 位 → 最多 2^4 = <strong>16 种</strong>操作；</li><li>I 型 + J 型：共用 6 位编码共 64 个码点，其中 <code>000000</code> 已被 R 型征用 → 64 − 1 = <strong>63 种</strong>；</li><li>rs/rt/rd 各 2 位，编号最多编出 2^2 = 4 个 → 通用寄存器最多 <strong>4 个</strong>。</li></ul>
+<ul><li>R 型：op1 有 4 位 → 最多 2<sup>4</sup> = <strong>16 种</strong>操作；</li><li>I 型 + J 型：共用 6 位编码共 64 个码点，其中 <code>000000</code> 已被 R 型征用 → 64 − 1 = <strong>63 种</strong>；</li><li>rs/rt/rd 各 2 位，编号最多编出 2<sup>2</sup> = 4 个 → 通用寄存器最多 <strong>4 个</strong>。</li></ul>
 <h3>第 3）问：拆指令、做运算、判溢出</h3>
 <p><code>01B2H</code> = 0000 0001 1011 0010。前 6 位 = 000000 → R 型，按位段拆开：</p>
 <table><thead><tr><th>位段</th><th>编码</th><th>含义</th></tr></thead><tbody><tr><td>rs</td><td>01</td><td>1 号寄存器</td></tr><tr><td>rt</td><td>10</td><td>2 号寄存器</td></tr><tr><td>rd</td><td>11</td><td>3 号寄存器</td></tr><tr><td>op1</td><td>0010</td><td>带符号整数减法</td></tr></tbody></table>
@@ -2607,7 +2607,7 @@ else
 <h3>第 5）问：无条件转移用 J 型</h3>
 <p>无条件转移只需要"把 PC 改成目标地址"，不碰寄存器、不做运算；R/I 型的寄存器号和 imm 位段对它毫无用处，而 J 型恰好就是"操作码 + 10 位 target"（PC 低 10 位 ← target），位段一点不浪费 → 采用 <strong>J 型格式</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，16 位指令分两次取、每次装 1 字节。</li><li><strong>可寻址空间用字长算成 64 KB</strong>：空间由地址线（20 位）决定，2^20 B = 1 MB。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，合计只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：负偏移变大正数，地址算错。</li></ul>
+<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，16 位指令分两次取、每次装 1 字节。</li><li><strong>可寻址空间用字长算成 64 KB</strong>：空间由地址线（20 位）决定，2<sup>20</sup> B = 1 MB。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，合计只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：负偏移变大正数，地址算错。</li></ul>
 <blockquote>记忆锚点：MAR/MDR 跟着地址线/数据线走，IR 跟着指令字长走；前 6 位是公共判别字段，000000 让给 R 型；带符号数先减模求真值，溢出看真值是否越界。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2643,7 +2643,7 @@ else
         <svg class="chk" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.5 3.5L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>显示本题答案
       </button>
     </div>
-    <div class="answer-placeholder"><span>答案</span><div class="answer-content"><div class="markdown-content"><div class="markdown-content"><h3 id="1">1）</h3><p><span>虚拟地址30位，页大小为4KB（2^12），页内地址占12位，虚页号占30-12=18位。</span></p><ul><li><strong>虚页号</strong>：虚拟地址的高18位（位29~12）。</li><li><strong>页内地址</strong>：虚拟地址的低12位（位11~0）。</li></ul><h3 id="2">2）</h3><p><span>TLB共8组，组号需3位（log2(8)=3）。虚页号的低3位作为TLB组号，高位部分作为TLB标记。</span></p><ul><li><strong>TLB标记</strong>：虚页号的高15位（对应虚拟地址位29~15）。</li><li><strong>TLB组号</strong>：虚页号的低3位（对应虚拟地址位14~12）。</li></ul><h3 id="3">3）</h3><p><span>虚页号4对应的TLB表项被替换。</span><span><br/>理由：TLB初始为空，访问序列中，当访问虚页号20时，其TLB组号（20 mod 8 = 4）对应的组已满（包含虚页号12和4），且虚页号4在组内为LRU（最久未使用），因此被替换。</span></p><h3 id="4">4）</h3><p><span>虚拟地址增至32位后，虚页号位数增至32-12=20位。TLB组号仍为3位，TLB标记位数增至20-3=17位。TLB表项中物理页号等位数不变，故TLB表项位数增加2位。</span></p></div></div></div></div>
+    <div class="answer-placeholder"><span>答案</span><div class="answer-content"><div class="markdown-content"><div class="markdown-content"><h3 id="1">1）</h3><p><span>虚拟地址30位，页大小为4KB（2<sup>12</sup>），页内地址占12位，虚页号占30-12=18位。</span></p><ul><li><strong>虚页号</strong>：虚拟地址的高18位（位29~12）。</li><li><strong>页内地址</strong>：虚拟地址的低12位（位11~0）。</li></ul><h3 id="2">2）</h3><p><span>TLB共8组，组号需3位（log2(8)=3）。虚页号的低3位作为TLB组号，高位部分作为TLB标记。</span></p><ul><li><strong>TLB标记</strong>：虚页号的高15位（对应虚拟地址位29~15）。</li><li><strong>TLB组号</strong>：虚页号的低3位（对应虚拟地址位14~12）。</li></ul><h3 id="3">3）</h3><p><span>虚页号4对应的TLB表项被替换。</span><span><br/>理由：TLB初始为空，访问序列中，当访问虚页号20时，其TLB组号（20 mod 8 = 4）对应的组已满（包含虚页号12和4），且虚页号4在组内为LRU（最久未使用），因此被替换。</span></p><h3 id="4">4）</h3><p><span>虚拟地址增至32位后，虚页号位数增至32-12=20位。TLB组号仍为3位，TLB标记位数增至20-3=17位。TLB表项中物理页号等位数不变，故TLB表项位数增加2位。</span></p></div></div></div></div>
 
     <div class="self-score" style="display:none;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
       <span style="font-size:12.5px;color:var(--muted);font-weight:700">自评得分：</span>
@@ -2663,7 +2663,7 @@ else
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：虚拟地址切分与 TLB 组相联的 LRU 替换</h2>
 <h3>第 0 步：先立机制——虚拟地址的"两刀切分"</h3>
-<p>虚拟地址的切分永远按固定次序来。<strong>第一刀按页大小切</strong>：页内偏移的任务是给页内每个字节编号，页大小 4 KB = 2^12 B，编完一页需要 12 位，所以低 12 位必是页内地址（页按 2 的幂对齐，低 12 位天然落在页内），剩下的高位整体就是虚页号。<strong>第二刀按 TLB 的组织方式切</strong>：TLB 查找分两步——先"定位组"，再"在组内比对认页"，所以虚页号的低位作组号（取位即可直接定位组），高位作标记（在组内逐路比较，负责认出"到底是哪个虚页"）。</p>
+<p>虚拟地址的切分永远按固定次序来。<strong>第一刀按页大小切</strong>：页内偏移的任务是给页内每个字节编号，页大小 4 KB = 2<sup>12</sup> B，编完一页需要 12 位，所以低 12 位必是页内地址（页按 2 的幂对齐，低 12 位天然落在页内），剩下的高位整体就是虚页号。<strong>第二刀按 TLB 的组织方式切</strong>：TLB 查找分两步——先"定位组"，再"在组内比对认页"，所以虚页号的低位作组号（取位即可直接定位组），高位作标记（在组内逐路比较，负责认出"到底是哪个虚页"）。</p>
 <h3>第 1）问：虚页号 / 页内地址</h3>
 <ul><li>页内地址：低 <strong>12</strong> 位（位 11～0）——位数只由页大小决定，与虚拟地址总位数无关；</li><li>虚页号：30 − 12 = <strong>18</strong> 位，即高 18 位（位 29～12）。</li></ul>
 <h3>第 2）问：TLB 标记 / 组号</h3>
@@ -2895,4 +2895,4 @@ else
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

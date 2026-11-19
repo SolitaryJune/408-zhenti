@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2017 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2017">
 <header class="site-header">
@@ -110,17 +110,17 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1u2mCBoEvK/?p=1" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：循环执行次数与时间复杂度</h2>
-<p><strong>答案：B</strong>（O(n^1/2)，即 n 的平方根量级）。</p>
+<p><strong>答案：B</strong>（O(n<sup>1</sup>/2)，即 n 的平方根量级）。</p>
 <h3>第零步：先立机制——这一轮循环到底在攒什么</h3>
 <p>复杂度由循环执行次数决定，而执行次数由 <code>sum</code> 的增长规律决定。每轮执行 <code>sum += ++i</code>：<code>++i</code> 先把 i 加 1，再加进 sum，所以第 1 轮加 1、第 2 轮加 2……第 k 轮加 k，第 k 轮结束时 sum = 1+2+…+k = k(k+1)/2（三角形数）。于是复杂度问题转化成：<strong>三角形数何时首次达到 n</strong>——循环退出时 k 是多少，执行次数就是多少。</p>
 <table><thead><tr><th>轮数 k</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>轮末 sum</td><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td></tr></tbody></table>
 <h3>第一步：解出循环轮数</h3>
 <p>循环条件 <code>sum &lt; n</code>：恰好执行 K 轮意味着 (K−1)K/2 &lt; n ≤ K(K+1)/2，即第 K 轮把 sum 顶过 n。由 K(K+1)/2 ≥ n 得 K ≈ √(2n)。数值验证：n=100 时 K=14（14×15/2=105 首次 ≥ 100，√200≈14.1）；n=1000000 时 K=1414。</p>
-<h3>第二步：为什么记作 O(n^1/2) 而不是别的</h3>
-<p>T(n) ≈ √(2n) = √2·n^1/2。大 O 只保留增长最快的因子，<strong>常数因子直接吸收</strong>——√2 与 n 无关，量级由 n^1/2 决定 → <strong>O(n^1/2)</strong>。再排除其余选项：对数 log n 增长远慢于 n^1/2（n=10⁶ 时 log₂n≈20，而这里要走 1414 轮），A 不可能；n 与 nlog n 又明显偏大，C、D 排除。</p>
+<h3>第二步：为什么记作 O(n<sup>1</sup>/2) 而不是别的</h3>
+<p>T(n) ≈ √(2n) = √2·n<sup>1</sup>/2。大 O 只保留增长最快的因子，<strong>常数因子直接吸收</strong>——√2 与 n 无关，量级由 n<sup>1</sup>/2 决定 → <strong>O(n<sup>1</sup>/2)</strong>。再排除其余选项：对数 log n 增长远慢于 n<sup>1</sup>/2（n=10⁶ 时 log₂n≈20，而这里要走 1414 轮），A 不可能；n 与 nlog n 又明显偏大，C、D 排除。</p>
 <h3>易错点</h3>
 <ul><li><strong>只盯循环变量 i 的写法</strong>：i 最终约等于 √(2n) 而不是 n，按 O(n) 估就会误选 C。</li><li><strong>被系数吓住</strong>：算出 √(2n) 后纠结"2n 不是 n"，忘记常数进不了大 O，在 B 与其他项之间摇摆。</li><li><strong>忽略循环条件的位置</strong>：<code>while(sum &lt; n)</code> 先判断再累加，退出时刻是"三角形数首次 ≥ n"。</li></ul>
-<blockquote>一句话结论：第 k 轮攒到三角形数 k(k+1)/2，首次 ≥ n 时 k ≈ √(2n)；常数 √2 不影响量级，复杂度 O(n^1/2)。</blockquote></div></div>
+<blockquote>一句话结论：第 k 轮攒到三角形数 k(k+1)/2，首次 ≥ n 时 k ≈ √(2n)；常数 √2 不影响量级，复杂度 O(n<sup>1</sup>/2)。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -978,11 +978,11 @@
 <h3>第一步：摆清位分配</h3>
 <p>设指令字长 L 位，地址字段各 6 位：三地址格式操作码占 L−18 位，二地址格式操作码占 L−12 位（恰好比三地址多出一个地址字段的位置）。</p>
 <h3>第二步：三地址指令的空间需求</h3>
-<p>29 条三地址指令需要 <code>2^(L−18) ≥ 29</code>，操作码至少 5 位（2^5 = 32 ≥ 29），理论最短 L = 5 + 18 = <strong>23 位</strong>。</p>
+<p>29 条三地址指令需要 <code>2<sup>L−18</sup> ≥ 29</code>，操作码至少 5 位（2<sup>5</sup> = 32 ≥ 29），理论最短 L = 5 + 18 = <strong>23 位</strong>。</p>
 <h3>第三步：二地址指令靠扩展操作码补齐</h3>
 <p>三地址用剩 32 − 29 = 3 个操作码前缀，每个前缀再接 6 位编码，可扩展 3 × 64 = 192 条二地址指令 ≥ 107，够用。</p>
 <h3>第四步：按字节对齐取整</h3>
-<p>机器按字节编址、指令按字节存放，指令字长应为 8 的倍数：23 位向上取整为 <strong>24 位</strong>。验证 L = 24：三地址码空间 2^6 = 64 ≥ 29，剩余 35 × 64 = 2240 ≥ 107，全部满足且最省。</p>
+<p>机器按字节编址、指令按字节存放，指令字长应为 8 的倍数：23 位向上取整为 <strong>24 位</strong>。验证 L = 24：三地址码空间 2<sup>6</sup> = 64 ≥ 29，剩余 35 × 64 = 2240 ≥ 107，全部满足且最省。</p>
 <p>结论：指令字长至少 <strong>24 位</strong>，<strong>答案：A</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>忘了字节对齐</strong>：算出 5 + 18 = 23 位就直接下结论，23 不在选项中，且按字节编址指令字长须是字节的整数倍。</li><li><strong>以为二地址要另占操作码空间</strong>：扩展操作码正是复用三地址没用掉的前缀，不必再加长。</li><li><strong>把"至少"当成"任选一个满足的"</strong>：26、28、32 位也能编码，但不是最小值。</li></ul>
@@ -1991,9 +1991,9 @@
 <h3>第一步：写出两条极限速率公式</h3>
 <p>答案：D（32）。<br/>无噪声信道用奈奎斯特准则：极限速率 = <code>2W·log2V</code>（V 为信号状态数）；有噪声信道用香农定理：极限速率 = <code>W·log2(1+S/N)</code>。题意是前者不小于后者。</p>
 <h3>第二步：把 30dB 换算成信噪比</h3>
-<p>dB 与倍数的关系是 dB = 10·lg(S/N)，所以 S/N = 10^(30/10) = <strong>1000</strong>。<br/>香农极限速率 = W·log2(1+1000) = W·log2(1001) ≈ <strong>9.97W</strong>。</p>
+<p>dB 与倍数的关系是 dB = 10·lg(S/N)，所以 S/N = 10<sup>30/10</sup> = <strong>1000</strong>。<br/>香农极限速率 = W·log2(1+1000) = W·log2(1001) ≈ <strong>9.97W</strong>。</p>
 <h3>第三步：解不等式求 V</h3>
-<p>令奈氏速率 ≥ 香农速率：2W·log2V ≥ 9.97W，得 log2V ≥ 4.985，即 V ≥ 2^4.985 ≈ 31.6。<br/>信号状态数必须是整数，只能向上取整，得 <strong>V = 32</strong>。</p>
+<p>令奈氏速率 ≥ 香农速率：2W·log2V ≥ 9.97W，得 log2V ≥ 4.985，即 V ≥ 2<sup>4</sup>.985 ≈ 31.6。<br/>信号状态数必须是整数，只能向上取整，得 <strong>V = 32</strong>。</p>
 <p>两端验证：V=16 时奈氏速率 = 2W×4 = 8W &lt; 9.97W，不满足；V=32 时 = 2W×5 = 10W ≥ 9.97W，满足。</p>
 <h3>易错点</h3>
 <ul><li><strong>dB 换算错</strong>：把 30dB 当成信噪比 30 倍，解出 V ≈ 5.6 后取整为 8，误选 B。</li><li><strong>对数底用错</strong>：把 log2 当成 lg 用，解出 V ≈ 3，误选 A（4）。</li><li><strong>不取整或漏验证</strong>：算出 31.6 就随手选小于它的选项；状态数必须取"能覆盖速率要求"的最小整数 32。</li></ul>
@@ -2212,14 +2212,14 @@
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：等分子网后每个子网可分配的地址数</h2>
 <h3>第一步：确定要借几位</h3>
-<p>答案：C（510）。<br/>网络 21.3.0.0/16 要等分成 128 个规模相同的子网：128 = 2^7，所以从主机位<strong>借 7 位</strong>做子网位，前缀从 /16 变为 <strong>/23</strong>，子网掩码 255.255.254.0。</p>
+<p>答案：C（510）。<br/>网络 21.3.0.0/16 要等分成 128 个规模相同的子网：128 = 2<sup>7</sup>，所以从主机位<strong>借 7 位</strong>做子网位，前缀从 /16 变为 <strong>/23</strong>，子网掩码 255.255.254.0。</p>
 <h3>第二步：算每个子网的地址规模</h3>
-<p>每个子网剩下 32 − 23 = <strong>9 位主机位</strong>，地址总数 = 2^9 = <strong>512</strong> 个。</p>
+<p>每个子网剩下 32 − 23 = <strong>9 位主机位</strong>，地址总数 = 2<sup>9</sup> = <strong>512</strong> 个。</p>
 <h3>第三步：扣除不可分配的地址</h3>
 <p>每个子网中主机位全 0 的地址是该子网的网络地址、全 1 的是广播地址，都不能分配给主机：512 − 2 = <strong>510</strong> 个可分配。</p>
 <h3>易错点</h3>
-<ul><li><strong>忘记减 2（误选 D，512）</strong>：网络地址和广播地址不可分配，必须扣除。</li><li><strong>按 /24 计算（误选 A/B，254 或 256）</strong>：误以为要借 8 位；其实 2^7 = 128 已够，只借 7 位，多借一位子网数就变成 256 个，不符合题意。</li><li><strong>前缀加错</strong>：/16 借 7 位是 /23 而不是 /24，主机位是 9 位不是 8 位。</li></ul>
-<blockquote>记忆锚点：子网数 128 → 借 7 位 → /23 → 主机位 9 位 → 2^9 − 2 = 510。</blockquote></div></div>
+<ul><li><strong>忘记减 2（误选 D，512）</strong>：网络地址和广播地址不可分配，必须扣除。</li><li><strong>按 /24 计算（误选 A/B，254 或 256）</strong>：误以为要借 8 位；其实 2<sup>7</sup> = 128 已够，只借 7 位，多借一位子网数就变成 256 个，不符合题意。</li><li><strong>前缀加错</strong>：/16 借 7 位是 /23 而不是 /24，主机位是 9 位不是 8 位。</li></ul>
+<blockquote>记忆锚点：子网数 128 → 借 7 位 → /23 → 主机位 9 位 → 2<sup>9</sup> − 2 = 510。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2560,30 +2560,30 @@ void BtreeToE(BTree *root) { BtreeToExp(root, 1); } // 根深度为 1</code></pr
     <a data-tab="video" href="https://www.bilibili.com/video/BV1u2mCBoEvK/?p=43" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：unsigned 下溢、int 溢出与 float 的精度/范围</h2>
-<p>答题框架：f(n) = 2^(n+1) − 1，即二进制 <strong>n+1 个连续的 1</strong>；循环跑 n 轮（i = 0 … n−1）。f1 用 int 累加、f2 用 float 累加，五个小问全是这两套记数系统与"n+1 个 1"的碰撞：无符号模运算（第(1)问）、24 位有效数字（第(2)(3)问）、补码范围（第(4)问）、float 范围（第(5)问）。</p>
+<p>答题框架：f(n) = 2<sup>n+1</sup> − 1，即二进制 <strong>n+1 个连续的 1</strong>；循环跑 n 轮（i = 0 … n−1）。f1 用 int 累加、f2 用 float 累加，五个小问全是这两套记数系统与"n+1 个 1"的碰撞：无符号模运算（第(1)问）、24 位有效数字（第(2)(3)问）、补码范围（第(4)问）、float 范围（第(5)问）。</p>
 <h3>第 0 步：先立两套记数系统的模型</h3>
-<ul><li><strong>int（补码）</strong>：32 位补码是模 2^32 的记数——最高位为 1 的位串，真值 = 无符号值 − 2^32；可表示范围 −2^31 ~ 2^31−1，<strong>全 1 位串 = −1</strong>。</li><li><strong>float（IEEE 754 单精度）</strong>：1 位符号 + 8 位阶码 + 23 位尾数，隐含首位 1 后有 <strong>24 位有效数字</strong>；可表示数值上限约 (2 − 2^−23) × 2^127 = 2^128 − 2^104，略小于 2^128。</li></ul>
+<ul><li><strong>int（补码）</strong>：32 位补码是模 2<sup>32</sup> 的记数——最高位为 1 的位串，真值 = 无符号值 − 2<sup>32</sup>；可表示范围 −2<sup>31</sup> ~ 2<sup>31</sup>−1，<strong>全 1 位串 = −1</strong>。</li><li><strong>float（IEEE 754 单精度）</strong>：1 位符号 + 8 位阶码 + 23 位尾数，隐含首位 1 后有 <strong>24 位有效数字</strong>；可表示数值上限约 (2 − 2<sup>−23</sup>) × 2<sup>127</sup> = 2<sup>128</sup> − 2<sup>104</sup>，略小于 2<sup>128</sup>。</li></ul>
 <p>int 只受<strong>范围</strong>限制；float 先受<strong>精度</strong>限制（有效位数），再受<strong>范围</strong>限制。这条主轴贯穿全题。</p>
 <h3>第（1）问：n=0 为什么死循环；改成 int 为什么就没事</h3>
-<p>i、n 均为 unsigned。无符号运算是<strong>模 2^32 运算</strong>：条件式里的 <code>n−1</code> 先算，0 − 1 在模 2^32 下同余于 2^32 − 1，机器数就是 32 个 1（FFFFFFFFH）——恰好是 unsigned 的最大值。于是 <code>i ≤ n−1</code> 恒成立，i 一路加到 0xFFFFFFFF 再回绕也出不去，死循环。</p>
-<p><strong>为什么可以"减模"求真值？</strong> 位串 FFFFFFFFH 之所以代表 2^32 − 1（无符号）就是这么定义的模运算余数；0−1 的余数即 2^32 − 1，没有"负数"一说。</p>
-<p>若把 i、n 都改成 int：<code>n−1 = −1</code>（补码真值），首次判断 <code>0 ≤ −1</code> 不成立，循环体一次都不执行，直接返回 sum = 1——恰好等于 f(0) = 2^1 − 1，根本进不了循环，自然不会死循环。</p>
+<p>i、n 均为 unsigned。无符号运算是<strong>模 2<sup>32</sup> 运算</strong>：条件式里的 <code>n−1</code> 先算，0 − 1 在模 2<sup>32</sup> 下同余于 2<sup>32</sup> − 1，机器数就是 32 个 1（FFFFFFFFH）——恰好是 unsigned 的最大值。于是 <code>i ≤ n−1</code> 恒成立，i 一路加到 0xFFFFFFFF 再回绕也出不去，死循环。</p>
+<p><strong>为什么可以"减模"求真值？</strong> 位串 FFFFFFFFH 之所以代表 2<sup>32</sup> − 1（无符号）就是这么定义的模运算余数；0−1 的余数即 2<sup>32</sup> − 1，没有"负数"一说。</p>
+<p>若把 i、n 都改成 int：<code>n−1 = −1</code>（补码真值），首次判断 <code>0 ≤ −1</code> 不成立，循环体一次都不执行，直接返回 sum = 1——恰好等于 f(0) = 2<sup>1</sup> − 1，根本进不了循环，自然不会死循环。</p>
 <h3>第（2）问：f1(23) 与 f2(23) 是否相等</h3>
-<p>n=23 时和 = 2^24 − 1 = 16 777 215，二进制恰好 <strong>24 个 1</strong>。</p>
-<ul><li>f1（int）：24 个 1 &lt; 2^31，范围内，机器数 <code>00FFFFFFH</code>。</li><li>f2（float）：规格化形式 1.11…1 × 2^23，有效数字 24 位<strong>恰好装下 24 个 1</strong>，无需舍入；阶码真值 23 + 偏置 127 = 150 = 10010110B，机器数 = 0｜10010110｜111…1 = <code>4B7FFFFFH</code>。</li></ul>
+<p>n=23 时和 = 2<sup>24</sup> − 1 = 16 777 215，二进制恰好 <strong>24 个 1</strong>。</p>
+<ul><li>f1（int）：24 个 1 &lt; 2<sup>31</sup>，范围内，机器数 <code>00FFFFFFH</code>。</li><li>f2（float）：规格化形式 1.11…1 × 2<sup>23</sup>，有效数字 24 位<strong>恰好装下 24 个 1</strong>，无需舍入；阶码真值 23 + 偏置 127 = 150 = 10010110B，机器数 = 0｜10010110｜111…1 = <code>4B7FFFFFH</code>。</li></ul>
 <p>两者返回值相等（都是 16 777 215）。</p>
 <h3>第（3）问：f1(24) 与 f2(24) 为什么差 1</h3>
-<p>n=24 时和 = 2^25 − 1 = 33 554 431，二进制 <strong>25 个 1</strong>——比 float 的 24 位有效数字多一位，<strong>必须舍入</strong>。</p>
-<p><strong>为什么恰好舍到 33 554 432？</strong> 24 位有效数字意味着 float 在 [2^24, 2^25) 区间内每 2 个整数才取一个（相邻可表示数间隔为 2），33 554 431 恰好落在 33 554 430 与 33 554 432 的<strong>正中间</strong>；IEEE 754 默认"就近舍入、并列取偶"，33 554 432（尾数全 0，偶）胜过 33 554 430（尾数全 1，奇）→ f2(24) = 33 554 432.0。f1 不舍入，f1(24) = 33 554 431，故相差 1。</p>
+<p>n=24 时和 = 2<sup>25</sup> − 1 = 33 554 431，二进制 <strong>25 个 1</strong>——比 float 的 24 位有效数字多一位，<strong>必须舍入</strong>。</p>
+<p><strong>为什么恰好舍到 33 554 432？</strong> 24 位有效数字意味着 float 在 [2<sup>24</sup>, 2<sup>25</sup>) 区间内每 2 个整数才取一个（相邻可表示数间隔为 2），33 554 431 恰好落在 33 554 430 与 33 554 432 的<strong>正中间</strong>；IEEE 754 默认"就近舍入、并列取偶"，33 554 432（尾数全 0，偶）胜过 33 554 430（尾数全 1，奇）→ f2(24) = 33 554 432.0。f1 不舍入，f1(24) = 33 554 431，故相差 1。</p>
 <h3>第（4）问：f1(31) 为什么返回 −1；最大 n</h3>
-<p>n=31 时和 = 2^32 − 1，超出 int 上限 2^31 − 1，<strong>溢出</strong>：留下的 32 位全 1 位串，按补码规则读回真值就是 2^32 − 1 − 2^32 = <strong>−1</strong>（无符号值减模）。要 f1(n) 与 f(n) 相等，需 2^(n+1) − 1 ≤ 2^31 − 1，即 n ≤ 30，<strong>最大 n = 30</strong>。</p>
+<p>n=31 时和 = 2<sup>32</sup> − 1，超出 int 上限 2<sup>31</sup> − 1，<strong>溢出</strong>：留下的 32 位全 1 位串，按补码规则读回真值就是 2<sup>32</sup> − 1 − 2<sup>32</sup> = <strong>−1</strong>（无符号值减模）。要 f1(n) 与 f(n) 相等，需 2<sup>n+1</sup> − 1 ≤ 2<sup>31</sup> − 1，即 n ≤ 30，<strong>最大 n = 30</strong>。</p>
 <h3>第（5）问：f2(127) 是什么；两个边界各在哪</h3>
-<p>n=127 时末轮和 = 2^128 − 1。float 的上限是 2^128 − 2^104（比 2^128 小一点点），2^128 − 1 已越过它，就近舍入只能落到<strong>正无穷 +∞</strong>，机器数 <code>7F80 0000H</code>。所以：</p>
-<ul><li><strong>不溢出的最大 n = 126</strong>：末轮和 2^127 − 1 &lt; 上限，仍是有限值（虽然要舍入，但"不溢出"只要求有限）。</li><li><strong>精确（无舍入）的最大 n = 23</strong>：和的有效位数是 n+1，float 只有 24 位有效数字，n+1 ≤ 24 ⇒ n ≤ 23；从 n=24 起（25 个 1）必舍入，即第(3)问的场景。</li></ul>
+<p>n=127 时末轮和 = 2<sup>128</sup> − 1。float 的上限是 2<sup>128</sup> − 2<sup>104</sup>（比 2<sup>128</sup> 小一点点），2<sup>128</sup> − 1 已越过它，就近舍入只能落到<strong>正无穷 +∞</strong>，机器数 <code>7F80 0000H</code>。所以：</p>
+<ul><li><strong>不溢出的最大 n = 126</strong>：末轮和 2<sup>127</sup> − 1 &lt; 上限，仍是有限值（虽然要舍入，但"不溢出"只要求有限）。</li><li><strong>精确（无舍入）的最大 n = 23</strong>：和的有效位数是 n+1，float 只有 24 位有效数字，n+1 ≤ 24 ⇒ n ≤ 23；从 n=24 起（25 个 1）必舍入，即第(3)问的场景。</li></ul>
 <p>用一张里程碑表对号入座（第二层汇总）：</p>
-<table><thead><tr><th>循环里程碑</th><th>f1 的 sum（int）</th><th>f2 的 sum（float）</th><th>说明</th></tr></thead><tbody><tr><td>i=22 后（n=23 完成）</td><td>16 777 215（00FFFFFFH）</td><td>16 777 215.0（4B7FFFFFH）</td><td>24 个 1，精确</td></tr><tr><td>i=23 后（n=24 完成）</td><td>33 554 431（01FFFFFFH）</td><td>33 554 432.0（4C000000H）</td><td>25 个 1，舍入</td></tr><tr><td>i=30 后（n=31 完成）</td><td>FFFFFFFFH = −1</td><td>2^32（4F800000H）</td><td>int 溢出；float 对 2 的幂仍精确</td></tr><tr><td>i=125 后（n=127 的末轮前）</td><td>早已溢出</td><td>2^127（有限，舍入）</td><td>2^127−1 舍入为 2^127，即 n=126 的结果</td></tr><tr><td>i=126 后（n=127 完成）</td><td>—</td><td>+∞（7F80 0000H）</td><td>2^127 + 2^127 = 2^128 越过 float 上限</td></tr></tbody></table>
+<table><thead><tr><th>循环里程碑</th><th>f1 的 sum（int）</th><th>f2 的 sum（float）</th><th>说明</th></tr></thead><tbody><tr><td>i=22 后（n=23 完成）</td><td>16 777 215（00FFFFFFH）</td><td>16 777 215.0（4B7FFFFFH）</td><td>24 个 1，精确</td></tr><tr><td>i=23 后（n=24 完成）</td><td>33 554 431（01FFFFFFH）</td><td>33 554 432.0（4C000000H）</td><td>25 个 1，舍入</td></tr><tr><td>i=30 后（n=31 完成）</td><td>FFFFFFFFH = −1</td><td>2<sup>32</sup>（4F800000H）</td><td>int 溢出；float 对 2 的幂仍精确</td></tr><tr><td>i=125 后（n=127 的末轮前）</td><td>早已溢出</td><td>2<sup>127</sup>（有限，舍入）</td><td>2<sup>127</sup>−1 舍入为 2<sup>127</sup>，即 n=126 的结果</td></tr><tr><td>i=126 后（n=127 完成）</td><td>—</td><td>+∞（7F80 0000H）</td><td>2<sup>127</sup> + 2<sup>127</sup> = 2<sup>128</sup> 越过 float 上限</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>unsigned 的 0−1 不是 −1</strong>：无符号是模 2^32 运算，0−1 ≡ 2^32 − 1，这是第(1)问死循环的根源。</li><li><strong>把 float 有效位数记成 23</strong>：尾数 23 位 + 隐含首位 1 = 24 位有效数字；24 个 1 能装下、25 个 1 装不下。</li><li><strong>混淆两个边界</strong>：不溢出看范围（n ≤ 126），精确看有效位数（n ≤ 23），两问分开答。</li><li><strong>int 全 1 想不起是 −1</strong>：补码 = 模记数，全 1 = 2^32 − 1 − 2^32 = −1。</li></ul>
+<ul><li><strong>unsigned 的 0−1 不是 −1</strong>：无符号是模 2<sup>32</sup> 运算，0−1 ≡ 2<sup>32</sup> − 1，这是第(1)问死循环的根源。</li><li><strong>把 float 有效位数记成 23</strong>：尾数 23 位 + 隐含首位 1 = 24 位有效数字；24 个 1 能装下、25 个 1 装不下。</li><li><strong>混淆两个边界</strong>：不溢出看范围（n ≤ 126），精确看有效位数（n ≤ 23），两问分开答。</li><li><strong>int 全 1 想不起是 −1</strong>：补码 = 模记数，全 1 = 2<sup>32</sup> − 1 − 2<sup>32</sup> = −1。</li></ul>
 <blockquote>一句话：f1 败在"范围"（n=31 溢出成 −1），f2 先败在"精度"（n ≥ 24 舍入）再败在"范围"（n ≥ 127 变 +∞）。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2653,12 +2653,12 @@ void BtreeToE(BTree *root) { BtreeToExp(root, 1); } // 根深度为 1</code></pr
 <p><code>总字节数 = 0040107FH − 00401020H + 1 = 60H = 96 字节</code></p>
 <p><strong>为什么末尾要 +1</strong>：地址相减得到的是"间隔数"（好比 5 根手指之间只有 4 个间隔），00401020H 自身这个字节也要计入，差 1 就少算一条指令的字节。</p>
 <h3>第（3）问：i=0 时 cmp 之后 CF 的内容</h3>
-<p>执行 f1(0)：n=0、i=0。第 20 条 <code>cmp</code> 做减法 <code>i − (n−1)</code>，由于 n 是 unsigned，<code>n−1</code> 下溢为 FFFFFFFFH（模 2^32 运算，见题 43 第(1)问）。<strong>cmp 不写回结果，只做减法并设标志</strong>。</p>
+<p>执行 f1(0)：n=0、i=0。第 20 条 <code>cmp</code> 做减法 <code>i − (n−1)</code>，由于 n 是 unsigned，<code>n−1</code> 下溢为 FFFFFFFFH（模 2<sup>32</sup> 运算，见题 43 第(1)问）。<strong>cmp 不写回结果，只做减法并设标志</strong>。</p>
 <p>减法在补码加/减运算器中化为"加负数的补码"：0 − FFFFFFFFH = 0 + (FFFFFFFH 按位取反 = 00000000H) + 1 = 00000001H，<strong>最高位进位输出 C = 0</strong>。</p>
-<p><strong>为什么减法的借位标志 CF = 进位输出取反？</strong> 无符号减法 A − B "够减" ⟺ A ≥ B ⟺ A + (2^32 − 1 − B) + 1 ≥ 2^32 ⟺ 这趟加法在最高位<strong>有进位</strong>。于是"无进位 ⟺ 不够减（有借位）"，硬件就把减法的 CF 接成进位输出取反。本题 C = 0 → <strong>CF = 1</strong>——直觉也对得上：0 &lt; FFFFFFFFH，确实不够减、要借位。</p>
+<p><strong>为什么减法的借位标志 CF = 进位输出取反？</strong> 无符号减法 A − B "够减" ⟺ A ≥ B ⟺ A + (2<sup>32</sup> − 1 − B) + 1 ≥ 2<sup>32</sup> ⟺ 这趟加法在最高位<strong>有进位</strong>。于是"无进位 ⟺ 不够减（有借位）"，硬件就把减法的 CF 接成进位输出取反。本题 C = 0 → <strong>CF = 1</strong>——直觉也对得上：0 &lt; FFFFFFFFH，确实不够减、要借位。</p>
 <h3>第（4）问：f2 中能否用 shl 实现 power × 2</h3>
 <p><strong>不能</strong>。先看整数为什么可以：补码每一位的位权是相邻低位的 2 倍，整体左移 1 位相当于所有位权升一级、空位补 0，数值恰好 ×2（不溢出时）——<code>shl</code> 移的是<strong>整个位串</strong>。</p>
-<p>而 float 的 32 位位串不是"数位"，是<strong>符号｜8 位阶码｜23 位尾数</strong>三段拼接；浮点 ×2 的正确动作是<strong>阶码加 1、尾数不动</strong>。用 shl 整体左移会把三段一起错位：符号位被阶码顶掉、阶码与尾数相互串位，得到的位串不再表示 2 倍的值。举个本题之外的实例看清破坏力：<code>1.0f</code> 的机器数是 3F800000H，浮点 ×2 应得 2.0f = 40000000H；而 shl 左移一位得 7F000000H，按 float 解读是 2^127——面目全非。所以 f2 中 power（float）×2 必须交给浮点乘法/浮点部件，不能挪用整数移位指令。</p>
+<p>而 float 的 32 位位串不是"数位"，是<strong>符号｜8 位阶码｜23 位尾数</strong>三段拼接；浮点 ×2 的正确动作是<strong>阶码加 1、尾数不动</strong>。用 shl 整体左移会把三段一起错位：符号位被阶码顶掉、阶码与尾数相互串位，得到的位串不再表示 2 倍的值。举个本题之外的实例看清破坏力：<code>1.0f</code> 的机器数是 3F800000H，浮点 ×2 应得 2.0f = 40000000H；而 shl 左移一位得 7F000000H，按 float 解读是 2<sup>127</sup>——面目全非。所以 f2 中 power（float）×2 必须交给浮点乘法/浮点部件，不能挪用整数移位指令。</p>
 <h3>易错点</h3>
 <ul><li><strong>算代码长度忘了 +1</strong>：0040107FH − 00401020H = 5FH，加 1 才是 60H = 96 字节。</li><li><strong>CF 直接抄进位输出</strong>：减法借位与加法进位方向相反，本题 C=0 → CF=1；直接写 CF=0 是把加法规则套到了减法上。</li><li><strong>忘记先做 n−1 的下溢</strong>：cmp 比的是 i 与 FFFFFFFFH，不是 i 与 −1——unsigned 的模运算要先算进条件里。</li><li><strong>把"位串左移"当"数值乘 2"用于 float</strong>：float 的机器数是分段编码，×2 靠阶码 +1，不是移位。</li></ul>
 <blockquote>一句话：长短不一判 CISC，地址差 +1 算长度（96B），减法 CF = 进位输出取反（本题 CF=1），float ×2 动阶码不动位串、shl 用不得。</blockquote></div></div>
@@ -2725,7 +2725,7 @@ void BtreeToE(BTree *root) { BtreeToExp(root, 1); } // 根深度为 1</code></pr
 <p>答题框架：先把二级分页机制立起来（页大小从偏移位数来、每级索引 10 位从表项大小来），再做"占几页"判断和 10｜10｜12 位拆分，最后按"系统调用陷入 → I/O 中断唤醒 → 调度"写状态链。</p>
 <h3>第 0 步：二级分页的机制——三段地址为什么是 10｜10｜12</h3>
 <p>虚拟地址 32 位被切成<strong>页目录号（10 位）｜页表索引（10 位）｜页内偏移（12 位）</strong>，这不是随意规定，而是两个算术约束推出的：</p>
-<ul><li><strong>偏移 12 位 ⇒ 页大小 = 2^12 B = 4KB</strong>（页内偏移必须能遍历一页内所有字节）；</li><li><strong>每级索引 10 位 ⇒ 每张表 2^10 = 1024 个表项</strong>：页目录和页表本身也要放进内存，各占一页（4KB），表项 4B，一页恰好装 4KB/4B = 1024 项——所以索引恰好 10 位，一个不多一个不少。</li></ul>
+<ul><li><strong>偏移 12 位 ⇒ 页大小 = 2<sup>12</sup> B = 4KB</strong>（页内偏移必须能遍历一页内所有字节）；</li><li><strong>每级索引 10 位 ⇒ 每张表 2<sup>10</sup> = 1024 个表项</strong>：页目录和页表本身也要放进内存，各占一页（4KB），表项 4B，一页恰好装 4KB/4B = 1024 项——所以索引恰好 10 位，一个不多一个不少。</li></ul>
 <p>转换流程：CR3 给出页目录基址 → 高 10 位当索引查页目录表项，得到页表基址 → 中 10 位查页表表项，得到页框号 → 页框号拼上低 12 位偏移，得到物理地址。</p>
 <h3>第（1）问：f1 的机器指令占几页</h3>
 <p>由题 44：代码从 00401020H（<code>push ebp</code>）到 0040107FH（<code>ret</code>），共 96 字节、连续存放。页大小 4KB，页边界是 4096 的倍数（地址以 …000 结尾）：00401020H 与 0040107FH 掩去低 12 位后同为 <strong>00401000H</strong>，即整段落在 00401000H～00401FFFH 这一页内 → <strong>仅占 1 页</strong>。</p>
@@ -2915,8 +2915,8 @@ signal(mutex_y2);</code></pre>
 <blockquote>答案速览：（1）3 个：<code>S_{0,0}</code>、<code>S_{1,0}</code>、<code>S_{2,0}</code>；（2）5 个，第一个 <code>S_{5,2}</code>、最后一个 <code>S_{1,2}</code>；（3）3 个，第一个 <code>S_{2,3}</code>；（4）50%。下面逐问推演。</blockquote>
 <h3>第 0 步：先立 GBN 的三条底层机制</h3>
 <p>这套题的所有小问都从这三条机制推出来：</p>
-<ul><li><strong>累计确认</strong>：确认号 y = "希望接收对方的下一帧序号"，等于宣告 <strong>y−1 及之前的帧已全部正确收到</strong>——看一个 y 就能一次性确认一串帧。</li><li><strong>接收窗口 = 1</strong>：GBN 接收方只按序收帧，序号不对的帧<strong>直接丢弃、不缓存</strong>——这是第(3)问"为什么整段重传"的根源。</li><li><strong>发送窗口 ≤ 2^n − 1</strong>：n=3 比特序号共 8 个（0~7），窗口却只能取 7。为什么不能取满 8？若 8 帧全部发出且都未确认，序号 0~7 同时"悬而未决"，此时收到一个确认，新旧两轮的同一序号无法区分，重传就会串号；留出一个空档就能永远分清新旧。</li></ul>
-<p>另有两笔常数账：帧长 1000B、速率 100Mbps → 发一帧用时 T_D = 1000×8 ÷ 100×10^6 = <strong>0.08ms</strong>；双方都用捎带确认，确认帧也是 1000B 的数据帧，发送用时同为 0.08ms。</p>
+<ul><li><strong>累计确认</strong>：确认号 y = "希望接收对方的下一帧序号"，等于宣告 <strong>y−1 及之前的帧已全部正确收到</strong>——看一个 y 就能一次性确认一串帧。</li><li><strong>接收窗口 = 1</strong>：GBN 接收方只按序收帧，序号不对的帧<strong>直接丢弃、不缓存</strong>——这是第(3)问"为什么整段重传"的根源。</li><li><strong>发送窗口 ≤ 2<sup>n</sup> − 1</strong>：n=3 比特序号共 8 个（0~7），窗口却只能取 7。为什么不能取满 8？若 8 帧全部发出且都未确认，序号 0~7 同时"悬而未决"，此时收到一个确认，新旧两轮的同一序号无法区分，重传就会串号；留出一个空档就能永远分清新旧。</li></ul>
+<p>另有两笔常数账：帧长 1000B、速率 100Mbps → 发一帧用时 T_D = 1000×8 ÷ 100×10<sup>6</sup> = <strong>0.08ms</strong>；双方都用捎带确认，确认帧也是 1000B 的数据帧，发送用时同为 0.08ms。</p>
 <h3>第（1）问：甲能断定乙正确接收了哪几帧</h3>
 <p>图(a) 中甲依次收到乙方三帧，逐帧读它的确认号：</p>
 <ul><li><code>R_{0,1}</code>：y=1 → 乙已收齐甲的 0 号帧（确认 1 个：<code>S_{0,0}</code>）；</li><li><code>R_{1,3}</code>：y=3 → 累计确认一步宣告甲的 0、1、2 号都已收到（新增 2 个）；</li><li><code>R_{3,3}</code>：乙的 3 号帧，y 仍是 3——<strong>没有确认任何新帧</strong>；而且甲此刻在等乙的 2 号帧，3 号帧是失序帧，按"接收窗口 = 1"被甲直接丢弃，不带来任何信息。</li></ul>
@@ -2934,7 +2934,7 @@ signal(mutex_y2);</code></pre>
 <p>周期内最多连发 7 帧（窗口 7），发送数据的时间 = 7 × 0.08 = <strong>0.56ms</strong>。</p>
 <p>信道利用率 = 0.56 ÷ 1.12 = <strong>50%</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 <code>R_{3,3}</code> 当新确认</strong>：y 仍是 3，且对甲是乱序帧被丢弃——第(1)问的帧数、第(2)问的 y 都不受它影响。</li><li><strong>窗口当 8 用</strong>：GBN 发送窗口最大 2^3 − 1 = 7；取 8 会新旧串号，第(2)问就会多算一个序号。</li><li><strong>第(2)问确认号填 4</strong>：<code>R_{3,3}</code> 被丢弃，甲仍在等乙的 2 号帧，y=2 不是 4。</li><li><strong>第(3)问只重发 1 帧</strong>：忘了接收窗口 = 1、失序帧全丢——3、4 号必须整段重传。</li><li><strong>利用率漏加 T_A</strong>：分母是 0.08 + 0.96 + 0.08 = 1.12ms，漏项会得约 58%。</li></ul>
+<ul><li><strong>把 <code>R_{3,3}</code> 当新确认</strong>：y 仍是 3，且对甲是乱序帧被丢弃——第(1)问的帧数、第(2)问的 y 都不受它影响。</li><li><strong>窗口当 8 用</strong>：GBN 发送窗口最大 2<sup>3</sup> − 1 = 7；取 8 会新旧串号，第(2)问就会多算一个序号。</li><li><strong>第(2)问确认号填 4</strong>：<code>R_{3,3}</code> 被丢弃，甲仍在等乙的 2 号帧，y=2 不是 4。</li><li><strong>第(3)问只重发 1 帧</strong>：忘了接收窗口 = 1、失序帧全丢——3、4 号必须整段重传。</li><li><strong>利用率漏加 T_A</strong>：分母是 0.08 + 0.96 + 0.08 = 1.12ms，漏项会得约 58%。</li></ul>
 <blockquote>一句话：累计确认读 y 即知收了哪几帧；窗口 7 决定还能发几帧；超时重传全部已发未确认（乙接收窗口 1 丢了 3、4 号）；利用率 = 7×0.08 ÷ 1.12 = 50%。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2949,4 +2949,4 @@ signal(mutex_y2);</code></pre>
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

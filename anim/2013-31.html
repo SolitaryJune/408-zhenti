@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2013-31 按计算/I/O 比例设置优先级</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -112,8 +114,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：按计算/I/O 比例设置进程优先级</h2>
 <p><strong>答案：B（P₃ &gt; P₂ &gt; P₁）。</strong></p>
 <h3>第一步：目标决定排序标准</h3>
@@ -124,7 +126,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>误选 A（P₁ &gt; P₂ &gt; P₃）</strong>：直觉上"计算量大的先跑"，实际 P₁ 长期占用 CPU，P₃ 的 I/O 设备大量空转，整机利用率反而最低——与题目目标背道而驰。</li><li><strong>误选 D（P₁ &gt; P₂ = P₃）</strong>：把"最耗 CPU"当成"最该优先"。优先级要给"能让设备并行起来"的进程，不是给"最需要 CPU"的进程；且 P₂ 与 P₃ 的 I/O 占比相差悬殊（50% 对 85%），划等号没有依据。</li><li><strong>误选 C（P₂ &gt; P₁ = P₃）</strong>：以为均衡型进程"两头都占"收益最大。但 P₂ 的 I/O 占比不及 P₃，让 P₂ 插队只会推迟 P₃ 发起 I/O，降低设备并行度；P₁ 与 P₃ 一个 CPU 型、一个 I/O 型，特征截然相反，同等对待同样没有依据。</li></ul>
 <blockquote>一句话结论：I/O 繁忙者优先（P₃ &gt; P₂ &gt; P₁），CPU 与设备才能最大程度并行，选 B。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

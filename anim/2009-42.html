@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2009-42 动画 · 双指针找倒数第 k 个结点</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：p 先行 k 步 → p、q 同步 → p 到表尾时 q 即答案
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改下面的 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -126,8 +128,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：单链表倒数第 k 个结点 —— 双指针一次遍历</h2>
 <h3>第 0 步：机制先行——「倒数第 k」为什么难，双指针为什么行</h3>
 <p>单链表只能沿 link 单向走、<strong>不能随机访问</strong>，「倒数第 k 个」没有现成地址可算。直觉做法是两趟：先数出表长 n，再从头走 n−k+1 步。但链表一遍走完之前<strong>无法先知 n</strong>，而题目要求「尽可能高效」——所以要把「倒数」换成另一种度量方式。</p>
@@ -144,7 +146,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>两趟遍历</strong>：先求表长再定位，结果正确但违背「尽可能高效」，按次优解扣分。</li><li><strong>丢失败分支</strong>：count &lt; k 时必须返回 0，漏判会继续解引用空指针。</li><li><strong>起点弄错</strong>：带头结点的链表第一个数据结点是 list 的后继，从 list 本身出发整条间隔错一位。</li><li><strong>间隔语义记反</strong>：p 先行 k 步、p 触底时 q 距链尾 k 个结点，对应「倒数第 k」；不要在先行步数上多加或少加 1。</li></ul>
 <blockquote>一句话结论：p 先走 k 步建间隔，p、q 同步走到 p 越过链尾，q 即倒数第 k 个结点；一次遍历 O(n)、空间 O(1)，count 判 k 是否合法。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

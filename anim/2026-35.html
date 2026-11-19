@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2026-35 CSMA/CA 发帧到收妥 · 时序动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -165,20 +167,20 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：CSMA/CA 从发数据帧到对方收妥的时间</h2>
 <p><strong>答案：B（68 μs）</strong>。方法：按 802.11 的"数据帧 → SIFS → ACK"时序画时间轴，再把每段的时长按题目给的"忽略"条件取舍。</p>
 <h3>第一步：算数据帧的发送时延</h3>
 <p><code>1500 B = 12000 bit</code>，速率 300 Mbps：</p>
-<p><code>t_DATA = 12000 ÷ (300 × 10^6) = 40 μs</code></p>
+<p><code>t_DATA = 12000 ÷ (300 × 10<sup>6</sup>) = 40 μs</code></p>
 <h3>第二步：画出完整时序并取舍</h3>
 <table><thead><tr><th>阶段</th><th>时长</th><th>计入与否</th></tr></thead><tbody><tr><td>DIFS（发送前侦听）</td><td>128 μs</td><td><strong>不计</strong>——计时从"开始发送数据帧"时刻起，DIFS 在此之前</td></tr><tr><td>数据帧发送</td><td>40 μs</td><td>计入</td></tr><tr><td>传播时延</td><td>—</td><td>题目忽略</td></tr><tr><td>SIFS（接收方收完后等一段再回 ACK）</td><td>28 μs</td><td>计入</td></tr><tr><td>ACK 帧发送</td><td>—</td><td><strong>不计</strong>——题目明确忽略除数据帧外其他帧的传输时延</td></tr></tbody></table>
 <p>所以从开始发送数据帧到确认接收方收到该帧：<code>40 + 28 = 68 μs</code>，选 <strong>B</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>把 DIFS 加进去</strong>：得 196 μs（干扰项 D）——注意计时起点是"开始发送数据帧"，DIFS 是发送<strong>之前</strong>的信道侦听等待，不在统计范围内。</li><li><strong>把 ACK 传输时延加进去</strong>：题目说"忽略除数据帧外的其他帧的传输时延"，ACK 只贡献 0 μs。</li><li><strong>漏掉 SIFS</strong>：直接答 40 μs（干扰项 A）——802.11 规定接收方必须等 SIFS 后才能发 ACK，这段等待不能省。</li></ul>
 <blockquote>一句话结论：数据帧 40 μs + SIFS 28 μs = <strong>68 μs</strong>，DIFS 与 ACK 都不计时，选 <strong>B</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

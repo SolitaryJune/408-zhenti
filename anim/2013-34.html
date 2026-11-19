@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2013-34 动画 · 曼彻斯特编码解码</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   /* 波形块居中：以 SVG 宽 766px 为内容宽度基准，规则文字/解出比特行与波形对中，
      整组再由引擎居中并放大（修宽屏下贴左、右侧大片留白） */
@@ -38,6 +38,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -59,7 +61,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -166,8 +168,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：曼彻斯特编码解码（10BaseT 波形）</h2>
 <p>答案：<strong>A（0011 0110）</strong>。10BaseT 是以太网，物理层采用曼彻斯特编码：每个码元正中间必有跳变，以太网规定<strong>中间低→高（上升沿）表示 0，中间高→低（下降沿）表示 1</strong>。</p>
 <h3>第一步：先定规则</h3>
@@ -179,7 +181,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>跳变方向约定记反</strong>：按「上升沿 = 1」去读会得出 <code>1100 1001</code>，说明出题人按以太网口径命题，必须记牢「中升 0、中降 1」。</li><li><strong>在码元边界处读跳变</strong>：比如 0→0 的边界上有一次下降（前码元后半高接后码元前半低），它不是数据信息；把边界跳变也当数据就会读出 B、C 这类错串。</li><li><strong>相位对半错位</strong>：从码元中间起读、把两个半码元当成一个码元，解码全部错位。</li></ul>
 <blockquote>口诀：以太网曼彻斯特——「中间升 0、中间降 1」，只认码元正中间那一跳。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

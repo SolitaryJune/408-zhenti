@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2014-41 WPL 算法动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 算法/过程类：先序递归求 WPL（示例树演示参考答案方法一） -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -191,8 +193,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：求二叉树带权路径长度 WPL 的算法设计</h2>
 <h3>先立机制：WPL 到底在算什么</h3>
 <p>WPL = 所有<strong>叶结点</strong>的（结点深度 × 权值）之和。它把"成本"拆成两半：<strong>权值</strong>存在叶结点里，<strong>深度</strong>却不存在任何结点里——深度等于从根走到该结点经过的边数，只随遍历过程"顺路"产生。所以本题的核心是：<strong>遍历走到哪儿，深度就得跟到哪儿</strong>。两条路线都能做到：</p>
@@ -215,7 +217,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把内部结点的权值也累加</strong>：WPL 只算<strong>叶结点</strong>；本题内部结点没有有效权值。</li><li><strong>深度起点记错</strong>：本题按根深度为 0 计算；若按 1 起算须全文口径一致，否则每个叶子都多算一层。</li><li><strong>层次遍历漏掉 lastNode</strong>：没有哨兵就感知不到换层，<code>deep</code> 停在第 1 层，所有累加全错。</li><li><strong>忘了传深度参数</strong>：不开参数就只能靠全局变量或额外结构记深度，逻辑易乱。</li><li><strong>空树不判 NULL</strong>：<code>root == NULL</code> 返回 0，防止空指针崩溃。</li></ul>
 <blockquote>复杂度：两种方法都使每个结点恰好被访问一次，时间 O(n)；递归法空间 O(h)（栈深等于树高），层次法空间 O(n)（队列最长时是宽度最大的一层）。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

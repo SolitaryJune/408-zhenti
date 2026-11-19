@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2023-43 数组访问的缺页、局部性与 Cache 命中率</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .calcbox{ display:inline-block; background:#f8edcb; border:1.5px solid #1b3a4b26; border-radius:10px; padding:6px 12px; font-size:14px; line-height:1.8; color:#213e48; }
 .aw-stepcard table{ border-collapse:collapse; margin:6px 0; font-size:13px; }
@@ -39,6 +39,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -60,7 +62,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -140,8 +142,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：数组访问的缺页、局部性与 Cache 命中率</h2>
 <p><strong>答题框架</strong>：数组 a 共 <code>24×64×4 = 6144B</code>。四问分别落在三个机制上：<strong>页机制</strong>（请求调页按页整体调入）、<strong>地址划分模型</strong>（虚地址从低到高三段：块内偏移 | Cache 组号 | 其余位）、<strong>命中率统计</strong>（每主存块只缺一次，其余访问命中）。</p>
 <h3>第 0 步：先立地址模型——为什么各位数"自己长出来"</h3>
@@ -164,7 +166,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>页故障地址答成页号或物理地址</strong>：页故障地址是引发缺页的<strong>虚拟地址</strong>本身。</li><li><strong>组号位数算错或带上路数</strong>：组号位数由组数决定（64 组 → 6 位），组号 = 块号 mod 组数 = 块号低 6 位，路数不参与划分。</li><li><strong>以为列优先命中率大跳水</strong>：列优先跨块是事实，但"同块元素会在 8 轮内被重访 + Cache 装得下活跃块"两个条件保证了每块仍只缺一次。</li><li><strong>缺页次数答成 1536 或与 Cache 混算</strong>：缺页以页为单位、发生在每页首次触碰时，之后与 Cache 无关。</li></ul>
 <blockquote>一句话结论：2 个页面、2 次缺页（00422000H、00423000H）；无时间局部性；块内 A4～A0、组号 A10～A5（组号=块号低 6 位）；a[1][0] = 00422100H、组号 8；192 块；两种循环命中率都是 87.5%（每块只缺一次）。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

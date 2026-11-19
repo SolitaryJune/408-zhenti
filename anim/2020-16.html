@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2020-16 指令位段划分与直接寻址范围</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -36,6 +36,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -57,7 +59,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var AMBER_CSS = 'border-color:#e07a2f;background:#f8edcb;color:#92400e;';
@@ -177,22 +179,22 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：16 位定长指令的位段划分与直接寻址范围</h2>
 <p>答案：A（直接寻址范围 0～255）。</p>
 <h3>第一步：先立机制——指令字如何切位段</h3>
 <p>16 位定长指令字像一张固定格式的表格，从高位到低位切成<strong>操作码 | 寻址方式 | 地址码</strong>三段。题设"操作码位数和寻址方式位数固定"，意味着这三段的切法对<strong>所有</strong>指令一致，单地址指令的地址码位数 = 16 − 操作码位数 − 寻址方式位数，不能再多也不能再少。</p>
 <h3>第二步：把位数账算清</h3>
-<ul><li><strong>操作码</strong>：要给 48 条指令各一个唯一编号。5 位只有 2^5 = 32 个编码，装不下；6 位有 64 个，够用 → <strong>6 位</strong>。</li><li><strong>寻址方式</strong>：4 种 → 2^2 = 4 个编码 → <strong>2 位</strong>。</li><li><strong>地址码</strong>：16 − 6 − 2 = <strong>8 位</strong>。</li></ul>
+<ul><li><strong>操作码</strong>：要给 48 条指令各一个唯一编号。5 位只有 2<sup>5</sup> = 32 个编码，装不下；6 位有 64 个，够用 → <strong>6 位</strong>。</li><li><strong>寻址方式</strong>：4 种 → 2<sup>2</sup> = 4 个编码 → <strong>2 位</strong>。</li><li><strong>地址码</strong>：16 − 6 − 2 = <strong>8 位</strong>。</li></ul>
 <table><thead><tr><th>字段</th><th>需求</th><th>位数</th></tr></thead><tbody><tr><td>操作码</td><td>32 &lt; 48 ≤ 64</td><td>6</td></tr><tr><td>寻址方式</td><td>4 种</td><td>2</td></tr><tr><td>地址码</td><td>16 − 6 − 2</td><td>8</td></tr></tbody></table>
 <h3>第三步：直接寻址为什么是 0～255</h3>
 <p>直接寻址时，地址码字段<strong>本身就是主存单元的地址</strong>——地址是"门牌号"，没有正负、不参与符号运算，按<strong>无符号数</strong>解释：0000 0000B ～ 1111 1111B，即 0～255，选 <strong>A</strong>。</p>
 <p><strong>为什么不是补码范围 −128～127</strong>：那是"带符号数"的口径，适用于立即数或相对寻址的偏移量（选项 C 正是拿它设的陷阱）；地址码只表达"去哪个单元"，不存在负地址。</p>
 <h3>易错点</h3>
-<ul><li><strong>操作码位数算少</strong> → 以为 5 位够：2^5 = 32 &lt; 48，必须 6 位。</li><li><strong>把补码范围当寻址范围</strong> → 误选 C：−128～127 是立即数/相对偏移的口径，不是地址。</li><li><strong>位数算错</strong> → 0～1023 需要 10 位地址码（B）、−512～511 是 10 位补码（D），8 位都给不出来。</li></ul>
+<ul><li><strong>操作码位数算少</strong> → 以为 5 位够：2<sup>5</sup> = 32 &lt; 48，必须 6 位。</li><li><strong>把补码范围当寻址范围</strong> → 误选 C：−128～127 是立即数/相对偏移的口径，不是地址。</li><li><strong>位数算错</strong> → 0～1023 需要 10 位地址码（B）、−512～511 是 10 位补码（D），8 位都给不出来。</li></ul>
 <blockquote>位数账：6（操作码）+ 2（寻址方式）+ 8（地址码）= 16，直接寻址 = 地址码按无符号解释，0～255。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

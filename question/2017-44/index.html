@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2017-44 · 计算机组成原理 · 单题模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="question" data-year="2017">
 <header class="site-header">
@@ -123,12 +123,12 @@
 <p><code>总字节数 = 0040107FH − 00401020H + 1 = 60H = 96 字节</code></p>
 <p><strong>为什么末尾要 +1</strong>：地址相减得到的是"间隔数"（好比 5 根手指之间只有 4 个间隔），00401020H 自身这个字节也要计入，差 1 就少算一条指令的字节。</p>
 <h3>第（3）问：i=0 时 cmp 之后 CF 的内容</h3>
-<p>执行 f1(0)：n=0、i=0。第 20 条 <code>cmp</code> 做减法 <code>i − (n−1)</code>，由于 n 是 unsigned，<code>n−1</code> 下溢为 FFFFFFFFH（模 2^32 运算，见题 43 第(1)问）。<strong>cmp 不写回结果，只做减法并设标志</strong>。</p>
+<p>执行 f1(0)：n=0、i=0。第 20 条 <code>cmp</code> 做减法 <code>i − (n−1)</code>，由于 n 是 unsigned，<code>n−1</code> 下溢为 FFFFFFFFH（模 2<sup>32</sup> 运算，见题 43 第(1)问）。<strong>cmp 不写回结果，只做减法并设标志</strong>。</p>
 <p>减法在补码加/减运算器中化为"加负数的补码"：0 − FFFFFFFFH = 0 + (FFFFFFFH 按位取反 = 00000000H) + 1 = 00000001H，<strong>最高位进位输出 C = 0</strong>。</p>
-<p><strong>为什么减法的借位标志 CF = 进位输出取反？</strong> 无符号减法 A − B "够减" ⟺ A ≥ B ⟺ A + (2^32 − 1 − B) + 1 ≥ 2^32 ⟺ 这趟加法在最高位<strong>有进位</strong>。于是"无进位 ⟺ 不够减（有借位）"，硬件就把减法的 CF 接成进位输出取反。本题 C = 0 → <strong>CF = 1</strong>——直觉也对得上：0 &lt; FFFFFFFFH，确实不够减、要借位。</p>
+<p><strong>为什么减法的借位标志 CF = 进位输出取反？</strong> 无符号减法 A − B "够减" ⟺ A ≥ B ⟺ A + (2<sup>32</sup> − 1 − B) + 1 ≥ 2<sup>32</sup> ⟺ 这趟加法在最高位<strong>有进位</strong>。于是"无进位 ⟺ 不够减（有借位）"，硬件就把减法的 CF 接成进位输出取反。本题 C = 0 → <strong>CF = 1</strong>——直觉也对得上：0 &lt; FFFFFFFFH，确实不够减、要借位。</p>
 <h3>第（4）问：f2 中能否用 shl 实现 power × 2</h3>
 <p><strong>不能</strong>。先看整数为什么可以：补码每一位的位权是相邻低位的 2 倍，整体左移 1 位相当于所有位权升一级、空位补 0，数值恰好 ×2（不溢出时）——<code>shl</code> 移的是<strong>整个位串</strong>。</p>
-<p>而 float 的 32 位位串不是"数位"，是<strong>符号｜8 位阶码｜23 位尾数</strong>三段拼接；浮点 ×2 的正确动作是<strong>阶码加 1、尾数不动</strong>。用 shl 整体左移会把三段一起错位：符号位被阶码顶掉、阶码与尾数相互串位，得到的位串不再表示 2 倍的值。举个本题之外的实例看清破坏力：<code>1.0f</code> 的机器数是 3F800000H，浮点 ×2 应得 2.0f = 40000000H；而 shl 左移一位得 7F000000H，按 float 解读是 2^127——面目全非。所以 f2 中 power（float）×2 必须交给浮点乘法/浮点部件，不能挪用整数移位指令。</p>
+<p>而 float 的 32 位位串不是"数位"，是<strong>符号｜8 位阶码｜23 位尾数</strong>三段拼接；浮点 ×2 的正确动作是<strong>阶码加 1、尾数不动</strong>。用 shl 整体左移会把三段一起错位：符号位被阶码顶掉、阶码与尾数相互串位，得到的位串不再表示 2 倍的值。举个本题之外的实例看清破坏力：<code>1.0f</code> 的机器数是 3F800000H，浮点 ×2 应得 2.0f = 40000000H；而 shl 左移一位得 7F000000H，按 float 解读是 2<sup>127</sup>——面目全非。所以 f2 中 power（float）×2 必须交给浮点乘法/浮点部件，不能挪用整数移位指令。</p>
 <h3>易错点</h3>
 <ul><li><strong>算代码长度忘了 +1</strong>：0040107FH − 00401020H = 5FH，加 1 才是 60H = 96 字节。</li><li><strong>CF 直接抄进位输出</strong>：减法借位与加法进位方向相反，本题 C=0 → CF=1；直接写 CF=0 是把加法规则套到了减法上。</li><li><strong>忘记先做 n−1 的下溢</strong>：cmp 比的是 i 与 FFFFFFFFH，不是 i 与 −1——unsigned 的模运算要先算进条件里。</li><li><strong>把"位串左移"当"数值乘 2"用于 float</strong>：float 的机器数是分段编码，×2 靠阶码 +1，不是移位。</li></ul>
 <blockquote>一句话：长短不一判 CISC，地址差 +1 算长度（96B），减法 CF = 进位输出取反（本题 CF=1），float ×2 动阶码不动位串、shl 用不得。</blockquote></div></div>
@@ -145,4 +145,4 @@
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

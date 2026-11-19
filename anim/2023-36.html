@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2023-36 二进制指数退避的最长等待</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 算法/过程类：退避范围逐次翻倍推演 -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var CELLS = [];
@@ -118,19 +120,19 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：二进制指数退避的最长等待时间</h2>
 <p>答案：C（768 μs）。</p>
 <h3>第一步：规则是什么</h3>
-<p>以太网 CSMA/CD 用<strong>截断二进制指数退避</strong>：发生第 i 次冲突后，网卡从 {0, 1, …, 2^i − 1} 中<strong>随机</strong>选整数 k，等待 k 个争用期（时间片）再重发；i 超过 10 后范围截断在 2^10 − 1。10BaseT 的争用期 = 51.2 μs。</p>
+<p>以太网 CSMA/CD 用<strong>截断二进制指数退避</strong>：发生第 i 次冲突后，网卡从 {0, 1, …, 2<sup>i</sup> − 1} 中<strong>随机</strong>选整数 k，等待 k 个争用期（时间片）再重发；i 超过 10 后范围截断在 2<sup>10</sup> − 1。10BaseT 的争用期 = 51.2 μs。</p>
 <h3>第二步：连续 4 次冲突，范围逐次翻倍</h3>
-<table><thead><tr><th>冲突次数 i</th><th>k 的取值范围（2^i 个值）</th><th>最长等待</th></tr></thead><tbody><tr><td>1</td><td>0 ~ 1</td><td>1 × 51.2 = 51.2 μs</td></tr><tr><td>2</td><td>0 ~ 3</td><td>3 × 51.2 = 153.6 μs</td></tr><tr><td>3</td><td>0 ~ 7</td><td>7 × 51.2 = 358.4 μs</td></tr><tr><td><strong>4</strong></td><td><strong>0 ~ 15</strong></td><td><strong>15 × 51.2 = 768 μs</strong></td></tr></tbody></table>
-<p>连续 4 次冲突 → 第 4 次后退避，k 最大取 2^4 − 1 = 15，最长等待 = 15 × 51.2 μs = <strong>768 μs</strong>，选 <strong>C</strong>。</p>
+<table><thead><tr><th>冲突次数 i</th><th>k 的取值范围（2<sup>i</sup> 个值）</th><th>最长等待</th></tr></thead><tbody><tr><td>1</td><td>0 ~ 1</td><td>1 × 51.2 = 51.2 μs</td></tr><tr><td>2</td><td>0 ~ 3</td><td>3 × 51.2 = 153.6 μs</td></tr><tr><td>3</td><td>0 ~ 7</td><td>7 × 51.2 = 358.4 μs</td></tr><tr><td><strong>4</strong></td><td><strong>0 ~ 15</strong></td><td><strong>15 × 51.2 = 768 μs</strong></td></tr></tbody></table>
+<p>连续 4 次冲突 → 第 4 次后退避，k 最大取 2<sup>4</sup> − 1 = 15，最长等待 = 15 × 51.2 μs = <strong>768 μs</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把冲突次数当 k</strong>：以为等 4 个争用期得 204.8 μs（B）——k 是随机数，不是冲突次数。</li><li><strong>多算一档</strong>：把范围当成 {0, …, 16} 或 1~16，得 16 × 51.2 = 819.2 μs（D）——2^i 个值从 <strong>0</strong> 数起，最大是 2^i − 1 = 15。</li><li><strong>只记第一档</strong>：得 51.2 μs（A），那是第 1 次冲突后的最长等待。</li></ul>
-<blockquote>第 i 次冲突后 k ∈ {0, …, 2^i − 1}；连续 4 次 → k 最大 15 → 15 × 51.2 μs = 768 μs，选 C。</blockquote></div>
-</details>
+<ul><li><strong>把冲突次数当 k</strong>：以为等 4 个争用期得 204.8 μs（B）——k 是随机数，不是冲突次数。</li><li><strong>多算一档</strong>：把范围当成 {0, …, 16} 或 1~16，得 16 × 51.2 = 819.2 μs（D）——2<sup>i</sup> 个值从 <strong>0</strong> 数起，最大是 2<sup>i</sup> − 1 = 15。</li><li><strong>只记第一档</strong>：得 51.2 μs（A），那是第 1 次冲突后的最长等待。</li></ul>
+<blockquote>第 i 次冲突后 k ∈ {0, …, 2<sup>i</sup> − 1}；连续 4 次 → k 最大 15 → 15 × 51.2 μs = 768 μs，选 C。</blockquote></div>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

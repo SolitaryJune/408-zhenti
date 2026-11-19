@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>2015-47 综合大题：DHCP / ARP / 默认网关 三问推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
-<!-- 概念/推理链类动画（大题按问推演）：外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域 -->
+<!-- 概念/推理链类动画（大题按问推演）：外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域 -->
 <!-- AW_QNAV_START -->
 <style>
 .aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -118,8 +120,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：DHCP 地址池、ARP 广播帧与网关配置错误</h2>
 <h3>第 0 步：先读图立机制——三个角色、三条规则</h3>
 <p>拓扑（题图）：以太网交换机一侧接 WWW 服务器（111.123.15.3/24）、DHCP 服务器（111.123.15.2/24，MAC 00-b1-b1-b1-b1-b1）、主机 1（111.123.15.4/24）与主机 2～N（DHCP 动态获取），另一侧接路由器内网接口（111.123.15.1/24，MAC 00-a1-a1-a1-a1-a1），路由器外侧是 Internet。本题三问各对应一条通信规则：</p>
@@ -135,7 +137,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把 .255 或静态占用的 .1～.4 算进 DHCP 地址池</strong>：全 1 主机号是广播地址、静态地址已占用，均不可分配。</li><li><strong>第 2）问把「载 IP 分组的帧」也写成全 F</strong>：广播只用于 ARP 请求解析网关 MAC；传数据的帧目的 MAC 是下一跳（网关接口）的 MAC。</li><li><strong>第 3）问漏答 WWW 可达</strong>：同子网直接交付不依赖默认网关，网关错配只影响跨网段访问。</li><li><strong>混淆帧 MAC 与 IP 头</strong>：跨网段传输中 IP 头的目的 IP 始终是终点，帧的目的 MAC 逐跳更换。</li></ul>
 <blockquote>记忆锚点：DHCP Discover = 0.0.0.0 → 255.255.255.255；ARP 请求 = 全 F 广播；跨网段的帧永远封装「下一跳」的 MAC；同网段直达不过网关。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

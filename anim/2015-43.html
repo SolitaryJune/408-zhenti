@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2015-43 动画 · 单总线 CPU 数据通路六问</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -119,8 +121,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：单总线 CPU 数据通路（寄存器可见性、控制信号、连线与 MUX）</h2>
 <p><strong>答题框架</strong>：单总线 CPU 的一切设计都由"总线一次只能传一个数据"这一个约束推出来——寄存器可见性按"指令系统是否提供访问"划分，控制信号按"部件要做什么动作"配位数，缺的连线按"数据从哪来、到哪去"补齐，MUX 的常数 2 由"下条指令地址 = (PC)+2"解释。</p>
 <h3>第 1 问：程序员可见寄存器与暂存器 T 的作用</h3>
@@ -141,7 +143,7 @@ AW.init({
 <h3>第 6 问：MUX 的一个输入端为什么是 2</h3>
 <p>指令 <strong>16 位定长</strong>、主存<strong>按字节编址</strong> → 一条指令占 2 字节，顺序执行时下条指令地址 = <strong>(PC) + 2</strong>。<strong>为什么不是 +1</strong>：按字节编址下 +1 只前进半个指令字，会落在指令中间，取指必然错位。实现上也不必为 PC 配专用加法器：MUX 选常数 2 送 ALU 的 B 端（A 端取到暂存的 (PC)），ALUop = add 即得 (PC)+2，经 SR 直送上总线写回 PC——与普通运算共用同一套 ALU，省部件。</p>
 <blockquote>主线逻辑：单总线一次一个数 → T 分流 A 端、MUX 喂 B 端；MUX 两路输入 = 常数 2（算 PC+2）+ 总线数据（普通运算）；每个部件输出到总线都要过三态门。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

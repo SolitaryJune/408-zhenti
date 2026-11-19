@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-43 Cache 地址划分与缺失率动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 算法/过程类：地址划分 → 元素定位 → 缺失率 → 跨页/缺页，四问逐问演示 -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 AW.init({
@@ -195,8 +197,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：组相联 Cache 地址划分、缺失率与跨页分析</h2>
 <h3>答题框架与底层机制</h3>
 <p>本题的全部计算都挂在两条机制上：其一，Cache 的地址划分由<strong>容量、相联度、块大小</strong>三个参数唯一决定——块内地址位数 = log(块大小)，组号位数 = log(组数)，组数 = 块数 ÷ 路数；其二，页式虚拟存储在"虚地址 → 实地址"翻译中<strong>只替换页号、原样保留页内偏移</strong>，所以页内偏移覆盖的低位字段不需要查页表就能直接用。先由参数切出地址段，再确认这些段落在页内偏移之内，剩下的就是逐元素算地址、数缺失、数页。</p>
@@ -212,7 +214,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>组数忘了除以路数</strong>：512 是块数，64 才是组数。</li><li><strong>d[100] 忘乘 4</strong>：int 元素占 4 B，字节偏移是 400 = 190H。</li><li><strong>129 块算成 128</strong>：起点在块内偏移 32 B 处，首块只占一半，(32+8192)÷64 = 128.5，必须向上取整。</li><li><strong>把读写都算缺失</strong>：同一块调入后读写都命中，缺失只有 129 次；分母 4096 是读写各算一次访问。</li><li><strong>平均访问时间漏加命中时间</strong>：应为 2 + 缺失率 × 缺失损失。</li><li><strong>缺页次数按块计</strong>：缺页以页（4 KB）为单位，不是以块（64 B）为单位——129 块 ≠ 129 次缺页。</li></ul>
 <blockquote>一句话结论：组号 6 位、块内 6 位、VA11～VA6 作索引（页内偏移翻译时不变）；d[100] 虚拟地址 0180 01B0H、组号 06H；d[0] 偏移 20H、129 块、缺失率 3.15%、平均 8.30 周期；数组跨 3 页、缺页 3 次。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

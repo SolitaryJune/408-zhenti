@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2009-44 ADD (R1)，R0 执行阶段节拍表</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -163,8 +165,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：ADD (R1)，R0 执行阶段的节拍与控制信号</h2>
 <h3>第 0 步：机制先行——单内总线数据通路的运行规则</h3>
 <p>先看清数据通路图的骨架：R0、R1、PC、IR、MAR、MDR、A、AC 都挂在<strong>一条内总线</strong>上；ALU 的一个输入端接暂存器 A，另一个输入端直接取自内总线，运算结果送 AC。访存走<strong>另一条外部通路</strong>：地址由 MAR 送出（题设 MAR 输出一直使能，地址可长期保持），数据经 DB 进出 MDR——所以 MDR 有两套门口：对内的 MDRin/MDRout，对外的 MDRinE/MDRoutE。</p>
@@ -182,7 +184,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>写回漏 MDRoutE / MemW</strong>：写主存必须用外部通路 MDRoutE + MemW；只给 MDRout 是往内总线送数，主存收不到。</li><li><strong>C8 漏 Add</strong>：不给 Add，ALU 不知道本次做加法。</li><li><strong>合并依赖拍</strong>：把 MAR←(R1) 与 MDR←M(MAR) 并到一拍——读操作用的地址还没就位，违反铁律 2。</li><li><strong>乱并行</strong>：并行的前提是「不同通路、不同目标、无数据依赖」；C6 的合并恰因两条通路独立才成立，不是任意两件微操作都能塞进一拍。</li></ul>
 <blockquote>一句话结论：基本方案 C5~C10 共 6 拍；利用「访存走外部通路、寄存器走内总线」的相容性把 A←(R0) 并入 C6，优化为 C5~C9 共 5 拍。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

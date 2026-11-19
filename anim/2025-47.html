@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-47 卫星链路大题三问推演动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      概念/推理链类：大题三问逐问推演（时延/吞吐量 · GBN 窗口/序号 · 子网划分）
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -129,8 +131,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：卫星链路时延/吞吐量、GBN 窗口与序号、子网划分</h2>
 <p>背景速记：工程部网络（H—S1—R1—TR1）经卫星链路（TR2—R2）接公司总部网络；卫星轨道高度 36000 km，电磁波速度 300000 km/s；R1—R2 为对称全双工信道、每方向 200 kb/s；图中主机 H 的地址为 10.10.10.33/26，位于管理区子网。</p>
 <h3>第（1）问：单向传播时延、最大吞吐量与 4000B 文件时间</h3>
@@ -145,7 +147,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>单向传播时延答 0.12 s</strong>：R1 到 R2 是"上行 + 下行"两段，共 0.24 s。</li><li><strong>文件时间漏加传播时延</strong>：只答发送时延 0.16 s 会错一半——要算到最后一位<strong>到达</strong>。</li><li><strong>发送窗口取 7</strong>：7.2 必须向上取整；取 7 的利用率只有 7 × 0.06 ÷ 0.54 ≈ 77.8%，达不到 80%。</li><li><strong>序号答 3 位</strong>：2³ = 8 只够 8 个序号，而发送窗口 8 + 接收窗口 1 需要 9 个序号，必须 4 位。</li><li><strong>可分配数按块大小计</strong>：/26 可分配的主机地址是 62 个（扣网络地址与广播地址），不是 64。</li></ul>
 <blockquote>一句话结论：（1）单向传播时延 0.24 s、最大吞吐量 200 kb/s、4000B 文件至少 0.40 s；（2）发送窗口至少 8、帧序号至少 4 位；（3）管理区 10.10.10.0/26、作业区 10.10.10.64/26、生活区 10.10.10.128/25。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2011-45 银行叫号问题：信号量设计与时序</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .bp-semwrap{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .bp-sem{padding:6px 14px;border-radius:8px;background:#f8edcb;border:1px solid #1b3a4b26;font-size:13.5px;color:#213e48;transition:all .3s}
@@ -50,6 +50,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -71,7 +73,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -183,8 +185,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：银行叫号问题——互斥与同步的信号量设计</h2>
 <p>这是"生产者—消费者"的变体：顾客生产"等待服务的顾客"，营业员消费之；10 个座位是缓冲区容量；取号机是被竞争使用的临界资源；叫号是一对一的同步关系。答题框架：<strong>先列信号量及初值，再写两个进程的 P/V 序列，最后说明顺序理由</strong>。</p>
 <h3>第一步：确定信号量及初值</h3>
@@ -200,7 +202,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>漏掉 service 信号量</strong>：只写 mutex、empty、full 无法实现"叫到号才服务"的一对一同步。</li><li><strong>empty 初值写成 0</strong>：空座位数初值是 10，full（等待顾客数）才是 0。</li><li><strong>营业员先 V(service) 后 P(full)</strong>：顺序颠倒会叫到不存在的顾客。</li></ul>
 <blockquote>框架记忆：empty/full 对应容量为 10 的缓冲区，mutex 互斥取号机，service 实现一对一叫号同步。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2011-32 并发加/减 1 后 x 的取值</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .ix-phase{text-align:center;margin:2px 0 12px}
 .ix-phase b{display:inline-block;padding:5px 18px;border-radius:999px;background:#f8edcb;color:#3730a3;font-size:14px}
@@ -50,6 +50,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -71,7 +73,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -175,8 +177,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：无同步措施时并发加/减 1 后 x 的取值</h2>
 <p><strong>答案：C（可能为 0、1 或 2）</strong>。x 初值为 1，P1 对 x 加 1、P2 对 x 减 1，两条指令序列都由"读—改—写"三步组成，执行顺序被打乱时会发生"丢失更新"。</p>
 <h3>第一步：先看顺序执行（不打架）</h3>
@@ -193,7 +195,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>选 B（只能为 1）</strong>：忽略了 load 与 store 之间可被打断，丢失更新会让结果偏离串行值。</li><li><strong>选 A 或 D（出现 −1 或 3）</strong>：把"并发交错"夸大成"操作次数可能变多"——操作次数固定，只是读到的值可能过期。</li></ul>
 <blockquote>记忆点：两条 load…store 序交错 → 丢失更新，x ∈ {0,1,2}；解题套路是枚举 store 相对对方各条指令的插入位置。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

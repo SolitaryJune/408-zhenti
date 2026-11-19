@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2025 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2025">
 <header class="site-header">
@@ -117,7 +117,7 @@ for (i = 1; i * i &lt;= n; i++) {
 <table><thead><tr><th>i</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody><tr><td>内层执行次数</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr><tr><td>count 累计</td><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td></tr></tbody></table>
 <p>总计 = 1 + 2 + … + k = k(k+1)/2 ≈ (√n)²/2 = <strong>n/2</strong>。系数 1/2 不影响数量级，故时间复杂度为 O(n)。</p>
 <h3>易错点</h3>
-<ul><li><strong>见两层循环就选 O(n²)</strong>（干扰项 D）：内层上限是 i 而不是 n；累加 1+2+…+√n 恰好是"平方项自乘"，量级被压回 n。</li><li>**把 <code>i*i &lt;= n</code> 读成 <code>i &lt;= n</code>**：那才会得到 O(n²) 级的错误判断——判停条件没读懂，上限直接放大 n^1.5 倍。</li><li><strong>误选 A（O(log n)）</strong>：把外层趟数当成对数级（误以为 i 会指数式逼近 n，实际 i 每次 +1），又漏掉内层还要线性累加——只数了趟数、没数总工作量。</li><li><strong>误选 C（O(n log n)）</strong>：套"外层 n × 内层 log n"的模板，两头都没对着本题：外层只跑到 √n，内层跑的是 i 次（从 1 累到 √n），不是 log n 次。</li><li><strong>纠结低阶项与系数</strong>：n/2 + √n/2 里的 √n 是低阶项，大 O 只看最高阶。</li></ul>
+<ul><li><strong>见两层循环就选 O(n²)</strong>（干扰项 D）：内层上限是 i 而不是 n；累加 1+2+…+√n 恰好是"平方项自乘"，量级被压回 n。</li><li>**把 <code>i*i &lt;= n</code> 读成 <code>i &lt;= n</code>**：那才会得到 O(n²) 级的错误判断——判停条件没读懂，上限直接放大 n<sup>1</sup>.5 倍。</li><li><strong>误选 A（O(log n)）</strong>：把外层趟数当成对数级（误以为 i 会指数式逼近 n，实际 i 每次 +1），又漏掉内层还要线性累加——只数了趟数、没数总工作量。</li><li><strong>误选 C（O(n log n)）</strong>：套"外层 n × 内层 log n"的模板，两头都没对着本题：外层只跑到 √n，内层跑的是 i 次（从 1 累到 √n），不是 log n 次。</li><li><strong>纠结低阶项与系数</strong>：n/2 + √n/2 里的 √n 是低阶项，大 O 只看最高阶。</li></ul>
 <blockquote>结论：外层跑 k = ⌊√n⌋ 次，总次数 k(k+1)/2 = Θ(n)，选 <strong>B</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -726,18 +726,18 @@ unsigned int ui = si;</code></pre></div></div>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：short 转 unsigned int 的符号扩展与无符号解释</h2>
 <h3>第 0 步：先立模型——补码与无符号数是同一位串的两种解释</h3>
-<p>32 位一共只有 2^32 个位串。<strong>补码</strong>和<strong>无符号数</strong>是同一批位串的两种读法：位串按补码读出真值 t（−2^31 ~ 2^31−1），按无符号读出 u（0 ~ 2^32−1），两者恒满足 <strong>u ≡ t (mod 2^32)</strong>——真值为负时就是 <strong>u = t + 2^32</strong>。这正是本题的全部机关：si 按补码是 −32767，赋给 unsigned 后同一串位按无符号读，值就是 −32767 + 2^32。</p>
-<p><strong>为什么符号扩展补 1 而数值不变？</strong> 8001H 之所以代表 −32767，依据是 −32767 ≡ 32769 (mod 2^16)；高位再补一串 1 得 FFFF 8001H，依据变成 −32767 ≡ 4294934529 (mod 2^32)——同一个负数在更大模下的化身，同余关系被高位全 1 维持着。若补 0，同余关系破坏，就换成另一个数了。</p>
+<p>32 位一共只有 2<sup>32</sup> 个位串。<strong>补码</strong>和<strong>无符号数</strong>是同一批位串的两种读法：位串按补码读出真值 t（−2<sup>31</sup> ~ 2<sup>31</sup>−1），按无符号读出 u（0 ~ 2<sup>32</sup>−1），两者恒满足 <strong>u ≡ t (mod 2<sup>32</sup>)</strong>——真值为负时就是 <strong>u = t + 2<sup>32</sup></strong>。这正是本题的全部机关：si 按补码是 −32767，赋给 unsigned 后同一串位按无符号读，值就是 −32767 + 2<sup>32</sup>。</p>
+<p><strong>为什么符号扩展补 1 而数值不变？</strong> 8001H 之所以代表 −32767，依据是 −32767 ≡ 32769 (mod 2<sup>16</sup>)；高位再补一串 1 得 FFFF 8001H，依据变成 −32767 ≡ 4294934529 (mod 2<sup>32</sup>)——同一个负数在更大模下的化身，同余关系被高位全 1 维持着。若补 0，同余关系破坏，就换成另一个数了。</p>
 <h3>第一步：先写出 si 的 16 位补码</h3>
 <p>si = -32767。先写 32767 的 16 位表示：0111 1111 1111 1111B = 7FFFH；取负数按「按位取反、末位加 1」得 1000 0000 0000 0001B，即 [si]补 = 8001H。</p>
 <h3>第二步：赋给 32 位 unsigned int 时发生了什么</h3>
 <p>C 语言转换规则：short（16 位有符号）赋给 unsigned int（32 位）时，先把 16 位补码<strong>符号扩展</strong>到 32 位——符号位是 1，高 16 位全部补 1，得机器数 FFFF 8001H；然后这个 32 位机器数按<strong>无符号数</strong>解释。</p>
-<table><thead><tr><th>阶段</th><th>机器数</th><th>解释</th></tr></thead><tbody><tr><td>si 的 16 位补码</td><td>8001H</td><td>真值 -32767</td></tr><tr><td>符号扩展成 32 位</td><td>FFFF 8001H</td><td>按补码解释仍是 -32767</td></tr><tr><td>按 unsigned 解释</td><td>FFFF 8001H</td><td>2^32 - 32767</td></tr></tbody></table>
+<table><thead><tr><th>阶段</th><th>机器数</th><th>解释</th></tr></thead><tbody><tr><td>si 的 16 位补码</td><td>8001H</td><td>真值 -32767</td></tr><tr><td>符号扩展成 32 位</td><td>FFFF 8001H</td><td>按补码解释仍是 -32767</td></tr><tr><td>按 unsigned 解释</td><td>FFFF 8001H</td><td>2<sup>32</sup> - 32767</td></tr></tbody></table>
 <h3>第三步：按无符号数算真值</h3>
-<p>FFFF 8001H 的最高位是 1，但 ui 是无符号类型，按第 0 步的模型直接加模：u = −32767 + 2^32 = 2^32 − 32767。而 32767 = 2^15 − 1，所以 ui = 2^32 − 2^15 + 1，选 <strong>D</strong>。</p>
+<p>FFFF 8001H 的最高位是 1，但 ui 是无符号类型，按第 0 步的模型直接加模：u = −32767 + 2<sup>32</sup> = 2<sup>32</sup> − 32767。而 32767 = 2<sup>15</sup> − 1，所以 ui = 2<sup>32</sup> − 2<sup>15</sup> + 1，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>做成零扩展</strong>：把 8001H 前面直接补 0 得 0000 8001H，无符号解释正好是 2^15 + 1——这就是干扰项 A。有符号数加宽位数必须符号扩展。</li><li><strong>误选 B（2^15）</strong>：把 8001H 的无符号值记成 2^15——记错邻居：无符号值 2^15 = 8000H 才是 −32768 的位串；8001H 的无符号值是 2^15 + 1 = 32769。</li><li><strong>按补码读回</strong>：得到 -32767，忽略了 ui 是无符号类型，最高位 1 不再当符号。</li><li><strong>加减差 1</strong>：8001H 对应的绝对值是 32767 = 2^15 − 1，所以减 32767 等价于 −2^15 + 1；误算成 2^32 − 2^15 − 1 就是干扰项 C。</li></ul>
-<blockquote>一句话结论：先符号扩展得 FFFF 8001H，再按无符号解释为 2^32 − 2^15 + 1，选 D。</blockquote></div></div>
+<ul><li><strong>做成零扩展</strong>：把 8001H 前面直接补 0 得 0000 8001H，无符号解释正好是 2<sup>15</sup> + 1——这就是干扰项 A。有符号数加宽位数必须符号扩展。</li><li><strong>误选 B（2<sup>15</sup>）</strong>：把 8001H 的无符号值记成 2<sup>15</sup>——记错邻居：无符号值 2<sup>15</sup> = 8000H 才是 −32768 的位串；8001H 的无符号值是 2<sup>15</sup> + 1 = 32769。</li><li><strong>按补码读回</strong>：得到 -32767，忽略了 ui 是无符号类型，最高位 1 不再当符号。</li><li><strong>加减差 1</strong>：8001H 对应的绝对值是 32767 = 2<sup>15</sup> − 1，所以减 32767 等价于 −2<sup>15</sup> + 1；误算成 2<sup>32</sup> − 2<sup>15</sup> − 1 就是干扰项 C。</li></ul>
+<blockquote>一句话结论：先符号扩展得 FFFF 8001H，再按无符号解释为 2<sup>32</sup> − 2<sup>15</sup> + 1，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -789,12 +789,12 @@ unsigned int ui = si;</code></pre></div></div>
 <p>4730 0000H = 0100 0111 0011 0000 0000 0000 0000 0000B。单精度格式按 1 + 8 + 23 拆：</p>
 <table><thead><tr><th>字段</th><th>数符 S</th><th>阶码 E（8 位）</th><th>尾数 M（23 位）</th></tr></thead><tbody><tr><td>取值</td><td>0</td><td>1000 1110</td><td>011 0000 0000 0000 0000 0000</td></tr></tbody></table>
 <h3>第二步：算指数与有效数字</h3>
-<ul><li>阶码 E = 1000 1110B = 128 + 8 + 4 + 2 = 142。<strong>为什么减 127？</strong> 8 位阶码按无符号形式存放（便于硬件逐位比较大小），要容纳负指数就得把真实指数整体抬高 127 存进去——所以真指数 = E − 127 = 15。</li><li>尾数域 M = 011B，其余 20 位全 0，即 0.011B = 0.25 + 0.125 = 0.375。<strong>为什么有效数字是 1.M 而不是 0.M？</strong> 规格化把小数点挪到第一个 1 之后，尾数整数位恒为 1；这个 1 对所有规格化数都相同，干脆不存、省出一位精度——所以有效数字 = 1.011B = 1 + 0.375 = 1.375，最终 x = 1.375 × 2^15。</li></ul>
+<ul><li>阶码 E = 1000 1110B = 128 + 8 + 4 + 2 = 142。<strong>为什么减 127？</strong> 8 位阶码按无符号形式存放（便于硬件逐位比较大小），要容纳负指数就得把真实指数整体抬高 127 存进去——所以真指数 = E − 127 = 15。</li><li>尾数域 M = 011B，其余 20 位全 0，即 0.011B = 0.25 + 0.125 = 0.375。<strong>为什么有效数字是 1.M 而不是 0.M？</strong> 规格化把小数点挪到第一个 1 之后，尾数整数位恒为 1；这个 1 对所有规格化数都相同，干脆不存、省出一位精度——所以有效数字 = 1.011B = 1 + 0.375 = 1.375，最终 x = 1.375 × 2<sup>15</sup>。</li></ul>
 <h3>第三步：合成真值</h3>
-<p>x = 1.375 × 2^15（数符 0 为正），选 <strong>D</strong>。</p>
+<p>x = 1.375 × 2<sup>15</sup>（数符 0 为正），选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉隐含的 1</strong>：把值写成 0.375 × 2^15（干扰项 A、C 的来源）——规格化非零数尾数域前隐含一个 1。</li><li><strong>误选 B（1.375 × 2^14）</strong>：尾数对了、指数差 1——典型原因是 32 位连写时字段拆分错位（阶码读成 1000 1101），说明拆字段必须从最高位一位一位数，不能按字节想当然。</li><li><strong>指数忘了减偏置 127</strong>：直接拿 142 当指数。</li><li><strong>按字节拆字段</strong>：符号 1 位、阶码 8 位必须从最高位连续数下来，0x4730 这两个字节同时横跨符号位、阶码和尾数域。</li></ul>
-<blockquote>一句话结论：S = 0，E = 142 − 127 = 15，M = 0.011B，x = 1.375 × 2^15，选 D。</blockquote></div></div>
+<ul><li><strong>漏掉隐含的 1</strong>：把值写成 0.375 × 2<sup>15</sup>（干扰项 A、C 的来源）——规格化非零数尾数域前隐含一个 1。</li><li><strong>误选 B（1.375 × 2<sup>14</sup>）</strong>：尾数对了、指数差 1——典型原因是 32 位连写时字段拆分错位（阶码读成 1000 1101），说明拆字段必须从最高位一位一位数，不能按字节想当然。</li><li><strong>指数忘了减偏置 127</strong>：直接拿 142 当指数。</li><li><strong>按字节拆字段</strong>：符号 1 位、阶码 8 位必须从最高位连续数下来，0x4730 这两个字节同时横跨符号位、阶码和尾数域。</li></ul>
+<blockquote>一句话结论：S = 0，E = 142 − 127 = 15，M = 0.011B，x = 1.375 × 2<sup>15</sup>，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -848,7 +848,7 @@ unsigned int ui = si;</code></pre></div></div>
 <p>补码运算器做 x − y = x + [−y]补。y = 0111 0101B，按位取反加 1 得 [−y]补 = 1000 1011B = 8BH。</p>
 <h3>第三步：8 位竖式相加（从 bit0 到 bit7）</h3>
 <table><thead><tr><th>位</th><th>bit7</th><th>bit6</th><th>bit5</th><th>bit4</th><th>bit3</th><th>bit2</th><th>bit1</th><th>bit0</th></tr></thead><tbody><tr><td>[x]补</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>[−y]补</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr><tr><td>本位和</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td></tr></tbody></table>
-<p>逐位：bit0 1+1=进1得0；bit1 1+1+1=进1得1；bit2 0+0+1=1；bit3 0+1=1；bit4 0；bit5 1+0=1；bit6 0；bit7 1+1=进1得0。8 位结果 = 0010 1110B = 2EH = <strong>46</strong>，最高位进位被丢弃。<strong>为什么第 9 位进位可以扔？</strong> 8 位运算器是模 2^8 = 256 的记数系统，第 9 位根本不在寄存器里；丢掉它等于减 256，而 −210 ≡ 46 (mod 256)，2EH 正是 −210 在 8 位世界里的化身。</p>
+<p>逐位：bit0 1+1=进1得0；bit1 1+1+1=进1得1；bit2 0+0+1=1；bit3 0+1=1；bit4 0；bit5 1+0=1；bit6 0；bit7 1+1=进1得0。8 位结果 = 0010 1110B = 2EH = <strong>46</strong>，最高位进位被丢弃。<strong>为什么第 9 位进位可以扔？</strong> 8 位运算器是模 2<sup>8</sup> = 256 的记数系统，第 9 位根本不在寄存器里；丢掉它等于减 256，而 −210 ≡ 46 (mod 256)，2EH 正是 −210 在 8 位世界里的化身。</p>
 <h3>第四步：判 OF</h3>
 <ul><li>双高位法：最高位进位 C7 = 1，次高位进位 C6 = 0，OF = C7 与 C6 异或 = <strong>1</strong>；</li><li>符号判断：负数 + 负数 = 正数（0010 1110B 符号位 0），必然溢出；</li><li>真值核对：x − y = −93 − 117 = −210，超出 8 位补码范围 −128～127，确实溢出；机器数 2EH 按 8 位补码读回是 +46（即 −210 + 256）。</li></ul>
 <p>所以 x − y 的机器结果为 <strong>46、OF = 1</strong>，选 <strong>D</strong>。</p>
@@ -2028,12 +2028,12 @@ unsigned int ui = si;</code></pre></div></div>
 <h3>第一步：明确争用期</h3>
 <p>10BaseT 以太网（10 Mbps）的争用期 2τ = 512 bit 时间 ÷ 10 Mbps = <strong>51.2 μs</strong>。二进制指数退避的等待时间总是以争用期为单位。</p>
 <h3>第二步：退避规则与封顶</h3>
-<p>第 i 次冲突后，从整数 0 ~ 2^i − 1 中随机选一个 k，推迟 k × 51.2 μs 再重传；<strong>当 i &gt; 10，k 的取值范围不再翻倍，固定为 0 ~ 1023</strong>（即 2^10 − 1）；若冲突累计达 16 次则放弃发送、上报错误。</p>
+<p>第 i 次冲突后，从整数 0 ~ 2<sup>i</sup> − 1 中随机选一个 k，推迟 k × 51.2 μs 再重传；<strong>当 i &gt; 10，k 的取值范围不再翻倍，固定为 0 ~ 1023</strong>（即 2<sup>10</sup> − 1）；若冲突累计达 16 次则放弃发送、上报错误。</p>
 <h3>第三步：本题套用</h3>
 <p>连续冲突 11 次，下一次尝试前 i = 11 &gt; 10，k 在 0 ~ 1023 中取。最大间隔取 k 的最大值：</p>
 <p><code>1023 × 51.2 μs = 52377.6 μs = 52.3776 ms</code></p>
 <h3>易错点</h3>
-<ul><li><strong>忘了封顶</strong>：按 2^11 − 1 = 2047 计算，得 2047 × 51.2 μs = 104.8064 ms，正好是 D 项。</li><li><strong>把冲突次数当成 k 本身</strong>：算出 10 个或 11 个争用期，即 0.512 ms（A 项）、0.5632 ms（B 项）；k 是「0 ~ 2^i − 1 中的随机数」，上限是 1023 而不是 i。</li><li><strong>争用期记错</strong>：10 Mbps 以太网 2τ = 51.2 μs 必须记牢，用别的值结果全错。</li></ul>
+<ul><li><strong>忘了封顶</strong>：按 2<sup>11</sup> − 1 = 2047 计算，得 2047 × 51.2 μs = 104.8064 ms，正好是 D 项。</li><li><strong>把冲突次数当成 k 本身</strong>：算出 10 个或 11 个争用期，即 0.512 ms（A 项）、0.5632 ms（B 项）；k 是「0 ~ 2<sup>i</sup> − 1 中的随机数」，上限是 1023 而不是 i。</li><li><strong>争用期记错</strong>：10 Mbps 以太网 2τ = 51.2 μs 必须记牢，用别的值结果全错。</li></ul>
 <blockquote>一句话结论：冲突次数超过 10 次后 k 封顶在 1023，最大间隔 = 1023 × 51.2 μs = <strong>52.3776 ms</strong>，选 <strong>C</strong>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2918,4 +2918,4 @@ void main()
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

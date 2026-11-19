@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2011-27 银行家算法安全性检测</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .os-work{display:flex;justify-content:center;gap:8px;margin:4px 0 12px;font-size:15px;flex-wrap:wrap}
 .os-work b{padding:4px 14px;border-radius:8px;background:#f8edcb;color:#3730a3}
@@ -46,6 +46,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -67,7 +69,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -177,8 +179,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：银行家算法安全性检测——找安全序列</h2>
 <p><strong>答案：D（安全序列不存在）</strong>。检测方法：反复寻找"尚需资源 ≤ 可用资源"的进程，让它运行完毕并回收其全部已分配资源；若推到某一步后没有任何进程能继续，则系统不安全。本题逐一检验后，P2、P3 始终无法满足。</p>
 <p>题中数据（可用资源 R1 R2 R3 = 0 2 1）：</p>
@@ -198,7 +200,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>找到一个能运行的进程就认为安全</strong>：P1、P4 能运行不代表存在安全序列，必须让所有进程都能依次完成。</li><li><strong>忘记回收资源</strong>：进程完成后必须把它的"已分配"全部加回可用资源，再继续检测。</li></ul>
 <blockquote>记忆点：安全性检测 = 反复找"尚需 ≤ 可用"的进程运行并回收资源；找不到可推进者即不安全。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

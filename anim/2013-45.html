@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2013-45 博物馆 500 人：信号量与 P/V 推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .sem-wrap{ display:flex; gap:16px; margin: 8px 0 4px; flex-wrap:wrap; }
   .sem{ border:2px solid #5a7d8c66; border-radius:12px; padding:8px 16px; text-align:center;
@@ -54,6 +54,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -75,7 +77,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var S = {};
@@ -186,8 +188,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：博物馆 500 人参观的信号量设计（7 分）</h2>
 <p><strong>答题框架</strong>：题干包含两件事——①<strong>互斥</strong>：出入口一次仅过一人 → 互斥信号量 <code>mutex</code>；②<strong>同步</strong>：馆内最多 500 人 → 计数信号量 <code>empty</code> 表示空位数。核心原则：<strong>先申请空位、再申请门锁</strong>，出门后逆序释放。</p>
 <h3>第 1 问：信号量含义与初值</h3>
@@ -200,7 +202,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>漏掉 <code>V(empty)</code></strong>：只放人进不管释放空位，馆很快“假满”，无人能再进。</li><li><strong>初值互换</strong>：mutex 初值是 <strong>1</strong>（互斥），empty 初值是 <strong>500</strong>（容量），别写反。</li><li><strong>参观也包进 mutex</strong>：进门后不立刻 <code>V(mutex)</code>，出入口长时间被占，吞吐量骤降。</li></ul>
 <blockquote>一句话结论：mutex 初值 1 管出入口互斥，empty 初值 500 管容量同步；进程按 <code>P(empty)→P(mutex)→进门→V(mutex)→参观→P(mutex)→出门→V(mutex)→V(empty)</code> 展开。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2011-31 单缓冲与双缓冲耗时计算</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .gl-panel{position:relative;border:1px solid #1b3a4b26;border-radius:10px;padding:8px 10px 10px;margin-bottom:10px;background:#fff}
 .gl-head{font-weight:700;font-size:14px;color:#213e48;margin:2px 0 8px}
@@ -49,6 +49,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -70,7 +72,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -199,8 +201,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：单缓冲与双缓冲的耗时计算</h2>
 <p><strong>答案：B（单缓冲 1550μs、双缓冲 1100μs）</strong>。已知：10 个磁盘块；读入缓冲区 T = 100μs，缓冲区送用户区 M = 50μs，CPU 分析 C = 50μs。</p>
 <h3>第一步：单缓冲——读入 T 与「传送+分析」并行，传送 M 与读入不能并行</h3>
@@ -214,7 +216,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>单缓冲算成 200 + 9 × 100 = 1100</strong>：漏掉 M——单缓冲下"送用户区"不能与"读下一块"重叠，M 必须每块单独支付。</li><li><strong>双缓冲算成 1000</strong>：忘记了首块仍是完整的 T + M + C，不能把 10 块全按 100μs 算。</li><li><strong>两种结构都把首块当成并行</strong>：第一块没有前一块的分析可重叠，两种结构的"首块代价"都是 T + M + C。</li></ul>
 <blockquote>记忆点：单缓冲每块 max(T,C)+M，双缓冲每块 max(T,M+C)，首块都是 T+M+C。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

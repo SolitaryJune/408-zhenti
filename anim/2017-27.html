@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2017-27 · 时间片轮转调度辨析</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 模板：概念/分析类（tools/anim_concept_template.html）· 只改 AW.init 区域 -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -124,8 +126,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：时间片轮转调度中的状态转换（找错误项）</h2>
 <h3>第一步：抓住"时间片用完"这一事件</h3>
 <p>时间片耗尽意味着进程<strong>没有运行完就被剥夺 CPU</strong>——它并未等待任何事件，随时可以继续运行。这个语义决定了它该回哪个队列。</p>
@@ -134,7 +136,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>混淆"就绪"与"阻塞"</strong>：这是本题唯一的坑。判断方法：失去 CPU 但"万事俱备"→ 就绪态；还要等事件或资源 → 阻塞态。</li><li><strong>以为时钟中断只管切换</strong>：中断处理里还要维护时间片计数，C 项就是考这一点。</li></ul>
 <blockquote>答案：<strong>B</strong>。时间片用完：执行态 → 就绪态；进程主动等事件：执行态 → 阻塞态。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

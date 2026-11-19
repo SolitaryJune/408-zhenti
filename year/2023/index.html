@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2023 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2023">
 <header class="site-header">
@@ -750,9 +750,9 @@
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：由主频与 CPI 求 GIPS 和用户 CPU 时间</h2>
 <p><strong>答案：C</strong>（1.25GIPS，0.4ms）。</p>
 <h3>第一步：求指令执行速度</h3>
-<p>平均 CPI = 1.2 表示每执行一条指令平均花 1.2 个时钟周期。主频 1.5GHz 即每秒有 <code>1.5×10^9</code> 个时钟周期，故每秒执行的指令数 = <code>1.5×10^9 / 1.2 = 1.25×10^9</code> 条/秒，即 <strong>1.25 GIPS</strong>。</p>
+<p>平均 CPI = 1.2 表示每执行一条指令平均花 1.2 个时钟周期。主频 1.5GHz 即每秒有 <code>1.5×10<sup>9</sup></code> 个时钟周期，故每秒执行的指令数 = <code>1.5×10<sup>9</sup> / 1.2 = 1.25×10<sup>9</sup></code> 条/秒，即 <strong>1.25 GIPS</strong>。</p>
 <h3>第二步：求用户 CPU 时间</h3>
-<p>先算程序共花多少周期：<code>5×10^5 × 1.2 = 6×10^5</code> 个周期；再除以每秒周期数：<code>6×10^5 / 1.5×10^9 = 4×10^-4 s = 0.4 ms</code>。</p>
+<p>先算程序共花多少周期：<code>5×10<sup>5</sup> × 1.2 = 6×10<sup>5</sup></code> 个周期；再除以每秒周期数：<code>6×10<sup>5</sup> / 1.5×10<sup>9</sup> = 4×10<sup>-4</sup> s = 0.4 ms</code>。</p>
 <h3>第三步：核对选项</h3>
 <table><thead><tr><th>选项</th><th>速度</th><th>时间</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>0.8GIPS</td><td>0.4ms</td><td>速度算错</td></tr><tr><td>B</td><td>0.8GIPS</td><td>0.4μs</td><td>速度、单位都错</td></tr><tr><td>C</td><td>1.25GIPS</td><td>0.4ms</td><td>正确</td></tr><tr><td>D</td><td>1.25GIPS</td><td>0.4μs</td><td>单位错 1000 倍</td></tr></tbody></table>
 <h3>易错点</h3>
@@ -807,19 +807,19 @@
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：short 型负数的补码机器数</h2>
 <p><strong>答案：A</strong>（E002H）。</p>
 <h3>第一步：机制——补码是模 65536 下的记数</h3>
-<p>short 是 16 位，共 2^16 = 65536 个状态。补码不是另一种数制，而是<strong>模运算记数</strong>：把这个 0~65535 的"环"从中间掰开——最高位 0 表示 +0~+32767，最高位 1 表示 −32768~−1。因此求 x = −8190 的机器数，本质上就是问"哪个位串与 −8190 同余"：</p>
-<p><code>[x]补 = 2^16 − 8190 = 65536 − 8190 = 57346 = E002 H</code></p>
+<p>short 是 16 位，共 2<sup>16</sup> = 65536 个状态。补码不是另一种数制，而是<strong>模运算记数</strong>：把这个 0~65535 的"环"从中间掰开——最高位 0 表示 +0~+32767，最高位 1 表示 −32768~−1。因此求 x = −8190 的机器数，本质上就是问"哪个位串与 −8190 同余"：</p>
+<p><code>[x]补 = 2<sup>16</sup> − 8190 = 65536 − 8190 = 57346 = E002 H</code></p>
 <p>这就是"减模"求补码的道理——不是额外技巧，而是补码定义本身。下面再用教材的"原码 → 反码 → 补码"三步走一遍，两条路结果应当一致。</p>
 <h3>第二步：写出 |x| 并求原码</h3>
 <p><code>8190 = 8192 − 2</code>，十六进制 <code>1FFE H</code>，16 位二进制 <code>0001 1111 1111 1110</code>。负数原码 = 符号位 1 ＋ 尾数（|x| 的低 15 位）：<code>1 001 1111 1111 1110</code>，即 <code>9FFE H</code>。</p>
 <h3>第三步：原码 → 反码 → 补码</h3>
 <ul><li>反码：符号位不变，尾数逐位取反 → <code>1110 0000 0000 0001</code> = <code>E001 H</code>；</li><li>补码：反码末位加 1 → <code>1110 0000 0000 0010</code> = <strong><code>E002 H</code></strong>。</li></ul>
-<p><strong>为什么"取反加一"等于"减模"？</strong> 尾数取反就是用全 1 串减它（每位相减不借位）：(2^15 − 1) − 8190；再加 1，连同符号位的 2^15 一起看：2^15 + (2^15 − 8190) = 2^16 − 8190 —— 与"减模"完全同一件事，只是换个算法。</p>
+<p><strong>为什么"取反加一"等于"减模"？</strong> 尾数取反就是用全 1 串减它（每位相减不借位）：(2<sup>15</sup> − 1) − 8190；再加 1，连同符号位的 2<sup>15</sup> 一起看：2<sup>15</sup> + (2<sup>15</sup> − 8190) = 2<sup>16</sup> − 8190 —— 与"减模"完全同一件事，只是换个算法。</p>
 <h3>第四步：核对选项</h3>
 <table><thead><tr><th>选项</th><th>机器数</th><th>实际是什么</th></tr></thead><tbody><tr><td>A</td><td>E002H</td><td>补码（正确）</td></tr><tr><td>B</td><td>E001H</td><td>只做到反码，忘了加 1</td></tr><tr><td>C</td><td>9FFFH</td><td>原码 9FFEH 又多加了 1</td></tr><tr><td>D</td><td>9FFEH</td><td>原码，没做「取反加 1」</td></tr></tbody></table>
 <h3>易错点</h3>
 <ul><li><strong>停在反码</strong>：取反之后忘了末位加 1，误选 B（E001H）。</li><li><strong>把原码当机器数</strong>：C 语言整型数据按补码存储，选 D（9FFEH）等于没转换。</li><li><strong>尾数位数弄错</strong>：16 位中符号位占最高位，尾数只有 15 位，别把 16 位全当数值位。</li></ul>
-<blockquote>一句话结论：−8190 的 16 位补码 = 2^16 − 8190 = E002 H（取反加一与减模同源），选 A。</blockquote></div></div>
+<blockquote>一句话结论：−8190 的 16 位补码 = 2<sup>16</sup> − 8190 = E002 H（取反加一与减模同源），选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -867,7 +867,7 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1SYCoYfEis/?p=14" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IEEE 754 单精度数 8020 0000H 的真值</h2>
-<p><strong>答案：A</strong>（-2^-128）。</p>
+<p><strong>答案：A</strong>（-2<sup>-128</sup>）。</p>
 <h3>第一步：机制——IEEE 754 用 E 的两个边界值"记账"</h3>
 <p>单精度 = 1 位数符 S + 8 位阶码 E + 23 位尾数 M。真实指数 = E − 127（移码记法）。8 位 E 的两个边界被征作特殊标记：<strong>E 全 1</strong> → 无穷大 / NaN；<strong>E 全 0</strong> → 0 与<strong>非规格化数</strong>。非规格化数有两条特殊规则：隐含整数位是 <strong>0</strong>（不再是 1），真实指数固定为 <strong>1 − 127 = −126</strong>。</p>
 <p><strong>为什么指数偏偏是 1 − 127，而不是 0 − 127？</strong> 为了"渐进下溢"的平滑衔接：最小规格化数（E = 1、M = 0）的指数正是 1 − 127 = −126。让 E = 0 的数也用 −126，那么从非规格化数过渡到最小规格化数时指数不变、只是隐含位从 0 变 1，数值链条在最小数附近无缝衔接，不会断档。</p>
@@ -877,10 +877,10 @@
 <table><thead><tr><th>字段</th><th>位数</th><th>本题值</th></tr></thead><tbody><tr><td>数符 S</td><td>1</td><td>1（负数）</td></tr><tr><td>阶码 E</td><td>8</td><td><code>0000 0000</code>（全 0）</td></tr><tr><td>尾数 M</td><td>23</td><td><code>010 0000 … 0</code>（非 0）</td></tr></tbody></table>
 <p>E 全 0 且 M ≠ 0 → <strong>非规格化数</strong>。它不是 NaN——NaN 要求 E 全 1 且 M ≠ 0，方向完全相反。</p>
 <h3>第三步：算真值</h3>
-<p>尾数字段 M = 二进制小数 <code>0.01</code> = 2^-2，隐含位 0、<strong>不添 1</strong>。于是 x = -0.01 × 2^-126 = -2^-2 × 2^-126 = <strong>-2^-128</strong>，选 <strong>A</strong>。</p>
+<p>尾数字段 M = 二进制小数 <code>0.01</code> = 2<sup>-2</sup>，隐含位 0、<strong>不添 1</strong>。于是 x = -0.01 × 2<sup>-126</sup> = -2<sup>-2</sup> × 2<sup>-126</sup> = <strong>-2<sup>-128</sup></strong>，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>误选 B（-1.01×2^-127）</strong>：把 E = 0 当成规格化数——补上隐含 1，指数还错取 0 − 127 = −127，两处全错。</li><li><strong>误选 C（-1.01×2^-126）</strong>：指数用对了（−126），却又把尾数 0.01"规格化"成 1.01——非规格化数不补隐含 1，0.01 就是 0.01。</li><li><strong>误选 D（NaN）</strong>：NaN 的条件是 E 全 1 且 M ≠ 0；本题 E 全 0。</li></ul>
-<blockquote>记忆锚点：E 全 0 → 非规格化数：隐含位 0、指数 1 − 127 = −126（为与最小规格化数平滑衔接）；本题 x = -0.01 × 2^-126 = -2^-128，选 A。</blockquote></div></div>
+<ul><li><strong>误选 B（-1.01×2<sup>-127</sup>）</strong>：把 E = 0 当成规格化数——补上隐含 1，指数还错取 0 − 127 = −127，两处全错。</li><li><strong>误选 C（-1.01×2<sup>-126</sup>）</strong>：指数用对了（−126），却又把尾数 0.01"规格化"成 1.01——非规格化数不补隐含 1，0.01 就是 0.01。</li><li><strong>误选 D（NaN）</strong>：NaN 的条件是 E 全 1 且 M ≠ 0；本题 E 全 0。</li></ul>
+<blockquote>记忆锚点：E 全 0 → 非规格化数：隐含位 0、指数 1 − 127 = −126（为与最小规格化数平滑衔接）；本题 x = -0.01 × 2<sup>-126</sup> = -2<sup>-128</sup>，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -930,7 +930,7 @@
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：30 位地址线下 ROM 的地址范围</h2>
 <p><strong>答案：C</strong>（3000 0000H～3FFF FFFFH）。</p>
 <h3>第一步：算总地址空间</h3>
-<p>30 根地址线按字节编址，可寻址 <code>2^30 B = 1GB</code>，地址范围为 <code>0000 0000H ～ 3FFF FFFFH</code>（最高地址是 3FFF FFFFH，不是 FFFF FFFFH）。</p>
+<p>30 根地址线按字节编址，可寻址 <code>2<sup>30</sup> B = 1GB</code>，地址范围为 <code>0000 0000H ～ 3FFF FFFFH</code>（最高地址是 3FFF FFFFH，不是 FFFF FFFFH）。</p>
 <h3>第二步：按 3:1 切分</h3>
 <p>要求占满全部空间且 RAM:ROM = 3:1 → RAM 占 768MB，ROM 占 256MB。以 256MB（即 <code>1000 0000H</code>）为一段恰好切成 4 段，前 3 段给 RAM、最后 1 段给 ROM。</p>
 <h3>第三步：定位 ROM</h3>
@@ -991,12 +991,12 @@
 <h3>第二步：判 OF</h3>
 <p>x = 10，y = -20 时，<code>x - y = 10 - (-20) = 30</code>。带符号结果 30 远未超出 int 范围 → <strong>OF = 0</strong>。</p>
 <h3>第三步：判 CF</h3>
-<p>CF 完全不看符号，只比无符号大小。y = -20 的机器数按无符号解释是 <code>2^32 - 20 = 4294967276</code>，远大于 10，无符号减法不够减 → <strong>CF = 1</strong>。</p>
+<p>CF 完全不看符号，只比无符号大小。y = -20 的机器数按无符号解释是 <code>2<sup>32</sup> - 20 = 4294967276</code>，远大于 10，无符号减法不够减 → <strong>CF = 1</strong>。</p>
 <h3>第四步：核对选项</h3>
 <table><thead><tr><th>选项</th><th>OF</th><th>CF</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>0</td><td>0</td><td>CF 错</td></tr><tr><td>B</td><td>0</td><td>1</td><td>正确</td></tr><tr><td>C</td><td>1</td><td>0</td><td>OF、CF 都错</td></tr><tr><td>D</td><td>1</td><td>1</td><td>OF 错</td></tr></tbody></table>
 <h3>易错点</h3>
 <ul><li><strong>以为「减负数=加正数不会借位」</strong>：CF 与操作数正负无关，机器层面 y 是一个巨大的无符号数（4294967276）。</li><li><strong>把 OF 和 CF 混为一谈</strong>：OF 服务带符号运算（看双符号位/最高位进位与次高位进位是否一致），CF 服务无符号运算（看借位），判定通道不同。</li><li><strong>直接沿用上一组数据的结论</strong>：换了一组操作数，必须重新比较无符号大小关系。</li></ul>
-<blockquote>一句话结论：10-(-20)=30 不溢出（OF=0），但无符号下 10 &lt; 2^32-20 需借位（CF=1），选 B。</blockquote></div></div>
+<blockquote>一句话结论：10-(-20)=30 不溢出（OF=0），但无符号下 10 &lt; 2<sup>32</sup>-20 需借位（CF=1），选 B。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1959,13 +1959,13 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：分组交换存储转发的总时间</h2>
 <p>答案：D（80.10 ms）。</p>
 <h3>第一步：算清三个基本量</h3>
-<ul><li><strong>分组数</strong>：1 MB（M=10^6）= 10^6 B = 8×10^6 bit；分组长 1000 B = 8000 bit，恰好 <strong>1000 个分组</strong>。</li><li><strong>单组发送时延</strong>：8000 bit ÷ 100 Mbps = <strong>80 μs</strong>，每段链路、每个分组都要花一次。</li><li><strong>单段传播时延</strong>：时延带宽积 = 单向传播时延 × 带宽 = 1000 bit，故传播时延 = 1000 bit ÷ 100 Mbps = <strong>10 μs</strong>，每段链路一次。</li></ul>
+<ul><li><strong>分组数</strong>：1 MB（M=10<sup>6</sup>）= 10<sup>6</sup> B = 8×10<sup>6</sup> bit；分组长 1000 B = 8000 bit，恰好 <strong>1000 个分组</strong>。</li><li><strong>单组发送时延</strong>：8000 bit ÷ 100 Mbps = <strong>80 μs</strong>，每段链路、每个分组都要花一次。</li><li><strong>单段传播时延</strong>：时延带宽积 = 单向传播时延 × 带宽 = 1000 bit，故传播时延 = 1000 bit ÷ 100 Mbps = <strong>10 μs</strong>，每段链路一次。</li></ul>
 <h3>第二步：让最后一个分组带你走完全程</h3>
 <p>前 999 个分组先走，把两段链路铺成流水线；最后一个分组从 999 × 80 μs 才开始从 H1 发出：</p>
 <table><thead><tr><th>阶段</th><th>花费</th><th>累计时刻</th></tr></thead><tbody><tr><td>H1 发完第 1000 个分组</td><td>80 μs</td><td>80.00 ms</td></tr><tr><td>链路1 传播</td><td>10 μs</td><td>80.01 ms</td></tr><tr><td>路由器收齐后存储转发（重发一次）</td><td>80 μs</td><td>80.09 ms</td></tr><tr><td>链路2 传播</td><td>10 μs</td><td>80.10 ms</td></tr></tbody></table>
 <p>总时间 = 999×80 + 80 + 10 + 80 + 10 μs = <strong>80.10 ms</strong>，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉路由器的存储转发时延（80 μs）</strong>：得 80.02 ms，对应 A——路由器必须整组收齐才能转发，中转必然多花一个分组的发送时延。</li><li><strong>漏掉传播时延</strong>：两段都漏得 80.08 ms（B），漏一段得 80.09 ms（C）。</li><li><strong>单位换算错</strong>：把 1 MB 当 2^20 B，或忘了字节换比特要乘 8，分组数就不对了。</li></ul>
+<ul><li><strong>漏掉路由器的存储转发时延（80 μs）</strong>：得 80.02 ms，对应 A——路由器必须整组收齐才能转发，中转必然多花一个分组的发送时延。</li><li><strong>漏掉传播时延</strong>：两段都漏得 80.08 ms（B），漏一段得 80.09 ms（C）。</li><li><strong>单位换算错</strong>：把 1 MB 当 2<sup>20</sup> B，或忘了字节换比特要乘 8，分组数就不对了。</li></ul>
 <blockquote>通用公式：n 个分组过 m 段等速链路，总时间 = (n + m − 1) × 单组发送时延 + m × 单段传播时延。本题 (1000+2−1)×80 + 2×10 = 80100 μs。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -2019,13 +2019,13 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
 <p>题干给的是「<strong>无噪声理想信道</strong>」，只能用<strong>奈奎斯特（Nyquist）准则</strong>：极限数据率 C = 2W·log₂V（W 为信道带宽，V 为码元状态数）。QAM-m 中的 m 就是 V，即每个码元有 m 种状态、携带 log₂m 比特。有噪声、给信噪比的题才用香农公式，本题不涉及。</p>
 <h3>第二步：代入反解</h3>
 <p>C = 48 Mbps，W = 4 MHz：</p>
-<p>48×10^6 = 2 × 4×10^6 × log₂V → log₂V = 48 ÷ (2×4) = <strong>6</strong> → V = 2^6 = <strong>64</strong>。</p>
+<p>48×10<sup>6</sup> = 2 × 4×10<sup>6</sup> × log₂V → log₂V = 48 ÷ (2×4) = <strong>6</strong> → V = 2<sup>6</sup> = <strong>64</strong>。</p>
 <p>即每个码元携带 6 bit，采用 <strong>QAM-64</strong>。</p>
 <h3>第三步：逐项验证</h3>
 <table><thead><tr><th>选项</th><th>V</th><th>log₂V</th><th>2W·log₂V</th></tr></thead><tbody><tr><td>A. QAM-16</td><td>16</td><td>4</td><td>8M × 4 = 32 Mbps</td></tr><tr><td>B. QAM-32</td><td>32</td><td>5</td><td>8M × 5 = 40 Mbps</td></tr><tr><td><strong>C. QAM-64</strong></td><td>64</td><td>6</td><td>8M × 6 = <strong>48 Mbps ✓</strong></td></tr><tr><td>D. QAM-128</td><td>128</td><td>7</td><td>8M × 7 = 56 Mbps</td></tr></tbody></table>
 <h3>易错点</h3>
-<ul><li><strong>套用香农公式</strong>：香农公式需要信噪比，本题没给；"无噪声"是奈奎斯特准则的信号词。</li><li><strong>忘乘 2</strong>：C = W·log₂V 是错的，奈奎斯特是 2W。</li><li><strong>把 64 算成别的</strong>：2^6 = 64，别与 6×10 混淆；选项 D 的 128 对应 56 Mbps，与题给的"最大速率是 48 Mbps"矛盾。</li></ul>
-<blockquote>无噪声用奈氏 C = 2W·log₂V；48 ÷ (2×4) = 6 → 2^6 = 64，选 C。</blockquote></div></div>
+<ul><li><strong>套用香农公式</strong>：香农公式需要信噪比，本题没给；"无噪声"是奈奎斯特准则的信号词。</li><li><strong>忘乘 2</strong>：C = W·log₂V 是错的，奈奎斯特是 2W。</li><li><strong>把 64 算成别的</strong>：2<sup>6</sup> = 64，别与 6×10 混淆；选项 D 的 128 对应 56 Mbps，与题给的"最大速率是 48 Mbps"矛盾。</li></ul>
+<blockquote>无噪声用奈氏 C = 2W·log₂V；48 ÷ (2×4) = 6 → 2<sup>6</sup> = 64，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2077,13 +2077,13 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
 <h3>第一步：信道利用率由发送窗口决定</h3>
 <p>同一信道、同样帧长下，发送方把窗口里的帧连续发出再等确认。发送窗口为 W、帧发送时延为 TD 时：U = W·TD ÷ (TD + RTT + TA)（窗口未填满管道时）；窗口足够大时 U 趋于 1。<strong>窗口越大，最大利用率越高</strong>。</p>
 <h3>第二步：序号 3 bit 限定各协议的最大窗口</h3>
-<table><thead><tr><th>协议</th><th>最大发送窗口</th><th>依据</th></tr></thead><tbody><tr><td>停-等</td><td>1</td><td>发 1 帧等 1 帧</td></tr><tr><td>GBN</td><td>2³ − 1 = 7</td><td>发送窗口 ≤ 2ⁿ − 1（接收窗口恒为 1）</td></tr><tr><td>SR</td><td>2³ ÷ 2 = 4</td><td>收发窗口之和 ≤ 2ⁿ，题设两者相等，各取 2^(n−1)</td></tr></tbody></table>
+<table><thead><tr><th>协议</th><th>最大发送窗口</th><th>依据</th></tr></thead><tbody><tr><td>停-等</td><td>1</td><td>发 1 帧等 1 帧</td></tr><tr><td>GBN</td><td>2³ − 1 = 7</td><td>发送窗口 ≤ 2ⁿ − 1（接收窗口恒为 1）</td></tr><tr><td>SR</td><td>2³ ÷ 2 = 4</td><td>收发窗口之和 ≤ 2ⁿ，题设两者相等，各取 2<sup>n−1</sup></td></tr></tbody></table>
 <p>窗口 1 ≤ 4 ≤ 7，故 <strong>U1 ≤ U3 ≤ U2</strong>，选 <strong>B</strong>。括号「发送窗口和接收窗口相等」是对 SR 的约束，正是它把 SR 窗口压到 4。</p>
 <h3>第三步：为什么 SR 反而不敌 GBN</h3>
 <p>直觉上"SR 选择重传更高效"，但那是出错时的重传开销比较。比<strong>最大利用率</strong>看的是窗口：SR 为不出错必须收发窗口之和 ≤ 2ⁿ，3 bit 序号下最多各 4；GBN 接收窗口固定为 1，发送窗口可用满 7。另外若传播时延很短，窗口 4 就能填满管道，三者都趋于 1，所以取"≤"（可相等），不能写严格小于。</p>
 <h3>易错点</h3>
 <ul><li><strong>选 A（U1 ≤ U2 ≤ U3）</strong>：默认 SR 一定优于 GBN，忽略了序号位数对 SR 窗口的压缩。</li><li><strong>忘掉窗口约束</strong>：以为窗口可任意大、三者一样满——停-等窗口只有 1，不可能与它们相等。</li></ul>
-<blockquote>停等窗口 1、SR 窗口 2^(n−1)、GBN 窗口 2ⁿ−1；1 ≤ 4 ≤ 7，U1 ≤ U3 ≤ U2，选 B。</blockquote></div></div>
+<blockquote>停等窗口 1、SR 窗口 2<sup>n−1</sup>、GBN 窗口 2ⁿ−1；1 ≤ 4 ≤ 7，U1 ≤ U3 ≤ U2，选 B。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2133,13 +2133,13 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：二进制指数退避的最长等待时间</h2>
 <p>答案：C（768 μs）。</p>
 <h3>第一步：规则是什么</h3>
-<p>以太网 CSMA/CD 用<strong>截断二进制指数退避</strong>：发生第 i 次冲突后，网卡从 {0, 1, …, 2^i − 1} 中<strong>随机</strong>选整数 k，等待 k 个争用期（时间片）再重发；i 超过 10 后范围截断在 2^10 − 1。10BaseT 的争用期 = 51.2 μs。</p>
+<p>以太网 CSMA/CD 用<strong>截断二进制指数退避</strong>：发生第 i 次冲突后，网卡从 {0, 1, …, 2<sup>i</sup> − 1} 中<strong>随机</strong>选整数 k，等待 k 个争用期（时间片）再重发；i 超过 10 后范围截断在 2<sup>10</sup> − 1。10BaseT 的争用期 = 51.2 μs。</p>
 <h3>第二步：连续 4 次冲突，范围逐次翻倍</h3>
-<table><thead><tr><th>冲突次数 i</th><th>k 的取值范围（2^i 个值）</th><th>最长等待</th></tr></thead><tbody><tr><td>1</td><td>0 ~ 1</td><td>1 × 51.2 = 51.2 μs</td></tr><tr><td>2</td><td>0 ~ 3</td><td>3 × 51.2 = 153.6 μs</td></tr><tr><td>3</td><td>0 ~ 7</td><td>7 × 51.2 = 358.4 μs</td></tr><tr><td><strong>4</strong></td><td><strong>0 ~ 15</strong></td><td><strong>15 × 51.2 = 768 μs</strong></td></tr></tbody></table>
-<p>连续 4 次冲突 → 第 4 次后退避，k 最大取 2^4 − 1 = 15，最长等待 = 15 × 51.2 μs = <strong>768 μs</strong>，选 <strong>C</strong>。</p>
+<table><thead><tr><th>冲突次数 i</th><th>k 的取值范围（2<sup>i</sup> 个值）</th><th>最长等待</th></tr></thead><tbody><tr><td>1</td><td>0 ~ 1</td><td>1 × 51.2 = 51.2 μs</td></tr><tr><td>2</td><td>0 ~ 3</td><td>3 × 51.2 = 153.6 μs</td></tr><tr><td>3</td><td>0 ~ 7</td><td>7 × 51.2 = 358.4 μs</td></tr><tr><td><strong>4</strong></td><td><strong>0 ~ 15</strong></td><td><strong>15 × 51.2 = 768 μs</strong></td></tr></tbody></table>
+<p>连续 4 次冲突 → 第 4 次后退避，k 最大取 2<sup>4</sup> − 1 = 15，最长等待 = 15 × 51.2 μs = <strong>768 μs</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把冲突次数当 k</strong>：以为等 4 个争用期得 204.8 μs（B）——k 是随机数，不是冲突次数。</li><li><strong>多算一档</strong>：把范围当成 {0, …, 16} 或 1~16，得 16 × 51.2 = 819.2 μs（D）——2^i 个值从 <strong>0</strong> 数起，最大是 2^i − 1 = 15。</li><li><strong>只记第一档</strong>：得 51.2 μs（A），那是第 1 次冲突后的最长等待。</li></ul>
-<blockquote>第 i 次冲突后 k ∈ {0, …, 2^i − 1}；连续 4 次 → k 最大 15 → 15 × 51.2 μs = 768 μs，选 C。</blockquote></div></div>
+<ul><li><strong>把冲突次数当 k</strong>：以为等 4 个争用期得 204.8 μs（B）——k 是随机数，不是冲突次数。</li><li><strong>多算一档</strong>：把范围当成 {0, …, 16} 或 1~16，得 16 × 51.2 = 819.2 μs（D）——2<sup>i</sup> 个值从 <strong>0</strong> 数起，最大是 2<sup>i</sup> − 1 = 15。</li><li><strong>只记第一档</strong>：得 51.2 μs（A），那是第 1 次冲突后的最长等待。</li></ul>
+<blockquote>第 i 次冲突后 k ∈ {0, …, 2<sup>i</sup> − 1}；连续 4 次 → k 最大 15 → 15 × 51.2 μs = 768 μs，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2189,7 +2189,7 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：CRC 校验——余数为 0 才算无错</h2>
 <p>答案：<strong>D</strong>（10111 1100）。</p>
 <h3>第一步：机制——为什么"余 0 判无错"</h3>
-<p>G(X) = X^4 + X + 1 对应除数 <strong>G = 10011</strong>（5 位，最高位对应 X^4）。发送方构造码字时，把数据左移 r = 4 位（<strong>补 4 个 0，正好为 4 位的 FCS 腾出位置</strong>），用模 2 除法除以 G，把余数 FCS 拼在末尾——这样<strong>整个码字恰好是 G 的倍式</strong>（模 2 意义下）。接收方拿同样的 G 除收到的串：</p>
+<p>G(X) = X<sup>4</sup> + X + 1 对应除数 <strong>G = 10011</strong>（5 位，最高位对应 X<sup>4</sup>）。发送方构造码字时，把数据左移 r = 4 位（<strong>补 4 个 0，正好为 4 位的 FCS 腾出位置</strong>），用模 2 除法除以 G，把余数 FCS 拼在末尾——这样<strong>整个码字恰好是 G 的倍式</strong>（模 2 意义下）。接收方拿同样的 G 除收到的串：</p>
 <ul><li>无错：整串仍是 G 的倍式，余 0；</li><li>出错：相当于在码字上异或了一个错误图案 E，由除法的线性性，余数变成 <strong>E mod G</strong>——只要 E 不是 G 的倍式，余数就非 0。</li></ul>
 <p>这就是"余 0 ⇔ 判定无错"的由来（严格说 CRC 是"检错"：余非 0 必有错，余 0 是大概率无错）。模 2 除法全程按位<strong>异或</strong>，不借位不进位。</p>
 <h3>第二步：先算出「正确」的 FCS</h3>
@@ -2315,7 +2315,7 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
 <h3>第二步：按位与求子网起点</h3>
 <p>主机第三字节 84 = 01010100：</p>
 <table><thead><tr><th></th><th>二进制</th><th>十进制</th></tr></thead><tbody><tr><td>地址第三字节</td><td>0101 0100</td><td>84</td></tr><tr><td>∧ 掩码</td><td>1111 0000</td><td>240</td></tr><tr><td>= 子网第三字节</td><td>0101 0000</td><td><strong>80</strong></td></tr></tbody></table>
-<p>子网 = <strong>168.16.80.0/20</strong>。第三字节块大小 = 2^4 = 16，范围 80 ~ 95。</p>
+<p>子网 = <strong>168.16.80.0/20</strong>。第三字节块大小 = 2<sup>4</sup> = 16，范围 80 ~ 95。</p>
 <h3>第三步：去掉两头，得可分配范围</h3>
 <ul><li>网络地址 168.16.<strong>80.0</strong>（主机位全 0）不可分配 → 最小可分配 = 168.16.80.0 + 1 = <strong>168.16.80.1</strong>。</li><li>广播地址 168.16.<strong>95.255</strong>（主机位全 1）不可分配 → 最大可分配 = 168.16.95.255 − 1 = <strong>168.16.95.254</strong>。</li></ul>
 <h3>易错点</h3>
@@ -2370,12 +2370,12 @@ I5  L1: ……</code></pre><p><span>若采用转发（旁路）技术处理数�
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IPv4 与 IPv6 的四条叙述辨析</h2>
 <p>答案：D（仅 III、IV）。</p>
 <h3>第一步：逐条判断</h3>
-<ul><li><strong>I（错）</strong>：IPv6 地址 128 位，IPv4 地址 32 位，地址<strong>数量</strong>之比 = 2^128 ÷ 2^32 = <strong>2^96 倍</strong>，不是 96 倍。"96" 只是位数的差（指数），倍数要把 2 带上。</li><li><strong>II（错）</strong>：IPv4 首部 20 ~ 60 B <strong>可变</strong>（有选项字段）；IPv6 <strong>基本首部固定 40 B</strong>，长度不可变——需要可变的功能放到扩展首部去实现。</li><li><strong>III（对）</strong>：IPv4 向 IPv6 过渡采用<strong>双协议栈</strong>和<strong>隧道</strong>技术，这是教材的标准表述。</li><li><strong>IV（对）</strong>：IPv6 基本首部的 <strong>Hop Limit 与 IPv4 的 TTL 等价</strong>：每经过一个路由器减 1，减到 0 就丢弃，防止分组在网络里无限兜圈。</li></ul>
+<ul><li><strong>I（错）</strong>：IPv6 地址 128 位，IPv4 地址 32 位，地址<strong>数量</strong>之比 = 2<sup>128</sup> ÷ 2<sup>32</sup> = <strong>2<sup>96</sup> 倍</strong>，不是 96 倍。"96" 只是位数的差（指数），倍数要把 2 带上。</li><li><strong>II（错）</strong>：IPv4 首部 20 ~ 60 B <strong>可变</strong>（有选项字段）；IPv6 <strong>基本首部固定 40 B</strong>，长度不可变——需要可变的功能放到扩展首部去实现。</li><li><strong>III（对）</strong>：IPv4 向 IPv6 过渡采用<strong>双协议栈</strong>和<strong>隧道</strong>技术，这是教材的标准表述。</li><li><strong>IV（对）</strong>：IPv6 基本首部的 <strong>Hop Limit 与 IPv4 的 TTL 等价</strong>：每经过一个路由器减 1，减到 0 就丢弃，防止分组在网络里无限兜圈。</li></ul>
 <h3>第二步：匹配选项</h3>
 <p>I、II 都错，含 I 的 A、B 和含 II 的 C 全排除；只有 D = 仅 III、IV 正确。</p>
 <h3>易错点</h3>
-<ul><li><strong>I 选成对</strong>：把「位数差 96」直接当倍数——比较地址空间比的是<strong>数量</strong>，是 2^96 倍。</li><li><strong>II 选成对</strong>：把「IPv6 扩展首部可变」当成「基本首部可变」——基本首部定长 40 B 正是 IPv6 简化转发、提高路由器处理效率的设计点。</li><li><strong>记不住 III、IV</strong>：过渡两件套「双栈 + 隧道」、TTL 改名「Hop Limit」都是高频考点，直接记结论。</li></ul>
-<blockquote>IPv6：地址数量是 IPv4 的 2^96 倍、基本首部固定 40 B、双栈 + 隧道过渡、Hop Limit 等价 TTL，选 D。</blockquote></div></div>
+<ul><li><strong>I 选成对</strong>：把「位数差 96」直接当倍数——比较地址空间比的是<strong>数量</strong>，是 2<sup>96</sup> 倍。</li><li><strong>II 选成对</strong>：把「IPv6 扩展首部可变」当成「基本首部可变」——基本首部定长 40 B 正是 IPv6 简化转发、提高路由器处理效率的设计点。</li><li><strong>记不住 III、IV</strong>：过渡两件套「双栈 + 隧道」、TTL 改名「Hop Limit」都是高频考点，直接记结论。</li></ul>
+<blockquote>IPv6：地址数量是 IPv4 的 2<sup>96</sup> 倍、基本首部固定 40 B、双栈 + 隧道过渡、Hop Limit 等价 TTL，选 D。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2903,10 +2903,10 @@ for (i = 0; i &lt; 24; i++)
 <p>于是：收到确认序号 <strong>2101</strong> 时（慢启动期，逐个确认加 1）cwnd = <strong>3 MSS</strong>；收到确认序号 <strong>7101</strong> 时，4101~7101 四个确认恰好把 cwnd=4 这一轮收齐，拥塞避免整轮加 1，cwnd = <strong>5 MSS</strong>。</p>
 <h3>第 4 问：总时间与平均发送速率</h3>
 <p>RTT = 10 ms（单程 5 ms），忽略段的传输时延：t = 0 发 SYN；t = 10 ms 握手完成并发出第 1 段；按第 3 问的时间线，t = 50 ms 发出最后一批段13~18（累计 18 段 × 1000B = 18000B 全部发出）；t = 55 ms 服务器收齐 F；t = <strong>60 ms</strong> H 收到最后一个确认 ack = 18101，F 被确认全部接收。</p>
-<p><strong>至少需要 60 ms</strong>——这是无差错、无丢包、无排队延迟的理想情形：握手 1 个 RTT 不可省，最后一个确认必须单程走回 H 才算"确认已接收"，也省不掉。<strong>为什么速率的分母是 60 ms？</strong> 题目问"从请求建立连接到确认全部接收<strong>期间</strong>"的平均发送速率，握手与最后确认都在期间内，分子 18000 B、分母 60 ms，得 <strong>3×10^5 B/s</strong>（0.3 MB/s，即 2.4 Mb/s）。</p>
+<p><strong>至少需要 60 ms</strong>——这是无差错、无丢包、无排队延迟的理想情形：握手 1 个 RTT 不可省，最后一个确认必须单程走回 H 才算"确认已接收"，也省不掉。<strong>为什么速率的分母是 60 ms？</strong> 题目问"从请求建立连接到确认全部接收<strong>期间</strong>"的平均发送速率，握手与最后确认都在期间内，分子 18000 B、分母 60 ms，得 <strong>3×10<sup>5</sup> B/s</strong>（0.3 MB/s，即 2.4 Mb/s）。</p>
 <h3>易错点</h3>
-<ul><li><strong>忘掉 SYN / FIN 各占 1 个序号</strong>：把首字节当成 100、把第二次挥手的确认号当成 18101——根源是没意识到确认号要"点收"SYN/FIN 本身。</li><li><strong>拥塞避免继续翻倍</strong>：cwnd = 4 已达阈值，此后整轮加 1 MSS（4 → 5 → 6），不是翻到 8。</li><li><strong>以为每个 ACK 都让拥塞避免加 1</strong>：加性增按"轮"计，收齐整轮确认才加 1；逐个确认加 1 是慢启动的规则。</li><li><strong>总时间漏掉握手或最后确认</strong>：数据从 t = 10 ms 才开始发；"确认 F 已被服务器全部接收"要等最后一个 ACK 回到 H。</li><li><strong>速率忘换算</strong>：3×10^5 B/s 乘 8 才是 2.4 Mb/s。</li></ul>
-<blockquote>SYN 占 1 号 → 首字节 101；FIN 占 1 号 → 确认号 18102；慢启动逐确认 +1、到阈值后整轮 +1，cwnd 路径 1→2→3→4→5→6；总时长 60 ms，平均速率 3×10^5 B/s。</blockquote></div></div>
+<ul><li><strong>忘掉 SYN / FIN 各占 1 个序号</strong>：把首字节当成 100、把第二次挥手的确认号当成 18101——根源是没意识到确认号要"点收"SYN/FIN 本身。</li><li><strong>拥塞避免继续翻倍</strong>：cwnd = 4 已达阈值，此后整轮加 1 MSS（4 → 5 → 6），不是翻到 8。</li><li><strong>以为每个 ACK 都让拥塞避免加 1</strong>：加性增按"轮"计，收齐整轮确认才加 1；逐个确认加 1 是慢启动的规则。</li><li><strong>总时间漏掉握手或最后确认</strong>：数据从 t = 10 ms 才开始发；"确认 F 已被服务器全部接收"要等最后一个 ACK 回到 H。</li><li><strong>速率忘换算</strong>：3×10<sup>5</sup> B/s 乘 8 才是 2.4 Mb/s。</li></ul>
+<blockquote>SYN 占 1 号 → 首字节 101；FIN 占 1 号 → 确认号 18102；慢启动逐确认 +1、到阈值后整轮 +1，cwnd 路径 1→2→3→4→5→6；总时长 60 ms，平均速率 3×10<sup>5</sup> B/s。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2920,4 +2920,4 @@ for (i = 0; i &lt; 24; i++)
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

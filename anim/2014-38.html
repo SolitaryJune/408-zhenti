@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2014-38 动画 · TCP 超时后拥塞窗口演化</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -168,8 +170,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：TCP 超时后 10 个 RTT 内拥塞窗口的演化</h2>
 <h3>结论：答案 A（10KB）</h3>
 <p>TCP 发送窗口 = <strong>min(拥塞窗口 cwnd, 接收窗口 rwnd)</strong>。这道题一半考"超时后 cwnd 怎么长"，一半考"最后被接收窗口卡住"。</p>
@@ -185,7 +187,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>忘了 min</strong>：把 cwnd = 12KB 当成发送窗口，误选 B（12KB）——发送窗口还要和接收窗口取小。</li><li><strong>慢开始数错</strong>：cwnd 从 1 翻倍是 1→2→4（到达 4 后停止翻倍），不是 1→2→4→8；8 已经超时过的值，重新爬升到 ssthresh=4 就必须转拥塞避免。</li><li><strong>ssthresh 取错</strong>：ssthresh 是超时时刻 cwnd 的一半（8÷2=4），且本轮不再变化；不是减 1 也不是 1KB。</li></ul>
 <blockquote>记忆锚点：超时 → ssthresh 减半、cwnd 归 1；慢开始翻倍到 ssthresh，之后每 RTT 加 1；<strong>最终发送窗口永远 min(cwnd, rwnd)</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

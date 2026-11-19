@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-35 二进制指数退避封顶规则动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      概念/推理链类：争用期 → 退避规则 → 封顶 → 最大间隔计算
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -123,21 +125,21 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：二进制指数退避的「封顶」规则</h2>
 <p><strong>答案：C</strong>（52.3776 ms）。</p>
 <h3>第一步：明确争用期</h3>
 <p>10BaseT 以太网（10 Mbps）的争用期 2τ = 512 bit 时间 ÷ 10 Mbps = <strong>51.2 μs</strong>。二进制指数退避的等待时间总是以争用期为单位。</p>
 <h3>第二步：退避规则与封顶</h3>
-<p>第 i 次冲突后，从整数 0 ~ 2^i − 1 中随机选一个 k，推迟 k × 51.2 μs 再重传；<strong>当 i &gt; 10，k 的取值范围不再翻倍，固定为 0 ~ 1023</strong>（即 2^10 − 1）；若冲突累计达 16 次则放弃发送、上报错误。</p>
+<p>第 i 次冲突后，从整数 0 ~ 2<sup>i</sup> − 1 中随机选一个 k，推迟 k × 51.2 μs 再重传；<strong>当 i &gt; 10，k 的取值范围不再翻倍，固定为 0 ~ 1023</strong>（即 2<sup>10</sup> − 1）；若冲突累计达 16 次则放弃发送、上报错误。</p>
 <h3>第三步：本题套用</h3>
 <p>连续冲突 11 次，下一次尝试前 i = 11 &gt; 10，k 在 0 ~ 1023 中取。最大间隔取 k 的最大值：</p>
 <p><code>1023 × 51.2 μs = 52377.6 μs = 52.3776 ms</code></p>
 <h3>易错点</h3>
-<ul><li><strong>忘了封顶</strong>：按 2^11 − 1 = 2047 计算，得 2047 × 51.2 μs = 104.8064 ms，正好是 D 项。</li><li><strong>把冲突次数当成 k 本身</strong>：算出 10 个或 11 个争用期，即 0.512 ms（A 项）、0.5632 ms（B 项）；k 是「0 ~ 2^i − 1 中的随机数」，上限是 1023 而不是 i。</li><li><strong>争用期记错</strong>：10 Mbps 以太网 2τ = 51.2 μs 必须记牢，用别的值结果全错。</li></ul>
+<ul><li><strong>忘了封顶</strong>：按 2<sup>11</sup> − 1 = 2047 计算，得 2047 × 51.2 μs = 104.8064 ms，正好是 D 项。</li><li><strong>把冲突次数当成 k 本身</strong>：算出 10 个或 11 个争用期，即 0.512 ms（A 项）、0.5632 ms（B 项）；k 是「0 ~ 2<sup>i</sup> − 1 中的随机数」，上限是 1023 而不是 i。</li><li><strong>争用期记错</strong>：10 Mbps 以太网 2τ = 51.2 μs 必须记牢，用别的值结果全错。</li></ul>
 <blockquote>一句话结论：冲突次数超过 10 次后 k 封顶在 1023，最大间隔 = 1023 × 51.2 μs = <strong>52.3776 ms</strong>，选 <strong>C</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

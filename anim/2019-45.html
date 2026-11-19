@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2019-45 递归函数 f1 的机器级代码（五问全解）</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .ct{ border-collapse: collapse; width: 100%; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; margin: 6px 0 4px; }
   .ct th, .ct td{ border: 1px solid #1b3a4b26; padding: 4px 8px; text-align: left; }
@@ -40,6 +40,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -61,7 +63,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 function card(n, cls, title, body){
@@ -135,8 +137,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：递归函数 f1 的机器级代码（五问全解）</h2>
 <h3>第 0 步：先立模型——这次递归在机器上是怎么走起来的</h3>
 <ul><li><strong>函数调用模型</strong>：<code>call</code> 指令做两件事——把<strong>返回地址</strong>（call 自己的下一条指令地址）压栈，再跳到函数入口；函数体用 <code>ebp+8</code> 访问实参 n；<code>ret</code> 从栈顶弹回返回地址。递归就是这套机制的嵌套：每层调用各有一个栈帧。第 16 行 call 的目标 <code>00401000</code> 正是第 1 行 <code>push ebp</code> 所在的 f1 入口，所以它是递归调用。</li><li><strong>相对寻址模型</strong>：CPU 取指后 PC 已自动指向<strong>下一条</strong>指令（顺序执行是默认），所以相对转移的基准是下一条指令地址：<strong>目标地址 = 下一条指令地址 + 偏移量</strong>；偏移量是带符号补码，负数表示往低地址（向前）跳。</li><li><strong>溢出模型</strong>：int 是 32 位补码 = 模 2³² 的记数方式，范围 [−2³¹, 2³¹−1]；乘法器内部算的是 64 位真积，写回 32 位寄存器只保留<strong>低 32 位</strong>，等价于真积 mod 2³²。三个模型立好，五问都是顺推。</li></ul>
@@ -153,7 +155,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>偏移量从本指令地址算起</strong>：基准是"下一条指令地址"（=返回地址 0040102AH），不是 call 自身地址。</li><li><strong>把 FFFFFFD6H 当正数</strong>：它是 −2AH 的 32 位补码，负偏移 = 往低地址跳（跳回函数入口），这正是递归调用的方向。</li><li><strong>溢出只答"int 装不下"</strong>：要能写出还原算式——保留低 32 位 = 真积 mod 2³²（6227020800−4294967296=1932053504）。</li><li><strong>大小端看错对象</strong>：判据是多字节数据（偏移量）在内存里的<strong>字节存放顺序</strong>，不是指令的排列顺序。</li><li><strong>OF 判据说成"结果为负"</strong>：OF 看的是真积是否超出 32 位补码范围，等价说法是"高 32 位 ≠ 低 32 位的符号扩展"。</li></ul>
 <blockquote>大题锚点：call = 压返回地址（下一条指令地址）+ 跳转；偏移量 = 目标 − 下一条；溢出值 = 真值 mod 2³²；OF=1 ⟺ 高 32 位不是低 32 位的符号扩展；最低有效字节在最低地址 = 小端。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

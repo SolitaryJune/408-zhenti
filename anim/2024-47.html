@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-47 · RIP/OSPF、TTL 与 BGP 选路（大题 5 问）</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      概念推理动画：2024 大题 5 问逐问推演（OSPF / TTL=16 / 30s·60s / eBGP·iBGP / R11·R13）
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -123,8 +125,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：一条路由的旅程——IGP 选型、TTL、RIP 扩散节奏与 BGP 选路</h2>
 <h3>第 0 步：机制先行——五问各挂在一个机制上</h3>
 <p>本题五个小问看似分散，其实各挂一个底层机制，先把机制立起来，答案都是自然推论：</p>
@@ -147,7 +149,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>第（1）问答 RIP</strong>：忽略"可能超过 20 个路由器"撞上 RIP 15 跳上限。</li><li><strong>第（2）问答 15</strong>：TTL 的减 1 只发生在路由器转发处，主机不减；TTL=0 即丢弃，等于"最多路由器数"还到不了主机，必须 +1。</li><li><strong>第（3）问两网都答 30 s</strong>：漏了"每轮发旧表"——R11 距 R16 三跳，且 t=30 时它的两个邻居发出的都是旧表，必须等第二轮（60 s）。</li><li><strong>第（4）问会话弄反</strong>：判别标准只有"跨不跨 AS"：跨 AS 用 eBGP，AS 内用 iBGP。</li><li><strong>第（5）问等长后乱选</strong>：按路由器名或 IP 排序都不对，要按"AS 路径条数 → 到下一跳的 IGP 距离"的次序比。</li></ul>
 <blockquote>一句话结论：AS4 用 OSPF；初始 TTL 至少 16；210.2.3.0/24 全齐至少 30 s、210.2.4.0/24 至少 60 s；R44→R13 走 eBGP（UPDATE 报文），R13→R14/R15 走 iBGP；R14 下一跳 R11、R15 下一跳 R13。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

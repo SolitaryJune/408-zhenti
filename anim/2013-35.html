@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2013-35 动画 · 报文交换 vs 分组交换</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .lane{ position:relative; width:580px; height:64px; margin:6px 0 2px; }
   .lane .bar{ position:absolute; left:44px; right:44px; top:29px; height:4px; background:#5a7d8c66; border-radius:2px; }
@@ -49,6 +49,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -70,7 +72,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -176,8 +178,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：报文交换与分组交换的总时间</h2>
 <p>答案：<strong>D（报文交换 1600ms、分组交换 801ms）</strong>。两段链路、存储转发，差别在于「整段传」还是「切片流水传」。</p>
 <h3>第一步：报文交换</h3>
@@ -191,7 +193,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>报文交换漏乘链路数</strong>：只算一段 800ms，会错选 C 类答案——存储转发下每段链路都要整段重发一遍。</li><li><strong>分组数公式记错</strong>：写成 800 × 2 = 1600ms 或 (800 + 2) × 1 = 802ms；正确口径是「首分组走完 + N−1 个发送间隔」。</li><li><strong>忽视题设</strong>：本题明确忽略传播时延、分组头开销与拆装时间，若题目给了开销要按有效数据重算。</li></ul>
 <blockquote>流水线思维：分组交换总时间 ≈ 首分组走完 k 段链路的时间 + (N−1) × 单分组发送时延。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

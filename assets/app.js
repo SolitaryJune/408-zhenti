@@ -459,3 +459,49 @@
   var study = btn.closest('.study');
   if(study) setTimeout(function(){ study.scrollIntoView({block:'center'}); }, 100);
 })();
+
+/* ---------- 动画 iframe 高度自适应：整页内嵌显示，不出现内部滚动条 ---------- */
+(function(){
+  function fitFrame(f){
+    try{
+      var doc = f.contentDocument;
+      if(!doc || !doc.documentElement) return;
+      var h = Math.max(doc.documentElement.scrollHeight || 0,
+                       doc.body ? doc.body.scrollHeight : 0);
+      if(!h) return;
+      h += 4;   /* 消除亚像素舍入造成的 2px 内部滚动条 */
+      if(Math.abs((parseInt(f.style.height, 10) || 0) - h) > 4) f.style.height = h + 'px';
+    }catch(e){}
+  }
+  function watch(f){
+    fitFrame(f);
+    setTimeout(function(){ fitFrame(f); }, 250);
+    setTimeout(function(){ fitFrame(f); }, 900);
+    try{
+      if(window.ResizeObserver && f.contentDocument && f.contentDocument.body){
+        new ResizeObserver(function(){ fitFrame(f); }).observe(f.contentDocument.body);
+      }
+    }catch(e){}
+  }
+  document.addEventListener('load', function(e){
+    var t = e.target;
+    if(t && t.tagName === 'IFRAME' && /anim-frame/.test(t.className || '')) watch(t);
+  }, true);
+  function fitAll(){
+    var fs = document.querySelectorAll('iframe.anim-frame');
+    for(var i = 0; i < fs.length; i++) fitFrame(fs[i]);
+  }
+  window.addEventListener('resize', fitAll);
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    while(t && t !== document){
+      if(t.className && String(t.className).indexOf('study-tabs') >= 0){
+        setTimeout(fitAll, 60);
+        setTimeout(fitAll, 600);
+        return;
+      }
+      t = t.parentNode;
+    }
+  }, true);
+  setTimeout(fitAll, 300);
+})();

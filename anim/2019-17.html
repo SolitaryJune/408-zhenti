@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2019-17 一条指令的取数与执行需要哪些部件</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 function card(n, cls, title, body){
@@ -104,8 +106,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：一条指令的取数与执行需要哪些部件</h2>
 <p>答案：<strong>B（I、II、III）</strong>。</p>
 <h3>第 0 步：先建立模型——一条指令的一生分五个阶段</h3>
@@ -124,7 +126,7 @@ AW.init({
 <h3>易错点：每个干扰项对应哪种误解</h3>
 <ul><li><strong>漏掉通用寄存器组（+把 ID 算进来）→ 误选 C</strong>：漏 I 的典型误解是"取数 = 访存"——眼里只有 M[R[r0]]，以为取数就是去主存拿数据。其实两个源操作数都要先过通用寄存器组：r1 的值直接从中读出（寄存器寻址），r0 里存的地址也要先从中读出（寄存器间接寻址第一步），结果最后还要在 WB 写回 r2——两头都在场，漏不掉；再叠加"把 ID 算进来"，就凑成了 C。</li><li><strong>把"执行"当成控制器的活 → 误选 D（同时多 IV、漏 II）</strong>：一个误解解释两面——把"执行指令"理解成"译码器译码、发出控制信号"，于是译码器（IV）被算成"执行"的部件混进来，而真正在 EX 阶段干活的 ALU（II）反被当成"只是运算"排除掉。落到数据通路看："执行" = ALU 对取出的两个操作数做加法。</li><li><strong>把 ID 算进来 → C、D 共有的错</strong>：题限"取数及执行"，译码器只在 ID 阶段上班，此时早已退场。四件部件里唯一该排除的就是 IV；C、D 除多算它之外，还各自漏了该要的部件（C 漏 I，D 漏 II）。</li><li><strong>漏掉存储器 → 误选 A</strong>：寄存器间接寻址的操作数在主存，"寄存器给地址、存储器出数据"，不访存拿不到。</li><li><strong>把取指阶段的访存算作 III 的理由</strong> → 不对：IF 取的是指令，"取数"取的是操作数；本题 III 成立的理由是 OF 阶段取<strong>数据</strong>要访存。</li></ul>
 <blockquote>记忆锚点：指令一生 = <strong>IF → ID → OF → EX → WB</strong>；部件题先划阶段，再让部件"对号入座"；寄存器间接 = 寄存器出地址 + 存储器出数据；译码器只在 ID 上班。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

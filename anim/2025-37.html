@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-37 NAT 对 UDP 首部字段的修改动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      概念/推理链类：NAT 改什么 → UDP 四字段逐个判 → 结论
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -126,8 +128,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：NAT 会改 UDP 首部的哪些字段</h2>
 <p><strong>答案：B</strong>（仅 I 源端口号、IV 校验和被修改）。</p>
 <h3>第一步：NAT 做了什么</h3>
@@ -139,7 +141,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>漏掉校验和</strong>：以为 NAT 只改 IP 首部、不碰 UDP；但 UDP 校验和的伪首部包含源 IP 地址，源 IP 与源端口一变它就失效，路由器必须重算——这正是 B 对 A 的差别。</li><li><strong>以为总长度也要改</strong>：长度由报文本身决定，NAT 转发时不增删载荷字节。</li><li><strong>以为目的端口要改</strong>：方向搞反——NAT 改的是「出去」方向的源端口号，目的端口原样保留。</li></ul>
 <blockquote>一句话结论：NAT 动「源」（源 IP、源端口），UDP 首部随之改 <strong>I、IV</strong>，选 <strong>B</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

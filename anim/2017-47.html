@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>2017-47 · GBN 双向捎带传输推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
-<!-- 模板：算法 / 过程演示类题目动画（外壳与控件由 assets/anim-engine.js 提供） -->
+<!-- 模板：算法 / 过程演示类题目动画（外壳与控件由 assets/anim-engine.js?v=20261119a 提供） -->
 <!-- AW_QNAV_START -->
 <style>
 .aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -169,14 +171,14 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：GBN 双向捎带传输的窗口推演与信道利用率</h2>
 <blockquote>答案速览：（1）3 个：<code>S_{0,0}</code>、<code>S_{1,0}</code>、<code>S_{2,0}</code>；（2）5 个，第一个 <code>S_{5,2}</code>、最后一个 <code>S_{1,2}</code>；（3）3 个，第一个 <code>S_{2,3}</code>；（4）50%。下面逐问推演。</blockquote>
 <h3>第 0 步：先立 GBN 的三条底层机制</h3>
 <p>这套题的所有小问都从这三条机制推出来：</p>
-<ul><li><strong>累计确认</strong>：确认号 y = "希望接收对方的下一帧序号"，等于宣告 <strong>y−1 及之前的帧已全部正确收到</strong>——看一个 y 就能一次性确认一串帧。</li><li><strong>接收窗口 = 1</strong>：GBN 接收方只按序收帧，序号不对的帧<strong>直接丢弃、不缓存</strong>——这是第(3)问"为什么整段重传"的根源。</li><li><strong>发送窗口 ≤ 2^n − 1</strong>：n=3 比特序号共 8 个（0~7），窗口却只能取 7。为什么不能取满 8？若 8 帧全部发出且都未确认，序号 0~7 同时"悬而未决"，此时收到一个确认，新旧两轮的同一序号无法区分，重传就会串号；留出一个空档就能永远分清新旧。</li></ul>
-<p>另有两笔常数账：帧长 1000B、速率 100Mbps → 发一帧用时 T_D = 1000×8 ÷ 100×10^6 = <strong>0.08ms</strong>；双方都用捎带确认，确认帧也是 1000B 的数据帧，发送用时同为 0.08ms。</p>
+<ul><li><strong>累计确认</strong>：确认号 y = "希望接收对方的下一帧序号"，等于宣告 <strong>y−1 及之前的帧已全部正确收到</strong>——看一个 y 就能一次性确认一串帧。</li><li><strong>接收窗口 = 1</strong>：GBN 接收方只按序收帧，序号不对的帧<strong>直接丢弃、不缓存</strong>——这是第(3)问"为什么整段重传"的根源。</li><li><strong>发送窗口 ≤ 2<sup>n</sup> − 1</strong>：n=3 比特序号共 8 个（0~7），窗口却只能取 7。为什么不能取满 8？若 8 帧全部发出且都未确认，序号 0~7 同时"悬而未决"，此时收到一个确认，新旧两轮的同一序号无法区分，重传就会串号；留出一个空档就能永远分清新旧。</li></ul>
+<p>另有两笔常数账：帧长 1000B、速率 100Mbps → 发一帧用时 T_D = 1000×8 ÷ 100×10<sup>6</sup> = <strong>0.08ms</strong>；双方都用捎带确认，确认帧也是 1000B 的数据帧，发送用时同为 0.08ms。</p>
 <h3>第（1）问：甲能断定乙正确接收了哪几帧</h3>
 <p>图(a) 中甲依次收到乙方三帧，逐帧读它的确认号：</p>
 <ul><li><code>R_{0,1}</code>：y=1 → 乙已收齐甲的 0 号帧（确认 1 个：<code>S_{0,0}</code>）；</li><li><code>R_{1,3}</code>：y=3 → 累计确认一步宣告甲的 0、1、2 号都已收到（新增 2 个）；</li><li><code>R_{3,3}</code>：乙的 3 号帧，y 仍是 3——<strong>没有确认任何新帧</strong>；而且甲此刻在等乙的 2 号帧，3 号帧是失序帧，按"接收窗口 = 1"被甲直接丢弃，不带来任何信息。</li></ul>
@@ -194,9 +196,9 @@ AW.init({
 <p>周期内最多连发 7 帧（窗口 7），发送数据的时间 = 7 × 0.08 = <strong>0.56ms</strong>。</p>
 <p>信道利用率 = 0.56 ÷ 1.12 = <strong>50%</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>把 <code>R_{3,3}</code> 当新确认</strong>：y 仍是 3，且对甲是乱序帧被丢弃——第(1)问的帧数、第(2)问的 y 都不受它影响。</li><li><strong>窗口当 8 用</strong>：GBN 发送窗口最大 2^3 − 1 = 7；取 8 会新旧串号，第(2)问就会多算一个序号。</li><li><strong>第(2)问确认号填 4</strong>：<code>R_{3,3}</code> 被丢弃，甲仍在等乙的 2 号帧，y=2 不是 4。</li><li><strong>第(3)问只重发 1 帧</strong>：忘了接收窗口 = 1、失序帧全丢——3、4 号必须整段重传。</li><li><strong>利用率漏加 T_A</strong>：分母是 0.08 + 0.96 + 0.08 = 1.12ms，漏项会得约 58%。</li></ul>
+<ul><li><strong>把 <code>R_{3,3}</code> 当新确认</strong>：y 仍是 3，且对甲是乱序帧被丢弃——第(1)问的帧数、第(2)问的 y 都不受它影响。</li><li><strong>窗口当 8 用</strong>：GBN 发送窗口最大 2<sup>3</sup> − 1 = 7；取 8 会新旧串号，第(2)问就会多算一个序号。</li><li><strong>第(2)问确认号填 4</strong>：<code>R_{3,3}</code> 被丢弃，甲仍在等乙的 2 号帧，y=2 不是 4。</li><li><strong>第(3)问只重发 1 帧</strong>：忘了接收窗口 = 1、失序帧全丢——3、4 号必须整段重传。</li><li><strong>利用率漏加 T_A</strong>：分母是 0.08 + 0.96 + 0.08 = 1.12ms，漏项会得约 58%。</li></ul>
 <blockquote>一句话：累计确认读 y 即知收了哪几帧；窗口 7 决定还能发几帧；超时重传全部已发未确认（乙接收窗口 1 丢了 3、4 号）；利用率 = 7×0.08 ÷ 1.12 = 50%。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

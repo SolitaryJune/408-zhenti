@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-16 组相联Cache比较器</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .aw-box.blue{ background:#d9e3df; border-color:#1b3a4b; color:#1b3a4b; }
 .aw-box.amber{ background:#f8edcb; border-color:#e07a2f; color:#92400e; }
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -168,11 +170,11 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：组相联 Cache 的比较器个数与位数</h2>
 <h3>第一步：求块数与组数</h3>
-<ul><li>主存块大小 64 B → 块内地址占 6 位（<code>2^6 = 64</code>）；</li><li>Cache 数据区 32 KB ÷ 64 B = <strong>512 块</strong>；</li><li>8 路组相联 → 组数 = 512 ÷ 8 = <strong>64 组</strong> → 组号占 6 位（<code>2^6 = 64</code>）。</li></ul>
+<ul><li>主存块大小 64 B → 块内地址占 6 位（<code>2<sup>6</sup> = 64</code>）；</li><li>Cache 数据区 32 KB ÷ 64 B = <strong>512 块</strong>；</li><li>8 路组相联 → 组数 = 512 ÷ 8 = <strong>64 组</strong> → 组号占 6 位（<code>2<sup>6</sup> = 64</code>）。</li></ul>
 <h3>第二步：拆主存地址，定 tag 位数</h3>
 <p>32 位主存地址从高到低：</p>
 <table><thead><tr><th>字段</th><th>位数</th><th>来源</th></tr></thead><tbody><tr><td>tag</td><td>20</td><td>32 - 6 - 6 = 20</td></tr><tr><td>组号</td><td>6</td><td>64 组</td></tr><tr><td>块内偏移</td><td>6</td><td>64 B</td></tr></tbody></table>
@@ -180,9 +182,9 @@ AW.init({
 <p>访问时用组号定位一组，组内 <strong>8 路</strong>的 tag 必须同时与主存地址的 tag 比较 → <strong>每路 1 个比较器，共 8 个</strong>；每个比较器比较 tag 全部 20 位。</p>
 <p><strong>答案：A</strong>（8 个，20 位）。</p>
 <h3>易错点</h3>
-<ul><li><strong>比较器按组数算成 64 个</strong>：同一组内的 8 行才需要并行比较 tag，比较器数量跟路数走，不跟组数走。</li><li><strong>tag 位数算成 23</strong>：误把 8 路（<code>2^3</code>）当成组号 3 位，得 32 - 3 - 6 = 23——组号位数由组数 64 决定，不是由路数决定。</li><li><strong>忘了按字节编址</strong>：64 B 块对应 6 位块内地址，别少算。</li></ul>
+<ul><li><strong>比较器按组数算成 64 个</strong>：同一组内的 8 行才需要并行比较 tag，比较器数量跟路数走，不跟组数走。</li><li><strong>tag 位数算成 23</strong>：误把 8 路（<code>2<sup>3</sup></code>）当成组号 3 位，得 32 - 3 - 6 = 23——组号位数由组数 64 决定，不是由路数决定。</li><li><strong>忘了按字节编址</strong>：64 B 块对应 6 位块内地址，别少算。</li></ul>
 <blockquote>一句话结论：tag = 20 位，每路一个比较器 → 8 个 20 位比较器，选 A。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

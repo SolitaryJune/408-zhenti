@@ -22,7 +22,7 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 YEARS = list(range(2009, 2027))
-ASSET_VER = "20261118b"
+ASSET_VER = "20261119a"
 
 SUBJECTS = {
     "数据结构": {"cls": "ds", "color": "#e07a2f", "bg": "#e07a2f1f"},
@@ -35,6 +35,30 @@ SUBJECTS = {
 
 def esc(s: str) -> str:
     return htmllib.escape(s, quote=False)
+
+
+SUP_RE = re.compile(r"\^\{([^}\n]+)\}|\^\(([^)\n]+)\)|\^([+\-\u2212]?[A-Za-z0-9]+)")
+
+
+def sup_text(s: str) -> str:
+    return SUP_RE.sub(lambda m: "<sup>" + (m.group(1) or m.group(2) or m.group(3)) + "</sup>", s)
+
+
+def sup_html(html: str) -> str:
+    """正文里的 2^n / 2^{n-1} / 2^(n-1) 转成上标（跳过 HTML 标签与 pre/script 内容；行内 code 也转换）。"""
+    parts = re.split(r"(<[^>]+>)", html)
+    out, depth = [], 0
+    for part in parts:
+        if part.startswith("<"):
+            t = part.lower()
+            if re.match(r"<(pre|script|style)\b", t) and not t.endswith("/>"):
+                depth += 1
+            elif re.match(r"</(pre|script|style)>", t):
+                depth = max(0, depth - 1)
+            out.append(part)
+        else:
+            out.append(part if depth else sup_text(part))
+    return "".join(out)
 
 
 def img_size(path: Path):
@@ -91,7 +115,7 @@ def imgfix(html: str, rel: str) -> str:
     """把题面里的 content-images/ 引用改写为本地相对路径（src/srcset 通吃）。"""
     s = html.replace("/content-images/", rel + "images/")   # 绝对站根引用
     s = s.replace("content-images/", rel + "images/")        # 剩余裸相对引用
-    return fix_img_dims(s)
+    return sup_html(fix_img_dims(s))
 
 
 def md2html(md: str) -> str:
@@ -106,7 +130,7 @@ def md2html(md: str) -> str:
         s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
         s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)",
                    r'<a href="\2" target="_blank" rel="noopener noreferrer">\1</a>', s)
-        return s
+        return sup_html(s)
 
     while i < n:
         line = lines[i]
@@ -917,6 +941,52 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
   var study = btn.closest('.study');
   if(study) setTimeout(function(){ study.scrollIntoView({block:'center'}); }, 100);
 })();
+
+/* ---------- 动画 iframe 高度自适应：整页内嵌显示，不出现内部滚动条 ---------- */
+(function(){
+  function fitFrame(f){
+    try{
+      var doc = f.contentDocument;
+      if(!doc || !doc.documentElement) return;
+      var h = Math.max(doc.documentElement.scrollHeight || 0,
+                       doc.body ? doc.body.scrollHeight : 0);
+      if(!h) return;
+      h += 4;   /* 消除亚像素舍入造成的 2px 内部滚动条 */
+      if(Math.abs((parseInt(f.style.height, 10) || 0) - h) > 4) f.style.height = h + 'px';
+    }catch(e){}
+  }
+  function watch(f){
+    fitFrame(f);
+    setTimeout(function(){ fitFrame(f); }, 250);
+    setTimeout(function(){ fitFrame(f); }, 900);
+    try{
+      if(window.ResizeObserver && f.contentDocument && f.contentDocument.body){
+        new ResizeObserver(function(){ fitFrame(f); }).observe(f.contentDocument.body);
+      }
+    }catch(e){}
+  }
+  document.addEventListener('load', function(e){
+    var t = e.target;
+    if(t && t.tagName === 'IFRAME' && /anim-frame/.test(t.className || '')) watch(t);
+  }, true);
+  function fitAll(){
+    var fs = document.querySelectorAll('iframe.anim-frame');
+    for(var i = 0; i < fs.length; i++) fitFrame(fs[i]);
+  }
+  window.addEventListener('resize', fitAll);
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    while(t && t !== document){
+      if(t.className && String(t.className).indexOf('study-tabs') >= 0){
+        setTimeout(fitAll, 60);
+        setTimeout(fitAll, 600);
+        return;
+      }
+      t = t.parentNode;
+    }
+  }, true);
+  setTimeout(fitAll, 300);
+})();
 """
 
 FOOTER_TXT = """本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
@@ -1152,6 +1222,8 @@ QNAV_SCRIPT = """<script>
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -1425,11 +1497,11 @@ def build(meta: dict, all_q: list[dict]) -> None:
         src = af.read_text(encoding="utf-8")
         block = (
             "<!-- AW_EXPLAIN_START -->\n"
-            '<details class="aw-explain" open>\n'
-            '<summary><span class="aw-explain-title">📝 文字讲解</span>'
-            '<span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>\n'
+            '<section class="aw-explain">\n'
+            '<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span>'
+            '<span class="aw-explain-sub">与动画配套的完整讲解</span></div>\n'
             f'<div class="aw-explain-body">{md2html(ef.read_text(encoding="utf-8"))}</div>\n'
-            "</details>\n<!-- AW_EXPLAIN_END -->"
+            "</section>\n<!-- AW_EXPLAIN_END -->"
         )
         if "<!-- AW_EXPLAIN_START -->" in src:
             src = re.sub(r"<!-- AW_EXPLAIN_START -->.*?<!-- AW_EXPLAIN_END -->", lambda m: block,
@@ -1438,6 +1510,17 @@ def build(meta: dict, all_q: list[dict]) -> None:
             src = src.replace("</body>", block + "\n</body>", 1)
         af.write_text(src, encoding="utf-8")
         n_explain += 1
+
+    # ---------- 静态资源版本号归一（cache-bust，防止旧 JS/CSS 残留） ----------
+    for f in root.glob("**/*.html"):
+        try:
+            s = f.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        s2 = re.sub(r"assets/(style\.css|app\.js|anim\.css|anim-engine\.js)(\?v=[0-9a-z]*)?",
+                    lambda m: f"assets/{m.group(1)}?v={ASSET_VER}", s)
+        if s2 != s:
+            f.write_text(s2, encoding="utf-8")
 
     print(f"站点已生成：首页 1 + 年份页 {len(by_year)} + 单题页 {len(all_q)}"
           f" + 知识点/搜索/错题本 3 + 动画占位 {n_placeholder} + 动画讲解注入 {n_explain}"

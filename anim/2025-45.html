@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-45 三人植树的同步互斥设计</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -161,8 +163,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：三人植树——用生产者-消费者链搭同步互斥</h2>
 <h3>第 0 步：先立机制——这是一条"坑 → 苗"的生产者-消费者链</h3>
 <p>植树流水线是：<strong>甲挖坑 → 乙放树苗 → 乙填土 → 丙浇水</strong>。把它看成两级生产者-消费者：甲"生产"空坑，乙"消费"坑、再"生产"待浇水的苗，丙"消费"苗。同步信号量的通用配法就一句话：<strong>前件做完的地方 signal（资源 +1），后件开始之前 wait（资源 −1）</strong>——没有资源时后件自然阻塞，工序顺序由信号量强行锁定。互斥信号量只发给<strong>多人争用的同一件工具</strong>；只有一人使用的工具不存在竞争，设了反而违背"尽可能少"。</p>
@@ -204,7 +206,7 @@ while (1) {
 <h3>易错点</h3>
 <ul><li><strong>给水桶也设信号量</strong>：水桶只有丙使用，无竞争，设置它违背"尽可能少"。</li><li><strong>漏掉 position</strong>：没有它无法表达"树坑数量小于 3 才能挖"。</li><li><strong>position 初值答 2</strong>："小于 3 才能挖"允许空坑数达到 3，名额上限是 3 不是 2。</li><li><strong>signal(position) 的位置放错</strong>：应在放树苗之后（空坑被占用、名额归还），而不是填土之后。</li></ul>
 <blockquote>一句话结论：position(3)、pit(0)、tree(0)、mutex(1) 共 4 个信号量——同步沿"坑 → 苗"生产链"前 signal、后 wait"，互斥只护两人争用的铁锹，水桶免设。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

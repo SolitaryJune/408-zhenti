@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2014-47 多生产者多消费者：连续取 10 件的信号量设计</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -185,8 +187,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：多生产者多消费者 + "连续取 10 件"的信号量设计（9 分）</h2>
 <h3>先立机制：这道题要管住哪两件事</h3>
 <p>生产者-消费者问题的底层是两类约束，各自对应一种信号量：</p>
@@ -204,7 +206,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>同步 P 写在互斥 P 之后</strong>：先 <code>P(mutex2)</code> 再 <code>P(empty)</code>，进程可能抱着缓冲区锁等空位而死锁。</li><li><strong>漏掉 mutex1</strong>：只有 mutex2 时每取一件就放锁，其他消费者可以插进来，"连续取 10 件"被破坏。</li><li><strong>把 mutex1 写进生产者</strong>：mutex1 只约束消费者之间；生产者只碰 empty、mutex2、full。</li><li><strong>empty 初值写成 0 或 1</strong>：它是空位计数，初值 = 缓冲区容量 1000。</li></ul>
 <blockquote>一句话结论：empty/full 管数量同步，mutex2 管单次互斥，mutex1 把"连续取 10 件"当一个整体锁起来——且 mutex1 不拦生产者，才能边取边补、不会死锁。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

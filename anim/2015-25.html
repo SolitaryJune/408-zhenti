@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2015-25 执行态变为就绪态的事件</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -156,8 +158,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：运行态 → 就绪态的触发事件</h2>
 <p>答案：<strong>D</strong>（被高优先级进程抢占）。</p>
 <h3>第一步：区分两条"下台"路径</h3>
@@ -170,7 +172,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>误选 A/B/C</strong>：三者都是"等资源/等事件"，属于<strong>阻塞</strong>而非就绪；阻塞进程即使 CPU 空闲也不能被调度，必须先等事件发生被唤醒。</li><li><strong>混淆"抢占"与"自愿让出"</strong>：抢占（剥夺）是调度程序强制收回 CPU，进程本身可运行，所以回到<strong>就绪</strong>队列。</li></ul>
 <blockquote>一句话结论：等资源 → 阻塞；被抢 CPU → 就绪。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

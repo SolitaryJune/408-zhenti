@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2016-47 FAT 链接分配：读第 5000 字节的访盘链</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 /* 链接分配 + FAT：簇 4KB；dir(dir1→48)，dir1(file1→100, file2→200)；file1 链 100→106→108 */
@@ -167,8 +169,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：链接分配 + FAT 的按名存取全链路</h2>
 <p><strong>答题框架</strong>：链接分配下每个文件是一串磁盘簇用"下一簇指针"串成的<strong>单链表</strong>；目录文件只记入口（文件名, 首簇号），FAT 记后续（每个簇号的下一簇号）。四问分别是：看目录（入口表）、算 FAT 的容量上限、顺着链对号、按链走一遍读字节。</p>
 <h3>第 0 步：先立模型——簇、目录项、FAT 各扮演什么角色</h3>
@@ -178,7 +180,7 @@ AW.init({
 <table><thead><tr><th>目录文件</th><th>内容</th></tr></thead><tbody><tr><td>dir</td><td>dir1，48</td></tr><tr><td>dir1</td><td>file1，100；file2，200</td></tr></tbody></table>
 <p><strong>为什么目录项里没有 106、108 这些后续簇号</strong>：链接分配中后续簇由 FAT 链给出，目录只管入口——这正是"按名存取"只查目录、再顺 FAT 走的结构基础。</p>
 <h3>问（2）：FAT 最大长度与最大文件长度</h3>
-<ul><li>FAT 每个表项只有 2 字节且只存簇号 → 簇号必须是 16 位以内的数 → 磁盘最多 <strong>2^16 = 65536</strong> 个簇（表项必须装得下任何一个有效簇号，簇号位数就是簇总数的天花板）；</li><li>FAT 最大长度 = 65536 × 2B = <strong>128KB</strong>；</li><li>最大文件：链接分配对单个文件占多少簇没有额外限制，极端情形一个文件独占全部簇 → 65536 簇 × 4KB/簇 = <strong>256MB</strong>。</li></ul>
+<ul><li>FAT 每个表项只有 2 字节且只存簇号 → 簇号必须是 16 位以内的数 → 磁盘最多 <strong>2<sup>16</sup> = 65536</strong> 个簇（表项必须装得下任何一个有效簇号，簇号位数就是簇总数的天花板）；</li><li>FAT 最大长度 = 65536 × 2B = <strong>128KB</strong>；</li><li>最大文件：链接分配对单个文件占多少簇没有额外限制，极端情形一个文件独占全部簇 → 65536 簇 × 4KB/簇 = <strong>256MB</strong>。</li></ul>
 <h3>问（3）：106、108 存在 FAT 的哪个表项</h3>
 <p>file1 的簇链是 100 → 106 → 108（题表顺序）。<code>FAT[c]</code> 存"簇 c 的下一簇"，所以 FAT[100] = 106、FAT[106] = 108：<strong>106 存放在 FAT 的 100 号表项，108 存放在 FAT 的 106 号表项</strong>。规律一句话：链上第 i 个簇号，存放在它前一个簇号对应的表项里；首簇号在目录项里，不占 FAT 表项。</p>
 <h3>问（4）：读 dir/dir1/file1 第 5000 字节要访问哪几个簇</h3>
@@ -187,7 +189,7 @@ AW.init({
 <ol><li>在内存的 dir 目录文件中查 dir1 → 首簇号 48；dir1 的内容不在内存 → <strong>访问簇 48</strong>，读出 dir1 目录文件；</li><li>在簇 48 中查 file1 → 首簇号 100；要的是第 2 簇，第 1 簇（100）不用读——字节 1~4096 都在第 1 簇里，不含第 5000 字节；</li><li>查内存 FAT：FAT[100] = 106 → <strong>访问簇 106</strong>，从簇内偏移 904 处取到第 5000 字节。</li></ol>
 <p>所以需要访问的簇为 <strong>簇 48 和簇 106</strong>，共 2 次访盘；dir 与 FAT 均在内存命中，不产生访盘。</p>
 <blockquote>链路记忆：目录管入口（名字→首簇），FAT 管后续（本簇→下一簇）；读远端字节 = 先定位在第几簇，再用内存里的目录/FAT 拿到簇号，只把真正含目标字节的簇读进内存。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

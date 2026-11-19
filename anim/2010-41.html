@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2010-41 散列表构造与 ASL · 动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -181,8 +183,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：散列表构造与两种平均查找长度</h2>
 <h3>第 0 步：先立机制——地址是"算"出来的，冲突靠"顺次挪位"</h3>
 <p>散列表的基本思想：<strong>地址不靠比较找，直接由关键字算出来</strong>。本题 H(key) = (key×3) mod 7，模 7 决定了算出的地址只可能是 0～6——这 7 个地址是今后一切查找（无论成败）的入口。装填因子 α = 表中元素数 ÷ 表长，衡量表的"拥挤程度"；题目给 α = 0.7、7 个元素，表长 = 7 ÷ 0.7 = <strong>10</strong>（下标 0～9）。注意：表长 10 与模数 7 是两回事——散列地址只有 0～6，下标 7～9 只是冲突挪位时的"后备区"，这正是后面不成功查找分母取 7 的根源。</p>
@@ -202,7 +204,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>分母写成表长 10</strong>：失败查找的入口由散列函数决定，只有模 7 的 7 个地址；7～9 只是冲突后备区。</li><li><strong>把成功 ASL 另起炉灶算</strong>：它就是插入探测次数之和——查找重走插入路径。</li><li><strong>漏数冲突链</strong>：18 被 11、30 连挡两次，9 被 30、18 连挡两次，探测次数须数到落位/空位为止。</li></ul>
 <blockquote>结论：散列表为 7、14、空、8、空、11、30、18、9、空；ASL成功 = 12/7，ASL不成功 = 18/7。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

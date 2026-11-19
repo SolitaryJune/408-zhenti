@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2017-42 Prim 求最小生成树 · SVG 逐步选边动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .psvg{width:100%;max-width:640px;display:block;margin:0 auto;background:#f8edcb;
     border:1px solid #1b3a4b38;border-radius:12px}
@@ -61,6 +61,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -82,7 +84,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 2017-42 Prim 从 A 求 MST（SVG 逐步选边） ==================
  * 图 G：AB=6 · AD=4 · AE=5 · BC=4 · CD=6 · CE=5 · DE=4
@@ -243,8 +245,8 @@ AW.init({
 });
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：Prim 算法求 MST 与唯一性判断</h2>
 <p>答案要点：（1）依次选边 <strong>(A, D)、(D, E)、(C, E)、(B, C)</strong>；（2）本题 MST <strong>唯一</strong>；（3）<strong>任意环上所有边权值均不相同时 MST 唯一</strong>（充分条件：所有边权互不相同）。</p>
 <h3>第 0 步：Prim 为什么"每轮选最小横切边"是对的——先立机制</h3>
@@ -263,7 +265,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把 Prim 当 Kruskal</strong>：Kruskal 按权从小到大全局选边、用并查集判环；Prim 每轮只在「树内 ↔ 树外」的横切边里选，候选边范围完全不同。</li><li><strong>候选边列漏</strong>：每轮必须扫 U 内全部顶点对 U 外全部顶点，漏一条就可能选错（如第 2 轮漏掉 DE=4 会误选 AE=5）。</li><li><strong>唯一性说理只有结论</strong>：只答"是唯一的"拿不到分，要给依据——每轮最小边无并列 + 总权 17 的生成树仅一棵。</li><li><strong>条件答偏</strong>：唯一性只与<strong>环上边权是否并列</strong>有关，与顶点度数、边数、起点选择无关。</li></ul>
 <blockquote>一句话结论：Prim 逐轮取最小横切边得 (A,D)、(D,E)、(C,E)、(B,C)，总权 17；割的最小横切边处处唯一 ⇒ MST 唯一；一般判据是任意环上边权互不相同。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

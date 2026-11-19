@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2011-44 虚拟地址 → 物理地址 → Cache / TLB 全链路</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 算法/过程类动画（复制 tools/anim_algo_template.html，只改 AW.init 区域）
@@ -35,6 +35,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -56,7 +58,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -264,8 +266,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：虚拟地址 → 物理地址 → Cache / TLB 全链路（综合题）</h2>
 <h3>第 0 步：先立机制——一次访存要过三道关卡</h3>
 <p>把整条链路想成一趟"翻译 + 缓存"的流水线，四个小问全挂在这条链上：</p>
@@ -286,7 +288,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>页号位数另起炉灶算</strong>：页号位数 = 地址位数 − 页内偏移位数（24−12、20−12），不存在"再减一"或"再加一"。</li><li><strong>Cache 字段从高位起分</strong>：顺序只能从低位起——块内 5 位、行号 3 位、标记 12 位；行号是用来"选行"的索引，不是标记。</li><li><strong>把有效位当命中</strong>：有效位 1 且 tag 相等才叫命中，缺一不可——第 3 问的陷阱正设在这里。</li><li><strong>TLB 组号用整个虚页号</strong>：2 组时组号只占虚页号最低 1 位，其余 11 位是 TLB 标记；组号那一位不参与比较。</li></ul>
 <blockquote>一句话：24 位虚地址高 12 位查页表（001H → 04H），偏移不变拼出 04C60H；Cache 按"块内 5 + 行号 3 + 标记 12"拆开，第 3 行标记 105H ≠ 04CH 不命中；024BAC 的虚页 024H 在 TLB 第 0 组（标记 012H）命中，页面在主存。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

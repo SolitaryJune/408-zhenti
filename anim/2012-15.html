@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2012-15 结构体对齐 + 小端布局 · 过程动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -143,8 +145,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：结构体边界对齐 + 小端方式的内存布局</h2>
 <p><strong>答案：D</strong>——地址 0xC008 中内容是 <code>0x11</code>，record.c 的地址是 <code>0xC00E</code>。</p>
 <h3>第一步：把 273 写成 4 个字节</h3>
@@ -157,7 +159,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>按大端方式放 273</strong>：大端会把最高字节 00 放进 0xC008（干扰项 A、B 的 0x00），本题明确是小端。</li><li><strong>让 c 顶在 0xC00D</strong>：short 必须 2 字节对齐，0xC00D 奇地址不合法（干扰项 A、C 的 0xC00D）。</li><li><strong>忘记对齐产生的空洞</strong>：b 与 c 之间的 0xC00D 是 1 字节填充，不属于任何成员。</li></ul>
 <blockquote>记忆点：小端 = 低字节在低地址；short / int 的起始地址必须分别是 2 / 4 的倍数，放不下就留空洞。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

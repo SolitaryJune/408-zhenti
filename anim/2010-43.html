@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2010-43 指令格式与 add (R4),(R5)+ · 过程动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域 ================== */
 var BITS = '0010001100010101'.split('');
@@ -226,17 +228,17 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：单字长指令格式与 add (R4),(R5)+ 的机器码</h2>
 <h3>第 0 步：先立机制——指令字是 16 位的"字段拼图"，位数由"要区分多少、要指到多少"决定</h3>
 <p>单字长指令 = 一条指令占一个字（16 位），内部按固定宽度切块。本题布局（自 15～12 起）：<strong>操作码 OP 4 位 | 源寻址方式 Ms 3 位、源寄存器号 Rs 3 位 | 目的寻址方式 Md 3 位、目的寄存器号 Rd 3 位</strong>。机器码就是按字段"对号填空"拼出的 16 个二进制位。三条位数规律：</p>
-<ul><li><strong>操作码位数 ↔ 指令条数</strong>：每条指令要靠唯一操作码区分，4 位给出 2^4 = 16 个编码 → 最多 <strong>16 条指令</strong>。</li><li><strong>寄存器编号位数 ↔ 寄存器数</strong>：3 位编号 → 2^3 = <strong>8 个通用寄存器</strong>。</li><li><strong>MAR 位数 ↔ 可寻址单元数</strong>：MAR 必须指得到每一个存储单元。主存 128KB、按字编址、字长 16 位（2B）→ 128KB ÷ 2B = 64K = 2^16 个字单元 → <strong>MAR ≥ 16 位</strong>；MDR 与主存一次传送一个存储字（存储字长 = 字长 = 16 位）→ <strong>MDR ≥ 16 位</strong>。</li></ul>
+<ul><li><strong>操作码位数 ↔ 指令条数</strong>：每条指令要靠唯一操作码区分，4 位给出 2<sup>4</sup> = 16 个编码 → 最多 <strong>16 条指令</strong>。</li><li><strong>寄存器编号位数 ↔ 寄存器数</strong>：3 位编号 → 2<sup>3</sup> = <strong>8 个通用寄存器</strong>。</li><li><strong>MAR 位数 ↔ 可寻址单元数</strong>：MAR 必须指得到每一个存储单元。主存 128KB、按字编址、字长 16 位（2B）→ 128KB ÷ 2B = 64K = 2<sup>16</sup> 个字单元 → <strong>MAR ≥ 16 位</strong>；MDR 与主存一次传送一个存储字（存储字长 = 字长 = 16 位）→ <strong>MDR ≥ 16 位</strong>。</li></ul>
 <h3>第(1)问</h3>
 <p>16 条指令；8 个通用寄存器；MAR、MDR 至少各 <strong>16 位</strong>。</p>
 <h3>第(2)问：转移目标地址为什么是全空间</h3>
-<p>题目定义相对寻址：<strong>转移目标地址 = (PC) + 偏移量</strong>，偏移量用补码表示、占 16 位（−32768～+32767）。加法在 16 位运算器里按<strong>模 2^16</strong> 进行——第 17 位进位自然丢弃（补码运算本就是模运算，丢进位不影响 16 位内的结果）。</p>
-<p><strong>为什么范围是 0000H～FFFFH？</strong> 任给目标地址 T 与转移指令所在位置 P，偏移 = T − P (mod 2^16) 总落在 16 位补码可表示范围内——PC 在任何位置都"够得到"任何目标。对所有 PC 取并集即整个主存：<strong>0000H～FFFFH（0～65535）</strong>。</p>
+<p>题目定义相对寻址：<strong>转移目标地址 = (PC) + 偏移量</strong>，偏移量用补码表示、占 16 位（−32768～+32767）。加法在 16 位运算器里按<strong>模 2<sup>16</sup></strong> 进行——第 17 位进位自然丢弃（补码运算本就是模运算，丢进位不影响 16 位内的结果）。</p>
+<p><strong>为什么范围是 0000H～FFFFH？</strong> 任给目标地址 T 与转移指令所在位置 P，偏移 = T − P (mod 2<sup>16</sup>) 总落在 16 位补码可表示范围内——PC 在任何位置都"够得到"任何目标。对所有 PC 取并集即整个主存：<strong>0000H～FFFFH（0～65535）</strong>。</p>
 <h3>第(3)问：汇编 → 机器码 → 执行</h3>
 <p>查题目寻址方式定义表：<strong>001B = 寄存器间接 (Rn)</strong>（操作数 = ((Rn))），<strong>010B = 寄存器间接自增 (Rn)+</strong>（操作数 = ((Rn))，取完再 (Rn)+1 → Rn）。据此拆解 <code>add (R4),(R5)+</code>（逗号前为源、后为目的）：</p>
 <table><thead><tr><th>字段</th><th>含义</th><th>编码</th></tr></thead><tbody><tr><td>OP</td><td>add 操作码</td><td>0010</td></tr><tr><td>Ms / Rs</td><td>源 = (R4)：间接、R4 = 100B</td><td>001 / 100</td></tr><tr><td>Md / Rd</td><td>目的 = (R5)+：间接自增、R5 = 101B</td><td>010 / 101</td></tr></tbody></table>
@@ -247,7 +249,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>字段位置拼反</strong>：Rd 占最低 3 位，(R5)+ 的 101B 必须落在末尾，否则拼不出 2315H。</li><li><strong>漏掉 (R5) 自增</strong>：先用后增，R5 终值 5679H；漏掉就少答一处"改变"。</li><li><strong>写回位置想当然</strong>：目的操作数在存储器，68ACH 写进 5678H 单元；写成"写回 R5"或改动 (1234H) 都错。</li></ul>
 <blockquote>一句话结论：16 条指令、8 个寄存器、MAR/MDR 各 16 位；转移目标 0000H～FFFFH；机器码 2315H，执行后 R5 = 5679H、(5678H) = 68ACH。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2021-46 · 多阶段引导与制作启动盘</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 /* 页面专属小样式（仅本页舞台内容使用） */
 .chain{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:4px 0 2px; }
@@ -45,6 +45,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -66,7 +68,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -166,8 +168,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：多阶段引导的接力顺序与制盘顺序</h2>
 <h3>第 0 步：先立机制——为什么启动必须"逐级接力"</h3>
 <p>CPU 加电那一刻，内存（RAM）是空的，没有程序可取，所以第一步只能执行<strong>固化在 ROM 里</strong>的引导程序——它不依赖磁盘、加电即可运行。但 ROM 里的程序做不了太多事，它只认得"约定好的固定位置"：去硬盘第一个扇区（主引导记录 MBR）把<strong>磁盘引导程序</strong>读进内存、交出控制权；磁盘引导程序查分区表，把选定分区第一个扇区里的<strong>分区引导程序</strong>读进内存、交出控制权；分区引导程序认识该分区的文件系统，把操作系统装载进来，交给<strong>操作系统的初始化程序</strong>。接力能一棒一棒传下去，靠的是"每一级都知道下一级放在哪个固定位置"。</p>
@@ -183,7 +185,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把 ROM 引导程序与磁盘引导程序颠倒</strong>：ROM 里的程序最先执行，磁盘引导程序是被它读进内存后才执行的。</li><li><strong>把分区放在物理格式化之前</strong>：没划扇区的"生盘"无处记录分区信息。</li><li><strong>把建根目录归到"安装操作系统"</strong>：根目录随逻辑格式化建立，与装不装 OS 无关。</li></ul>
 <blockquote>记忆锚点：启动接力 ROM → 磁盘引导 → 分区引导 → OS 初始化；制盘 物理格式化 → 分区 → 逻辑格式化 → 安装 OS；扇区划分属物理格式化，根目录建立属逻辑格式化。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2010-42 循环左移 · 三次逆置动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -151,8 +153,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：三次逆置原地实现循环左移 p 个位置</h2>
 <h3>第 0 步：先看清问题结构——要的是"两段换位"</h3>
 <p>把数组切成两段：a = 前 p 个元素（下标 0～p−1），b = 后 n−p 个元素（下标 p～n−1），整个数组就是拼接串 ab；循环左移 p 位 = 把 ab 变成 <strong>ba</strong>——两段整体换位、段内顺序不动。直接把 b 搬到前面，要开一块与 b 同大的辅助数组；而"逆置"操作自带一条恒等式，能让我们<strong>原地</strong>完成：对两段拼接 XY 整体逆置，等于<strong>段序翻转、各段内部各自翻转</strong>，即 (XY)R = YR XR。</p>
@@ -171,7 +173,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>区间边界写错</strong>：前段 0～p−1 共 p 个、后段 p～n−1 共 n−p 个；把 <code>p-1</code> 写成 <code>p</code>，会把下标为 p 的元素卷进前段，三步之后结果错。</li><li><strong>逆置函数翻过头</strong>：循环必须止于区间中点；若一路翻到 <code>to</code>，每对元素被交换两次、等于没翻。</li><li><strong>以为必须开辅助数组</strong>：直接平移 b 要 O(n) 辅助空间；三次逆置是原地解法。</li></ul>
 <blockquote>结论：三次逆置 = 先局部翻、再整体翻，恒等式 (aR bR)R = ba 保证正确；时间 O(n)、空间 O(1)。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

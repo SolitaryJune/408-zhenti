@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2014-42 OSPF 链路状态图 · Dijkstra 最短路径</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .dij-svg{width:100%;max-width:700px;display:block;margin:0 auto;background:#f8edcb;
     border:1px solid #1b3a4b38;border-radius:12px}
@@ -62,6 +62,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -83,7 +85,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 2014-42 Dijkstra 动画（SVG 拓扑图） ==================
  * 题42图拓扑：路由器 R1~R4 + 直连子网 N1=192.1.1.0/24、N5=192.1.5.0/24、N6=192.1.6.0/24、N7=192.1.7.0/24
@@ -269,8 +271,8 @@ AW.init({
 });
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：OSPF 链路状态信息的存储与最短路径计算</h2>
 <h3>先立机制：OSPF 与"图"是怎么接上来的</h3>
 <p>OSPF 是<strong>链路状态</strong>协议：每台路由器把自己的邻接情况（到谁、本地接口 IP、代价 Metric）封装成链路状态信息（LSI）<strong>泛洪</strong>给全网；每台路由器收齐所有 LSI 后，就能在本地<strong>拼出一幅完整的带权拓扑图</strong>。所以"网络 → 数据结构"的翻译规则是：路由器、子网都是<strong>顶点</strong>，链路/直连网络是<strong>边</strong>，Metric 是<strong>边权</strong>；链路双向可达，边没有方向——抽象为<strong>图（无向图）</strong>。而"已知全图、边权非负、求单源最短路"正是 <strong>Dijkstra 算法</strong>的适用场景——第 3 问用它不是巧合，是 OSPF 的协议设计本身。</p>
@@ -293,7 +295,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>答成树或线性结构</strong>：多对多邻接 + 有回路，必须答"图（无向图）"。</li><li><strong>漏掉 Flag/union</strong>：Link 与 Net 字段不同，弧结点必须能区分并二选一存储，这是给分点。</li><li><strong>最短路径只报费用不报路径</strong>：第 3 问要求"路径及费用"两者都写全。</li><li><strong>N7 误取 9</strong>：只看了 R1-R3-R4 一条路，忘了 R2 方向的松弛会把 R4 的距离更新得更小。</li></ul>
 <blockquote>记忆锚点：OSPF 链路状态 → 泛洪 LSI → 全网带权图；存储 → 表头 + 弧结点邻接表；算路 → Dijkstra 逐点定案、逐边松弛。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

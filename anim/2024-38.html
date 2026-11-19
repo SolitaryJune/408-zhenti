@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-38 · TCP 从建连到 CLOSED 的最短时间</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      过程推演动画：建连 1RTT + 数据 2RTT + 释放 1RTT + 2MSL = 60.04s（答案 D）
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -161,8 +163,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：TCP 从请求建连到进入 CLOSED 的最短时间</h2>
 <p>答案：<strong>D</strong>（60.04 s）。</p>
 <h3>第一步：拆解全程阶段</h3>
@@ -175,7 +177,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>忘了 TIME_WAIT</strong>：主动关闭方要等 2MSL = 60 s 才进入 CLOSED，60 s 的大头就在这里。</li><li><strong>数据阶段只算 1 RTT（得 60.03 s）</strong>：连接刚建立时慢开始，拥塞窗口从 1 MSS 起步，3 个报文段要 2 个 RTT 才能全部发出，还要再等最后一段的确认才算"报文传输结束"。</li><li><strong>单位叠加出错</strong>：40 ms + 60 s = 60.04 s，不是 60.03 s，也不是 60.4 s。</li></ul>
 <blockquote>一句话结论：建连 1 RTT + 数据 2 RTT + 释放 1 RTT + 2MSL = 40 ms + 60 s = <strong>60.04 s</strong>，选 <strong>D</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

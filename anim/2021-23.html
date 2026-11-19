@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2021-23 · 只能在内核态执行的指令</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -106,8 +108,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：哪些指令只能在内核态执行</h2>
 <p><strong>答案：B。</strong> 只有 I/O 指令属于特权指令，只能在内核态执行；trap、设置断点、数据传送这三类指令用户态都能执行。</p>
 <h3>第一步：抓住特权指令的判据</h3>
@@ -118,7 +120,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把 trap 当特权指令</strong>：trap 是"进入内核的门"，门槛本身在门外，选 A 正中陷阱。</li><li><strong>把设置断点指令当特权指令</strong>：断点中断的处理程序在内核态，但设置断点的指令用户态可用。</li><li><strong>误以为普通指令也要保护</strong>：数据传送指令只动用户自己的数据，不威胁系统全局。</li></ul>
 <blockquote>记忆锚点：I/O、开/关中断、置时钟、清内存这类"碰硬件、动全局"的指令都是特权指令。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

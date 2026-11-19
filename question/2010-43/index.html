@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2010-43 · 计算机组成原理 · 单题模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="question" data-year="2010">
 <header class="site-header">
@@ -109,12 +109,12 @@
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：单字长指令格式与 add (R4),(R5)+ 的机器码</h2>
 <h3>第 0 步：先立机制——指令字是 16 位的"字段拼图"，位数由"要区分多少、要指到多少"决定</h3>
 <p>单字长指令 = 一条指令占一个字（16 位），内部按固定宽度切块。本题布局（自 15～12 起）：<strong>操作码 OP 4 位 | 源寻址方式 Ms 3 位、源寄存器号 Rs 3 位 | 目的寻址方式 Md 3 位、目的寄存器号 Rd 3 位</strong>。机器码就是按字段"对号填空"拼出的 16 个二进制位。三条位数规律：</p>
-<ul><li><strong>操作码位数 ↔ 指令条数</strong>：每条指令要靠唯一操作码区分，4 位给出 2^4 = 16 个编码 → 最多 <strong>16 条指令</strong>。</li><li><strong>寄存器编号位数 ↔ 寄存器数</strong>：3 位编号 → 2^3 = <strong>8 个通用寄存器</strong>。</li><li><strong>MAR 位数 ↔ 可寻址单元数</strong>：MAR 必须指得到每一个存储单元。主存 128KB、按字编址、字长 16 位（2B）→ 128KB ÷ 2B = 64K = 2^16 个字单元 → <strong>MAR ≥ 16 位</strong>；MDR 与主存一次传送一个存储字（存储字长 = 字长 = 16 位）→ <strong>MDR ≥ 16 位</strong>。</li></ul>
+<ul><li><strong>操作码位数 ↔ 指令条数</strong>：每条指令要靠唯一操作码区分，4 位给出 2<sup>4</sup> = 16 个编码 → 最多 <strong>16 条指令</strong>。</li><li><strong>寄存器编号位数 ↔ 寄存器数</strong>：3 位编号 → 2<sup>3</sup> = <strong>8 个通用寄存器</strong>。</li><li><strong>MAR 位数 ↔ 可寻址单元数</strong>：MAR 必须指得到每一个存储单元。主存 128KB、按字编址、字长 16 位（2B）→ 128KB ÷ 2B = 64K = 2<sup>16</sup> 个字单元 → <strong>MAR ≥ 16 位</strong>；MDR 与主存一次传送一个存储字（存储字长 = 字长 = 16 位）→ <strong>MDR ≥ 16 位</strong>。</li></ul>
 <h3>第(1)问</h3>
 <p>16 条指令；8 个通用寄存器；MAR、MDR 至少各 <strong>16 位</strong>。</p>
 <h3>第(2)问：转移目标地址为什么是全空间</h3>
-<p>题目定义相对寻址：<strong>转移目标地址 = (PC) + 偏移量</strong>，偏移量用补码表示、占 16 位（−32768～+32767）。加法在 16 位运算器里按<strong>模 2^16</strong> 进行——第 17 位进位自然丢弃（补码运算本就是模运算，丢进位不影响 16 位内的结果）。</p>
-<p><strong>为什么范围是 0000H～FFFFH？</strong> 任给目标地址 T 与转移指令所在位置 P，偏移 = T − P (mod 2^16) 总落在 16 位补码可表示范围内——PC 在任何位置都"够得到"任何目标。对所有 PC 取并集即整个主存：<strong>0000H～FFFFH（0～65535）</strong>。</p>
+<p>题目定义相对寻址：<strong>转移目标地址 = (PC) + 偏移量</strong>，偏移量用补码表示、占 16 位（−32768～+32767）。加法在 16 位运算器里按<strong>模 2<sup>16</sup></strong> 进行——第 17 位进位自然丢弃（补码运算本就是模运算，丢进位不影响 16 位内的结果）。</p>
+<p><strong>为什么范围是 0000H～FFFFH？</strong> 任给目标地址 T 与转移指令所在位置 P，偏移 = T − P (mod 2<sup>16</sup>) 总落在 16 位补码可表示范围内——PC 在任何位置都"够得到"任何目标。对所有 PC 取并集即整个主存：<strong>0000H～FFFFH（0～65535）</strong>。</p>
 <h3>第(3)问：汇编 → 机器码 → 执行</h3>
 <p>查题目寻址方式定义表：<strong>001B = 寄存器间接 (Rn)</strong>（操作数 = ((Rn))），<strong>010B = 寄存器间接自增 (Rn)+</strong>（操作数 = ((Rn))，取完再 (Rn)+1 → Rn）。据此拆解 <code>add (R4),(R5)+</code>（逗号前为源、后为目的）：</p>
 <table><thead><tr><th>字段</th><th>含义</th><th>编码</th></tr></thead><tbody><tr><td>OP</td><td>add 操作码</td><td>0010</td></tr><tr><td>Ms / Rs</td><td>源 = (R4)：间接、R4 = 100B</td><td>001 / 100</td></tr><tr><td>Md / Rd</td><td>目的 = (R5)+：间接自增、R5 = 101B</td><td>010 / 101</td></tr></tbody></table>
@@ -138,4 +138,4 @@
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

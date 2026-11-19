@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2017-16 扩展操作码推最小指令字长</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -109,22 +111,22 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：两种指令格式推最小指令字长</h2>
 <h3>第一步：摆清位分配</h3>
 <p>设指令字长 L 位，地址字段各 6 位：三地址格式操作码占 L−18 位，二地址格式操作码占 L−12 位（恰好比三地址多出一个地址字段的位置）。</p>
 <h3>第二步：三地址指令的空间需求</h3>
-<p>29 条三地址指令需要 <code>2^(L−18) ≥ 29</code>，操作码至少 5 位（2^5 = 32 ≥ 29），理论最短 L = 5 + 18 = <strong>23 位</strong>。</p>
+<p>29 条三地址指令需要 <code>2<sup>L−18</sup> ≥ 29</code>，操作码至少 5 位（2<sup>5</sup> = 32 ≥ 29），理论最短 L = 5 + 18 = <strong>23 位</strong>。</p>
 <h3>第三步：二地址指令靠扩展操作码补齐</h3>
 <p>三地址用剩 32 − 29 = 3 个操作码前缀，每个前缀再接 6 位编码，可扩展 3 × 64 = 192 条二地址指令 ≥ 107，够用。</p>
 <h3>第四步：按字节对齐取整</h3>
-<p>机器按字节编址、指令按字节存放，指令字长应为 8 的倍数：23 位向上取整为 <strong>24 位</strong>。验证 L = 24：三地址码空间 2^6 = 64 ≥ 29，剩余 35 × 64 = 2240 ≥ 107，全部满足且最省。</p>
+<p>机器按字节编址、指令按字节存放，指令字长应为 8 的倍数：23 位向上取整为 <strong>24 位</strong>。验证 L = 24：三地址码空间 2<sup>6</sup> = 64 ≥ 29，剩余 35 × 64 = 2240 ≥ 107，全部满足且最省。</p>
 <p>结论：指令字长至少 <strong>24 位</strong>，<strong>答案：A</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>忘了字节对齐</strong>：算出 5 + 18 = 23 位就直接下结论，23 不在选项中，且按字节编址指令字长须是字节的整数倍。</li><li><strong>以为二地址要另占操作码空间</strong>：扩展操作码正是复用三地址没用掉的前缀，不必再加长。</li><li><strong>把"至少"当成"任选一个满足的"</strong>：26、28、32 位也能编码，但不是最小值。</li></ul>
 <blockquote>记忆锚点：操作码位数看条数（2 的 k 次方 ≥ 条数），字长 = 操作码 + 地址字段，最后向上取整到字节边界。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

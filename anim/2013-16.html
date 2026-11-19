@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2013-16 TLB 虚实地址变换</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -176,8 +178,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：TLB 命中时的虚实地址变换</h2>
 <p><strong>答案：A（015 3180H）。</strong></p>
 <h3>第一步：切分虚拟地址</h3>
@@ -186,12 +188,12 @@ AW.init({
 <h3>第二步：查 TLB（全相联，标记即虚页号）</h3>
 <table><thead><tr><th>表项</th><th>有效位</th><th>标记</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>0</td><td>FF180H</td><td>✗ 有效位为 0，不能用</td></tr><tr><td>2</td><td>1</td><td>3FFF1H</td><td>✗ 标记与 03FFFH 不符</td></tr><tr><td>3</td><td>0</td><td>02FF3H</td><td>✗ 有效位为 0</td></tr><tr><td>4</td><td>1</td><td>03FFFH</td><td>✓ 有效且标记相同 → 命中，页框号 <code>0153H</code></td></tr></tbody></table>
 <h3>第三步：拼接物理地址</h3>
-<p>主存 256MB = 2^28，物理地址 28 位 = 16 位页框号 + 12 位页内偏移：</p>
+<p>主存 256MB = 2<sup>28</sup>，物理地址 28 位 = 16 位页框号 + 12 位页内偏移：</p>
 <p>物理地址 = <code>0153H</code>（页框号）直接拼接 <code>180H</code>（偏移）= <code>0153180H</code>，写作 <strong>015 3180H</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>偏移位数取错</strong>：4KB 页对应低 12 位 <code>180H</code>；若错取 <code>F180H</code>（16 位），说明把页面当成 64KB 了。</li><li><strong>忽略有效位</strong>：第 1、3 项的标记虽也不同，但有效位 0 的表项根本无效——即使标记相同也不能用。</li><li><strong>误判"TLB 缺失"或"缺页"</strong>：TLB 中找到了有效匹配就是命中，直接得到页框号；缺页是指所访问页面不在主存，本题无此信息。</li><li><strong>拼接时相加</strong>：页框号与页内偏移是"拼接"关系，不是相加。</li></ul>
 <blockquote>一句话结论：虚页号 <code>03FFFH</code> 命中 TLB 第 4 项 → 物理地址 = <code>0153H</code> ‖ <code>180H</code> = 015 3180H，选 A。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2014-43 动画 · OSPF 路由表 / TTL / LSI 更新</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -257,8 +259,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：OSPF 链路状态信息 → R1 路由表、TTL 计算、LSI 更新（9 分大题）</h2>
 <p><strong>答题总框架</strong>：先把题 42 表读成一张带代价的环形拓扑（R1—R2 Metric 3，R2—R4 Metric 4，R4—R3 Metric 6，R3—R1 Metric 2；四个直连子网 192.1.1.0/24@R1、192.1.6.0/24@R2、192.1.7.0/24@R4、192.1.5.0/24@R3），第 1 问用最短路径填表再聚合，第 2 问查表转发数 TTL，第 3 问往 LSI 里补一条直连信息。</p>
 <h3>第 1 问：R1 的路由表（要求路由项尽可能少）</h3>
@@ -274,7 +276,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>聚合写成 192.1.6.0/24 或 /22</strong>：覆盖 6 与 7 两个 /24 恰好是 /23；用"第三字节 6、7 → 二进制 0000011x"验证。</li><li><strong>TTL 只减 2 次</strong>：以为 192.1.7.0/24 挂在 R2 上就到站了——实际挂在 R4，必须再过一跳，64−3 = 61。</li><li><strong>第 3 问写成具体 IP</strong>：Internet 链路的前缀是默认路由 <strong>0.0.0.0/0</strong>，不是某个网络地址；Metric 用题干给的 10。</li></ul>
 <blockquote>记忆锚点：OSPF 大题三步曲——读表画拓扑定代价、最短路填表再聚合（少一跳同下一跳就合并）、按路径数路由器减 TTL。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

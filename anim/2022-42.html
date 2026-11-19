@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-42 大根堆找最小的 10 个数</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -139,8 +141,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：用规模恒为 10 的大根堆找最小的 10 个数</h2>
 <h3>第 0 步：先立机制——“候选人守门”模型</h3>
 <p>n 超过 10 万，要把最小的 10 个挑出来。先看清两条低效路：全排序为了 10 个数把 10 万个数排干净，Θ(n log n)；逐个与“已选出的 10 个数”比较、再线性找该淘汰谁，一个数最多要 10 次比较才被裁决。</p>
@@ -153,7 +155,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>用小根堆</strong>：小根堆顶是“当前最小”，拿它守门既判不了“够不够小”，也无法快速找到该淘汰的最大者；必须大根堆，让最大的候选守门。</li><li><strong>先建 n 个元素的堆</strong>：堆规模随 n 增大，空间 O(n)、比较次数也远超 n，违背题目对效率的要求。</li><li><strong>忽略“平均”口径</strong>：最坏情形（数据递减到来）每个数都入堆、都要下沉，但题目问平均，每元素常数次比较即可。</li><li><strong>不初始化堆顶为最大值</strong>：就得先取前 10 个数建堆再扫描，思路也正确但表述必须完整；参考答案用最大值初始化更简洁，且不变量从第 0 步就成立。</li></ul>
 <blockquote>大根堆守门：比堆顶小才进堆，平均 O(n) 时间、O(1) 空间，比较次数贴着 n−10 的下界。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

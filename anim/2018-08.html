@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2018-08 3阶B树最少关键字数 · 逐层构树动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   .btree-svg{width:100%;max-width:860px;display:block;margin:0 auto;background:#f8edcb;
     border:1px solid #1b3a4b38;border-radius:12px}
@@ -59,6 +59,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -80,7 +82,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 2018-08 3阶B树逐层构树动画（SVG） ==================
  * 题：高度为 5 的 3 阶 B 树，含有的关键字个数至少是多少？（答案 B = 31）
@@ -215,8 +217,8 @@ AW.init({
 });
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：3 阶 B 树的最少关键字个数</h2>
 <p><strong>答案：B（31）。</strong></p>
 <h3>第一步：先立机制——"至少"意味着每个结点都压着下限长</h3>
@@ -225,11 +227,11 @@ AW.init({
 <p>高度 5 按真题口径是<strong>从根到最底层关键字结点共 5 层</strong>（查找失败的外部结点不占层）。这是本题第一个陷阱：若按"高度把失败结点层也算进去"的口径，关键字结点只剩 4 层，会得出 15——恰是干扰项 A。做题时用答案口径反推校准：5 层逐层翻倍得 1、2、4、8、16，总关键字 31，与选项 B 吻合。</p>
 <h3>第三步：逐层累加</h3>
 <table><thead><tr><th>层</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><td>最少结点数</td><td>1</td><td>2</td><td>4</td><td>8</td><td>16</td></tr><tr><td>每结点最少关键字</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr></tbody></table>
-<p>关键字总数最少 = 1 + 2 + 4 + 8 + 16 = <strong>31</strong>。这与通用公式一致：m 阶 B 树高度 h 的最少关键字数 = 2×⌈m/2⌉^(h−1) − 1，本题即 2×2⁴ − 1 = 31——公式来历就是"根先放 1 个，往下一代代翻倍"。</p>
+<p>关键字总数最少 = 1 + 2 + 4 + 8 + 16 = <strong>31</strong>。这与通用公式一致：m 阶 B 树高度 h 的最少关键字数 = 2×⌈m/2⌉<sup>h−1</sup> − 1，本题即 2×2⁴ − 1 = 31——公式来历就是"根先放 1 个，往下一代代翻倍"。</p>
 <h3>易错点</h3>
 <ul><li><strong>误选 A（15）</strong>：只数了 4 层关键字结点，把高度口径弄错一层。</li><li><strong>误选 C（62）</strong>：以为每个结点至少 2 个关键字——3 阶 B 树结点最多 2 个关键字，<strong>最少</strong>情形压在 1 个上。</li><li><strong>误选 D（242）</strong>：242 是每个结点都取<strong>上限</strong>（3 棵子树、2 个关键字，结点数 1,3,9,27,81）数出的"最多"关键字数 = 2×(1+3+9+27+81)——题目问的是"至少"。</li></ul>
-<blockquote>记忆锚点：最少关键字 = 2×⌈m/2⌉^(h−1) − 1；3 阶、h = 5 时 = 2×2⁴ − 1 = 31。</blockquote></div>
-</details>
+<blockquote>记忆锚点：最少关键字 = 2×⌈m/2⌉<sup>h−1</sup> − 1；3 阶、h = 5 时 = 2×2⁴ − 1 = 31。</blockquote></div>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

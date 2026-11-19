@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-35 · VLAN 隔离下的 ARP 表范围</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      概念推理动画：VLAN 划分 → H4 的 ARP 表只含同 VLAN 主机（答案 D：H6 不可能）
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -116,8 +118,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：VLAN 隔离广播域，ARP 表只会有同 VLAN 主机</h2>
 <p>答案：<strong>D</strong>（192.168.3.129 那条不可能出现）。</p>
 <h3>第一步：先立机制——ARP 表项从哪来，VLAN 挡住了什么</h3>
@@ -130,7 +132,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>按 IP 同网段误判</strong>：192.168.3.129 与 H4 的地址在同一 IP 网段，但被 VLAN 隔离，二层仍不可达，ARP 广播到不了 H6。</li><li><strong>只看 MAC 不查端口</strong>：D 的 MAC 属于接入端口 9 的 H6，端口 9 属 VLAN3。</li><li><strong>被 TTL 干扰</strong>：TTL 只是 ARP 表项的老化时间，与"会不会出现"无关。</li></ul>
 <blockquote>一句话结论：VLAN 隔离广播域，H4 的 ARP 表只含 VLAN1 主机（H1、H2、H3），H6 属 VLAN3 不可能出现，选 <strong>D</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

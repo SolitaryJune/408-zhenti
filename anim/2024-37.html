@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-37 · SR 协议窗口滑动与超时重传</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      过程推演动画：SR（3 比特序号，窗口 4）t1 发 F4、t2 重传 F1（答案 D）
-     外壳与控件由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -169,8 +171,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：SR 协议窗口滑动与超时重传的时序推演</h2>
 <p>答案：<strong>D</strong>（t1 发 F4，t2 发 F1）。</p>
 <h3>第一步：确定窗口大小——为什么最大是 4</h3>
@@ -182,7 +184,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把窗口当成 8</strong>：忽略了 SR 要满足发送窗口 + 接收窗口 ≤ 序号空间总数，发送窗口最大是序号空间的一半 = 4。</li><li><strong>误选 B（t2 发 F4）</strong>：t2 是 F1 超时触发的重传事件，发的是 F1；F4 早在 t1 已发出。</li><li><strong>误选 A / C（t1 重传）</strong>：t1 时 F1 尚未超时，甲对 F1 的丢失一无所知，滑动窗口腾出的空位只能发新帧 F4。</li></ul>
 <blockquote>一句话结论：SR 收到 ACK0 就滑窗，t1 发新帧 <strong>F4</strong>；F1 丢失只能等超时，t2 重传 <strong>F1</strong>，选 <strong>D</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

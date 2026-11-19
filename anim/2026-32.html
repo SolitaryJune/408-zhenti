@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2026-32 鼠标中断：数据通路上谁干了什么</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 function card(n, cls, title, body){
@@ -118,8 +120,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：鼠标中断处理程序负责数据通路上的哪一步</h2>
 <p><strong>答案：D（将输入数据从设备接口的数据寄存器传送到内核数据区）</strong>。方法：先画出鼠标输入的完整数据通路，把每一步归给"谁"，再看中断处理程序排在哪一环。</p>
 <h3>第一步：画数据通路，逐步归责</h3>
@@ -129,7 +131,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>把 B 当成中断处理程序做的</strong>：模式切换发生在"进入处理程序之前"，且是硬件行为。</li><li><strong>把 C 的方向搞反</strong>：数据寄存器是设备→CPU 的传递站，<strong>写入靠硬件，读出靠中断处理程序</strong>。</li></ul>
 <blockquote>结论：硬件填寄存器、硬件切模式，中断处理程序把数据从寄存器搬到内核数据区，选 <strong>D</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

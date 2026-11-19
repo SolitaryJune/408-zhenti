@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2026-37 链路断开重算路由 + 充分聚合 · 过程动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -188,8 +190,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：链路断开后重算路由，再充分路由聚合</h2>
 <p><strong>答案：B（4 项）</strong>。方法：三步走——先按断开后的拓扑重算每个目的网络走哪个接口，再对"同一接口"的路由做聚合，最后数最终表里的项数。</p>
 <h3>第一步：t1 时刻重算（R1–R2 断开，费用 2 变无穷）</h3>
@@ -204,7 +206,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>忘了 0/27 要改道</strong>：仍写 S1 就会漏掉"两个 /27 同走 S2 才能聚合"这一步。</li><li><strong>以为聚合必须严丝合缝</strong>：64/26 与 128/25 拼起来是 64~255，不是整齐的 CIDR 块，但只要最长前缀匹配下转发不出错，就可以聚合成超网 199.10.20.0/24。</li><li><strong>把直连项丢了</strong>：服务器 /32 与默认路由 0.0.0.0/0 一直存在，最终也要计入。</li></ul>
 <blockquote>一句话结论：断链后 0/27 改走 S2，两个 /27 聚合成 /26、两个 R4 侧网聚合成 /24 超网，加上直连的 /32 与默认路由，共 <strong>4 项</strong>，选 <strong>B</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

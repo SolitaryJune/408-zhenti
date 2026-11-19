@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2021-43 · 计算机组成原理 · 单题模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="question" data-year="2021">
 <header class="site-header">
@@ -112,12 +112,12 @@
 <p>位数题不要背结论，先问"这个东西一次必须完整装下/送出什么"：</p>
 <ul><li><strong>ALU</strong>：一次对两个操作数完成一次运算，操作数是一个字 → ALU 宽度 = 字长 = <strong>16 位</strong>；</li><li><strong>IR</strong>：一条指令必须一口气取进 IR 才能译码 → IR = 指令字长。定长指令字 16 位 → <strong>16 位</strong>；</li><li><strong>MAR</strong>：地址沿地址线一位一位送出，MAR 的每一位都要有对应的地址线 → MAR = 地址线条数 = <strong>20 位</strong>；</li><li><strong>MDR</strong>：数据沿数据线搬运，数据线只有 8 位，一次总线事务只能搬 1 字节 → MDR = 数据线条数 = <strong>8 位</strong>。</li></ul>
 <p>（为什么 16 位指令装得进 8 位 MDR？分两次：先取高字节经 MDR 转存 IR，再取低字节——这正是"按字节编址 + 8 位数据线"的机器取一条指令的真实过程。）</p>
-<p>可寻址空间同理：20 位地址线能给出 2^20 个不同地址，按字节编址 → <strong>2^20 B = 1 MB</strong>。空间由地址线根数决定，与字长无关。</p>
+<p>可寻址空间同理：20 位地址线能给出 2<sup>20</sup> 个不同地址，按字节编址 → <strong>2<sup>20</sup> B = 1 MB</strong>。空间由地址线根数决定，与字长无关。</p>
 <h3>第 1）问：答案</h3>
-<p>ALU 16 位；可寻址主存 2^20 B = 1 MB；IR 16 位、MAR 20 位、MDR 8 位。</p>
+<p>ALU 16 位；可寻址主存 2<sup>20</sup> B = 1 MB；IR 16 位、MAR 20 位、MDR 8 位。</p>
 <h3>第 2）问：编码空间账</h3>
 <p>三种格式共享<strong>前 6 位</strong>这个公共字段：CPU 取来指令先看前 6 位——是 <code>000000</code> 就按 R 型处理，真正的操作编码藏在其后的 op1 里；否则这 6 位就是操作码（在 I 型里叫 op2、在 J 型里叫 op3，是<strong>同一个字段的两个名字</strong>，不会同时出现）。</p>
-<ul><li>R 型：op1 有 4 位 → 最多 2^4 = <strong>16 种</strong>操作；</li><li>I 型 + J 型：共用 6 位编码共 64 个码点，其中 <code>000000</code> 已被 R 型征用 → 64 − 1 = <strong>63 种</strong>；</li><li>rs/rt/rd 各 2 位，编号最多编出 2^2 = 4 个 → 通用寄存器最多 <strong>4 个</strong>。</li></ul>
+<ul><li>R 型：op1 有 4 位 → 最多 2<sup>4</sup> = <strong>16 种</strong>操作；</li><li>I 型 + J 型：共用 6 位编码共 64 个码点，其中 <code>000000</code> 已被 R 型征用 → 64 − 1 = <strong>63 种</strong>；</li><li>rs/rt/rd 各 2 位，编号最多编出 2<sup>2</sup> = 4 个 → 通用寄存器最多 <strong>4 个</strong>。</li></ul>
 <h3>第 3）问：拆指令、做运算、判溢出</h3>
 <p><code>01B2H</code> = 0000 0001 1011 0010。前 6 位 = 000000 → R 型，按位段拆开：</p>
 <table><thead><tr><th>位段</th><th>编码</th><th>含义</th></tr></thead><tbody><tr><td>rs</td><td>01</td><td>1 号寄存器</td></tr><tr><td>rt</td><td>10</td><td>2 号寄存器</td></tr><tr><td>rd</td><td>11</td><td>3 号寄存器</td></tr><tr><td>op1</td><td>0010</td><td>带符号整数减法</td></tr></tbody></table>
@@ -129,7 +129,7 @@
 <h3>第 5）问：无条件转移用 J 型</h3>
 <p>无条件转移只需要"把 PC 改成目标地址"，不碰寄存器、不做运算；R/I 型的寄存器号和 imm 位段对它毫无用处，而 J 型恰好就是"操作码 + 10 位 target"（PC 低 10 位 ← target），位段一点不浪费 → 采用 <strong>J 型格式</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，16 位指令分两次取、每次装 1 字节。</li><li><strong>可寻址空间用字长算成 64 KB</strong>：空间由地址线（20 位）决定，2^20 B = 1 MB。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，合计只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：负偏移变大正数，地址算错。</li></ul>
+<ul><li><strong>MDR 位数当成 16 位</strong>：MDR 与数据线（8 位）等宽，16 位指令分两次取、每次装 1 字节。</li><li><strong>可寻址空间用字长算成 64 KB</strong>：空间由地址线（20 位）决定，2<sup>20</sup> B = 1 MB。</li><li><strong>I/J 型操作码算成 128</strong>：op2 与 op3 是同一 6 位字段的两种用途，且 000000 被 R 型占用，合计只有 63 种。</li><li><strong>溢出判断只看低 16 位的符号</strong>：判据是真值是否在 [−32768, 32767]，−163184 已远超范围。</li><li><strong>imm 做零扩展</strong>：负偏移变大正数，地址算错。</li></ul>
 <blockquote>记忆锚点：MAR/MDR 跟着地址线/数据线走，IR 跟着指令字长走；前 6 位是公共判别字段，000000 让给 R 型；带符号数先减模求真值，溢出看真值是否越界。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
@@ -144,4 +144,4 @@
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2014-46 连续/链接分配下插入一条记录</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -235,8 +237,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：连续/链接分配下插入一条记录（7 分）</h2>
 <h3>先立机制：两种分配方式下"记录位置"从哪来</h3>
 <p>同一次插入，为什么在两种方式下代价天差地别？根源在于<strong>记录的位置怎么确定</strong>：</p>
@@ -250,12 +252,12 @@ AW.init({
 <p>插入不需要移动任何旧块，只需"接链"：</p>
 <table><thead><tr><th>步骤</th><th>访盘次数</th></tr></thead><tbody><tr><td>顺链查找第 29 块：读第 1~29 块</td><td>29</td></tr><tr><td>写入新块（新记录 + 指向原第 30 块的指针）</td><td>1</td></tr><tr><td>改第 29 块的指针指向新块</td><td>1</td></tr><tr><td>合计</td><td><strong>31 次</strong></td></tr></tbody></table>
 <p><strong>为什么顺链到第 29 块就停</strong>：第 29 块是插入点的"前驱"，要改它的指针；第 30 块不必读，新块的指针直接指向它即可。</p>
-<p>最大文件长度：块 1KB = 1024B，每块要留 4B 放链接指针 → 有效数据区 1020B；指针存的是<strong>块号</strong>，4B = 32 位可表示 2^32 个不同的块号 → 最多 2^32 块：</p>
-<p>最大长度 = 2^32 × 1020 B = 4 GB × 1020 = <strong>4080 GB</strong>。</p>
+<p>最大文件长度：块 1KB = 1024B，每块要留 4B 放链接指针 → 有效数据区 1020B；指针存的是<strong>块号</strong>，4B = 32 位可表示 2<sup>32</sup> 个不同的块号 → 最多 2<sup>32</sup> 块：</p>
+<p>最大长度 = 2<sup>32</sup> × 1020 B = 4 GB × 1020 = <strong>4080 GB</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>连续分配答 343</strong>：默认向后移动，忽略"前后均有空闲空间"的提示——前移只动 29 条。</li><li><strong>每条记录只算 1 次访盘</strong>：移动 = 读出 + 写回共 2 次，29 × 2 才是 58。</li><li><strong>漏写 FCB 变化</strong>：只答"文件长度"漏"起始块号"——前移后文件起点变了。</li><li><strong>链接分配只算 30 次</strong>：忘了"改第 29 块指针"也是一次写盘，31 = 29 + 2。</li><li><strong>4080 GB 算成 4096 GB</strong>：每块数据区要扣掉 4B 指针，是 1020B 不是 1024B。</li></ul>
-<blockquote>一句话结论：连续最少 59 次（29×2+1），FCB 改起始块号与文件长度；链接 31 次（29+2），最大文件 2^32 × 1020B = 4080 GB。</blockquote></div>
-</details>
+<blockquote>一句话结论：连续最少 59 次（29×2+1），FCB 改起始块号与文件长度；链接 31 次（29+2），最大文件 2<sup>32</sup> × 1020B = 4080 GB。</blockquote></div>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2012-46 文件索引结构与寻址字节计算</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -124,8 +126,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：索引结点能撑起多大的文件——从"块数"算起</h2>
 <h3>第 0 步：先做一次单位翻译——块号是对"块"计数，不是对"字节"</h3>
 <p>磁盘以 1KB 为分配单位，文件系统给每个<strong>块</strong>编号：块号 n 对应字节区间 [n×1KB, (n+1)×1KB)。所以任何"块号/块数"字段要覆盖的都是块的<strong>个数</strong>：</p>
@@ -141,7 +143,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>按 4TB 的字节数直接算块号位数</strong>：块号以块为单位，必须先除以块大小得 2³² 个块，再定 32 位（4 字节）。</li><li><strong>漏加 84KB</strong>：第 2）问的最大长度是"连续段 + 直接索引段"两部分相加。</li><li><strong>最优拆分想成 6B＋2B 原样</strong>：块数字段 2B 只能数 2¹⁶ 块，永远到不了 4TB；必须 4B＋4B。</li><li><strong>把瓶颈安错字段</strong>：起始块号 6B 绰绰有余，上限是 16 位的块数字段卡出来的。</li></ul>
 <blockquote>记忆锚点：4TB ÷ 1KB = 2³² 块 → 块号最少 4B；字段能表示 N 块 = 覆盖 N×1KB；512B 索引区 ÷ 4B = 128 项 = 128KB；8B 拆 4B＋4B 才能让两个字段同时覆盖全盘。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

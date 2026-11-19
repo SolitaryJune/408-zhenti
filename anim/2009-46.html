@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2009-46 · 请求分页：访问耗时与缺页置换</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：请求分页地址转换 + LRU 缺页置换（7 分→8 分大题）
-     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -243,8 +245,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：请求分页的访问耗时与缺页置换</h2>
 <h3>第 0 步：机制先行——一次虚地址访问的完整流水线</h3>
 <p>请求分页系统里，每访问一个虚地址都要走完这条流水线，计时就是把走过的每一段加起来：</p>
@@ -261,7 +263,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>漏算缺页后的「重新执行」</strong>：题设③明确返回重执，重执的 TLB 命中 10ns + 访存 100ns 不能漏。</li><li><strong>LRU 选错牺牲页</strong>：在驻留的页 0、页 2 之间选最久未用的页 0；页 1 不在驻留集，不是候选。</li><li><strong>误判第三次访问</strong>：页 2 的 TLB 表项仍有效，25A5H 走命中路径 110ns，不能再算一次页表 100ns。</li><li><strong>页号切错</strong>：页内位移位数由页面大小决定，4KB → 低 3 位十六进制；2362H 的页号是 2，不是把 236 当页号。</li></ul>
 <blockquote>一句话结论：三次访问依次 210ns、100000220ns、110ns；LRU 淘汰页 0，页 1 入驻 101H，物理地址 101565H。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

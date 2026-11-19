@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2024-43 指令格式与数据通路动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 算法/过程类：控制信号 → ALU 加法 → 标志位 → 指令译码全过程演示 -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 AW.init({
@@ -216,8 +218,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：从位段到控制信号——add/slli/lw 在同一条数据通路上走一遍</h2>
 <h3>第 0 步：机制先行——一条指令如何变成数据通路上的动作</h3>
 <p>机器指令是<strong>位段的拼装</strong>：32 位定长，操作码 <code>IR[6:0]</code> 决定"这是哪条指令"（add=0110011、slli=0010011、lw=0000011，三条互不相同），功能码 <code>IR[14:12]</code> 在需要时进一步细分，rd、rs1、rs2 各占 5 位指名寄存器编号；lw 的 <code>IR[31:20]</code> 是 12 位补码偏移 imm，slli 的 <code>IR[24:20]</code> 是移位量 shamt。</p>
@@ -243,7 +245,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>F 答成 33 位</strong>：进位 1 是给 CF 的，ALU 输出端 F 只保留 32 位 <code>1FDB9753H</code>。</li><li><strong>OF/CF 混用</strong>：有符号数溢出看 OF（判据"同号相加得异号"），无符号数溢出看 CF，别答反。</li><li><strong>slli 的 Ext 答死值</strong>：关键不在"必须零扩展"，而在"扩展出的高位不被使用"，信号无效才两可。</li><li><strong>imm 按无符号读</strong>：把 A04H 当 2564 加进去，地址会错成 <code>FFFFACD4H</code>；最高位 1 是负数记号，必须符号扩展。</li><li><strong>第（5）问只凭"像 lw"下结论</strong>：要落实到位段逐位比对——操作码与功能码同时吻合，且与另两条指令的编码不符，才配得上"一定"二字。</li></ul>
 <blockquote>一句话结论：32 个寄存器、shamt 5 位；ALUBsrc=0，F=1FDB9753H，OF=CF=1，无符号看 CF；slli 的 Ext 0/1 均可；lw 的 Ext=1、ALUctr=000；A040A103H 因操作码 0000011（加功能码 010）唯一命中 lw，有效地址 FFFF9CD4H。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

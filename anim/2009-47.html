@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>算法/过程类动画模板</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -156,14 +158,14 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：子网划分与两级路由表配置</h2>
 <h3>第 0 步：机制先行——路由器查表的三条规则</h3>
 <p>后面三问全都建立在这几条机制上，先立起来：</p>
 <ol><li><strong>掩码匹配</strong>：表项匹配的条件是「目的地址 AND 子网掩码 = 表项里的目的网络地址」；掩码中 1 的位数就是前缀长度（/25 → 前 25 位全 1）。</li><li><strong>最长前缀优先</strong>：多条表项同时匹配时，取前缀最长的——这条规则解释了为什么 /32 主机路由能压过 /0 默认路由被优先选中。</li><li><strong>直连路由免下一跳</strong>：目的网络直接挂在本路由器接口所在的链路上，交付由本机接口完成，下一跳写「直接」。</li></ol>
 <h3>问 1：划分两个子网——先定主机位，再借子网位</h3>
-<p><strong>为什么计算要减 2？</strong> 一个子网内主机位全 0 是网络地址、全 1 是广播地址，都不能分配给主机，可用地址数 = 2^h − 2。</p>
+<p><strong>为什么计算要减 2？</strong> 一个子网内主机位全 0 是网络地址、全 1 是广播地址，都不能分配给主机，可用地址数 = 2<sup>h</sup> − 2。</p>
 <p>设主机位为 h：2⁶ − 2 = 62 &lt; 120 不够；2⁷ − 2 = 126 ≥ 120 够 → <strong>h = 7</strong>。/24 本有 8 个主机位，只用 7 位，剩下 <strong>1 位借作子网位</strong> → 前缀 /25，掩码 <code>255.255.255.128</code>。子网位取 0/1，把原 /24 从中间一分为二：</p>
 <table><thead><tr><th>子网</th><th>地址范围</th><th>分配（方案一）</th></tr></thead><tbody><tr><td>202.118.1.0/25</td><td>202.118.1.0 ～ 202.118.1.127</td><td>局域网 1（E1）</td></tr><tr><td>202.118.1.128/25</td><td>202.118.1.128 ～ 202.118.1.255</td><td>局域网 2（E2）</td></tr></tbody></table>
 <p>（两子网对调分配的方案二同样得分，但第 2、3 问的表必须与所选方案前后一致。）</p>
@@ -177,7 +179,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>主机位算少</strong>：2⁶ = 64 忘了减 2 → 62 &lt; 120 不满足；必须 2⁷ − 2 = 126 才够。</li><li><strong>主机路由掩码写 /24</strong>：匹配的是网段不是主机，不符合「主机路由」要求。</li><li><strong>聚合掩码写 /25</strong>：题目要求「采用路由聚合技术」给出<strong>一条</strong>路由，须聚合到 /24（255.255.255.0）。</li><li><strong>下一跳方向写反</strong>：R1 的下一跳指向 R2 的 L0（202.118.2.2），R2 的聚合路由下一跳指回 R1 的 L0（202.118.2.1）。</li></ul>
 <blockquote>一句话结论：/25 一切为二（126 ≥ 120）；R1 = 两条直连 + 一条 /32 主机路由 + 一条默认路由；R2 聚合为 202.118.1.0/24 交给 R1。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

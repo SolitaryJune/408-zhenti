@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-15 页式虚存虚实地址转换</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .aw-box.amber{ background:#f8edcb; border-color:#e07a2f; color:#92400e; }
 .aw-box.blue{ background:#d9e3df; border-color:#1b3a4b; color:#1b3a4b; }
@@ -42,6 +42,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -63,7 +65,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -182,11 +184,11 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：分页虚存的虚-实地址转换</h2>
 <h3>第一步：确定地址结构</h3>
-<ul><li>页大小 4 KB = <code>2^12</code> B → <strong>页内偏移占低 12 位</strong>；</li><li>虚拟空间 4 GB = <code>2^32</code> B → 虚拟地址 32 位 → 虚页号占高 20 位；</li><li>主存地址 24 位 → 实页号（页框号）占高 12 位 + 页内偏移 12 位。</li></ul>
+<ul><li>页大小 4 KB = <code>2<sup>12</sup></code> B → <strong>页内偏移占低 12 位</strong>；</li><li>虚拟空间 4 GB = <code>2<sup>32</sup></code> B → 虚拟地址 32 位 → 虚页号占高 20 位；</li><li>主存地址 24 位 → 实页号（页框号）占高 12 位 + 页内偏移 12 位。</li></ul>
 <h3>第二步：拆分虚拟地址并查页表</h3>
 <p>虚拟地址 <code>0008 2840H</code>：</p>
 <table><thead><tr><th>部分</th><th>值</th><th>说明</th></tr></thead><tbody><tr><td>虚页号</td><td><code>00082H</code> = 130</td><td>高 20 位（十六进制 00082H 换成十进制是 130）</td></tr><tr><td>页内偏移</td><td><code>840H</code></td><td>低 12 位，转换时原样照搬</td></tr></tbody></table>
@@ -197,7 +199,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>进制看错</strong>：把虚页号 <code>00082H</code> 直接当表中的十进制 82 去匹配，误选 A（024H）甚至 D（缺页）。</li><li><strong>拿错行</strong>：错用虚页 129 行的实页号 <code>180H</code> 拼地址，得 18 0840H（B）。</li><li><strong>偏移改动</strong>：页内偏移 <code>840H</code> 在转换中原样保留，不动。</li></ul>
 <blockquote>一句话结论：虚页号 130 → 页框 018H，拼偏移 840H 得主存地址 01 8840H，选 C。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

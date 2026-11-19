@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2016-15 动画 · 数组循环访问的 Cache 缺失率推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：a[k]=a[k]+32 逐次访问 Cache 的命中/缺失推演
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改下面的 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -152,8 +154,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：循环访问数组的 Cache 缺失率</h2>
 <p><strong>答案：C（约 12.5%）。</strong></p>
 <h3>第一步：算清总访问次数与块的布局</h3>
@@ -166,7 +168,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>漏掉写访问</strong>：只按 1000 次读算，得 250/1000 = 25%（干扰项 D）。写操作同样是对 Cache 的访问（写命中/写分配）。</li><li><strong>选 A（1.25%）或 B（2.5%）</strong>：缺失次数或总访问次数数错一个数量级（如把块数当成 25 或 50）——先分清两个数：块数 250、访问 2000。</li><li><strong>担心 Cache 装不下产生额外缺失</strong>：数据 Cache 仅 1KB（64 块），装不下 250 块，但访问严格顺序前进、块用完不再回头，直接映射换出也不产生额外缺失。</li><li><strong>把变量 k 算进去</strong>：题目问"访问数组 a"的缺失率，对 k 的访问不计入。</li></ul>
 <blockquote>每块 16B 装 4 个 int：首读缺失、其余 7 次命中，250/2000 = 1/8 = 12.5%。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2026-18 主存地址映射 Cache 组号 · 动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -138,8 +140,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：主存块映射到哪个 Cache 组</h2>
 <p><strong>答案：C（组号 32）</strong></p>
 <h3>第一步：先立模型——组相联把 Cache 分组，主存块按块号循环入组</h3>
@@ -150,7 +152,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>拿地址直接 mod 组数</strong> → 1028 mod 256 = 16（干扰项 B）：地址 ≠ 块号，组号字段在地址的"块号"段而不在最低位段，必须先除以块大小。</li><li><strong>拿块内偏移当组号</strong> → 1028 mod 32 = 4（干扰项 A）：偏移只负责块内定位，与块到组的映射无关。</li><li><strong>块大小看错成 16 B</strong> → 块号变 64（干扰项 D）。</li><li><strong>忘除以路数</strong>：把 1024 行当成 1024 组——本题 32 mod 1024 恰好也是 32，碰对答案但模型已错，换个块号就露馅。</li></ul>
 <blockquote>记忆锚点：组相联 = 组间按"块号 mod 组数"循环入组 + 组内全相联；先除块大小得块号，再 mod 组数得组号。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

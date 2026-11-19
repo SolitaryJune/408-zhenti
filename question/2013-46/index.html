@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2013-46 · 操作系统 · 单题模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="question" data-year="2013">
 <header class="site-header">
@@ -110,14 +110,14 @@
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：分页地址结构与页表项定位（8 分）</h2>
 <h3>第 0 步：先立机制——分页地址翻译的两条铁律</h3>
 <p>分页的本质是把逻辑地址的 32 个二进制位<strong>切成两段</strong>：高位是页号，低位是页内偏移。两条对应关系贯穿本题所有小问：</p>
-<ul><li><strong>偏移位数决定页大小</strong>：地址低 k 位是页内字节偏移，页内就有 2^k 个字节，页大小 = 2^k B。页大小与偏移位数是同一件事的两种说法。</li><li><strong>页号位数决定页表项数</strong>：页号 n 位就有 2^n 个不同的页；一级页表要给<strong>每一个可能的页</strong>都准备一个表项——少一项，对应页就没法翻译。所以页表项数 = 2^n，页表大小 = 2^n × 每项字节数。</li></ul>
+<ul><li><strong>偏移位数决定页大小</strong>：地址低 k 位是页内字节偏移，页内就有 2<sup>k</sup> 个字节，页大小 = 2<sup>k</sup> B。页大小与偏移位数是同一件事的两种说法。</li><li><strong>页号位数决定页表项数</strong>：页号 n 位就有 2<sup>n</sup> 个不同的页；一级页表要给<strong>每一个可能的页</strong>都准备一个表项——少一项，对应页就没法翻译。所以页表项数 = 2<sup>n</sup>，页表大小 = 2<sup>n</sup> × 每项字节数。</li></ul>
 <p>页表本身是个数组：页号是下标，页框号是内容。于是<strong>页表项的物理地址 = 页表基址 + 页号 × 每项字节数</strong>——按字节编址的主存里，数组下标要乘元素大小才落到字节地址。</p>
 <h3>第（1）问：页大小与页表最大占用</h3>
 <p>一级页表的逻辑地址结构（题图）为 20 位页号 + 12 位页内偏移。套铁律：</p>
-<ul><li>偏移 12 位 → 页大小 = 2^12 B = <strong>4KB</strong>；</li><li>页号 20 位 → 页表最多 2^20 项，每项 4B → 页表最大 = 2^20 × 4B = <strong>4MB</strong>。</li></ul>
+<ul><li>偏移 12 位 → 页大小 = 2<sup>12</sup> B = <strong>4KB</strong>；</li><li>页号 20 位 → 页表最多 2<sup>20</sup> 项，每项 4B → 页表最大 = 2<sup>20</sup> × 4B = <strong>4MB</strong>。</li></ul>
 <p>顺带看懂一个事实：页表自己要占 4MB <strong>连续</strong>主存，且绝大部分表项平时根本用不上——这正是（2）问引入二级页表的动机。</p>
 <h3>第（2）问：二级页表的地址拆分</h3>
-<p>二级页表把 20 位页号再切两段：10 位页目录号 + 10 位页表索引。<strong>为什么每段恰好 10 位？</strong> 不是随便定的：页表项 4B、一页 4KB，一页恰好装得下 4KB ÷ 4B = 1024 = 2^10 个表项——每个页表页管 2^10 个虚拟页，所以每级索引 10 位；10 + 10 + 12 = 32 恰好拼满。二级页表的妙处：页目录只占 1 页，用到的页表页才进主存，不必整块 4MB 常驻。</p>
+<p>二级页表把 20 位页号再切两段：10 位页目录号 + 10 位页表索引。<strong>为什么每段恰好 10 位？</strong> 不是随便定的：页表项 4B、一页 4KB，一页恰好装得下 4KB ÷ 4B = 1024 = 2<sup>10</sup> 个表项——每个页表页管 2<sup>10</sup> 个虚拟页，所以每级索引 10 位；10 + 10 + 12 = 32 恰好拼满。二级页表的妙处：页目录只占 1 页，用到的页表页才进主存，不必整块 4MB 常驻。</p>
 <p>表达式（LA 为 32 位逻辑地址）：</p>
 <ul><li>页目录号 = <code>LA &gt;&gt; 22</code>——最高 10 位，右移 22 位（扔掉 12 位偏移 + 10 位索引）后自然剩下；</li><li>页表索引 = <code>(LA &gt;&gt; 12) &amp; 0x3FF</code>——先右移 12 位扔掉页内偏移，但此时低 10 位还挂着页目录号，必须再 <code>&amp; 0x3FF</code>（10 个 1）把它屏蔽掉，只留中间 10 位。</li></ul>
 <h3>第（3）问：逐项计算</h3>
@@ -141,4 +141,4 @@
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

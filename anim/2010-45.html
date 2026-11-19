@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2010-45 CSCAN 磁盘调度与位图管理</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -192,8 +194,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：位图管空闲块、CSCAN 读盘计时与 Flash 的调度选择</h2>
 <h3>第 0 步：先立机制——磁盘慢在"位置"，一切时间围绕位置展开</h3>
 <p>磁盘读写一个扇区要花三段时间：<strong>寻道</strong>（磁头移到目标磁道）+ <strong>旋转延迟</strong>（目标扇区转到磁头下方）+ <strong>传输</strong>（扇区从磁头下扫过）。寻道最贵、也最可调度——SCAN/CSCAN 类策略全为压缩寻道而生。CSCAN（循环扫描）的规则：磁头沿一个方向扫、途中依次服务；到头后<strong>直接折回另一端、折回途中不服务</strong>，再继续正向扫——像时针一样循环，好处是各磁道的等待时间更均匀。本题图中磁头正处在 100 号磁道、沿磁道号增大的方向移动。</p>
@@ -210,7 +212,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>折返段漏算</strong>：120→30 的 90 道是 CSCAN 回返的必付代价，漏掉得 100.4ms 就错。</li><li><strong>旋转延迟按整圈算</strong>：随机分布的扇区平均等半圈 5ms，不是 10ms。</li><li><strong>漏掉传输时间</strong>：4 × 0.1ms = 0.4ms 虽小，三个分量缺一不可。</li></ul>
 <blockquote>结论：位图 2KB 恰好装下；寻道 170ms + 旋转延迟 20ms + 传输 0.4ms = 190.4ms；Flash 无寻道可省，FCFS 即可。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

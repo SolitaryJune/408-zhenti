@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2021-28 · 请求分页地址变换 + 改进型 Clock</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 /* 页面专属小样式（仅本页舞台内容使用） */
 .hrow{ display:flex; gap:10px; align-items:stretch; flex-wrap:wrap; margin:8px 0 2px; }
@@ -55,6 +55,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -76,7 +78,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -184,8 +186,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：请求分页地址变换与改进型 Clock 置换</h2>
 <p><strong>答案：C（60A01H）。</strong> 完整链路是：拆地址 → 查页表发现缺页 → 改进型 Clock 选牺牲页 → 装入后重新变换。</p>
 <h3>第一步：拆分虚拟地址</h3>
@@ -200,7 +202,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>直接拿 20H 拼 B</strong>：页 2 存在位为 0，根本不在内存，页框号 20H 无效。</li><li><strong>忽略"扫描清 A"</strong>：不把 A 清 0，第三轮就找不到 (0,0)，改进型 Clock 的流程就走不下去。</li><li><strong>忘了重新变换</strong>：缺页处理后要用新页框号 60H 拼同一个偏移 A01H，而不是停在"缺页"。</li></ul>
 <blockquote>记忆锚点：请求分页先查存在位；缺页按 (0,0) → (0,1)（扫过清 A）→ 再 (0,0) 选牺牲页；物理地址 = 新页框号拼原偏移。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

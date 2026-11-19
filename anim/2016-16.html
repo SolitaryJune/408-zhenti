@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2016-16 动画 · 地址空间划分与 SRAM 芯片数量</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：64KB 地址空间划分 + 8K×4 SRAM 芯片数推演
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改下面的 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -147,12 +149,12 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：地址空间划分与 SRAM 芯片数量</h2>
 <p><strong>答案：C（14 片）。</strong></p>
 <h3>第一步：算出 ROM 区大小</h3>
-<p>ROM 区 4000H~5FFFH：5FFFH − 4000H + 1 = 2000H = 2 × 16^3 = <strong>8KB</strong>（按字节编址）。相减后别忘加 1。</p>
+<p>ROM 区 4000H~5FFFH：5FFFH − 4000H + 1 = 2000H = 2 × 16<sup>3</sup> = <strong>8KB</strong>（按字节编址）。相减后别忘加 1。</p>
 <h3>第二步：算出 RAM 区大小</h3>
 <p>总容量 64KB，RAM = 64KB − 8KB = <strong>56KB</strong>（分布在 0000H~3FFFH 与 6000H~FFFFH 两段）。</p>
 <h3>第三步：按芯片参数拼出 RAM</h3>
@@ -162,7 +164,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>选 A（7）</strong>：只做了字扩展、忘了位扩展——4 位芯片必须 2 片一组才能凑出 8 位的字节。</li><li><strong>选 B（8）</strong>：把整个 64KB 直接 ÷ 8KB = 8 组（既没扣掉 ROM 区、又漏了位扩展）。</li><li><strong>选 D（16）</strong>：把整个 64KB 都按 SRAM 计算（64KB ÷ 8KB × 2 = 16），漏了"ROM 区不用 SRAM 芯片"这一前提。</li><li><strong>地址相减忘加 1</strong>：5FFFH − 4000H = 1FFFH 不含末单元，正确算法要 +1 得 2000H（8KB）。</li></ul>
 <blockquote>片数 = 字扩展组数 × 位扩展片数 = (56KB ÷ 8KB) × (8 位 ÷ 4 位) = 7 × 2 = 14。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

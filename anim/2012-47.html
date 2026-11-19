@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2012-47 动画 · TCP 抓包分析</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   table.pkt{ border-collapse:collapse; font-size:12px; font-family:Menlo,monospace; width:100%; }
   table.pkt th, table.pkt td{ border:1px solid #1b3a4b26; padding:5px 7px; text-align:center; white-space:nowrap; }
@@ -42,6 +42,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -63,7 +65,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var rowEls = [], fxEl = null;
@@ -176,8 +178,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：TCP 抓包分析——从 40 字节十六进制读出方向、握手、填充与跳数</h2>
 <h3>第 0 步：先建立"读包"的方法——按头部结构逐字段切</h3>
 <p>抓包题的全部信息都在那 40 字节里，按题 47-a 图（IP 头）与题 47-b 图（TCP 头）的结构切开读：</p>
@@ -193,7 +195,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>TCP 头一律按 20B 算</strong>：1、2 号的数据偏移是 7，头长 28B（含选项）；算数据量必须用数据偏移 × 4。</li><li><strong>把"+1 的确认号"当笔误</strong>：SYN 消耗一个序号，SYN 与数据的确认号都指"下一个期望字节"，这是 TCP 的规定。</li><li><strong>把填充算进 IP 总长度</strong>：填充在帧层、不改变 IP 总长度字段，也不计入应用数据。</li><li><strong>TTL 差值再 ±1</strong>：只有路由器转发时减 1，两端主机不减，15 就是路由器台数。</li></ul>
 <blockquote>记忆锚点：源 IP 定方向；标志位＋确认号回扣定握手；IP 总长度 − 头部长定数据与填充（46B 下限定填充）；TTL 差值定跳数。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

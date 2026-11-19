@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2023-15 30 位地址空间的 RAM/ROM 划分</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .segb{ flex:1; border:2px solid #5a7d8c66; border-radius:12px; padding:14px 6px; text-align:center;
   font-size:13px; background:#fff; color:#b9cbd0; line-height:1.7; transition:all .25s; }
@@ -43,6 +43,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -64,7 +66,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -130,12 +132,12 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：30 位地址线下 ROM 的地址范围</h2>
 <p><strong>答案：C</strong>（3000 0000H～3FFF FFFFH）。</p>
 <h3>第一步：算总地址空间</h3>
-<p>30 根地址线按字节编址，可寻址 <code>2^30 B = 1GB</code>，地址范围为 <code>0000 0000H ～ 3FFF FFFFH</code>（最高地址是 3FFF FFFFH，不是 FFFF FFFFH）。</p>
+<p>30 根地址线按字节编址，可寻址 <code>2<sup>30</sup> B = 1GB</code>，地址范围为 <code>0000 0000H ～ 3FFF FFFFH</code>（最高地址是 3FFF FFFFH，不是 FFFF FFFFH）。</p>
 <h3>第二步：按 3:1 切分</h3>
 <p>要求占满全部空间且 RAM:ROM = 3:1 → RAM 占 768MB，ROM 占 256MB。以 256MB（即 <code>1000 0000H</code>）为一段恰好切成 4 段，前 3 段给 RAM、最后 1 段给 ROM。</p>
 <h3>第三步：定位 ROM</h3>
@@ -143,7 +145,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>最高地址写错</strong>：30 位地址线的最大地址是 3FFF FFFFH，选项 D 的 4000 0000H～4FFF FFFFH 超出了寻址空间。</li><li><strong>段起点算错</strong>：第 4 段起点 = <code>3 × 1000 0000H = 3000 0000H</code>；选项 A（0000 0000H～0FFF FFFFH）是第 1 段，选项 B（1000 0000H～2FFF FFFFH）跨第 2~3 段，都在 RAM 区。</li><li><strong>比例方向搞反</strong>：RAM 在低地址且占 3 份（大头），ROM 只占最后 1 份。</li></ul>
 <blockquote>一句话结论：1GB 空间按 3:1 切成 4 个 256MB 段，ROM 占最后一段 3000 0000H～3FFF FFFFH，选 C。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2012-18 字段直接编码位数 · 推理动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 function card(n, cls, title, body){
@@ -109,22 +111,22 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：微指令操作控制字段的位数（字段直接编码）</h2>
 <p><strong>答案：C</strong>——15 位。</p>
 <h3>第一步：字段直接编码法的分组原则</h3>
 <p>字段直接编码法把操作控制字段分成若干<strong>小段</strong>，把互斥的微命令编进同一段，各段独立译码、互不干扰。本题 33 个微命令构成 5 个互斥类 → 控制字段分成 5 段，段位数分别由各类的命令数决定。</p>
 <p><strong>为什么只有"互斥"的命令才能编进同一段？</strong> 每段配一个译码器，一次译码只点亮<strong>一条</strong>输出线——同一段在同一条微指令周期里最多发出 1 个微命令。若把两个可以同时出现（相容）的命令塞进同一段，它们就永远无法一起发出，控制功能直接残废；反过来，互斥（不可能同时需要）的命令共享一段恰好不损失任何组合能力。所以"互斥 → 同段、相容 → 分段"是分段的唯一依据。</p>
 <h3>第二步：每段要留一个"不发命令"的状态</h3>
-<p><strong>为什么每段必须留一个"不发命令"的状态？</strong> 一段 k 位有 2^k 个编码，译码器每个输出都被迫对应发出某条命令；但微指令经常需要"这一类操作什么都不做"（其他段照常工作），如果所有编码都绑死了命令，这种空操作就表达不出来。所以约定留出一个编码（通常全 0）表示本段不发任何微命令，可用命令数只剩 2^k − 1。于是每段要编码的状态数 = 微命令数 + 1，段位数 = log2(命令数 + 1) 向上取整：</p>
+<p><strong>为什么每段必须留一个"不发命令"的状态？</strong> 一段 k 位有 2<sup>k</sup> 个编码，译码器每个输出都被迫对应发出某条命令；但微指令经常需要"这一类操作什么都不做"（其他段照常工作），如果所有编码都绑死了命令，这种空操作就表达不出来。所以约定留出一个编码（通常全 0）表示本段不发任何微命令，可用命令数只剩 2<sup>k</sup> − 1。于是每段要编码的状态数 = 微命令数 + 1，段位数 = log2(命令数 + 1) 向上取整：</p>
 <table><thead><tr><th>互斥类</th><th>命令数</th><th>状态数（+1）</th><th>位数</th></tr></thead><tbody><tr><td>1</td><td>7</td><td>8</td><td>3</td></tr><tr><td>2</td><td>3</td><td>4</td><td>2</td></tr><tr><td>3</td><td>12</td><td>16</td><td>4</td></tr><tr><td>4</td><td>5</td><td>8</td><td>3</td></tr><tr><td>5</td><td>6</td><td>8</td><td>3</td></tr></tbody></table>
 <h3>第三步：求和</h3>
 <p>3 + 2 + 4 + 3 + 3 = <strong>15 位</strong>，选 <strong>C</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>只按互斥类个数给位数</strong>：5 个类 → 5 位（干扰项 A）——错在每类内部有多个命令，1 位编不下。</li><li><strong>把 33 个命令当一个字段编</strong>：log2(33) 向上取整约 6 位（干扰项 B）——错在这 33 个命令分属 5 个互斥类，相容的命令不能编进同一段。</li><li><strong>不分组、一位对应一个命令</strong>：33 位（干扰项 D）——那是水平直接控制法的思路，不是字段直接编码。</li><li><strong>忘记留"不发命令"状态</strong>：每个字段都要空出一个全 0 状态，位数按"命令数 + 1"取对数。</li></ul>
 <blockquote>记忆点：字段直接编码的位数 = 各互斥类的 log2(命令数 + 1) 向上取整之和。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

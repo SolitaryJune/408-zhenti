@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2015-44 动画 · 指令编码与执行阶段时钟周期推演</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -209,8 +211,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：指令编码、控制信号序列与时钟周期数</h2>
 <p><strong>答题框架</strong>：先立总机制——指令执行 = 公共的取指阶段 + 按操作码分支的执行阶段；图 a 中每行是一拍内同时有效的控制信号。单总线的关键约束是：<strong>同一拍至多允许一个部件往总线上"发"数，但允许多个部件同时"收"</strong>——后面数周期、安排信号全靠它。第 1 问按位段切分求指令数，第 2 问按图 b 拼位串，第 3 问按"这一拍要完成什么数据流动"定信号取值，第 4 问按"一拍一个发送者 + 依赖不能合并"数周期。</p>
 <h3>第 1 问：最多可定义多少条指令</h3>
@@ -230,7 +232,7 @@ AW.init({
 <p>→ 至少 <strong>4 个时钟周期</strong>，四拍环环相扣，无可合并。</p>
 <p>指令"inc R1"（(R1) + 1 → R1）：周期 1：(R1) → T（R1out、Tin）；周期 2：ALU 做 A+1，结果经 SR 上总线写回 R1（ALUop=inc、SRop=mov、SRout、R1in）→ 至少 <strong>2 个时钟周期</strong>。<strong>为什么不能 1 拍</strong>：ALU 的 A 端口只认 T，(R1) 必须先落入 T 才能参与运算；而总线上同一拍只能有一个发送者，取数与回写不可能同拍完成。</p>
 <blockquote>三步法：拼格式 → 对信号（看这一拍的数据流向）→ 数周期（一拍一个发送者 + 依赖不能合并）。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

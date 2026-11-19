@@ -200,6 +200,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -597,8 +599,8 @@
   applyCase('A');
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：KMP 匹配的比较次数</h2>
 <h3>第一步：先求 next 表</h3>
 <p>模式串 S = <code>abaabc</code>（m = 6），采用教材版定义（next[1] = 0，next[j] = S[1..j−1] 最长相等前后缀长度 + 1）：</p>
@@ -613,7 +615,7 @@
 <h3>易错点</h3>
 <ul><li><strong>漏数失配的那次比较</strong>：T[6] 与 S[6] 的失配也是一次"单个字符间的比较"，必须计入。</li><li><strong>误以为要重比 S[1]、S[2]</strong>：如果按朴素匹配思想把模式串右移一格重新从 S[1] 比，会算出偏大的次数（12 次正是这么来的）——KMP 的意义就是靠 next 跳过这些重复比较。</li><li><strong>next 表求错</strong>：注意 next[j] 看的是 S[1..j−1] 的边界，不是 S[1..j]。</li></ul>
 <blockquote>计数口径：每一次"单个字符之间"的比较都计入，包括失配的那一次与最后成功的那一次。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

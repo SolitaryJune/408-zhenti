@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2026-25 线程的创建者与共享资源</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- 模板：概念/分析类 · 只改下方 AW.init 区域 -->
@@ -34,6 +34,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -55,7 +57,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 function card(n, cls, title, body){
@@ -118,8 +120,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：用户级线程、内核级线程与线程共享资源</h2>
 <p><strong>答案：D（同一进程的不同线程共享该进程虚拟地址空间中的堆）</strong>。本题考两组事实：线程由谁创建、线程之间什么私有什么共享。</p>
 <h3>第一步：线程由谁创建</h3>
@@ -130,7 +132,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>"多对多"记反</strong>：是多个用户线程映射到少量内核线程，不是"一个用户线程映射到多个内核线程"。</li><li><strong>以为同进程的线程共用内核栈</strong>：内核栈属于内核级线程私有，与用户栈、寄存器一样是线程私有的。</li><li><strong>把"共享地址空间"与"共享一切"混淆</strong>：栈和寄存器现场始终是线程私有的。</li></ul>
 <blockquote>结论：用户级线程由线程库创建、内核栈线程私有、堆由同进程线程共享，选 <strong>D</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

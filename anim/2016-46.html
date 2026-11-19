@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2016-46 动态优先数防饥饿演示</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- AW_QNAV_START -->
@@ -33,6 +33,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -54,7 +56,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 /* priority = nice + k1×cpuTime − k2×waitTime（取 k1 = k2 = 1，题目只要求 k1,k2 > 0）
@@ -116,8 +118,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：动态优先数调度与饥饿</h2>
 <h3>第 0 步：先把调度器的行为模型立起来</h3>
 <p>调度策略只有一句话：<strong>每次调度，选就绪队列中优先数（priority）最小的进程运行</strong>——数越小，优先级越高。这是一个"每次取全队列最小值"的确定性策略：某进程能不能上 CPU，只取决于"决策那一刻，队列里有没有比它优先数更小的进程"。饥饿的根源与解药都要从这个模型里找。</p>
@@ -132,7 +134,7 @@ AW.init({
 <p><strong>为什么这样就能避免饥饿</strong>：等待时间没有上界，−k2 × waitTime 使 P 的优先数随等待<strong>单调下降、无下界</strong>；同时在运行的进程优先数因 cpuTime 上升。所以 P 迟早成为全队列优先数最小者而被调度——每个就绪进程都能在有限时间内获得 CPU。</p>
 <p><strong>waitTime 的作用</strong>：对长时间等待的进程做动态补偿——随等待时间减小优先数、提升优先级，使长时间等待的进程有机会被调度，从而避免饥饿。</p>
 <blockquote>一句话记忆：cpuTime 惩罚"跑得久"的进程，waitTime 补偿"等得久"的进程；置 0 让惩罚只管本次、补偿只给等待。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

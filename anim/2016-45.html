@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2016-45 动画 · 虚存 + Cache 地址字段划分与块映射</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：虚地址/物理地址/TLB/Cache 字段逐段切分 + 块 4099 映射
-     外壳与控件全部由 assets/anim-engine.js 提供，只改下面的 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改下面的 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -180,15 +182,15 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：页式虚存 + Cache 的地址分段与块映射</h2>
 <p><strong>答题框架</strong>：整道题是"一次访存要过三道查表关"——虚地址先经 TLB/页表换成物理地址，物理地址再经 Cache 取数。每一关的地址都被切成"索引段 + 标记段 + 偏移段"，A~G 无非是这些段在不同地址里的名字。先定偏移，再倒推其余字段，最后单独处理两个映射（TLB 全相联、Cache 2 路组相联）。</p>
 <h3>第 0 步：先立模型——地址怎么切，查表就怎么查</h3>
 <ul><li><strong>分页</strong>：虚地址 = 虚页号 + 页内偏移，物理地址 = 页框号 + 页内偏移。虚实变换只换"页号"那一头，<strong>页内偏移原样照搬</strong>——所以虚、物地址里的偏移段位数相同。</li><li><strong>TLB 全相联</strong>：任意虚页可放进任意表项。虚地址里<strong>没有索引段</strong>可供选表项，只能拿虚页号与每个表项的标记逐一比较——所以 TLB 表项的标记必须存<strong>完整虚页号</strong>，少存一位都会把别的页误判成命中。</li><li><strong>Cache 2 路组相联</strong>：物理地址切成 标记 E + 组号 F + 块内偏移 G 三段：组号选"进哪一组"，标记认"组里两行到底是谁"，偏移定位"块内第几字节"。</li></ul>
 <h3>问（1）：逐段切分 A~G</h3>
-<p><strong>先定偏移（一切计算的锚点）</strong>：页大小 8KB = 2^13 → <strong>D（页内偏移）= 13 位</strong>；主存块 64B = 2^6 → <strong>G（块内偏移）= 6 位</strong>。</p>
-<ul><li>虚地址 32 位：A（虚页号）= 32 − 13 = <strong>19 位</strong>；</li><li>物理地址 24 位：C（页框号）= 24 − 13 = <strong>11 位</strong>；</li><li>TLB 标记 B = 完整虚页号 = <strong>19 位</strong>（全相联的必然结果，见第 0 步）；</li><li>Cache：数据区 64KB、2 路、每块 64B → 组数 = 64KB ÷ (2 × 64B) = 512 = 2^9 → <strong>F（组号）= 9 位</strong>；E（标记）= 24 − 9 − 6 = <strong>9 位</strong>。</li></ul>
+<p><strong>先定偏移（一切计算的锚点）</strong>：页大小 8KB = 2<sup>13</sup> → <strong>D（页内偏移）= 13 位</strong>；主存块 64B = 2<sup>6</sup> → <strong>G（块内偏移）= 6 位</strong>。</p>
+<ul><li>虚地址 32 位：A（虚页号）= 32 − 13 = <strong>19 位</strong>；</li><li>物理地址 24 位：C（页框号）= 24 − 13 = <strong>11 位</strong>；</li><li>TLB 标记 B = 完整虚页号 = <strong>19 位</strong>（全相联的必然结果，见第 0 步）；</li><li>Cache：数据区 64KB、2 路、每块 64B → 组数 = 64KB ÷ (2 × 64B) = 512 = 2<sup>9</sup> → <strong>F（组号）= 9 位</strong>；E（标记）= 24 − 9 − 6 = <strong>9 位</strong>。</li></ul>
 <table><thead><tr><th>字段</th><th>含义</th><th>计算</th><th>位数</th></tr></thead><tbody><tr><td>A</td><td>虚地址中的虚页号</td><td>32 − 13</td><td>19</td></tr><tr><td>B</td><td>TLB 表项标记（全相联）</td><td>= 完整虚页号</td><td>19</td></tr><tr><td>C</td><td>物理地址中的页框号</td><td>24 − 13</td><td>11</td></tr><tr><td>D</td><td>页内偏移</td><td>log2 8KB</td><td>13</td></tr><tr><td>E</td><td>Cache 标记</td><td>24 − 9 − 6</td><td>9</td></tr><tr><td>F</td><td>Cache 组号</td><td>log2 512</td><td>9</td></tr><tr><td>G</td><td>块内偏移</td><td>log2 64B</td><td>6</td></tr></tbody></table>
 <p><strong>TLB 标记字段 B 中存放的是虚页号。</strong></p>
 <h3>问（2）：主存块 4099 映射到哪一组、H 存什么</h3>
@@ -203,7 +205,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>A 算成 20 位</strong>：忘记虚地址 32 位里已含 13 位页内偏移——虚页号 = 32 − 13 = 19。</li><li><strong>F 算成 10 位</strong>：用 64KB ÷ 64B = 1024 当组数——还要<strong>除以路数 2</strong>，64KB ÷ (2×64B) = 512 组。</li><li><strong>H 与组号颠倒</strong>：组号是块号的低位（4099 mod 512 = 3），标记是高位（4099 ÷ 512 = 8）。</li><li><strong>B 写成页框号</strong>：TLB 在虚地址一侧工作，标记必须与虚页号比较；页框号是命中后 TLB 交付的结果。</li></ul>
 <blockquote>答案汇总：(1) A=19、B=19、C=11、D=13、E=9、F=9、G=6，B 存虚页号；(2) 组号 3，H = 0 0000 1000B；(3) 缺页开销大，因缺页访磁盘、Cache 缺失只访主存；(4) Cache—主存层次快可用直写，磁盘太慢须回写以减少写盘次数。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

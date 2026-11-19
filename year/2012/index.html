@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2012 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2012">
 <header class="site-header">
@@ -868,19 +868,19 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1vNYC6eEzn/?p=14" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：float 能表示的最大正整数</h2>
-<p><strong>答案：D</strong>——float 的最大正数本身就是整数，即 <code>(2 - 2^-23) × 2^127 = 2^128 - 2^104</code>。</p>
+<p><strong>答案：D</strong>——float 的最大正数本身就是整数，即 <code>(2 - 2<sup>-23</sup>) × 2<sup>127</sup> = 2<sup>128</sup> - 2<sup>104</sup></code>。</p>
 <h3>第一步：明确"最大正整数"是什么</h3>
 <p>float 能表示的最大数恰好是一个整数，所以 float 能表示的最大正整数就是它的最大规格化正数——比它更大的整数都无法精确表示。</p>
 <h3>第二步：用 IEEE 754 单精度格式构造最大数</h3>
 <p>单精度 = 1 位符号 + 8 位阶码 + 23 位尾数。构造最大正数：</p>
-<ul><li>符号位 S = 0；</li><li>阶码全 1（E = 255）被保留给 ±∞ 和 NaN，不能表示数，故取最大可用阶码 E = 254，真指数 = 254 − 127 = 127；</li><li>尾数 M 全 1，加上隐含的最高位 1，即 1.M = 1.111…1 = 2 − 2^-23。</li></ul>
-<p><strong>两个"为什么"提前答掉：</strong> ①尾数为什么要加隐含的 1？规格化二进制数必写成 1.xxxx × 2^E，整数位的 1 永远存在，索性不存它——23 位的存储就能挤出 24 位有效精度，这叫隐藏位技术。M 全 1 时 1.M 就是最大的尾数 = 2 − 2^-23（离 2 差一个 2^-23）。②阶码为什么要减 127（偏置）？8 位若按补码存，负指数的比较和运算都别扭；改存"真指数 + 127"这个无符号数，硬件比较大小、做乘法都直接。所以存的最大阶码 254 对应真指数 254 − 127 = 127，而全 1 的 255 被保留给 ±∞ / NaN。</p>
-<p>最大值 = 1.M × 2^127 = (2 − 2^-23) × 2^127</p>
+<ul><li>符号位 S = 0；</li><li>阶码全 1（E = 255）被保留给 ±∞ 和 NaN，不能表示数，故取最大可用阶码 E = 254，真指数 = 254 − 127 = 127；</li><li>尾数 M 全 1，加上隐含的最高位 1，即 1.M = 1.111…1 = 2 − 2<sup>-23</sup>。</li></ul>
+<p><strong>两个"为什么"提前答掉：</strong> ①尾数为什么要加隐含的 1？规格化二进制数必写成 1.xxxx × 2<sup>E</sup>，整数位的 1 永远存在，索性不存它——23 位的存储就能挤出 24 位有效精度，这叫隐藏位技术。M 全 1 时 1.M 就是最大的尾数 = 2 − 2<sup>-23</sup>（离 2 差一个 2<sup>-23</sup>）。②阶码为什么要减 127（偏置）？8 位若按补码存，负指数的比较和运算都别扭；改存"真指数 + 127"这个无符号数，硬件比较大小、做乘法都直接。所以存的最大阶码 254 对应真指数 254 − 127 = 127，而全 1 的 255 被保留给 ±∞ / NaN。</p>
+<p>最大值 = 1.M × 2<sup>127</sup> = (2 − 2<sup>-23</sup>) × 2<sup>127</sup></p>
 <h3>第三步：展开成选项形式</h3>
-<p>(2 − 2^-23) × 2^127 = 2 × 2^127 − 2^-23 × 2^127 = <code>2^128 - 2^104</code>，选 <strong>D</strong>。</p>
+<p>(2 − 2<sup>-23</sup>) × 2<sup>127</sup> = 2 × 2<sup>127</sup> − 2<sup>-23</sup> × 2<sup>127</sup> = <code>2<sup>128</sup> - 2<sup>104</sup></code>，选 <strong>D</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>阶码取 255</strong>：E 全 1 是无穷大 / NaN 的保留编码，不能当数值用——选项 B、C 里 2^127 开头的式子常由此而来。</li><li><strong>忘记隐含的"1."</strong>：尾数是 1.M 不是 0.M，展开后是 2 − 2^-23，不是 1 − 2^-23，指数也就不是 126 或 127 开头的选项。</li><li><strong>指数运算出错</strong>：偏置常数是 127；−2^-23 × 2^127 = −2^104，不要把 23 直接加到 127 上。</li></ul>
-<blockquote>记忆点：float 最大值 = (2 − 2^-23) × 2^127 = 2^128 − 2^104。</blockquote></div></div>
+<ul><li><strong>阶码取 255</strong>：E 全 1 是无穷大 / NaN 的保留编码，不能当数值用——选项 B、C 里 2<sup>127</sup> 开头的式子常由此而来。</li><li><strong>忘记隐含的"1."</strong>：尾数是 1.M 不是 0.M，展开后是 2 − 2<sup>-23</sup>，不是 1 − 2<sup>-23</sup>，指数也就不是 126 或 127 开头的选项。</li><li><strong>指数运算出错</strong>：偏置常数是 127；−2<sup>-23</sup> × 2<sup>127</sup> = −2<sup>104</sup>，不要把 23 直接加到 127 上。</li></ul>
+<blockquote>记忆点：float 最大值 = (2 − 2<sup>-23</sup>) × 2<sup>127</sup> = 2<sup>128</sup> − 2<sup>104</sup>。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -1107,7 +1107,7 @@ record.a=273;</code></pre><p><span>若record变量的首地址为0xC008，则地
 <p>字段直接编码法把操作控制字段分成若干<strong>小段</strong>，把互斥的微命令编进同一段，各段独立译码、互不干扰。本题 33 个微命令构成 5 个互斥类 → 控制字段分成 5 段，段位数分别由各类的命令数决定。</p>
 <p><strong>为什么只有"互斥"的命令才能编进同一段？</strong> 每段配一个译码器，一次译码只点亮<strong>一条</strong>输出线——同一段在同一条微指令周期里最多发出 1 个微命令。若把两个可以同时出现（相容）的命令塞进同一段，它们就永远无法一起发出，控制功能直接残废；反过来，互斥（不可能同时需要）的命令共享一段恰好不损失任何组合能力。所以"互斥 → 同段、相容 → 分段"是分段的唯一依据。</p>
 <h3>第二步：每段要留一个"不发命令"的状态</h3>
-<p><strong>为什么每段必须留一个"不发命令"的状态？</strong> 一段 k 位有 2^k 个编码，译码器每个输出都被迫对应发出某条命令；但微指令经常需要"这一类操作什么都不做"（其他段照常工作），如果所有编码都绑死了命令，这种空操作就表达不出来。所以约定留出一个编码（通常全 0）表示本段不发任何微命令，可用命令数只剩 2^k − 1。于是每段要编码的状态数 = 微命令数 + 1，段位数 = log2(命令数 + 1) 向上取整：</p>
+<p><strong>为什么每段必须留一个"不发命令"的状态？</strong> 一段 k 位有 2<sup>k</sup> 个编码，译码器每个输出都被迫对应发出某条命令；但微指令经常需要"这一类操作什么都不做"（其他段照常工作），如果所有编码都绑死了命令，这种空操作就表达不出来。所以约定留出一个编码（通常全 0）表示本段不发任何微命令，可用命令数只剩 2<sup>k</sup> − 1。于是每段要编码的状态数 = 微命令数 + 1，段位数 = log2(命令数 + 1) 向上取整：</p>
 <table><thead><tr><th>互斥类</th><th>命令数</th><th>状态数（+1）</th><th>位数</th></tr></thead><tbody><tr><td>1</td><td>7</td><td>8</td><td>3</td></tr><tr><td>2</td><td>3</td><td>4</td><td>2</td></tr><tr><td>3</td><td>12</td><td>16</td><td>4</td></tr><tr><td>4</td><td>5</td><td>8</td><td>3</td></tr><tr><td>5</td><td>6</td><td>8</td><td>3</td></tr></tbody></table>
 <h3>第三步：求和</h3>
 <p>3 + 2 + 4 + 3 + 3 = <strong>15 位</strong>，选 <strong>C</strong>。</p>
@@ -2113,19 +2113,19 @@ record.a=273;</code></pre><p><span>若record变量的首地址为0xC008，则地
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：GBN 序号比特数与信道利用率</h2>
 <h3>结论：答案 B（4 比特）</h3>
-<p>要让信道利用率最高，发送方必须<strong>连续不断</strong>发帧。用<strong>最短帧 128 B</strong> 的最坏情况算：填满「一去一回」管道需要的帧数最多，再由 GBN 窗口约束 <code>W ≤ 2^n − 1</code> 定出 n。</p>
+<p>要让信道利用率最高，发送方必须<strong>连续不断</strong>发帧。用<strong>最短帧 128 B</strong> 的最坏情况算：填满「一去一回」管道需要的帧数最多，再由 GBN 窗口约束 <code>W ≤ 2<sup>n</sup> − 1</code> 定出 n。</p>
 <p><strong>为什么必须按最短帧算？</strong> 利用率"最高"意味着确认回来之前发送方一刻不停；帧越短、发送时延 Tf 越小，同样 668 ms 的往返管道里要塞的帧数就越多——长帧（512 B，Tf = 256 ms）只要 5 帧多，短帧（128 B，Tf = 64 ms）要 10 帧多。序号比特数是按最坏需求设计的，所以取帧长下限 128 B。</p>
 <h3>第一步：算时间</h3>
 <table><thead><tr><th>量</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>帧发送时延 Tf</td><td>128×8 bit ÷ 16 kbps</td><td>64 ms</td></tr><tr><td>单向传播时延 Tp</td><td>题目给定</td><td>270 ms</td></tr><tr><td>ACK 发送时延 Ta</td><td>确认帧与数据帧等长</td><td>64 ms</td></tr></tbody></table>
 <p>第 1 帧从开始发送到它的确认完全回到发送方：<code>Tf + Tp + Ta + Tp = 64 + 270 + 64 + 270 = 668 ms</code>。</p>
 <h3>第二步：算窗口与比特数</h3>
-<p>这 668 ms 内发送方一刻不能停，需要连发的帧数 <code>W ≥ 668 ÷ 64 ≈ 10.44</code>，取 <strong>W ≥ 11</strong>。GBN 发送窗口受序号空间限制：<code>2^n − 1 ≥ 11</code>，即 <code>2^n ≥ 12</code>：</p>
-<p><strong>为什么窗口上限是 2^n − 1 而不是 2^n？</strong> 序号共 2^n 个、GBN 接收窗口为 1。若发送窗口开满 2^n，发送方可以在一个确认都没收到的情况下把 0 ~ 2^n−1 号帧全部发完；此时一旦最老的累计确认丢失，重传的 0 号帧和"下一轮新发"的 0 号帧撞用同一序号，接收方无法分辨新旧帧，出了错就无法挽回。留出 1 个序号作隔离带，新帧序号就绝不会与未确认旧帧重合——这就是 <code>W ≤ 2^n − 1</code> 的由来。</p>
-<ul><li>n = 3：<code>2^3 − 1 = 7</code>，小于 11，不够；</li><li>n = 4：<code>2^4 − 1 = 15 ≥ 11</code>，可行。</li></ul>
+<p>这 668 ms 内发送方一刻不能停，需要连发的帧数 <code>W ≥ 668 ÷ 64 ≈ 10.44</code>，取 <strong>W ≥ 11</strong>。GBN 发送窗口受序号空间限制：<code>2<sup>n</sup> − 1 ≥ 11</code>，即 <code>2<sup>n</sup> ≥ 12</code>：</p>
+<p><strong>为什么窗口上限是 2<sup>n</sup> − 1 而不是 2<sup>n</sup>？</strong> 序号共 2<sup>n</sup> 个、GBN 接收窗口为 1。若发送窗口开满 2<sup>n</sup>，发送方可以在一个确认都没收到的情况下把 0 ~ 2<sup>n</sup>−1 号帧全部发完；此时一旦最老的累计确认丢失，重传的 0 号帧和"下一轮新发"的 0 号帧撞用同一序号，接收方无法分辨新旧帧，出了错就无法挽回。留出 1 个序号作隔离带，新帧序号就绝不会与未确认旧帧重合——这就是 <code>W ≤ 2<sup>n</sup> − 1</code> 的由来。</p>
+<ul><li>n = 3：<code>2<sup>3</sup> − 1 = 7</code>，小于 11，不够；</li><li>n = 4：<code>2<sup>4</sup> − 1 = 15 ≥ 11</code>，可行。</li></ul>
 <p>故帧序号至少 <strong>4 比特</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>按 512 B 长帧算</strong>：Tf = 256 ms，此时 W ≥ 5、n = 3 就够——但帧长可以短到 128 B，要保证<strong>任何帧长下</strong>利用率都能最高，必须按最坏情况（最短帧）设计。</li><li><strong>漏掉 ACK 的发送时延</strong>：题目明说「接收方总是以与数据帧等长的帧进行确认」，Ta = Tf = 64 ms，不能当成瞬间到达。</li><li><strong>窗口上限记成 2^n</strong>：GBN 发送窗口最大是 <code>2^n − 1</code>，不是 <code>2^n</code>。</li></ul>
-<blockquote>一句话：最短帧定出最大需求 11 帧，<code>2^n − 1 ≥ 11</code> → n 至少为 4。</blockquote></div></div>
+<ul><li><strong>按 512 B 长帧算</strong>：Tf = 256 ms，此时 W ≥ 5、n = 3 就够——但帧长可以短到 128 B，要保证<strong>任何帧长下</strong>利用率都能最高，必须按最坏情况（最短帧）设计。</li><li><strong>漏掉 ACK 的发送时延</strong>：题目明说「接收方总是以与数据帧等长的帧进行确认」，Ta = Tf = 64 ms，不能当成瞬间到达。</li><li><strong>窗口上限记成 2<sup>n</sup></strong>：GBN 发送窗口最大是 <code>2<sup>n</sup> − 1</code>，不是 <code>2<sup>n</sup></code>。</li></ul>
+<blockquote>一句话：最短帧定出最大需求 11 帧，<code>2<sup>n</sup> − 1 ≥ 11</code> → n 至少为 4。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2900,4 +2900,4 @@ I5  STORE  R2, [x]</code></pre><figure class="markdown-image"><img src="../../im
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

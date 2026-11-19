@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2013 年 408 真题 · 整张模式 · 408 真题档案</title>
-<link rel="stylesheet" href="../../assets/style.css?v=20261118b">
+<link rel="stylesheet" href="../../assets/style.css?v=20261119a">
 </head>
 <body data-mode="paper" data-year="2013">
 <header class="site-header">
@@ -790,18 +790,18 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1F8Yt6AEYN/?p=13" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：IEEE 754 单精度浮点数的还原</h2>
-<p><strong>答案：A（−1.5 × 2^13）。</strong></p>
+<p><strong>答案：A（−1.5 × 2<sup>13</sup>）。</strong></p>
 <h3>第一步：先懂格式再拆位——两处必被追问的设计</h3>
 <p>IEEE 754 单精度把 32 位切成 <strong>1 位数符 + 8 位阶码 + 23 位尾数</strong>。动手拆之前，先弄清两处最容易被追问"为什么"的设计：</p>
-<ul><li><strong>阶码为什么减 127？</strong> 指数本来有正有负，若直接存补码，硬件比较两数大小、对阶时都要额外处理符号。于是约定存"指数 + 127"（移码/偏置码）：8 位全部落进 1~254 的无符号范围，比较阶码就是比较无符号整数。所以还原时<strong>真实指数 = E − 127</strong>。</li><li><strong>尾数为什么有隐藏的 1？</strong> 规格化二进制数总能写成 1.xxxx × 2^E，整数位恒为 1，存它纯属浪费——约定不存、还原时补上，等于白赚 1 位精度。所以尾数必须按 <strong>1.M</strong> 还原，而不是 0.M。</li></ul>
+<ul><li><strong>阶码为什么减 127？</strong> 指数本来有正有负，若直接存补码，硬件比较两数大小、对阶时都要额外处理符号。于是约定存"指数 + 127"（移码/偏置码）：8 位全部落进 1~254 的无符号范围，比较阶码就是比较无符号整数。所以还原时<strong>真实指数 = E − 127</strong>。</li><li><strong>尾数为什么有隐藏的 1？</strong> 规格化二进制数总能写成 1.xxxx × 2<sup>E</sup>，整数位恒为 1，存它纯属浪费——约定不存、还原时补上，等于白赚 1 位精度。所以尾数必须按 <strong>1.M</strong> 还原，而不是 0.M。</li></ul>
 <h3>第二步：拆 C640 0000H</h3>
 <p><code>C640 0000H</code> = <code>1100 0110 0100 0000 0000 0000 0000 0000</code>：</p>
 <table><thead><tr><th>字段</th><th>取出的位</th><th>读数</th></tr></thead><tbody><tr><td>数符（最高 1 位）</td><td>1</td><td>负数</td></tr><tr><td>阶码（数符后 8 位）</td><td><code>100 0110 0</code> = <code>10001100B</code></td><td>128+8+4 = 140</td></tr><tr><td>尾数（低 23 位）</td><td><code>100…0</code></td><td>M = 0.5</td></tr></tbody></table>
 <h3>第三步：三段拼成真值</h3>
-<p>真实指数 = 140 − 127 = <strong>13</strong>；尾数 1.M = 1 + 0.5 = <strong>1.5</strong>；数符为 1 → 整体取负。该数 = <strong>−1.5 × 2^13</strong>，选 <strong>A</strong>。</p>
+<p>真实指数 = 140 − 127 = <strong>13</strong>；尾数 1.M = 1 + 0.5 = <strong>1.5</strong>；数符为 1 → 整体取负。该数 = <strong>−1.5 × 2<sup>13</sup></strong>，选 <strong>A</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>忘记减偏置 127</strong>：把阶码 140 直接当指数，全盘皆错；单精度偏置是 127（双精度才是 1023）。</li><li><strong>漏掉隐含的 1</strong>：尾数按 0.M 还原成 0.5 → 得 −0.5×2^13（选项 C）或 −0.5×2^12（选项 D）。</li><li><strong>指数差 1</strong>：偏置错减 128、或指数多扣一位 → −1.5×2^12（选项 B）。</li><li><strong>位段切错位置</strong>：阶码是数符后的 8 位 <code>100 0110 0</code>，拼成 <code>1000 1100</code> = 140；从别处截取则指数全错。</li></ul>
-<blockquote>一句话结论：数符 1、阶码 10001100B = 140、指数 140 − 127 = 13、尾数 1.M = 1.5，该数 = −1.5 × 2^13，选 A。</blockquote></div></div>
+<ul><li><strong>忘记减偏置 127</strong>：把阶码 140 直接当指数，全盘皆错；单精度偏置是 127（双精度才是 1023）。</li><li><strong>漏掉隐含的 1</strong>：尾数按 0.M 还原成 0.5 → 得 −0.5×2<sup>13</sup>（选项 C）或 −0.5×2<sup>12</sup>（选项 D）。</li><li><strong>指数差 1</strong>：偏置错减 128、或指数多扣一位 → −1.5×2<sup>12</sup>（选项 B）。</li><li><strong>位段切错位置</strong>：阶码是数符后的 8 位 <code>100 0110 0</code>，拼成 <code>1000 1100</code> = 140；从别处截取则指数全错。</li></ul>
+<blockquote>一句话结论：数符 1、阶码 10001100B = 140、指数 140 − 127 = 13、尾数 1.M = 1.5，该数 = −1.5 × 2<sup>13</sup>，选 A。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -914,16 +914,16 @@
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：海明码校验位数的最小值</h2>
 <p><strong>答案：C（4 位）。</strong></p>
 <h3>第一步：写出海明码不等式</h3>
-<p>k 位校验位共能表示 2^k 种"校验结果"，而需要区分的状态有：无错 1 种 + 8 位信息位中某一位错 8 种 + k 位校验位自身出错 k 种，共 <strong>1 + n + k</strong> 种。因此必须满足：</p>
-<p><code>2^k ≥ n + k + 1</code></p>
+<p>k 位校验位共能表示 2<sup>k</sup> 种"校验结果"，而需要区分的状态有：无错 1 种 + 8 位信息位中某一位错 8 种 + k 位校验位自身出错 k 种，共 <strong>1 + n + k</strong> 种。因此必须满足：</p>
+<p><code>2<sup>k</sup> ≥ n + k + 1</code></p>
 <h3>第二步：代入 n = 8 逐个试值</h3>
-<table><thead><tr><th>k</th><th>2^k</th><th>需区分 1+8+k</th><th>是否满足</th></tr></thead><tbody><tr><td>2</td><td>4</td><td>11</td><td>✗（干扰项 A）</td></tr><tr><td>3</td><td>8</td><td>12</td><td>✗（干扰项 B）</td></tr><tr><td>4</td><td>16</td><td>13</td><td>✓（答案 C）</td></tr><tr><td>5</td><td>32</td><td>14</td><td>✓ 但非"至少"（干扰项 D）</td></tr></tbody></table>
+<table><thead><tr><th>k</th><th>2<sup>k</sup></th><th>需区分 1+8+k</th><th>是否满足</th></tr></thead><tbody><tr><td>2</td><td>4</td><td>11</td><td>✗（干扰项 A）</td></tr><tr><td>3</td><td>8</td><td>12</td><td>✗（干扰项 B）</td></tr><tr><td>4</td><td>16</td><td>13</td><td>✓（答案 C）</td></tr><tr><td>5</td><td>32</td><td>14</td><td>✓ 但非"至少"（干扰项 D）</td></tr></tbody></table>
 <p>k = 3 时 8 &lt; 12，不够用；k = 4 时 16 ≥ 13，刚好满足。所以校验位至少 <strong>4 位</strong>。</p>
 <h3>第三步：直观核对</h3>
 <p>总码长 = 8 + 4 = 12 位，4 位校验值有 16 种组合，覆盖"无错 + 12 个可能出错位"共 13 种情况，分组校验可行。</p>
 <h3>易错点</h3>
-<ul><li><strong>背成 2^k ≥ n</strong>：漏掉 +k+1，会误选 B（3 位）——错态还包括"校验位自身出错"和"完全无错"，必须计入。</li><li><strong>代错 n</strong>：不等式里的 n 是信息位数 8，不是加入校验位后的码字总长 12。</li><li><strong>选 D（5 位）</strong>：5 位当然也能纠一位错，但题目问"至少"，4 位已满足不等式，取最小即可。</li></ul>
-<blockquote>一句话结论：2^k ≥ 8 + k + 1，k 最小取 4，选 C。</blockquote></div></div>
+<ul><li><strong>背成 2<sup>k</sup> ≥ n</strong>：漏掉 +k+1，会误选 B（3 位）——错态还包括"校验位自身出错"和"完全无错"，必须计入。</li><li><strong>代错 n</strong>：不等式里的 n 是信息位数 8，不是加入校验位后的码字总长 12。</li><li><strong>选 D（5 位）</strong>：5 位当然也能纠一位错，但题目问"至少"，4 位已满足不等式，取最小即可。</li></ul>
+<blockquote>一句话结论：2<sup>k</sup> ≥ 8 + k + 1，k 最小取 4，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -978,7 +978,7 @@
 <h3>第二步：查 TLB（全相联，标记即虚页号）</h3>
 <table><thead><tr><th>表项</th><th>有效位</th><th>标记</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>0</td><td>FF180H</td><td>✗ 有效位为 0，不能用</td></tr><tr><td>2</td><td>1</td><td>3FFF1H</td><td>✗ 标记与 03FFFH 不符</td></tr><tr><td>3</td><td>0</td><td>02FF3H</td><td>✗ 有效位为 0</td></tr><tr><td>4</td><td>1</td><td>03FFFH</td><td>✓ 有效且标记相同 → 命中，页框号 <code>0153H</code></td></tr></tbody></table>
 <h3>第三步：拼接物理地址</h3>
-<p>主存 256MB = 2^28，物理地址 28 位 = 16 位页框号 + 12 位页内偏移：</p>
+<p>主存 256MB = 2<sup>28</sup>，物理地址 28 位 = 16 位页框号 + 12 位页内偏移：</p>
 <p>物理地址 = <code>0153H</code>（页框号）直接拼接 <code>180H</code>（偏移）= <code>0153180H</code>，写作 <strong>015 3180H</strong>。</p>
 <h3>易错点</h3>
 <ul><li><strong>偏移位数取错</strong>：4KB 页对应低 12 位 <code>180H</code>；若错取 <code>F180H</code>（16 位），说明把页面当成 64KB 了。</li><li><strong>忽略有效位</strong>：第 1、3 项的标记虽也不同，但有效位 0 的表项根本无效——即使标记相同也不能用。</li><li><strong>误判"TLB 缺失"或"缺页"</strong>：TLB 中找到了有效匹配就是命中，直接得到页框号；缺页是指所访问页面不在主存，本题无此信息。</li><li><strong>拼接时相加</strong>：页框号与页内偏移是"拼接"关系，不是相加。</li></ul>
@@ -1088,19 +1088,19 @@
     <a data-tab="video" href="https://www.bilibili.com/video/BV1F8Yt6AEYN/?p=18" target="_blank" rel="noopener noreferrer">📺 解析视频</a>
   </div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：流水线吞吐率的计算</h2>
-<p><strong>答案：C（1.0×10^9 条指令/秒）。</strong></p>
+<p><strong>答案：C（1.0×10<sup>9</sup> 条指令/秒）。</strong></p>
 <h3>第一步：写出公式</h3>
 <p>n 条指令、k 段流水线、每段 1 个时钟周期 τ，总时间 = (k + n − 1) × τ，吞吐率 TP = n ÷ 总时间。前 k−1 个周期是"装料"（填充）时间，期间没有指令流出，必须计入。</p>
 <h3>第二步：求时钟周期</h3>
-<p>主频 1.03 GHz → τ = 1 ÷ (1.03×10^9) 秒 = 1/1.03 ns ≈ 0.971 ns（不是约 1ns，精度很关键）。</p>
+<p>主频 1.03 GHz → τ = 1 ÷ (1.03×10<sup>9</sup>) 秒 = 1/1.03 ns ≈ 0.971 ns（不是约 1ns，精度很关键）。</p>
 <h3>第三步：求总时间</h3>
 <p>k = 4，n = 100 → 共经历 4 + 100 − 1 = <strong>103</strong> 个时钟周期：</p>
 <p>总时间 = 103 × (1/1.03) ns = <strong>100 ns</strong>（103 ÷ 1.03 = 100，整好）。</p>
 <h3>第四步：求吞吐率</h3>
-<p>TP = 100 条 ÷ 100 ns = 1 条/ns = <strong>1.0×10^9 条指令/秒</strong>。</p>
+<p>TP = 100 条 ÷ 100 ns = 1 条/ns = <strong>1.0×10<sup>9</sup> 条指令/秒</strong>。</p>
 <h3>易错点</h3>
-<ul><li><strong>漏掉填充时间（选 D）</strong>：只算 100 个周期，100 × (1/1.03GHz) ≈ 97 ns，TP ≈ 1.03×10^9 条/秒，数值恰好等于主频，是最强干扰项。</li><li><strong>时钟周期取整过粗（选 B）</strong>：把 τ 粗略当 1 ns，总时间 = 103 ns，TP = 100/103 ≈ 0.97×10^9。精确 τ = 1/1.03 ns 时总时间恰为 100 ns。</li><li><strong>把流水线当减速器（选 A）</strong>：0.25×10^9 = 主频 ÷ 4，误以为 4 级流水线使吞吐率降为 1/4——流水线恰恰是提高吞吐率的。</li></ul>
-<blockquote>一句话结论：103 个周期 × (1/1.03 GHz) = 100 ns 执行 100 条指令，TP = 1.0×10^9 条/秒，选 C。</blockquote></div></div>
+<ul><li><strong>漏掉填充时间（选 D）</strong>：只算 100 个周期，100 × (1/1.03GHz) ≈ 97 ns，TP ≈ 1.03×10<sup>9</sup> 条/秒，数值恰好等于主频，是最强干扰项。</li><li><strong>时钟周期取整过粗（选 B）</strong>：把 τ 粗略当 1 ns，总时间 = 103 ns，TP = 100/103 ≈ 0.97×10<sup>9</sup>。精确 τ = 1/1.03 ns 时总时间恰为 100 ns。</li><li><strong>把流水线当减速器（选 A）</strong>：0.25×10<sup>9</sup> = 主频 ÷ 4，误以为 4 级流水线使吞吐率降为 1/4——流水线恰恰是提高吞吐率的。</li></ul>
+<blockquote>一句话结论：103 个周期 × (1/1.03 GHz) = 100 ns 执行 100 条指令，TP = 1.0×10<sup>9</sup> 条/秒，选 C。</blockquote></div></div>
   <div class="study-pane" data-pane="anim"><div class="anim-wrap">
 <div class="anim-bar">
   <button class="exam-controls fs-btn" type="button" title="全屏播放动画">⛶ 全屏播放</button>
@@ -2225,7 +2225,7 @@
 <h3>第一步：直通交换要收多少</h3>
 <p>以太网帧（不含前导码）开头是目的 MAC 地址 6 字节、源 MAC 地址 6 字节。交换机靠<strong>目的地址</strong>查转发表决定输出端口——所以最少要收下前 6 字节（48 bit）才能开始转发，这就是「至少」引入的延迟。</p>
 <h3>第二步：算延迟</h3>
-<p>100Mbps 下每 bit 发送时间 = 1 ÷ 100×10^6 s = 0.01μs，故：</p>
+<p>100Mbps 下每 bit 发送时间 = 1 ÷ 100×10<sup>6</sup> s = 0.01μs，故：</p>
 <p>48 bit × 0.01μs/bit = <strong>0.48μs</strong></p>
 <p>（出口无排队，查表时间忽略，收到第 6 字节末尾即可转发。）</p>
 <h3>第三步：三个干扰项从哪来</h3>
@@ -2788,14 +2788,14 @@ coend</code></pre></div></div></div></div>
   <div class="study-pane" data-pane="explain"><div class="explain"><h2>本题讲解：分页地址结构与页表项定位（8 分）</h2>
 <h3>第 0 步：先立机制——分页地址翻译的两条铁律</h3>
 <p>分页的本质是把逻辑地址的 32 个二进制位<strong>切成两段</strong>：高位是页号，低位是页内偏移。两条对应关系贯穿本题所有小问：</p>
-<ul><li><strong>偏移位数决定页大小</strong>：地址低 k 位是页内字节偏移，页内就有 2^k 个字节，页大小 = 2^k B。页大小与偏移位数是同一件事的两种说法。</li><li><strong>页号位数决定页表项数</strong>：页号 n 位就有 2^n 个不同的页；一级页表要给<strong>每一个可能的页</strong>都准备一个表项——少一项，对应页就没法翻译。所以页表项数 = 2^n，页表大小 = 2^n × 每项字节数。</li></ul>
+<ul><li><strong>偏移位数决定页大小</strong>：地址低 k 位是页内字节偏移，页内就有 2<sup>k</sup> 个字节，页大小 = 2<sup>k</sup> B。页大小与偏移位数是同一件事的两种说法。</li><li><strong>页号位数决定页表项数</strong>：页号 n 位就有 2<sup>n</sup> 个不同的页；一级页表要给<strong>每一个可能的页</strong>都准备一个表项——少一项，对应页就没法翻译。所以页表项数 = 2<sup>n</sup>，页表大小 = 2<sup>n</sup> × 每项字节数。</li></ul>
 <p>页表本身是个数组：页号是下标，页框号是内容。于是<strong>页表项的物理地址 = 页表基址 + 页号 × 每项字节数</strong>——按字节编址的主存里，数组下标要乘元素大小才落到字节地址。</p>
 <h3>第（1）问：页大小与页表最大占用</h3>
 <p>一级页表的逻辑地址结构（题图）为 20 位页号 + 12 位页内偏移。套铁律：</p>
-<ul><li>偏移 12 位 → 页大小 = 2^12 B = <strong>4KB</strong>；</li><li>页号 20 位 → 页表最多 2^20 项，每项 4B → 页表最大 = 2^20 × 4B = <strong>4MB</strong>。</li></ul>
+<ul><li>偏移 12 位 → 页大小 = 2<sup>12</sup> B = <strong>4KB</strong>；</li><li>页号 20 位 → 页表最多 2<sup>20</sup> 项，每项 4B → 页表最大 = 2<sup>20</sup> × 4B = <strong>4MB</strong>。</li></ul>
 <p>顺带看懂一个事实：页表自己要占 4MB <strong>连续</strong>主存，且绝大部分表项平时根本用不上——这正是（2）问引入二级页表的动机。</p>
 <h3>第（2）问：二级页表的地址拆分</h3>
-<p>二级页表把 20 位页号再切两段：10 位页目录号 + 10 位页表索引。<strong>为什么每段恰好 10 位？</strong> 不是随便定的：页表项 4B、一页 4KB，一页恰好装得下 4KB ÷ 4B = 1024 = 2^10 个表项——每个页表页管 2^10 个虚拟页，所以每级索引 10 位；10 + 10 + 12 = 32 恰好拼满。二级页表的妙处：页目录只占 1 页，用到的页表页才进主存，不必整块 4MB 常驻。</p>
+<p>二级页表把 20 位页号再切两段：10 位页目录号 + 10 位页表索引。<strong>为什么每段恰好 10 位？</strong> 不是随便定的：页表项 4B、一页 4KB，一页恰好装得下 4KB ÷ 4B = 1024 = 2<sup>10</sup> 个表项——每个页表页管 2<sup>10</sup> 个虚拟页，所以每级索引 10 位；10 + 10 + 12 = 32 恰好拼满。二级页表的妙处：页目录只占 1 页，用到的页表页才进主存，不必整块 4MB 常驻。</p>
 <p>表达式（LA 为 32 位逻辑地址）：</p>
 <ul><li>页目录号 = <code>LA &gt;&gt; 22</code>——最高 10 位，右移 22 位（扔掉 12 位偏移 + 10 位索引）后自然剩下；</li><li>页表索引 = <code>(LA &gt;&gt; 12) &amp; 0x3FF</code>——先右移 12 位扔掉页内偏移，但此时低 10 位还挂着页目录号，必须再 <code>&amp; 0x3FF</code>（10 个 1）把它屏蔽掉，只留中间 10 位。</li></ul>
 <h3>第（3）问：逐项计算</h3>
@@ -2887,4 +2887,4 @@ coend</code></pre></div></div></div></div>
   <span>📋</span><strong>答题卡</strong><small>47 题</small>
 </button><footer><div class="wrap">本站为个人学习用途的自建 408 真题复习站。题目内容来自全国硕士研究生统一考试计算机学科专业基础（408）历年公开真题；
 文字讲解与 HTML 交互动画均为本站原创编写；解析视频链接指向原作者 Beokayy_ 的 Bilibili 公开视频，版权归原作者所有。
-进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js"></script></body></html>
+进度与错题保存在浏览器 localStorage 中，不上传任何数据。</div></footer><script src="../../assets/app.js?v=20261119a"></script></body></html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-44 磁盘访问时间与DMA</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
 .aw-box.blue{ background:#d9e3df; border-color:#1b3a4b; color:#1b3a4b; }
 .aw-box.amber{ background:#f8edcb; border-color:#e07a2f; color:#92400e; }
@@ -42,6 +42,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -63,7 +65,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -172,8 +174,8 @@ AW.init({
 /* ================== 题目专属区域结束 ================== */
 </script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：磁盘扇区地址、平均访问时间与周期挪用 DMA</h2>
 <h3>第 1）问：扇区地址的 3 个字段与最少位数</h3>
 <p>先立机制：一个扇区在盘上的位置由三个依次收窄的问题定位——<strong>哪个记录面</strong>（磁头号/盘面号）、该面的<strong>哪一圈磁道</strong>（柱面号/磁道号）、这条磁道上的<strong>第几个扇区</strong>（扇区号）。三段地址各管一维，合起来唯一确定一个扇区。</p>
@@ -190,7 +192,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>位数算成“恰好够的幂”</strong>：500 个扇区要 9 位（2⁸ 不够），20000 道要 15 位（2¹⁴ 不够），一律向上取幂。</li><li><strong>把一整转当旋转延迟</strong>：平均旋转延迟是<strong>半转</strong>——目标扇区初始位置均匀分布所致。</li><li><strong>漏加传输时间</strong>：9.18 = 5 + 4.167 + 0.017，三项缺一不可。</li><li><strong>以为 DMA 一定让 CPU</strong>：周期挪用的原则恰恰是 DMA 优先，防的是磁盘数据流不可暂停导致的丢失。</li></ul>
 <blockquote>一句话结论：地址 15 + 3 + 9 位；平均访问 ≈ 5 + 4.167 + 0.017 ≈ 9.18 ms；每扇区 64 次总线请求，同时请求时 DMA 优先。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

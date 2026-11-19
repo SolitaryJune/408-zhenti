@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>2025-38 TCP 慢开始窗口推演动画</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 </head>
 <body>
 <!-- ============================================================
      算法/过程类：字节序号标尺上的 TCP 窗口推演
-     外壳与控件全部由 assets/anim-engine.js 提供，只改 AW.init 区域。
+     外壳与控件全部由 assets/anim-engine.js?v=20261119a 提供，只改 AW.init 区域。
 ============================================================= -->
 <!-- AW_QNAV_START -->
 <style>
@@ -37,6 +37,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -58,7 +60,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 var S = {};   // 持久 DOM 引用
@@ -157,8 +159,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：慢开始下「还能再发几个报文段」</h2>
 <p><strong>答案：A</strong>（2 个）。</p>
 <h3>第一步：t0 时刻的发送</h3>
@@ -172,7 +174,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>忘了慢开始加窗</strong>：以为 cwnd 仍是 2000 B、只能发 1 段——慢开始阶段每确认一个新段 cwnd 增加 1 个 MSS。</li><li><strong>忘扣已发送未确认</strong>：把发送窗口 3000 B 全当可发字节，得出 3 段（B 项）；可新发字节 = 发送窗口 − 已发送未确认。</li><li><strong>接收窗口当发送窗口</strong>：直接用 rcvwnd = 4000 B 去算会得 4 段（C 项）；发送窗口要取 min(cwnd, rwnd)。</li></ul>
 <blockquote>一句话结论：cwnd 3000、rwnd 4000 → 发送窗口 3000 B，扣除在途 1000 B，还能再发 <strong>2</strong> 个段，选 <strong>A</strong>。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

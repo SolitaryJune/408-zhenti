@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>2022-41 顺序存储二叉树的 BST 判定</title>
-<link rel="stylesheet" href="../assets/anim.css?v=20261116a">
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
 <style>
   /* T1 / T2 两组数组并排成两列（makeRows 每组装进一个列容器），
      画布窄于两列总宽时由引擎 fitStage 整体缩小，无需滚动 */
@@ -41,6 +41,8 @@
   if(!nav) return;
   var framed = false;
   try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
   if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
   function findA(el){
     while(el && el !== nav){
@@ -62,7 +64,7 @@
 </script>
 <!-- AW_QNAV_END -->
 <div class="aw"></div>
-<script src="../assets/anim-engine.js?v=20261116a"></script>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
 <script>
 /* ================== 题目专属区域（只改这里） ================== */
 
@@ -200,8 +202,8 @@ AW.init({
 </script>
 <script>/* aw-ok */</script>
 <!-- AW_EXPLAIN_START -->
-<details class="aw-explain" open>
-<summary><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解 · 点击展开/收起</span></summary>
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
 <div class="aw-explain-body"><h2>本题讲解：判定顺序存储的二叉树是否为二叉搜索树</h2>
 <h3>第 0 步：先立机制——BST 的性质是“子树级”的，不是“父子级”的</h3>
 <p>二叉搜索树的定义最容易被读窄。它要求的不是“每个结点比左孩子大、比右孩子小”，而是<strong>比左子树里所有结点都大、比右子树里所有结点都小</strong>。树深不超过 1 时两句话等价；树一深，父子局部的检查就会漏判。题目图里的 T2 自己就藏着这样的例子：结点 35 与它的双亲 30 直接比较完全合法（右孩子 35 &gt; 30），但它挂在 50 的右子树里——50 的右子树必须全部大于 50，而 35 &lt; 50。这层“祖孙关系”用“双亲 vs 直接孩子”永远看不见，违规只能顺着子树最值浮上来。</p>
@@ -218,7 +220,7 @@ AW.init({
 <h3>易错点</h3>
 <ul><li><strong>只比较双亲与直接孩子</strong>：T2 的 35 与双亲 30 直接比较合法，但 35 &lt; 50（它待在 50 的右子树里）；深层违规必须靠 pmin/pmax 向上传播才抓得住。</li><li><strong>顺序扫描（k 从 0 递增）</strong>：孩子下标恒大于双亲下标，必须倒序才能“先子后父”；正序时处理双亲，子树的 pmin/pmax 还没算好，传播链断裂。</li><li><strong>忘记跳过 −1 空位</strong>：−1 是占位符不是值，拿去比较会误判，混进最值会污染传播；ElemNum 只限定扫描范围。</li><li><strong>左右孩子奇偶写反</strong>：奇数下标 2m+1 是左孩子、偶数下标 2m+2 是右孩子，分支一旦写反，检查与传播全错。</li></ul>
 <blockquote>一句话：pmin/pmax 自底向上传播子树最值，左孩子拿 pmax 比双亲、右孩子拿 pmin 比双亲，通过才传播、失败即返回，时间 O(n)、空间 O(n)。</blockquote></div>
-</details>
+</section>
 <!-- AW_EXPLAIN_END -->
 </body>
 </html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·04 积分条件下的中点函数值符号</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-03.html" data-q="../question/m2-2018-03/">← <b>m2-2018-03</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-04/" data-q="../question/m2-2018-04/" data-no-anim="1">m2-2018-04 · 本题</a>
+  <a href="m2-2018-05.html" data-q="../question/m2-2018-05/"><b>m2-2018-05</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：整体条件 → 一点符号，用中点泰勒',
+    cls: 'key',
+    body: '<p>手里只有 $\\int_0^1f(x)\\,dx=0$ 这一个整体条件，要判断一点处 $f\\left(\\tfrac12\\right)$ 的符号——桥梁是<b>在 $x=\\tfrac12$ 处带拉格朗日余项的泰勒公式</b>：积分会把一次项自动消掉。</p>',
+    log: '整体积分条件 + 一点值 ⇒ 中点泰勒展开' },
+  { title: '在 $x=\\tfrac12$ 处展开（带二阶拉格朗日余项）',
+    cls: 'step',
+    body: '<p>$$f(x)=f\\left(\\tfrac12\\right)+f\'\\left(\\tfrac12\\right)\\left(x-\\tfrac12\\right)+\\frac12f\'\'(\\xi)\\left(x-\\tfrac12\\right)^2$$ 其中 $\\xi$ 介于 $x$ 与 $\\tfrac12$ 之间。用佩亚诺余项就定不了号，必须用拉格朗日余项。</p>',
+    log: '余项必须带二阶导，符号才有来源' },
+  { title: '两边在 $[0,1]$ 上积分：一次项消失',
+    cls: 'step',
+    body: '<p>$$\\int_0^1\\left(x-\\tfrac12\\right)dx=0\\quad(\\text{关于中点对称}),\\qquad \\int_0^1f(x)\\,dx=0\\quad(\\text{已知})$$ 两个 $0$ 一消，剩下：$$f\\left(\\tfrac12\\right)=-\\frac12\\int_0^1f\'\'(\\xi)\\left(x-\\tfrac12\\right)^2dx$$ 被 $\\left(x-\\tfrac12\\right)^2\\ge0$ 恒正且不恒为零，符号全交给 $f\'\'$。</p>',
+    log: '一次项积分为 0，f(1/2) 与二阶导反号' },
+  { title: '判定 D：$f\'\'>0 \\Rightarrow f\\left(\\tfrac12\\right)<0$',
+    cls: 'good',
+    body: '<p>$f\'\'(x)>0$（下凸）时被积函数 $\\ge0$ 且不恒为 $0$，积分<b>严格</b>为正：$$f\\left(\\tfrac12\\right)=-\\frac12\\times(\\text{正数})<0\\quad\\checkmark$$ 验证例：$f(x)=\\left(x-\\tfrac12\\right)^2-\\dfrac1{12}$，$f\'\'=2$，$\\int_0^1f=0$，$f\\left(\\tfrac12\\right)=-\\dfrac1{12}<0$。</p>',
+    ribbon: {k:1, ok:true},
+    log: '下凸时 f(1/2)<0，D 成立' },
+  { title: '排除 B：恰好说反',
+    cls: 'bad',
+    body: '<p>$f\'\'(x)<0$（上凸）时积分为负，于是 $f\\left(\\tfrac12\\right)>0$——B 说 $f\\left(\\tfrac12\\right)<0$，方向恰好相反。</p>',
+    ribbon: {k:2, ok:false},
+    log: '上凸时 f(1/2)>0，B 排除' },
+  { title: '排除 A、C：单调性定不了符号',
+    cls: 'bad',
+    body: '<p>$f\'$ 定号只保证单调。反例 A：$f(x)=\\tfrac12-x$，$f\'<0$、$\\int_0^1f=0$，但 $f\\left(\\tfrac12\\right)=0$ 并不小于 $0$。反例 C：$f(x)=x-\\tfrac12$，$f\'>0$，同样 $f\\left(\\tfrac12\\right)=0$。单调性与中点值符号没有必然联系。</p>',
+    ribbon: {k:3, ok:false},
+    log: 'A、C 找反例排除' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。核心记忆点：$\\int_0^1f=0$ + 中点展开 ⇒ $$f\\left(\\tfrac12\\right)=-\\frac12\\int_0^1f\'\'(\\xi)\\left(x-\\tfrac12\\right)^2dx$$ $f\\left(\\tfrac12\\right)$ 与 $f\'\'$ <b>反号</b>：下凸（$f\'\'>0$）时中点在 $x$ 轴下方。</p>',
+    log: 'f(1/2) 与二阶导反号，选 D' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$\\int_0^1f=0$ 时 $f\\left(\\tfrac12\\right)$ 的符号：中点泰勒定号',
+  subtitle: '考点：泰勒公式（拉格朗日余项）· 定积分 · 凹凸性',
+  counterLabel: '推理步',
+  ribbonTitle: '推理判定（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开：展开 → 积分 → 定号 → 排错。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D：$f\'\'(x)>0$ 时 $f\\left(\\tfrac12\\right)<0$',
+    html: '记忆锚点：<b>中点展开 + 积分 = 一次项自动消失</b>，$f\\left(\\tfrac12\\right)$ 与 $\\int_0^1f\'\'(\\xi)\\left(x-\\tfrac12\\right)^2dx$ 反号——被积的 $\\left(x-\\tfrac12\\right)^2$ 恒正，符号全由 $f\'\'$ 决定。单调性（A、C）与反凹向（B）都是干扰。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：定积分条件下的中点函数值符号（泰勒展开 + 积分消一次项）</h2>
+<p>答案：D（当 $f''(x)&gt;0$ 时 $f\left(\dfrac12\right)&lt;0$）</p>
+<h3>第一步：选对工具——在 $x=\dfrac12$ 处泰勒展开</h3>
+<p>条件 $\displaystyle\int_0<sup>1f</sup>(x)\,dx=0$ 是"整体信息"，要联系一点处的值 $f\left(\dfrac12\right)$，标准桥梁是<strong>在 $x=\dfrac12$ 处带拉格朗日余项的一阶泰勒展开</strong>：</p>
+<p>$$f(x)=f\!\left(\tfrac12\right)+f'\!\left(\tfrac12\right)\left(x-\tfrac12\right)+\frac12 f''(\xi)\left(x-\tfrac12\right)<sup>2</sup>,\qquad \xi\ \text{介于}\ x\ \text{与}\ \tfrac12\ \text{之间}.$$</p>
+<h3>第二步：两边在 $[0,1]$ 上积分，一次项自动消失</h3>
+<p>$$\int_0<sup>1</sup>\left(x-\tfrac12\right)dx=0\quad(\text{关于 } x=\tfrac12 \text{ 对称})，$$</p>
+<p>又已知 $\displaystyle\int_0<sup>1f</sup>(x)\,dx=0$，于是</p>
+<p>$$f\!\left(\tfrac12\right)=-\frac12\int_0<sup>1f</sup>''(\xi)\left(x-\tfrac12\right)<sup>2dx</sup>.$$</p>
+<p>关键结构：右边被积函数中 $\left(x-\tfrac12\right)<sup>2</sup>\ge0$ 且不恒为零，<strong>整个积分的符号完全由 $f''$ 决定</strong>。</p>
+<h3>第三步：定号选答案</h3>
+<ul><li>$f''(x)&gt;0$（下凸）时：被积函数 $\ge0$ 且不恒为 $0$，积分严格为正，故 $f\!\left(\tfrac12\right)=-\dfrac12\times(\text{正})&lt;0$——正是选项 <strong>D</strong>。</li><li>$f''(x)&lt;0$ 时同理 $f\!\left(\tfrac12\right)&gt;0$，与 B 所述恰好相反。</li></ul>
+<p><strong>验证例</strong>：取 $f(x)=\left(x-\tfrac12\right)<sup>2</sup>-\dfrac1{12}$，则 $f''=2&gt;0$，$\displaystyle\int_0<sup>1f</sup>\,dx=0$，而 $f\!\left(\tfrac12\right)=-\dfrac1{12}&lt;0$，与 D 一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>想用单调性做 A、C</strong>：$f'$ 定号只给单调，定不出中点值的符号。反例：$f(x)=\tfrac12-x$（$f'&lt;0$，积分为 $0$，但 $f\!\left(\tfrac12\right)=0$，不小于 $0$）；$f(x)=x-\tfrac12$ 同理否掉 C。</li><li><strong>余项符号没锁住</strong>：余项里 $\left(x-\tfrac12\right)<sup>2</sup>$ 恒正，$f''$ 的符号才能"传"给积分；若用佩亚诺余项就无从定号。</li><li><strong>漏掉"严格"二字</strong>：$f''&gt;0$ 时积分严格大于 $0$（不是 $\ge0$），因为 $(x-\tfrac12)<sup>2</sup>$ 不恒为零。</li></ul>
+<blockquote>结论：$\displaystyle f\!\left(\tfrac12\right)=-\frac12\int_0<sup>1f</sup>''(\xi)\left(x-\tfrac12\right)<sup>2dx</sup>$，符号由 $f''$ 决定：$f''&gt;0$ 得 $f\!\left(\tfrac12\right)&lt;0$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

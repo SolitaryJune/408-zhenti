@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·01 曲线渐近线的条数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-23.html" data-q="../question/m2-2011-23/">← <b>m2-2011-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-01/" data-q="../question/m2-2012-01/" data-no-anim="1">m2-2012-01 · 本题</a>
+  <a href="m2-2012-02.html" data-q="../question/m2-2012-02/"><b>m2-2012-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：先约分再清点',
+    cls: 'key',
+    body: '<p>$y=\\dfrac{x^{2}+x}{x^{2}-1}=\\dfrac{x(x+1)}{(x-1)(x+1)}$，分子分母有公因子 $(x+1)$，约去后（$x\\neq-1$）$y=\\dfrac{x}{x-1}$。渐近线分三类查：<b>铅直</b>（分母零点且极限为 $\\infty$）、<b>水平</b>（$x\\to\\infty$）、<b>斜</b>（同一方向与水平互斥）。</p>',
+    log: '先约分：公因子 x+1 消去，函数化为 x/(x−1)' },
+  { title: '候选点 $x=1$：铅直渐近线',
+    cls: 'good',
+    body: '<p>$\\lim_{x\\to1}\\dfrac{x}{x-1}=\\infty$，函数在 $x=1$ 处竖直冲天——<b>是</b>铅直渐近线，记第 1 条。</p>',
+    ribbon: {k:1, ok:true},
+    log: 'x=1：极限无穷，铅直渐近线（第 1 条）' },
+  { title: '候选点 $x=-1$：可去间断点',
+    cls: 'bad',
+    body: '<p>原始分母虽为零，但约分后 $\\lim_{x\\to-1}\\dfrac{x}{x-1}=\\dfrac{-1}{-2}=\\dfrac{1}{2}$ 有限——只是<b>可去间断点</b>，不产生渐近线。这是本题最大的陷阱。</p>',
+    ribbon: {k:2, ok:false},
+    log: 'x=−1：极限有限（1/2），可去间断点，不算' },
+  { title: '无穷远：水平渐近线 $y=1$',
+    cls: 'good',
+    body: '<p>分子分母同除 $x$：$\\lim_{x\\to\\infty}\\dfrac{x}{x-1}=\\lim_{x\\to\\infty}\\dfrac{1}{1-\\frac{1}{x}}=1$——<b>是</b>水平渐近线 $y=1$，记第 2 条。</p>',
+    ribbon: {k:3, ok:true},
+    log: 'x→∞：极限为 1，水平渐近线 y=1（第 2 条）' },
+  { title: '斜渐近线：出局',
+    cls: 'bad',
+    body: '<p>同一方向上<b>水平渐近线与斜渐近线互斥</b>：已有 $y=1$，斜渐近线不再存在，否则曲线沿两个方向跑出两个极限。</p>',
+    ribbon: {k:4, ok:false},
+    log: '已有水平渐近线，同方向无斜渐近线' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>铅直 1 条（$x=1$）+ 水平 1 条（$y=1$）= <b>2</b> 条，答案选 <b>C</b>。</p>',
+    log: '合计 2 条，选 C' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '渐近线条数清点：$y=\\dfrac{x^{2}+x}{x^{2}-1}$',
+  subtitle: '考点：渐近线三查 · 方法：先约分 → 铅直（分母零点）→ 水平/斜（无穷远）',
+  counterLabel: '推理步',
+  ribbonTitle: '候选渐近线（✓ 是 / ✗ 否）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C（共 2 条）',
+    html: '记忆锚点：<b>先约分再数渐近线</b>。约分消去的零点（$x=-1$）只是可去间断点，不是铅直渐近线；$x\\to\\infty$ 有极限 $1$ 给出水平渐近线 $y=1$，且同方向上水平与斜互斥。清点：铅直 $x=1$ + 水平 $y=1$，共 2 条。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：渐近线的判定机制与"假铅直点"</h2>
+<p>答案：C（2 条）</p>
+<h3>第一步：先把"渐近线"的判定机制立起来</h3>
+<p>渐近线回答两个问题：函数在哪里<strong>爆炸</strong>、在无穷远处<strong>贴着哪条直线</strong>。由此得到判定标准——铅直渐近线：$\lim_{x\to x_0}|f(x)|=\infty$（在某点爆炸）；水平渐近线：$\lim_{x\to\infty}f(x)=b$（无穷远处趋于常数）；斜渐近线：$\lim_{x\to\infty}\frac{f(x)}{x}=k\neq0$ 且 $\lim_{x\to\infty}(f(x)-kx)=b$。注意铅直的判定标准是<strong>极限为无穷</strong>，不是"分母为零"——记住这条，才知道下面为什么要先约分。</p>
+<h3>第二步：约分不是化简，是把"假铅直点"现形</h3>
+<p>$y=\dfrac{x<sup>2</sup>+x}{x<sup>2</sup>-1}=\dfrac{x(x+1)}{(x-1)(x+1)}$，约去公因子 $(x+1)$（$x\neq-1$）得 $y=\dfrac{x}{x-1}$。<strong>为什么约分能一票否决 $x=-1$？</strong> 因为在 $x=-1$ 处极限 $\lim_{x\to-1}\dfrac{x}{x-1}=\dfrac{-1}{-2}=\dfrac12$ 有限——图像上这里只是缺一个点（可去间断点），函数值有限，永远不会爆炸，按判定标准不构成铅直渐近线。原始分母为零只是公因子制造的假象。</p>
+<h3>第三步：按标准清点</h3>
+<p>$x=1$ 处 $\lim_{x\to1}\dfrac{x}{x-1}=\infty$，爆炸，铅直渐近线 1 条；$x\to\infty$ 时分子分母同除 $x$ 得 $\lim\dfrac{1}{1-\frac1x}=1$，水平渐近线 $y=1$，1 条。</p>
+<h3>第四步：为什么有水平渐近线就必无斜渐近线</h3>
+<p>斜渐近线的斜率 $k=\lim_{x\to\infty}\dfrac{f(x)}{x}$。已有水平渐近线（$f(x)\to b$）时 $\dfrac{f(x)}{x}\to0$，斜率只能取 0——那就是水平渐近线本身。所以在同一方向上两者互斥，斜渐近线不必再找。</p>
+<h3>易错点</h3>
+<ul><li><strong>不约分就数点</strong>：把 $x=-1$ 也当铅直渐近线，误数成 3 条（选 D 的根源）。</li><li><strong>漏掉水平渐近线</strong>：只盯爆炸点，漏数 $y=1$（选 B 的根源）。</li><li><strong>水平与斜并存</strong>：同一方向互斥（斜率极限只能为 0），别重复计数。</li></ul>
+<blockquote>一句话结论：判定标准是"极限无穷 / 无穷远贴直线"——铅直 $x=1$、水平 $y=1$，共 2 条，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

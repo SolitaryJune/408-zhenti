@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·10 和式极限凑定积分（黎曼和）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-09.html" data-q="../question/m2-2016-09/">← <b>m2-2016-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-10/" data-q="../question/m2-2016-10/" data-no-anim="1">m2-2016-10 · 本题</a>
+  <a href="m2-2016-11.html" data-q="../question/m2-2016-11/"><b>m2-2016-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>$\\displaystyle\\lim_{n\\to\\infty}\\frac{1}{n^2}\\Big(\\sin\\frac1n+2\\sin\\frac2n+\\cdots+n\\sin\\frac nn\\Big)$。通项 $\\frac{k}{n^2}\\sin\\frac kn$——看到 $\\sum$ 就找「步长 + 分点 + 函数」三件套。</p>' },
+  { label: '第 1 步 · 拆因子，露出黎曼和',
+    h: '<p>$\\dfrac{k}{n^2}=\\dfrac1n\\cdot\\dfrac kn$：$$\\frac{1}{n^2}\\sum_{k=1}^n k\\sin\\frac kn=\\frac1n\\sum_{k=1}^n\\underbrace{\\frac kn\\sin\\frac kn}_{f\\left(\\frac kn\\right)}.$$</p>' },
+  { label: '第 2 步 · 认三件套',
+    h: '<table style="border-collapse:collapse;margin:6px 0;font-size:14px"><tr><th style="border:1px solid #cbd5e1;padding:4px 12px">角色</th><th style="border:1px solid #cbd5e1;padding:4px 12px">本式</th></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 12px">分点 $x_k$</td><td style="border:1px solid #cbd5e1;padding:4px 12px">$\\frac kn\\in[0,1]$</td></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 12px">步长 $\\Delta x$</td><td style="border:1px solid #cbd5e1;padding:4px 12px">$\\frac1n$</td></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 12px">被积函数 $f$</td><td style="border:1px solid #cbd5e1;padding:4px 12px">$f(x)=x\\sin x$</td></tr></table>' },
+  { label: '第 3 步 · 写成定积分',
+    h: '<p>$f$ 在 $[0,1]$ 连续、必可积：$$\\lim_{n\\to\\infty}\\frac1n\\sum_{k=1}^n\\frac kn\\sin\\frac kn=\\int_0^1 x\\sin x\\,\\mathrm dx.$$</p>' },
+  { label: '第 4 步 · 分部积分',
+    h: '<p>取 $u=x$、$\\mathrm dv=\\sin x\\,\\mathrm dx$：$$\\int_0^1 x\\sin x\\,\\mathrm dx=\\big[-x\\cos x\\big]_0^1+\\int_0^1\\cos x\\,\\mathrm dx=-\\cos 1+\\sin 1.$$</p>' },
+  { label: '第 5 步 · 结论',
+    h: '<p>原极限 $=\\sin 1-\\cos 1\\approx0.30>0$，与 $x\\sin x\\ge0$ 相容，<b>合理</b>。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '$\\lim\\limits_{n\\to\\infty}\\frac{1}{n^2}\\sum\\limits_{k=1}^n k\\sin\\frac kn$',
+  subtitle: '考点：定积分定义（黎曼和） · 方法：拆因子 → 认分点/步长/函数 → 分部积分',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的六步计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'通项 k/n² · sin(k/n)，先把它拆成步长与分点的乘积', count:0 },
+    { cls:'step', tag:'拆因子', log:'k/n² = (1/n)·(k/n)，黎曼和形状露出来', count:1 },
+    { cls:'ok',   tag:'三件套', log:'分点 k/n ∈ [0,1]、步长 1/n、函数 x·sin x', count:2 },
+    { cls:'ok',   tag:'写积分', log:'连续必可积，极限等于 [0,1] 上 x·sin x 的积分', count:3 },
+    { cls:'step', tag:'分部',   log:'u = x，dv = sin x dx，得 sin 1 − cos 1', count:4 },
+    { cls:'done', tag:'完成',   log:'极限 = sin 1 − cos 1 ≈ 0.30，与被积函数非负相容', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: 'sin 1 − cos 1',
+    html: '记忆锚点：<b>和式极限三件套</b>——把系数拆成「步长 $\\frac1n$ × 分点 $\\frac kn$」，函数自动现形 $f(x)=x\\sin x$，极限即 $\\int_0^1 x\\sin x\\,\\mathrm dx$。分部积分首项是 $-x\\cos x$（负号别丢）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：和式极限——把定积分定义倒过来用</h2>
+<p>答案：$\sin 1-\cos 1$</p>
+<h3>第 0 步：先立机制——定积分本来就是黎曼和的极限</h3>
+<p>定积分的定义式：$\displaystyle\int_a<sup>bf</sup>(x)\,\mathrm dx=\lim_{n\to\infty}\sum_{k=1}<sup>n</sup> f(\xi_k)\,\Delta x$。和式极限题就是<strong>把定义倒过来用</strong>：从一串和里认出三件套——<strong>分点</strong> $\xi_k$、<strong>步长</strong> $\Delta x$、<strong>被积函数</strong> $f$。本题 $\dfrac{k}{n<sup>2</sup>}=\dfrac1n\cdot\dfrac kn$ 的一拆，正是要同时凑出"步长 $\frac1n$"与"分点 $\frac kn$"两个角色——谁能拆出这两件套，谁就是黎曼和，极限就是对应的定积分。</p>
+<h3>第一步：认出三件套，改写和式</h3>
+<p>$$\frac{1}{n<sup>2</sup>}\sum_{k=1}<sup>n</sup> k\sin\frac kn=\frac1n\sum_{k=1}<sup>n</sup>\frac kn\sin\frac kn.$$</p>
+<p>分点 $x_k=\dfrac kn$ 落在 $[0,1]$（$k$ 从 $1$ 到 $n$），步长 $\Delta x=\dfrac1n$，函数值 $f(x_k)=\dfrac kn\sin\dfrac kn$，故 $f(x)=x\sin x$、区间 $[0,1]$。$f$ 在 $[0,1]$ 连续故可积，极限即</p>
+<p>$$\int_0<sup>1</sup> x\sin x\,\mathrm dx.$$</p>
+<h3>第二步：分部积分收尾</h3>
+<p>选 $u=x$、$\mathrm dv=\sin x\,\mathrm dx$——理由：$u$ 求导后 $x\to1$，幂因子被消掉（"谁求导变简单谁作 $u$"），反过来选就会越积越繁：</p>
+<p>$$\int_0<sup>1</sup> x\sin x\,\mathrm dx=\big[-x\cos x\big]_0<sup>1</sup>+\int_0<sup>1</sup>\cos x\,\mathrm dx=-\cos 1+\sin 1.$$</p>
+<h3>第三步：符号与量级复核</h3>
+<p>$\sin1-\cos1\approx0.30&gt;0$，与 $x\sin x\ge0$（$x\in[0,1]$）非负一致；若算出 $\cos1-\sin1&lt;0$，说明分部首项的符号写反了——复核能当场抓错。</p>
+<h3>易错点</h3>
+<ul><li><strong>拆错因子</strong>：步长与分点必须同时到位，只留 $\frac1{n<sup>2</sup>}$ 或只配 $\sin\frac1n$，都拼不出黎曼和的三件套。</li><li><strong>分部积分首项符号</strong>：$\int u\,\mathrm dv=uv-\int v\,\mathrm du$，首项是 $-x\cos x$；写成 $+x\cos x$ 是高频失分点，第三步的量级复核就是为此设的。</li><li><strong>区间认错</strong>：分点是 $\frac kn$，积分区间是 $[0,1]$ 而不是 $[0,n]$——$n$ 只扮演"切多少份"，不进上下限。</li></ul>
+<blockquote>结论：原式 $=\displaystyle\int_0<sup>1</sup> x\sin x\,\mathrm dx=\sin1-\cos1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

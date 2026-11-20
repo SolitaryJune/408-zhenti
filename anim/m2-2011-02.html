@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 2 题 · 凑导数定义求极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-01.html" data-q="../question/m2-2011-01/">← <b>m2-2011-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-02/" data-q="../question/m2-2011-02/" data-no-anim="1">m2-2011-02 · 本题</a>
+  <a href="m2-2011-03.html" data-q="../question/m2-2011-03/"><b>m2-2011-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>$f(x)$ 在 $x=0$ 处可导，$f(0)=0$，求 $$\\lim_{x\\to0}\\frac{x^2f(x)-2f(x^3)}{x^3}.$$</p>',
+  '<p><b>盘点工具：</b>条件只给「一点可导」，没有邻域内可导，<b>洛必达与泰勒都不可用</b>。由 $f(0)=0$，导数定义可改写为 $$f\'(0)=\\lim_{u\\to0}\\frac{f(u)-f(0)}{u}=\\lim_{u\\to0}\\frac{f(u)}{u}.$$</p>',
+  '<p><b>拆分：</b>$$\\frac{x^2f(x)-2f(x^3)}{x^3}=\\frac{f(x)}{x}-2\\cdot\\frac{f(x^3)}{x^3}.$$</p>',
+  '<p><b>第一项：</b>$\\dfrac{f(x)}{x}=\\dfrac{f(x)-f(0)}{x-0}\\to f\'(0)$，就是定义式取 $u=x$。</p>',
+  '<p><b>第二项：</b>令 $u=x^3$，$x\\to0\\Rightarrow u\\to0$，于是 $\\dfrac{f(x^3)}{x^3}=\\dfrac{f(u)}{u}\\to f\'(0)$。</p>',
+  '<p><b>合并：</b>$$f\'(0)-2f\'(0)=-f\'(0),$$ <b>选 B</b>。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 2 题 · $\\lim\\limits_{x\\to0}\\dfrac{x^2f(x)-2f(x^3)}{x^3}$',
+  subtitle: '考点：导数定义 · 方法：拆项凑差商（洛必达不可用）',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：先盘点工具，再拆项凑导数定义。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'工具盘点', log:'只在一点可导：洛必达与泰勒都不可用，回到导数定义', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'拆分', log:'把分子拆成两项，各自凑成 f(·)/· 的形状', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'第一项', log:'f(x)/x 就是 x 处的差商，极限为 f′(0)', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'第二项', log:'换元 u=x³ 后仍是同一定义式，极限也是 f′(0)', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'结论', log:'合并：f′(0) − 2f′(0) = −f′(0)，选 B', count:5, reveal:6, hl:5, good:true, done:true, ribbon:{k:5, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '选 B：−f′(0)',
+    html: '核心式：$\\lim_{u\\to0}\\dfrac{f(u)}{u}=f\'(0)$（用 $f(0)=0$ 凑差商）。记忆锚点：<b>只知一点可导 ⇒ 只能凑定义</b>。易错：没有「邻域内可导」的条件，洛必达的逻辑不成立；两项系数是 $1$ 与 $-2$，合并为 $-f\'(0)$。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：只给一点可导——全部凑导数定义</h2>
+<p>答案：B（$-f'(0)$）</p>
+<h3>第一步：盘点可用的工具</h3>
+<p>条件只有「$f$ 在 $x=0$ 处可导，$f(0)=0$」，没说在邻域内可导，所以<strong>洛必达与泰勒都不可用</strong>；唯一合法的武器是定义式（由 $f(0)=0$ 改写）：</p>
+<p>$$f'(0)=\lim_{u\to0}\frac{f(u)-f(0)}{u}=\lim_{u\to0}\frac{f(u)}{u}.$$</p>
+<h3>第二步：把分式拆成两个「差商」</h3>
+<p>$$\frac{x<sup>2f</sup>(x)-2f(x<sup>3</sup>)}{x<sup>3</sup>}=\frac{f(x)}{x}-2\cdot\frac{f(x<sup>3</sup>)}{x<sup>3</sup>}.$$</p>
+<h3>第三步：逐项取极限</h3>
+<ul><li>$\dfrac{f(x)}{x}=\dfrac{f(x)-f(0)}{x-0}\to f'(0)$，就是定义式取 $u=x$；</li><li>令 $u=x<sup>3</sup>$，$x\to0$ 时 $u\to0$，$\dfrac{f(x<sup>3</sup>)}{x<sup>3</sup>}=\dfrac{f(u)}{u}\to f'(0)$。</li></ul>
+<p>合并：$f'(0)-2f'(0)=-f'(0)$。</p>
+<h3>易错点</h3>
+<ul><li><strong>直接洛必达</strong>：对分子分母求导默认 $f$ 在 $0$ 的邻域内可导，题目没给，逻辑链条断裂。</li><li><strong>漏用 $f(0)=0$</strong>：没有它就凑不出 $\dfrac{f(u)-f(0)}{u}$ 的形状。</li><li><strong>系数抄丢</strong>：$2f(x<sup>3</sup>)$ 拆开后前面带着 2，最后是 $1-2=-1$ 倍，选 C 的错误多出在这里。</li></ul>
+<blockquote>结论：选 <strong>B</strong>。凡是「只知一点可导」的极限，一律回到定义式凑差商。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

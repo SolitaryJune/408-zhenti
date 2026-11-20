@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：含参反常积分 f(α) 的最小值点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-05.html" data-q="../question/m2-2023-05/">← <b>m2-2023-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-06/" data-q="../question/m2-2023-06/" data-no-anim="1">m2-2023-06 · 本题</a>
+  <a href="m2-2023-07.html" data-q="../question/m2-2023-07/"><b>m2-2023-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$f(\\alpha)=\\displaystyle\\int_2^{+\\infty}\\frac{\\mathrm dx}{x(\\ln x)^{\\alpha+1}}$ 的最小值点',
+  subtitle: '考点：含参反常积分 + 最值 · 方法：换元 $u=\\ln x$ → 取对数求导',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：先算出 f(α)，再求最小值点。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题换元</b>：被积函数自带 $\\dfrac1x$，令 $u=\\ln x$（$\\mathrm du=\\dfrac{\\mathrm dx}x$，$u:\\ln2\\to+\\infty$）$$f(\\alpha)=\\int_{\\ln2}^{+\\infty}\\frac{\\mathrm du}{u^{\\alpha+1}}$$',
+      '<b>收敛域</b>：$p$ 型积分收敛 $\\iff p=\\alpha+1>1\\iff\\alpha>0$——这是 $f(\\alpha)$ 的定义域',
+      '<b>算出显函数</b>：$$f(\\alpha)=\\Bigl[\\frac{u^{-\\alpha}}{-\\alpha}\\Bigr]_{\\ln2}^{+\\infty}=\\frac{(\\ln2)^{-\\alpha}}{\\alpha}\\quad(\\alpha>0)$$',
+      '<b>取对数求导</b>：$$\\ln f=-\\alpha\\ln(\\ln2)-\\ln\\alpha\\quad\\Rightarrow\\quad\\bigl(\\ln f\\bigr)\'=-\\ln(\\ln2)-\\frac1\\alpha$$',
+      '<b>解驻点</b>：$-\\ln(\\ln2)-\\dfrac1\\alpha=0\\Rightarrow\\alpha_0=-\\dfrac1{\\ln(\\ln2)}$；因 $0<\\ln2<1$，$\\ln(\\ln2)<0$，故 $\\alpha_0>0$ 落在定义域内',
+      '<b>判最小</b>：$\\bigl(\\ln f\\bigr)\'\'=\\dfrac1{\\alpha^2}>0$，凸函数唯一驻点即全局最小值点 $$\\alpha_0=-\\frac1{\\ln(\\ln2)}\\qquad\\Rightarrow\\qquad \\text{选 A}$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'换元',   log:'看到 1/x 配 dx，就令 u=ln x，积分下限变成 ln2', count:0 },
+    { cls:'step',  tag:'收敛域', log:'p 型积分收敛要求指数大于 1，即 α 大于 0', count:1 },
+    { cls:'shift', tag:'求值',   log:'上限处指数衰减到 0，只剩代入下限的项', count:2 },
+    { cls:'shift', tag:'取对数', log:'对 f 取对数再求导，比直接求导省事', count:3 },
+    { cls:'step',  tag:'驻点',   log:'令导数为零解出 α，注意取倒数；ln(ln2) 是负的，驻点为正', count:4 },
+    { cls:'done',  tag:'完成',   log:'结论：二阶导恒正，唯一驻点即最小值点，选 A', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\alpha_0=-\\dfrac{1}{\\ln(\\ln 2)}$（选 A）',
+    html: '记忆锚点：<b>含参反常积分先「算成显函数」再谈最值</b>；$\\dfrac1x\\,\\mathrm dx=\\mathrm d(\\ln x)$ 是天然换元信号。易错：$-\\ln(\\ln2)-\\dfrac1\\alpha=0$ 解出的是 $-\\dfrac1{\\ln(\\ln2)}$（要取倒数），不是 $-\\ln(\\ln2)$；$\\alpha\\le0$ 时积分发散，驻点必须在定义域内才有效。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含参反常积分的最小值点——先算出 f(α)，再取对数求导</h2>
+<p>答案：A</p>
+<h3>第一步：换元算出显函数</h3>
+<p>被积函数自带 $\dfrac1x$，提示令 $u=\ln x$（$\mathrm du=\dfrac{\mathrm dx}x$；$x:2\to+\infty$ 时 $u:\ln2\to+\infty$）：</p>
+<p>$$f(\alpha)=\int_{\ln2}<sup>+\infty</sup>\frac{\mathrm du}{u<sup>\alpha+1</sup>}.$$</p>
+<h3>第二步：收敛域</h3>
+<p>$p$ 型积分 $\displaystyle\int_a<sup>+\infty</sup>\frac{\mathrm du}{u<sup>p</sup>}$ 收敛 $\iff p&gt;1$——这条判据的来历：$p=1$ 时原函数是 $\ln u$，$u\to+\infty$ 时爆掉；$p&lt;1$ 时原函数 $u<sup>1-p</sup>$ 幂次为正，照样 $\to+\infty$；只有 $p&gt;1$ 时 $u<sup>1-p</sup>\to0$，积分收敛到 $\dfrac{a<sup>1-p</sup>}{p-1}$。这里 $p=\alpha+1$，故定义域为 $\alpha&gt;0$（发散区间上 $f$ 无定义，谈不上最小值）。此时</p>
+<p>$$f(\alpha)=\Bigl[\frac{u<sup>-\alpha</sup>}{-\alpha}\Bigr]_{\ln2}<sup>+\infty</sup>=\frac{(\ln2)<sup>-\alpha</sup>}{\alpha}.$$</p>
+<h3>第三步：取对数求导找驻点——为什么先取对数</h3>
+<p>$f(\alpha)=\dfrac{(\ln2)<sup>-\alpha</sup>}{\alpha}$ 是「指数型 × 幂型」的商：直接求导要同时处理 $(\ln2)<sup>-\alpha</sup>$ 的链式（导数自带因子 $\ln(\ln2)$）和商法则，两处都容易出错。取对数把乘除变成加减：</p>
+<p>$$\ln f=-\alpha\ln(\ln2)-\ln\alpha,\qquad\bigl(\ln f\bigr)'=-\ln(\ln2)-\frac1\alpha.$$</p>
+<p>只剩两项，而且取 $\ln$ 不挪动最值点——$\ln$ 严格增，$\ln f$ 与 $f$ 在同一点取最小。令导数为零得 $\alpha=-\dfrac1{\ln(\ln2)}$。因 $0&lt;\ln2&lt;1$，$\ln(\ln2)&lt;0$，故 $\alpha_0&gt;0$，落在定义域内。</p>
+<h3>第四步：确认是最小值</h3>
+<p>两条路互相印证。其一，$\bigl(\ln f\bigr)''=\dfrac1{\alpha<sup>2</sup>}&gt;0$，$\ln f$ 凸，唯一驻点即全局最小值点。其二，看两端行为：$\alpha\to0^+$ 时分母 $\alpha\to0$，$f\to+\infty$；$\alpha\to+\infty$ 时 $(\ln2)<sup>-\alpha</sup>=\Bigl(\dfrac1{\ln2}\Bigr)^\alpha\to+\infty$（$\ln2&lt;1$，其倒数大于 1）。两端都炸、中间唯一驻点，必然是全局最小。故 $\alpha_0=-\dfrac1{\ln(\ln2)}$，选 A。</p>
+<h3>易错点</h3>
+<ul><li><strong>解方程忘了取倒数选 B</strong>：由 $-\ln(\ln2)-\dfrac1\alpha=0$ 解出的是 $\alpha=-\dfrac1{\ln(\ln2)}$，不是 $-\ln(\ln2)$。</li><li><strong>忽略收敛域</strong>：$\alpha\le0$ 时积分发散，$f$ 根本没有定义，最小值只可能在 $\alpha&gt;0$ 内部取到。</li><li><strong>混淆 $\ln2$ 与 $\ln(\ln2)$ 的符号</strong>：$\ln2&gt;0$ 但 $\ln(\ln2)&lt;0$，负号来源要盯住。</li></ul>
+<blockquote>一句话结论：$f(\alpha)=\dfrac{(\ln2)<sup>-\alpha</sup>}{\alpha}$，驻点 $\alpha_0=-\dfrac1{\ln(\ln2)}$ 即最小值点，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

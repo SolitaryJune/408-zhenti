@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019·20 指数变换消去一阶偏导项</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-19.html" data-q="../question/m2-2019-19/">← <b>m2-2019-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-20/" data-q="../question/m2-2019-20/" data-no-anim="1">m2-2019-20 · 本题</a>
+  <a href="m2-2019-21.html" data-q="../question/m2-2019-21/"><b>m2-2019-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$2u_{xx}-2u_{yy}+3u_x+3u_y=0,\\qquad u=v\\,\\mathrm{e}^{ax+by}\\qquad\\text{目标：}\\ v_x,\\,v_y\\ \\text{的系数同时为零}$$",
+  "<b>① 一阶偏导：</b>$u_x=\\mathrm{e}^{ax+by}\\left(v_x+av\\right)$，$u_y=\\mathrm{e}^{ax+by}\\left(v_y+bv\\right)$——对 $x$ 每求导一次掉出一个 $a$，对 $y$ 掉出 $b$",
+  "<b>② 二阶偏导：</b>$u_{xx}=\\mathrm{e}^{ax+by}\\left(v_{xx}+2av_x+a^2v\\right)$，$u_{yy}=\\mathrm{e}^{ax+by}\\left(v_{yy}+2bv_y+b^2v\\right)$",
+  "<b>③ 代入并约去 $\\mathrm{e}^{ax+by}\\ne0$：</b>原方程两边同除以指数因子，按 $v_{xx},\\ v_{yy},\\ v_x,\\ v_y,\\ v$ 归类",
+  "<b>④ 归类结果：</b>$$2v_{xx}-2v_{yy}+(4a+3)\\,v_x+(-4b+3)\\,v_y+\\left(2a^2-2b^2+3a+3b\\right)v=0$$",
+  "<b>⑤ 令一阶项系数为零：</b>$4a+3=0$，$-4b+3=0$——$v_x$ 只跟 $a$ 有关、$v_y$ 只跟 $b$ 有关，两个方程互不纠缠",
+  "<b>⑥ 解得：</b>$$a=-\\frac34,\\qquad b=\\frac34$$",
+  "<b>⑦ 回代验证：</b>此时 $v$ 的系数 $2a^2-2b^2+3a+3b=0$，方程化为 $2v_{xx}-2v_{yy}=0$——确实不含任何一阶偏导数"
+];
+
+AW.init({
+  title: '2019·20　取 $a,b$ 使变换 $u=v\\,\\mathrm{e}^{ax+by}$ 消去一阶偏导',
+  subtitle: '考点：复合函数高阶偏导 · 乘积法则链式法则 · 待定系数归类',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，逐阶求偏导、归类系数、令一阶项消失。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'带指数因子的换元，目标是让新方程不含一阶偏导', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'一阶',   log:'一阶偏导各多出一项：v 加 a 倍 v、v 加 b 倍 v', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'二阶',   log:'二阶偏导三项结构：v 双导、二 a 乘 v 一阶导、a 平方乘 v', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'代入',   log:'代入原方程并约去指数因子，指数不为零可整体消去', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'归类',   log:'按五类导数项归拢，一阶项系数是四 a 加三与负四 b 加三', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'令零',   log:'两个一阶系数同时为零，得到两个独立方程', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'求解',   log:'解得 a 等于负四分之三，b 等于四分之三', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：回代后方程化为二 v 双导 x 减二 v 双导 y 等于零', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$a=-\\dfrac34,\\qquad b=\\dfrac34$",
+    html: "记忆锚点：<b>对 $x$ 每求导一次掉出一个 $a$、对 $y$ 掉出 $b$；二阶导必成三件套 $v_{xx}+2av_x+a^2v$</b>。易错：漏掉 $2av_x$ 交叉项；误令 $v$ 的系数也为零；忘约去 $\\mathrm{e}^{ax+by}$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：指数变换为什么能"吸走"一阶偏导项</h2>
+<p><strong>答案</strong>：$a=-\dfrac34,\quad b=\dfrac34$。</p>
+<h3>第 0 步：机制——为什么偏偏选 $\mathrm{e}<sup>ax+by</sup>$ 当变换因子</h3>
+<p>目标是消掉 $v_x$、$v_y$。求导算子对一般函数"越导越新"，对指数函数却只是<strong>乘常数</strong>：$\partial_x\mathrm{e}<sup>ax+by</sup>=a\,\mathrm{e}<sup>ax+by</sup>$，$\partial_y\mathrm{e}<sup>ax+by</sup>=b\,\mathrm{e}<sup>ax+by</sup>$——指数函数是 $\partial_x$ 与 $\partial_y$ 的共同"特征函数"。令 $u=v\,\mathrm{e}<sup>ax+by</sup>$ 后，每次偏导按乘积法则出"对 $v$ 求导"与"乘 $a$ 或 $b$"两路，二阶导攒出 $2av_x$ 这样的<strong>一阶项</strong>；所有项都带公因子 $\mathrm{e}<sup>ax+by</sup>$，$v$ 的各阶导数便能合并系数——选 $a,b$ 让一阶系数归零即可。这与 ODE 乘积分因子消一阶项、二次型配平方消一次项是同一思想：<strong>用可逆变换吸收不要的低阶项</strong>。</p>
+<h3>第一步：逐项求偏导——完全平方式的规律</h3>
+<p>由 $u=v\,\mathrm{e}<sup>ax+by</sup>$，乘积法则与链式法则给出</p>
+<p>$$u_x=\mathrm{e}<sup>ax+by</sup>\left(v_x+av\right),\qquad u_{xx}=\mathrm{e}<sup>ax+by</sup>\left(v_{xx}+2av_x+a<sup>2v</sup>\right),$$</p>
+<p>$$u_y=\mathrm{e}<sup>ax+by</sup>\left(v_y+bv\right),\qquad u_{yy}=\mathrm{e}<sup>ax+by</sup>\left(v_{yy}+2bv_y+b<sup>2v</sup>\right).$$</p>
+<p><strong>为什么 $u_{xx}$ 里 $v_x$ 的系数是 $2a$</strong>：$(\partial_x+a)<sup>2v</sup>=v_{xx}+2av_x+a<sup>2v</sup>$ 是完全平方式——"先导 $v_x$ 再导指数"与"先导指数再导 $v_x$"两条路各贡献一个 $a$，二项式系数自动现形。每多求一次 $x$ 导，$v$ 的导数升一阶，同时掉下一个 $av_x$ 与一个 $a<sup>2v</sup>$；对 $y$ 同理换 $b$。</p>
+<h3>第二步：代入原方程，约公因子后归类</h3>
+<p>$\mathrm{e}<sup>ax+by</sup>$ 恒不为零，可整体约去（为什么能约：方程两边是恒等式，非零因子可以除）。按 $v_{xx},v_{yy},v_x,v_y,v$ 归类：</p>
+<p>$$2v_{xx}-2v_{yy}+\underbrace{(4a+3)}_{v_x\ \text{的系数}}v_x+\underbrace{(-4b+3)}_{v_y\ \text{的系数}}v_y+\left(2a<sup>2</sup>-2b<sup>2</sup>+3a+3b\right)v=0.$$</p>
+<p>$v_x$ 的系数 $4a$ 来自 $2u_{xx}$ 中的 $2\cdot2a$，再加 $3u_x$ 中的 $3$；$v_y$ 的系数 $-4b$ 来自 $-2u_{yy}$ 中的 $-2\cdot2b$，再加 $3$。</p>
+<h3>第三步：令一阶系数同时为零</h3>
+<p>$$4a+3=0\ \Rightarrow\ a=-\frac34,\qquad -4b+3=0\ \Rightarrow\ b=\frac34.$$</p>
+<p><strong>为什么只令一阶系数为零、不管 $v$ 的系数</strong>：题目只禁"一阶偏导数"，$v$ 项是零阶，不在禁令内；本题恰好 $2a<sup>2</sup>-2b<sup>2</sup>+3a+3b=0$（$a=-b$ 让两组自动归零），方程化为最干净的 $2v_{xx}-2v_{yy}=0$——属意外奖励，不是要求。<strong>为什么两个方程恰好解两个未知数且互不纠缠</strong>：$v_x$ 只经 $x$ 向链攒 $a$，$v_y$ 只经 $y$ 向链攒 $b$，这是题目把两个一阶项系数都设为 $3$ 的对称设计。</p>
+<h3>易错点</h3>
+<ul><li><strong>二阶偏导漏项 $2av_x$</strong>：它是完全平方式 $(\partial_x+a)<sup>2v</sup>$ 的中间项，两条求导路径各出一个 $a$。</li><li><strong>误令 $v$ 的系数也为零</strong>：题目只要求消一阶项，强加这条约束反而可能无解（本题为零属巧合）。</li><li><strong>忘记约去 $\mathrm{e}<sup>ax+by</sup>$</strong>：不约公因子就"令系数为零"，等于在带多余因子的等式上操作。</li></ul>
+<blockquote>结论：$4a+3=0$ 与 $-4b+3=0$ 同时成立，$a=-\dfrac34,\ b=\dfrac34$，此时方程化为 $2v_{xx}-2v_{yy}=0$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

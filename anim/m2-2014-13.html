@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：变密度细棒的质心（2014 年第 13 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-12.html" data-q="../question/m2-2014-12/">← <b>m2-2014-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-13/" data-q="../question/m2-2014-13/" data-no-anim="1">m2-2014-13 · 本题</a>
+  <a href="m2-2014-14.html" data-q="../question/m2-2014-14/"><b>m2-2014-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CARDS = [
+  { cls: 'key', title: '公式就位',
+    body: '<p>$\\rho(x)=-x^{2}+2x+1$，$x\\in[0,1]$。质心公式：</p>' +
+          '<p>$$\\bar x=\\frac{\\displaystyle\\int_{0}^{1}x\\,\\rho(x)\\,\\mathrm dx}{\\displaystyle\\int_{0}^{1}\\rho(x)\\,\\mathrm dx}.$$</p>' +
+          '<p>分子是<b>质量矩</b>，分母是<b>总质量</b>。</p>' },
+  { cls: 'step', title: '算总质量',
+    body: '<p>$$M=\\int_{0}^{1}(-x^{2}+2x+1)\\,\\mathrm dx=\\Big[-\\frac{x^{3}}{3}+x^{2}+x\\Big]_{0}^{1}=\\frac{5}{3}.$$</p>' },
+  { cls: '', title: '质量矩的被积函数',
+    body: '<p>$$x\\,\\rho(x)=-x^{3}+2x^{2}+x.$$</p>' },
+  { cls: '', title: '算质量矩',
+    body: '<p>$$\\int_{0}^{1}(-x^{3}+2x^{2}+x)\\,\\mathrm dx=\\Big[-\\frac{x^{4}}{4}+\\frac{2x^{3}}{3}+\\frac{x^{2}}{2}\\Big]_{0}^{1}=-\\frac14+\\frac23+\\frac12=\\frac{11}{12}.$$</p>' },
+  { cls: 'ok', title: '相除得质心',
+    body: '<p>$$\\bar x=\\frac{11/12}{5/3}=\\frac{11}{12}\\cdot\\frac{3}{5}=\\frac{11}{20}=0.55.$$</p>' },
+  { cls: 'good', title: '直观校验',
+    body: '<p>$\\rho(0)=1$，$\\rho(1)=2$：密度向右递增，质心 $0.55$ 略偏右，合理。答案 $\\bar x=\\dfrac{11}{20}$。</p>' },
+];
+
+AW.init({
+  title: '【2014 数二·13】细棒质心 $\\bar{x}$',
+  subtitle: '考点：定积分应用（质心） · 方法：质量矩 ÷ 总质量',
+  counterLabel: '已执行',
+  ribbonTitle: '关键节点',
+  intro: '点击「▶ 播放」逐步演示计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一张卡'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'质心 = 质量矩 ÷ 总质量，两个积分一个比', count:0 },
+    { cls:'step',  tag:'总质量', log:'分母积分 = 5/3', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'展开', log:'分子被积函数展开成 −x³+2x²+x', count:2 },
+    { cls:'ok',    tag:'质量矩', log:'分子积分 = 11/12', count:3, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'相除', log:'(11/12) ÷ (5/3) = 11/20', count:4 },
+    { cls:'done',  tag:'完成', log:'质心 0.55 略偏右，与密度递增一致', count:5, ribbon:{k:3, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 x̄ = 11/20',
+    html: '记忆锚点：<b>$\\bar x=\\dfrac{\\int x\\rho\\,\\mathrm dx}{\\int\\rho\\,\\mathrm dx}$</b>——分子忘乘 $x$、分式颠倒（得 $\\dfrac{20}{11}$）是两大高频错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变密度细棒的质心——加权平均的连续化</h2>
+<p><strong>答案：$\bar x=\dfrac{11}{20}$</strong></p>
+<h3>第一步：先立机制——质心是「位置乘质量」的平均</h3>
+<p>离散版最好懂：两个质点的质心 $\bar x=\dfrac{m_1x_1+m_2x_2}{m_1+m_2}$——分子是「位置乘质量」之和（力矩），分母是总质量。连续化：小段 $\mathrm dx$ 的质量 $\mathrm dm=\rho(x)\,\mathrm dx$，求和变积分：</p>
+<p>$$\bar x=\frac{\displaystyle\int_0<sup>1</sup> x\,\rho(x)\,\mathrm dx}{\displaystyle\int_0<sup>1</sup> \rho(x)\,\mathrm dx}.$$</p>
+<p>为什么分子必须乘 $x$：不乘就丢掉了位置信息；密度大的一侧权重大，把 $\bar x$ 往自己那边拉。为什么不能取中点 $\dfrac12$：那是<strong>均匀密度</strong>（形心）的特权；本题 $\rho(x)=2-(x-1)<sup>2</sup>$ 在 $[0,1]$ 上从 $1$ 涨到 $2$，右边更重，应预期 $\bar x&gt;\dfrac12$。</p>
+<h3>第二步：算总质量</h3>
+<p>$$M=\int_0<sup>1</sup>(-x<sup>2</sup>+2x+1)\,\mathrm dx=\Big[-\frac{x<sup>3</sup>}{3}+x<sup>2</sup>+x\Big]_0<sup>1</sup>=-\frac13+1+1=\frac53.$$</p>
+<h3>第三步：算质量矩</h3>
+<p>$$\int_0<sup>1</sup>(-x<sup>3</sup>+2x<sup>2</sup>+x)\,\mathrm dx=\Big[-\frac{x<sup>4</sup>}{4}+\frac{2x<sup>3</sup>}{3}+\frac{x<sup>2</sup>}{2}\Big]_0<sup>1</sup>=-\frac14+\frac23+\frac12=\frac{11}{12}.$$</p>
+<p>（通分：$-\dfrac{3}{12}+\dfrac{8}{12}+\dfrac{6}{12}=\dfrac{11}{12}$。）</p>
+<h3>第四步：相除并回看直观</h3>
+<p>$$\bar x=\frac{11/12}{5/3}=\frac{11}{12}\cdot\frac35=\frac{11}{20}=0.55.$$</p>
+<p>比 $\dfrac12$ 略偏右，与「右侧更重」的预期一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>分子忘乘 $x$</strong>：算出 $\dfrac53$ 只是总质量，不是质心。</li><li><strong>分式颠倒</strong>：写成 $\dfrac{\int\rho}{\int x\rho}$ 会得 $\dfrac{20}{11}$。</li><li><strong>通分出错</strong>：$-\dfrac14$ 通分到 $12$ 是 $-\dfrac{3}{12}$，别丢负号。</li></ul>
+<blockquote>一句话结论：$\bar x=\dfrac{\int x\rho}{\int\rho}=\dfrac{11/12}{5/3}=\dfrac{11}{20}$，质量矩除以总质量。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

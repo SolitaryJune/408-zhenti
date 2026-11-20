@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·03 反常积分敛散性：奇点在 0 的哪一侧</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-02.html" data-q="../question/m2-2016-02/">← <b>m2-2016-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-03/" data-q="../question/m2-2016-03/" data-no-anim="1">m2-2016-03 · 本题</a>
+  <a href="m2-2016-04.html" data-q="../question/m2-2016-04/"><b>m2-2016-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>两个积分被积函数同为 $\\dfrac{1}{x^2}\\mathrm e^{1/x}$，差别只在区间：$(1)$ 在 $(-\\infty,0)$、$(2)$ 在 $(0,+\\infty)$。策略：先求原函数，再看<b>奇点端点的极限</b>。</p>' },
+  { label: '第 1 步 · 凑微分求原函数',
+    h: '<p>$\\dfrac{1}{x^2}\\mathrm e^{1/x}\\mathrm dx=-\\mathrm e^{1/x}\\,\\mathrm d\\!\\left(\\dfrac1x\\right)$，故 $$\\int \\frac{1}{x^2}\\mathrm e^{\\frac1x}\\mathrm dx=-\\mathrm e^{\\frac1x}+C.$$</p>' },
+  { label: '第 2 步 · 端点行为：关键在 e 的指数',
+    h: '<table style="border-collapse:collapse;margin:6px 0;font-size:14px">' +
+       '<tr><th style="border:1px solid #cbd5e1;padding:4px 10px">极限过程</th><th style="border:1px solid #cbd5e1;padding:4px 10px">$\\frac1x$ 趋向</th><th style="border:1px solid #cbd5e1;padding:4px 10px">$\\mathrm e^{1/x}$ 趋向</th><th style="border:1px solid #cbd5e1;padding:4px 10px">$-\\mathrm e^{1/x}$</th></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px">$x\\to0^-$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$-\\infty$</td><td style="border:1px solid #cbd5e1;padding:4px 10px;color:#15803d"><b>$0$</b></td><td style="border:1px solid #cbd5e1;padding:4px 10px">$0$</td></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px">$x\\to-\\infty$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$0^-$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$1$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$-1$</td></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px">$x\\to0^+$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$+\\infty$</td><td style="border:1px solid #cbd5e1;padding:4px 10px;color:#b91c1c"><b>$+\\infty$</b></td><td style="border:1px solid #cbd5e1;padding:4px 10px">$-\\infty$</td></tr>' +
+       '<tr><td style="border:1px solid #cbd5e1;padding:4px 10px">$x\\to+\\infty$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$0^+$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$1$</td><td style="border:1px solid #cbd5e1;padding:4px 10px">$-1$</td></tr></table>' },
+  { label: '第 3 步 · 判 (1)：奇点 x→0⁻，温和',
+    h: '<p>$$\\int_{-\\infty}^0\\frac{1}{x^2}\\mathrm e^{\\frac1x}\\mathrm dx=\\Big[-\\mathrm e^{\\frac1x}\\Big]_{-\\infty}^{0^-}=(0)-(-1)=1,$$ 上限处 $\\mathrm e^{1/x}\\to0$、下限处 $\\to1$，极限存在，<b style="color:#15803d">收敛</b>。</p>' },
+  { label: '第 4 步 · 判 (2)：奇点 x→0⁺，爆炸',
+    h: '<p>$$\\Big[-\\mathrm e^{\\frac1x}\\Big]_{0^+}^{+\\infty}：\\ x\\to0^+\\ \\text{时}\\ \\mathrm e^{\\frac1x}\\to+\\infty,$$ 下限项无界，极限不存在，<b style="color:#b91c1c">发散</b>。</p>' },
+  { label: '第 5 步 · 结论',
+    h: '<p>$(1)$ 收敛、$(2)$ 发散，<b>选 B</b>。分水岭就一句话：奇点在 0 的哪一侧，决定了 $\\mathrm e^{1/x}$ 是归零还是爆炸。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '反常积分敛散性：$\\int\\frac{1}{x^2}\\mathrm e^{1/x}\\mathrm dx$ 的两个区间',
+  subtitle: '考点：反常积分敛散 · 方法：求原函数 → 端点（奇点）极限',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的六步判断。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'被积函数相同，奇点都在 x=0，差别是区间在 0 的哪一侧', count:0 },
+    { cls:'step', tag:'凑微分', log:'1/x² 配 e^(1/x) 正好凑成 −e^(1/x) 的导数', count:1 },
+    { cls:'step', tag:'端点表', log:'四个极限过程里 e^(1/x) 的走向：0⁻ 端归零、0⁺ 端爆炸', count:2 },
+    { cls:'ok',   tag:'判(1)',  log:'x→0⁻ 端 e^(1/x)→0，上限有限、下限有限，积分等于 1，收敛', count:3 },
+    { cls:'miss', tag:'判(2)',  log:'x→0⁺ 端 e^(1/x)→+∞，下限无界，发散', count:4 },
+    { cls:'done', tag:'完成',   log:'(1) 收敛、(2) 发散，选 B', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '(1) 收敛，(2) 发散（选 B）',
+    html: '记忆锚点：<b>同一个 $\\mathrm e^{1/x}$，奇点侧的符号定生死</b>——$x\\to0^-$ 时 $\\frac1x\\to-\\infty$、指数归零，收敛；$x\\to0^+$ 时 $\\frac1x\\to+\\infty$、指数爆炸，发散。原函数 $-\\mathrm e^{1/x}$ 一求，端点一代就出结论。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：同一被积函数，两侧反常积分为何一收一发</h2>
+<p>答案：B</p>
+<h3>第 0 步：先立机制——收敛的定义与"不对称"的来源</h3>
+<p>反常积分<strong>收敛就是端点极限存在且有限</strong>，所以最可靠的路是求出初等原函数、对端点取极限，不必绕判别法。凑微分一眼可辨：$\dfrac{1}{x<sup>2</sup>}\mathrm dx=-\mathrm d\!\left(\dfrac1x\right)$，被积函数正是 $\mathrm e<sup>u</sup>\,\mathrm du$（$u=\frac1x$）的伪装：</p>
+<p>$$\int\frac{1}{x<sup>2</sup>}\mathrm e<sup>\frac1x</sup>\mathrm dx=-\mathrm e<sup>\frac1x</sup>+C.$$</p>
+<p>更要想通<strong>为什么两个区间命运不同</strong>：$\frac1x$ 在 $x\to0^+$ 冲向 $+\infty$、在 $x\to0^-$ 跌向 $-\infty$；而 $\mathrm e<sup>u</sup>$ 对 $u\to+\infty$ 指数爆炸、对 $u\to-\infty$ 指数熄灭。同一个奇点 $x=0$，右侧把原函数顶上天，左侧把它摁到 $0$——两个积分的全部结论都从这里长出来。</p>
+<h3>第一步：(1) 在 $(-\infty,0)$ 上，奇点在 $0^-$</h3>
+<p>$$\int_{-\infty}<sup>0</sup>\frac{1}{x<sup>2</sup>}\mathrm e<sup>\frac1x</sup>\mathrm dx=\Big[-\mathrm e<sup>\frac1x</sup>\Big]_{-\infty}<sup>0^-</sup>=\Big(-\lim_{x\to0^-}\mathrm e<sup>\frac1x</sup>\Big)+\lim_{x\to-\infty}\mathrm e<sup>\frac1x</sup>=0+1=1,$$</p>
+<p>其中 $x\to0^-$ 时 $\frac1x\to-\infty$、$\mathrm e<sup>1/x</sup>\to0$（熄灭侧），$x\to-\infty$ 时 $\frac1x\to0^-$、$\mathrm e<sup>1/x</sup>\to1$。两端极限都有限，<strong>收敛</strong>，值恰为 $1$。</p>
+<h3>第二步：(2) 在 $(0,+\infty)$ 上，奇点在 $0^+$</h3>
+<p>$x\to+\infty$ 端：$\mathrm e<sup>1/x</sup>\to1$，$-\mathrm e<sup>1/x</sup>\to-1$，没问题；$x\to0^+$ 端：$\frac1x\to+\infty$、$\mathrm e<sup>1/x</sup>\to+\infty$（爆炸侧），原函数 $-\mathrm e<sup>1/x</sup>$ 在下限处无界，端点极限不存在——<strong>发散</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 (2) 也收敛</strong>（A）：只看见 $\frac{1}{x<sup>2</sup>}$ 这个"好因子"——它确实是可积的幂函数，但压不住 $\mathrm e<sup>1/x</sup>$ 在 $0^+$ 的指数爆炸，幂因子救不了指数奇性。</li><li><strong>两侧搞反</strong>（C）：误记 $x\to0^-$ 时 $\mathrm e<sup>1/x</sup>\to+\infty$。代个具体数验证：$x=-1$ 时 $\frac1x=-1$，$\mathrm e<sup>-1</sup>\approx0.37&lt;1$，负侧明明在熄灭。</li><li><strong>以为两个都发散</strong>（D）：漏了 $0^-$ 侧"熄灭"这半边机制。对称奇点两侧的反常积分必须<strong>逐侧独立</strong>判断，一侧收敛推不出另一侧收敛。</li></ul>
+<blockquote>结论：$0^-$ 侧指数熄灭故 (1) 收敛（值为 1），$0^+$ 侧指数爆炸故 (2) 发散，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

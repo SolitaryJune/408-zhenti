@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：由「有解」条件算目标行列式</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-15.html" data-q="../question/m2-2023-15/">← <b>m2-2023-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-16/" data-q="../question/m2-2023-16/" data-no-anim="1">m2-2023-16 · 本题</a>
+  <a href="m2-2023-17.html" data-q="../question/m2-2023-17/"><b>m2-2023-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：4 个方程 3 个未知量',
+    cls: 'key',
+    log: '超定方程组有解；前三个方程的系数行列式恰是题给的 D=4≠0',
+    body: '<p>方程组 4 个方程、3 个未知量。前三个方程的系数行列式恰为题给的 $$D=\\begin{vmatrix}a&0&1\\\\1&a&1\\\\1&2&a\\end{vmatrix}=4\\neq0$$ 故系数矩阵（$4\\times3$）<b>满列秩</b>，秩为 3。</p>' },
+  { title: '「有解」⟹ 增广行列式为零',
+    cls: 'key',
+    log: '有解 ⟺ 增广秩也是 3；增广是 4×4，秩 3 等价于行列式为零',
+    ribbon: {k:1, ok:true},
+    body: '<p>有解 $\\iff r(\\text{增广})=r(\\text{系数})=3$。增广矩阵是 $4\\times4$ 的，秩为 3 $\\iff$ 其行列式为零：$$\\Delta=\\begin{vmatrix}a&0&1&1\\\\1&a&1&0\\\\1&2&a&0\\\\a&b&0&2\\end{vmatrix}=0$$</p>' },
+  { title: '按最后一列展开',
+    cls: 'step',
+    log: '末列只有第 1 行的 1 和第 4 行的 2 两个非零元',
+    body: '<p>末列 $(1,0,0,2)^{\\mathsf T}$ 只有两个非零元：$$\\Delta=1\\cdot(-1)^{1+4}M_{14}+2\\cdot(-1)^{4+4}M_{44}$$</p>' },
+  { title: '识别两个余子式',
+    cls: 'good',
+    log: 'M₁₄ 恰是目标行列式 T；M₄₄ 恰是已知的 D=4',
+    ribbon: {k:2, ok:true},
+    body: '<p>$M_{14}=\\begin{vmatrix}1&a&1\\\\1&2&a\\\\a&b&0\\end{vmatrix}=T$（正是所求！）；$M_{44}=\\begin{vmatrix}a&0&1\\\\1&a&1\\\\1&2&a\\end{vmatrix}=D=4$。</p>' },
+  { title: '结算：T = 2D = 8',
+    cls: 'good',
+    log: '−T + 2D = 0，得 T = 8',
+    ribbon: {k:3, ok:true},
+    body: '<p>$$\\Delta=-T+2D=0\\quad\\Longrightarrow\\quad T=2D=2\\times4=8$$</p>' },
+  { title: '验算：两组 (a,b) 都得 8',
+    cls: 'good',
+    log: 'D=a³−3a+2=4 给 a=−1 或 2，对应 b=7/2 或 −4，代回目标行列式都是 8',
+    body: '<p>$D=a^3-3a+2=4\\Rightarrow(a+1)^2(a-2)=0\\Rightarrow a=-1$ 或 $a=2$；由相容条件分别解得 $b=\\dfrac72$ 或 $b=-4$。两组 $(a,b)$ 代回 $T=-ab+a^3+b-2a$，结果都是 <b>8</b> ✓。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '超定方程组有解：一次展开算出目标行列式',
+  subtitle: '考点：线性方程组有解条件 + 行列式展开 · 方法：秩 → 4 阶行列式为零',
+  counterLabel: '推理步',
+  ribbonTitle: '推理链核对（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '目标行列式 $=8$',
+    html: '记忆锚点：<b>有解 + 系数满列秩 $\\Rightarrow$ 4 阶增广行列式 $=0$，按常数列展开一步出结果</b>。易错：代数余子式符号 $(-1)^{1+4}=-1$（这正是 $-T$ 的来源）；不必解出 $a,b$ 再硬算。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：超定方程组有解 ⟹ 增广行列式为零——一次展开直接出结果</h2>
+<p>答案：$8$</p>
+<h3>第一步：读条件的含义</h3>
+<p>方程组 4 个方程、3 个未知量。前三个方程的系数行列式恰为题给的</p>
+<p>$$D=\begin{vmatrix}a&amp;0&amp;1\\1&amp;a&amp;1\\1&amp;2&amp;a\end{vmatrix}=4\neq0,$$</p>
+<p>故整个方程组的系数矩阵（$4\times3$）秩为 3，达到满列秩。</p>
+<h3>第二步：把「有解」翻译成秩的语言</h3>
+<p>有解 $\iff$ 增广矩阵的秩也是 3。增广矩阵是 $4\times4$ 的，秩为 3 $\iff$ 其行列式为零：</p>
+<p>$$\Delta=\begin{vmatrix}a&amp;0&amp;1&amp;1\\1&amp;a&amp;1&amp;0\\1&amp;2&amp;a&amp;0\\a&amp;b&amp;0&amp;2\end{vmatrix}=0.$$</p>
+<h3>第三步：按最后一列展开</h3>
+<p>末列只有两个非零元：第 1 行的 $1$ 与第 4 行的 $2$。</p>
+<ul><li>元素 $1$（第 1 行第 4 列）：贡献 $1\cdot(-1)<sup>1+4</sup>M_{14}$，而 $M_{14}=\begin{vmatrix}1&amp;a&amp;1\\1&amp;2&amp;a\\a&amp;b&amp;0\end{vmatrix}=T$ 恰是目标行列式；</li><li>元素 $2$（第 4 行第 4 列）：贡献 $2\cdot(-1)<sup>4+4</sup>M_{44}$，而 $M_{44}=D=4$。</li></ul>
+<p>于是 $\Delta=-T+2D=0$。</p>
+<h3>第四步：结算与验算</h3>
+<p>$$T=2D=2\times4=8.$$</p>
+<p>复核：$D=a<sup>3</sup>-3a+2=4$ 给 $a=-1$ 或 $a=2$；由相容条件分别解得 $b=\dfrac72$ 或 $b=-4$；把两组 $(a,b)$ 代回目标行列式，结果都是 8。</p>
+<h3>易错点</h3>
+<ul><li><strong>非要解出 a、b 再硬算</strong>：没必要，秩条件加一次展开就够；真去解还容易在展开时漏符号。</li><li><strong>代数余子式符号错</strong>：$(-1)<sup>1+4</sup>=-1$，这一负号正是 $-T$ 的来源。</li><li><strong>把 4 阶行列式当方程组的解</strong>：这里是对增广矩阵用秩的条件，不是克拉默法则。</li></ul>
+<blockquote>一句话结论：有解 + 系数满秩 $\Rightarrow$ 4 阶增广行列式为 0，按末列展开得 $T=2D=8$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

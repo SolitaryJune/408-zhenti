@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·05 sec x 的 2 次泰勒多项式</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-04.html" data-q="../question/m2-2021-04/">← <b>m2-2021-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-05/" data-q="../question/m2-2021-05/" data-no-anim="1">m2-2021-05 · 本题</a>
+  <a href="m2-2021-06.html" data-q="../question/m2-2021-06/"><b>m2-2021-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$f(x)=\\sec x$ 的 2 次泰勒多项式为 $1+ax+bx^2$，即 $a=f'(0)$、$b=\\dfrac{f''(0)}{2}$——只缺两个数",
+  "<b>② 奇偶性先定 $a$：</b>$\\sec x=\\dfrac{1}{\\cos x}$ 是<b>偶函数</b>，麦克劳林展开无奇次项，$a=0$ 直接锁定（排除 A、B）",
+  "<b>③ 方法一·一阶导：</b>$f'(x)=\\sec x\\tan x$，代 $x=0$：$f'(0)=1\\cdot0=0$，与 ② 一致",
+  "<b>④ 方法一·二阶导：</b>$f''(x)=(\\sec x\\tan x)'=\\sec x\\tan^2x+\\sec^3x$，代 $x=0$：$f''(0)=0+1=1$",
+  "<b>⑤ 得 $b$：</b>$b=\\dfrac{f''(0)}{2}=\\dfrac12$——求导法完毕：$a=0,\\ b=\\dfrac12$",
+  "<b>⑥ 方法二·倒数展开：</b>$\\cos x=1-\\dfrac{x^2}{2}+o(x^2)$，令 $u=\\dfrac{x^2}{2}$，用 $\\dfrac{1}{1-u}=1+u+o(u)$",
+  "<b>⑦ 展开验证：</b>$\\sec x=\\dfrac{1}{1-\\frac{x^2}{2}+o(x^2)}=1+\\dfrac{x^2}{2}+o(x^2)$——二次系数 $+\\dfrac12$，两法一致",
+  "<b>⑧ 结论：</b>$a=0,\\ b=\\dfrac12$，选 D"
+];
+
+AW.init({
+  title: '2021·05　$\\sec x$ 的 2 次泰勒多项式 $1+ax+bx^2$',
+  subtitle: '考点：麦克劳林展开 · 偶函数奇次项为零 · $\\cos x$ 展开取倒数',
+  counterLabel: '已推导',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，求导法与倒数展开法互相印证。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'系数含义明确：a 是一阶导数值，b 是二阶导数值的一半', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'定 a',   log:'正割是余弦的倒数，偶函数没有奇次项，a 必为零', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'一阶导', log:'正割乘正切在零点等于零，验证 a 为零', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'二阶导', log:'再求一次导得两项，在零点只剩正割立方等于一', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'得 b',   log:'二分之一乘一，b 等于二分之一', count:4, ribbon:{k:5, ok:true} },
+    { cls:'shift', tag:'换法',   log:'换倒数展开法验证：余弦展到平方项，取倒数套几何级数', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'验证',   log:'二次项系数翻转成正的二分之一，两种方法结果一致', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：a 为零、b 为正二分之一，选 D', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '选 D　$a=0,\\ b=\\dfrac12$，即 $\\sec x=1+\\dfrac{x^2}{2}+o(x^2)$',
+    html: '记忆锚点：<b>偶函数 $\\Rightarrow a=0$；$\\cos$ 展开取倒数，二次系数符号翻转（$-\\frac12\\to+\\frac12$）</b>。易错：把 $\\sec$ 当 $\\cos$ 展开错选 C；把 $f(0)=1$ 误当一次项系数错选 A/B。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$\sec x$ 的麦克劳林展开——偶函数定 $a$，倒数展开定 $b$</h2>
+<p>答案：D</p>
+<h3>第一步：认清系数的含义</h3>
+<p>$x=0$ 处的 2 次泰勒多项式是 $f(0)+f'(0)x+\dfrac{f''(0)}{2}x<sup>2</sup>$，对照 $1+ax+bx<sup>2</sup>$ 知 $a=f'(0)$，$b=\dfrac{f''(0)}{2}$。只需求两个数。</p>
+<h3>第二步：求导法（标准流程）</h3>
+<p>$f(0)=1$；$f'(x)=\sec x\tan x\Rightarrow f'(0)=1\cdot0=0$，得 $a=0$。<br/>$f''(x)=\sec x\tan<sup>2x</sup>+\sec<sup>3x</sup>\Rightarrow f''(0)=0+1=1$，得 $b=\dfrac12$。</p>
+<h3>第三步：倒数展开法（更快，也自带检验）</h3>
+<p>$\sec x=\dfrac{1}{\cos x}$ 是偶函数，奇次项系数全为零，$a=0$ 直接锁定（排除 A、B）。再用</p>
+<p>$$\cos x=1-\frac{x<sup>2</sup>}{2}+o(x<sup>2</sup>),\qquad \frac{1}{1-u}=1+u+o(u),$$</p>
+<p>取 $u=\dfrac{x<sup>2</sup>}{2}$：</p>
+<p>$$\sec x=\frac{1}{1-\frac{x<sup>2</sup>}{2}+o(x<sup>2</sup>)}=1+\frac{x<sup>2</sup>}{2}+o(x<sup>2</sup>).$$</p>
+<p>对照得 $a=0,\ b=\dfrac12$，选 D。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $\sec$ 当 $\cos$ 展开</strong>：$\cos x=1-\dfrac{x<sup>2</sup>}{2}+\cdots$ 二次系数是负的；取倒数后符号翻转成 $+\dfrac12$，选 C 就是这里翻车。</li><li><strong>以为 $a=1$</strong>：把函数值 $f(0)=1$ 误当一次项系数；偶函数的一次项必为 0。</li><li><strong>二阶导漏项</strong>：$(\sec x\tan x)'=\sec x\tan<sup>2x</sup>+\sec<sup>3x</sup>$，两项都不能丢，否则 $f''(0)$ 就错。</li></ul>
+<blockquote>一句话结论：$\sec x$ 是偶函数故 $a=0$；$\cos$ 展开取倒数，二次系数翻转成 $+\dfrac12$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

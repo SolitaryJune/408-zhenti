@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017·17 n项和极限化定积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-16.html" data-q="../question/m2-2017-16/">← <b>m2-2017-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-17/" data-q="../question/m2-2017-17/" data-no-anim="1">m2-2017-17 · 本题</a>
+  <a href="m2-2017-18.html" data-q="../question/m2-2017-18/"><b>m2-2017-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2017·17　求 $\\lim\\limits_{n\\to\\infty}\\sum\\limits_{k=1}^{n}\\dfrac{k}{n^{2}}\\ln\\!\\left(1+\\dfrac{k}{n}\\right)$',
+  subtitle: '考点：定积分定义（黎曼和）· 方法：凑 $\\dfrac1n\\sum g(k/n)$ → 定积分 → 分部积分',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看和式如何一步步变成积分。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "$$\\sum_{k=1}^{n}\\frac{k}{n^{2}}\\ln\\!\\left(1+\\frac{k}{n}\\right)\\qquad(\\text{n 项和，先找}\\ \\tfrac1n)$$",
+      "<b>① 拆通项：</b>$\\dfrac{k}{n^{2}}=\\dfrac1n\\cdot\\dfrac{k}{n}$——宽度 $\\tfrac1n$ ＋ 采样点 $\\tfrac{k}{n}$",
+      "<b>② 凑黎曼和：</b>$\\dfrac1n\\sum\\limits_{k=1}^{n}\\dfrac{k}{n}\\ln\\!\\left(1+\\dfrac{k}{n}\\right)$，识别 $g(x)=x\\ln(1+x)$",
+      "<b>③ 化积分：</b>分点 $x_k=\\dfrac{k}{n}\\in[0,1]$，$g$ 连续 $\\Rightarrow\\ \\displaystyle\\lim=\\int_0^{1}x\\ln(1+x)\\,\\mathrm{d}x$",
+      "<b>④ 分部：</b>取 $u=\\ln(1+x),\\ \\mathrm{d}v=x\\,\\mathrm{d}x$：$\\displaystyle\\int_0^1 x\\ln(1+x)\\,\\mathrm{d}x=\\frac12\\ln2-\\frac12\\int_0^1\\frac{x^{2}}{1+x}\\,\\mathrm{d}x$",
+      "<b>⑤ 拆假分式：</b>$\\dfrac{x^{2}}{1+x}=x-1+\\dfrac{1}{1+x}$",
+      "<b>⑥ 逐段积：</b>$\\int_0^1(x-1)\\,\\mathrm{d}x=-\\dfrac12$，$\\int_0^1\\dfrac{\\mathrm{d}x}{1+x}=\\ln2\\ \\Rightarrow\\ \\displaystyle\\int_0^1\\dfrac{x^{2}}{1+x}\\,\\mathrm{d}x=\\ln2-\\dfrac12$",
+      "<b>⑦ 合并：</b>$$\\frac12\\ln2-\\frac12\\left(\\ln2-\\frac12\\right)=\\frac14$$"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题', log:'n 项和求极限，标准动作：找出一 n 分之一当宽度', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'拆项', log:'k 比上 n 的平方拆成一 n 乘 k 比 n，宽度和采样点分开', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'凑形', log:'认出被积函数：x 乘 ln 一加 x，分点是 k 比 n', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'化积', log:'分点落在一到零区间上，和式收敛为该函数在零一上的积分', count:3, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'分部', log:'对数留作 u，x 方留作 v，积分变成对数项减去一个新积分', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'拆式', log:'分子比分母次数高，先做多项式除法拆成三块', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'积分', log:'三块分别积分，合起来是 ln2 减二分之一', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'合并', log:'对数项恰好抵消，剩下四分之一', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成', log:'结论：原极限等于四分之一', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '极限 $=\\dfrac{1}{4}$',
+    html: '核心链条：<b>$\\dfrac{k}{n^{2}}=\\dfrac1n\\cdot\\dfrac{k}{n}\\ \\Rightarrow\\ \\dfrac1n\\sum g\\!\\left(\\dfrac{k}{n}\\right)\\to\\int_0^1g(x)\\,\\mathrm{d}x$</b>，此处 $g(x)=x\\ln(1+x)$，积分值 $\\dfrac14$。易错：区间不看分点取值范围乱写；分部后 $\\dfrac{x^{2}}{1+x}$ 不拆假分式硬积。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：n 项和极限化定积分——先认出「宽度 × 高度」，再分部积分</h2>
+<p>答案：$\dfrac14$</p>
+<h3>第一步：机制——黎曼和就是「宽度 × 高度」的清单</h3>
+<p>定积分 $\int_0<sup>1g</sup>(x)\,\mathrm{d}x$ 的定义：把 $[0,1]$ 切成 $n$ 等份，每份宽 $\dfrac1n$，在第 $k$ 份上取高 $g\!\left(\dfrac kn\right)$，阶梯面积 $\dfrac1n\,g\!\left(\dfrac kn\right)$ 求和取极限。所以"n 项和极限化定积分"的全部技巧就是：<strong>从通项里认出宽度与高度</strong>。本题通项</p>
+<p>$$\frac{k}{n<sup>2</sup>}\ln\!\left(1+\frac{k}{n}\right)=\underbrace{\frac1n}_{\text{宽度}}\cdot\underbrace{\frac{k}{n}\ln\!\left(1+\frac{k}{n}\right)}_{\text{高度 }g(k/n)},$$</p>
+<p>高度是 $g(x)=x\ln(1+x)$ 在分点 $x_k=\dfrac kn$ 处的值，分点铺满 $[0,1]$，区间即 $[0,1]$：</p>
+<p>$$\sum_{k=1}<sup>n</sup>\frac{k}{n<sup>2</sup>}\ln\!\left(1+\frac{k}{n}\right)=\frac1n\sum_{k=1}<sup>n</sup>\frac{k}{n}\ln\!\left(1+\frac{k}{n}\right).$$</p>
+<p>这一步合法的原因：$g$ 在 $[0,1]$ 上连续故可积，可积则<strong>任何分割、任何取点</strong>的黎曼和都收敛到同一个积分值——右端点取法只是其中一种，不必纠结。</p>
+<h3>第二步：为什么要换成定积分</h3>
+<p>和式里 $n$ 同时出现在求和限与通项内部，硬算无从下手；化成 $\int_0<sup>1x</sup>\ln(1+x)\,\mathrm{d}x$ 后，问题从"数列极限"变成"一个具体积分"，微积分的工具（牛顿–莱布尼茨、分部积分）就都能用了——这步换形的目的正在于此：</p>
+<p>$$\lim_{n\to\infty}\sum_{k=1}<sup>n</sup>\frac{k}{n<sup>2</sup>}\ln\!\left(1+\frac{k}{n}\right)=\int_0<sup>1</sup> x\ln(1+x)\,\mathrm{d}x.$$</p>
+<h3>第三步：为什么分部积分、为什么 u 取对数</h3>
+<p>被积函数是"幂 × 对数"。分部积分的选 $u$ 原则：<strong>让 $u$ 求导后变简单，让 $\mathrm{d}v$ 好积分</strong>。$\ln(1+x)$ 求导变成 $\dfrac1{1+x}$，对数消失；$x\,\mathrm{d}x$ 积出 $\dfrac{x<sup>2</sup>}2$ 是多项式。反过来取（$u=x$，$\mathrm{d}v=\ln(1+x)\mathrm{d}x$）会把 $\ln$ 留在积分里，越积越乱。取 $u=\ln(1+x)$，$\mathrm{d}v=x\,\mathrm{d}x$：</p>
+<p>$$\int_0<sup>1</sup> x\ln(1+x)\,\mathrm{d}x=\left[\frac{x<sup>2</sup>}{2}\ln(1+x)\right]_0<sup>1</sup>-\frac12\int_0<sup>1</sup>\frac{x<sup>2</sup>}{1+x}\,\mathrm{d}x=\frac12\ln2-\frac12\int_0<sup>1</sup>\frac{x<sup>2</sup>}{1+x}\,\mathrm{d}x.$$</p>
+<h3>第四步：为什么假分式要先拆——多项式除法</h3>
+<p>$\dfrac{x<sup>2</sup>}{1+x}$ 的分子次数不低于分母，不是基本积分公式能直接积的形状。用 $x<sup>2</sup>=(x-1)(x+1)+1$ 拆成多项式加真分式再逐段积：</p>
+<p>$$\frac{x<sup>2</sup>}{1+x}=x-1+\frac{1}{1+x}\ \Longrightarrow\ \int_0<sup>1</sup>\frac{x<sup>2</sup>}{1+x}\,\mathrm{d}x=\left(\frac12-1\right)+\ln2=\ln2-\frac12.$$</p>
+<p>代回：</p>
+<p>$$\int_0<sup>1x</sup>\ln(1+x)\,\mathrm{d}x=\frac12\ln2-\frac12\left(\ln2-\frac12\right)=\frac14.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>找不到 $\dfrac1n$</strong>：盯着 $\dfrac{k}{n<sup>2</sup>}$ 发呆——按"宽度×高度"去拆，$\dfrac{k}{n<sup>2</sup>}=\dfrac1n\cdot\dfrac{k}{n}$，黎曼和立刻现形。</li><li><strong>区间写错</strong>：分点是 $\dfrac{k}{n}\in[0,1]$，积分区间是 $[0,1]$，不要写成 $[0,n]$ 或 $[1,+\infty)$。</li><li><strong>分部方向取反</strong>：$u$ 取 $x$ 会把对数留在积分号里；记住"对数求导会消失，幂函数积分易"。</li><li><strong>假分式硬积</strong>：$\dfrac{x<sup>2</sup>}{1+x}$ 先拆成 $x-1+\dfrac{1}{1+x}$ 再积。</li></ul>
+<blockquote>一句话结论：通项拆成 $\dfrac1n\times g\!\left(\dfrac kn\right)$（$g=x\ln(1+x)$，区间 $[0,1]$）得 $\int_0<sup>1x</sup>\ln(1+x)\,\mathrm{d}x$；分部让对数消失、假分式拆项，结果 $=\dfrac14$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

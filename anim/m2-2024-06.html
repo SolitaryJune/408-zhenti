@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·06 二重积分交换积分次序</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-05.html" data-q="../question/m2-2024-05/">← <b>m2-2024-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-06/" data-q="../question/m2-2024-06/" data-no-anim="1">m2-2024-06 · 本题</a>
+  <a href="m2-2024-07.html" data-q="../question/m2-2024-07/"><b>m2-2024-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导行工具：acc 取 key/ok/bad/blue 决定高亮色；未揭示时隐去 */
+var ACC = { key:'#f59e0b', ok:'#22c55e', bad:'#ef4444', blue:'#3b82f6' };
+var BGS = { key:'#fffbeb', ok:'#f6fef9', bad:'#fff8f8', blue:'#eff6ff' };
+function row(accent, html){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'border-left:4px solid #cbd5e1;padding:7px 14px;margin:9px 0;border-radius:10px;'
+    + 'opacity:0;transform:translateX(-12px);transition:all .45s ease;font-size:15px;line-height:2;';
+  d.dataset.acc = accent;
+  return d;
+}
+
+// 每行推导内容（html 里可写 $..$ / $$..$$ 公式）
+var ROWS = [
+  { acc: 'blue', html: '<p><b>区域边界</b>：$D=\\Big\\{(x,y)\\ \\Big|\\ \\dfrac\\pi6\\le x\\le\\dfrac\\pi2,\\ \\sin x\\le y\\le1\\Big\\}$。下边界 $y=\\sin x$ 过 $\\Big(\\dfrac\\pi6,\\dfrac12\\Big)$ 与 $\\Big(\\dfrac\\pi2,1\\Big)$，上边界 $y=1$，左边界 $x=\\dfrac\\pi6$。</p>' },
+  { acc: 'key', html: '<p><b>$y$ 的总范围</b>：$\\sin x$ 在 $\\Big[\\dfrac\\pi6,\\dfrac\\pi2\\Big]$ 单调增，区域最低点 $\\sin\\dfrac\\pi6=\\dfrac12$、最高点 $1$，故 $\\dfrac12\\le y\\le1$。（C/D 写 $[0,\\tfrac12]$，直接出局）</p>' },
+  { acc: 'blue', html: '<p><b>固定 $y$ 反解 $x$</b>：$x\\in\\Big[\\dfrac\\pi6,\\dfrac\\pi2\\Big]$ 落在 $\\sin$ 的单调增段内，可取反函数：$$\\sin x\\le y\\iff x\\le\\arcsin y.$$</p>' },
+  { acc: 'blue', html: '<p><b>内层 $x$ 范围</b>：叠加左边界 $x\\ge\\dfrac\\pi6$，得 $\\dfrac\\pi6\\le x\\le\\arcsin y$。</p>' },
+  { acc: 'ok', html: '<p><b>交换结果</b>：$$\\int_{\\frac\\pi6}^{\\frac\\pi2}\\mathrm dx\\int_{\\sin x}^{1}f(x,y)\\,\\mathrm dy=\\int_{\\frac12}^{1}\\mathrm dy\\int_{\\frac\\pi6}^{\\arcsin y}f(x,y)\\,\\mathrm dx.$$</p>' },
+  { acc: 'bad', html: '<p><b>对照选项</b>：外层 $\\Big[\\dfrac12,1\\Big]$ + 内层 $\\Big[\\dfrac\\pi6,\\arcsin y\\Big]$ 恰为 <b>A</b>。B/D 内层写 $\\arcsin y\\le x\\le\\dfrac\\pi2$，对应 $\\sin x\\ge y$ 的补区域；C/D 的 $y$ 下限取 $0$，低于区域最低点 $\\tfrac12$。</p>' },
+  { acc: 'blue', html: '<p><b>回代验证</b>：$x\\le\\arcsin y\\iff\\sin x\\le y$，且 $y\\le1$、$x\\ge\\dfrac\\pi6$、$y\\ge\\sin x\\Rightarrow x\\le\\dfrac\\pi2$——与原区域完全一致 ✓。</p>' },
+];
+
+AW.init({
+  title: '交换积分次序：$\\int_{\\pi/6}^{\\pi/2}\\mathrm dx\\int_{\\sin x}^{1}f(x,y)\\,\\mathrm dy$',
+  subtitle: '考点：二重积分 · 方法：描区域 → 定 $y$ 范围 → 反解 $\\sin x\\le y$',
+  counterLabel: '计算步',
+  intro: '点击「▶ 播放」逐步演示推导。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，最新一行高亮）'));
+    var board = AW.el('div', '');
+    this.rows = [];
+    ROWS.forEach(function(r){
+      var d = row(r.acc, r.html);
+      board.appendChild(d);
+      this.rows.push(d);
+    }, this);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    (this.rows || []).forEach(function(d, j){
+      var on = j < i;
+      d.style.opacity = on ? '1' : '0';
+      d.style.transform = on ? 'none' : 'translateX(-12px)';
+      d.style.borderLeftColor = on ? (ACC[d.dataset.acc] || ACC.blue) : '#cbd5e1';
+      d.style.background = on ? (BGS[d.dataset.acc] || BGS.blue) : '#f8fafc';
+    });
+    renderMathAfterSnap(stage);
+  },
+  snaps: [
+    { cls: 'step',  tag: '审题', log: '先 y 后 x：π/6≤x≤π/2，sin x≤y≤1，改先 x 后 y', count: 0 },
+    { cls: 'shift', tag: '描区域', log: '下边界 y=sin x，上边界 y=1，左边界 x=π/6', count: 1 },
+    { cls: 'key',   tag: '定 y', log: 'y 从 sin(π/6)=1/2 到 1，不会更低', count: 2 },
+    { cls: 'shift', tag: '反解', log: '固定 y 解 sin x ≤ y：x ≤ arcsin y（单调段内）', count: 3 },
+    { cls: 'step',  tag: '内层', log: 'x 从 π/6 到 arcsin y', count: 4 },
+    { cls: 'ok',    tag: '结果', log: '交换后的累次积分写出来了', count: 5 },
+    { cls: 'step',  tag: '对照', log: '外层 [1/2,1] + 内层 [π/6, arcsin y] = 选项 A', count: 6 },
+    { cls: 'done',  tag: '完成', log: '回代验证区域一致，选 A', count: 7, done: true },
+  ],
+  result: {
+    big: '答案 A',
+    html: '记忆锚点：$\\displaystyle\\int_{\\frac12}^{1}\\mathrm dy\\int_{\\frac\\pi6}^{\\arcsin y}f\\,\\mathrm dx$。<b>下限不看 0</b>——$y$ 的最小值是下边界端点 $\\sin\\frac\\pi6=\\frac12$；反解 $\\sin x\\le y$ 得 $x\\le\\arcsin y$（$x$ 在单调增段），方向写反（B/D）就变成补区域 $\\sin x\\ge y$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：二重积分交换积分次序（先描区域再反解不等式）</h2>
+<p>答案：A</p>
+<h3>第一步：写出区域，认清边界</h3>
+<p>原次序"先 $y$ 后 $x$"：$D=\Big\{(x,y)\ \Big|\ \dfrac\pi6\le x\le\dfrac\pi2,\ \sin x\le y\le1\Big\}$。边界四要素：</p>
+<ul><li>下边界曲线 $y=\sin x$，过点 $\Big(\dfrac\pi6,\dfrac12\Big)$ 与 $\Big(\dfrac\pi2,1\Big)$；</li><li>上边界水平线 $y=1$；左边界竖直线 $x=\dfrac\pi6$。</li></ul>
+<h3>第二步：定 $y$ 的总范围</h3>
+<p>$\sin x$ 在 $\Big[\dfrac\pi6,\dfrac\pi2\Big]$ 单调增，区域最低点是下边界的左端 $\sin\dfrac\pi6=\dfrac12$，最高点 $1$。故</p>
+<p>$$\frac12\le y\le1.$$</p>
+<p>（这就是排除 C/D 的关键：$y$ 永远不小于 $\dfrac12$，写 $0\le y\le\dfrac12$ 直接出局。）</p>
+<h3>第三步：固定 $y$ 反解 $x$</h3>
+<p>内层条件 $\sin x\le y$。因 $x\in\Big[\dfrac\pi6,\dfrac\pi2\Big]$ 落在 $\sin$ 的<strong>单调增区间</strong>，可直接取反函数：</p>
+<p>$$\sin x\le y\iff x\le\arcsin y.$$</p>
+<p>再叠加左边界 $x\ge\dfrac\pi6$，得内层 $\dfrac\pi6\le x\le\arcsin y$。于是</p>
+<p>$$\int_{\frac\pi6}<sup>\frac\pi2</sup>\mathrm dx\int_{\sin x}<sup>1</sup>f(x,y)\,\mathrm dy=\int_{\frac12}<sup>1</sup>\mathrm dy\int_{\frac\pi6}<sup>\arcsin y</sup>f(x,y)\,\mathrm dx,$$</p>
+<p>选 <strong>A</strong>。</p>
+<h3>第四步：回代验证</h3>
+<p>把 A 再换回去：$x\le\arcsin y\iff\sin x\le y$，且 $y\le1$、$x\ge\dfrac\pi6$、由 $y\ge\sin x$ 与 $y\le1$ 知 $x\le\dfrac\pi2$，区域与原式完全一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>内层方向写反</strong>（选 B/D）：$\arcsin y\le x\le\dfrac\pi2$ 对应的是 $\sin x\ge y$ 的<strong>补区域</strong>，与原题的 $y\ge\sin x$ 恰好相反。</li><li><strong>$y$ 范围写 $[0,\frac12]$</strong>（选 C/D）：把"上边界 $1$"与"下边界最小值 $\frac12$"看混；区域在 $y=\frac12$ 以下根本不存在。</li><li><strong>忘验单调性</strong>：取 $\arcsin$ 要求 $x$ 在单调段内，本题恰好满足，但这一步不能省。</li></ul>
+<blockquote>一句话结论：$y$ 从 $\frac12$ 到 $1$，固定 $y$ 后 $x$ 从 $\frac\pi6$ 到 $\arcsin y$——选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

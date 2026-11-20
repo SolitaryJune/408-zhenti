@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019·15 分段函数求导与极值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-14.html" data-q="../question/m2-2019-14/">← <b>m2-2019-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-15/" data-q="../question/m2-2019-15/" data-no-anim="1">m2-2019-15 · 本题</a>
+  <a href="m2-2019-16.html" data-q="../question/m2-2019-16/"><b>m2-2019-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$f(x)=\\begin{cases}x^{2x}, & x>0\\\\ x\\,\\mathrm{e}^{x}+1, & x\\le 0\\end{cases}\\qquad\\text{两段各自求导，分段点单独考}$$",
+  "<b>① 幂指函数改写：</b>$x^{2x}=\\mathrm{e}^{2x\\ln x}$——底、指数都含 $x$，不能套幂函数或指数函数的求导公式",
+  "<b>② 对数求导（右段）：</b>$\\ln f=2x\\ln x\\ \\Rightarrow\\ \\dfrac{f'(x)}{f(x)}=2\\ln x+2\\ \\Rightarrow\\ f'(x)=2x^{2x}(\\ln x+1)$（$x>0$）",
+  "<b>③ 左段求导：</b>$(x\\,\\mathrm{e}^x+1)'=\\mathrm{e}^x+x\\,\\mathrm{e}^x=(1+x)\\,\\mathrm{e}^x$（$x<0$）",
+  "<b>④ 分段点 $x=0$：</b>$f(0)=1$；$x\\to0^+$ 时 $2x\\ln x\\to0$，$f\\to1$，连续。右导数 $\\lim_{x\\to0^+}2x^{2x}(\\ln x+1)=-\\infty$，而左导数为 $1$，故 $x=0$ 处不可导",
+  "<b>⑤ 左段驻点：</b>$(1+x)\\,\\mathrm{e}^x=0\\Rightarrow x=-1$；$f'$ 在 $(-\\infty,-1)$ 为负、$(-1,0)$ 为正，由负变正 → 极小值 $f(-1)=1-\\dfrac1{\\mathrm{e}}$",
+  "<b>⑥ 右段驻点：</b>$\\ln x+1=0\\Rightarrow x=\\dfrac1{\\mathrm{e}}$；$f'$ 在 $\\left(0,\\tfrac1{\\mathrm{e}}\\right)$ 为负、$\\left(\\tfrac1{\\mathrm{e}},+\\infty\\right)$ 为正 → 极小值 $f\\!\\left(\\dfrac1{\\mathrm{e}}\\right)=\\mathrm{e}^{-2/\\mathrm{e}}$",
+  "<b>⑦ 不可导点 $x=0$：</b>左侧 $(-1,0)$ 上 $f'>0$（递增），右侧 $\\left(0,\\tfrac1{\\mathrm{e}}\\right)$ 上 $f'<0$（递减）→ 虽不可导，仍是极大值点，$f(0)=1$",
+  "<b>⑧ 结论：</b>$$f'(x)=\\begin{cases}2x^{2x}(\\ln x+1), & x>0\\\\ (1+x)\\,\\mathrm{e}^x, & x<0\\end{cases}\\quad(x=0\\ \\text{处不存在})$$"
+];
+
+AW.init({
+  title: '2019·15　分段函数 $f(x)$ 的导数与极值',
+  subtitle: '考点：幂指函数对数求导 · 分段点可导性 · 一阶导数变号判极值',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，逐行完成分段求导与极值判别。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',     log:'两段函数分段处理，幂指函数与分段点各有各的坑', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'改写',     log:'幂指函数化成 e 的指数形式，这是唯一稳妥的路', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'右段导数', log:'取对数再求导，右段导数等于二倍幂指函数乘以 ln x 加一', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'左段导数', log:'左段是乘积函数，导数为 e 的 x 次方乘以 x 加一', count:3, ribbon:{k:4, ok:true} },
+    { cls:'miss',  tag:'分段点',   log:'右导数趋于负无穷，左导数为一，x 等于零处不可导', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'驻点一',   log:'左段驻点 x 等于负一，一阶导数由负变正，是极小值点', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'驻点二',   log:'右段驻点 x 等于 e 分之一，导数同样由负变正，也是极小值点', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'极大值',   log:'x 等于零处虽不可导，但左侧增右侧减，是极大值点', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',     log:'结论：写出分段导数与三个极值', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "极小 $f(-1)=1-\\dfrac1{\\mathrm{e}}$、$f\\!\\left(\\dfrac1{\\mathrm{e}}\\right)=\\mathrm{e}^{-2/\\mathrm{e}}$；极大 $f(0)=1$",
+    html: "记忆锚点：<b>幂指函数先化 $\\mathrm{e}^{\\,\\square}$ 再求导；不可导点两侧 $f'$ 变号同样是极值点</b>。易错：对 $x^{2x}$ 套幂函数公式；只盯着 $f'=0$ 漏掉 $x=0$；分段点忘验可导性。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：幂指函数求导 + 分段点"不可导也能取极值"的判别</h2>
+<p><strong>答案</strong>：$f'(x)=\begin{cases}2x<sup>2x</sup>(\ln x+1), &amp; x&gt;0\\ (1+x)\mathrm{e}<sup>x</sup>, &amp; x\lt 0\end{cases}$（$x=0$ 处不可导）；极小值 $f(-1)=1-\dfrac1{\mathrm{e}}$ 与 $f\left(\dfrac1{\mathrm{e}}\right)=\mathrm{e}<sup>-2/\mathrm{e</sup>}$，极大值 $f(0)=1$。</p>
+<h3>第 0 步：先立机制——分段函数的"两段一接口"</h3>
+<p>分段函数求导的全部逻辑是一句话：<strong>段内用公式，接口单独验</strong>。$x=0$ 是两套求导机器的拼接处，两侧公式互不相干，能否拼成连续曲线要单独回答。求极值考的是<strong>函数值的局部高低</strong>，与可导与否无关——可导点走"驻点"这条候选通道，不可导点照样可能两侧高低翻转。这两条机制立住，下面的每一步都是它们的落地。</p>
+<h3>第一步：$x\gt 0$ 段——为什么必须先改写成 $\mathrm{e}<sup>2x\ln x</sup>$</h3>
+<p>$(x<sup>a</sup>)'=ax<sup>a-1</sup>$ 要求指数 $a$ 是常数，$(a<sup>x</sup>)'=a<sup>x</sup>\ln a$ 要求底 $a$ 是常数；$x<sup>2x</sup>$ 两条前提同时被破坏，直接套必错。出路是指数恒等式 $x<sup>u(x)</sup>=\mathrm{e}<sup>u(x)\ln x</sup>$（$x\gt0$ 保证 $\ln x$ 有定义，两边取对数即互相还原）：它把"底、指都在动"化成<strong>只有指数在动</strong>的纯指数函数，链式法则一条路走通。</p>
+<p>$$f(x)=\mathrm{e}<sup>2x\ln x</sup>\ \Rightarrow\ f'(x)=\mathrm{e}<sup>2x\ln x</sup>\,(2\ln x+2)=2x<sup>2x</sup>(\ln x+1).$$</p>
+<p>（对数求导法是同一件事：$\ln f=2x\ln x$ 两边求导，左端由链式法则给出 $\dfrac{f'}{f}$，解出 $f'$ 即可。）</p>
+<p>$x\lt 0$ 段是普通乘积：$f'(x)=\mathrm{e}<sup>x</sup>+x\mathrm{e}<sup>x</sup>=(1+x)\mathrm{e}<sup>x</sup>$。</p>
+<h3>第二步：接口 $x=0$——连续、可导分开验</h3>
+<p>$f(0)=1$。连续性：$x\to0^+$ 时 $2x\ln x\to0$——这是 $0\cdot\infty$ 型，为什么趋于 $0$？洛必达一次即知 $\lim\limits_{x\to0^+}\dfrac{\ln x}{1/x}=\lim\limits_{x\to0^+}(-x)=0$（$\ln x$ 跑不赢任何负幂）。于是 $f(0^+)=\mathrm{e}<sup>0</sup>=1=f(0)$，左侧同理，函数在 $x=0$ <strong>连续</strong>。</p>
+<p>可导性回到定义分左右算差商。<strong>为什么右导数可以直接写 $\lim\limits_{x\to0^+}f'(x)$？</strong> 因为 $f$ 在 $0$ 右连续已验，由拉格朗日中值定理，差商 $\dfrac{f(x)-f(0)}{x}=f'(c_x)$（$c_x$ 介于 $0$ 与 $x$ 之间），差商与 $f'$ 同极限——这是"导数极限定理"的合法性来源（含 $\pm\infty$ 情形）。于是</p>
+<ul><li>左：$\lim\limits_{x\to0^-}(1+x)\mathrm{e}<sup>x</sup>=1$；</li><li>右：$x<sup>2x</sup>\to1$ 而 $\ln x+1\to-\infty$，故 $f'_+(0)=-\infty$。</li></ul>
+<p>左右不一致，$x=0$ <strong>不可导</strong>——$f'(x)$ 的表达式只在 $x\ne0$ 成立，第一问必须交代这一点。</p>
+<h3>第三步：定极值——变号判别，候选点分两类</h3>
+<p>候选点是<strong>驻点</strong>（$f'=0$）与<strong>不可导点</strong>（$x=0$）两类。为什么 $x=0$ 虽不可导仍是候选：变号判别只需 $f$ 在该点连续、两侧 $f'$ 异号，可导性不在条件清单里。符号逐段看（恒正因子先拎出来）：</p>
+<table><thead><tr><th>区间</th><th>$f'$ 符号由谁定</th><th>符号</th><th>结论</th></tr></thead><tbody><tr><td>$(-\infty,-1)$</td><td>$(1+x)\mathrm{e}<sup>x</sup>$：$\mathrm{e}<sup>x</sup>\gt0$，看 $1+x$</td><td>$-$</td><td>递减</td></tr><tr><td>$(-1,0)$</td><td>同上</td><td>$+$</td><td>$x=-1$ 极小：$f(-1)=1-\dfrac1{\mathrm{e}}$</td></tr><tr><td>$\left(0,\tfrac1{\mathrm{e}}\right)$</td><td>$2x<sup>2x</sup>(\ln x+1)$：$x<sup>2x</sup>\gt0$，看 $\ln x+1$</td><td>$-$</td><td>$x=0$ 极大：$f(0)=1$</td></tr><tr><td>$\left(\tfrac1{\mathrm{e}},+\infty\right)$</td><td>同上</td><td>$+$</td><td>$x=\tfrac1{\mathrm{e}}$ 极小</td></tr></tbody></table>
+<p>两个端点值都借指数形式算：$f(-1)=-\mathrm{e}<sup>-1</sup>+1$；$f\left(\dfrac1{\mathrm{e}}\right)=\mathrm{e}<sup>2\cdot\frac1{\mathrm{e</sup>}\cdot\ln\frac1{\mathrm{e}}}=\mathrm{e}<sup>-2/\mathrm{e</sup>}$——又一次用 $x<sup>u</sup>=\mathrm{e}<sup>u\ln x</sup>$，不要硬套幂公式。</p>
+<h3>易错点</h3>
+<ul><li><strong>套 $(x<sup>a</sup>)'$ 或 $(a<sup>x</sup>)'$</strong>：两个公式的"常数"前提同时被破坏，必须先化 $\mathrm{e}<sup>2x\ln x</sup>$。</li><li><strong>只盯 $f'=0$</strong>：$x=0$ 不可导但两侧 $f'$ 由正变负，是极大值点，漏掉直接丢分。</li><li><strong>不交代 $x=0$ 不可导</strong>：题目先问 $f'(x)$，分段点处必须单独说明。</li><li><strong>右导数直接取 $\lim f'$ 却不验连续</strong>：没有 $x=0$ 处连续性作底，"导数极限定理"用不了。</li></ul>
+<blockquote>记忆锚点：分段函数 = 两段公式 + 一个接口；幂指函数一律 $\mathrm{e}<sup>u\ln x</sup>$；极值候选点 = 驻点 ∪ 不可导点，判生死只看 $f'$ 变号。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

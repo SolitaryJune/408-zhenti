@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：加料向量组与充要条件（2014 年第 8 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-07.html" data-q="../question/m2-2014-07/">← <b>m2-2014-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-08/" data-q="../question/m2-2014-08/" data-no-anim="1">m2-2014-08 · 本题</a>
+  <a href="m2-2014-09.html" data-q="../question/m2-2014-09/"><b>m2-2014-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个命题与隐藏特例', cls: 'key', tag: '审题', log: 'P：对任意 k,l 两向量无关；Q：三向量无关',
+    body: '<p>命题 $P$：对<b>任意</b> $k,l$，$\\boldsymbol{\\alpha}_{1}+k\\boldsymbol{\\alpha}_{3}$ 与 $\\boldsymbol{\\alpha}_{2}+l\\boldsymbol{\\alpha}_{3}$ 线性无关；命题 $Q$：$\\boldsymbol{\\alpha}_{1},\\boldsymbol{\\alpha}_{2},\\boldsymbol{\\alpha}_{3}$ 线性无关。「任意 $k,l$」藏着特例 $k=l=0$。</p>' },
+  { title: '$Q\\Rightarrow P$：必要性方向', cls: 'good', tag: '必要性', log: '系数归拢到三个原向量，由无关得 x=y=0',
+    ribbon: {k:1, ok:true},
+    body: '<p>设 $x(\\boldsymbol{\\alpha}_{1}+k\\boldsymbol{\\alpha}_{3})+y(\\boldsymbol{\\alpha}_{2}+l\\boldsymbol{\\alpha}_{3})=\\boldsymbol{0}$，整理：</p>' +
+          '<p>$$x\\boldsymbol{\\alpha}_{1}+y\\boldsymbol{\\alpha}_{2}+(kx+ly)\\boldsymbol{\\alpha}_{3}=\\boldsymbol{0}.$$</p>' +
+          '<p>由 $Q$ 得 $x=0,\\ y=0$（$kx+ly=0$ 自动满足）。故 $Q\\Rightarrow P$ 对任意 $k,l$ 成立。</p>' },
+  { title: '$P\\not\\Rightarrow Q$：找反例', cls: 'bad', tag: '反例', log: '取 α3 为零向量：P 照样成立，Q 崩塌',
+    ribbon: {k:2, ok:false},
+    body: '<p>取 $\\boldsymbol{\\alpha}_{3}=\\boldsymbol{0}$，$\\boldsymbol{\\alpha}_{1},\\boldsymbol{\\alpha}_{2}$ 无关。加料项失效，两向量就是 $\\boldsymbol{\\alpha}_{1},\\boldsymbol{\\alpha}_{2}$，$P$ 对任意 $k,l$ 成立；但<b>含零向量的向量组必线性相关</b>，$Q$ 不成立。</p>' },
+  { title: '方向判定', cls: 'good', tag: '判定', log: 'Q 推得出 P，P 推不出 Q：P 是 Q 的必要非充分条件',
+    body: '<p>$Q\\Rightarrow P$ 成立而 $P\\not\\Rightarrow Q$：$Q$ 是 $P$ 的充分条件，$P$ 是 $Q$ 的<b>必要非充分</b>条件。</p>' },
+  { title: '结论', cls: 'good', tag: '完成', log: '必要非充分，答案 A',
+    body: '<p>选 <b>A</b>。B 是把推理方向说反了，C 忽略了反例，D 否定了已证明的 $Q\\Rightarrow P$。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : 'step'),
+    tag: s.tag,
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2014 数二·8】加料向量组无关 $\\Rightarrow$ 原组无关？',
+  subtitle: '考点：向量组线性无关 · 充要条件双向判定',
+  counterLabel: '步数',
+  ribbonTitle: '两个方向（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（必要非充分）',
+    html: '记忆锚点：<b>$Q\\Rightarrow P$ 靠系数归拢（$x\\boldsymbol{\\alpha}_{1}+y\\boldsymbol{\\alpha}_{2}+(kx+ly)\\boldsymbol{\\alpha}_{3}=\\boldsymbol{0}$），$P\\not\\Rightarrow Q$ 靠反例 $\\boldsymbol{\\alpha}_{3}=\\boldsymbol{0}$</b>。方向口诀：能推出别人的是充分条件，被推出的是必要条件。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：向量「加料」后的线性无关——条件方向的判定</h2>
+<p><strong>答案：A</strong></p>
+<h3>第一步：先立机制——无关性的判定装置与「料」的去向</h3>
+<p>判定线性无关的标准装置：设线性组合为零，证只有零解。加料向量 $\boldsymbol{\alpha}_1+k\boldsymbol{\alpha}_3$ 的任何相关关系，整理后都是 $\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3$ 的相关关系，系数恰好是 $(x,\,y,\,kx+ly)$——所以只要三向量组 $Q$ 无关，装置一开就能把 $P$ 压住。这决定了<strong>先证 $Q\Rightarrow P$</strong>：因为现成机制在这一侧。</p>
+<h3>第二步：$Q\Rightarrow P$（必要性方向）</h3>
+<p>设 $x(\boldsymbol{\alpha}_1+k\boldsymbol{\alpha}_3)+y(\boldsymbol{\alpha}_2+l\boldsymbol{\alpha}_3)=\boldsymbol{0}$，整理：</p>
+<p>$$x\boldsymbol{\alpha}_{1}+y\boldsymbol{\alpha}_{2}+(kx+ly)\boldsymbol{\alpha}_{3}=\boldsymbol{0}.$$</p>
+<p>由 $Q$ 得 $x=0$、$y=0$（第三式 $kx+ly=0$ 随之自动满足），两向量无关。</p>
+<h3>第三步：$P\not\Rightarrow Q$——反例为什么挑 $\boldsymbol{\alpha}_3=\boldsymbol{0}$</h3>
+<p>取 $\boldsymbol{\alpha}_3=\boldsymbol{0}$、$\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2$ 无关：加进去的是「零料」，两向量对任意 $k,l$ 就是 $\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2$，$P$ 真；但含零向量的组必相关，$Q$ 假。挑零向量的道理：让料彻底失效，把 $P$ 与 $Q$ 干净地分开。</p>
+<h3>第四步：方向命名（A 与 B 的分界）</h3>
+<p>$Q\Rightarrow P$ 成立 $\Leftrightarrow$ 「$P$ 是 $Q$ 的必要条件」；反例挡住 $P\Rightarrow Q$，故 $P$ 对 $Q$ <strong>必要非充分</strong>，选 <strong>A</strong>。</p>
+<h3>干扰项归因</h3>
+<ul><li><strong>B</strong>：方向说反了——能推人的是 $Q$，被推的是 $P$。</li><li><strong>C</strong>：充要要双向成立，第三步的反例专堵 $P\Rightarrow Q$。</li><li><strong>D</strong>：与第二步已证的 $Q\Rightarrow P$ 矛盾，「既非」不可能。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>方向命名搞反</strong>：「$Q$ 能推出 $P$」意味着 $P$ 是必要条件。</li><li><strong>忽略「任意 $k,l$」</strong>：它使 $P$ 成为强命题（含 $k=l=0$ 的特例，即 $\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2$ 无关）。若弱化成某组固定 $k,l$，$Q\Rightarrow P$ 的证明一字不改、反例照样挡路——方向不变，「任意」不是改变答案的开关，而是抬高 $P$ 强度的量词。</li><li><strong>反例不会找</strong>：令 $\boldsymbol{\alpha}_3=\boldsymbol{0}$ 是标准起手式。</li></ul>
+<blockquote>一句话结论：无关组「掺料」仍无关（$Q\Rightarrow P$），$\boldsymbol{\alpha}_3=\boldsymbol{0}$ 说明反之不然，$P$ 对 $Q$ 必要非充分，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

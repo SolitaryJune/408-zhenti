@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2014·17 对称性二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-16.html" data-q="../question/m2-2014-16/">← <b>m2-2014-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-17/" data-q="../question/m2-2014-17/" data-no-anim="1">m2-2014-17 · 本题</a>
+  <a href="m2-2014-18.html" data-q="../question/m2-2014-18/"><b>m2-2014-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$D=\\{1\\le x^2+y^2\\le4,\\ x\\ge0,\\ y\\ge0\\}$ 是第一象限的圆环（$r\\in[1,2]$，$\\theta\\in\\left[0,\\tfrac\\pi2\\right]$），关于直线 $y=x$ 对称。被积函数 $\\dfrac{x\\sin\\bigl(\\pi\\sqrt{x^2+y^2}\\bigr)}{x+y}$ 中 $\\sin(\\pi r)$ 交换 $x,y$ 不变，<b>只有 $\\dfrac{x}{x+y}$ 不对称</b>。</p>",
+  "<p><b>交换 $x,y$</b>：区域不变，$$I=\\iint_D\\frac{y\\sin\\bigl(\\pi\\sqrt{x^2+y^2}\\bigr)}{x+y}\\,\\mathrm dx\\,\\mathrm dy.$$</p>",
+  "<p><b>两式相加</b>：分子 $x$ 变成 $x+y$，分母恰好消掉：$$2I=\\iint_D\\sin\\bigl(\\pi\\sqrt{x^2+y^2}\\bigr)\\,\\mathrm dx\\,\\mathrm dy.$$</p>",
+  "<p><b>化极坐标</b>：$x=r\\cos\\theta,\\ y=r\\sin\\theta$，面积元带雅可比 $r$：$$2I=\\int_0^{\\pi/2}\\mathrm d\\theta\\int_1^2 r\\sin(\\pi r)\\,\\mathrm dr=\\frac{\\pi}{2}\\int_1^2 r\\sin(\\pi r)\\,\\mathrm dr.$$</p>",
+  "<p><b>分部积分</b>：$$\\int r\\sin(\\pi r)\\,\\mathrm dr=-\\frac{r\\cos(\\pi r)}{\\pi}+\\frac{\\sin(\\pi r)}{\\pi^2}.$$</p>",
+  "<p><b>代上下限</b>：$r=2$：$-\\dfrac{2\\cos2\\pi}{\\pi}+0=-\\dfrac2\\pi$；$r=1$：$-\\dfrac{\\cos\\pi}{\\pi}+0=\\dfrac1\\pi$。故 $$\\int_1^2 r\\sin(\\pi r)\\,\\mathrm dr=-\\frac2\\pi-\\frac1\\pi=-\\frac3\\pi.$$</p>",
+  "<p><b>符号检查</b>：$r\\in[1,2]$ 时 $\\pi r\\in[\\pi,2\\pi]$，$\\sin(\\pi r)\\le0$，积分值为负是合理的。</p>",
+  "<p><b>收尾</b>：$$2I=\\frac{\\pi}{2}\\cdot\\left(-\\frac{3}{\\pi}\\right)=-\\frac32\\quad\\Longrightarrow\\quad I=\\boxed{-\\frac34}.$$</p>"
+];
+
+AW.init({
+  title: "对称性消分母，极坐标收尾",
+  subtitle: "考点：二重积分 · 区域关于 $y=x$ 对称 · 极坐标（2014 年数学二第 17 题）",
+  counterLabel: "推导步",
+  ribbonTitle: "关键节点（✓ 已完成）",
+  intro: "点击「▶ 播放」逐步演示对称性技巧与极坐标计算。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:"shift", tag:"审题",     log:"区域是第一象限的圆环，关于对角线对称，只有分子里的 x 不对称", show:1, count:0 },
+    { cls:"step",  tag:"交换变量", log:"把 x 和 y 互换重写一遍积分，区域和正弦因子都不变", show:2, count:1 },
+    { cls:"ok",    tag:"相加",     log:"两个式子相加，分子凑成 x 加 y，分母正好消掉", show:3, count:2, ribbon:{k:1, ok:true} },
+    { cls:"ok",    tag:"极坐标",   log:"化成极坐标，角度积出二分之派，剩下径向的定积分", show:4, count:3, ribbon:{k:2, ok:true} },
+    { cls:"step",  tag:"分部积分", log:"被积函数是 r 乘正弦，分部积分一次写成原函数", show:5, count:4 },
+    { cls:"ok",    tag:"代限",     log:"上限给出负的 2 比派，下限给出正的 1 比派，差是负的 3 比派", show:6, count:5, ribbon:{k:3, ok:true} },
+    { cls:"step",  tag:"符号检查", log:"角在派到两派之间正弦非正，负答案正常", show:7, count:6 },
+    { cls:"done",  tag:"完成",     log:"乘二分之派再除以二，最终结果是负四分之三", show:8, count:7, done:true },
+  ],
+
+  result: {
+    big: "$I=-\\dfrac{3}{4}$",
+    html: "记忆锚点：<b>区域关于 $y=x$ 对称 + 被积函数只差 $\\frac{x}{x+y}$ 不对称 → 交换 $x,y$ 相加消分母</b>。$2I=\\iint_D\\sin(\\pi r)\\,\\mathrm dA=\\frac\\pi2\\int_1^2 r\\sin(\\pi r)\\,\\mathrm dr=-\\frac32$。易错：极坐标漏乘雅可比 $r$；$\\sin(\\pi r)$ 在 $[1,2]$ 上非正，负答案正常。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$y=x$ 对称性消掉不对称因子，再化极坐标</h2>
+<p>答案：$-\dfrac{3}{4}$。</p>
+<h3>第 0 步：先立机制——对称性为什么能"搬"积分</h3>
+<p>二重积分对称性的底层机制是<strong>换元不变性</strong>：映射 $\sigma:(x,y)\mapsto(y,x)$（关于直线 $y=x$ 的翻折）把区域 $D$ 映到自身，做换元 $x=y',\ y=x'$ 后雅可比行列式为 $-1$，绝对值 $1$，面积元不变，于是</p>
+<p>$$\iint_D h(x,y)\,\mathrm dx\,\mathrm dy=\iint_D h(y,x)\,\mathrm dx\,\mathrm dy.$$</p>
+<p>只要被积函数在"翻折"下会变形，这个等式就提供了第二个等价写法——把原式与翻折式相加，常能把不对称的部分<strong>配对消去</strong>。本题就是标准舞台：先看清谁对称、谁不对称。</p>
+<h3>第一步：认清区域与被积函数的"半对称"结构</h3>
+<p>$D=\{1\le x<sup>2</sup>+y<sup>2</sup>\le4,\ x\ge0,\ y\ge0\}$ 是第一象限的半圆环（极坐标下 $r\in[1,2]$，$\theta\in\left[0,\frac\pi2\right]$），关于 $y=x$ 对称。被积函数</p>
+<p>$$\frac{x\sin\left(\pi\sqrt{x<sup>2</sup>+y<sup>2</sup>}\right)}{x+y}$$</p>
+<p>里，$\sin\left(\pi\sqrt{x<sup>2</sup>+y<sup>2</sup>}\right)$ 只依赖半径 $r$，翻折后纹丝不动；分母 $x+y$ 翻折也不动；<strong>唯一会换位置的是分子的 $x$</strong>。为什么盯着 $y=x$ 而不是坐标轴：$D$ 在第一象限内，对 $x$ 轴、$y$ 轴都不对称，手头只有 $y=x$ 这一张对称牌——而它恰好打中要害。</p>
+<h3>第二步：交换 $x,y$ 再相加——为什么相加就是 $2I$</h3>
+<p>记 $I=\displaystyle\iint_D\frac{x\sin(\pi\sqrt{x<sup>2</sup>+y<sup>2</sup>})}{x+y}\,\mathrm dx\,\mathrm dy$。由第 0 步的换元不变性，把 $x,y$ 互换积分值不变：</p>
+<p>$$I=\iint_D\frac{y\sin\left(\pi\sqrt{x<sup>2</sup>+y<sup>2</sup>}\right)}{x+y}\,\mathrm dx\,\mathrm dy.$$</p>
+<p>两个相等的积分相加自然是 $2I$；而两式相加时被积函数合流：</p>
+<p>$$2I=\iint_D\frac{(x+y)\sin\left(\pi\sqrt{x<sup>2</sup>+y<sup>2</sup>}\right)}{x+y}\,\mathrm dx\,\mathrm dy=\iint_D\sin\left(\pi\sqrt{x<sup>2</sup>+y<sup>2</sup>}\right)\,\mathrm dx\,\mathrm dy.$$</p>
+<p>不对称的因子 $\dfrac{x}{x+y}$ 被自己的镜像 $\dfrac{y}{x+y}$ 平均掉——这正是第 0 步机制承诺的效果。</p>
+<h3>第三步：化极坐标——为什么消完分母就该换系</h3>
+<p>剩下的被积函数只含 $r$，区域是圆环扇形，极坐标把它<strong>拆成两个一元积分相乘</strong>：</p>
+<p>$$2I=\int_0<sup>\pi/2</sup>\mathrm d\theta\int_1<sup>2</sup> r\sin(\pi r)\,\mathrm dr=\frac{\pi}{2}\int_1<sup>2</sup> r\sin(\pi r)\,\mathrm dr.$$</p>
+<p><strong>为什么别忘 $r$</strong>：$\mathrm dx\,\mathrm dy=r\,\mathrm dr\,\mathrm d\theta$，$r$ 是小扇形面积与矩形面积之比（雅可比的几何意义），漏掉它结果差一个量级。</p>
+<h3>第四步：分部积分收尾</h3>
+<p>被积函数是"幂 $r$ × 三角 $\sin(\pi r)$"：取 $u=r$（求导降次），$\mathrm dv=\sin(\pi r)\mathrm dr$（积分复原）。<strong>为什么不让 $u=\sin(\pi r)$</strong>：那样 $\mathrm dv=r\,\mathrm dr$ 会生成 $r<sup>2</sup>$，越积越重。幂去三角留，是分部积分选 $u$ 的一般原则。</p>
+<p>$$\int_1<sup>2</sup> r\sin(\pi r)\,\mathrm dr=\left[-\frac{r\cos(\pi r)}{\pi}+\frac{\sin(\pi r)}{\pi<sup>2</sup>}\right]_1<sup>2</sup>=-\frac2\pi-\frac1\pi=-\frac3\pi.$$</p>
+<p>（上限 $r=2$：$-\dfrac{2\cos2\pi}{\pi}=-\dfrac2\pi$；下限 $r=1$：$-\dfrac{\cos\pi}{\pi}=\dfrac1\pi$。）故</p>
+<p>$$2I=\frac{\pi}{2}\cdot\left(-\frac3\pi\right)=-\frac32,\qquad I=-\frac34.$$</p>
+<p><strong>见到负答案不用慌</strong>：$r\in[1,2]$ 时 $\pi r\in[\pi,2\pi]$，$\sin(\pi r)\le0$，被积函数全程非正，负值是题设自带的，不是算错。</p>
+<h3>易错点</h3>
+<ul><li><strong>上来就化极坐标硬算</strong>：极坐标下会出现 $\dfrac{\cos\theta}{\cos\theta+\sin\theta}$，对 $\theta$ 的积分非常难；对称性是唯一省力通道，先消不对称因子再换系。</li><li><strong>漏乘雅可比 $r$</strong>：$\mathrm dx\,\mathrm dy=r\,\mathrm dr\,\mathrm d\theta$，漏 $r$ 结果差一个量级。</li><li><strong>对称性用错对象</strong>：$D$ 只关于 $y=x$ 对称，关于坐标轴不对称；"奇偶对称性"在这里无从谈起。</li><li><strong>分部积分方向选反</strong>：$u$ 必须取幂 $r$，取三角函数会让积分变重。</li></ul>
+<blockquote>结论：$I=-\dfrac34$。机制链条：区域 $y=x$ 对称 → 交换变量相加消去 $\dfrac{x}{x+y}$ → 极坐标分离变量 → 幂乘三角分部积分。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

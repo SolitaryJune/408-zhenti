@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016 数二第 16 题 · 含参绝对值积分求导与最小值（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-15.html" data-q="../question/m2-2016-15/">← <b>m2-2016-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-16/" data-q="../question/m2-2016-16/" data-no-anim="1">m2-2016-16 · 本题</a>
+  <a href="m2-2016-17.html" data-q="../question/m2-2016-17/"><b>m2-2016-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2016·16　$f(x)=\\int_{0}^{1}\\lvert t^{2}-x^{2}\\rvert\\,\\mathrm{d}t$：求 $f^{\\prime}(x)$ 与最小值',
+  subtitle: '考点：含参变限积分 · 方法：<b>按分界点 $t=x$ 分类去绝对值</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看绝对值如何被分类拆掉、最小值如何被逼出来。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '<b>题式：</b>$f(x)=\\int_{0}^{1}\\lvert t^{2}-x^{2}\\rvert\\,\\mathrm{d}t\\ (x>0)$，积分区间 $[0,1]$，分界点 $t=x$',
+      '<b>① 分类：</b>$0<x<1$ 时分界点在区间内，拆成 $\\int_{0}^{x}(x^{2}-t^{2})\\mathrm{d}t+\\int_{x}^{1}(t^{2}-x^{2})\\mathrm{d}t$；$x\\ge1$ 时区间内恒有 $t^{2}\\le x^{2}$',
+      '<b>② 算出（$0<x<1$）：</b>$f(x)=\\frac{2x^{3}}{3}+\\Bigl(\\frac{1}{3}-x^{2}+\\frac{2x^{3}}{3}\\Bigr)=\\frac{4x^{3}}{3}-x^{2}+\\frac{1}{3}$',
+      '<b>③ 算出（$x\\ge1$）：</b>$f(x)=\\int_{0}^{1}(x^{2}-t^{2})\\,\\mathrm{d}t=x^{2}-\\frac{1}{3}$',
+      '<b>④ 求导：</b>$f^{\\prime}(x)=4x^{2}-2x=2x(2x-1)\\ (0<x<1)$；$f^{\\prime}(x)=2x\\ (x\\ge1)$；$x=1$ 两侧均为 $2$，衔接光滑',
+      '<b>⑤ 找最小：</b>$2x(2x-1)=0$ 得 $x=\\frac{1}{2}$，左负右正为极小点；$x\\ge1$ 段恒增且 $f(1)=\\frac{2}{3}>\\frac{1}{4}$',
+      '<b>⑥ 结论：</b>$f\\Bigl(\\frac{1}{2}\\Bigr)=\\frac{4}{3}\\cdot\\frac{1}{8}-\\frac{1}{4}+\\frac{1}{3}=\\frac{1}{6}-\\frac{1}{4}+\\frac{1}{3}=\\frac{1}{4}$ 为最小值'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'绝对值里是 t 平方与 x 平方比大小，分界点 t 等于 x 落不落在零到一之间决定分几段', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'分类',   log:'x 小于 1 时从 t 等于 x 处拆两段：前段 x 平方减 t 平方，后段 t 平方减 x 平方', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'积分',   log:'两段分别积完再相加：三分之四 x 三次方减 x 平方加三分之一', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'另一段', log:'x 不小于 1 时整段都是 x 平方减 t 平方，积出来是 x 平方减三分之一', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'求导',   log:'分别求导：内段是二 x 乘括号二 x 减一，外段是二 x，接口处左右都等于 2', count:4, ribbon:{k:5, ok:true} },
+    { cls:'shift', tag:'驻点',   log:'内段驻点 x 等于二分之一，导数左负右正是极小点；外段一直增不会更小', count:5, ribbon:{k:6, ok:true} },
+    { cls:'done',  tag:'完成',   log:'代入二分之一算出最小值四分之一', count:6, ribbon:{k:7, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$f^{\\prime}(x)=2x(2x-1)\\ (0<x<1)$，$\\ f^{\\prime}(x)=2x\\ (x\\ge1)$；最小值 $f\\bigl(\\frac{1}{2}\\bigr)=\\frac{1}{4}$',
+    html: '记忆锚点：<b>绝对值积分先按分界点 $t=x$ 分类</b>，算出分段 $f$ 再求导找驻点，最后与另一段比较。易错：漏掉 $x\\ge1$ 的情形，或忘了验证 $x=1$ 处导数衔接。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含参绝对值积分——先分段算出 $f$，再求导找最小值</h2>
+<p><strong>答案：$f<sup>\prime</sup>(x)=2x(2x-1)$（$0&lt;x&lt;1$），$f<sup>\prime</sup>(x)=2x$（$x\ge1$）；最小值 $f\bigl(\tfrac12\bigr)=\dfrac14$。</strong></p>
+<h3>第 0 步：机制与几何直觉——$f(x)$ 到底在度量什么</h3>
+<p>$\lvert t<sup>2</sup>-x<sup>2</sup>\rvert$ 是曲线 $y=t<sup>2</sup>$ 与水平线 $y=x<sup>2</sup>$ 在同一横坐标 $t$ 处的纵向距离，所以 $f(x)$ 就是这两条线在 $t\in[0,1]$ 之间夹出的面积。求最小值 = 挑一条水平线让「夹缝」最窄：线压得太低（$x$ 小），右侧缝宽；抬得太高（$x$ 大），左侧缝宽——最优位置必在内部，导数零点 $x=\dfrac12$ 给出精确折中。这解释了为什么最小值不在端点（$f(0)=\dfrac13$、$f(1)=\dfrac23$ 都更大）。</p>
+<h3>第一步：为什么必须按 $t$ 与 $x$ 分类</h3>
+<p>绝对值的符号由 $t$ 与 $x$ 谁大决定，分界点 $t=x$ 是否落进积分区间 $[0,1]$ 决定符号怎么分布：</p>
+<table><thead><tr><th>情形</th><th>区间内的符号</th><th>处理</th></tr></thead><tbody><tr><td>$0&lt;x&lt;1$</td><td>$[0,x]$ 上 $t<sup>2</sup>\le x<sup>2</sup>$；$[x,1]$ 上 $t<sup>2</sup>\ge x<sup>2</sup>$</td><td>从 $t=x$ 处拆成两段</td></tr><tr><td>$x\ge1$</td><td>恒有 $t<sup>2</sup>\le x<sup>2</sup>$</td><td>直接去绝对值</td></tr></tbody></table>
+<h3>第二步：算出分段表达式</h3>
+<p>$0&lt;x&lt;1$ 时：</p>
+<p>$$f(x)=\int_0<sup>x</sup>(x<sup>2</sup>-t<sup>2</sup>)\,dt+\int_x<sup>1</sup>(t<sup>2</sup>-x<sup>2</sup>)\,dt=\frac{2x<sup>3</sup>}{3}+\Bigl(\frac13-x<sup>2</sup>+\frac{2x<sup>3</sup>}{3}\Bigr)=\frac{4x<sup>3</sup>}{3}-x<sup>2</sup>+\frac13.$$</p>
+<p>$x\ge1$ 时：</p>
+<p>$$f(x)=\int_0<sup>1</sup>(x<sup>2</sup>-t<sup>2</sup>)\,dt=x<sup>2</sup>-\frac13.$$</p>
+<h3>第三步：求导并检查接口</h3>
+<p>$0&lt;x&lt;1$：$f<sup>\prime</sup>(x)=4x<sup>2</sup>-2x=2x(2x-1)$；$x\ge1$：$f<sup>\prime</sup>(x)=2x$。</p>
+<p><strong>为什么要检查 $x=1$</strong>：分段函数在接口处的导数不能想当然——若左右导数不等，接口本身就可能是极值点，最小值会藏在缝里。本例左导数 $4-2=2$、右导数 $2$，相等无缺口，接口才被放心排除。</p>
+<h3>第四步：找最小值</h3>
+<p>驻点：$2x(2x-1)=0$ 在 $(0,1)$ 内得 $x=\dfrac12$，且左负右正，是极小值点；$x\ge1$ 段 $f<sup>\prime</sup>&gt;0$ 恒增，且 $f(1)=\dfrac23$。两段比较之后才敢下「全局最小」的结论：</p>
+<p>$$f\Bigl(\frac12\Bigr)=\frac43\cdot\frac18-\frac14+\frac13=\frac16-\frac14+\frac13=\frac14.$$</p>
+<h3>为什么不直接对积分上限公式求导</h3>
+<p>对 $\displaystyle\int_0<sup>1</sup>\lvert t<sup>2</sup>-x<sup>2</sup>\rvert\,\mathrm{d}t$ 套「对参数求导」，要求被积函数对 $x$ 可导，而它在 $t=x$ 处恰是不可导的角点；严谨处理仍要把积分按 $t=x$ 拆开、对每段分别求导——殊途同归但更易丢分。先拆绝对值算出显式 $f(x)$，是最稳的路线。</p>
+<h3>易错点</h3>
+<ul><li><strong>不分类直接套求导公式</strong>：绝对值没拆开，$t=x$ 处的不可导点被悄悄略过；第一步永远是「分界点在哪」。</li><li><strong>漏掉 $x\ge1$ 的情形</strong>：分界点跑出积分区间后符号分布完全不同，只算 $0&lt;x&lt;1$ 拿不到全局最小。</li><li><strong>忘记与另一段比较</strong>：$x\ge1$ 段单调增且 $f(1)=\frac23$，比较之后才敢说最小值就在 $x=\frac12$。</li></ul>
+<blockquote>结论：$f<sup>\prime</sup>$ 分段为 $2x(2x-1)$ 与 $2x$，最小值 $f\bigl(\tfrac12\bigr)=\dfrac14$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

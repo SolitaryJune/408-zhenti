@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-15 斜渐近线 · 逐步推导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-14.html" data-q="../question/m2-2020-14/">← <b>m2-2020-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-15/" data-q="../question/m2-2020-15/" data-no-anim="1">m2-2020-15 · 本题</a>
+  <a href="m2-2020-16.html" data-q="../question/m2-2020-16/"><b>m2-2020-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域 ================== */
+var rows = [];   // 推导板行（build 填充，render 控制）
+
+AW.init({
+  title: '求 $y=\\dfrac{x^{1+x}}{(1+x)^x}$（$x>0$）的斜渐近线',
+  subtitle: '考点：斜渐近线 · 方法：$k=\\lim\\frac yx$、$b=\\lim(y-kx)$ + 一阶泰勒展开',
+  counterLabel: '已推进',
+  intro: '点击「▶ 播放」逐步推导斜渐近线 $y=kx+b$。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rows = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：目标 $y=kx+b$，其中 $k=\\lim_{x\\to+\\infty}\\dfrac yx$，$b=\\lim_{x\\to+\\infty}(y-kx)$'));
+    var ROWS = [
+      '$$y=\\frac{x^{1+x}}{(1+x)^x}=x\\left(\\frac{x}{1+x}\\right)^{x}=x\\left(1+\\frac1x\\right)^{-x}$$',
+      '$$k=\\lim_{x\\to+\\infty}\\frac yx=\\lim_{x\\to+\\infty}\\left(1+\\frac1x\\right)^{-x}=e^{-1}=\\frac1e$$',
+      '$$b=\\lim_{x\\to+\\infty}\\left(y-\\frac xe\\right)=\\lim_{t\\to0^+}\\frac{(1+t)^{-1/t}-e^{-1}}{t}\\quad\\left(t=\\frac1x\\right)$$',
+      '$$\\frac{\\ln(1+t)}{t}=1-\\frac t2+o(t)\\ \\Longrightarrow\\ (1+t)^{-1/t}=e^{-1}\\left(1+\\frac t2+o(t)\\right)$$',
+      '$$b=\\lim_{t\\to0^+}\\frac{e^{-1}\\cdot\\frac t2+o(t)}{t}=\\frac{1}{2e}$$',
+      '$$\\boxed{y=\\frac xe+\\frac{1}{2e}}$$'
+    ];
+    ROWS.forEach(function(html){
+      var row = AW.el('div', 'derive-row', html);
+      row.style.cssText = 'padding:6px 14px;margin:8px 0;border-radius:8px;' +
+        'border-left:4px solid #cbd5e1;background:#f8fafc;opacity:0;' +
+        'transform:translateY(8px);transition:all .35s ease;';
+      wrap.appendChild(row);
+      rows.push(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    rows.forEach(function(row, j){
+      var vis = j < i;
+      var cur = vis && j === i - 1;
+      row.style.opacity = vis ? '1' : '0';
+      row.style.transform = vis ? 'translateY(0)' : 'translateY(8px)';
+      row.style.borderLeftColor = cur ? '#f59e0b' : (vis ? '#10b981' : '#cbd5e1');
+      row.style.background = cur ? '#fffbeb' : (vis ? '#f0fdf4' : '#f8fafc');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'斜渐近线两步走：先求 k，再求 b', count:0 },
+    { cls:'step',  tag:'化简', log:'把 y 拆成 x 乘上 (1+1/x) 的负 x 次幂', count:1 },
+    { cls:'ok',    tag:'求 k', log:'y/x 就是 (1+1/x) 的负 x 次幂，用重要极限得 1/e', count:2 },
+    { cls:'step',  tag:'设 b', log:'b 是 y 减 kx 的极限，换元 t=1/x 化成标准型', count:3 },
+    { cls:'step',  tag:'展开', log:'对指数取对数展开，必须保留 t 的一次项', count:4 },
+    { cls:'ok',    tag:'定 b', log:'一阶项系数留下，极限得 1/(2e)', count:5 },
+    { cls:'done',  tag:'结论', log:'斜渐近线：y = x/e + 1/(2e)', count:6, done:true },
+  ],
+
+  result: {
+    big: '$y=\\dfrac1e x+\\dfrac{1}{2e}$',
+    html: '正确答案：<b>$y=\\dfrac1e x+\\dfrac{1}{2e}$</b>。记忆点：求 $k$ 用 $(1+\\frac1x)^x\\to e$；求 $b$ 必须展开到一阶——$(1+t)^{-1/t}=e^{-1}\\left(1+\\frac t2+o(t)\\right)$，只留 $e^{-1}(1+o(1))$ 会算不出 $b$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：斜渐近线 k 与 b 的来源与求法</h2>
+<p><strong>答案：斜渐近线为 $y=\dfrac1e x+\dfrac{1}{2e}$。</strong></p>
+<h3>第 0 步：斜渐近线的机制——「距离趋于零」翻译成两个极限</h3>
+<p>先把机制立起来：直线 $y=kx+b$ 是曲线（$x\to+\infty$）的斜渐近线，几何意思是曲线上点 $(x,f(x))$ 到直线的<strong>竖直距离</strong>趋于零：$f(x)-(kx+b)\to0$。为什么这等价于 $k=\lim\dfrac yx$、$b=\lim(y-kx)$？把距离拆开除以 $x$：</p>
+<p>$$\frac{f(x)}x=k+\frac bx+\frac{f(x)-kx-b}{x},$$</p>
+<p>竖直距离趋于零保证第三项趋于 $0$，$\dfrac bx$ 也趋于 $0$，故斜率极限恰为 $k$；反之求出 $k$ 后，竖直距离 $f(x)-kx$ 的极限自然记作 $b$。所以「先 $k$ 后 $b$」不是套路，是同一句几何话的两次落地。</p>
+<h3>第一步：为什么先把 y 拆成「x 乘一个幂」</h3>
+<p>$$y=\frac{x<sup>1+x</sup>}{(1+x)<sup>x</sup>}=x\cdot\left(\frac{x}{1+x}\right)<sup>x</sup>=x\left(1+\frac1x\right)<sup>-x</sup>.$$</p>
+<p>拆分的动机来自第 0 步：求 $k$ 要算 $\dfrac yx$，先把 $x$ 干净地提出来，$\dfrac yx$ 就只剩一个幂指式，重要极限直接可用——先为「除以 $x$」铺路，再动手算。</p>
+<h3>第二步：求 k——重要极限一步到位</h3>
+<p>$$k=\lim_{x\to+\infty}\left(1+\frac1x\right)<sup>-x</sup>=e<sup>-1</sup>=\frac1e,$$</p>
+<p>用的是重要极限 $\left(1+\dfrac1x\right)<sup>x</sup>\to e$ 取负指数。为什么敢把极限移进指数：指数函数连续，复合函数的极限可以穿进去算。</p>
+<h3>第三步：求 b——为什么换元、为什么展开到一阶</h3>
+<p>令 $t=\dfrac1x\to0^+$：</p>
+<p>$$b=\lim_{t\to0^+}\frac{(1+t)<sup>-1/t</sup>-e<sup>-1</sup>}t.$$</p>
+<p><strong>为什么换元</strong>：泰勒展开的主场在 $0$ 点，把 $+\infty$ 处的极限拉回 $0$ 点，工具才顺手。</p>
+<p><strong>为什么展开到一阶</strong>：这是 $\dfrac00$ 型极限，分子里 $e<sup>-1</sup>$ 是常数，$b$ 的值取决于 $(1+t)<sup>-1/t</sup>$ 里<strong>偏离 $e<sup>-1</sup>$ 的部分是否恰好是一次项</strong>——低于一阶极限为 $0$，高于一阶发散，只有一阶系数说了算。</p>
+<p>对指数展开（由 $\ln(1+t)=t-\dfrac{t<sup>2</sup>}2+\cdots$ 除以 $t$）：</p>
+<p>$$\frac{\ln(1+t)}t=1-\frac t2+o(t)\ \Longrightarrow\ (1+t)<sup>-1/t</sup>=e<sup>-1+\frac t2+o(t)</sup>.$$</p>
+<p><strong>为什么能提出 $e<sup>-1</sup>$</strong>：$e<sup>-1+\frac t2+o(t)</sup>=e<sup>-1</sup>\cdot e<sup>\frac t2+o(t)</sup>$，而小量 $u$ 满足 $e<sup>u</sup>=1+u+o(u)$（$e<sup>u</sup>-1\sim u$），故</p>
+<p>$$(1+t)<sup>-1/t</sup>=e<sup>-1</sup>\left(1+\frac t2+o(t)\right)=e<sup>-1</sup>+\frac{1}{2e}\,t+o(t),$$</p>
+<p>代入得 $b=\lim\limits_{t\to0^+}\dfrac{\frac{1}{2e}t+o(t)}t=\dfrac{1}{2e}$。</p>
+<p><strong>为什么不用洛必达</strong>：分子求导要穿过复合链 $e<sup>-\ln(1+t)/t</sup>$，越求越繁；对数展开一次到位。幂指函数统一走「取对数化指数」这条路。</p>
+<h3>易错点</h3>
+<ul><li><strong>只求 k 不求 b</strong>：斜渐近线必须 $k$、$b$ 两个极限都算，少一个不完整。</li><li><strong>展开阶数不够</strong>：只写成 $(1+t)<sup>-1/t</sup>=e<sup>-1</sup>(1+o(1))$，分子只剩 $o(t)$，比值的极限定不出来；必须保留 $t$ 的一次项。</li><li><strong>直接对底数用等价无穷小</strong>：$1+t\sim1$ 会把幂整个变成 $1$，幂指函数必须先取对数再展开。</li></ul>
+<blockquote>一句话结论：$k$ 靠重要极限，$b$ 靠对数展开留一阶，答案是 $y=\dfrac xe+\dfrac{1}{2e}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

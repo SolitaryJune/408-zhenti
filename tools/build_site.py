@@ -31,6 +31,41 @@ SUBJECTS = {
     "计算机网络": {"cls": "cn", "color": "#5a7d8c", "bg": "#5a7d8c26"},
 }
 
+# ---- 考研四科目注册表（统一站） ----
+EXAMS = [
+    {"sk": "408",      "name": "408",     "full": "计算机学科专业基础", "prefix": "",    "ddir": "data/408/questions",      "total": 150, "accent": "#e07a2f", "bg": "#e07a2f1f"},
+    {"sk": "math2",    "name": "数学二",   "full": "数学",              "prefix": "m2-", "ddir": "data/math2/questions",    "total": 150, "accent": "#963b32", "bg": "#963b321a"},
+    {"sk": "politics", "name": "政治101", "full": "思想政治理论",        "prefix": "zz-", "ddir": "data/politics/questions", "total": 100, "accent": "#315b47", "bg": "#315b471a"},
+    {"sk": "english2", "name": "英语二",   "full": "英语",              "prefix": "yy-", "ddir": "data/english2/questions", "total": 100, "accent": "#5a7d8c", "bg": "#5a7d8c26"},
+]
+EXAM_BY_SK = {e["sk"]: e for e in EXAMS}
+
+
+def exam_of(qid: str) -> str:
+    """按 id 前缀判定科目（408 无前缀）。"""
+    for e in EXAMS:
+        if e["prefix"] and qid.startswith(e["prefix"]):
+            return e["sk"]
+    return "408"
+
+
+KIND_MAP = {
+    "408": {"choice": "choice", "essay": "essay"},
+    "math2": {"选择题": "choice", "填空题": "essay", "解答题": "essay"},
+    "politics": {"单选题": "choice", "多选题": "multi", "分析题": "essay"},
+    "english2": {"完形填空": "choice", "阅读理解": "choice", "新题型": "choice",
+                 "翻译": "essay", "作文": "essay"},
+}
+
+
+def norm_kind(sk: str, t: str) -> str:
+    return KIND_MAP.get(sk, {}).get(t, "choice")
+
+
+TYPE_LABEL = {
+    "choice": "选择题", "multi": "多选题", "essay": "自主评分题",
+}
+
 # ---------------------------------------------------------------- 工具
 
 def esc(s: str) -> str:
@@ -111,11 +146,40 @@ def fix_img_dims(html: str) -> str:
     return re.sub(r"<img\b[^>]*>", repl, html)
 
 
-def imgfix(html: str, rel: str) -> str:
-    """把题面里的 content-images/ 引用改写为本地相对路径（src/srcset 通吃）。"""
+def imgfix(html: str, rel: str, sup: bool = True) -> str:
+    """把题面里的 content-images/ 引用改写为本地相对路径（src/srcset 通吃）。
+    sup=True 时把 2^n / 2^{n-1} 转成上标——仅 408 站文本用该记法；
+    数学站 $..$ 内的 ^ 是 LaTeX 语法，必须传 sup=False 跳过。"""
     s = html.replace("/content-images/", rel + "images/")   # 绝对站根引用
     s = s.replace("content-images/", rel + "images/")        # 剩余裸相对引用
-    return sup_html(fix_img_dims(s))
+    s = fix_img_dims(s)
+    return sup_html(s) if sup else s
+
+
+KATEX_OK = all(
+    (PROJECT / "assets" / "katex" / f).exists()
+    for f in ("katex.min.css", "katex.min.js", "contrib/auto-render.min.js"))
+
+
+def katex_head(rel: str) -> str:
+    if not KATEX_OK:
+        return ""
+    return f'<link rel="stylesheet" href="{rel}assets/katex/katex.min.css">'
+
+
+def katex_foot(rel: str) -> str:
+    """单题页与整卷页底部加载 KaTeX + auto-render（delimiters 含 $ 与 $$）。"""
+    if not KATEX_OK:
+        return ""
+    return (
+        f'<script src="{rel}assets/katex/katex.min.js"></script>\n'
+        f'<script src="{rel}assets/katex/contrib/auto-render.min.js"></script>\n'
+        '<script>\n'
+        'if (window.renderMathInElement) renderMathInElement(document.body, {delimiters: [\n'
+        '  {left: "$$", right: "$$", display: true},\n'
+        '  {left: "$", right: "$", display: false}\n'
+        '], throwOnError: false});\n'
+        '</script>')
 
 
 def md2html(md: str) -> str:
@@ -198,284 +262,381 @@ def md2html(md: str) -> str:
 # ---------------------------------------------------------------- CSS（原站同款视觉）
 
 CSS = r""":root{
+  /* 色彩系统 */
   --teal:#1b3a4b; --teal-soft:#5a7d8c; --teal-pale:#d9e3df; --quiet:#b9cbd0;
   --cream:#f5e6b8; --cream-light:#fbf3da; --paper:#f8edcb;
   --ink:#213e48; --muted:#586e72; --line:#1b3a4b38; --rule:#47616c;
   --red:#e63946; --green:#2f9e44; --orange:#e07a2f; --action:#efa15c;
   --white:#fff; --desk:#1b3a4b;
-  --shadow:0 14px 34px #1b3a4b1a;
-  --mono:JetBrains Mono,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  
+  /* 圆角标准 */
+  --radius-xs: 6px; --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 18px;
+  
+  /* 阴影系统 */
+  --shadow-sm: 0 2px 8px #1b3a4b0d;
+  --shadow-md: 0 8px 20px #1b3a4b1a;
+  --shadow-lg: 0 14px 34px #1b3a4b1a;
+  --shadow-focus: 0 18px 40px #e07a2f38;
+  
+  /* 排版系统 */
+  --lh-tight: 1.4; --lh-normal: 1.65; --lh-loose: 1.8;
+  --mono: JetBrains Mono,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  
+  /* 动画 */
+  --transition-fast: 120ms ease-out;
+  --transition-normal: 200ms ease-out;
+  --transition-smooth: 300ms ease-out;
 }
+
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{color:var(--teal);background:var(--cream);font-family:"Noto Sans SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65}
-a{color:var(--teal);text-decoration:none}
+body{color:var(--teal);background:var(--cream);font-family:"Noto Sans SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:var(--lh-normal)}
+a{color:var(--teal);text-decoration:none;transition:color var(--transition-fast)}
 a:hover{text-decoration:none}
-code{font-family:var(--mono)}
-img{max-width:100%}
+code{font-family:var(--mono);font-size:.93em}
+img{max-width:100%;height:auto}
 ::selection{background:#e07a2f55}
 
 /* ===== 顶栏 ===== */
 .site-header{border-bottom:1px solid var(--teal-soft);justify-content:space-between;align-items:center;
-  width:min(1220px,100% - 64px);min-height:84px;margin:0 auto;display:flex;gap:24px;flex-wrap:wrap}
-.brand{color:var(--teal);font-weight:800;font-size:21px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  width:clamp(320px,100% - 28px,1220px);min-height:clamp(68px,12vw,84px);margin:0 auto;display:flex;gap:clamp(12px,3vw,24px);flex-wrap:wrap;padding:0 clamp(14px,4vw,32px)}
+.brand{color:var(--teal);font-weight:800;font-size:clamp(16px,3.5vw,21px);letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
 .brand i{font-style:normal;color:var(--red)}
-.brand small{color:var(--muted);font-size:12px;font-weight:700;border:1px solid var(--line);
-  border-radius:7px;padding:2px 7px;background:#ffffff59}
-.site-nav{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.site-nav a{color:var(--teal);padding:8px 13px;border-radius:9px;font-size:14px;font-weight:600}
-.site-nav a:hover{background:#1b3a4b0f}
+.brand small{color:var(--muted);font-size:11px;font-weight:700;border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:2px 7px;background:#ffffff59}
+.site-nav{display:flex;align-items:center;gap:clamp(2px,1vw,4px);flex-wrap:wrap}
+.site-nav a{color:var(--teal);padding:clamp(6px,1vw,8px) clamp(10px,1.5vw,13px);border-radius:var(--radius-md);
+  font-size:clamp(12px,1.8vw,14px);font-weight:600;transition:all var(--transition-fast)}
+.site-nav a:hover{background:#1b3a4b0f;transform:translateY(-1px)}
 .site-nav a.on{background:var(--teal);color:var(--white)}
-.year-select{background:#ffffff73;border:1px solid var(--line);border-radius:9px;color:var(--teal);
-  font-weight:700;font-size:13px;padding:6px 8px;cursor:pointer;font-family:inherit}
+.year-select{background:#ffffff73;border:1px solid var(--line);border-radius:var(--radius-md);color:var(--teal);
+  font-weight:700;font-size:13px;padding:6px 8px;cursor:pointer;font-family:inherit;transition:all var(--transition-fast)}
+.year-select:hover{border-color:var(--teal-soft)}
 
-/* ===== 卷首 hero（原站 intro / paper-stamp）===== */
-.intro{grid-template-columns:1fr auto;align-items:center;gap:52px;width:min(1220px,100% - 64px);
-  margin:0 auto;padding:60px 0 44px;display:grid}
+/* ===== 卷首 hero ===== */
+.intro{grid-template-columns:1fr auto;align-items:center;gap:clamp(24px,5vw,52px);width:clamp(320px,100% - 28px,1220px);
+  margin:0 auto;padding:clamp(30px,6vw,60px) 0 clamp(20px,4vw,44px);display:grid}
 .intro .eyebrow{color:var(--muted);letter-spacing:.14em;font-size:12px;font-weight:700;margin-bottom:10px}
 .intro h1{max-width:850px;color:var(--teal);letter-spacing:-.04em;margin:0;
-  font-size:clamp(38px,5.4vw,68px);font-weight:800;line-height:1.1}
+  font-size:clamp(28px,5vw,68px);font-weight:800;line-height:1.1}
 .intro h1 span{color:var(--red);margin-top:10px;display:block}
-.intro-copy{max-width:700px;color:var(--teal);margin:20px 0 0;font-size:16px;line-height:1.75}
+.intro-copy{max-width:700px;color:var(--teal);margin:20px 0 0;font-size:clamp(14px,1.8vw,16px);line-height:1.75}
 .intro-copy b{color:var(--red)}
 .paper-stamp{border:2px solid var(--teal);width:190px;min-height:150px;color:var(--teal);background:#ffffff38;
-  border-radius:18px;grid-template-columns:1fr 1fr;align-items:baseline;gap:6px 8px;padding:24px;
-  display:grid;box-shadow:10px 10px #e07a2f4d;transform:rotate(1.2deg)}
+  border-radius:var(--radius-xl);grid-template-columns:1fr 1fr;align-items:baseline;gap:6px 8px;padding:24px;
+  display:grid;box-shadow:var(--shadow-md);transform:rotate(1.2deg);transition:transform var(--transition-normal)}
+.paper-stamp:hover{transform:rotate(0deg)}
 .paper-stamp strong{color:var(--red);font-family:var(--mono);font-size:40px;line-height:1}
 .paper-stamp span{color:var(--teal);font-size:12px;font-weight:700}
 .paper-stamp i{background:var(--teal-soft);grid-column:1/-1;height:1px}
 
-/* ===== 工具条（mode-switch / study-timer / exam-controls）===== */
+/* ===== 工具条 ===== */
 .toolbar-wrap{z-index:30;background:#f5e6b8eb;border-bottom:1px solid #5a7d8c57;margin-top:8px;
-  padding:10px 32px;position:sticky;top:0;backdrop-filter:blur(6px)}
+  padding:clamp(8px,2vw,10px) clamp(14px,4vw,32px);position:sticky;top:0;backdrop-filter:blur(6px)}
 .toolbar{overscroll-behavior-x:contain;scrollbar-width:thin;flex-wrap:wrap;justify-content:flex-start;
-  align-items:center;gap:12px;width:min(1220px,100%);margin:0 auto;display:flex}
-.mode-switch{background:var(--teal-soft);border-radius:12px;flex:none;padding:4px;display:inline-flex}
-.mode-switch a{color:var(--white);border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700}
-.mode-switch a.active{color:var(--white);background:var(--teal);box-shadow:0 4px 12px #1b3a4b33}
+  align-items:center;gap:clamp(8px,2vw,12px);width:clamp(320px,100% - 28px,1220px);margin:0 auto;display:flex}
+.mode-switch{background:var(--teal-soft);border-radius:var(--radius-md);flex:none;padding:4px;display:inline-flex}
+.mode-switch a{color:var(--white);border-radius:var(--radius-sm);padding:9px 18px;font-size:13px;font-weight:700;transition:all var(--transition-fast)}
+.mode-switch a.active{color:var(--white);background:var(--teal);box-shadow:var(--shadow-md)}
 .study-timer{color:var(--teal);flex:none;align-items:center;gap:7px;margin:0;display:inline-flex}
-.timer-mode{background:#5a7d8c40;border-radius:8px;padding:2px;display:inline-flex}
+.timer-mode{background:#5a7d8c40;border-radius:var(--radius-sm);padding:2px;display:inline-flex}
 .timer-mode button{min-height:30px;color:var(--teal);cursor:pointer;background:0 0;border:0;
-  border-radius:7px;font-size:11px;font-weight:800;padding:0 8px;font-family:inherit}
+  border-radius:var(--radius-xs);font-size:11px;font-weight:800;padding:0 8px;font-family:inherit;transition:all var(--transition-fast)}
 .timer-mode button.active{color:var(--white);background:var(--teal)}
 .study-timer strong{min-width:64px;color:var(--teal);letter-spacing:.04em;text-align:center;
   font-family:var(--mono);font-size:17px}
 .study-timer strong.is-finished{color:var(--red)}
 .timer-control{min-height:30px;color:var(--white);cursor:pointer;background:var(--teal);border:0;
-  border-radius:7px;font-size:11px;font-weight:800;padding:0 12px;font-family:inherit}
-.timer-reset{min-height:30px;color:var(--teal);cursor:pointer;background:0 0;border:0;border-radius:7px;
-  font-size:13px;font-weight:800;padding:0 8px;font-family:inherit}
+  border-radius:var(--radius-sm);font-size:11px;font-weight:800;padding:0 12px;font-family:inherit;transition:all var(--transition-fast)}
+.timer-control:hover{background:var(--orange);transform:translateY(-1px)}
+.timer-reset{min-height:30px;color:var(--teal);cursor:pointer;background:0 0;border:0;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:800;padding:0 8px;font-family:inherit;transition:all var(--transition-fast)}
+.timer-reset:hover{color:var(--orange)}
 .exam-controls{flex-wrap:wrap;flex:none;align-items:center;gap:6px;display:flex}
 .exam-controls button{color:#193d4d;font:inherit;cursor:pointer;background:#fff9e7;
-  border:1px solid #587b89;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;font-family:inherit}
+  border:1px solid #587b89;border-radius:var(--radius-md);padding:9px 12px;font-size:13px;font-weight:700;
+  font-family:inherit;transition:all var(--transition-fast)}
+.exam-controls button:hover:not(.is-active){border-color:var(--teal-soft);background:#fffcf5}
 .exam-controls button.is-active{color:#fff;background:#193d4d}
 .exam-controls button.fs-btn{padding:8px 11px}
 
-/* ===== 题卡（原站 question-card）===== */
-.paper-body{width:min(1220px,100% - 64px);margin:0 auto;padding:26px 0 70px}
-.question-card{border:1px solid var(--teal-soft);background:var(--cream-light);box-shadow:var(--shadow);
-  border-radius:18px;scroll-margin-top:96px;position:relative;overflow:hidden;padding:30px 30px 28px}
-.question-card+.question-card{margin-top:20px}
-.question-card.is-focus{border-color:var(--orange);box-shadow:0 18px 40px #e07a2f38}
+/* ===== 题卡 ===== */
+.paper-body{width:clamp(320px,100% - 28px,1220px);margin:0 auto;padding:clamp(14px,3vw,26px) 0 70px}
+.question-card{border:1px solid var(--teal-soft);background:var(--cream-light);box-shadow:var(--shadow-md);
+  border-radius:var(--radius-xl);scroll-margin-top:96px;position:relative;overflow:hidden;
+  padding:clamp(16px,3vw,30px) clamp(14px,3vw,30px);transition:all var(--transition-normal)}
+.question-card:hover{box-shadow:var(--shadow-lg)}
+.question-card+.question-card{margin-top:clamp(12px,2vw,20px)}
+.question-card.is-focus{border-color:var(--orange);box-shadow:var(--shadow-focus)}
 .card-watermark{color:var(--teal);opacity:.62;align-items:center;gap:6px;font-size:11px;font-weight:700;
   display:inline-flex;position:absolute;top:18px;right:24px;letter-spacing:.06em}
-.question-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
-.question-kicker{color:var(--orange);margin-bottom:6px;font-size:13px;font-weight:700;display:block;letter-spacing:.04em}
-.question-header h2{font-family:var(--mono);font-size:22px;letter-spacing:-.01em}
-.question-meta{flex-wrap:wrap;justify-content:flex-end;gap:7px;max-width:52%;display:flex;align-items:center}
-.question-meta>span{color:var(--white);background:var(--teal-soft);border-radius:8px;padding:6px 10px;
-  font-size:11px;font-weight:700}
-.meta-btn{color:var(--teal);background:0 0;border:1px solid var(--line);border-radius:8px;
-  padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
-.meta-btn:hover{background:#1b3a4b0f}
+.question-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.question-kicker{color:var(--orange);margin-bottom:6px;font-size:clamp(12px,1.5vw,13px);font-weight:700;
+  display:block;letter-spacing:.04em;text-transform:uppercase}
+.question-header h2{font-family:var(--mono);font-size:clamp(18px,2.5vw,22px);letter-spacing:-.01em;font-weight:700}
+.question-meta{flex-wrap:wrap;justify-content:flex-end;gap:clamp(6px,1vw,7px);max-width:100%;display:flex;align-items:center}
+.question-meta>span{color:var(--white);background:var(--teal-soft);border-radius:var(--radius-sm);
+  padding:6px 10px;font-size:11px;font-weight:700;transition:all var(--transition-fast)}
+.question-meta>span:hover{background:var(--teal)}
+.meta-btn{color:var(--teal);background:0 0;border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all var(--transition-fast)}
+.meta-btn:hover{background:#1b3a4b0f;border-color:var(--teal-soft)}
 .meta-btn.on{color:var(--white);background:var(--orange);border-color:var(--orange)}
 .meta-btn.on-wrong{color:var(--white);background:var(--red);border-color:var(--red)}
-.subject-tag{color:var(--white);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;display:inline-block}
-.question-body{color:var(--teal);margin-top:22px;font-size:17px;line-height:1.75}
-.question-body p{white-space:pre-line;margin:0 0 14px}
-.question-body img{border-radius:8px;border:1px solid var(--line);margin:6px 0;background:#fff}
+.subject-tag{color:var(--white);border-radius:var(--radius-sm);padding:6px 10px;font-size:11px;
+  font-weight:700;display:inline-block;transition:all var(--transition-fast)}
+.subject-tag:hover{opacity:.9}
+.question-body{color:var(--teal);margin-top:clamp(14px,2vw,22px);font-size:clamp(15px,1.8vw,17px);line-height:var(--lh-loose)}
+.question-body p{white-space:pre-line;margin:0 0 clamp(10px,1.5vw,14px)}
+.question-body img{border-radius:var(--radius-md);border:1px solid var(--line);margin:6px 0;background:#fff;
+  box-shadow:var(--shadow-sm);transition:box-shadow var(--transition-normal)}
+.question-body img:hover{box-shadow:var(--shadow-md)}
 .question-body table,.answer-content table,.explain table{border-collapse:collapse;margin:8px 0}
 .question-body td,.question-body th,.answer-content td,.answer-content th,.explain td,.explain th{
   border:1px solid var(--line);padding:4px 10px;font-size:14px}
 .markdown-content p{white-space:pre-line;margin:0 0 12px}
 .markdown-content p:last-child{margin-bottom:0}
-.choice-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;display:grid}
+.choice-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,1.5vw,10px);
+  margin-top:clamp(12px,2vw,18px);display:grid}
 @media (max-width:720px){.choice-options{grid-template-columns:1fr}}
 .choice-option{border:1.5px solid var(--line);min-width:0;color:var(--teal);background:var(--white);
-  text-align:left;cursor:pointer;border-radius:12px;align-items:flex-start;gap:10px;padding:10px 12px;
-  font-size:15px;line-height:1.55;transition:border-color .15s,background-color .15s,transform .1s;
-  display:flex;font-family:inherit;width:100%}
-.choice-option:hover:not(:disabled){border-color:var(--teal-soft);transform:translateY(-1px)}
+  text-align:left;cursor:pointer;border-radius:var(--radius-md);align-items:flex-start;gap:10px;
+  padding:clamp(8px,1.5vw,10px) clamp(10px,2vw,12px);font-size:clamp(14px,1.7vw,15px);
+  line-height:var(--lh-normal);transition:all var(--transition-fast);display:flex;font-family:inherit;width:100%}
+.choice-option:hover:not(:disabled){border-color:var(--teal-soft);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.choice-option:active:not(:disabled){transform:translateY(0)}
 .choice-option:disabled{cursor:default;opacity:1}
-.choice-option.is-selected{border-color:var(--orange);background:#efa15c1a}
-.choice-option.is-correct{border-color:var(--green);background:#2f9e441f}
-.choice-option.is-wrong{border-color:var(--red);background:#e6394612}
-.choice-option.locked{pointer-events:none}
+.choice-option.is-selected{border-color:var(--orange);background:#efa15c1a;box-shadow:var(--shadow-sm)}
+.choice-option.is-correct{border-color:var(--green);background:#2f9e441f;box-shadow:var(--shadow-sm)}
+.choice-option.is-wrong{border-color:var(--red);background:#e6394612;box-shadow:var(--shadow-sm)}
+.choice-option.locked{pointer-events:none;opacity:.7}
 .choice-letter{width:24px;height:24px;color:var(--white);background:var(--teal-soft);border-radius:50%;
   flex:none;justify-content:center;align-items:center;font-family:var(--mono);font-size:13px;
-  font-weight:700;line-height:1;display:inline-flex;margin-top:1px}
+  font-weight:700;line-height:1;display:inline-flex;margin-top:1px;transition:all var(--transition-fast)}
 .choice-option.is-selected .choice-letter{background:var(--orange)}
 .choice-option.is-correct .choice-letter{background:var(--green)}
 .choice-option.is-wrong .choice-letter{background:var(--red)}
 .choice-text{min-width:0;flex:1}
-.choice-text .markdown-content p{white-space:pre-line;margin:0;font-size:15px;line-height:1.55}
+.choice-text .markdown-content p{white-space:pre-line;margin:0;font-size:inherit;line-height:inherit}
 .choice-text img{max-height:150px}
-.choice-mark{color:var(--green);flex:none;font-size:15px;font-weight:700;line-height:24px}
+.choice-mark{color:var(--green);flex:none;font-size:15px;font-weight:700;line-height:24px;animation:popIn var(--transition-fast)}
 .choice-option.is-wrong .choice-mark{color:var(--red)}
 .card-page-number{color:var(--teal);font-family:var(--mono);font-size:12px;font-weight:700;
   position:absolute;bottom:16px;right:22px}
 
 /* ===== 答案区 ===== */
-.answer-region{border-top:1px dashed var(--teal-soft);margin-top:24px;padding-top:18px}
-.answer-actions{justify-content:flex-start;align-items:center;gap:10px;display:flex;flex-wrap:wrap}
+.answer-region{border-top:1px dashed var(--teal-soft);margin-top:clamp(14px,2vw,24px);padding-top:clamp(12px,2vw,18px)}
+.answer-actions{justify-content:flex-start;align-items:center;gap:clamp(8px,1.5vw,10px);display:flex;flex-wrap:wrap}
 .reveal-button{border:1px solid var(--teal);color:var(--white);background:var(--teal);cursor:pointer;
-  border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;font-family:inherit}
-.reveal-button:disabled{opacity:.45;cursor:default}
+  border-radius:var(--radius-md);padding:9px 14px;font-size:12px;font-weight:700;font-family:inherit;
+  transition:all var(--transition-fast)}
+.reveal-button:hover{background:var(--orange);border-color:var(--orange);transform:translateY(-1px)}
+.reveal-button:active{transform:translateY(0)}
+.reveal-button:disabled{opacity:.45;cursor:default;transform:none}
 .reveal-button.is-red{color:var(--red);border-color:var(--red);background:#ffffff6b}
+.reveal-button.is-red:hover{background:#fff;transform:translateY(-1px)}
 .answer-toggle{color:var(--teal);background:0 0;border:1px solid var(--line);cursor:pointer;
-  border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;display:inline-flex;
-  align-items:center;gap:6px;font-family:inherit}
+  border-radius:var(--radius-md);padding:9px 12px;font-size:12px;font-weight:700;display:inline-flex;
+  align-items:center;gap:6px;font-family:inherit;transition:all var(--transition-fast)}
+.answer-toggle:hover{border-color:var(--teal-soft)}
 .answer-toggle[aria-pressed=true]{color:var(--white);background:var(--teal);border-color:var(--teal)}
-.answer-toggle .chk{visibility:hidden;width:13px;height:13px}
+.answer-toggle .chk{visibility:hidden;width:13px;height:13px;transition:visibility var(--transition-fast)}
 .answer-toggle[aria-pressed=true] .chk{visibility:visible}
-.answer-placeholder{align-items:flex-start;gap:12px;min-width:0;display:none;margin-top:14px}
+.answer-placeholder{align-items:flex-start;gap:12px;min-width:0;display:none;margin-top:14px;
+  animation:slideDown var(--transition-normal)}
 .answer-placeholder.show{display:flex}
-.answer-placeholder>span{color:var(--white);background:var(--red);border-radius:9px;flex:none;
+.answer-placeholder>span{color:var(--white);background:var(--red);border-radius:var(--radius-md);flex:none;
   padding:7px 11px;font-size:12px;font-weight:700}
-.answer-content{min-width:0;color:var(--teal);flex:1;font-size:13.5px;line-height:1.75}
-.choice-verdict{display:none;margin-top:12px;font-weight:700;font-size:13.5px}
+.answer-content{min-width:0;color:var(--teal);flex:1;font-size:clamp(13px,1.6vw,13.5px);line-height:var(--lh-loose)}
+.answer-content strong{color:var(--red);font-weight:700}
+.answer-content code{background:#1b3a4b0f;padding:2px 6px;border-radius:var(--radius-xs);font-size:.95em}
+.choice-verdict{display:none;margin-top:12px;font-weight:700;font-size:13.5px;animation:fadeIn var(--transition-normal)}
 .choice-verdict.ok{display:block;color:var(--green)}
 .choice-verdict.bad{display:block;color:var(--red)}
 .video-link-row{margin-top:14px;display:inline-block}
-.video-link{border:1px solid var(--red);color:var(--red);background:#ffffff6b;border-radius:9px;
+.video-link{border:1px solid var(--red);color:var(--red);background:#ffffff6b;border-radius:var(--radius-md);
   align-items:center;gap:7px;padding:9px 14px;font-size:12px;font-weight:700;line-height:1.4;
-  display:inline-flex}
-.video-link:hover{background:#fff}
+  display:inline-flex;transition:all var(--transition-fast);text-decoration:none}
+.video-link:hover{background:#fff;transform:translateY(-1px)}
 
 /* ===== 学习区（讲解/动画）===== */
-.study{border-top:1px dashed var(--teal-soft);margin-top:16px;padding-top:14px}
-.study-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.study-tabs button,.study-tabs a{border:0;cursor:pointer;background:#5a7d8c40;color:var(--teal);border-radius:8px;
-  padding:8px 13px;font-size:12px;font-weight:800;font-family:inherit;text-decoration:none;display:inline-block}
-.study-tabs button.on{color:var(--white);background:var(--teal)}
-.study-tabs a:hover{color:var(--white);background:var(--teal)}
-.study-pane{display:none}
+.study{border-top:1px dashed var(--teal-soft);margin-top:clamp(12px,2vw,16px);padding-top:clamp(10px,2vw,14px)}
+.study-tabs{display:flex;gap:clamp(4px,1vw,6px);flex-wrap:wrap;align-items:center}
+.study-tabs button,.study-tabs a{border:0;cursor:pointer;background:#5a7d8c40;color:var(--teal);
+  border-radius:var(--radius-sm);padding:clamp(6px,1vw,8px) clamp(10px,1.5vw,13px);font-size:clamp(11px,1.5vw,12px);
+  font-weight:800;font-family:inherit;text-decoration:none;display:inline-block;white-space:nowrap;flex:0 1 auto;
+  transition:all var(--transition-fast)}
+.study-tabs button:hover,.study-tabs a:hover{background:#5a7d8c60;transform:translateY(-1px)}
+.study-tabs button.on,.study-tabs a.on{color:var(--white);background:var(--teal)}
+.study-pane{display:none;animation:fadeIn var(--transition-normal)}
 .study-pane.on{display:block}
-.explain{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
-  margin-top:12px;font-size:14.5px;color:var(--ink);line-height:1.8}
-.explain h2,.explain h3,.explain h4{margin:12px 0 6px;font-size:15px;color:var(--teal)}
-.explain ul,.explain ol{margin:6px 0 6px 22px}
+.explain{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:clamp(12px,2vw,16px) clamp(12px,2vw,18px);margin-top:clamp(10px,2vw,12px);
+  font-size:clamp(13px,1.6vw,14.5px);color:var(--ink);line-height:var(--lh-loose)}
+.explain h2,.explain h3,.explain h4{margin:clamp(10px,1.5vw,12px) 0 6px;font-size:clamp(14px,1.8vw,15px);
+  color:var(--teal);font-weight:700}
+.explain h2:first-child{margin-top:0}
+.explain ul,.explain ol{margin:clamp(6px,1vw,6px) 0 clamp(6px,1vw,6px) 22px}
+.explain li{margin:4px 0}
 .explain blockquote{border-left:3px solid var(--orange);background:#efa15c17;padding:8px 12px;
-  border-radius:8px;margin:8px 0;color:var(--teal)}
-.explain code{background:#1b3a4b14;padding:1px 6px;border-radius:6px;font-family:var(--mono);font-size:13px}
-.explain pre{background:var(--desk);color:#f5e6b8;border-radius:10px;padding:12px;overflow-x:auto;margin:8px 0}
-.explain pre code{background:none;color:inherit}
+  border-radius:var(--radius-xs);margin:8px 0;color:var(--teal);font-style:italic}
+.explain code{background:#1b3a4b14;padding:2px 6px;border-radius:var(--radius-xs);font-family:var(--mono);
+  font-size:.93em;color:var(--ink)}
+.explain pre{background:var(--desk);color:#f5e6b8;border-radius:var(--radius-md);padding:12px;
+  overflow-x:auto;margin:8px 0;border:1px solid #1b3a4b33;line-height:1.5}
+.explain pre code{background:none;color:inherit;padding:0;font-size:13px}
 .anim-wrap{margin-top:12px;position:relative}
 .anim-bar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
-.anim-frame{width:100%;height:62vh;min-height:480px;border:1px solid var(--teal-soft);border-radius:14px;
-  background:#f8fafc}
+.anim-frame{width:100%;height:clamp(380px,56vh,640px);border:1px solid var(--teal-soft);border-radius:var(--radius-lg);
+  background:#f8fafc;transition:all var(--transition-normal)}
 iframe:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;background:#fff}
-.anim-empty{padding:44px;text-align:center;color:var(--muted);border:2px dashed var(--teal-soft);
-  border-radius:14px;font-size:14px}
+.anim-empty{padding:clamp(30px,4vw,44px);text-align:center;color:var(--muted);border:2px dashed var(--teal-soft);
+  border-radius:var(--radius-lg);font-size:14px;line-height:var(--lh-loose)}
 
-/* ===== 题目导航（上一题/下一题）===== */
-.question-navigation{grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;display:grid}
-.question-navigation a{min-height:72px;color:var(--white);background:var(--teal-soft);border-radius:14px;
-  justify-content:space-between;align-items:center;padding:14px 20px;transition:background .16s,transform .16s;
-  display:flex}
-.question-navigation a:hover{background:var(--teal);transform:translateY(-2px)}
+/* ===== 题目导航 ===== */
+.question-navigation{grid-template-columns:1fr 1fr;gap:clamp(10px,2vw,16px);margin-top:clamp(14px,2vw,20px);display:grid}
+.question-navigation a{min-height:clamp(64px,8vw,72px);color:var(--white);background:var(--teal-soft);
+  border-radius:var(--radius-lg);justify-content:space-between;align-items:center;padding:clamp(10px,1.5vw,14px) clamp(12px,2vw,20px);
+  transition:all var(--transition-normal);text-decoration:none}
+.question-navigation a:hover{background:var(--teal);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.question-navigation a:active{transform:translateY(0)}
 .question-navigation a:last-child{text-align:right}
-.question-navigation a small{font-size:11px;display:block;opacity:.9}
-.question-navigation a strong{font-family:var(--mono);font-size:17px}
+.question-navigation a small{font-size:11px;display:block;opacity:.9;letter-spacing:.02em;text-transform:uppercase}
+.question-navigation a strong{font-family:var(--mono);font-size:clamp(15px,2vw,17px);font-weight:700}
 
 /* ===== 答题卡 ===== */
 .answer-sheet-trigger{z-index:45;width:64px;min-height:92px;color:var(--white);background:var(--teal);
-  cursor:pointer;border:1px solid #1b3a4b38;border-radius:18px;flex-direction:column;justify-content:center;
-  align-items:center;gap:4px;padding:10px 7px;transition:transform .15s,background .15s;display:flex;
-  position:fixed;top:50%;right:18px;transform:translateY(-50%);box-shadow:0 14px 30px #1b3a4b38;font-family:inherit}
-.answer-sheet-trigger:hover{background:var(--orange);transform:translateY(-50%) translate(-2px)}
+  cursor:pointer;border:1px solid #1b3a4b38;border-radius:var(--radius-xl);flex-direction:column;justify-content:center;
+  align-items:center;gap:4px;padding:10px 7px;transition:all var(--transition-normal);display:flex;
+  position:fixed;top:50%;right:18px;transform:translateY(-50%);box-shadow:var(--shadow-md);font-family:inherit}
+.answer-sheet-trigger:hover{background:var(--orange);transform:translateY(-50%) translateX(-2px);box-shadow:var(--shadow-lg)}
+.answer-sheet-trigger:active{transform:translateY(-50%)}
 .answer-sheet-trigger>span{font-size:20px;line-height:1}
-.answer-sheet-trigger strong{font-size:12px;line-height:1.2}
+.answer-sheet-trigger strong{font-size:12px;line-height:1.2;font-weight:700}
 .answer-sheet-trigger small{font-family:var(--mono);font-size:11px;font-weight:800}
-.answer-sheet-layer{z-index:200;position:fixed;inset:0;background:#1b3a4b59;display:none}
+.answer-sheet-layer{z-index:200;position:fixed;inset:0;background:#1b3a4b59;display:none;animation:fadeIn var(--transition-normal)}
 .answer-sheet-layer.show{display:block}
-.answer-sheet-panel{position:absolute;right:0;top:0;bottom:0;width:min(380px,94vw);background:var(--cream-light);
-  border-left:1px solid var(--teal-soft);padding:20px;overflow-y:auto;box-shadow:-14px 0 40px #1b3a4b33}
-.answer-sheet-panel h3{font-size:17px}
+.answer-sheet-panel{position:absolute;right:0;top:0;bottom:0;width:clamp(280px,90vw,380px);background:var(--cream-light);
+  border-left:1px solid var(--teal-soft);padding:clamp(14px,3vw,20px);overflow-y:auto;box-shadow:-14px 0 40px #1b3a4b33}
+.answer-sheet-panel h3{font-size:clamp(15px,2vw,17px);font-weight:700}
 .answer-sheet-score{color:var(--muted);font-size:13px;margin:4px 0 12px}
 .answer-sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:7px;margin-bottom:14px}
 .answer-sheet-grid .grp{grid-column:1/-1;font-size:11px;color:var(--muted);font-weight:700;margin-top:6px}
 .answer-sheet-grid a,.answer-sheet-grid button{display:flex;align-items:center;justify-content:center;
-  height:38px;border-radius:10px;font-size:13px;font-weight:800;background:#ffffff8c;color:var(--muted);
-  border:1.5px solid var(--line);font-family:var(--mono);cursor:pointer;text-decoration:none}
+  height:38px;border-radius:var(--radius-md);font-size:13px;font-weight:800;background:#ffffff8c;color:var(--muted);
+  border:1.5px solid var(--line);font-family:var(--mono);cursor:pointer;text-decoration:none;transition:all var(--transition-fast)}
+.answer-sheet-grid a:hover,.answer-sheet-grid button:hover{border-color:var(--teal-soft);background:#fffef5}
 .answer-sheet-grid .answered{background:#efa15c2e;color:var(--orange);border-color:var(--orange)}
 .answer-sheet-grid .correct{background:#2f9e4424;color:var(--green);border-color:var(--green)}
 .answer-sheet-grid .incorrect{background:#e6394620;color:var(--red);border-color:var(--red)}
-.sheet-legend{font-size:11.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sheet-legend{font-size:clamp(11px,1.5vw,11.5px);color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .sheet-legend i{display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:4px;vertical-align:-1px}
 .sheet-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.sheet-result{display:none;background:var(--paper);border:1px solid var(--line);border-radius:12px;
-  padding:12px 14px;margin-bottom:12px;font-size:14px;line-height:1.8}
+.sheet-result{display:none;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:12px 14px;margin-bottom:12px;font-size:clamp(13px,1.6vw,14px);line-height:var(--lh-loose);animation:slideDown var(--transition-normal)}
 .sheet-result.show{display:block}
-.sheet-result b{color:var(--red);font-family:var(--mono)}
+.sheet-result b{color:var(--red);font-family:var(--mono);font-weight:700}
 
-/* ===== 首页年份网格 / 其他页 ===== */
-.section-title{width:min(1220px,100% - 64px);margin:8px auto 14px;font-size:18px;font-weight:800}
-.year-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px;
-  width:min(1220px,100% - 64px);margin:0 auto 50px}
-.year-card{background:var(--cream-light);border:1px solid var(--teal-soft);border-radius:16px;padding:18px;
-  text-align:center;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow)}
-.year-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px #1b3a4b26}
-.year-card b{font-size:20px;display:block;font-family:var(--mono)}
+/* ===== 首页卡片 ===== */
+.section-title{width:clamp(320px,100% - 28px,1220px);margin:8px auto 14px;font-size:clamp(16px,2.5vw,18px);
+  font-weight:800;letter-spacing:-.01em}
+.year-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(120px,20vw,158px),1fr));
+  gap:clamp(10px,2vw,14px);width:clamp(320px,100% - 28px,1220px);margin:0 auto 50px}
+.year-card{background:var(--cream-light);border:1px solid var(--teal-soft);border-radius:var(--radius-lg);
+  padding:clamp(14px,2vw,18px);text-align:center;transition:all var(--transition-normal);box-shadow:var(--shadow-sm);
+  cursor:pointer;text-decoration:none}
+.year-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--orange)}
+.year-card b{font-size:clamp(18px,2.5vw,20px);display:block;font-family:var(--mono);font-weight:800;margin-bottom:4px}
 .year-card span{font-size:12px;color:var(--muted);font-weight:600}
-.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;background:#e07a2f1c;
-  color:var(--orange);border:1px solid #e07a2f4d;margin:2px 4px 2px 0;font-weight:600}
-.card{background:var(--cream-light);border:1px solid var(--teal-soft);border-radius:16px;padding:20px;
-  box-shadow:var(--shadow);margin-bottom:16px}
-.page-wrap{width:min(900px,100% - 48px);margin:0 auto;padding:26px 0 70px}
-.page-wrap h1{font-size:26px;letter-spacing:-.02em}
-.lead{color:var(--muted);font-size:14px;margin:6px 0 18px}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;background:#e07a2f1c;
+  color:var(--orange);border:1px solid #e07a2f4d;margin:2px 4px 2px 0;font-weight:600;transition:all var(--transition-fast)}
+.tag:hover{background:#e07a2f3c;color:#d4651f}
+.card{background:var(--cream-light);border:1px solid var(--teal-soft);border-radius:var(--radius-lg);
+  padding:clamp(14px,2vw,20px);box-shadow:var(--shadow-sm);margin-bottom:16px;transition:all var(--transition-normal)}
+.card:hover{box-shadow:var(--shadow-md)}
+.page-wrap{width:clamp(320px,100% - 28px,900px);margin:0 auto;padding:clamp(14px,3vw,26px) 0 70px}
+.page-wrap h1{font-size:clamp(22px,4vw,26px);letter-spacing:-.02em;font-weight:800;margin-bottom:6px}
+.lead{color:var(--muted);font-size:clamp(13px,1.6vw,14px);margin:6px 0 18px}
 .search-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.search-bar input{flex:1;min-width:200px;padding:11px 14px;border:1.5px solid var(--teal-soft);
-  border-radius:12px;font-size:15px;background:var(--white);color:var(--teal);font-family:inherit}
-.search-bar select{padding:10px;border:1.5px solid var(--teal-soft);border-radius:12px;font-size:14px;
-  background:var(--white);color:var(--teal)}
-.result-item{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
-  margin-bottom:8px;background:#ffffff8c;color:inherit}
-.result-item:hover{border-color:var(--orange);background:#fff}
-.result-item b{font-family:var(--mono);font-size:14px}
+.search-bar input{flex:1;min-width:clamp(160px,100%,200px);padding:clamp(9px,1.5vw,11px) clamp(10px,1.5vw,14px);
+  border:1.5px solid var(--teal-soft);border-radius:var(--radius-md);font-size:clamp(13px,1.6vw,15px);
+  background:var(--white);color:var(--teal);font-family:inherit;transition:all var(--transition-fast)}
+.search-bar input:focus{border-color:var(--teal);outline:none;box-shadow:0 0 0 3px #1b3a4b0d}
+.search-bar select{padding:10px;border:1.5px solid var(--teal-soft);border-radius:var(--radius-md);
+  font-size:14px;background:var(--white);color:var(--teal);transition:all var(--transition-fast)}
+.search-bar select:focus{border-color:var(--teal);outline:none}
+.result-item{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-md);
+  margin-bottom:8px;background:#ffffff8c;color:inherit;transition:all var(--transition-fast);text-decoration:none}
+.result-item:hover{border-color:var(--orange);background:#fff;transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.result-item b{font-family:var(--mono);font-size:14px;font-weight:700}
 .result-item p{font-size:13px;color:var(--muted);margin-top:3px;overflow:hidden;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-mark{background:#efa15c80;border-radius:3px;padding:0 2px}
-details.tagblk{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px;background:#ffffff8c}
-details.tagblk summary{cursor:pointer;font-weight:700;font-size:14px}
+mark{background:#efa15c80;border-radius:var(--radius-xs);padding:0 2px}
+details.tagblk{border:1px solid var(--line);border-radius:var(--radius-md);padding:10px 14px;
+  margin-bottom:8px;background:#ffffff8c;transition:all var(--transition-fast)}
+details.tagblk summary{cursor:pointer;font-weight:700;font-size:14px;transition:color var(--transition-fast)}
+details.tagblk[open] summary{color:var(--orange)}
 details.tagblk summary small{color:var(--muted);font-weight:400}
-.btn{display:inline-block;border:none;border-radius:10px;cursor:pointer;font-weight:700;
-  background:var(--teal);color:var(--white);padding:9px 15px;font-size:13.5px;font-family:inherit;
-  text-decoration:none}
+.btn{display:inline-block;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:700;
+  background:var(--teal);color:var(--white);padding:clamp(7px,1.2vw,9px) clamp(12px,1.5vw,15px);
+  font-size:clamp(12px,1.5vw,13.5px);font-family:inherit;text-decoration:none;transition:all var(--transition-fast)}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
 .btn.ghost{background:0 0;border:1px solid var(--teal-soft);color:var(--teal)}
 .btn.danger{background:var(--red)}
-.btn:hover{opacity:.92}
-footer{border-top:1px solid var(--teal-soft);padding:22px 0 44px;color:var(--muted);font-size:12.5px;
-  line-height:1.9;margin-top:20px}
-footer .wrap{width:min(1220px,100% - 64px);margin:0 auto}
+footer{border-top:1px solid var(--teal-soft);padding:clamp(14px,3vw,22px) 0 clamp(22px,4vw,44px);
+  color:var(--muted);font-size:clamp(12px,1.5vw,12.5px);line-height:1.9;margin-top:20px}
+footer .wrap{width:clamp(320px,100% - 28px,1220px);margin:0 auto}
 .hidden{display:none!important}
+
+/* ===== 响应式断点 ===== */
 @media (max-width:860px){
-  .site-header,.intro,.paper-body{width:min(100% - 28px,1220px)}
+  .site-header,.intro,.paper-body{width:clamp(320px,100% - 28px,1220px)}
   .intro{grid-template-columns:1fr;gap:18px;padding:30px 0 22px}
-  .intro h1{font-size:clamp(28px,6vw,44px)}
+  .intro h1{font-size:clamp(24px,5vw,40px)}
   .paper-stamp{width:auto;min-height:0;padding:10px 14px;display:inline-grid;transform:none;grid-template-columns:auto auto auto}
   .paper-stamp strong{font-size:22px}
-  .question-card{padding:20px 16px 22px}
+  .question-card{padding:clamp(14px,2vw,20px) clamp(12px,2vw,16px)}
   .question-meta{max-width:100%}
   .question-navigation{gap:10px}
-  .anim-frame{min-height:420px;height:56vh}
+  .anim-frame{height:clamp(320px,48vh,520px)}
 }
-/* ===== 题图自适应：按真实宽高比显示，不放大、不超高 ===== */
-.question-body img,.answer-content img,.ref-answer img,.explain img,
-.qstem img,.aw-qstem img{max-width:100%;width:auto;height:auto;max-height:72vh}
-.choice-text img{max-width:100%;width:auto;height:auto;max-height:150px}
+@media (max-width:480px){
+  html{font-size:14px}
+  .site-header{min-height:56px;padding:0 12px}
+  .brand{font-size:16px}
+  .site-nav{gap:0}
+  .site-nav a{padding:6px 8px;font-size:12px}
+  .toolbar-wrap{padding:6px 12px}
+  .toolbar{gap:6px}
+  .study-timer strong{font-size:15px}
+  .question-card{padding:12px 10px}
+  .question-header{gap:8px}
+  .question-body{font-size:15px;margin-top:14px}
+  .choice-options{gap:6px;margin-top:12px}
+  .choice-option{padding:8px 8px;font-size:14px;gap:8px}
+  .choice-letter{width:22px;height:22px;font-size:12px}
+  .question-navigation{gap:8px;margin-top:12px}
+  .question-navigation a{min-height:56px;padding:8px 10px;font-size:12px}
+  .question-navigation a strong{font-size:14px}
+  .answer-sheet-trigger{width:56px;min-height:80px;right:10px;font-size:11px}
+  .answer-sheet-panel{width:80vw}
+  .page-wrap{padding:12px 0 50px}
+  .page-wrap h1{font-size:20px}
+  .year-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+  .anim-frame{height:clamp(280px,40vh,400px)}
+}
+
+/* ===== 题图自适应 ===== */
+.question-body img,.answer-content img,.ref-answer img,.explain img,.qstem img,.aw-qstem img{
+  max-width:100%;width:auto;height:auto;max-height:72vh;border-radius:var(--radius-md);border:1px solid var(--line)}
+.choice-text img{max-width:100%;width:auto;height:auto;max-height:150px;border-radius:var(--radius-sm)}
 .question-body .markdown-image,.answer-content .markdown-image{display:flex;justify-content:center;margin:10px 0}
+
+/* ===== 动画 ===== */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 """
 
 # ---------------------------------------------------------------- JS
@@ -528,7 +689,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
     }
   }
 
-  /* ---------- 选择题 ---------- */
+  /* ---------- 选择/多选题 ---------- */
   function setChoiceState(card, pick, graded){
     var qid = card.dataset.qid, ans = card.dataset.answer;
     var opts = card.querySelectorAll('.choice-option');
@@ -541,6 +702,28 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
         if(L === ans){ o.classList.add('is-correct'); o.querySelector('.choice-mark').textContent = '✓'; }
         if(L === pick && pick !== ans){ o.classList.add('is-wrong'); o.querySelector('.choice-mark').textContent = '✗'; }
       } else if(L === pick){
+        o.classList.add('is-selected');
+      }
+    });
+    var btn = card.querySelector('.reveal-button');
+    if(btn && !graded){
+      btn.disabled = !pick;
+      btn.textContent = '提交答案';
+      btn.classList.remove('is-red');
+    }
+  }
+  function setMultiState(card, picks, graded){
+    var qid = card.dataset.qid, ans = card.dataset.answer;
+    var pick = (picks || '').split('').filter(Boolean).sort().join('');
+    card.querySelectorAll('.choice-option').forEach(function(o){
+      o.classList.remove('is-selected','is-correct','is-wrong','locked');
+      o.querySelector('.choice-mark').textContent = '';
+      var L = o.dataset.letter, inAns = ans.indexOf(L) >= 0, inPick = pick.indexOf(L) >= 0;
+      if(graded){
+        o.classList.add('locked');
+        if(inAns){ o.classList.add('is-correct'); o.querySelector('.choice-mark').textContent = '✓'; }
+        if(inPick && !inAns){ o.classList.add('is-wrong'); o.querySelector('.choice-mark').textContent = '✗'; }
+      } else if(inPick){
         o.classList.add('is-selected');
       }
     });
@@ -568,14 +751,35 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
     revealStudy(card);
     sheetMark(qid);
   }
+  function gradeMulti(card, picks){
+    var qid = card.dataset.qid, ans = card.dataset.answer, pts = +card.dataset.points;
+    var pick = (picks || '').split('').filter(Boolean).sort().join('');
+    var ok = pick === ans;
+    setMultiState(card, pick, true);
+    var v = card.querySelector('.choice-verdict');
+    v.className = 'choice-verdict ' + (ok ? 'ok' : 'bad');
+    v.textContent = ok ? ('✓ 多选全对，+' + pts + ' 分') : ('✗ 多选错误（漏选/错选均不得分），正确答案是 ' + ans);
+    progress[qid] = {pick: pick, correct: ok, score: ok ? pts : 0, at: Date.now()};
+    save(LS.progress, progress);
+    delete drafts[qid]; save(LS.drafts, drafts);
+    if(!ok) addWrong(qid);
+    var rb = card.querySelector('.reveal-button');
+    if(rb){ rb.textContent = '重做'; rb.classList.add('is-red'); rb.disabled = false; }
+    showAnswer(card);
+    revealStudy(card);
+    sheetMark(qid);
+  }
 
   /* ---------- 恢复答题状态 ---------- */
   function restoreCard(card){
-    var qid = card.dataset.qid, type = card.dataset.type;
+    var qid = card.dataset.qid, kind = card.dataset.kind;
     var graded = progress[qid];
-    if(type === 'choice'){
-      if(graded && graded.pick){ setChoiceState(card, graded.pick, true); restoreVerdict(card); showAnswer(card); revealStudy(card); }
-      else if(drafts[qid]){ setChoiceState(card, drafts[qid], false); }
+    if(kind === 'choice' || kind === 'multi'){
+      if(graded && graded.pick){
+        if(kind === 'multi') setMultiState(card, graded.pick, true); else setChoiceState(card, graded.pick, true);
+        restoreVerdict(card); showAnswer(card); revealStudy(card);
+      }
+      else if(drafts[qid]){ if(kind === 'multi') setMultiState(card, drafts[qid], false); else setChoiceState(card, drafts[qid], false); }
       else if(revealAlways){ showAnswer(card); }
     } else {
       if(graded && graded.score != null){
@@ -607,7 +811,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
 
   var cards = [].slice.call(document.querySelectorAll('.qcard'));
   cards.forEach(function(card){
-    var qid = card.dataset.qid, type = card.dataset.type;
+    var qid = card.dataset.qid, kind = card.dataset.kind;
     var fb = card.querySelector('.favorite-button');
     if(fb) fb.addEventListener('click', function(){
       var i = fav.indexOf(qid);
@@ -619,12 +823,20 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
       addWrong(qid); syncMetaBtns(card);
     });
 
-    if(type === 'choice'){
+    if(kind === 'choice' || kind === 'multi'){
       card.querySelectorAll('.choice-option').forEach(function(o){
         o.addEventListener('click', function(){
           if(o.classList.contains('locked')) return;
-          drafts[qid] = o.dataset.letter; save(LS.drafts, drafts);
-          setChoiceState(card, o.dataset.letter, false);
+          if(kind === 'multi'){
+            var set = (drafts[qid] || '').split('').filter(Boolean);
+            var i2 = set.indexOf(o.dataset.letter);
+            if(i2 >= 0) set.splice(i2, 1); else set.push(o.dataset.letter);
+            drafts[qid] = set.sort().join(''); save(LS.drafts, drafts);
+            setMultiState(card, drafts[qid], false);
+          } else {
+            drafts[qid] = o.dataset.letter; save(LS.drafts, drafts);
+            setChoiceState(card, o.dataset.letter, false);
+          }
         });
       });
       var btn = card.querySelector('.reveal-button');
@@ -634,13 +846,13 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
           delete progress[qid]; save(LS.progress, progress);
           delete drafts[qid]; save(LS.drafts, drafts);
           var v = card.querySelector('.choice-verdict'); v.className = 'choice-verdict';
-          setChoiceState(card, '', false);
+          if(kind === 'multi') setMultiState(card, '', false); else setChoiceState(card, '', false);
           var ap = card.querySelector('.answer-placeholder');
           if(ap && !revealAlways) ap.classList.remove('show');
           sheetMark(qid);
         } else {
           var pick = drafts[qid];
-          if(pick) gradeChoice(card, pick);
+          if(pick){ if(kind === 'multi') gradeMulti(card, pick); else gradeChoice(card, pick); }
         }
       });
     } else {
@@ -698,7 +910,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
       var card = t.closest('.qcard');
       var pressed = t.getAttribute('aria-pressed') === 'true';
       t.setAttribute('aria-pressed', String(!pressed));
-      if(!pressed){ showAnswer(card); if(card.dataset.type === 'essay'){ var ra = card.querySelector('.reveal-ref'); if(ra) ra.click(); } }
+      if(!pressed){ showAnswer(card); if(card.dataset.kind === 'essay'){ var ra = card.querySelector('.reveal-ref'); if(ra) ra.click(); } }
       else {
         var ap = card.querySelector('.answer-placeholder');
         if(ap && !progress[card.dataset.qid]) ap.classList.remove('show');
@@ -775,7 +987,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
       cards.forEach(function(c){
         if(!progress[c.dataset.qid]) showAnswer(c);
         var ra = c.querySelector('.reveal-ref');
-        if(c.dataset.type === 'essay' && ra && !progress[c.dataset.qid]) ra.click();
+        if(c.dataset.kind === 'essay' && ra && !progress[c.dataset.qid]) ra.click();
       });
     }
   }
@@ -794,16 +1006,19 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
     var card = document.querySelector('.qcard[data-qid="' + qid + '"]');
     a.className = '';
     if(!p){ if(drafts[qid]) a.classList.add('answered'); return; }
-    if(card && card.dataset.type === 'essay') a.classList.add(p.score > 0 ? 'correct' : 'incorrect');
+    if(card && card.dataset.kind === 'essay') a.classList.add(p.score > 0 ? 'correct' : 'incorrect');
     else a.classList.add(p.correct ? 'correct' : 'incorrect');
   }
   if(layer && year){
     var grid = layer.querySelector('.answer-sheet-grid');
     var html = '';
-    html += '<div class="grp">选择题 1–40（各 2 分）</div>';
+    var lastType = null;
     cards.forEach(function(c){
       var n = +c.dataset.number;
-      if(n === 41) html += '<div class="grp">综合应用题 41–47</div>';
+      if(c.dataset.type !== lastType){
+        lastType = c.dataset.type;
+        html += '<div class="grp">' + lastType + '</div>';
+      }
       var href = document.body.dataset.mode === 'question'
         ? ('../../question/' + c.dataset.qid + '/')
         : ('#q-' + c.dataset.qid);
@@ -826,7 +1041,8 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
     if(submit) submit.addEventListener('click', function(){
       cards.forEach(function(c){
         var qid = c.dataset.qid;
-        if(c.dataset.type === 'choice' && !progress[qid] && drafts[qid]) gradeChoice(c, drafts[qid]);
+        if(c.dataset.kind === 'choice' && !progress[qid] && drafts[qid]) gradeChoice(c, drafts[qid]);
+        if(c.dataset.kind === 'multi' && !progress[qid] && drafts[qid]) gradeMulti(c, drafts[qid]);
       });
       cards.forEach(function(c){ sheetMark(c.dataset.qid); });
       var total = 0, full = 0, correctN = 0, choiceN = 0;
@@ -835,7 +1051,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
         var pts = +c.dataset.points; full += pts;
         var p = progress[c.dataset.qid];
         if(p){ total += p.score || 0; }
-        if(c.dataset.type === 'choice'){
+        if(c.dataset.kind === 'choice' || c.dataset.kind === 'multi'){
           choiceN++;
           if(p && p.correct) correctN++;
           if(p && !p.correct) wrongIds.push(c.dataset.qid);
@@ -892,12 +1108,29 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
     if(state.loaded) return cb();
     if(state.loading) return setTimeout(function(){ ensureData(cb); }, 200);
     state.loading = true;
-    var years = []; for(var y=2009; y<=2026; y++) years.push(y);
-    var pending = years.length;
-    years.forEach(function(y){
-      fetch('../data/questions/' + y + '.json')
-        .then(function(r){ return r.json(); })
-        .then(function(js){ state.data = state.data.concat(js); if(--pending === 0){ state.loaded = true; cb(); } })
+    var EXAMD = [
+      {sk: '408',      name: null,      dir: '408'},
+      {sk: 'math2',    name: '数学二',   dir: 'math2'},
+      {sk: 'politics', name: '政治101', dir: 'politics'},
+      {sk: 'english2', name: '英语二',   dir: 'english2'}
+    ];
+    var jobs = [];
+    EXAMD.forEach(function(e){
+      for(var y = 2009; y <= 2026; y++) jobs.push({e: e, y: y});
+    });
+    var pending = jobs.length;
+    jobs.forEach(function(j){
+      fetch('../data/' + j.e.dir + '/questions/' + j.y + '.json')
+        .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+        .then(function(js){
+          var qs = js.questions || js;
+          qs.forEach(function(q){
+            if(!q.subject) q.subject = j.e.name;
+            if(!q.exam) q.exam = j.e.sk;
+          });
+          state.data = state.data.concat(qs);
+          if(--pending === 0){ state.loaded = true; cb(); }
+        })
         .catch(function(){ if(--pending === 0){ state.loaded = true; cb(); } });
     });
   }
@@ -995,48 +1228,59 @@ FOOTER_TXT = """本站为个人学习用途的自建 408 真题复习站。题�
 
 
 def page_head(title: str, rel: str, mode: str = "", year: str = "",
-              focus_qid: str | None = None, cur_qid: str | None = None) -> str:
-    year_opts = "".join(f'<option value="{y}">{y}</option>' for y in YEARS)
+              focus_qid: str | None = None, cur_qid: str | None = None,
+              sk: str = "408", years: list[int] | None = None) -> str:
+    ex = EXAM_BY_SK.get(sk, EXAMS[0])
+    yl = years or YEARS
+    year_opts = "".join(f'<option value="{y}">{y}</option>' for y in yl)
+    subject_opts = "".join(f'<option value="{e["sk"]}">{e["name"]}</option>' for e in EXAMS)
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{esc(title)} · 408 真题档案</title>
+<title>{esc(title)} · 考研真题档案</title>
 <link rel="stylesheet" href="{rel}assets/style.css?v={ASSET_VER}">
 </head>
-<body data-mode="{mode}" data-year="{year}">
+<body data-mode="{mode}" data-year="{sk}-{year}" data-sk="{sk}">
 <header class="site-header">
-  <a class="brand" href="{rel}index.html">408<i>真题档案</i><small>自建复习站</small></a>
+  <a class="brand" href="{rel}index.html">考研<i>真题档案</i><small>自建复习站</small></a>
   <nav class="site-nav">
-    <a href="{rel}index.html">按年份</a>
+    <select class="year-select" aria-label="科目跳转" onchange="if(this.value)location.href='{rel}'+this.value+'/year/{max(yl) if yl else 2026}/'">
+      <option value="">跳转科目</option>{subject_opts}
+    </select>
     <a href="{rel}knowledge/">按知识点</a>
     <a href="{rel}search/">搜索</a>
     <a href="{rel}wrongbook/">错题本</a>
-    <select class="year-select" aria-label="跳转年份" onchange="if(this.value)location.href='{rel}year/'+this.value+'/'">
+    <a href="{rel}countdown/">倒计时</a>
+    <select class="year-select" aria-label="跳转年份" onchange="if(this.value)location.href='{rel}{sk}/year/'+this.value+'/'">
       <option value="">跳转年份</option>{year_opts}
     </select>
   </nav>
-</header>""" + toolbar(rel, mode, year or None, focus_qid=focus_qid, cur_qid=cur_qid)
+</header>""" + toolbar(rel, mode, year or None, focus_qid=focus_qid, cur_qid=cur_qid, sk=sk, years=yl)
 
 
-def toolbar(rel: str, mode: str, year: int | str | None, focus_qid: str | None = None,
-            cur_qid: str | None = None) -> str:
+def toolbar(rel: str, mode: str, year: int | str | None, sk: str = "408",
+            focus_qid: str | None = None, cur_qid: str | None = None,
+            years: list[int] | None = None) -> str:
     """原站同款工具条：模式切换 + 计时器 + 考试模式/答案常显/答题卡。
-    无年份上下文的页面（首页/知识点/搜索/错题本）只注入模式切换。"""
+    无年份上下文的页面（首页/知识点/搜索/错题本）只注入科目切换。"""
+    ex = EXAM_BY_SK.get(sk, EXAMS[0])
+    prefix = ex["prefix"]
+    yl = years or YEARS
+    latest = max(yl)
     if not year:
-        latest = max(YEARS)
-        ms = (f'<a href="{rel}year/{latest}/">整张模式</a>'
-              f'<a href="{rel}question/{latest}-01/">单题模式</a>')
+        ms = (f'<a href="{rel}{sk}/year/{latest}/">整张模式</a>'
+              f'<a href="{rel}question/{prefix}{latest}-01/">单题模式</a>')
         return f"""
 <div class="toolbar-wrap"><div class="toolbar">
   <div class="mode-switch" aria-label="浏览模式">{ms}</div>
 </div></div>"""
-    paper_href = f"{rel}year/{year}/" + (f"?focus={focus_qid}" if focus_qid else "")
+    paper_href = f"{rel}{sk}/year/{year}/" + (f"?focus={focus_qid}" if focus_qid else "")
     if mode == "paper":
         ms = f'<a href="{paper_href}" class="active">整张模式</a>'
         ms += (f'<a href="{rel}question/{cur_qid}/" class="js-single-link">单题模式</a>' if cur_qid
-               else f'<a href="{rel}question/{int(year)}-01/" class="js-single-link">单题模式</a>')
+               else f'<a href="{rel}question/{prefix}{latest}-01/" class="js-single-link">单题模式</a>')
     else:
         ms = (f'<a href="{paper_href}">整张模式</a>'
               f'<a href="{rel}question/{cur_qid}/" class="active">单题模式</a>')
@@ -1080,10 +1324,11 @@ def toolbar(rel: str, mode: str, year: int | str | None, focus_qid: str | None =
 </div>"""
 
 
-def sheet_trigger() -> str:
-    return """
+def sheet_trigger(n: int | None = None) -> str:
+    small = f'{n} 题' if n else '答题卡'
+    return f"""
 <button class="answer-sheet-trigger sheet-open" aria-label="打开答题卡">
-  <span>📋</span><strong>答题卡</strong><small>47 题</small>
+  <span>📋</span><strong>答题卡</strong><small>{small}</small>
 </button>"""
 
 
@@ -1137,10 +1382,18 @@ def render_card(q: dict, rel: str, focus: bool = False) -> str:
     stem = imgfix(q["stemHtml"], rel)
     tags = "".join(f'<span class="tag">{esc(t)}</span>' for t in q["tags"])
     graded_cls = " is-focus" if focus else ""
+    kind = q.get("kind", "choice" if q["type"] == "choice" else "essay")
+    sub_color = SUBJECTS.get(q["subject"], {}).get("color")
+    if not sub_color:
+        ex = EXAM_BY_SK.get(q.get("exam", "408"), {})
+        sub_color = ex.get("accent", "#e07a2f")
+        sub_bg = ex.get("bg", "#e07a2f1f")
+    else:
+        sub_bg = SUBJECTS[q["subject"]]["bg"]
     parts = [f'<article class="question-card qcard subject-{esc(q["subject"])}{graded_cls}" '
-             f'id="q-{q["id"]}" data-qid="{q["id"]}" data-type="{q["type"]}" '
-             f'data-points="{q["points"]}" data-number="{q["number"]}" data-answer="{q["answerLetter"] or ""}">']
-    parts.append(f'<span class="card-watermark"><span>408 {esc(q["subject"])}</span></span>')
+             f'id="q-{q["id"]}" data-qid="{q["id"]}" data-kind="{kind}" data-type="{q["type"]}" '
+             f'data-points="{q["points"]}" data-number="{q["number"]}" data-answer="{q.get("answerLetter") or ""}">']
+    parts.append(f'<span class="card-watermark"><span>{esc(q.get("examName", ""))} {esc(q["subject"])}</span></span>')
     parts.append(f"""
   <header class="question-header">
     <div>
@@ -1148,7 +1401,7 @@ def render_card(q: dict, rel: str, focus: bool = False) -> str:
       <h2>{q["id"]}</h2>{tags}
     </div>
     <div class="question-meta">
-      <span>{'选择题' if q['type'] == 'choice' else '综合应用题'}</span>
+      <span>{esc(q["type"])}</span>
       <span>{q["points"]} 分</span>
       <button class="meta-btn favorite-button" type="button">☆ 收藏</button>
       <button class="meta-btn mistake-book-button" type="button">加错题</button>
@@ -1157,22 +1410,24 @@ def render_card(q: dict, rel: str, focus: bool = False) -> str:
   <div class="question-detail-columns">
     <div class="question-body">{stem}</div>""")
 
-    if q["type"] == "choice":
+    if kind in ("choice", "multi"):
         opts = "".join(
             f'<button class="choice-option" data-letter="{o["letter"]}">'
             f'<span class="choice-letter">{o["letter"]}</span>'
             f'<span class="choice-text">{imgfix(o["html"], rel)}</span>'
             f'<span class="choice-mark" aria-hidden="true"></span></button>'
             for o in q["options"])
-        parts.append(f'<div class="choice-options" role="group" aria-label="选项（点击作答）">{opts}</div>')
+        multi_hint = '（多选：点选全部正确选项）' if kind == "multi" else ''
+        parts.append(f'<div class="choice-options" role="group" aria-label="选项（点击作答{multi_hint}）">{opts}</div>')
     parts.append('</div>')
 
     # 答案区（原站结构：answer-actions + answer-placeholder）
     ref_inner = imgfix(q["refAnswerHtml"], rel)
-    answer_content = (f'<div class="markdown-content"><p><strong>答案：{q["answerLetter"]}</strong></p></div>'
-                      if q["type"] == "choice" else f'<div class="markdown-content">{ref_inner}</div>')
+    is_choice_like = kind in ("choice", "multi")
+    answer_content = (f'<div class="markdown-content"><p><strong>答案：{q.get("answerLetter") or "?"}</strong></p></div>'
+                      if is_choice_like else f'<div class="markdown-content">{ref_inner}</div>')
     parts.append('<div class="answer-region"><div class="answer-actions">')
-    if q["type"] == "choice":
+    if is_choice_like:
         parts.append('<button class="reveal-button" type="button" disabled>提交答案</button>')
     else:
         parts.append('<button class="reveal-button reveal-ref" type="button">查看参考答案</button>')
@@ -1182,7 +1437,7 @@ def render_card(q: dict, rel: str, focus: bool = False) -> str:
       </button>
     </div>
     <div class="answer-placeholder"><span>答案</span><div class="answer-content">{}</div></div>""".format(answer_content))
-    if q["type"] == "essay":
+    if kind == "essay":
         half = max(q["points"] // 2, 1)
         parts.append(f"""
     <div class="self-score" style="display:none;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
@@ -1278,103 +1533,140 @@ def anim_placeholder(q: dict) -> str:
 <p style="font-size:13px">完成后将自动替换本占位页</p></div></body></html>"""
 
 
-def build(meta: dict, all_q: list[dict]) -> None:
+def all_questions_flat(exams: list[dict]) -> list[dict]:
+    """按科目顺序摊平全部题目。"""
+    out = []
+    for ex in exams:
+        for yv in ex["years"]:
+            out += yv["questions"]
+    return out
+
+
+def build(meta: dict, exams: list[dict]) -> None:
+    """exams: [{sk, ex, years: [{year, count, questions: [q...]}]}] —— 四科目统一构建。"""
     root = PROJECT
-    by_year: dict[int, list[dict]] = {}
-    for q in all_q:
-        by_year.setdefault(q["year"], []).append(q)
-    for y in by_year:
-        by_year[y].sort(key=lambda q: q["number"])
+    for ex in exams:
+        for yv in ex["years"]:
+            yv["questions"].sort(key=lambda q: q["number"])
 
     # ---------- 首页 ----------
-    idx = [page_head("408 历年真题复习", ""), """
+    n_papers = sum(len(ex["years"]) for ex in exams)
+    n_questions = sum(len(yv["questions"]) for ex in exams for yv in ex["years"])
+    subject_sections = ""
+    for ex in exams:
+        cards = "".join(
+            f'<a class="year-card" href="{ex["sk"]}/year/{yv["year"]}/"><b>{yv["year"]} 年</b>'
+            f'<span>{yv["count"]} 题 · {ex["total"]} 分</span></a>'
+            for yv in ex["years"])
+        subject_sections += (f'<div class="section-title">{esc(ex["name"])} · {ex["full"]}</div>'
+                             f'<div class="year-grid">{cards}</div>')
+    idx = [page_head("考研真题复习 · 四科目", ""), f"""
 <div class="intro">
   <div>
-    <p class="eyebrow">自建 · 计算机考研 408 历年真题复习站</p>
-    <h1>计算机学科专业基础<span>408 真题档案</span></h1>
-    <p class="intro-copy">收录 <b>2009–2026 共 18 套真题、846 道题</b>，支持整张/单题两种模式、答题卡与考试模式计时。
-    每道题配有<b>原创文字讲解</b>与<b>交互动画演示</b>，解析视频来自 B 站。进度与错题保存在本地浏览器。</p>
+    <p class="eyebrow">自建 · 考研历年真题复习站（政治 / 英语 / 数学 / 408）</p>
+    <h1>考研真题档案<span>四科目 · 一站刷完</span></h1>
+    <p class="intro-copy">收录 <b>政治101 · 英语二 · 数学二 · 408</b> 共 <b>{n_papers} 套真题、{n_questions} 道题</b>，
+    支持整张/单题两种模式、答题卡与考试模式计时。每道题配有<b>原创文字讲解</b>与<b>交互动画演示</b>。
+    进度与错题保存在本地浏览器。</p>
   </div>
-  <div class="paper-stamp" aria-label="共 846 道题，18 套卷">
-    <strong>18</strong><span>套卷</span><i></i><strong>846</strong><span>道题</span>
+  <div class="paper-stamp" aria-label="共 {n_papers} 套卷，{n_questions} 道题">
+    <strong>{n_papers}</strong><span>套卷</span><i></i><strong>{n_questions}</strong><span>道题</span>
   </div>
 </div>
-<div class="section-title">按年份浏览</div>
-<div class="year-grid">{cards}</div>
-<footer><div class="wrap">{footer}</div></footer>
-<script src="assets/app.js"></script></body></html>""".format(
-        cards="".join(
-            f'<a class="year-card" href="year/{x["year"]}/"><b>{x["year"]} 年</b><span>{x["count"]} 题 · 150 分</span></a>'
-            for x in meta["years"]),
-        footer=FOOTER_TXT)]
+{subject_sections}
+<footer><div class="wrap">{FOOTER_TXT}</div></footer>
+<script src="assets/app.js"></script></body></html>"""]
     (root / "index.html").write_text("\n".join(idx), encoding="utf-8")
 
-    # ---------- 整张模式页 ----------
-    for y, qs in by_year.items():
-        ydir = root / "year" / str(y)
-        ydir.mkdir(parents=True, exist_ok=True)
-        cards = "\n".join(render_card(q, "../../") for q in qs)
-        head = page_head(f"{y} 年 408 真题 · 整张模式", "../../", mode="paper", year=str(y))
-        hero = f"""
+    # ---------- 整张模式页（按科目×年份） ----------
+    for ex in exams:
+        sk = ex["sk"]
+        for yv in ex["years"]:
+            y, qs = yv["year"], yv["questions"]
+            paper_total = sum(q["points"] for q in qs)
+            ydir = root / sk / "year" / str(y)
+            ydir.mkdir(parents=True, exist_ok=True)
+            cards = "\n".join(render_card(q, "../../") for q in qs)
+            head = page_head(f"{ex['name']} {y} 年真题 · 整张模式", "../../", mode="paper",
+                             year=str(y), sk=sk, years=[yv["year"] for yv in ex["years"]])
+            hero = f"""
 <div class="intro">
   <div>
-    <p class="eyebrow">{y} · 全国硕士研究生入学统一考试</p>
-    <h1>计算机学科专业基础<span>{y} 真题档案</span></h1>
+    <p class="eyebrow">{y} · 全国硕士研究生入学统一考试 · {esc(ex["full"])}</p>
+    <h1>{esc(ex["name"])}<span>{y} 真题档案</span></h1>
     <p class="intro-copy">整张模式：自上而下依次作答；右上角可切换到任意一题的<b>单题模式</b>。
-    选择题点选后「提交答案」即判分（考试模式下交卷统一判分），大题写完思路后对照参考答案自评。</p>
+    选择题点选后「提交答案」即判分（多选题需全对才得分；考试模式下交卷统一判分），大题写完思路后对照参考答案自评。</p>
   </div>
-  <div class="paper-stamp" aria-label="共 47 道题，满分 150 分">
-    <strong>47</strong><span>道题</span><i></i><strong>150</strong><span>满分</span>
+  <div class="paper-stamp" aria-label="共 {len(qs)} 道题，满分 {paper_total} 分">
+    <strong>{len(qs)}</strong><span>道题</span><i></i><strong>{paper_total}</strong><span>满分</span>
   </div>
 </div>"""
-        page = (head + hero + f'<div class="paper-body">{cards}</div>' + sheet_trigger()
-                + f'<footer><div class="wrap">{FOOTER_TXT}</div></footer>'
-                + '<script src="../../assets/app.js"></script></body></html>')
-        (ydir / "index.html").write_text(page, encoding="utf-8")
+            page = (head + hero + f'<div class="paper-body">{cards}</div>' + sheet_trigger(len(qs))
+                    + f'<footer><div class="wrap">{FOOTER_TXT}</div></footer>'
+                    + katex_foot("../../")
+                    + '<script src="../../assets/app.js"></script></body></html>')
+            (ydir / "index.html").write_text(page, encoding="utf-8")
 
-    # ---------- 单题模式页 ----------
-    for y, qs in by_year.items():
-        for i, q in enumerate(qs):
-            qdir = root / "question" / q["id"]
-            qdir.mkdir(parents=True, exist_ok=True)
-            prev_q = qs[i - 1] if i > 0 else None
-            next_q = qs[i + 1] if i < len(qs) - 1 else None
-            head = page_head(f"{q['id']} · {q['subject']} · 单题模式", "../../", mode="question",
-                             year=str(y), focus_qid=q["id"], cur_qid=q["id"])
-            hero = f"""
+    # ---------- 单题模式页（四科目平铺，id 全局唯一） ----------
+    for ex in exams:
+        sk = ex["sk"]
+        for yv in ex["years"]:
+            y, qs = yv["year"], yv["questions"]
+            for i, q in enumerate(qs):
+                qdir = root / "question" / q["id"]
+                qdir.mkdir(parents=True, exist_ok=True)
+                prev_q = qs[i - 1] if i > 0 else None
+                next_q = qs[i + 1] if i < len(qs) - 1 else None
+                head = page_head(f"{q['id']} · {q['subject']} · 单题模式", "../../", mode="question",
+                                 year=str(y), sk=sk, focus_qid=q["id"], cur_qid=q["id"],
+                                 years=[yv2["year"] for yv2 in ex["years"]])
+                hero = f"""
 <div class="intro" style="padding:30px 0 8px">
   <div>
     <p class="eyebrow">{y} 年真题 · 单题模式</p>
-    <h1 style="font-size:clamp(26px,3.4vw,42px)">{q["id"]}<span style="font-size:.42em;letter-spacing:0">{esc(q["subject"])} · {"选择题" if q['type'] == 'choice' else '综合应用题'} · {q["points"]} 分</span></h1>
+    <h1 style="font-size:clamp(26px,3.4vw,42px)">{q["id"]}<span style="font-size:.42em;letter-spacing:0">{esc(q["subject"])} · {esc(q["type"])} · {q["points"]} 分</span></h1>
   </div>
   <div class="paper-stamp" style="transform:none;min-height:0;padding:10px 16px;display:inline-grid;grid-template-columns:auto auto;gap:2px 10px;width:auto">
     <strong style="font-size:22px">{q["number"]}</strong><span>题号</span>
   </div>
 </div>"""
-            nav = '<nav class="question-navigation paper-body" style="padding-top:0;margin-top:4px">'
-            nav += (f'<a class="nav-link-prev" rel="prev" href="../{prev_q["id"]}/"><span>← 上一题</span>'
-                    f'<strong>{prev_q["id"]}</strong></a>') if prev_q else '<span></span>'
-            nav += (f'<a class="nav-link-next" rel="next" href="../{next_q["id"]}/"><span>下一题 →</span>'
-                    f'<strong>{next_q["id"]}</strong></a>') if next_q else '<span></span>'
-            nav += '</nav>'
-            page = (head + hero + f'<div class="paper-body" style="padding-top:14px">{render_card(q, "../../", focus=True)}</div>'
-                    + nav + sheet_trigger()
-                    + f'<footer><div class="wrap">{FOOTER_TXT}</div></footer>'
-                    + '<script src="../../assets/app.js"></script></body></html>')
-            (qdir / "index.html").write_text(page, encoding="utf-8")
+                nav = '<nav class="question-navigation paper-body" style="padding-top:0;margin-top:4px">'
+                nav += (f'<a class="nav-link-prev" rel="prev" href="../{prev_q["id"]}/"><span>← 上一题</span>'
+                        f'<strong>{prev_q["id"]}</strong></a>') if prev_q else '<span></span>'
+                nav += (f'<a class="nav-link-next" rel="next" href="../{next_q["id"]}/"><span>下一题 →</span>'
+                        f'<strong>{next_q["id"]}</strong></a>') if next_q else '<span></span>'
+                nav += '</nav>'
+                page = (head + hero + f'<div class="paper-body" style="padding-top:14px">{render_card(q, "../../", focus=True)}</div>'
+                        + nav + sheet_trigger()
+                        + f'<footer><div class="wrap">{FOOTER_TXT}</div></footer>'
+                        + katex_foot("../../")
+                        + '<script src="../../assets/app.js"></script></body></html>')
+                (qdir / "index.html").write_text(page, encoding="utf-8")
 
-    # ---------- 知识点页 ----------
+    # ---------- 知识点页（四科目统一） ----------
     tag_map: dict[str, dict] = {}
-    for q in all_q:
-        for t in q["tags"] or ["未分类"]:
-            e = tag_map.setdefault(t, {"subject": q["subject"], "qs": set()})
-            e["qs"].add(q["id"])
+    for ex in exams:
+        for yv in ex["years"]:
+            for q in yv["questions"]:
+                for t in q["tags"] or ["未分类"]:
+                    e = tag_map.setdefault(t, {"subject": q["subject"], "qs": set()})
+                    e["qs"].add(q["id"])
+    subject_order = []
+    for ex in exams:
+        for yv in ex["years"]:
+            for q in yv["questions"]:
+                if q["subject"] not in subject_order:
+                    subject_order.append(q["subject"])
     kn = [page_head("按知识点浏览", "../"), """
 <div class="page-wrap">
 <h1>按知识点浏览</h1>
 <p class="lead">共 {} 个知识点标签；标签后数字为该考点历年出现的题目数（考频）。</p>
 """.format(len(tag_map))]
-    for s in SUBJECTS:
+    seen_subjects = []
+    for q in all_questions_flat(exams):
+        if q["subject"] not in seen_subjects:
+            seen_subjects.append(q["subject"])
+    for s in seen_subjects:
         tags = sorted([(t, e) for t, e in tag_map.items() if e["subject"] == s],
                       key=lambda x: -len(x[1]["qs"]))
         if not tags:
@@ -1392,16 +1684,16 @@ def build(meta: dict, all_q: list[dict]) -> None:
     (root / "knowledge").mkdir(exist_ok=True)
     (root / "knowledge" / "index.html").write_text("\n".join(kn), encoding="utf-8")
 
-    # ---------- 搜索页 ----------
-    subjects_opts = "".join(f'<option value="{esc(s)}">{esc(s)}</option>' for s in SUBJECTS)
+    # ---------- 搜索页（四科目统一） ----------
+    subjects_opts = "".join(f'<option value="{esc(s)}">{esc(s)}</option>' for s in seen_subjects)
     sp = page_head("搜索真题", "../")
     sp += f"""
 <div class="page-wrap" id="search-page">
 <h1>搜索真题</h1>
-<p class="lead">支持题干全文与知识点标签匹配；首次搜索会加载全部题库（约 1 MB）。</p>
+<p class="lead">支持题干全文与知识点标签匹配；首次搜索会加载全部题库。</p>
 <div class="card">
   <div class="search-bar">
-    <input id="search-input" placeholder="试试：KMP / TCP / 进程调度 / Cache / 哈夫曼 …" autofocus>
+    <input id="search-input" placeholder="试试：KMP / TCP / 进程调度 / Cache / 极限 …" autofocus>
     <select id="search-subject"><option value="">全部科目</option>{subjects_opts}</select>
   </div>
   <p id="search-count" style="font-size:13px;color:#586e72;margin:6px 0 10px"></p>
@@ -1426,12 +1718,15 @@ def build(meta: dict, all_q: list[dict]) -> None:
   var box = document.getElementById('wrongbook-box');
   var ids = Object.keys(wrong).sort();
   if(!ids.length){{ box.innerHTML = '<p style="color:#586e72">还没有错题 —— 去刷几套卷吧 😉</p>'; return; }}
-  var byYear = {{}};
-  ids.forEach(function(id){{ (byYear[id.slice(0,4)] = byYear[id.slice(0,4)] || []).push(id); }});
+  var SUBN = {{'m2':'数学二','zz':'政治101','yy':'英语二'}};
+  function subjOf(id){{ if(id.indexOf('m2-')===0) return '数学二'; if(id.indexOf('zz-')===0) return '政治101'; if(id.indexOf('yy-')===0) return '英语二'; return '408'; }}
+  var bySub = {{}};
+  ids.forEach(function(id){{ var s = subjOf(id); (bySub[s] = bySub[s] || []).push(id); }});
   var h = '<p style="font-size:13px;color:#586e72;margin-bottom:10px">共 ' + ids.length + ' 道错题</p>';
-  Object.keys(byYear).sort().forEach(function(y){{
-    h += '<h3 style="margin:10px 0 6px;font-size:15px">' + y + ' 年（' + byYear[y].length + '）</h3>';
-    byYear[y].forEach(function(id){{
+  ['408','数学二','政治101','英语二'].forEach(function(s){{
+    if(!bySub[s]) return;
+    h += '<h3 style="margin:10px 0 6px;font-size:15px">' + s + '（' + bySub[s].length + '）</h3>';
+    bySub[s].forEach(function(id){{
       var w = wrong[id];
       h += '<a class="result-item" href="../question/' + id + '/"><b>' + id + '</b>' +
         '<span class="tag">错 ' + w.n + ' 次</span></a>';
@@ -1454,7 +1749,7 @@ def build(meta: dict, all_q: list[dict]) -> None:
     adir = root / "anim"
     adir.mkdir(exist_ok=True)
     n_placeholder = 0
-    for q in all_q:
+    for q in all_questions_flat(exams):
         f = adir / f"{q['id']}.html"
         if not f.exists():
             f.write_text(anim_placeholder(q), encoding="utf-8")
@@ -1465,31 +1760,32 @@ def build(meta: dict, all_q: list[dict]) -> None:
     (adir2 / "style.css").write_text(CSS, encoding="utf-8")
     (adir2 / "app.js").write_text(APP_JS, encoding="utf-8")
 
-    # ---------- 动画页注入「上一题/下一题」切换条 ----------
-    ids = [q["id"] for q in all_q]
-    pos = {qid: i for i, qid in enumerate(ids)}
+    # ---------- 动画页注入「上一题/下一题」切换条（按科目内顺序） ----------
     n_qnav = 0
-    for q in all_q:
-        af = adir / f"{q['id']}.html"
-        if not af.exists():
-            continue
-        i = pos[q["id"]]
-        prev_id = ids[i - 1] if i > 0 else None
-        next_id = ids[i + 1] if i < len(ids) - 1 else None
-        src = af.read_text(encoding="utf-8")
-        if "<!-- AW_QNAV_START -->" in src:
-            src = re.sub(r"<!-- AW_QNAV_START -->.*?<!-- AW_QNAV_END -->", lambda m: qnav_html(q, prev_id, next_id),
-                         src, flags=re.S)
-        elif '<div class="aw"></div>' in src:
-            src = src.replace('<div class="aw"></div>', qnav_html(q, prev_id, next_id) + '\n<div class="aw"></div>', 1)
-        else:
-            src = src.replace("<body>", "<body>\n" + qnav_html(q, prev_id, next_id), 1)
-        af.write_text(src, encoding="utf-8")
-        n_qnav += 1
+    for ex in exams:
+        ids = [q["id"] for yv in ex["years"] for q in yv["questions"]]
+        pos = {qid: i for i, qid in enumerate(ids)}
+        for q in [q for yv in ex["years"] for q in yv["questions"]]:
+            af = adir / f"{q['id']}.html"
+            if not af.exists():
+                continue
+            i = pos[q["id"]]
+            prev_id = ids[i - 1] if i > 0 else None
+            next_id = ids[i + 1] if i < len(ids) - 1 else None
+            src = af.read_text(encoding="utf-8")
+            if "<!-- AW_QNAV_START -->" in src:
+                src = re.sub(r"<!-- AW_QNAV_START -->.*?<!-- AW_QNAV_END -->", lambda m: qnav_html(q, prev_id, next_id),
+                             src, flags=re.S)
+            elif '<div class="aw"></div>' in src:
+                src = src.replace('<div class="aw"></div>', qnav_html(q, prev_id, next_id) + '\n<div class="aw"></div>', 1)
+            else:
+                src = src.replace("<body>", "<body>\n" + qnav_html(q, prev_id, next_id), 1)
+            af.write_text(src, encoding="utf-8")
+            n_qnav += 1
 
     # ---------- 动画页注入「文字讲解」（与动画同页，可折叠） ----------
     n_explain = 0
-    for q in all_q:
+    for q in all_questions_flat(exams):
         af = adir / f"{q['id']}.html"
         ef = PROJECT / "data" / "explain" / f"{q['id']}.md"
         if not af.exists() or not ef.exists():
@@ -1522,18 +1818,47 @@ def build(meta: dict, all_q: list[dict]) -> None:
         if s2 != s:
             f.write_text(s2, encoding="utf-8")
 
-    print(f"站点已生成：首页 1 + 年份页 {len(by_year)} + 单题页 {len(all_q)}"
+    print(f"站点已生成：首页 1 + 年份页 {sum(len(ex['years']) for ex in exams)} + 单题页 {n_questions}"
           f" + 知识点/搜索/错题本 3 + 动画占位 {n_placeholder} + 动画讲解注入 {n_explain}"
           f" + 动画切题条 {n_qnav}")
 
 
 def main():
     meta = json.loads((PROJECT / "data" / "meta.json").read_text(encoding="utf-8"))
-    all_q = []
-    for x in meta["years"]:
-        all_q += json.loads(
-            (PROJECT / "data" / "questions" / f"{x['year']}.json").read_text(encoding="utf-8"))
-    build(meta, all_q)
+    exams = []
+    for sm in meta["subjects"]:
+        sk = sm["key"]
+        ex = EXAM_BY_SK[sk]
+        years = []
+        for yv in sm["years"]:
+            y = yv["year"]
+            raw = json.loads((PROJECT / "data" / sk / "questions" / f"{y}.json").read_text(encoding="utf-8"))
+            qs = raw["questions"] if isinstance(raw, dict) and "questions" in raw else raw
+            for q in qs:
+                q["exam"] = sk
+                q["examName"] = ex["name"]
+                if not q.get("subject"):
+                    q["subject"] = ex["name"]
+                q["kind"] = norm_kind(sk, q["type"])
+                q["_sup"] = (sk == "408")
+                # 字段归一：math/politics/english → 408 同款 schema
+                if not q.get("stemHtml"):
+                    st = q.get("stem") or ""
+                    q["stemHtml"] = f'<div class="markdown-content"><p>{st}</p></div>'
+                if not q.get("refAnswerHtml"):
+                    ra = q.get("refAnalysis") or ""
+                    q["refAnswerHtml"] = f'<div class="markdown-content"><p>{ra}</p></div>'
+                if not q.get("answerLetter") and q["kind"] in ("choice", "multi"):
+                    a = (q.get("answer") or "").strip()
+                    if a and a != "略" and re.fullmatch(r"[A-G]+", a):
+                        q["answerLetter"] = a
+                q.setdefault("tags", [])
+                q.setdefault("options", [])
+                q.setdefault("videoUrl", "")
+                q.setdefault("images", [])
+            years.append({"year": y, "count": len(qs), "questions": qs})
+        exams.append({**EXAM_BY_SK[sk], "sk": sk, "years": years})
+    build(meta, exams)
 
 
 if __name__ == "__main__":

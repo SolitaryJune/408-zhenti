@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画：构造 g=f/e^x 用单调性定选项</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-05.html" data-q="../question/m2-2020-05/">← <b>m2-2020-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-06/" data-q="../question/m2-2020-06/" data-no-anim="1">m2-2020-06 · 本题</a>
+  <a href="m2-2020-07.html" data-q="../question/m2-2020-07/"><b>m2-2020-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：见 $f^\\prime-f$ 就构造 $g=\\dfrac{f}{e^x}$',
+    cls: 'key',
+    log: '条件同时含 f′ 与 f，选项全在比 f(b)/f(a) 与 e^(b-a)',
+    body: '<p>条件 $f^\\prime(x)>f(x)>0$ 同时出现 $f^\\prime$ 与 $f$，四个选项都是 $\\dfrac{f(b)}{f(a)}$ 与 $e^{b-a}$ 比较——构造 $$g(x)=\\frac{f(x)}{e^x},\\qquad g^\\prime(x)=\\frac{f^\\prime(x)-f(x)}{e^x}>0.$$ 故 $g$ 在 $[-2,2]$ 上<b>严格递增</b>；$f^\\prime>0$ 还说明 $f$ 本身递增且恒正。</p>' },
+  { title: '翻译器：$g(b)>g(a)$ 意味着什么',
+    cls: 'step',
+    log: 'g(b)>g(a) 等价于 f(b)/f(a) > e^(b-a)',
+    body: '<p>对 $b>a$：$$g(b)>g(a)\\iff\\frac{f(b)}{e^b}>\\frac{f(a)}{e^a}\\iff\\frac{f(b)}{f(a)}>e^{b-a}$$（$f>0$，除法不变号）。每个选项都对应 $g$ 在两点的一次大小比较。</p>' },
+  { title: '选项 B：$\\dfrac{f(0)}{f(-1)}>e$',
+    cls: 'good',
+    log: 'g(0) > g(-1) → f(0)/f(-1) > e，B 成立',
+    ribbon: {k:1, ok:true},
+    body: '<p>$g(0)>g(-1)$：$$\\frac{f(0)}{1}>\\frac{f(-1)}{e^{-1}}\\Rightarrow f(0)>e\\,f(-1)\\Rightarrow\\frac{f(0)}{f(-1)}>e.$$ <b>B 成立</b>。</p>' },
+  { title: '选项 A：$\\dfrac{f(-2)}{f(-1)}>1$',
+    cls: 'bad',
+    log: 'f 递增直接否掉 A：比值小于 1',
+    ribbon: {k:2, ok:false},
+    body: '<p>$f^\\prime>0$ 说明 $f$ 严格递增，故 $f(-2)<f(-1)$，比值 $\\dfrac{f(-2)}{f(-1)}<1$，不可能大于 $1$。<b>A 错</b>。</p>' },
+  { title: '选项 C：$\\dfrac{f(1)}{f(-1)}<e^2$',
+    cls: 'bad',
+    log: 'g(1) > g(-1) 给出 f(1)/f(-1) > e²，方向反',
+    ribbon: {k:3, ok:false},
+    body: '<p>$g(1)>g(-1)$：$$\\frac{f(1)}{e}>\\frac{f(-1)}{e^{-1}}\\Rightarrow f(1)>e^2f(-1)\\Rightarrow\\frac{f(1)}{f(-1)}>e^2.$$ 选项写 $<e^2$，方向恰好相反。<b>C 错</b>。</p>' },
+  { title: '选项 D：$\\dfrac{f(2)}{f(-1)}<e^3$',
+    cls: 'bad',
+    log: 'g(2) > g(-1) 给出 f(2)/f(-1) > e³，方向也反',
+    ribbon: {k:4, ok:false},
+    body: '<p>$g(2)>g(-1)$：$$\\frac{f(2)}{e^2}>\\frac{f(-1)}{e^{-1}}\\Rightarrow f(2)>e^3f(-1)\\Rightarrow\\frac{f(2)}{f(-1)}>e^3.$$ 选项写 $<e^3$，同样方向反了。<b>D 错</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '只有 B 成立，选 B',
+    body: '<p>答案 <b>B</b>。记忆锚点：<b>见 $f^\\prime\\pm f$ 就除以 $e^x$</b>——$\\left(\\frac{f}{e^x}\\right)^\\prime$ 的符号由 $f^\\prime-f$ 决定，单调性把抽象条件翻译成两点的比值不等式。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f^\\prime(x)>f(x)>0$（$[-2,2]$）：四个比值不等式谁成立',
+  subtitle: '考点：辅助函数构造与单调性 · 方法：$g=f/e^x$，$g^\\prime$ 符号由 $f^\\prime-f$ 决定',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步构造并逐项判定。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B：$\\dfrac{f(0)}{f(-1)}>e$',
+    html: '记忆锚点：<b>$g=\\dfrac{f}{e^x}$ 严格增，$g(b)>g(a)\\iff\\dfrac{f(b)}{f(a)}>e^{b-a}$</b>。A 被 $f$ 递增直接否掉（比值 $<1$）；C、D 的不等号方向恰好都写反：真结论是 $\\frac{f(1)}{f(-1)}>e^2$、$\\frac{f(2)}{f(-1)}>e^3$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：见 $f'-f$ 就除以 $e<sup>x</sup>$——构造 $g=\frac{f}{e<sup>x</sup>}$ 用单调性</h2>
+<p>答案：B</p>
+<h3>第一步：选构造</h3>
+<p>条件 $f'(x)&gt;f(x)&gt;0$ 同时出现 $f'$ 与 $f$，而四个选项全是 $\dfrac{f(b)}{f(a)}$ 与 $e<sup>b-a</sup>$ 比较——这是构造 $g(x)=\dfrac{f(x)}{e<sup>x</sup>}$ 的信号：</p>
+<p>$$g'(x)=\frac{f'(x)e<sup>x</sup>-f(x)e<sup>x</sup>}{e<sup>2x</sup>}=\frac{f'(x)-f(x)}{e<sup>x</sup>}&gt;0,$$</p>
+<p>故 $g$ 在 $[-2,2]$ 上严格递增。又 $f'&gt;0$ 说明 $f$ 本身严格递增且恒正。</p>
+<h3>第二步：把选项翻译成 $g$ 的两点比较</h3>
+<p>对 $b&gt;a$：$g(b)&gt;g(a)\iff\dfrac{f(b)}{e<sup>b</sup>}&gt;\dfrac{f(a)}{e<sup>a</sup>}\iff\dfrac{f(b)}{f(a)}&gt;e<sup>b-a</sup>$（$f&gt;0$，除法不变号）。逐项核对：</p>
+<ul><li><strong>B</strong>：$g(0)&gt;g(-1)$ → $f(0)&gt;e\,f(-1)$ → $\dfrac{f(0)}{f(-1)}&gt;e$，成立。</li><li><strong>A</strong>：$f$ 递增 → $f(-2)&lt;f(-1)$ → 比值 $&lt;1$，不可能 $&gt;1$。</li><li><strong>C</strong>：$g(1)&gt;g(-1)$ → $f(1)&gt;e<sup>2f</sup>(-1)$ → 比值 $&gt;e<sup>2</sup>$，选项写 $&lt;e<sup>2</sup>$，方向反了。</li><li><strong>D</strong>：$g(2)&gt;g(-1)$ → $f(2)&gt;e<sup>3f</sup>(-1)$ → 比值 $&gt;e<sup>3</sup>$，选项写 $&lt;e<sup>3</sup>$，同样方向反。</li></ul>
+<p>只有 B 成立。</p>
+<h3>第三步：直观理解（为什么比值一定上升）</h3>
+<p>比较增长快慢要看<strong>相对增长率</strong>：$f$ 的是 $\dfrac{f'}{f}$，$e<sup>x</sup>$ 的是 $\dfrac{(e<sup>x</sup>)'}{e<sup>x</sup>}=1$。条件 $f'&gt;f&gt;0$ 两边同除以 $f$，恰是 $\dfrac{f'}{f}&gt;1$——$f$ 在"百分比意义"下跑赢 $e<sup>x</sup>$，所以比值 $g=\dfrac{f}{e<sup>x</sup>}$ 一路上升。这也回答了"为什么偏偏除以 $e<sup>x</sup>$"：$e<sup>x</sup>$ 是相对增长率恒为 1 的标尺，$g$ 量出 $f$ 超出这条标尺的程度；$g$ 在任意两点的大小关系是硬信息，比任何具体函数例子都可靠。</p>
+<h3>易错点</h3>
+<ul><li><strong>只用 $f$ 递增</strong>：$f$ 递增只能否掉 A；C、D 的方向必须靠 $g$ 的单调性才能定。</li><li><strong>不等号方向记反</strong>：$g$ 增给出比值 $&gt;e<sup>b-a</sup>$，C、D 恰把两个方向都写反。</li><li><strong>忽略 $f&gt;0$ 的作用</strong>：它是「除以 $f(a)$ 不变号」「比值有意义」的保障。</li></ul>
+<blockquote>一句话结论：$g=\frac{f}{e<sup>x</sup>}$ 严格增，$g(b)&gt;g(a)\iff\frac{f(b)}{f(a)}&gt;e<sup>b-a</sup>$：B 成立，A 的比值小于 1，C、D 方向全反。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

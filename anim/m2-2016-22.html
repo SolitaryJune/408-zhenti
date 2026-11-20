@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016 数二第 22 题 · 无解定参数与正规方程通解（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-21.html" data-q="../question/m2-2016-21/">← <b>m2-2016-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-22/" data-q="../question/m2-2016-22/" data-no-anim="1">m2-2016-22 · 本题</a>
+  <a href="m2-2016-23.html" data-q="../question/m2-2016-23/"><b>m2-2016-23</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2016·22　$AX=\\beta$ 无解求 $a$，再解 $A^{\\mathrm{T}}AX=A^{\\mathrm{T}}\\beta$',
+  subtitle: '考点：线性方程组 · 方法：<b>秩的比较 + 正规方程行变换</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看「无解」如何逼出 $a$，通解如何从行变换里长出来。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '<b>题设：</b>$A=\\begin{pmatrix}1&1&1-a\\\\1&0&a\\\\a+1&1&a+1\\end{pmatrix}$，$\\beta=\\begin{pmatrix}0\\\\1\\\\2a-2\\end{pmatrix}$，$AX=\\beta$ <b>无解</b>',
+      '<b>① 定候选：</b>无解 $\\Rightarrow$ $A$ 不满秩（满秩时任意右端都有唯一解）；$|A|=a(a-2)$，候选 $a=0$ 或 $a=2$',
+      '<b>② 检验 $a=2$：</b>增广矩阵行变换得 $r(A)=r(A,\\beta)=2$，有无穷多解，与「无解」矛盾，排除',
+      '<b>③ 检验 $a=0$：</b>$A$ 的第一、三行相同而右端 $0\\ne-2$，矛盾方程，$r(A)=2<r(A,\\beta)=3$，无解成立，定 $a=0$',
+      '<b>④ 组装正规方程：</b>$A^{\\mathrm{T}}A=\\begin{pmatrix}3&2&2\\\\2&2&2\\\\2&2&2\\end{pmatrix}$，$A^{\\mathrm{T}}\\beta=\\begin{pmatrix}-1\\\\-2\\\\-2\\end{pmatrix}$',
+      '<b>⑤ 行变换化简：</b>$(A^{\\mathrm{T}}A\\mid A^{\\mathrm{T}}\\beta)\\longrightarrow\\begin{pmatrix}1&0&0&1\\\\0&1&1&-2\\\\0&0&0&0\\end{pmatrix}$（第 4 列为右端项），秩 $2$，$x_{3}$ 自由',
+      '<b>⑥ 通解：</b>$x_{3}=k$：$x_{1}=1,\\ x_{2}=-2-k$，故 $X=\\begin{pmatrix}1\\\\-2\\\\0\\end{pmatrix}+k\\begin{pmatrix}0\\\\-1\\\\1\\end{pmatrix}$，$k\\in\\mathbb{R}$'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'无解说明系数矩阵不满秩，行列式必须为零，先锁定候选值再验秩', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'行列式', log:'行列式算出来是 a 乘 a 减二，候选只有零和二', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'验 a=2', log:'a 取二时系数与增广的秩相等，方程组有无穷多解，与无解矛盾，排除', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'验 a=0', log:'a 取零时第一行第三行系数一样但右端一个是零一个是负二，矛盾方程，正是无解', count:3, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'组装',   log:'第二问先算正规方程的系数矩阵与右端向量，别把负号带错', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'化简',   log:'增广矩阵行变换化成最简形：秩为二，第三个变量自由', count:5, ribbon:{k:6, ok:true} },
+    { cls:'done',  tag:'完成',  log:'特解加齐次通解：x 等于 (1,-2,0) 加 k 倍 (0,-1,1)', count:6, ribbon:{k:7, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$a=0$；$X=\\begin{pmatrix}1\\\\-2\\\\0\\end{pmatrix}+k\\begin{pmatrix}0\\\\-1\\\\1\\end{pmatrix}$',
+    html: '记忆锚点：<b>无解 $\\Leftrightarrow$ $r(A)<r(A,\\beta)$</b>；$|A|=0$ 只给候选，必须逐个验秩。正规方程 $A^{\\mathrm T}AX=A^{\\mathrm T}\\beta$ 恒有解，行变换直接出通解。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由「无解」定参数——秩的比较与正规方程的通解</h2>
+<p><strong>答案：(I) $a=0$；(II) $X=\begin{pmatrix}1\\-2\\0\end{pmatrix}+k\begin{pmatrix}0\\-1\\1\end{pmatrix}$（$k$ 为任意常数）。</strong></p>
+<h3>第一步：(I) 由 $|A|$ 锁定候选值</h3>
+<p>$AX=\beta$ 无解 $\Rightarrow$ 系数矩阵必不满秩：若 $r(A)=3$，则 $A$ 可逆，$X=A<sup>-1</sup>\beta$ 对任何 $\beta$ 都是唯一解，绝不无解。计算</p>
+<p>$$|A|=\begin{vmatrix}1&amp;1&amp;1-a\\1&amp;0&amp;a\\a+1&amp;1&amp;a+1\end{vmatrix}=a(a-2),$$</p>
+<p>候选只有 $a=0$ 与 $a=2$。<strong>注意 $|A|=0$ 只是「可疑」不是「定罪」</strong>：降秩时可能无解、也可能有无穷多解，必须逐个比较 $r(A)$ 与 $r(A,\beta)$。</p>
+<h3>第二步：逐个检验秩</h3>
+<ul><li>$a=2$：$A=\begin{pmatrix}1&amp;1&amp;-1\\1&amp;0&amp;2\\3&amp;1&amp;3\end{pmatrix}$，增广矩阵行变换后得 $r(A)=r(A,\beta)=2$，有无穷多解——不符合「无解」，排除。</li><li>$a=0$：$A=\begin{pmatrix}1&amp;1&amp;1\\1&amp;0&amp;0\\1&amp;1&amp;1\end{pmatrix}$，$\beta=(0,1,-2)<sup>\mathrm T</sup>$。第一、三行系数完全相同，但右端 $0\ne-2$，是矛盾方程，故 $r(A)=2&lt;r(A,\beta)=3$，<strong>无解</strong>成立。定 $a=0$。</li></ul>
+<h3>第三步：(II) 为什么正规方程不必担心无解</h3>
+<p>$$A<sup>\mathrm T</sup>A=\begin{pmatrix}3&amp;2&amp;2\\2&amp;2&amp;2\\2&amp;2&amp;2\end{pmatrix},\qquad A<sup>\mathrm T</sup>\beta=\begin{pmatrix}-1\\-2\\-2\end{pmatrix}.$$</p>
+<p>$A<sup>\mathrm T</sup>\beta=A<sup>\mathrm T</sup>\cdot\beta$ 天然是 $A<sup>\mathrm T</sup>$ 各列（即 $A$ 的行）的线性组合；而 $A<sup>\mathrm T</sup>A$ 的列也是 $A<sup>\mathrm T</sup>$ 各列的组合，且 $r(A<sup>\mathrm T</sup>A)=r(A<sup>\mathrm T</sup>)$，两者列空间相同。所以右端永远落在系数矩阵的列空间里，$A<sup>\mathrm T</sup>AX=A<sup>\mathrm T</sup>\beta$ <strong>对任何 $\beta$ 都相容</strong>——这正是最小二乘正规方程恒有解的原因，也是本题直接求通解、不必再讨论解的存在的底气。</p>
+<h3>第四步：行变换求通解</h3>
+<p>$$\begin{pmatrix}3&amp;2&amp;2&amp;-1\\2&amp;2&amp;2&amp;-2\\2&amp;2&amp;2&amp;-2\end{pmatrix}\longrightarrow\begin{pmatrix}1&amp;0&amp;0&amp;1\\0&amp;1&amp;1&amp;-2\\0&amp;0&amp;0&amp;0\end{pmatrix}$$</p>
+<p>（最右一列为右端项。）秩为 $2$，$3-2=1$ 个自由未知量，取 $x_3=k$：$x_1=1,\ x_2=-2-k$。通解</p>
+<p>$$X=(1,-2,0)<sup>\mathrm T</sup>+k(0,-1,1)<sup>\mathrm T</sup>,\quad k\in\mathbb R.$$</p>
+<p>验算：$A<sup>\mathrm T</sup>A\,(1,-2,0)<sup>\mathrm T</sup>=(-1,-2,-2)<sup>\mathrm T</sup>=A<sup>\mathrm T</sup>\beta$；$A<sup>\mathrm T</sup>A\,(0,-1,1)<sup>\mathrm T</sup>=\mathbf 0$。</p>
+<h3>易错点</h3>
+<ul><li><strong>不先算行列式就全面讨论</strong>：满秩情形可整体排除，先锁定候选再验秩，工作量小一个量级。</li><li><strong>以为 $|A|=0$ 就无解</strong>：$a=2$ 同样使 $|A|=0$，但秩相等、有无穷多解；无解的判定标准始终是 $r(A)&lt;r(A,\beta)$。</li><li><strong>$A<sup>\mathrm T</sup>\beta$ 算错符号</strong>：$\beta$ 的第三个分量是 $2a-2$，$a=0$ 时为 $-2$，乘法时别带错。</li><li><strong>漏验算</strong>：特解与齐次解各验一次（如上），行变换出错能当场抓住。</li></ul>
+<blockquote>结论：$a=0$；正规方程秩 $2$、自由量 $x_3$，通解 $X=(1,-2,0)<sup>\mathrm T</sup>+k(0,-1,1)<sup>\mathrm T</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

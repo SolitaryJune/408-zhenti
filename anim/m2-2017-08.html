@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2017·08 特征值相同是否相似（秩判对角化）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-07.html" data-q="../question/m2-2017-07/">← <b>m2-2017-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-08/" data-q="../question/m2-2017-08/" data-no-anim="1">m2-2017-08 · 本题</a>
+  <a href="m2-2017-09.html" data-q="../question/m2-2017-09/"><b>m2-2017-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：读特征值</b>。$A$、$B$ 是上三角阵，$C$ 是对角阵，主对角线就是特征值：三者都是 $1,2,2$。$C=\\mathrm{diag}(1,2,2)$ 本身已对角化，于是 $$A\\sim C\\iff A\\text{ 可对角化},\\qquad B\\sim C\\iff B\\text{ 可对角化}.$$</p>",
+  "<p><b>第二步：定判据</b>。特征值相同只是相似的<b>必要</b>条件；$\\lambda=2$ 是二重根，可对角化要求它有 $3-2=2$ 个线性无关特征向量，即 $$r(2E-M)=3-2=1.$$ 分别对 $A$、$B$ 算这个秩。</p>",
+  "<p><b>判 $A$</b>：$$2E-A=\\begin{pmatrix}0&0&0\\\\0&0&-1\\\\0&0&1\\end{pmatrix}$$ 只有第 3 列非零（第 3 行是第 2 行的反号），$r(2E-A)=1$。$\\lambda=2$ 有 $3-1=2$ 个无关特征向量 = 代数重数 ⟹ <b>$A$ 可对角化</b>，$A\\sim C$ ✓</p>",
+  "<p><b>判 $B$</b>：$$2E-B=\\begin{pmatrix}0&-1&0\\\\0&0&0\\\\0&0&1\\end{pmatrix}$$ 第 2 列（$-1$）与第 3 列（$1$）都非零且线性无关，$r(2E-B)=2$。$\\lambda=2$ 只有 $3-2=1$ 个特征向量 &lt; 代数重数 $2$ ⟹ <b>$B$ 不可对角化</b>，$B\\not\\sim C$ ✗</p>",
+  "<p><b>第三步：汇总</b>。$A$ 与 $C$ 相似、$B$ 与 $C$ 不相似，对应选项 <b>B</b>。</p>",
+  "<p><b>排错</b>：只看\"特征值相同\"就认定都相似会误选 A；把 $r(2E-B)$ 算成 $1$（漏了第 2 列的 $-1$）也会误选 A；把两个结论看反会选 C。</p>"
+];
+
+AW.init({
+  title: '$A=\\begin{pmatrix}2&0&0\\\\0&2&1\\\\0&0&1\\end{pmatrix}$，$B=\\begin{pmatrix}2&1&0\\\\0&2&0\\\\0&0&1\\end{pmatrix}$ 与 $C=\\mathrm{diag}(1,2,2)$ 是否相似',
+  subtitle: '考点：相似判定 + 可对角化 · 方法：二重根 λ=2 的几何重数，r(2E−M) 是否为 1',
+  counterLabel: '已执行',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'特征值', log:'三个矩阵都是三角/对角形，特征值同为 1,2,2；C 已对角化', show:1, count:0 },
+    { cls:'step',  tag:'判据',   log:'特征值相同不够，还要看 λ=2 有没有 2 个无关特征向量：r(2E−M)=1？', show:2, count:1 },
+    { cls:'ok',    tag:'判 A',   log:'2E−A 只有第 3 列非零，秩为 1 → 可对角化，A∼C ✓', show:3, count:2 },
+    { cls:'miss',  tag:'判 B',   log:'2E−B 第 2、3 列都非零，秩为 2 → 只 1 个特征向量，不可对角化，B≁C ✗', show:4, count:3 },
+    { cls:'done',  tag:'完成',   log:'A 与 C 相似、B 与 C 不相似，选 B', show:5, count:4, done:true },
+    { cls:'step',  tag:'排错',   log:'只看特征值会误选 A；r(2E−B)=2 别算成 1', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '答案 B：$A\\sim C$ 相似，$B\\not\\sim C$ 不相似',
+    html: '记忆锚点：<b>上三角阵特征值 = 对角线</b>；特征值相同 ≠ 相似，还要看<b>二重根的几何重数</b>：$r(2E-A)=1$ 过关、$r(2E-B)=2$ 卡住。判据一句话：$r(2E-M)=n-\\text{重数}$ 才可对角化。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：特征值相同为何还不相似——几何重数说了算</h2>
+<p>答案：<strong>B</strong>（$A$ 与 $C$ 相似，$B$ 与 $C$ 不相似）。</p>
+<h3>第 0 步：为什么"特征值相同"只是入场券</h3>
+<p>相似矩阵共享一切相似不变量（特征多项式、特征值、秩、迹……），但反过来特征值相同<strong>推不出</strong>相似：相似还要求每个特征值的<strong>线性无关特征向量个数（几何重数）</strong>对得上。$C=\mathrm{diag}(1,2,2)$ 是对角阵，由相似的传递性与对称性，"谁与 $C$ 相似"等价于"谁可对角化"。而 $\lambda$ 的线性无关特征向量就是方程 $(\lambda E-M)x=0$ 的解，个数 = 解空间维数 $=n-r(\lambda E-M)$——这就是秩判据的来历。二重特征值 $\lambda=2$ 要有 $2$ 个，即要求 $r(2E-M)=3-2=1$。</p>
+<h3>第 1 步：三个矩阵的特征值</h3>
+<p>$A$、$B$ 上三角、$C$ 对角，特征值都从对角线读出：都是 $1,2,2$。入场券三家都有，胜负全在 $\lambda=2$ 的几何重数上。</p>
+<h3>第 2 步：判 $A$——那个"1"连接的是不同特征值</h3>
+<p>$$2E-A=\begin{pmatrix}0&amp;0&amp;0\\0&amp;0&amp;-1\\0&amp;0&amp;1\end{pmatrix}\ \Longrightarrow\ r(2E-A)=1,$$</p>
+<p>（第 2、3 行成比例。）$\lambda=2$ 有 $3-1=2$ 个无关特征向量，等于代数重数，$A$ 可对角化，$A\sim\mathrm{diag}(1,2,2)\sim C$——<strong>$A$ 与 $C$ 相似</strong>。</p>
+<p>机制上看：$A$ 中非对角元 $1$ 位于 $(2,3)$，连接坐标 $2$（属 $\lambda=2$）与坐标 $3$（属 $\lambda=1$）。解 $(2E-A)x=0$ 时它只强迫 $x_3=0$，$x_1,x_2$ 依然自由——耦合落在<strong>不同特征值</strong>的方向之间，不损耗 $\lambda=2$ 的特征空间。</p>
+<h3>第 3 步：判 $B$——那个"1"把两条同特征值方向串成一条链</h3>
+<p>$$2E-B=\begin{pmatrix}0&amp;-1&amp;0\\0&amp;0&amp;0\\0&amp;0&amp;1\end{pmatrix}\ \Longrightarrow\ r(2E-B)=2,$$</p>
+<p>（第 1、3 行独立。）$\lambda=2$ 只有 $3-2=1$ 个无关特征向量，小于代数重数 $2$，$B$ <strong>不可对角化</strong>，与对角阵 $C$ 不相似。</p>
+<p>机制上看：$B$ 中非对角元 $1$ 位于 $(1,2)$，连接的坐标 $1$ 与坐标 $2$ <strong>都属 $\lambda=2$</strong>。方程第 1 行强迫 $x_2=0$、第 3 行强迫 $x_3=0$，只剩 $x_1$ 一维——两条同特征值的方向被这一个 $1$ 串成一条链，几何重数掉到 $1$。数字相同、位置不同，结论就相反。</p>
+<h3>第 4 步：汇总</h3>
+<p>$A$ 与 $C$ 相似、$B$ 与 $C$ 不相似，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>只对特征值就下结论</strong>（误选 A）：特征值相同是必要条件而非充分条件，二重根必须验几何重数。</li><li><strong>秩算错</strong>：$r(2E-B)=2$ 不是 $1$——$B$ 的 $(1,2)$ 处的 $1$ 使第 1 行给出约束 $x_2=0$，多压掉一维。</li><li><strong>结论看反</strong>（误选 C）：可对角化的是 $A$ 不是 $B$。</li></ul>
+<blockquote>记忆锚点：上三角对角线读特征值；与对角阵相似 ⟺ 可对角化；二重根看 $r(\lambda E-M)$ 是否等于 $n-$ 重数；非对角元把"同特征值"方向串成链，几何重数就减一。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

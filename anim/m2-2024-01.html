@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·01 幂指函数第一类间断点个数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-22.html" data-q="../question/m2-2023-22/">← <b>m2-2023-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-01/" data-q="../question/m2-2024-01/" data-no-anim="1">m2-2024-01 · 本题</a>
+  <a href="m2-2024-02.html" data-q="../question/m2-2024-02/"><b>m2-2024-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：幂指函数先取对数降维',
+    cls: 'key',
+    tag: '方法',
+    body: '<p>$f(x)=|x|^{\\frac{1}{(1-x)(x-2)}}$ 的可疑点只有两类：<b>底数为零</b>的 $x=0$，<b>指数分母为零</b>的 $x=1$、$x=2$。幂指型统一取对数：$$\\ln f(x)=\\frac{\\ln\\lvert x\\rvert}{(1-x)(x-2)}=g(x),$$ 先判 $g$ 的极限，再用 $f=\\mathrm e^{g}$ 还原。判类标准：<b>左右极限都存在且有限，才是第一类</b>。</p>',
+    log: '可疑点 x=0、x=1、x=2，逐个求左右极限' },
+  { title: '可疑点 x=0：极限无穷 → 第二类',
+    cls: 'bad',
+    tag: 'x=0',
+    ribbon: {k:1, ok:false},
+    body: '<p>$x=0$ 处指数取值 $\\dfrac{1}{(1-0)(0-2)}=-\\dfrac12$，于是 $f(x)=|x|^{-\\frac12}=\\dfrac{1}{\\sqrt{\\lvert x\\rvert}}\\to+\\infty$。极限为无穷，<b>第二类间断点</b>，不计入。</p>',
+    log: 'x=0：f→+∞，第二类，不算' },
+  { title: '可疑点 x=1：左右极限同为 e → 第一类',
+    cls: 'good',
+    tag: 'x=1',
+    ribbon: {k:2, ok:true},
+    body: '<p>$x\\to1$ 时用等价无穷小 $\\ln\\lvert x\\rvert=\\ln\\big(1+(x-1)\\big)\\sim x-1=-(1-x)$：$$g(x)\\sim\\frac{-(1-x)}{(1-x)(x-2)}=\\frac{-1}{x-2}\\xrightarrow{\\;x\\to1\\;}\\frac{-1}{-1}=1,$$ 故 $f\\to\\mathrm e^{1}=\\mathrm e$。左右极限存在、相等、有限，但 $f(1)$ 无定义——<b>可去间断点，第一类</b>。</p>',
+    log: 'x=1：左右极限同为 e，第一类（可去）✓' },
+  { title: '可疑点 x=2：一侧无穷 → 第二类',
+    cls: 'bad',
+    tag: 'x=2',
+    ribbon: {k:3, ok:false},
+    body: '<p>$x\\to2^-$：$(1-x)(x-2)\\to0^+$，指数 $\\to+\\infty$，$f\\to+\\infty$；$x\\to2^+$：指数 $\\to-\\infty$，$f\\to0$。虽有一侧极限存在，但<b>另一侧为无穷就是第二类</b>，不计入。</p>',
+    log: 'x=2：左极限 +∞，第二类，不算' },
+  { title: '计数：第一类只有 x=1',
+    cls: 'good',
+    tag: '计数',
+    body: '<p>三个可疑点中，$x=0$、$x=2$ 极限出现 $\\infty$ 均为第二类；$x=1$ 左右极限同为 $\\mathrm e$，是第一类（可去）。<b>第一类间断点个数 $=1$</b>。</p>',
+    log: '第一类间断点只有 x=1，个数为 1' },
+  { title: '干扰项复盘',
+    cls: 'bad',
+    tag: '防坑',
+    body: '<p><b>A（3 个）</b>：把 $x=0,2$ 也计入——它们的极限是 $\\infty$，属第二类。<b>B（2 个）</b>：多算了 $x=2$，其左极限 $+\\infty$ 一票否决。<b>D（0 个）</b>：见 $\\ln\\lvert x\\rvert\\to0$ 就以为极限不存在，漏掉了极限恰为 $\\mathrm e$ 的可去间断点 $x=1$。</p>',
+    log: 'A/B 多算第二类点，D 漏掉 x=1' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>C</b>。记忆锚点：幂指函数<b>先取对数降维</b>；判第一类只看<b>左右极限是否都有限</b>——一侧为无穷即第二类，一票否决。</p>',
+    log: '选 C：第一类间断点仅 x=1 一个' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f(x)=|x|^{\\frac{1}{(1-x)(x-2)}}$ 的第一类间断点判别',
+  subtitle: '考点：连续与间断 · 方法：取对数降维 → 可疑点 0、1、2 逐个求左右极限',
+  counterLabel: '判别点',
+  ribbonTitle: '可疑点判别（✓ 第一类 / ✗ 第二类）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C（第一类间断点 1 个）',
+    html: '记忆锚点：<b>幂指型先取对数降维</b>。$x=0$：$f\\approx|x|^{-\\frac12}\\to+\\infty$；$x=2$：左侧 $f\\to+\\infty$——都是第二类。$x=1$：$\\ln f\\sim\\dfrac{-1}{x-2}\\to1$，$f\\to\\mathrm e$，可去间断点。口诀：<b>左右极限都有限才谈第一类，无穷一票否决</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：幂指函数间断点判别——取对数降维，逐点查左右极限</h2>
+<p>答案：<strong>C</strong>（第一类间断点 1 个）。</p>
+<h3>第 0 步：先立模型——分类的裁判标准与可疑点来源</h3>
+<p>间断点分类只认一条裁判标准：<strong>分别求左右极限</strong>——双侧都存在且有限是第一类（相等为可去、不等为跳跃）；只要有一侧为无穷即第二类。所以全部工作就是：找齐可疑点，逐点算左右极限。</p>
+<p><strong>为什么可疑点是 $0,1,2$？</strong> 幂指式 $\lvert x\rvert<sup>v</sup>$ 只在两处出事：底数为零（$x=0$，$0$ 的负指数次幂无意义）；指数无定义（分母 $(1-x)(x-2)=0$，即 $x=1,2$）。</p>
+<p><strong>为什么先取对数？</strong> 幂指型 $u<sup>v</sup>$ 直接看是 $0<sup>-\frac12</sup>$、$2<sup>\pm\infty</sup>$ 这类没有现成工具的结构；取对数把乘方化为商：$g(x)=\ln f(x)=\dfrac{\ln\lvert x\rvert}{(1-x)(x-2)}$，先求 $g$ 的极限，再用 $\mathrm e<sup>x</sup>$ 的连续性还原——$\ln f\to1$ 就意味着 $f\to\mathrm e<sup>1</sup>=\mathrm e$。</p>
+<h3>第 1 步：$x=0$——底数死，指数救不了</h3>
+<p>$x\to0$ 时底数 $\lvert x\rvert\to0<sup>+</sup>$，而指数在 $x=0$ 处取定值 $-\dfrac12$，近旁 $f(x)\approx\lvert x\rvert<sup>-1/2</sup>$，负幂把 $0$ 翻成 $+\infty$。<strong>为什么左右不用分？</strong> 绝对值把两侧底数都翻成 $0<sup>+</sup>$，故两侧同为 $+\infty$——第二类。</p>
+<h3>第 2 步：$x=1$——等价无穷小给出有限极限</h3>
+<p>$x\to1$ 时 $\ln\lvert x\rvert=\ln\big(1+(x-1)\big)\sim x-1=-(1-x)$，代入：</p>
+<p>$$g(x)\sim\frac{-(1-x)}{(1-x)(x-2)}=\frac{-1}{x-2}\xrightarrow{x\to1}1.$$</p>
+<p><strong>为什么敢约去 $(1-x)$？</strong> 它是乘除结构中趋于 $0$ 的因子，可作等价无穷小代换；剩下的 $\dfrac{-1}{x-2}$ 在 $x=1$ 处分母不为零，连续取值 $1$。于是 $f\to\mathrm e$：双侧极限存在、相等、有限，仅 $f(1)$ 无定义——<strong>可去间断点，第一类</strong>。</p>
+<h3>第 3 步：$x=2$——指数正负由分母走向决定</h3>
+<p>底数 $\lvert x\rvert\to2$ 是大于 $1$ 的常数，戏码全在指数分母上：$x\to2^-$ 时 $(1-x)(x-2)\to0<sup>+</sup>$，指数 $\to+\infty$，$f\to+\infty$；$x\to2<sup>+</sup>$ 时乘积 $\to0<sup>-</sup>$，指数 $\to-\infty$，$f\to0$。<strong>为什么右侧趋于 $0$ 救不了它？</strong> 裁判标准要求双侧有限，一侧无穷即一票否决——第二类。</p>
+<h3>第 4 步：汇总对号</h3>
+<table><thead><tr><th>点</th><th>左右极限</th><th>类型</th></tr></thead><tbody><tr><td>$x=0$</td><td>双侧均 $+\infty$</td><td>第二类</td></tr><tr><td>$x=1$</td><td>双侧均 $\mathrm e$，$f(1)$ 无定义</td><td>第一类（可去）</td></tr><tr><td>$x=2$</td><td>左 $+\infty$，右 $0$</td><td>第二类</td></tr></tbody></table>
+<p>第一类仅 $x=1$，个数 $1$，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 A</strong>：把"函数出事"当成"第一类"；$x=0,2$ 都有单侧无穷，按标准全是第二类。</li><li><strong>选 B</strong>：见 $x=2$ 右侧极限 $0$ 存在就收工；裁判看双侧，左侧 $+\infty$ 已定案。</li><li><strong>选 D</strong>：见 $\ln\lvert x\rvert\to0$ 就放弃 $x=1$；等价无穷小 $\ln(1+t)\sim t$ 恰好给出有限极限 $\mathrm e$，这是命题人埋的"可去"点。</li></ul>
+<blockquote>一句话结论：取对数降维，可疑点 $0,1,2$ 逐点查左右极限——只有 $x=1$ 双侧同为 $\mathrm e$，第一类 1 个，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 7 题 · 初等变换的矩阵语言</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-06.html" data-q="../question/m2-2011-06/">← <b>m2-2011-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-07/" data-q="../question/m2-2011-07/" data-no-anim="1">m2-2011-07 · 本题</a>
+  <a href="m2-2011-08.html" data-q="../question/m2-2011-08/"><b>m2-2011-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>把 $A$ 的第 2 列加到第 1 列得 $B$；再交换 $B$ 的第 2、3 行得单位矩阵 $E$。求 $A$（用 $P_1$、$P_2$ 表示）。</p>',
+  '<p><b>认矩阵：</b>$P_1=\\begin{pmatrix}1&0&0\\\\1&1&0\\\\0&0&1\\end{pmatrix}$ 对应「第 2 列加到第 1 列」，$P_2=\\begin{pmatrix}1&0&0\\\\0&0&1\\\\0&1&0\\end{pmatrix}$ 对应「交换第 2、3 行」。</p>',
+  '<p><b>翻译句一（列变换 → 右乘）：</b>$$B=AP_1.$$</p>',
+  '<p><b>翻译句二（行变换 → 左乘）：</b>$$P_2B=E.$$</p>',
+  '<p><b>联立解出 A：</b>$$P_2\\,A\\,P_1=E\\ \\Longrightarrow\\ A=P_2^{-1}P_1^{-1}.$$</p>',
+  '<p><b>化简：</b>$P_2$ 交换两行、再换一次就还原，故 $P_2^{-1}=P_2$；$P_1^{-1}$ 只把那个 1 变号。故 $$A=P_2P_1^{-1},$$ <b>选 D</b>。</p>',
+  '<p><b>验证：</b>取 $A=P_2P_1^{-1}=\\begin{pmatrix}1&0&0\\\\0&0&1\\\\-1&1&0\\end{pmatrix}$，则 $AP_1=\\begin{pmatrix}1&0&0\\\\0&0&1\\\\0&1&0\\end{pmatrix}$，再交换其第 2、3 行恰得 $E$，完全吻合。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 7 题 · 由初等变换过程反解 $A$',
+  subtitle: '考点：初等矩阵 · 方法：行变换左乘、列变换右乘',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：认矩阵 → 翻译两句话 → 联立求逆 → 化简。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'认矩阵', log:'先认出 P₁、P₂ 各自对应哪个初等变换', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'句一', log:'列变换等于右乘：B = A·P₁', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'句二', log:'行变换等于左乘：P₂·B = E', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'联立', log:'代入得 P₂AP₁ = E，两侧乘逆矩阵解出 A', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'化简', log:'交换矩阵自逆 P₂⁻¹ = P₂，于是 A = P₂P₁⁻¹', count:5, reveal:6, hl:5, ribbon:{k:5, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：A = P₂P₁⁻¹，选 D（已代回验证）', count:6, reveal:7, hl:6, good:true, done:true, ribbon:{k:6, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '选 D：A = P₂P₁⁻¹',
+    html: '核心口诀：<b>行变换左乘、列变换右乘</b>。链条：$B=AP_1$、$P_2B=E\\Rightarrow P_2AP_1=E\\Rightarrow A=P_2^{-1}P_1^{-1}=P_2P_1^{-1}$（$P_2$ 交换两行，自逆）。易错：解 $A$ 时两侧都要乘逆矩阵，漏乘一边就错选 A 或 B。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：初等变换的矩阵语言——左右乘规则可以「推」出来</h2>
+<p>答案：D（$A=P_2P_1<sup>-1</sup>$）</p>
+<h3>第一步：先懂机制——为什么行变换左乘、列变换右乘</h3>
+<p>这条规则不必背，用矩阵乘法的结构一推就出。<strong>按列看</strong>：$AP$ 的第 $j$ 列 $=A\cdot(P$ 的第 $j$ 列$)$，即用 $P$ 第 $j$ 列的分量为系数去<strong>组合 $A$ 的列</strong>——列操作天然从右边乘进来。$P_1$ 的第 $1$ 列是 $(1,1,0)<sup>\mathrm T</sup>$，于是 $AP_1$ 的第 $1$ 列 $=1\cdot$第$1$列 $+1\cdot$第$2$列 $+0\cdot$第$3$列，正是「第 2 列加到第 1 列」。<strong>按行看</strong>：$PA$ 的第 $i$ 行 $=(P$ 的第 $i$ 行$)\cdot A$，是用 $P$ 第 $i$ 行为系数<strong>组合 $A$ 的行</strong>——行操作天然从左边乘进来。$P_2$ 的第 $2$、$3$ 行分别是 $(0,0,1)$、$(0,1,0)$，所以 $P_2A$ 的第 $2$ 行取 $A$ 的第 $3$ 行、第 $3$ 行取 $A$ 的第 $2$ 行，正是交换第 2、3 行。</p>
+<p>于是 $P_1$ 就是「列加」矩阵、$P_2$ 就是「行换」矩阵，题面两句话可以逐句翻译。</p>
+<h3>第二步：把题面翻译成矩阵等式</h3>
+<ul><li>「$A$ 的第 2 列加到第 1 列得 $B$」是<strong>列变换</strong>，等于<strong>右乘</strong>：$B=AP_1$；</li><li>「交换 $B$ 的第 2、3 行得 $E$」是<strong>行变换</strong>，等于<strong>左乘</strong>：$P_2B=E$。</li></ul>
+<h3>第三步：联立解出 A——每一步求逆都有理由</h3>
+<p>$$P_2AP_1=E\ \Longrightarrow\ A=P_2<sup>-1</sup>P_1<sup>-1</sup>.$$</p>
+<p>$P_2$ 是交换两行的初等矩阵，再换一次就还原，故 $P_2<sup>-1</sup>=P_2$；$P_1$ 把第 2 列加到第 1 列，其逆就是「把第 1 列减去第 2 列」，即那个 $1$ 变号。于是</p>
+<p>$$A=P_2P_1<sup>-1</sup>.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>左右乘记反（误选 A）</strong>：$P_1P_2$ 把「行左列右」全反过来，还漏了取逆；想不清就现场推一遍——列组合从右乘进来、行组合从左乘进来。</li><li><strong>逆矩阵安错对象（误选 B）</strong>：$P_1<sup>-1</sup>P_2$ 顺序颠倒，且把不该取逆的 $P_1$ 取了逆、该体现自逆的 $P_2$ 没处理对。</li><li><strong>漏掉 $P_1$ 的逆（误选 C）</strong>：$P_2P_1$ 左右乘对了，但「加到」的逆是「减去」，$P_1<sup>-1</sup>$ 不能省。</li><li><strong>不敢用 $P_2<sup>-1</sup>=P_2$</strong>：交换矩阵自逆（换两次还原），漏了这步就凑不出 D 的形状。</li></ul>
+<blockquote>验证：取 $A=\begin{pmatrix}1&amp;0&amp;0\\0&amp;0&amp;1\\-1&amp;1&amp;0\end{pmatrix}$，则 $AP_1=\begin{pmatrix}1&amp;0&amp;0\\0&amp;0&amp;1\\0&amp;1&amp;0\end{pmatrix}$，交换其第 2、3 行恰得 $E$，完全吻合。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

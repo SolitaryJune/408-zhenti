@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：反常积分收敛范围 0&lt;p&lt;2</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-10.html" data-q="../question/m2-2026-10/">← <b>m2-2026-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-11/" data-q="../question/m2-2026-11/" data-no-anim="1">m2-2026-11 · 本题</a>
+  <a href="m2-2026-12.html" data-q="../question/m2-2026-12/"><b>m2-2026-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '反常积分 $\\displaystyle\\int_0^{+\\infty}\\frac{\\arctan x}{x^p(x+1)}\\,dx$ 收敛，求 $p$ 的范围',
+  subtitle: '考点：反常积分敛散 · 双瑕点 · 比较判别法（等价量定阶）',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步检查两个瑕点端。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：瑕点两个——$x\\to0^+$（$x^p$ 在分母）与 $x\\to+\\infty$（无穷区间）。收敛 = <b>两端同时收敛</b>，拆成 $\\int_0^1+\\int_1^{+\\infty}$ 分别判。',
+      '<b>端点 $x\\to0^+$</b>：$\\arctan x\\sim x$、$x+1\\to1$ $$f(x)\\sim\\frac{x}{x^p}=\\frac{1}{x^{p-1}}$$ 与 $\\int_0^1\\dfrac{dx}{x^{p-1}}$ 比较：收敛 $\\iff p-1<1\\iff p<2$。',
+      '<b>端点 $x\\to+\\infty$</b>：$\\arctan x\\to\\dfrac\\pi2$（有界正数）、$x+1\\sim x$ $$f(x)\\sim\\frac{\\pi/2}{x^{p+1}}$$ 与 $\\int_1^{+\\infty}\\dfrac{dx}{x^{p+1}}$ 比较：收敛 $\\iff p+1>1\\iff p>0$。',
+      '<b>取交集</b>：两端同时成立 $$0<p<2.$$', 
+      '<b>易错</b>：只查 $\\infty$ 端得 $p>0$（丢上界）；只查 $0$ 端得 $p<2$（丢下界）；分母里 $x^p$ 与 $x+1\\sim x$ 合计 $x^{p+1}$，别少算一个 $x$。',
+      '<b>结论</b>：$$p\\in(0,\\ 2)$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'双瑕点：x→0⁺ 与 x→+∞，两端同时收敛才收敛', count:0 },
+    { cls:'shift', tag:'零点端', log:'arctan x ~ x，被积函数约等于 1/x^(p−1)，要求 p < 2', count:1 },
+    { cls:'shift', tag:'无穷端', log:'arctan x → π/2，被积函数约等于 1/x^(p+1)，要求 p > 0', count:2 },
+    { cls:'ok',    tag:'取交集', log:'p < 2 且 p > 0，交集 0 < p < 2', count:3 },
+    { cls:'miss',  tag:'易错',   log:'只查一端就作答会漏掉另一个不等式', count:4 },
+    { cls:'done',  tag:'完成',   log:'结论：p 的取值范围是 0 < p < 2', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$0<p<2$',
+    html: '记忆锚点：<b>双瑕点拆两段分别定阶——零点处 $\\arctan x\\sim x$ 给 $p<2$；无穷处 $\\arctan x\\to\\dfrac\\pi2$、$x+1\\sim x$ 给 $p>0$</b>。收敛取交集，发散任一端即可。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：双瑕点反常积分——两端同时收敛才收敛</h2>
+<p>答案：$0&lt;p&lt;2$</p>
+<h3>第零步：机制——收敛是两段独立的极限，比阶用的是 p-积分尺子</h3>
+<p>反常积分按定义是极限：从任一内点（如 $1$）切开成 $\displaystyle\int_0<sup>1</sup>+\int_1<sup>+\infty</sup>$，整体收敛 ⟺ <strong>两段各自的极限都存在</strong>——任何一段崩掉，和就无意义。判别工具是比较判别法，而比较的"尺子"是 p-积分，其门槛来自原函数 $F_s(x)=\dfrac{x<sup>1-s</sup>}{1-s}$（$s\ne1$）：</p>
+<ul><li>$\displaystyle\int_0<sup>1</sup>\frac{dx}{x<sup>s</sup>}$ 收敛 $\iff s&lt;1$（$x\to0^+$ 时 $F_s$ 要有有限极限，需 $1-s&gt;0$）；</li><li>$\displaystyle\int_1<sup>+\infty</sup>\frac{dx}{x<sup>s</sup>}$ 收敛 $\iff s&gt;1$（$x\to+\infty$ 时 $F_s$ 要趋于 $0$，需 $1-s&lt;0$）。</li></ul>
+<p>所以全题就是一件事：<strong>用等价无穷小量出被积函数在两端的"阶"，再对门槛 $1$ 比大小</strong>。</p>
+<h3>第一步：$x\to0^+$ 端</h3>
+<p>$\arctan x\sim x$（它在原点附近的泰勒首项），$x+1\to1$：</p>
+<p>$$f(x)\sim\frac{x}{x<sup>p</sup>}=x<sup>1-p</sup>=\frac{1}{x<sup>p-1</sup>},$$</p>
+<p>对照零点尺子得 $p-1&lt;1$，即 $p&lt;2$。</p>
+<h3>第二步：$x\to+\infty$ 端</h3>
+<p>$\arctan x\to\dfrac\pi2$（<strong>非零</strong>常数只差常数倍，不改变阶），$x+1\sim x$：</p>
+<p>$$f(x)\sim\frac{\pi/2}{x<sup>p+1</sup>},$$</p>
+<p>对照无穷尺子得 $p+1&gt;1$，即 $p&gt;0$。</p>
+<h3>第三步：取交集</h3>
+<p>两端条件同时成立：$p&lt;2$ 且 $p&gt;0$，即</p>
+<p>$$0&lt;p&lt;2.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>只查一端</strong>：只查无穷远丢 $p&lt;2$，只查零点丢 $p&gt;0$；双瑕点必须拆段逐端验。</li><li><strong>阶数数错</strong>：分母上 $x<sup>p</sup>$ 与 $x+1\sim x$ 合计 $x<sup>p+1</sup>$，别只算一个 $x$。</li><li><strong>以为 $\arctan$ 在无穷端"有界就行"</strong>：必须趋于<strong>非零</strong>常数才能保阶；若趋于 $0$，有界因子会把阶降下去。</li></ul>
+<blockquote>一句话结论：零点处 $1-p&gt;-1$ 给 $p&lt;2$，无穷处 $p+1&gt;1$ 给 $p&gt;0$，交集 $0&lt;p&lt;2$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

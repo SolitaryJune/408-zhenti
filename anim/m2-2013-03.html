@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：变上限积分在分段点处连续但不可导（2013 年第 3 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-02.html" data-q="../question/m2-2013-02/">← <b>m2-2013-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-03/" data-q="../question/m2-2013-03/" data-no-anim="1">m2-2013-03 · 本题</a>
+  <a href="m2-2013-04.html" data-q="../question/m2-2013-04/"><b>m2-2013-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>$f(x)=\\sin x$（$0\\le x&lt;\\pi$），$f(x)=2$（$\\pi\\le x\\le2\\pi$），$F(x)=\\int_0^x f(t)\\,\\mathrm dt$。要判断 $F$ 在分段点 $x=\\pi$ 处：<b>先连续，后可导</b>。</p>' },
+  { title: '连续性保底', cls: '',
+    body: '<p>$f$ 在 $[0,2\\pi]$ 上分段连续、有界，故可积。被积函数可积 $\\Rightarrow$ $F(x)=\\int_0^x f$ <b>处处连续</b>——积分抹平了被积函数的跳跃。</p>' },
+  { title: '排除 A：不是跳跃间断', cls: 'bad',
+    body: '<p>跳跃间断点要求 $F$ 本身左右极限不等，但 $F$ 在 $x=\\pi$ 处连续（左极限 $=$ 右极限 $=$ $F(\\pi)=2$）。<b>排除 A</b>。</p>' },
+  { title: '排除 B：不是可去间断', cls: 'bad',
+    body: '<p>可去间断要求极限存在但不等于函数值，而 $F$ 在该点的极限就等于函数值。<b>排除 B</b>。</p>' },
+  { title: '左导数：沿 sin 段逼近', cls: 'key',
+    body: '<p>在 $f$ 的跳跃点两侧分别用定义：</p>' +
+          '<p>$$F\'_-(\\pi)=\\lim_{x\\to\\pi^-}\\frac{F(x)-F(\\pi)}{x-\\pi}=f(\\pi^-)=\\sin\\pi=0.$$</p>' },
+  { title: '右导数：沿常数段逼近', cls: 'key',
+    body: '<p>$$F\'_+(\\pi)=f(\\pi^+)=2.$$</p>' +
+          '<p>图像上：$F$ 在 $[0,\\pi]$ 是 $1-\\cos x$（斜率趋于 $0$），在 $[\\pi,2\\pi]$ 是 $2+2(x-\\pi)$（斜率恒 $2$）。</p>' },
+  { title: '排除 D：左右导数不等', cls: 'bad',
+    body: '<p>$0\\ne2$，左、右导数不相等，$F$ 在 $x=\\pi$ 处<b>不可导</b>。<b>排除 D</b>。</p>' },
+  { title: '结论：连续但不可导 ✓', cls: 'good',
+    body: '<p>连续（第一步）+ 不可导（第七步）＝ <b>C</b> 选项的描述："折点"——函数值衔接无缝、斜率突变。</p>' },
+];
+
+var RIBBONS = [null, null, {k:1, ok:false}, {k:2, ok:false},
+  null, null, {k:4, ok:false}, {k:3, ok:true}];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : (s.cls === 'good' ? 'ok' : 'step')),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    ribbon: RIBBONS[i],
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$F(x)=\\int_0^x f(t)\\,\\mathrm dt$ 在 $x=\\pi$ 处的性态',
+  subtitle: '考点：变限积分 · 方法：可积保连续 → 左右导数判可导',
+  ribbonTitle: '选项判定（A=1 · B=2 · C=3 · D=4）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>被积函数可积 ⇒ 变限积分连续</b>；在 $f$ 的跳跃点 $x_0$ 处 $F$ 连续但不可导，左、右导数恰为 $f(x_0^-)$ 与 $f(x_0^+)$。本题 $f(\\pi^-)=0\\ne2=f(\\pi^+)$——"折点"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变上限积分在分段点处的连续与可导</h2>
+<p><strong>答案：C</strong></p>
+<h3>第一步：连续性——变上限积分的"保底"性质</h3>
+<p>$f$ 在 $[0,2\pi]$ 上分段连续、有界，因而可积。被积函数可积，则 $F(x)=\int_0<sup>x</sup> f(t)\,\mathrm dt$ 处处连续——直观地说，$F$ 是"累积面积"函数，$\lvert F(x+h)-F(x)\rvert\le M\lvert h\rvert$（$M$ 是 $f$ 的界），增量随 $h$ 一起消失，积分把 $f$ 的跳跃"抹平"成连续增长。所以 $x=\pi$ 根本不可能是 $F$ 的间断点：A（跳跃间断）、B（可去间断）直接排除。</p>
+<h3>第二步：可导性——左右导数分开算</h3>
+<p>在 $f$ 的连续点处 $F'=f$；但 $x=\pi$ 是 $f$ 的跳跃点，只能从两侧用定义：</p>
+<p>$$F'_-(\pi)=f(\pi^-)=\lim_{x\to\pi^-}\sin x=0,\qquad F'_+(\pi)=f(\pi^+)=\lim_{x\to\pi^+}2=2.$$</p>
+<p>为什么左右导数恰等于 $f$ 的左右极限值？看增量的构造：$F(\pi+h)-F(\pi)=\int_\pi<sup>\pi+h</sup>f(t)\,\mathrm dt$ 是 $f$ 在长度 $h$ 的小区间上的积分。$h\to0^\pm$ 时小区间压缩到 $\pi$ 的一侧，$f$ 在其上的平均值被夹逼到该侧极限 $f(\pi^\pm)$，而"积分 $\div$ 宽度"正是平均值——可导性把面积换算成了平均高度。</p>
+<h3>第三步：对号结论</h3>
+<p>左导数 $0\ne$ 右导数 $2$，$F$ 在 $x=\pi$ 处不可导，排除 D；结合连续性得"连续但不可导"，选 <strong>C</strong>。</p>
+<p>直观图像：$F$ 在 $[0,\pi]$ 上是 $1-\cos x$（此处斜率趋于 $0$），在 $[\pi,2\pi]$ 上是 $2+2(x-\pi)$（斜率恒 $2$）；两段在 $x=\pi$ 处函数值同为 $2$，无缝衔接但出现"折角"。</p>
+<h3>易错点</h3>
+<ul><li><strong>把"$f$ 的间断点"当成"$F$ 的间断点"</strong>：积分运算抹平跳跃，$F$ 仍然连续。</li><li><strong>不分侧直接写 $F'=f$</strong>：$f$ 在 $\pi$ 处左右值不同，公式失效，必须用左右导数定义。</li><li><strong>右侧斜率沿用 $\sin$ 段</strong>：右导数由 $[\pi,2\pi]$ 段决定，是 $f(\pi^+)=2$，不是 $0$。</li></ul>
+<blockquote>一句话结论：$F$ 处处连续，在 $x=\pi$ 处左导 $0$、右导 $2$——连续但不可导，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

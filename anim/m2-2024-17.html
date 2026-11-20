@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024·17 二重积分：对称性消元 + 积商换元</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<style>
+.mb-line{border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin:8px 0;background:#fff;font-size:14.5px;line-height:1.9;transition:all .25s}
+.mb-line.act{border-color:#d97706;background:#fffbeb;box-shadow:0 2px 8px rgba(217,119,6,.14)}
+.mb-line.past{opacity:.7}
+.mb-title{font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px}
+.mb-chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
+.mb-chip{border:2px solid #cbd5e1;border-radius:10px;padding:5px 10px;font-size:13.5px;background:#f8fafc}
+.mb-chip.hyper{border-color:#2563eb;background:#eff6ff}
+.mb-chip.line{border-color:#8b5cf6;background:#faf5ff}
+.mb-chip.swap{border-color:#d97706;background:#fffbeb}
+</style>
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-16.html" data-q="../question/m2-2024-16/">← <b>m2-2024-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-17/" data-q="../question/m2-2024-17/" data-no-anim="1">m2-2024-17 · 本题</a>
+  <a href="m2-2024-18.html" data-q="../question/m2-2024-18/"><b>m2-2024-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 每一步一块推导板内容，按步数揭示，当前步高亮 */
+var SECS = [
+  { t: '第一步 · 看清边界',
+    h: '<div class="mb-chips">' +
+       '<span class="mb-chip hyper">$xy=\\tfrac13$</span><span class="mb-chip hyper">$xy=3$</span>' +
+       '<span class="mb-chip line">$y=\\tfrac13 x$</span><span class="mb-chip line">$y=3x$</span></div>' +
+       '<p>第一象限（$x>0,y>0$）内两条双曲线夹两条过原点直线：$D=\\{\\tfrac13\\le xy\\le3,\\ \\tfrac13\\le \\frac yx\\le3\\}$。</p>' },
+  { t: '第二步 · 找对称性',
+    h: '<p>交换 $x\\leftrightarrow y$：双曲线 $xy=c$ <b>不变</b>；直线 $y=\\tfrac13x \\leftrightarrow y=3x$ <b>互换</b>（斜率互为倒数）。</p>' +
+       '<p>所以 $D$ 关于直线 $y=x$ 对称。</p>' },
+  { t: '第三步 · 对称性消元',
+    h: '$$\\iint_D x\\,\\mathrm d\\sigma=\\iint_D y\\,\\mathrm d\\sigma\\ \\Longrightarrow\\ \\iint_D(x-y)\\,\\mathrm d\\sigma=0$$' +
+       '<p>于是 $\\displaystyle\\iint_D(1+x-y)\\,\\mathrm d\\sigma=\\iint_D 1\\,\\mathrm d\\sigma= $ <b>面积$(D)$</b>。</p>' },
+  { t: '第四步 · 换元变矩形',
+    h: '<p>边界全是「积」与「商」，令 $u=xy,\\ v=\\dfrac yx$，四条边界变成 $u=\\tfrac13,\\ u=3,\\ v=\\tfrac13,\\ v=3$：</p>' +
+       '$$D\\longrightarrow\\Big[\\tfrac13,3\\Big]\\times\\Big[\\tfrac13,3\\Big]\\ (\\text{矩形})$$' },
+  { t: '第五步 · 反解中间变量',
+    h: '<p>由 $uv=y^2,\\ u/v=x^2$ 反解：</p>' +
+       '$$x=\\sqrt{\\frac uv},\\qquad y=\\sqrt{uv}$$' },
+  { t: '第六步 · 雅可比行列式',
+    h: '$$\\frac{\\partial(u,v)}{\\partial(x,y)}=\\begin{vmatrix} y & x \\\\ -\\frac{y}{x^2} & \\frac1x \\end{vmatrix}=\\frac yx+\\frac yx=2v$$' +
+       '<p>面积元素取倒数：$\\mathrm dx\\,\\mathrm dy=\\dfrac{\\mathrm du\\,\\mathrm dv}{2v}$（第一象限 $v>0$）。</p>' },
+  { t: '第七步 · 矩形上积分',
+    h: '$$\\text{面积}(D)=\\int_{1/3}^{3}\\!\\!\\int_{1/3}^{3}\\frac{\\mathrm du\\,\\mathrm dv}{2v}=\\frac12\\Big(\\int_{1/3}^{3}\\mathrm du\\Big)\\Big(\\int_{1/3}^{3}\\frac{\\mathrm dv}{v}\\Big)$$' +
+       '<p>$=\\dfrac12\\cdot\\Big(3-\\tfrac13\\Big)\\cdot\\Big(\\ln3-\\ln\\tfrac13\\Big)=\\dfrac12\\cdot\\dfrac83\\cdot 2\\ln3$。</p>' },
+  { t: '结论',
+    h: '<p>对称性砍掉 $x-y$，换元把曲边区域变矩形：</p>' +
+       '$$\\iint_D(1+x-y)\\,\\mathrm dx\\,\\mathrm dy=\\frac83\\ln 3$$' },
+];
+
+var snaps = [
+  { cls:'step',  tag:'审题',   log:'第一象限内，两条双曲线夹两条过原点直线，围出曲边区域', count:0 },
+  { cls:'step',  tag:'对称',   log:'交换 x 和 y，双曲线不动、两条直线互换，区域关于对角线对称', count:1, ribbon:{k:1, ok:true} },
+  { cls:'ok',    tag:'消元',   log:'x 的积分等于 y 的积分，相减为零，被积函数只剩常数 1', count:2, ribbon:{k:2, ok:true} },
+  { cls:'shift', tag:'换元',   log:'令 u 等于横纵坐标之积、v 等于二者之商，曲边区域变成矩形', count:3, ribbon:{k:3, ok:true} },
+  { cls:'step',  tag:'反解',   log:'由乘积与商反解出 x 和 y，为算雅可比做准备', count:4 },
+  { cls:'shift', tag:'雅可比', log:'先算正向雅可比得 2v，面积元素取其倒数', count:5, ribbon:{k:4, ok:true} },
+  { cls:'step',  tag:'积分',   log:'矩形上二重积分拆成两个一元积分相乘', count:6 },
+  { cls:'done',  tag:'完成',   log:'原积分等于区域面积：八分之三倍 ln3', count:7, done:true, ribbon:{k:5, ok:true} },
+];
+
+AW.init({
+  title: '【2024·17】$\\iint_D(1+x-y)\\,\\mathrm dx\\,\\mathrm dy$：对称性 + 换元',
+  subtitle: '考点：二重积分 · 区域由 $xy=\\tfrac13,\\ xy=3$ 与 $y=\\tfrac13x,\\ y=3x$ 围成（第一象限）',
+  counterLabel: '已完成',
+  intro: '点击「▶ 播放」逐步演示：先对称性消元，再换元算面积。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    this._board = AW.el('div', '');
+    wrap.appendChild(this._board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var b = this._board;
+    b.innerHTML = '';
+    for(var k = 0; k <= i && k < SECS.length; k++){
+      var cur = (k === Math.min(i, SECS.length - 1));
+      b.appendChild(AW.el('div', 'mb-line' + (cur ? ' act' : ' past'),
+        '<div class="mb-title">' + SECS[k].t + '</div>' + SECS[k].h));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: snaps,
+
+  result: {
+    big: '$\\dfrac{8}{3}\\ln 3$',
+    html: '<p>记忆锚点：边界含 $xy=c$ 与 $y=kx$ → 换元 <b>$u=xy,\\ v=\\dfrac yx$</b> 直接变矩形；$\\dfrac{\\partial(u,v)}{\\partial(x,y)}=2v$，面积元素 $\\dfrac{\\mathrm du\\,\\mathrm dv}{2v}$。</p>' +
+          '<p>易错：对称性是关于 $y=x$（不是坐标轴），只有 $x-y$ 这种互换变号的组合消零；$\\int_{1/3}^{3}\\frac{\\mathrm dv}{v}=2\\ln3$ 别写成 $\\ln3$。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：对称性消元 + 「积商换元」算曲边区域面积</h2>
+<p><strong>答案</strong>：$\displaystyle\iint_D(1+x-y)\,\mathrm dx\,\mathrm dy=\frac{8}{3}\ln 3$。</p>
+<p>先别急着写直角坐标累次积分：边界是两条双曲线 $xy=c$ 加两条过原点直线 $y=kx$，直接定限要解边界、找交点、分段讨论，繁琐且易错。边界全用「积」与「商」描述的区域，标准打法只有两步——先用对称性把被积函数削到最简，再用换元把曲边区域打平成矩形。</p>
+<h3>第一步：对称性为什么能消掉 $x-y$</h3>
+<p>把 $x$、$y$ 互换（等价于关于直线 $y=x$ 作翻折）：$xy=c$ 不变，两条直线 $y=\dfrac13x$ 与 $y=3x$ 恰好互换（斜率互为倒数），所以 $D$ 翻折后与自身重合——$D$ 关于 $y=x$ 对称。</p>
+<p><strong>为什么由此就有 $\iint_D x\,\mathrm d\sigma=\iint_D y\,\mathrm d\sigma$？</strong> 翻折把 $D$ 一比一映到自身：每一小块的面积不变，只是坐标标签 $(x,y)$ 换成 $(y,x)$。对这个映射作变量替换，区域不变、被积函数 $x$ 换名成 $y$，积分值当然不变——两个积分数的是同一批点，只是记号互换。于是</p>
+<p>$$\iint_D x\,\mathrm d\sigma=\iint_D y\,\mathrm d\sigma\ \Longrightarrow\ \iint_D(x-y)\,\mathrm d\sigma=0,$$</p>
+<p>被积函数只剩常数 $1$：<strong>原积分就是 $D$ 的面积</strong>。（注意对称轴是 $y=x$ 而非坐标轴：关于坐标轴对称消的是奇偶性，关于 $y=x$ 对称消的是互换后变号的组合 $x-y$；常数 $1$ 互换后不变，消不掉，留下来正好是面积。）</p>
+<h3>第二步：为什么换元偏偏选 $u=xy,\ v=y/x$</h3>
+<p>换元的目的：把每条边界变成新坐标下的「坐标线」，区域自然成矩形。观察四条边界方程——它们恰好是两个函数的<strong>等值线</strong>：$xy=\dfrac13$、$xy=3$ 是 $u=xy$ 的等值线；$y=\dfrac13x$ 与 $y=3x$ 即 $\dfrac yx=\dfrac13$、$\dfrac yx=3$，是 $v=\dfrac yx$ 的等值线。于是令</p>
+<p>$$u=xy,\qquad v=\frac{y}{x}\quad(x&gt;0,\ y&gt;0,\ v&gt;0),$$</p>
+<p>四条边界分别变成 $u=\dfrac13,\ u=3,\ v=\dfrac13,\ v=3$，区域变成矩形 $\Big[\dfrac13,3\Big]\times\Big[\dfrac13,3\Big]$。第一象限内 $u&gt;0,\ v&gt;0$，反解 $x=\sqrt{u/v},\ y=\sqrt{uv}$ 唯一，换元是一一对应，合法。选换元函数的口诀就写在边界方程里：<strong>边界把哪些量固定成常数，就把哪些量取成新坐标</strong>。反解式 $uv=y<sup>2</sup>,\ u/v=x<sup>2</sup>$ 供后用。</p>
+<h3>第三步：算雅可比——为什么「先正后倒」</h3>
+<p>面积元素要的是 $\left|\dfrac{\partial(x,y)}{\partial(u,v)}\right|$，但<strong>先算正向 $\dfrac{\partial(u,v)}{\partial(x,y)}$ 再取倒数</strong>：互逆换元的两个雅可比行列式互为倒数；而 $u=xy,\ v=y/x$ 对 $x,y$ 的偏导是显式多项式，比从 $x=\sqrt{u/v}$ 求偏导（带根号）快且不易错。</p>
+<p>$$\frac{\partial(u,v)}{\partial(x,y)}=<br/>\begin{vmatrix} y &amp; x \\[2pt] -\dfrac{y}{x<sup>2</sup>} &amp; \dfrac1x \end{vmatrix}<br/>=\frac{y}{x}+\frac{y}{x}=2v<br/>\ \Longrightarrow\ \mathrm dx\,\mathrm dy=\frac{\mathrm du\,\mathrm dv}{2v}.$$</p>
+<p>第一象限内 $v&gt;0$，绝对值可直接去掉。于是面积</p>
+<p>$$\int_{1/3}<sup>3</sup>\!\!\int_{1/3}<sup>3</sup>\frac{\mathrm du\,\mathrm dv}{2v}<br/>=\frac12\Big(\int_{1/3}<sup>3</sup>\mathrm du\Big)\Big(\int_{1/3}<sup>3</sup>\frac{\mathrm dv}{v}\Big)<br/>=\frac12\cdot\frac83\cdot\Big(\ln3-\ln\frac13\Big)=\frac12\cdot\frac83\cdot2\ln3=\frac83\ln3.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>硬化为直角坐标累次积分</strong>：下边界是双曲线，要按交点分段讨论，极易错；看到 $xy=c$ 与 $y=kx$ 混合边界就应想到 $u=xy,\ v=y/x$。</li><li><strong>雅可比方向搞反</strong>：$\dfrac{\partial(x,y)}{\partial(u,v)}$ 与 $\dfrac{\partial(u,v)}{\partial(x,y)}$ 互为倒数，先算好算的一侧再取倒；第一象限内 $v&gt;0$，绝对值可直接写。</li><li><strong>对称性用错对象</strong>：$D$ 关于 $y=x$ 对称（不是关于坐标轴），只有 $x-y$ 这种互换后变号的组合才消为零。</li><li><strong>$\ln$ 的上减下</strong>：$\displaystyle\int_{1/3}<sup>3</sup>\frac{\mathrm dv}{v}=\ln3-\ln\dfrac13=2\ln3$ 而不是 $\ln3$，别丢了下限的 $\ln\dfrac13$。</li></ul>
+<blockquote>一句话结论：对称性砍掉 $x-y$，换元 $u=xy,\ v=y/x$ 把 $D$ 变成矩形，面积 $=\dfrac12\cdot\dfrac83\cdot2\ln3=\dfrac83\ln3$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

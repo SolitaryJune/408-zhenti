@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·03 变限积分函数的奇偶性</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-02.html" data-q="../question/m2-2024-02/">← <b>m2-2024-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-03/" data-q="../question/m2-2024-03/" data-no-anim="1">m2-2024-03 · 本题</a>
+  <a href="m2-2024-04.html" data-q="../question/m2-2024-04/"><b>m2-2024-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：奇偶性靠换元 t = −u',
+    cls: 'key',
+    tag: '方法',
+    body: '<p>$f(x)=\\displaystyle\\int_0^{\\sin x}\\sin t^3\\,\\mathrm dt$，$g(x)=\\displaystyle\\int_0^x f(t)\\,\\mathrm dt$。判奇偶的唯一正规手段是<b>对积分换元 $t=-u$</b>，把上限与被积函数里的负号一起消化。先判 $f$，再用现成结论判 $g$。</p>',
+    log: '先判 f 的奇偶，再判 g 的奇偶' },
+  { title: '写出 f(−x)：上限变号',
+    cls: 'step',
+    tag: 'f(−x)',
+    body: '<p>$\\sin(-x)=-\\sin x$（上限是奇函数），被积函数 $\\sin t^3$ 也是 $t$ 的奇函数。直接写出：$$f(-x)=\\int_0^{-\\sin x}\\sin t^3\\,\\mathrm dt.$$ 负号出现在<b>两处</b>：上限、被积函数。</p>',
+    log: '上限 sin(−x)=−sin x，被积函数也是奇的' },
+  { title: '换元 t = −u：两个负号相消 → f 为偶',
+    cls: 'good',
+    tag: 'f：偶',
+    ribbon: {k:1, ok:true},
+    body: '<p>令 $t=-u$（$\\mathrm dt=-\\mathrm du$，上限 $-\\sin x\\to\\sin x$，被积函数 $\\sin((-u)^3)=-\\sin u^3$）：$$f(-x)=\\int_0^{\\sin x}\\big(-\\sin u^3\\big)(-\\mathrm du)=\\int_0^{\\sin x}\\sin u^3\\,\\mathrm du=f(x).$$ <b>偶函数</b>——"被积奇 × 上限奇"，两重奇性相消。</p>',
+    log: '两个负号相消，f(−x)=f(x)，f 是偶函数' },
+  { title: '判 g：偶函数变上限积分必为奇',
+    cls: 'good',
+    tag: 'g：奇',
+    ribbon: {k:2, ok:true},
+    body: '<p>$f$ 已判为偶函数，对 $g(-x)=\\displaystyle\\int_0^{-x}f(t)\\,\\mathrm dt$ 换元 $t=-u$：$$g(-x)=-\\int_0^{x}f(-u)\\,\\mathrm du=-\\int_0^x f(u)\\,\\mathrm du=-g(x).$$ <b>奇函数</b>。这也是免算结论：<b>偶函数从 $0$ 起的变上限积分必为奇函数</b>。</p>',
+    log: 'g(−x)=−g(x)，g 是奇函数' },
+  { title: '对照选项：偶 + 奇 = D',
+    cls: 'good',
+    tag: '定答案',
+    body: '<p>$f(x)$ 为<b>偶函数</b>、$g(x)$ 为<b>奇函数</b>，对应选项 <b>D</b>。</p>',
+    log: 'f 偶、g 奇，选 D' },
+  { title: '干扰项复盘',
+    cls: 'bad',
+    tag: '防坑',
+    body: '<p><b>A</b>：只看到 $\\sin t^3$ 是奇的、把 $f$ 判成奇，忘了上限 $\\sin x$ 也贡献一个负号。<b>B</b>：$f$ 判错连累 $g$；且偶函数从 0 积分起必为奇，不会是偶。<b>C</b>：$f$ 判对（偶），但把 $g$ 判成偶——"偶函数变上限积分为奇"这条免算结论没背。</p>',
+    log: 'A/B 把 f 判成奇，C 把 g 判成偶' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>被积奇 × 上限奇 = 偶</b>；<b>偶函数从 $0$ 起变上限积分 = 奇</b>（奇函数从 0 起变上限积分 = 偶）。换元 $t=-u$ 时上限、被积函数、$\\mathrm dt$ 三处符号要同步。</p>',
+    log: '选 D：f 偶、g 奇' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f(x)=\\int_0^{\\sin x}\\sin t^3\\,\\mathrm dt$，$g(x)=\\int_0^x f(t)\\,\\mathrm dt$ 的奇偶性',
+  subtitle: '考点：变限积分 · 方法：换元 $t=-u$ + 奇偶传递结论',
+  counterLabel: '推理步',
+  ribbonTitle: '判定（✓ 已定 / ✗ 待定）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D（f 偶，g 奇）',
+    html: '记忆锚点：<b>$\\sin t^3$ 奇 × 上限 $\\sin x$ 奇 ⟹ $f$ 偶</b>；<b>偶函数从 $0$ 起变上限积分 ⟹ $g$ 奇</b>。易错：$t=-u$ 换元后被积函数与 $\\mathrm dt$ 的两个负号相消，别只处理一处。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分定义函数的奇偶性（换元 $t=-u$ 两次）</h2>
+<p>答案：D</p>
+<h3>第一步：备好两件工具</h3>
+<p>判定 $f(-x)$ 是否等于 $\pm f(x)$，唯一的正规手段是<strong>对积分换元 $t=-u$</strong>，把积分上限与被积函数里的负号一起消化。另备一条通用结论备用：<strong>偶函数从 $0$ 起变上限积分是奇函数；奇函数从 $0$ 起变上限积分是偶函数</strong>。</p>
+<h3>第二步：判 $f(x)=\displaystyle\int_0<sup>\sin x</sup>\sin t<sup>3</sup>\,\mathrm dt$</h3>
+<p>写出 $f(-x)=\displaystyle\int_0<sup>\sin(-x)</sup>\sin t<sup>3</sup>\,\mathrm dt=\int_0<sup>-\sin x</sup>\sin t<sup>3</sup>\,\mathrm dt$，换元 $t=-u$（$\mathrm dt=-\mathrm du$）：</p>
+<ul><li>上限 $-\sin x\to\sin x$；</li><li>被积函数 $\sin((-u)<sup>3</sup>)=-\sin u<sup>3</sup>$（奇复合奇仍奇）；</li><li>两个负号（来自被积函数与 $\mathrm dt$）相消。</li></ul>
+<p>$$f(-x)=\int_0<sup>\sin x</sup>\sin u<sup>3</sup>\,\mathrm du=f(x),$$</p>
+<p>故 $f$ 为<strong>偶函数</strong>。口诀记法："被积奇 × 上限奇 = 偶"，两重奇性相消。</p>
+<h3>第三步：判 $g(x)=\displaystyle\int_0<sup>x</sup> f(t)\,\mathrm dt$</h3>
+<p>$f$ 已是偶函数，故</p>
+<p>$$g(-x)=\int_0<sup>-x</sup>f(t)\,\mathrm dt\xlongequal{t=-u}-\int_0<sup>x</sup>f(-u)\,\mathrm du=-\int_0<sup>x</sup> f(u)\,\mathrm du=-g(x),$$</p>
+<p>$g$ 为<strong>奇函数</strong>。偶 + 奇 对应选项 <strong>D</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $f$ 判成奇</strong>（选 A/B）：只看到 $\sin t<sup>3</sup>$ 是奇的，忽略了上限 $\sin x$ 也是奇的，换元后负号成对出现、互相抵消。</li><li><strong>把 $g$ 判成偶</strong>（选 B/C）：忘记"偶函数从 $0$ 积分起必得奇函数"，这是不需要计算就直接可用的结论。</li><li><strong>换元时丢负号</strong>：$t=-u$ 要同时改上限、改被积函数、改 $\mathrm dt$，三处一致才不翻车。</li></ul>
+<blockquote>一句话结论：$\sin t<sup>3</sup>$ 奇、上限 $\sin x$ 奇，合成 $f$ 偶；偶函数再变上限积分得 $g$ 奇——选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

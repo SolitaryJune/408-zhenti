@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022·17 一点线性展开求 $f'(1)$</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-16.html" data-q="../question/m2-2022-16/">← <b>m2-2022-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-17/" data-q="../question/m2-2022-17/" data-no-anim="1">m2-2022-17 · 本题</a>
+  <a href="m2-2022-18.html" data-q="../question/m2-2022-18/"><b>m2-2022-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$\\lim_{x\\to0}\\frac{f(\\mathrm{e}^{x^2})-3f(1+\\sin^2x)}{x^2}=2,\\qquad f \\text{ 仅在 } x=1 \\text{ 处可导，求 } f'(1)$$",
+  "<b>① 选工具：</b>只给一点可导 → 一阶线性逼近 $f(1+t)=f(1)+f'(1)\\,t+o(t)\\ (t\\to0)$",
+  "<b>② 增量化阶：</b>$\\mathrm{e}^{x^2}-1\\sim x^2$，$\\sin^2x\\sim x^2$（$x\\to0$），两个内层自变量都趋于 $1$",
+  "<b>③ 记 $a=f(1),\\ b=f'(1)$：</b>$f(\\mathrm{e}^{x^2})=f\\big(1+(\\mathrm{e}^{x^2}-1)\\big)=a+b\\,x^2+o(x^2)$",
+  "<b>④ 同理：</b>$f(1+\\sin^2x)=a+b\\sin^2x+o(x^2)=a+b\\,x^2+o(x^2)$",
+  "<b>⑤ 合并分子：</b>$(a+bx^2)-3(a+bx^2)+o(x^2)=-2a-2bx^2+o(x^2)$",
+  "<b>⑥ 除以 $x^2$：</b>$\\dfrac{f(\\mathrm{e}^{x^2})-3f(1+\\sin^2x)}{x^2}=\\dfrac{-2a}{x^2}-2b+o(1)$，极限应等于 $2$",
+  "<b>⑦ 极限有限 ⇒ 奇异项消失：</b>$a\\neq0$ 时 $\\dfrac{-2a}{x^2}$ 发散，故 $a=f(1)=0$",
+  "<b>⑧ 收尾：</b>剩下 $-2b+o(1)\\to-2b=2\\ \\Rightarrow\\ f'(1)=-1$"
+];
+
+AW.init({
+  title: '2022·17　一点线性展开 + 等价无穷小求 $f\'(1)$',
+  subtitle: '考点：一点可导的线性逼近 · 等价无穷小定阶 · 极限有限定参数',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看八个步骤如何从「只在一点可导」逼出 $f\'(1)=-1$。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'条件只给一点可导，能用的一阶线性逼近，目标是导数值', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'定工具', log:'写出一点处的线性逼近公式，增量趋于零时误差是高阶小量', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'化阶',   log:'两个内层增量分别等价于 x 平方，都压到同一阶', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'展开一', log:'把第一个函数值展开成 a 加 b 乘 x 平方再加高阶小量', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'展开二', log:'第二个函数值同样展开，形式完全一致', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'合并',   log:'分子按一比三合并，剩负 2a 减 2b 乘 x 平方', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'去除',   log:'整体除以 x 平方，出现负 2a 除以 x 平方的奇异项', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'定 f1',  log:'极限有限要求奇异项消失，于是 f 一 的值为零', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：剩下负 2b 等于 2，导数值为负 1', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$f(1)=0,\\qquad f'(1)=-1$",
+    html: "记忆锚点：<b>只在一点可导 → 用 $f(1+t)=f(1)+f'(1)t+o(t)$；极限是有限值 ⇒ 分子上发散的 $\\dfrac{-2a}{x^2}$ 必须消失，先定 $f(1)$ 再定 $f'(1)$</b>。易错：对一点可导的函数乱用二阶展开；漏答 $f(1)=0$ 这个采分点。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：一点处的线性展开 + 等价无穷小定 $f'(1)$</h2>
+<p><strong>答案</strong>：$f(1)=0$，$f'(1)=-1$。</p>
+<h3>第一步：识别「只给一点可导」的工具箱</h3>
+<p>条件只有「$f$ 在 $x=1$ 处可导」，不能用高阶泰勒，唯一趁手的工具是一点处的一阶线性逼近：</p>
+<p>$$f(1+t)=f(1)+f'(1)\,t+o(t)\quad(t\to0).$$</p>
+<p>当 $x\to0$ 时，$\mathrm{e}<sup>x^2</sup>\to1$，$1+\sin<sup>2x</sup>\to1$，两个内层自变量都落到可导点附近——出题人正是按这个接口设计的。</p>
+<p><strong>为什么不用洛必达？</strong> 洛必达要求分子、分母在 $x=0$ 的去心邻域内<strong>都可导</strong>，而条件只给 $f$ 在 $x=1$ 这一个点可导——$f(\mathrm{e}<sup>x^2</sup>)$、$f(1+\sin<sup>2x</sup>)$ 在 $x=0$ 附近根本没有"导函数"可洛。条件给到哪里，工具就只能用到哪里：一点的线性逼近是唯一合法的武器。</p>
+<p><strong>为什么两个增量恰是 $x<sup>2</sup>$ 阶？</strong> 分母是 $x<sup>2</sup>$，分子想留下有限信息，增量 $\mathrm{e}<sup>x^2</sup>-1$ 与 $\sin<sup>2x</sup>$ 就必须是 $x<sup>2</sup>$ 阶——若哪个只有 $x$ 阶，除以 $x<sup>2</sup>$ 后极限必为无穷，条件"$=2$"就自相矛盾。所以 "$\mathrm{e}<sup>x^2</sup>$" 与 "$\sin<sup>2x</sup>$" 这两个构造都按 $x<sup>2</sup>$ 量级精心设计，这是本题的题眼。</p>
+<h3>第二步：把两个增量都压到 $x<sup>2</sup>$ 阶</h3>
+<p>由等价无穷小 $\mathrm{e}<sup>x^2</sup>-1\sim x<sup>2</sup>$，$\sin<sup>2x</sup>\sim x<sup>2</sup>$（$x\to0$）。记 $a=f(1)$，$b=f'(1)$，代入线性展开：</p>
+<p>$$f(\mathrm{e}<sup>x^2</sup>)=f\big(1+(\mathrm{e}<sup>x^2</sup>-1)\big)=a+b\,x<sup>2</sup>+o(x<sup>2</sup>),$$</p>
+<p>$$f(1+\sin<sup>2x</sup>)=a+b\sin<sup>2x</sup>+o(x<sup>2</sup>)=a+b\,x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<p>（追问：为什么 $o(t)$ 敢写成 $o(x<sup>2</sup>)$？因为 $t=\mathrm{e}<sup>x^2</sup>-1\sim x<sup>2</sup>$，比 $t$ 高阶的无穷小当然也比 $x<sup>2</sup>$ 高阶——余项的"阶"可沿等价无穷小传递。特例验证：$\mathrm{e}<sup>x^2</sup>-1=x<sup>2</sup>+\dfrac{x<sup>4</sup>}{2}+\cdots$，尾巴 $\dfrac{x<sup>4</sup>}{2}$ 确实是 $o(x<sup>2</sup>)$。）</p>
+<h3>第三步：合并分子、除以 $x<sup>2</sup>$</h3>
+<p>$$f(\mathrm{e}<sup>x^2</sup>)-3f(1+\sin<sup>2x</sup>)=(a+bx<sup>2</sup>)-3(a+bx<sup>2</sup>)+o(x<sup>2</sup>)=-2a-2bx<sup>2</sup>+o(x<sup>2</sup>),$$</p>
+<p>$$\frac{f(\mathrm{e}<sup>x^2</sup>)-3f(1+\sin<sup>2x</sup>)}{x<sup>2</sup>}=\frac{-2a}{x<sup>2</sup>}-2b+o(1).$$</p>
+<h3>第四步：极限有限 ⇒ 先定 $f(1)$，再定 $f'(1)$</h3>
+<p>极限存在且等于 $2$（有限值），而 $\dfrac{-2a}{x<sup>2</sup>}$ 当 $a\ne0$ 时发散，故必须 $a=0$，即 $f(1)=0$。随后只剩 $-2b+o(1)\to-2b=2$，得</p>
+<p>$$f'(1)=-1.$$</p>
+<p>顺带看穿出题设计：系数 $1$ 与 $-3$ 不相等，常数项合并成 $-2a$，只要 $a\ne0$ 除以 $x<sup>2</sup>$ 就发散——"极限有限"这一条把 $f(1)=0$ 白送出来；若两个系数相等，$a$ 将永远定不出，题目就少了一问。</p>
+<h3>易错点</h3>
+<ul><li><strong>擅自展开到二阶</strong>：题目只给一阶可导，$f(1+t)$ 的高阶展开没有依据；一阶线性逼近已经够用。</li><li><strong>漏掉「极限有限 ⇒ 奇异项消失」</strong>：直接令 $-2b=2$ 虽然碰巧得到 $b=-1$，但「$f(1)=0$」是独立采分点，必须先把发散项钉死。</li><li><strong>等价无穷小用错对象</strong>：等价的是增量 $\mathrm{e}<sup>x^2</sup>-1$ 与 $\sin<sup>2x</sup>$，不是对 $f$ 本身做替换。</li></ul>
+<blockquote>一句话结论：线性逼近 $f(1+t)\approx f(1)+f'(1)t$，极限有限先逼出 $f(1)=0$，再由 $-2f'(1)=2$ 得 $f'(1)=-1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

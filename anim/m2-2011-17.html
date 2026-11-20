@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·17 抽象复合函数的二阶混合偏导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-16.html" data-q="../question/m2-2011-16/">← <b>m2-2011-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-17/" data-q="../question/m2-2011-17/" data-no-anim="1">m2-2011-17 · 本题</a>
+  <a href="m2-2011-18.html" data-q="../question/m2-2011-18/"><b>m2-2011-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>设中间变量</b>：$u=xy,\\ v=yg(x)$，$z=f(u,v)$。求导链：$z\\to(f_1',f_2')\\to(u,v)\\to(x,y)$，$u$、$v$ 同时依赖 $x$ 与 $y$。</p>",
+  "<p><b>先求 $\\partial z/\\partial x$</b>：$$\\frac{\\partial z}{\\partial x}=f_1'\\cdot\\frac{\\partial u}{\\partial x}+f_2'\\cdot\\frac{\\partial v}{\\partial x}=y f_1'+y g'(x)f_2'.$$ 注意 $f_1',f_2'$ 仍是 $(u,v)$ 的函数——伏笔在此。</p>",
+  "<p><b>挖出钥匙</b>：$g$ 可导且在 $x=1$ 处取得极值 $\\Rightarrow g'(1)=0$；又 $g(1)=1$。这两条待时代入。</p>",
+  "<p><b>对 $y$ 求导·第一项</b>（乘积法则 + 链式，$\\dfrac{\\partial u}{\\partial y}=x,\\ \\dfrac{\\partial v}{\\partial y}=g(x)$）：$$\\frac{\\partial}{\\partial y}\\big(y f_1'\\big)=f_1'+y\\big(x f_{11}''+g(x)f_{12}''\\big).$$</p>",
+  "<p><b>对 $y$ 求导·第二项</b>：$$\\frac{\\partial}{\\partial y}\\big(y g'(x)f_2'\\big)=g'(x)f_2'+y g'(x)\\big(x f_{21}''+g(x)f_{22}''\\big).$$</p>",
+  "<p><b>代入 $x=y=1$</b>：此时 $u=v=1$，$g(1)=1$，$g'(1)=0$。含 $f_2'$ 的两项、以及 $g'(1)$ 乘出的整块全部归零，只剩 $f_1'+f_{11}''+f_{12}''$（均在 $(1,1)$ 取值）。</p>",
+  "<p><b>结论</b>：$$\\left.\\frac{\\partial^2 z}{\\partial x\\,\\partial y}\\right|_{\\substack{x=1\\\\ y=1}}=f_1'(1,1)+f_{11}''(1,1)+f_{12}''(1,1).$$</p>"
+];
+
+AW.init({
+  title: '$z=f[\\,xy,\\ y g(x)\\,]$ 在 $(1,1)$ 处的 $\\dfrac{\\partial^2 z}{\\partial x\\partial y}$',
+  subtitle: '考点：多元复合函数二阶偏导 · 方法：链式法则 + 极值点导数为零清场',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示混合偏导的链式展开与化简。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'设链',   log:'设两个中间变量 u=xy、v=y·g(x)，f 的两个偏导都还挂在 u,v 上', show:1, count:0 },
+    { cls:'step',  tag:'一阶',   log:'先对 x 求偏导：两项各乘一条链，得 y·f₁ + y·g′·f₂', show:2, count:1 },
+    { cls:'key',   tag:'钥匙',   log:'g 在 x=1 取极值且可导，所以 g′(1)=0，还有 g(1)=1 备用', show:3, count:2 },
+    { cls:'step',  tag:'二阶一', log:'第一项按乘积法则拆：本体项 f₁ 留下，导数项再走链得 f₁₁、f₁₂', show:4, count:3 },
+    { cls:'step',  tag:'二阶二', log:'第二项同样拆：带 g′ 的本体项先挂着，导数项里出现 f₂₁、f₂₂', show:5, count:4 },
+    { cls:'ok',    tag:'清场',   log:'代入 x=y=1：g′(1)=0 让所有含 f₂ 的项全部消失', show:6, count:5 },
+    { cls:'done',  tag:'完成',   log:'幸存三项：本体 f₁ 加走 u 通道的 f₁₁、f₁₂', show:7, count:6, done:true },
+  ],
+
+  result: {
+    big: '$f_1\'(1,1)+f_{11}\'\'(1,1)+f_{12}\'\'(1,1)$',
+    html: '记忆锚点：<b>$f_1\',f_2\'$ 不是常数，对 $y$ 求导要再走一遍链</b>；乘积项 $y f_1\'$ 拆出本体项 $f_1\'$ 最易漏。可导点取极值 $\\Rightarrow g\'(1)=0$，一举消灭全部含 $f_2\'$、$f_{22}\'\'$ 的项。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：抽象复合函数的二阶混合偏导，用极值条件清场</h2>
+<p>最终答案：$\left.\dfrac{\partial<sup>2</sup> z}{\partial x\,\partial y}\right|_{\substack{x=1\\y=1}}=f_1'(1,1)+f_{11}''(1,1)+f_{12}''(1,1)$。</p>
+<h3>第一步：立机制——链式法则的"逐通道记账"，以及为什么先对 x 求导</h3>
+<p>令 $u=xy,\ v=yg(x)$，则 $z=f(u,v)$。链式法则的机制是<strong>逐通道记账</strong>：$z$ 到 $x$ 有两条通道（经 $u$ 与经 $v$），每条通道贡献"该通道的偏导 × 中间变量对该自变量的偏导"：</p>
+<p>$$\frac{\partial z}{\partial x}=f_1'\cdot y+f_2'\cdot y g'(x)=y f_1'+y g'(x) f_2'.$$</p>
+<p>求导次序为什么是先 $x$ 后 $y$？记号 $\dfrac{\partial<sup>2</sup> z}{\partial x\,\partial y}$ 的约定就是"先对 $x$、后对 $y$"（与 $f''_{xy}$ 下标从左往右读一致），第一步只能对 $x$ 开工。同时埋下伏笔：$f_1',f_2'$ 不是常数，是 $(u,v)$ 的函数——这条伏笔下一步必须兑现。</p>
+<h3>第二步：对 y 求导——f₁′、f₂′ 要再走一遍链，显式因子要走乘积法则</h3>
+<p>两套机制同时运转：其一，$f_1',f_2'$ 是 $(u,v)$ 的函数，而 $u,v$ 又随 $y$ 变（$\dfrac{\partial u}{\partial y}=x,\ \dfrac{\partial v}{\partial y}=g(x)$），对它们求导要再经 $u,v$ 走链式法则，产生全部四个二阶偏导；其二，$y$ 与 $g'(x)$ 是显式因子，按乘积法则各拆出"本体项"：</p>
+<p>$$\frac{\partial<sup>2</sup> z}{\partial x\,\partial y}=f_1'+y\big(x f_{11}''+g(x) f_{12}''\big)+g'(x) f_2'+y g'(x)\big(x f_{21}''+g(x) f_{22}''\big).$$</p>
+<h3>第三步：代入 x=y=1——费马引理是清场钥匙</h3>
+<p>$g$ 在 $x=1$ 处<strong>可导且取得极值</strong>，由费马引理 $g'(1)=0$。直观地说：可导函数在极值点两侧增减性翻转，导数必须"过零"才翻转得起，所以极值点的导数只能是零。又 $g(1)=1$，此时中间变量取值 $u=xy=1,\ v=yg(1)=1$——<strong>所有 $f$ 的偏导都在 $(1,1)$ 处取值</strong>。</p>
+<p>清场规则：凡是乘着 $g'(1)=0$ 的项全部归零——$g'(x)f_2'$ 与 $y\,g'(x)(\cdots)$ 两块消失，$f_{21}'',f_{22}''$ 就此出局；乘着 $g(1)=1$（非零）的项保留。幸存的恰是走 $u=xy$ 通道的部分：</p>
+<p>$$f_1'(1,1)+f_{11}''(1,1)+f_{12}''(1,1).$$</p>
+<p>（<strong>为什么答案里没有 $f_{21}''$？</strong> 它是被 $g'(1)=0$ 消掉的，不是被"$f_{12}''=f_{21}''$"合并的——克莱罗定理只在二阶偏导连续时保证两者相等，本题里它在幸存项中根本没露面。）</p>
+<h3>易错点</h3>
+<ul><li><strong>丢掉乘积法则的本体项</strong>：$\dfrac{\partial}{\partial y}(y f_1')=f_1'+y\dfrac{\partial f_1'}{\partial y}$，第一项 $f_1'$ 最常被漏——它恰是最终答案里唯一的一阶量。</li><li><strong>把 f₁′、f₂′ 当常数</strong>：它们仍是复合函数，对 $y$ 求导必须再经 $u,v$ 走链式法则。</li><li><strong>极值条件不会用</strong>：可导 + 极值 $\Rightarrow g'(1)=0$（费马引理），一举消灭所有含 $f_2'$ 的项。</li><li><strong>忘记换算取值点</strong>：对 $x,y$ 的偏导在 $(1,1)$ 取值，对 $f$ 的偏导要在中间变量的值 $(u,v)=(1,1)$ 处取值。</li></ul>
+<blockquote>结论：本体项 $f_1'$ 留下，链式项里只有乘 $g(1)=1$ 的 $f_{11}'',f_{12}''$ 幸存，$f_{21}'',f_{22}''$ 乘 $g'(1)=0$ 出局——答案 $f_1'+f_{11}''+f_{12}''$（均在 $(1,1)$ 处取值）。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

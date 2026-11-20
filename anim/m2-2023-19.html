@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023·19 无界区域的面积与旋转体体积</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-18.html" data-q="../question/m2-2023-18/">← <b>m2-2023-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-19/" data-q="../question/m2-2023-19/" data-no-anim="1">m2-2023-19 · 本题</a>
+  <a href="m2-2023-20.html" data-q="../question/m2-2023-20/"><b>m2-2023-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$D$ 沿 $x\\ge1$ 无界，面积与体积都是<b>无穷限反常积分</b>",
+  "<b>② (1) 面积：</b>曲线 $y=\\frac{1}{x\\sqrt{1+x^2}}$ 下方、$x\\ge1$ 上方，$S=\\int_1^{+\\infty}\\frac{\\mathrm dx}{x\\sqrt{1+x^2}}$",
+  "<b>③ 倒代换：</b>令 $x=\\frac1t$：$\\mathrm dx=-\\frac{\\mathrm dt}{t^2}$，且 $t>0$ 时 $\\sqrt{1+x^2}=\\frac{\\sqrt{1+t^2}}{t}$，被积式化为 $-\\frac{\\mathrm dt}{\\sqrt{1+t^2}}$",
+  "<b>④ 变限：</b>$x:1\\to+\\infty$ 对应 $t:1\\to0^+$，$S=\\int_0^1\\frac{\\mathrm dt}{\\sqrt{1+t^2}}$",
+  "<b>⑤ (1) 完成：</b>原函数 $\\ln\\big(t+\\sqrt{1+t^2}\\big)$，$S=\\ln(1+\\sqrt2)-\\ln1=\\boxed{\\,\\ln(\\sqrt2+1)\\,}$",
+  "<b>⑥ (2) 圆盘法：</b>$V=\\pi\\int_1^{+\\infty}\\Big(\\frac{1}{x\\sqrt{1+x^2}}\\Big)^2\\mathrm dx=\\pi\\int_1^{+\\infty}\\frac{\\mathrm dx}{x^2(1+x^2)}$",
+  "<b>⑦ 部分分式：</b>$\\frac{1}{x^2(1+x^2)}=\\frac{1}{x^2}-\\frac{1}{1+x^2}$（通分 $\\frac{1+x^2-x^2}{x^2(1+x^2)}$ 回验成立）",
+  "<b>⑧ 逐项积分：</b>原函数 $-\\frac1x-\\arctan x$",
+  "<b>⑨ 代上限：</b>$x\\to+\\infty$：$-\\frac1x\\to0$，$\\arctan x\\to\\frac\\pi2$，得 $0-\\frac\\pi2$",
+  "<b>⑩ (2) 收尾：</b>$V=\\pi\\Big[\\big(0-\\frac\\pi2\\big)-\\big(-1-\\frac\\pi4\\big)\\Big]=\\boxed{\\,\\pi\\Big(1-\\frac\\pi4\\Big)\\,}$"
+];
+var rowEls = [];
+
+AW.init({
+  title: '2023·19　无界区域的面积与旋转体体积',
+  subtitle: '考点：无穷限反常积分 · 倒代换 · 部分分式 · 圆盘法',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」：(1) 倒代换算面积，(2) 部分分式算旋转体体积。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    rowEls = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      rowEls.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'第①步：区域延伸到无穷远，面积和体积都要用无穷限反常积分', count:0, ribbon:{k:1,  ok:true} },
+    { cls:'ok',   tag:'写面积', log:'第②步：第一问把曲线下方到 x 轴的面积写成积分', count:1, ribbon:{k:2,  ok:true} },
+    { cls:'ok',   tag:'倒代换', log:'第③步：令 x 等于 t 分之一，根号里的式子提出来，被积式大幅化简', count:2, ribbon:{k:3,  ok:true} },
+    { cls:'ok',   tag:'变限',   log:'第④步：x 从 1 到无穷，对应 t 从 1 到 0 的正侧，方向反过来', count:3, ribbon:{k:4,  ok:true} },
+    { cls:'ok',   tag:'算面积', log:'第⑤步：用对数形式的原函数代上下限，面积等于 1 加根号 2 的对数', count:4, ribbon:{k:5,  ok:true} },
+    { cls:'ok',   tag:'写体积', log:'第⑥步：第二问绕 x 轴转，圆盘法把纵坐标平方后积分', count:5, ribbon:{k:6,  ok:true} },
+    { cls:'ok',   tag:'拆分式', log:'第⑦步：分母是 x 平方乘 1 加 x 平方，拆成两个简单分式之差', count:6, ribbon:{k:7,  ok:true} },
+    { cls:'ok',   tag:'积分',   log:'第⑧步：两项分别积分，原函数是负的 x 分之一减反正切', count:7, ribbon:{k:8,  ok:true} },
+    { cls:'ok',   tag:'代上限', log:'第⑨步：x 趋于无穷时，第一项归零，反正切趋于二分之派', count:8, ribbon:{k:9,  ok:true} },
+    { cls:'done', tag:'完成',   log:'第⑩步：上限减下限，整理得派乘 1 减四分之派，两问全部完成', count:9, ribbon:{k:10, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for (var j = 0; j < rowEls.length; j++){
+      rowEls[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$S=\\ln(\\sqrt2+1),\\qquad V=\\pi\\Big(1-\\frac\\pi4\\Big)$",
+    html: "按问结论：<b>(1) $S=\\ln(\\sqrt2+1)$；(2) $V=\\pi\\big(1-\\frac\\pi4\\big)$</b>。记忆锚点：<b>倒代换 $x=\\frac1t$ 专治 $\\frac{1}{x\\sqrt{1+x^2}}$ 型</b>，把无穷限变成有限限 $[0,1]$；$\\frac{1}{x^2(1+x^2)}$ 拆分后两项原函数分别是 $-\\frac1x$ 与 $-\\arctan x$。易错：代换后忘写 $\\lvert t\\rvert$；上下限方向弄反；上限处 $\\arctan x$ 的极限是 $\\frac\\pi2$ 不是 $1$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：无界区域的面积与旋转体体积（反常积分）</h2>
+<p><strong>答案</strong>：(1) $S=\ln\left(\sqrt2+1\right)$；(2) $V=\pi\left(1-\dfrac\pi4\right)$。</p>
+<h3>第 0 步：先立模型——为什么两个量都是反常积分、体积公式从哪来</h3>
+<p>$D$ 夹在 $y=0$ 与 $y=\dfrac{1}{x\sqrt{1+x<sup>2</sup>}}$ 之间、沿 $x\ge1$ 无限延伸，上边界衰减到 $0$ 却永不闭合——面积只能写成无穷限反常积分 $\displaystyle\int_1<sup>+\infty</sup>y(x)\,\mathrm dx$；旋转体用<strong>圆盘法</strong>：在 $x$ 处取厚度 $\mathrm dx$ 的薄片，绕 $x$ 轴转出一个半径为 $y(x)$ 的圆盘，面积 $\pi y<sup>2</sup>$，沿 $x$ 累加即 $V=\pi\int_1<sup>+\infty</sup>y<sup>2</sup>\,\mathrm dx$。两个被积函数在无穷远分别按 $\dfrac1{x<sup>2</sup>}$ 与 $\dfrac1{x<sup>4</sup>}$ 衰减（$\sqrt{1+x<sup>2</sup>}\sim x$），都收敛；但原函数都不是「一眼可积」型——难点全在怎么处理被积式。</p>
+<h3>第一步：为什么选倒代换算面积</h3>
+<p>被积式 $\dfrac{1}{x\sqrt{1+x<sup>2</sup>}}$ 有两个「钉子」：因子 $\dfrac1x$ 与根式 $\sqrt{1+x<sup>2</sup>}$。<strong>倒代换 $x=\dfrac1t$ 一箭双雕</strong>：$\dfrac1x=t$ 直接消因子；$\sqrt{1+x<sup>2</sup>}=\dfrac{\sqrt{1+t<sup>2</sup>}}{t}$（$t&gt;0$），与 $\mathrm dx=-\dfrac{\mathrm dt}{t<sup>2</sup>}$ 相乘后 $t$ 的幂恰好约干净。凡「$\dfrac1x$ 乘 $\sqrt{a<sup>2</sup>+x<sup>2</sup>}$」型被积式，倒代换都是首选。另一条路 $x=\tan\theta$ 也可行（$\sqrt{1+x<sup>2</sup>}=\sec\theta$），被积式化为 $\csc\theta$，积分结果同为 $\ln(\sqrt2+1)$，可作验算，但不如倒代换直接。</p>
+<p>令 $x=\dfrac1t$：$\mathrm dx=-\dfrac{\mathrm dt}{t<sup>2</sup>}$，$x\sqrt{1+x<sup>2</sup>}=\dfrac{\sqrt{1+t<sup>2</sup>}}{t<sup>2</sup>}$，被积式化为 $-\dfrac{\mathrm dt}{\sqrt{1+t<sup>2</sup>}}$；$x:1\to+\infty$ 对应 $t:1\to0^+$（方向反了，负号恰好扭回来），于是</p>
+<p>$$S=\int_0<sup>1</sup>\frac{\mathrm dt}{\sqrt{1+t<sup>2</sup>}}.$$</p>
+<p><strong>为什么原函数是 $\ln\big(t+\sqrt{1+t<sup>2</sup>}\big)$</strong>：求导验证——</p>
+<p>$$\frac{\mathrm d}{\mathrm dt}\ln\big(t+\sqrt{1+t<sup>2</sup>}\big)=\frac{1+\frac{t}{\sqrt{1+t<sup>2</sup>}}}{t+\sqrt{1+t<sup>2</sup>}}=\frac{1}{\sqrt{1+t<sup>2</sup>}}.$$</p>
+<p>直观上它是双曲代换 $t=\sinh u$ 的化身（此时 $\mathrm dt=\sqrt{1+t<sup>2</sup>}\,\mathrm du$，积分变成 $\int\mathrm du$），即反双曲正弦。于是</p>
+<p>$$S=\Big[\ln\big(t+\sqrt{1+t<sup>2</sup>}\big)\Big]_0<sup>1</sup>=\ln(1+\sqrt2)-\ln1=\ln(\sqrt2+1).$$</p>
+<h3>第二步：为什么这样拆部分分式算体积</h3>
+<p>$$V=\pi\int_1<sup>+\infty</sup>\frac{\mathrm dx}{x<sup>2</sup>(1+x<sup>2</sup>)}.$$</p>
+<p>分母已经写成两个现成因子的乘积 $x<sup>2</sup>$ 与 $1+x<sup>2</sup>$，<strong>拆分的目标是让每一段都落回基本积分表</strong>：设 $\dfrac{1}{x<sup>2</sup>(1+x<sup>2</sup>)}=\dfrac{a}{x<sup>2</sup>}+\dfrac{b}{1+x<sup>2</sup>}$，通分比较分子得 $1=a(1+x<sup>2</sup>)+bx<sup>2</sup>$，常数项给 $a=1$、$x<sup>2</sup>$ 项给 $a+b=0$，故 $b=-1$：</p>
+<p>$$\frac{1}{x<sup>2</sup>(1+x<sup>2</sup>)}=\frac{1}{x<sup>2</sup>}-\frac{1}{1+x<sup>2</sup>},$$</p>
+<p>两项的原函数分别是 $-\dfrac1x$ 与 $-\arctan x$，再无技术难点（通分回验：$\dfrac{1+x<sup>2</sup>-x<sup>2</sup>}{x<sup>2</sup>(1+x<sup>2</sup>)}$ 恰为左端）。逐项积分：</p>
+<p>$$V=\pi\Big[-\frac1x-\arctan x\Big]_1<sup>+\infty</sup>.$$</p>
+<p><strong>上限为什么代成 $\Big(0-\dfrac\pi2\Big)$</strong>：$x\to+\infty$ 时 $-\dfrac1x\to0$；而 $\arctan x$ 的值域是 $\left(-\dfrac\pi2,\dfrac\pi2\right)$，$x\to+\infty$ 贴的是上渐近线 $y=\dfrac\pi2$，不是 $1$。下限 $x=1$：$-1-\dfrac\pi4$。故</p>
+<p>$$V=\pi\Big[\Big(0-\frac\pi2\Big)-\Big(-1-\frac\pi4\Big)\Big]=\pi\Big(1-\frac\pi2+\frac\pi4\Big)=\pi\Big(1-\frac\pi4\Big).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>倒代换后的根号</strong>：$\sqrt{1+t<sup>2</sup>}/t$ 依赖 $t&gt;0$，若代换区间含负数必须写 $\lvert t\rvert$。</li><li><strong>上下限随代换反向</strong>：$x:1\to+\infty$ 变成 $t:1\to0^+$，方向弄反会差一个负号。</li><li><strong>部分分式系数瞎凑</strong>：按「常数项、$x<sup>2</sup>$ 项分别相等」联立定 $a,b$，拆完通分回验一遍最保险。</li><li><strong>上限代入想当然</strong>：$x\to+\infty$ 时 $-\dfrac1x\to0$ 而 $\arctan x\to\dfrac\pi2$，别把 $\arctan$ 的极限写成 $1$。</li></ul>
+<blockquote>一句话结论：倒代换消去 $\frac1x$ 与根式的纠缠，面积化为 $\displaystyle\int_0<sup>1</sup>\frac{\mathrm dt}{\sqrt{1+t<sup>2</sup>}}=\ln(\sqrt2+1)$；部分分式按分母因子拆成 $\dfrac1{x<sup>2</sup>}-\dfrac{1}{1+x<sup>2</sup>}$，体积为 $\pi\Big(1-\dfrac\pi4\Big)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

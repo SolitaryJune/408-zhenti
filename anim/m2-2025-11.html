@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：含参反常积分 ∫a/[x(2x+a)] 定参数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-10.html" data-q="../question/m2-2025-10/">← <b>m2-2025-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-11/" data-q="../question/m2-2025-11/" data-no-anim="1">m2-2025-11 · 本题</a>
+  <a href="m2-2025-12.html" data-q="../question/m2-2025-12/"><b>m2-2025-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$\\displaystyle\\int_1^{+\\infty}\\frac{a}{x(2x+a)}\\,\\mathrm dx=\\ln2$，求 $a$',
+  subtitle: '考点：反常积分 · 部分分式 · 方法：分子 = 分母两因子之差，一步拆开',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示拆分、积分与解参数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：分子 $a$ 恰好等于分母两因子之差 $(2x+a)-2x=a$，不用待定系数，直接拆 $$\\frac{a}{x(2x+a)}=\\frac1x-\\frac{2}{2x+a}$$ 通分验证：分子 $(2x+a)-2x=a$ ✓',
+      '<b>原函数</b>：两项都是对数 $$\\int\\Bigl(\\frac1x-\\frac{2}{2x+a}\\Bigr)\\mathrm dx=\\ln x-\\ln(2x+a)=\\ln\\frac{x}{2x+a}$$',
+      '<b>代上限</b>：$x\\to+\\infty$ 时合并成单个对数再取极限（避免 $\\infty-\\infty$） $$\\lim_{x\\to+\\infty}\\ln\\frac{x}{2x+a}=\\ln\\frac12$$',
+      '<b>代下限并合并</b>：$x=1$ 处值为 $\\ln\\dfrac{1}{2+a}$ $$\\int_1^{+\\infty}\\frac{a}{x(2x+a)}\\,\\mathrm dx=\\ln\\frac12-\\ln\\frac{1}{2+a}=\\ln\\frac{2+a}{2}$$',
+      '<b>解参数</b>：令 $\\ln\\dfrac{2+a}{2}=\\ln2$ $$\\frac{2+a}{2}=2\\ \\Longrightarrow\\ a=2$$ 满足 $a>0$（$[1,+\\infty)$ 上分母不变号）。',
+      '<b>验算</b>：$a=2$ 时被积函数 $=\\dfrac{1}{x(x+1)}=\\dfrac1x-\\dfrac1{x+1}$，积分 $\\Bigl[\\ln\\dfrac{x}{x+1}\\Bigr]_1^{+\\infty}=0-\\ln\\dfrac12=\\ln2$ ✓',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'拆分', log:'分子就是分母两因子之差，一步拆成两个对数项', count:0 },
+    { cls:'step',  tag:'积出来', log:'原函数 ln x − ln(2x+a)，合并成 ln(x/(2x+a))', count:1 },
+    { cls:'shift', tag:'上限', log:'x→+∞ 时 x/(2x+a) → 1/2，得 ln(1/2)', count:2 },
+    { cls:'step',  tag:'下限', log:'x=1 处是 ln(1/(2+a))，相减合并得 ln((2+a)/2)', count:3 },
+    { cls:'ok',    tag:'解参数', log:'ln((2+a)/2) = ln2，解出 a=2', count:4 },
+    { cls:'done',  tag:'验算完成', log:'代回 a=2 变成 1/[x(x+1)]，积分恰为 ln2，结论 a=2', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$a=2$',
+    html: '记忆锚点：<b>认出「分子 = 分母因子之差」免掉待定系数；$\\infty$ 处对数必须合并成 $\\ln\\dfrac{x}{2x+a}$ 再取极限</b>。积分值 $\\ln\\dfrac{2+a}{2}$ 是 $a$ 的单调函数，解 $\\ln\\dfrac{2+a}{2}=\\ln2$ 得 $a=2$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含参反常积分定参数——分子恰好是分母两因子之差</h2>
+<p>答案：$a=2$</p>
+<h3>第一步：拆分被积函数</h3>
+<p>分子 $a$ 恰好等于分母两因子之差 $(2x+a)-2x$，直接拆开：</p>
+<p>$$\frac{a}{x(2x+a)}=\frac{1}{x}-\frac{2}{2x+a}.$$</p>
+<p>验证：通分后分子 $(2x+a)-2x=a$，成立。</p>
+<h3>第二步：求原函数并算反常积分</h3>
+<p>$$\int\Big(\frac1x-\frac{2}{2x+a}\Big)\mathrm dx=\ln x-\ln(2x+a)=\ln\frac{x}{2x+a}.$$</p>
+<p>在 $x\to+\infty$ 处用<strong>合并的对数</strong>求极限（避免 $\infty-\infty$）：</p>
+<p>$$\int_1<sup>+\infty</sup>\frac{a}{x(2x+a)}\,\mathrm dx=\lim_{x\to+\infty}\ln\frac{x}{2x+a}-\ln\frac{1}{2+a}=\ln\frac12+\ln(2+a)=\ln\frac{2+a}{2}.$$</p>
+<h3>第三步：解出 $a$</h3>
+<p>令 $\ln\dfrac{2+a}{2}=\ln2$，得 $\dfrac{2+a}{2}=2$，即 $a=2$（满足 $a&gt;0$ 的收敛性前提）。</p>
+<p>验算：$a=2$ 时被积函数 $=\dfrac{1}{x(x+1)}=\dfrac1x-\dfrac1{x+1}$，积分 $\Big[\ln\dfrac{x}{x+1}\Big]_1<sup>+\infty</sup>=0-\ln\dfrac12=\ln2$，吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>拆分时生凑系数</strong>：见到 $a$ 就设待定常数慢慢解，其实认出「分子 = 分母因子之差」一步到位。</li><li><strong>∞ 处两项分别取极限</strong>：$\ln x$ 与 $\ln(2x+a)$ 各自趋于 $\infty$，必须合并成 $\ln\dfrac{x}{2x+a}$ 再取极限。</li><li><strong>忘验收敛性</strong>：要求 $[1,+\infty)$ 上分母不变号，$a=2$ 代回确认合法。</li></ul>
+<blockquote>一句话结论：拆成 $\dfrac1x-\dfrac{2}{2x+a}$，积分值为 $\ln\dfrac{2+a}{2}$，令其等于 $\ln2$ 得 $a=2$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画：二阶常系数方程 + 反常积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-12.html" data-q="../question/m2-2020-12/">← <b>m2-2020-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-13/" data-q="../question/m2-2020-13/" data-no-anim="1">m2-2020-13 · 本题</a>
+  <a href="m2-2020-14.html" data-q="../question/m2-2020-14/"><b>m2-2020-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$y^{\\prime\\prime}+2y^\\prime+y=0$，$y(0)=0$，$y^\\prime(0)=1$：求 $\\int_0^{+\\infty}y\\,\\mathrm{d}x$',
+  subtitle: '考点：二阶常系数齐次方程 + 反常积分 · 方法：特征根 → 定常数 → 分部积分',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」先解方程再算积分。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>特征方程</b>：$r^2+2r+1=(r+1)^2=0\\Rightarrow$ 二重根 $r=-1$',
+      '<b>通解</b>（二重根必须带 $x$）：$$y=(C_1+C_2x)\\,e^{-x}$$',
+      '<b>定 $C_1$</b>：$y(0)=C_1=0$',
+      '<b>定 $C_2$</b>：$y^\\prime=C_2e^{-x}-(C_1+C_2x)e^{-x}$，代 $y^\\prime(0)=1$ 得 $C_2-C_1=1\\Rightarrow C_2=1$，故 $y=xe^{-x}$',
+      '<b>分部积分</b>：$$\\int_0^{+\\infty}xe^{-x}\\,\\mathrm{d}x=\\big[-xe^{-x}\\big]_0^{+\\infty}+\\int_0^{+\\infty}e^{-x}\\,\\mathrm{d}x$$',
+      '<b>算两块</b>：$\\lim_{x\\to+\\infty}xe^{-x}=0$（指数压倒幂），$x=0$ 处也是 0；$\\int_0^{+\\infty}e^{-x}\\,\\mathrm{d}x=\\big[-e^{-x}\\big]_0^{+\\infty}=1$',
+      '<b>答案：$\\displaystyle\\int_0^{+\\infty}y\\,\\mathrm{d}x=1$</b>',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'特征根', log:'特征方程是完全平方，得二重根 −1', count:0 },
+    { cls:'shift', tag:'通解',   log:'二重根的通解必须写成 (C1 + C2x)·e^(−x)，多一层 x', count:1 },
+    { cls:'step',  tag:'定 C1',  log:'代 y(0)=0，得 C1 = 0', count:2 },
+    { cls:'ok',    tag:'定 C2',  log:'乘积法则求导后代 y′(0)=1，得 C2 = 1，解为 y = x·e^(−x)', count:3 },
+    { cls:'step',  tag:'分部',   log:'x 与 e^(−x) 分部积分，边界项与积分互移', count:4 },
+    { cls:'step',  tag:'算块',   log:'边界项因指数压倒幂而归零；e^(−x) 从 0 到无穷积出 1', count:5 },
+    { cls:'done',  tag:'完成',   log:'结论：反常积分值为 1', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\displaystyle\\int_0^{+\\infty}y\\,\\mathrm{d}x=1$',
+    html: '记忆锚点：<b>二重根 $(r+1)^2=0$ 通解 $y=(C_1+C_2x)e^{-x}$</b>——少写 $x$ 两个初值就定不出。积分端：$\\int_0^{+\\infty}xe^{-x}\\mathrm{d}x=\\Gamma(2)=1$，分部积分后边界项 $\\lim_{x\\to+\\infty}xe^{-x}=0$ 自动消失。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：先解二重根方程的初值问题，再算 $\Gamma(2)$ 型反常积分</h2>
+<p>答案：$1$</p>
+<h3>第一步：特征方程定结构</h3>
+<p>$r<sup>2</sup>+2r+1=(r+1)<sup>2</sup>=0$，二重根 $r=-1$，通解为</p>
+<p>$$y=(C_1+C_2x)\,e<sup>-x</sup>.$$</p>
+<p>为什么要多乘一个 $x$？一个特征根只提供一个解 $e<sup>rx</sup>$，二重根还缺一个线性无关解；把 $y=xe<sup>-x</sup>$ 代入方程验证：$y''+2y'+y=(x-2+2-2x+x)\,e<sup>-x</sup>=0$，确实成立——求导恰好把 $x$ 的线性因子"耗掉"。通解必须凑够两个自由常数，才能满足 $y(0)=0$ 与 $y'(0)=1$ 两个初值。</p>
+<h3>第二步：初值定常数</h3>
+<p>$y(0)=C_1=0$。求导（乘积法则）：$y'=C_2e<sup>-x</sup>-(C_1+C_2x)e<sup>-x</sup>$，代 $y'(0)=1$ 得 $C_2-C_1=1$，故 $C_2=1$。于是</p>
+<p>$$y=xe<sup>-x</sup>.$$</p>
+<h3>第三步：分部积分算反常积分</h3>
+<p>分部积分取 $u=x$、$\mathrm{d}v=e<sup>-x</sup>\mathrm{d}x$：$x$ 求导一次降为常数 1，$e<sup>-x</sup>$ 的原函数 $-e<sup>-x</sup>$ 现成——两边都朝简单的方向走。</p>
+<p>$$\int_0<sup>+\infty</sup>xe<sup>-x</sup>\,\mathrm{d}x=\big[-xe<sup>-x</sup>\big]_0<sup>+\infty</sup>+\int_0<sup>+\infty</sup>e<sup>-x</sup>\,\mathrm{d}x.$$</p>
+<p>第一项：$\lim_{x\to+\infty}xe<sup>-x</sup>=0$（指数压倒幂），$x=0$ 处也为 0，整项为 0；第二项 $=\big[-e<sup>-x</sup>\big]_0<sup>+\infty</sup>=1$。故积分值为 $1$。</p>
+<h3>易错点</h3>
+<ul><li><strong>二重根通解漏 $x$</strong>：$r=-1$ 是二重根，必须写成 $(C_1+C_2x)e<sup>-x</sup>$；只写 $Ce<sup>-x</sup>$ 少一个自由度，两个初值定不出。</li><li><strong>求导漏乘积法则</strong>：$(C_2xe<sup>-x</sup>)'=C_2e<sup>-x</sup>-C_2xe<sup>-x</sup>$，两项都不能丢，否则 $y'(0)$ 算错。</li><li><strong>反常积分直接「代 $\infty$」</strong>：应理解为 $\lim_{b\to+\infty}\int_0<sup>b</sup>$，先算有限上限再取极限。</li></ul>
+<blockquote>一句话结论：$y=xe<sup>-x</sup>$，$\int_0<sup>+\infty</sup>xe<sup>-x</sup>\mathrm{d}x=\big[-xe<sup>-x</sup>\big]_0<sup>+\infty</sup>+\int_0<sup>+\infty</sup>e<sup>-x</sup>\mathrm{d}x=0+1=1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

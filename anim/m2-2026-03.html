@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：隐函数求 z_x − z_y</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-02.html" data-q="../question/m2-2026-02/">← <b>m2-2026-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-03/" data-q="../question/m2-2026-03/" data-no-anim="1">m2-2026-03 · 本题</a>
+  <a href="m2-2026-04.html" data-q="../question/m2-2026-04/"><b>m2-2026-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '隐函数 $x-az=\\mathrm e^{y+az}$：求 $\\dfrac{\\partial z}{\\partial x}-\\dfrac{\\partial z}{\\partial y}$',
+  subtitle: '考点：隐函数求偏导 · 方法：记 $E=\\mathrm e^{y+az}=x-az$ 整体替换',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示两个偏导的完整推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：$z=z(x,y)$ 由 $x-az=\\mathrm e^{y+az}$ 确定。记 $E=\\mathrm e^{y+az}$，由原方程 $E=x-az$，求导后整体替换，化简极干净。',
+      '<b>对 $x$ 求偏导</b>（$y$ 不动）：左边 $1-az_x$，右边 $\\mathrm e^{y+az}\\cdot az_x=E\\,az_x$ $$1-az_x=E\\,az_x\\ \\Longrightarrow\\ z_x=\\frac{1}{a(1+E)}$$',
+      '<b>对 $y$ 求偏导</b>（$x$ 不动）：右边是 $E(1+az_y)$（内层 $y+az$ 整体求导） $$-az_y=E(1+az_y)\\ \\Longrightarrow\\ z_y=\\frac{-E}{a(1+E)}$$',
+      '<b>相减</b>：分子恰好凑出公因子 $$z_x-z_y=\\frac{1}{a(1+E)}+\\frac{E}{a(1+E)}=\\frac{1+E}{a(1+E)}=\\frac1a$$',
+      '<b>辨析含加号的选项</b>：$z_x+z_y=\\dfrac{1-E}{a(1+E)}$ 含 $E$、不是常数 $\\Rightarrow$ B、D 不对；C 把 $\\dfrac1a$ 的符号取反了。',
+      '<b>结论</b>：$$\\frac{\\partial z}{\\partial x}-\\frac{\\partial z}{\\partial y}=\\frac1a\\qquad\\Longrightarrow\\qquad \\text{选 A}$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'记 E = e^(y+az) = x−az，求导后整体替换', count:0 },
+    { cls:'step',  tag:'求 z_x', log:'对 x 求导：1 − a·z_x = E·a·z_x，解出 z_x', count:1 },
+    { cls:'shift', tag:'求 z_y', log:'对 y 求导：内层多出一项 a·z_y，解出带负号的 z_y', count:2 },
+    { cls:'ok',    tag:'相减',   log:'分子恰好凑成 1+E，约分得常数 1/a', count:3 },
+    { cls:'miss',  tag:'辨析',   log:'带加号的组合不是常数；C 是符号取反的错误', count:4 },
+    { cls:'done',  tag:'完成',   log:'结论：z_x − z_y = 1/a，选 A', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$z_x-z_y=\\dfrac1a$（选 A）',
+    html: '记忆锚点：<b>用原方程把 $\\mathrm e^{y+az}$ 整体换成 $x-az$，两个偏导就共享分母 $a(1+E)$，相减自动约分</b>。易错：对 $y$ 求导漏掉内层的 $az_y$，或者把差值符号取反（C）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：隐函数求偏导——用原方程整体替换指数项</h2>
+<p>答案：A</p>
+<h3>第零步：机制——替换为什么合法、结果为什么是常数</h3>
+<p>方程 $x-az=e<sup>y+az</sup>$ 两端是<strong>同一个数</strong>的两种写法，所以求导的任何环节都可以把 $e<sup>y+az</sup>$ 换成 $x-az$（反之亦然）——这不是近似，是恒等代换。记 $E=e<sup>y+az</sup>=x-az$，替换的好处立刻显现：两个偏导都会带出同一个因子 $(1+E)$，相减时恰好约干净，剩下常数 $\dfrac1a$。四个选项按"组合取 $+$ 还是 $-$、符号正负"设计，所以策略就是<strong>分别求出 $z_x,z_y$，再看哪种组合是常数</strong>。</p>
+<h3>第一步：对 $x$ 求偏导（$y$ 不动）</h3>
+<p>左边 $1-az_x$；右边链式：指数里 $az$ 对 $x$ 的导数是 $az_x$，得 $E\cdot az_x$：</p>
+<p>$$1-a z_x=E\,a z_x\ \Longrightarrow\ 1=a z_x(1+E)\ \Longrightarrow\ z_x=\frac{1}{a(1+E)}.$$</p>
+<h3>第二步：对 $y$ 求偏导（$x$ 不动）</h3>
+<p>左边 $-az_y$；右边链式有两条：$y$ 本身给 $1$、$az$ 给 $az_y$，故 $E(1+az_y)$：</p>
+<p>$$-a z_y=E(1+a z_y)\ \Longrightarrow\ -a z_y(1+E)=E\ \Longrightarrow\ z_y=\frac{-E}{a(1+E)}.$$</p>
+<h3>第三步：相减见分晓</h3>
+<p>$$z_x-z_y=\frac{1}{a(1+E)}+\frac{E}{a(1+E)}=\frac{1+E}{a(1+E)}=\frac1a,$$</p>
+<p>是常数——选 <strong>A</strong>。而 $z_x+z_y=\dfrac{1-E}{a(1+E)}$ 仍含 $E$、不是常数，凡带 $+$ 的 B、D 都不对。</p>
+<h3>易错点</h3>
+<ul><li><strong>求 $z_y$ 漏掉链式里的 $az_y$</strong>：右端对 $y$ 求导是 $E\cdot(1+az_y)$，内层 $az$ 也在变。</li><li><strong>不敢用 $E=x-az$ 替换</strong>：保留 $e<sup>y+az</sup>$ 硬算也能做，但凑不出 $(1+E)$ 公因子，符号上极易翻车；替换合法的原因就是"等号两端本来就是同一个数"。</li><li><strong>默认差值为负</strong>：C 是把 $\dfrac1a$ 取反了；注意 $z_x&gt;0$、$z_y&lt;0$，相减必然为正。</li></ul>
+<blockquote>一句话结论：替换 $E=x-az$ 后 $z_x=\dfrac{1}{a(1+E)}$、$z_y=\dfrac{-E}{a(1+E)}$，相减分子凑成 $1+E$，得 $\dfrac1a$，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

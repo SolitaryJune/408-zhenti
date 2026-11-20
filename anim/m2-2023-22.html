@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023·22 由线性变换写矩阵与相似对角化</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-21.html" data-q="../question/m2-2023-21/">← <b>m2-2023-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-22/" data-q="../question/m2-2023-22/" data-no-anim="1">m2-2023-22 · 本题</a>
+  <a href="m2-2024-01.html" data-q="../question/m2-2024-01/"><b>m2-2024-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① (1) 读变换：</b>$\\boldsymbol{Ax}$ 第 $i$ 个分量的组合系数就是 $A$ 的第 $i$ 行",
+  "<b>② (1) 完成：</b>按行抄出 $A=\\begin{pmatrix}1&1&1\\\\2&-1&1\\\\0&1&-1\\end{pmatrix}$",
+  "<b>③ 特征多项式：</b>$\\lvert A-\\lambda E\\rvert=\\begin{vmatrix}1-\\lambda&1&1\\\\2&-1-\\lambda&1\\\\0&1&-1-\\lambda\\end{vmatrix}=-(\\lambda-2)(\\lambda+1)(\\lambda+2)$",
+  "<b>④ 特征值：</b>$\\lambda_1=-2,\\ \\lambda_2=-1,\\ \\lambda_3=2$（三个互异 $\\Rightarrow$ 必可对角化）",
+  "<b>⑤ $\\lambda=-2$：</b>解 $(A+2E)\\boldsymbol x=\\boldsymbol 0$，$x_1=0,\\ x_2=-x_3$，取 $\\xi_1=(0,-1,1)^{\\mathrm T}$（代回 $3\\cdot0+(-1)+1=0$ ✓）",
+  "<b>⑥ $\\lambda=-1$：</b>解 $(A+E)\\boldsymbol x=\\boldsymbol 0$，$x_2=0,\\ x_3=-2x_1$，取 $\\xi_2=(-1,0,2)^{\\mathrm T}$（代回 $2\\cdot(-1)+0+2=0$ ✓）",
+  "<b>⑦ $\\lambda=2$：</b>解 $(A-2E)\\boldsymbol x=\\boldsymbol 0$，$x_2=3x_3,\\ x_1=4x_3$，取 $\\xi_3=(4,3,1)^{\\mathrm T}$（代回 $2\\cdot4-3\\cdot3+1=0$ ✓）",
+  "<b>⑧ 拼 $P$：</b>$P=(\\xi_1,\\xi_2,\\xi_3)=\\begin{pmatrix}0&-1&4\\\\-1&0&3\\\\1&2&1\\end{pmatrix}$，$\\det P=-12\\neq0$（可逆）",
+  "<b>⑨ 写 $\\Lambda$：</b>对角元按列的顺序排：$\\Lambda=\\mathrm{diag}(-2,-1,2)$",
+  "<b>⑩ 验算：</b>$A\\xi_1=-2\\xi_1,\\ A\\xi_2=-\\xi_2,\\ A\\xi_3=2\\xi_3$，按列合并即 $AP=P\\Lambda\\ \\Rightarrow\\ P^{-1}AP=\\Lambda$ —— (2) 完成",
+  "<b>⑪ 补充：</b>$P$ 不唯一：特征向量可乘非零常数、各列可重排，$\\Lambda$ 对角元顺序随之对应"
+];
+var rowEls = [];
+
+AW.init({
+  title: '2023·22　由线性变换写矩阵 + 相似对角化',
+  subtitle: '考点：线性变换与矩阵 · 特征值特征向量 · $P^{-1}AP=\\Lambda$',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」：(1) 按行抄系数得 A，(2) 特征值→特征向量→拼 P 与 Λ。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    rowEls = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      rowEls.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'读变换', log:'第①步：矩阵乘向量的第 i 个分量是线性组合，组合系数就是矩阵的第 i 行', count:0,  ribbon:{k:1,  ok:true} },
+    { cls:'ok',   tag:'写矩阵', log:'第②步：三个分量的系数逐行抄下来，第一问的矩阵就出来了', count:1,  ribbon:{k:2,  ok:true} },
+    { cls:'ok',   tag:'特征式', log:'第③步：写特征多项式，按含零的行展开整理成三个一次因式', count:2,  ribbon:{k:3,  ok:true} },
+    { cls:'ok',   tag:'特征值', log:'第④步：三个特征值负 2、负 1、2 互不相同，必然可以对角化', count:3,  ribbon:{k:4,  ok:true} },
+    { cls:'ok',   tag:'向量一', log:'第⑤步：特征值负 2 的齐次方程组解出第一列，代回验证通过', count:4,  ribbon:{k:5,  ok:true} },
+    { cls:'ok',   tag:'向量二', log:'第⑥步：特征值负 1 的齐次方程组解出第二列，代回验证通过', count:5,  ribbon:{k:6,  ok:true} },
+    { cls:'ok',   tag:'向量三', log:'第⑦步：特征值 2 的齐次方程组解出第三列，代回验证通过', count:6,  ribbon:{k:7,  ok:true} },
+    { cls:'ok',   tag:'拼 P',  log:'第⑧步：三个特征向量按列拼成 P，行列式负 12 不为零，确实可逆', count:7,  ribbon:{k:8,  ok:true} },
+    { cls:'ok',   tag:'写 Λ',  log:'第⑨步：对角矩阵按列的顺序填特征值，负 2、负 1、2', count:8,  ribbon:{k:9,  ok:true} },
+    { cls:'ok',   tag:'验算',  log:'第⑩步：矩阵乘每一列都等于对应特征值乘该列，第二问完成', count:9,  ribbon:{k:10, ok:true} },
+    { cls:'done', tag:'完成',  log:'第⑪步：补充——答案不唯一，特征向量缩放或换序都行，对角阵跟着对应', count:10, ribbon:{k:11, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for (var j = 0; j < rowEls.length; j++){
+      rowEls[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$A=\\begin{pmatrix}1&1&1\\\\2&-1&1\\\\0&1&-1\\end{pmatrix},\\qquad P^{-1}AP=\\mathrm{diag}(-2,-1,2)$",
+    html: "按问结论：<b>(1) $A=\\begin{pmatrix}1&1&1\\\\2&-1&1\\\\0&1&-1\\end{pmatrix}$；(2) $P=(\\xi_1,\\xi_2,\\xi_3)=\\begin{pmatrix}0&-1&4\\\\-1&0&3\\\\1&2&1\\end{pmatrix}$（$\\xi_1=(0,-1,1)^{\\mathrm T},\\ \\xi_2=(-1,0,2)^{\\mathrm T},\\ \\xi_3=(4,3,1)^{\\mathrm T}$），$\\Lambda=\\mathrm{diag}(-2,-1,2)$，$\\det P=-12\\neq0$</b>。记忆锚点：变换矩阵<b>按行抄系数</b>；$\\Lambda$ 对角元顺序与 $P$ 的列一一对应；$P$ 不唯一（缩放、换序均可）。易错：按列抄矩阵；解完不回验 $A\\boldsymbol x=\\lambda\\boldsymbol x$；不验 $\\det P$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由线性变换写矩阵 + 相似对角化</h2>
+<p><strong>答案</strong>：(1) $A=\begin{pmatrix}1&amp;1&amp;1\\2&amp;-1&amp;1\\0&amp;1&amp;-1\end{pmatrix}$；(2) 取 $\xi_1=(0,-1,1)<sup>\mathrm T</sup>,\ \xi_2=(-1,0,2)<sup>\mathrm T</sup>,\ \xi_3=(4,3,1)<sup>\mathrm T</sup>$，$P=(\xi_1,\xi_2,\xi_3)=\begin{pmatrix}0&amp;-1&amp;4\\-1&amp;0&amp;3\\1&amp;2&amp;1\end{pmatrix}$，$\Lambda=\mathrm{diag}(-2,-1,2)$，使 $P<sup>-1</sup>AP=\Lambda$。</p>
+<h3>第一步：(1) 为什么「按行抄系数」是对的</h3>
+<p>矩阵乘法按「行乘列」展开：$\boldsymbol{Ax}$ 的第 $i$ 个分量 $=\sum_j a_{ij}x_j$，是 $x_1,x_2,x_3$ 以 $A$ 第 $i$ 行为系数的线性组合。题设等式对<strong>任意</strong> $x_1,x_2,x_3$ 成立，两个线性表达式处处相等当且仅当系数逐项相等（取 $x=(1,0,0)<sup>\mathrm T</sup>$ 立刻看出 $a_{i1}=$ 右端第 $i$ 个分量里 $x_1$ 的系数）。所以第 $i$ 行 $=$ 右端第 $i$ 个分量的系数，逐行抄出：</p>
+<p>$$A=\begin{pmatrix}1&amp;1&amp;1\\2&amp;-1&amp;1\\0&amp;1&amp;-1\end{pmatrix}.$$</p>
+<h3>第二步：特征多项式（可复现的展开）</h3>
+<p>$A-\lambda E$ 的第 3 行首元是 $0$，按第一列展开最省力：</p>
+<p>$$\lvert A-\lambda E\rvert=(1-\lambda)\big[(1+\lambda)<sup>2</sup>-1\big]-2\big[(-1-\lambda)-1\big]=(1-\lambda)\lambda(\lambda+2)+2(\lambda+2).$$</p>
+<p>（第一项：划去第 1 行第 1 列后余 $\begin{vmatrix}-1-\lambda&amp;1\\1&amp;-1-\lambda\end{vmatrix}$；第二项：$-2$ 乘划去第 2 行第 1 列的余子式 $\begin{vmatrix}1&amp;1\\1&amp;-1-\lambda\end{vmatrix}$。）提出公因子 $(\lambda+2)$：</p>
+<p>$$\lvert A-\lambda E\rvert=(\lambda+2)\big[\lambda(1-\lambda)+2\big]=-(\lambda-2)(\lambda+1)(\lambda+2),$$</p>
+<p>特征值 $\lambda_1=-2,\ \lambda_2=-1,\ \lambda_3=2$，三个互异。</p>
+<h3>第三步：为什么「互异」就必可对角化（预答）</h3>
+<p>机制：<strong>不同特征值的特征向量必线性无关</strong>——否则 $\xi_1=k\xi_2$（$\lambda_1\neq\lambda_2$），两边同乘 $A$：$\lambda_1\xi_1=k\lambda_2\xi_2=\lambda_2\xi_1$，由 $\xi_1\neq\boldsymbol 0$ 得 $\lambda_1=\lambda_2$，矛盾。三个互异特征值给出三个线性无关特征向量，按列拼成的 $P$ 自动可逆；按列写成矩阵形式 $A\xi_i=\lambda_i\xi_i$ 合起来就是 $AP=P\Lambda$，左乘 $P<sup>-1</sup>$ 即得 $P<sup>-1</sup>AP=\Lambda$。</p>
+<h3>第四步：逐个解齐次方程组求特征向量</h3>
+<ul><li>$\lambda=-2$：$A+2E$ 的行向量 $(3,1,1),(2,1,1),(0,1,1)$，前两行相减得 $x_1=0$；代入第三行 $x_2+x_3=0$，即 $x_2=-x_3$，取 $\xi_1=(0,-1,1)<sup>\mathrm T</sup>$；</li><li>$\lambda=-1$：$A+E$ 的行向量 $(2,1,1),(2,0,1),(0,1,0)$，第 1、2 行相减得 $x_2=0$（与第 3 行一致）；代回第 2 行 $2x_1+x_3=0$，即 $x_3=-2x_1$，取 $\xi_2=(-1,0,2)<sup>\mathrm T</sup>$；</li><li>$\lambda=2$：$A-2E$ 的行向量 $(-1,1,1),(2,-3,1),(0,1,-3)$，第三行给 $x_2=3x_3$；代入第一行 $x_1=x_2+x_3=4x_3$，取 $\xi_3=(4,3,1)<sup>\mathrm T</sup>$。</li></ul>
+<p><strong>每个都十秒回验</strong>：$A\xi_1=(0,2,-2)<sup>\mathrm T</sup>=-2\xi_1$，$A\xi_2=(1,0,-2)<sup>\mathrm T</sup>=-\xi_2$，$A\xi_3=(8,6,2)<sup>\mathrm T</sup>=2\xi_3$，全部对上。</p>
+<h3>第五步：拼 P、写 Λ、验算</h3>
+<p>$$P=(\xi_1,\xi_2,\xi_3)=\begin{pmatrix}0&amp;-1&amp;4\\-1&amp;0&amp;3\\1&amp;2&amp;1\end{pmatrix},\qquad \det P=-12\neq0,\qquad \Lambda=\begin{pmatrix}-2&amp;0&amp;0\\0&amp;-1&amp;0\\0&amp;0&amp;2\end{pmatrix},$$</p>
+<p>$P$ 可逆。验算按列进行：$A\xi_i=\lambda_i\xi_i$ 合起来就是 $AP=P\Lambda$，$P$ 可逆时左乘 $P<sup>-1</sup>$ 得 $P<sup>-1</sup>AP=\Lambda$——<strong>不必真去算 $P<sup>-1</sup>$</strong>。注意 $P$ 不唯一：特征向量可乘任意非零常数、各列可重排，只需 $\Lambda$ 的对角元顺序与列顺序一一对应。</p>
+<h3>易错点</h3>
+<ul><li><strong>矩阵行颠倒</strong>：$\boldsymbol{Ax}$ 第 $i$ 个分量的系数构成 $A$ 的第 $i$ 行，按行抄，别按列抄。</li><li><strong>特征值与特征向量错位</strong>：$\Lambda$ 的对角元顺序必须与 $P$ 的列顺序一一对应，重排后忘改 $\Lambda$ 是高频失分点。</li><li><strong>解方程组出错不回验</strong>：每个特征向量代回 $A\boldsymbol x=\lambda\boldsymbol x$ 十秒验完。</li><li><strong>不验可逆</strong>：$\det P=-12\neq0$ 要写出来，否则 $P<sup>-1</sup>$ 无从谈起。</li></ul>
+<blockquote>一句话结论：变换矩阵按行抄系数；互异特征值保证特征向量线性无关、从而必可对角化；特征值 $-2,-1,2$ 对应 $\xi_1,\xi_2,\xi_3$ 拼成 $P$，$P<sup>-1</sup>AP=\mathrm{diag}(-2,-1,2)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

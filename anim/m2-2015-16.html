@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015 数二第 16 题 · 旋转体体积定参数 A（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-15.html" data-q="../question/m2-2015-15/">← <b>m2-2015-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-16/" data-q="../question/m2-2015-16/" data-no-anim="1">m2-2015-16 · 本题</a>
+  <a href="m2-2015-17.html" data-q="../question/m2-2015-17/"><b>m2-2015-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2015·16　$V_1=V_2$，求 $A$：$y=A\\sin x\\,(0\\le x\\le\\frac\\pi2)$ 旋转体',
+  subtitle: '考点：定积分应用 · <b>圆盘法 + 柱壳法</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看两个体积如何各自算出再列方程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '$$D:\\ y=A\\sin x\\ \\Bigl(0\\le x\\le\\tfrac\\pi2\\Bigr),\\ y=0,\\ x=\\tfrac\\pi2;\\qquad V_1\\ \\text{绕}\\ x\\ \\text{轴},\\quad V_2\\ \\text{绕}\\ y\\ \\text{轴}$$',
+      '<b>① 绕 $x$ 轴圆盘法：</b>$V_1=\\pi\\int_0^{\\pi/2}(A\\sin x)^2\\,\\mathrm dx=\\pi A^2\\int_0^{\\pi/2}\\sin^2x\\,\\mathrm dx$',
+      '<b>② 降幂收口：</b>$\\int_0^{\\pi/2}\\sin^2x\\,\\mathrm dx=\\dfrac12\\cdot\\dfrac\\pi2=\\dfrac\\pi4\\ \\Rightarrow\\ V_1=\\dfrac{\\pi^2A^2}4$',
+      '<b>③ 绕 $y$ 轴柱壳法（免反函数）：</b>$V_2=2\\pi\\int_0^{\\pi/2}x\\cdot A\\sin x\\,\\mathrm dx$',
+      '<b>④ 分部积分：</b>$\\int_0^{\\pi/2}x\\sin x\\,\\mathrm dx=\\bigl[-x\\cos x+\\sin x\\bigr]_0^{\\pi/2}=1\\ \\Rightarrow\\ V_2=2\\pi A$',
+      '<b>⑤ 列方程：</b>$V_1=V_2\\ \\Longleftrightarrow\\ \\dfrac{\\pi^2A^2}4=2\\pi A$',
+      '<b>⑥ 两边除以 $\\pi A$（$A>0$ 保证合法）：</b>$\\dfrac{\\pi A}4=2$',
+      '<b>⑦ 解得：</b>$A=\\dfrac8\\pi$',
+      '<b>⑧ 验算：</b>$V_1=\\dfrac{\\pi^2}4\\cdot\\dfrac{64}{\\pi^2}=16,\\quad V_2=2\\pi\\cdot\\dfrac8\\pi=16$ ✓'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'区域是正弦曲线下一块带边界的图形，绕 x 轴与绕 y 轴各算一个体积', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'圆盘',   log:'绕 x 轴用圆盘法：截面半径就是曲线高度，平方后积分', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'降幂',   log:'正弦平方在零到二分之派上积分等于八分之派乘二，体积出一派平方乘 A 方', count:2, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'柱壳',   log:'绕 y 轴不解反函数，改用柱壳法：对 x 直接积分', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'分部',   log:'x 乘正弦用分部积分，边界代入后恰好剩 1，第二个体积是二派 A', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'方程',   log:'令两个体积相等，得到 A 的方程', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'约简',   log:'A 大于零，两边除以派 A，方程化为一派 A 等于八', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'求解',   log:'解得 A 等于八除以派', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',   log:'验算：两个体积都等于 16，相等成立', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$A=\\dfrac8\\pi\\quad(V_1=V_2=16)$',
+    html: '记忆锚点：<b>绕 $y$ 轴先想柱壳法</b> $2\\pi\\int x\\,|y|\\,\\mathrm dx$，避免解反函数；绕 $x$ 轴圆盘法 $\\pi\\int y^2\\,\\mathrm dx$。易错：两边除以 $A$ 前要用题设 $A>0$ 排除伪根 $A=0$；$\\int_0^{\\pi/2}\\sin^2x\\,\\mathrm dx=\\frac\\pi4$（不是 $\\frac\\pi2$）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：旋转体体积的两种切法——圆盘切"片"，柱壳剥"皮"</h2>
+<p><strong>答案：$A=\dfrac8\pi$。</strong></p>
+<h3>第 0 步：先立机制——体积微元是"切"出来的，切法跟着转轴走</h3>
+<ul><li><strong>圆盘法</strong>（绕 $x$ 轴）：垂直转轴切片。截面本身就是半径 $A\sin x$ 的实心圆，一片体积 $\pi y<sup>2</sup>\,\mathrm dx$——绕 $x$ 轴天生用它。</li><li><strong>柱壳法</strong>（绕 $y$ 轴）：改用<strong>平行于转轴的竖条</strong>。$[x,x+\mathrm dx]$ 上的竖条高 $y$，绕 $y$ 轴扫出一层薄筒壳；沿母线剪开展平，是一块<strong>长 $2\pi x$（周长）、高 $y$、厚 $\mathrm dx$ 的薄板</strong>，体积 $2\pi xy\,\mathrm dx$。这就是系数是 $2\pi x$ 而非 $\pi x<sup>2</sup>$ 的原因：筒壳取决于<strong>周长×高×厚</strong>。</li></ul>
+<h3>第 1 步：绕 $x$ 轴——圆盘法直接收</h3>
+<p>$$V_1=\pi\int_0<sup>\pi/2</sup>(A\sin x)<sup>2</sup>\,\mathrm dx=\pi A<sup>2</sup>\int_0<sup>\pi/2</sup>\sin<sup>2x</sup>\,\mathrm dx=\pi A<sup>2</sup>\cdot\frac12\cdot\frac\pi2=\frac{\pi<sup>2A</sup><sup>2</sup>}4.$$</p>
+<p>（$\sin<sup>2x</sup>$ 在 $[0,\frac\pi2]$ 用华里士公式或降幂，值为 $\frac\pi4$。）</p>
+<h3>第 2 步：绕 $y$ 轴——为什么换柱壳法（预答）</h3>
+<p>圆盘法绕 $y$ 轴须以 $y$ 为积分变量，先解反函数 $x=\arcsin\dfrac yA$，垫圈内外径都得用反函数表达，$\int_0<sup>A</sup>\bigl(\arcsin\frac yA\bigr)<sup>2</sup>\mathrm dy$ 无法下手。柱壳法<strong>保持 $x$ 为变量</strong>，几何量原样代入：</p>
+<p>$$V_2=2\pi\int_0<sup>\pi/2</sup>x\cdot A\sin x\,\mathrm dx.$$</p>
+<h3>第 3 步：分部积分收口——为什么设 $u=x$</h3>
+<p>$u$ 要"求导降次"（$x\to1$），$\mathrm dv=\sin x\,\mathrm dx$ 的原函数 $-\cos x$ 现成；反过来设 $u=\sin x$ 会越积越繁。</p>
+<p>$$\int_0<sup>\pi/2</sup>x\sin x\,\mathrm dx=\bigl[-x\cos x+\sin x\bigr]_0<sup>\pi/2</sup>=1,\qquad V_2=2\pi A.$$</p>
+<h3>第 4 步：解方程定 $A$</h3>
+<p>$$\frac{\pi<sup>2A</sup><sup>2</sup>}4=2\pi A\ \Longrightarrow\ \frac{\pi A}4=2\ \Longrightarrow\ A=\frac8\pi.$$</p>
+<p>两边除以 $A$ 由题设 $A&gt;0$ 保证——$A=0$ 是"区域退化成线段"的伪根，必须排除。验算：$A=\dfrac8\pi$ 时 $V_1=V_2=16$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>柱壳系数写错</strong>：$2\pi x$ 来自周长×高×厚，不是 $\pi x<sup>2</sup>$。</li><li><strong>绕 $y$ 轴硬解反函数</strong>：能解但积不动；竖条剥皮一步到位。</li><li><strong>$\int_0<sup>\pi/2</sup>\sin<sup>2x</sup>\,\mathrm dx$ 记成 $\frac\pi2$</strong>：华里士公式给 $\frac\pi4$。</li></ul>
+<blockquote>记忆锚点：绕谁转就垂直谁切片（圆盘）；绕 $y$ 轴遇 $y=f(x)$ 难反解，就平行转轴剥皮——$2\pi\int x\lvert y\rvert\,\mathrm dx$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

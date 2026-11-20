@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-12.html" data-q="../question/m2-2010-12/">← <b>m2-2010-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-13/" data-q="../question/m2-2010-13/" data-no-anim="1">m2-2010-13 · 本题</a>
+  <a href="m2-2010-14.html" data-q="../question/m2-2010-14/"><b>m2-2010-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导板：所有推导行在 build 时建好（含公式），render 按 i 逐行点亮 */
+var rows = [];
+function drow(html, at, green){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'margin:10px 0;padding:10px 16px;border-left:4px solid #cbd5e1;' +
+    'background:#f8fafc;border-radius:8px;font-size:15.5px;line-height:1.9;' +
+    'opacity:0.15;transform:translateX(-10px);transition:all .4s;';
+  rows.push({el: d, at: at, green: !!green});
+  return d;
+}
+
+AW.init({
+  title: '2010 数学二 第13题 · 长方形两边增速 $2$ 与 $3\\ \\mathrm{cm/s}$，对角线的增速',
+  subtitle: '考点：相关变化率 · 方法：隐函数关系两边对 $t$ 求导',
+  counterLabel: '已推导',
+  intro: '点击「▶ 播放」逐步演示相关变化率的标准流程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：流程——建关系式、两边对 $t$ 求导、代入当下数值'));
+    inner.appendChild(drow(
+      '<b>建关系</b>：对角线 $d=\\sqrt{l^2+w^2}$，即 $d^2=l^2+w^2$，$l,w,d$ 都随 $t$ 变化', 1));
+    inner.appendChild(drow(
+      '<b>对 $t$ 求导</b>：$2d\\,\\dfrac{\\mathrm dd}{\\mathrm dt}=2l\\,\\dfrac{\\mathrm dl}{\\mathrm dt}+2w\\,\\dfrac{\\mathrm dw}{\\mathrm dt}$' +
+      '$\\ \\Longrightarrow\\ \\dfrac{\\mathrm dd}{\\mathrm dt}=\\dfrac{l\\,\\dfrac{\\mathrm dl}{\\mathrm dt}+w\\,\\dfrac{\\mathrm dw}{\\mathrm dt}}{d}$', 2));
+    inner.appendChild(drow(
+      '<b>先算当下的 $d$</b>：$d=\\sqrt{12^2+5^2}=\\sqrt{169}=13$（勾股数 5, 12, 13）', 3));
+    inner.appendChild(drow(
+      '<b>代入数值</b>：$\\dfrac{\\mathrm dd}{\\mathrm dt}=\\dfrac{12\\times2+5\\times3}{13}=\\dfrac{24+15}{13}=\\dfrac{39}{13}$', 4));
+    inner.appendChild(drow(
+      '<b>结论</b>：$\\dfrac{\\mathrm dd}{\\mathrm dt}=3\\ \\mathrm{cm/s}$（注意答案带单位）', 5, true));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '审题',   log: '长、宽、对角线都随时间变，先用勾股定理写出对角线与两边的平方关系', count: 1 },
+    { cls: 'shift', tag: '求导',   log: '两边对时间 t 求导，链式法则给出每项一个变化率因子，解出对角线变化率的表达式', count: 2 },
+    { cls: 'step',  tag: '算当下', log: '代入时刻数值前先算当前对角线：12 和 5 正好是勾股数，斜边是 13', count: 3 },
+    { cls: 'shift', tag: '代入',   log: '分子是 12 乘 2 加 5 乘 3，等于 39，除以当前对角线 13', count: 4 },
+    { cls: 'done',  tag: '完成',   log: '对角线每秒增加 3 厘米，答案 3 cm/s', count: 5, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < rows.length; k++){
+      var r = rows[k];
+      var revealed = i >= r.at;
+      var active = revealed && r.at === i && !sn.done;
+      var green = sn.done && r.green;
+      r.el.style.opacity = revealed ? '1' : '0.15';
+      r.el.style.transform = revealed ? 'none' : 'translateX(-10px)';
+      r.el.style.background = green ? '#ecfdf3' : (active ? '#fff7e0' : '#f8fafc');
+      r.el.style.borderLeftColor = green ? '#16a34a' : (active ? '#f59e0b' : '#cbd5e1');
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\dfrac{\\mathrm dd}{\\mathrm dt}=3\\ \\mathrm{cm/s}$',
+    html: '记忆锚点：<b>相关变化率三步——建关系、对 $t$ 求导、代入当下数值</b>。易错：对 $\\sqrt{l^2+w^2}$ 求导丢分母因子 $d$；忘记先算当下的 $d=13$（勾股数 5, 12, 13）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：相关变化率——隐函数链式求导</h2>
+<p>答案：$3\ \mathrm{cm/s}$</p>
+<h3>第一步：建立对角线与边长的关系，两边对 $t$ 求导</h3>
+<p>对角线 $d=\sqrt{l<sup>2</sup>+w<sup>2</sup>}$，即 $d<sup>2</sup>=l<sup>2</sup>+w<sup>2</sup>$。$l,w,d$ 都随时间变化，两边对 $t$ 求导（链式法则）：</p>
+<p>$$2d\,\frac{\mathrm dd}{\mathrm dt}=2l\,\frac{\mathrm dl}{\mathrm dt}+2w\,\frac{\mathrm dw}{\mathrm dt}\ \Longrightarrow\ \frac{\mathrm dd}{\mathrm dt}=\frac{l\,\dfrac{\mathrm dl}{\mathrm dt}+w\,\dfrac{\mathrm dw}{\mathrm dt}}{d}.$$</p>
+<h3>第二步：先算「当下」的 $d$，再代入数值</h3>
+<p>$l=12,\ w=5$ 时 $d=\sqrt{12<sup>2</sup>+5<sup>2</sup>}=\sqrt{169}=13$（勾股数 $5,12,13$）。代入 $\dfrac{\mathrm dl}{\mathrm dt}=2,\ \dfrac{\mathrm dw}{\mathrm dt}=3$：</p>
+<p>$$\frac{\mathrm dd}{\mathrm dt}=\frac{12\times2+5\times3}{13}=\frac{24+15}{13}=\frac{39}{13}=3\ (\mathrm{cm/s}).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>求导丢链式因子</strong>：$\dfrac{\mathrm d}{\mathrm dt}\sqrt{l<sup>2</sup>+w<sup>2</sup>}=\dfrac{2l\,\dfrac{\mathrm dl}{\mathrm dt}+2w\,\dfrac{\mathrm dw}{\mathrm dt}}{2\sqrt{l<sup>2</sup>+w<sup>2</sup>}}$，分母里的 $d$ 不能丢。</li><li><strong>忘记先求当前时刻的 $d$</strong>：代入公式前必须算出 $d=13$，不能拿 $12+5$ 或其他数值凑。</li><li><strong>单位丢失</strong>：变化率答案要带单位 $\mathrm{cm/s}$。</li></ul>
+<blockquote>勾股数 $5,12,13$ 秒算当前对角线；$\dfrac{\mathrm dd}{\mathrm dt}=\dfrac{24+15}{13}=3\ \mathrm{cm/s}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015 数二第 22 题 · $A^3=O$ 与矩阵方程求 $X$（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-21.html" data-q="../question/m2-2015-21/">← <b>m2-2015-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-22/" data-q="../question/m2-2015-22/" data-no-anim="1">m2-2015-22 · 本题</a>
+  <a href="m2-2015-23.html" data-q="../question/m2-2015-23/"><b>m2-2015-23</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2015·22　(I) 由 $A^3=O$ 求 $a$；(II) 解矩阵方程求 $X$',
+  subtitle: '考点：矩阵幂与行列式 · <b>方程因式分解 $(E-A)X(E-A^2)=E$</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看 a 如何被逼出来、X 如何被「因式分解 + 求逆」解出。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '$$\\boldsymbol A=\\begin{pmatrix}a&1&0\\\\1&a&-1\\\\0&1&a\\end{pmatrix},\\qquad \\boldsymbol A^{3}=\\boldsymbol O$$',
+      '<b>① (I) 取行列式：</b>$(\\det A)^3=\\det O=0\\ \\Rightarrow\\ \\det A=0$',
+      '<b>② 展开计算：</b>$\\det A=a\\,(a^2+1)-1\\cdot a=a^{3}\\ \\Rightarrow\\ a=0$（代回验证 $A^3=O$ ✓）',
+      '<b>③ (II) 因式分解：</b>$X-XA^2-AX+AXA^2=(X-XA^2)-A(X-XA^2)=(E-A)\\,X\\,(E-A^2)$，方程即 $(E-A)X(E-A^2)=E$',
+      '<b>④ 代入 $a=0$ 算 $A^2$：</b>$A^2=\\begin{pmatrix}1&0&-1\\\\0&0&0\\\\1&0&-1\\end{pmatrix}$',
+      '<b>⑤ 检查可逆：</b>$E-A$ 与 $E-A^2$ 的行列式都等于 $1\\ne0$，均可逆',
+      '<b>⑥ 求逆：</b>$(E-A)^{-1}=\\begin{pmatrix}2&1&-1\\\\1&1&-1\\\\1&1&0\\end{pmatrix},\\qquad(E-A^2)^{-1}=\\begin{pmatrix}2&0&-1\\\\0&1&0\\\\1&0&0\\end{pmatrix}$',
+      '<b>⑦ 相乘：</b>$X=(E-A)^{-1}(E-A^2)^{-1}=\\begin{pmatrix}2&1&-1\\\\1&1&-1\\\\1&1&0\\end{pmatrix}\\begin{pmatrix}2&0&-1\\\\0&1&0\\\\1&0&0\\end{pmatrix}=\\begin{pmatrix}3&1&-2\\\\1&1&-1\\\\2&1&-1\\end{pmatrix}$'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'第一问给立方零矩阵，第二问是含 X 的矩阵方程，先解 a 再解 X', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'取行列式', log:'立方等于零矩阵，两边取行列式，行列式的立方为零', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'算 a',  log:'按第一行展开，行列式恰是 a 的立方，故 a 等于零', count:2, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'分解',  log:'四个项按公因式分组：提出左因子 E 减 A、右因子 E 减 A 平方', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'算 A²', log:'a 为零时代入算 A 的平方，三行两两相同结构清晰', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'可逆',  log:'两个行列式都等于一，都可逆，才能两边求逆', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'求逆',  log:'分别求出两个逆矩阵', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',  log:'按顺序相乘得到 X，注意左因子在左、右因子在右', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$a=0,\\quad X=\\begin{pmatrix}3&1&-2\\\\1&1&-1\\\\2&1&-1\\end{pmatrix}$',
+    html: '记忆锚点：<b>$A^3=O\\Rightarrow\\det A=0$ 定参数；矩阵方程按公因式分组</b>：$(E-A)X(E-A^2)=E\\Rightarrow X=(E-A)^{-1}(E-A^2)^{-1}$。易错：左右位置不能装反（乘法无交换律）；求逆前先验 $\\det\\neq0$（本题两个都等于 $1$）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：矩阵方程的"因式分解"——数换成矩阵，左右要分开提</h2>
+<p><strong>答案：(I) $a=0$；(II) $X=\begin{pmatrix}3&amp;1&amp;-2\\1&amp;1&amp;-1\\2&amp;1&amp;-1\end{pmatrix}$。</strong></p>
+<h3>第 (I) 问：为什么取行列式、为什么还要代回验证</h3>
+<p>$A<sup>3</sup>=O$ 是矩阵等式，信息藏在整块矩阵里；取行列式把它压成一个数。依据是行列式的乘法性 $|AB|=|A|\,|B|$（归纳得 $|A<sup>3</sup>|=|A|<sup>3</sup>$）：</p>
+<p>$$(\det A)<sup>3</sup>=\det O=0\ \Longrightarrow\ \det A=0.$$</p>
+<p>按第一行展开 $\det A=a(a<sup>2</sup>+1)-a=a<sup>3</sup>$，故 $a=0$。<strong>为什么还要代回验证</strong>：$\det A=0$ 只是 $A<sup>3</sup>=O$ 的必要条件（说明 $A$ 不可逆），并不保证 $A<sup>3</sup>=O$；$a=0$ 代回直接算 $A<sup>3</sup>$ 确认幂零，(I) 才算闭环。</p>
+<h3>第 (II) 问第 0 步：分解的机制——初等代数的矩阵版</h3>
+<p>看到 $X-XA<sup>2</sup>-AX+AXA<sup>2</sup>$，先想<strong>数的因式分解</strong>：$x-xa<sup>2</sup>-ax+axa<sup>2</sup>=(1-a)x(1-a<sup>2</sup>)$。矩阵版本成立，但<strong>乘法不可交换</strong>，公因式必须按左右位置分开提：</p>
+<p>$$X-XA<sup>2</sup>-AX+AXA<sup>2</sup>=(X-XA<sup>2</sup>)-A(X-XA<sup>2</sup>)=(E-A)\,X\,(E-A<sup>2</sup>).$$</p>
+<p>$(E-A)$ 在 $X$ 左、$(E-A<sup>2</sup>)$ 在 $X$ 右，位置由原式各项的左右次序决定，不能对调；逐项展开可验证无误。方程化为</p>
+<p>$$(E-A)\,X\,(E-A<sup>2</sup>)=E.$$</p>
+<h3>第 1 步：为什么分解完就"赢"了</h3>
+<p>$X$ 被两个因子<strong>夹在中间</strong>：只要两侧因子可逆，左右各乘逆就唯一确定 $X$——所以笔算前先验可逆性，这是"两边乘逆"的合法性前提。$a=0$ 时 $A=\begin{pmatrix}0&amp;1&amp;0\\1&amp;0&amp;-1\\0&amp;1&amp;0\end{pmatrix}$，算得 $|E-A|=|E-A<sup>2</sup>|=1\ne0$，均可逆，于是</p>
+<p>$$X=(E-A)<sup>-1</sup>\,(E-A<sup>2</sup>)<sup>-1</sup>.$$</p>
+<h3>第 2 步：算 $A<sup>2</sup>$、求逆、按位相乘</h3>
+<p>$$A<sup>2</sup>=\begin{pmatrix}1&amp;0&amp;-1\\0&amp;0&amp;0\\1&amp;0&amp;-1\end{pmatrix},\quad<br/>(E-A)<sup>-1</sup>=\begin{pmatrix}2&amp;1&amp;-1\\1&amp;1&amp;-1\\1&amp;1&amp;0\end{pmatrix},\quad<br/>(E-A<sup>2</sup>)<sup>-1</sup>=\begin{pmatrix}2&amp;0&amp;-1\\0&amp;1&amp;0\\1&amp;0&amp;0\end{pmatrix}.$$</p>
+<p>相乘时 $(E-A)<sup>-1</sup>$ 在左、$(E-A<sup>2</sup>)<sup>-1</sup>$ 在右——顺序与原方程左右位置一致：</p>
+<p>$$X=\begin{pmatrix}2&amp;1&amp;-1\\1&amp;1&amp;-1\\1&amp;1&amp;0\end{pmatrix}\begin{pmatrix}2&amp;0&amp;-1\\0&amp;1&amp;0\\1&amp;0&amp;0\end{pmatrix}=\begin{pmatrix}3&amp;1&amp;-2\\1&amp;1&amp;-1\\2&amp;1&amp;-1\end{pmatrix}.$$</p>
+<p>（代回 $X-XA<sup>2</sup>-AX+AXA<sup>2</sup>$ 可核验等于 $E$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>分解时左右装反</strong>：$E-A$ 从左侧提、$E-A<sup>2</sup>$ 从右侧提，交换律在这里不存在。</li><li><strong>求逆后乘序颠倒</strong>：$X=(E-A)<sup>-1</sup>(E-A<sup>2</sup>)<sup>-1</sup>$ 的左右顺序由原式位置决定。</li><li><strong>跳过可逆性检查</strong>：两个行列式为 $1$ 是"两边乘逆"合法的前提。</li></ul>
+<blockquote>记忆锚点：矩阵方程先当数分解，再按左右位置提公因式；夹心方程 $(E-A)X(E-A<sup>2</sup>)=E$ 两因子可逆则 $X$ 唯一。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

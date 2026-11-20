@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：幂零矩阵 (A−B)²=O 的推理链</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-09.html" data-q="../question/m2-2026-09/">← <b>m2-2026-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-10/" data-q="../question/m2-2026-10/" data-no-anim="1">m2-2026-10 · 本题</a>
+  <a href="m2-2026-11.html" data-q="../question/m2-2026-11/"><b>m2-2026-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：拆出完全平方',
+    cls: 'key',
+    body: '<p>$AB+BA=A^2+B^2$ 移项：$$A^2-AB-BA+B^2=O,$$ 而 $(A-B)^2=A^2-AB-BA+B^2$（交叉项恰凑齐）。记 $C=A-B$：<b>$C^2=O$ 且 $C\\ne O$（因 $A\\ne B$）</b>——幂零指数为 2。</p>' },
+  { title: 'A 项：成立',
+    cls: 'good',
+    body: '<p>$C^3=C\\cdot C^2=C\\cdot O=O$，即 $(A-B)^3=O$。<b>结论正确</b>。</p>' },
+  { title: 'B 项：成立',
+    cls: 'good',
+    body: '<p>若 $C\\xi=\\lambda\\xi$，则 $O=C^2\\xi=\\lambda^2\\xi\\Rightarrow\\lambda=0$——特征值只能全为 $0$，$A-B$ 只有零特征值。<b>结论正确</b>。</p>' },
+  { title: 'C 项：成立',
+    cls: 'good',
+    body: '<p>若 $A,B$ 都是对角矩阵，则 $C=A-B$ 也是对角矩阵；对角阵平方为零必须每个对角元为零，即 $C=O\\Rightarrow A=B$，与 $A\\ne B$ 矛盾。<b>结论正确</b>。</p>' },
+  { title: 'D 项：错在个数',
+    cls: 'bad',
+    body: '<p>$C^2=O\\Rightarrow\\operatorname{Im}C\\subseteq\\ker C\\Rightarrow 2\\operatorname{rank}C\\le3$；又 $C\\ne O$，故 $\\operatorname{rank}C=1$。零特征值的几何重数 $$\\dim\\ker C=3-1=2,$$ 即有 <b>2 个</b>线性无关的特征向量，不是"只有一个"。<b>结论错误</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>题目问"错误的结论"，答案选 <b>D</b>。记忆锚点：<b>幂零矩阵特征值全零、秩 $\\le n/2$；线性无关特征向量个数 = $n-r$，不是 1</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$AB+BA=A^2+B^2$ 且 $A\\ne B$：哪个结论错误',
+  subtitle: '考点：矩阵完全平方 · 幂零矩阵 · 特征值与几何重数',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐项检验 A、B、C、D。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D（$A-B$ 有 2 个线性无关特征向量）',
+    html: '记忆锚点：<b>条件即 $(A-B)^2=O$；幂零 + 非零 ⇒ $\\operatorname{rank}=1$ ⇒ $\\dim\\ker=3-1=2$</b>。易错：展开 $(A-B)^2$ 漏掉 $-BA$；把"特征值全零"误当成"只有一个特征向量"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：伪装的完全平方——$(A-B)<sup>2</sup>=O$ 的幂零推理链</h2>
+<p>答案：D</p>
+<h3>第零步：机制——幂零矩阵是什么、它管住什么</h3>
+<p>数里 $(a-b)<sup>2</sup>=a<sup>2</sup>-2ab+b<sup>2</sup>$；矩阵乘法不可交换，$A$ 与 $B$ 交叉时中项<strong>不合并</strong>，$(A-B)<sup>2</sup>=A<sup>2</sup>-AB-BA+B<sup>2</sup>$——恰好与题设移项后的结果一字不差。记 $C=A-B$，题设就是 $C<sup>2</sup>=O$ 且 $C\ne O$（因 $A\ne B$）。$C<sup>2</sup>=O$ 的直译是"<strong>任何被 $C$ 作用过的向量，再过一遍 $C$ 必得零</strong>"——输出全部落在核里。一条"作用两次必归零"的算子，特征值、秩、特征向量个数全被它管住，四个选项由此展开。</p>
+<h3>第一步：A、B 成立</h3>
+<p>$C<sup>3</sup>=C\cdot C<sup>2</sup>=O$，A 成立。若 $C\xi=\lambda\xi$，则 $O=C<sup>2</sup>\xi=\lambda<sup>2</sup>\xi$，故 $\lambda=0$——特征值只能全零，B 成立。</p>
+<h3>第二步：C 成立</h3>
+<p>若 $A,B$ 都是对角矩阵，则 $C=A-B$ 也是对角矩阵；对角阵平方为零必须每个对角元的平方为零，即 $C=O$，与 $A\ne B$ 矛盾。故 C 成立。</p>
+<h3>第三步：D 错在个数</h3>
+<p>$C<sup>2</sup>=O$ 说明 $\operatorname{Im}C\subseteq\ker C$（$C$ 的任何输出再过 $C$ 都归零），于是 $2\operatorname{rank}C\le3$；又 $C\ne O$ 排除秩 $0$，得 $\operatorname{rank}C=1$。零特征值对应的特征向量就是 $C\xi=0$ 的解——即齐次方程组 $Cx=0$ 的解空间，其维数是几何重数</p>
+<p>$$\dim\ker C=3-\operatorname{rank}C=2,$$</p>
+<p>即 $A-B$ 有 <strong>2 个</strong>线性无关的特征向量，"只有一个"不成立——D 是错误结论。</p>
+<h3>易错点</h3>
+<ul><li><strong>展开 $(A-B)<sup>2</sup>$ 漏掉 $-BA$</strong>：不可交换时中项是 $-AB-BA$ 两项，缺一就凑不出题设条件。</li><li><strong>由特征值全零断言只有一个特征向量</strong>：特征值个数与线性无关特征向量个数是两回事，中间隔着秩与几何重数（$\dim\ker=n-\operatorname{rank}$）。</li><li><strong>忘了用 $C\ne O$ 压下界</strong>：没有它定不出 $\operatorname{rank}C=1$，个数就悬空。</li></ul>
+<blockquote>一句话结论：条件即 $(A-B)<sup>2</sup>=O$；幂零 ⟹ 特征值全零、$\operatorname{Im}\subseteq\ker$ ⟹ 秩 $1$、几何重数 $=3-1=2$，说"只有一个"的 D 错。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

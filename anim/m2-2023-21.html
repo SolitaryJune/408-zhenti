@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023·21 泰勒展开 + 介值定理的两问证明</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-20.html" data-q="../question/m2-2023-20/">← <b>m2-2023-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-21/" data-q="../question/m2-2023-21/" data-no-anim="1">m2-2023-21 · 本题</a>
+  <a href="m2-2023-22.html" data-q="../question/m2-2023-22/"><b>m2-2023-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：武器是泰勒公式',
+    cls: 'key',
+    body: '<p>条件只有「$f$ 二阶连续可导 + 端点值（极值）」，这指向<b>带拉格朗日余项的泰勒公式</b>：把 $f(\\pm a)$ 在选定的内点展开到二阶，余项里的 $f\'\'(\\xi)$ 正是结论要的量。两问的关键都是<b>选对展开点让一阶项消掉</b>。</p>' },
+  { title: '(1) 第 1 式：在 x=0 展开 f(a)',
+    cls: '',
+    body: '<p>$$f(a)=f(0)+f\'(0)\\,a+\\frac{f\'\'(\\xi_1)}{2}a^2,\\qquad \\xi_1\\in(0,a).$$</p><p>展开点选 $x=0$，因为条件只给了 $f(0)=0$。</p>' },
+  { title: '(1) 第 2 式：再展开 f(−a)',
+    cls: '',
+    body: '<p>$$f(-a)=f(0)-f\'(0)\\,a+\\frac{f\'\'(\\xi_2)}{2}a^2,\\qquad \\xi_2\\in(-a,0).$$</p><p>余项来自 $(0+(-a))^2=a^2$；两个中值点分居 $0$ 两侧。</p>' },
+  { title: '(1) 相加：一阶项消光',
+    cls: '',
+    body: '<p>代入 $f(0)=0$，$\\pm f\'(0)a$ 相消：</p><p>$$f(a)+f(-a)=\\frac{a^2}{2}\\big[f\'\'(\\xi_1)+f\'\'(\\xi_2)\\big].$$</p>' },
+  { title: '(1) 介值定理兑现 ξ',
+    cls: 'good',
+    body: '<p>平均值 $\\dfrac{f\'\'(\\xi_1)+f\'\'(\\xi_2)}{2}$ 介于两点值的最小者与最大者之间；$f\'\'$ 连续 $\\Rightarrow$ 存在 $\\xi$ 介于 $\\xi_1,\\xi_2$ 之间（$\\xi\\in(-a,a)$）使</p><p>$$f\'\'(\\xi)=\\frac{1}{a^2}\\big[f(a)+f(-a)\\big].\\qquad\\blacksquare$$</p>' },
+  { title: '(2) 极值点 c 处展开',
+    cls: 'key',
+    body: '<p>设 $f$ 在 $c\\in(-a,a)$ 取极值，<b>费马定理</b>给 $f\'(c)=0$。在 $c$ 处展开两端点：</p><p>$$f(a)=f(c)+\\frac{f\'\'(\\xi_1)}{2}(a-c)^2,\\qquad f(-a)=f(c)+\\frac{f\'\'(\\xi_2)}{2}(a+c)^2,$$</p><p>$\\xi_1$ 介于 $c,a$ 之间，$\\xi_2$ 介于 $-a,c$ 之间。</p>' },
+  { title: '(2) 作差消 f(c) 并取绝对值',
+    cls: '',
+    body: '<p>$$f(a)-f(-a)=\\frac{f\'\'(\\xi_1)}{2}(a-c)^2-\\frac{f\'\'(\\xi_2)}{2}(a+c)^2.$$</p><p>记 $M=\\max\\{\\lvert f\'\'(\\xi_1)\\rvert,\\ \\lvert f\'\'(\\xi_2)\\rvert\\}=\\lvert f\'\'(\\eta)\\rvert$（$\\lvert f\'\'\\rvert$ 连续，最大值可达）。</p>' },
+  { title: '(2) 放缩并控制二次因子',
+    cls: '',
+    body: '<p>$$\\lvert f(a)-f(-a)\\rvert\\le\\frac{M}{2}\\big[(a-c)^2+(a+c)^2\\big]=\\frac{M}{2}(2a^2+2c^2)\\le\\frac{M}{2}\\cdot4a^2=2a^2M.$$</p><p>末步用 $\\lvert c\\rvert<a\\Rightarrow c^2<a^2$。</p>' },
+  { title: '结论：两问证毕',
+    cls: 'good',
+    body: '<p>由 $2a^2M=2a^2\\lvert f\'\'(\\eta)\\rvert\\ge\\lvert f(a)-f(-a)\\rvert$ 得 $\\lvert f\'\'(\\eta)\\rvert\\ge\\dfrac{1}{2a^2}\\lvert f(a)-f(-a)\\rvert$，证毕。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2023·21　泰勒展开 + 介值定理的两问证明',
+  subtitle: '考点：带拉格朗日余项的泰勒公式 · 费马定理 · 介值定理 · 放缩',
+  intro: '点击「▶ 播放」逐步展开证明推理链：(1) 在 x=0 展开，(2) 在极值点展开。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: "$f''(\\xi)=\\frac{f(a)+f(-a)}{a^2},\\qquad \\lvert f''(\\eta)\\rvert\\ge\\frac{\\lvert f(a)-f(-a)\\rvert}{2a^2}$",
+    html: "两问同一套路：<b>带拉格朗日余项的泰勒公式选对展开点，让一阶项消光</b>——(1) 在 $x=0$（用 $f(0)=0$），(2) 在极值点 $c$（用费马定理 $f'(c)=0$）；收尾都靠 $f\'\'$ 连续：(1) 介值定理取平均，(2) 最大值点放缩并卡 $2a^2+2c^2\\le4a^2$。易错：展开点选错；忘写余项中值点所在区间；$\\eta$ 的存在性漏证；二次因子放缩方向弄反。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：泰勒展开 + 介值定理的两问证明</h2>
+<p><strong>答案</strong>：(1) 在 $x=0$ 处展开；(2) 在极值点 $c$ 处展开——两问同为「带拉格朗日余项的泰勒公式 + 消一阶项 + $f''$ 连续性收尾」。</p>
+<h3>第一步：(1) 选展开点，写两个泰勒式</h3>
+<p>条件只有 $f$ 二阶连续可导与 $f(0)=0$，展开点取 $x=0$，对两端点带拉格朗日余项展开到二阶：存在 $\xi_1\in(0,a)$、$\xi_2\in(-a,0)$，</p>
+<p>$$f(a)=f(0)+f'(0)\,a+\frac{f''(\xi_1)}{2}a<sup>2</sup>,\qquad<br/>f(-a)=f(0)-f'(0)\,a+\frac{f''(\xi_2)}{2}a<sup>2</sup>.$$</p>
+<h3>第二步：(1) 相加消一阶项</h3>
+<p>代入 $f(0)=0$，$\pm f'(0)a$ 相消：</p>
+<p>$$f(a)+f(-a)=\frac{a<sup>2</sup>}{2}\big[f''(\xi_1)+f''(\xi_2)\big]<br/>\ \Longrightarrow\<br/>\frac{f''(\xi_1)+f''(\xi_2)}{2}=\frac{f(a)+f(-a)}{a<sup>2</sup>}.$$</p>
+<h3>第三步：(1) 介值定理兑现 $\xi$</h3>
+<p>$f''$ 在 $[\xi_2,\xi_1]$ 上连续，上式左端的<strong>平均值</strong>介于两点值的最小者与最大者之间，故存在 $\xi$ 介于 $\xi_1,\xi_2$ 之间（当然 $\xi\in(-a,a)$）使</p>
+<p>$$f''(\xi)=\frac{1}{a<sup>2</sup>}\big[f(a)+f(-a)\big].\qquad\blacksquare$$</p>
+<h3>第四步：(2) 极值点处展开</h3>
+<p>设 $f$ 在 $c\in(-a,a)$ 取极值，费马定理给 $f'(c)=0$。在 $c$ 处展开两端点（$\xi_1$ 介于 $c,a$，$\xi_2$ 介于 $-a,c$）：</p>
+<p>$$f(a)=f(c)+\frac{f''(\xi_1)}{2}(a-c)<sup>2</sup>,\qquad<br/>f(-a)=f(c)+\frac{f''(\xi_2)}{2}(a+c)<sup>2</sup>.$$</p>
+<h3>第五步：(2) 作差、放缩、控二次因子</h3>
+<p>相减消去 $f(c)$ 并取绝对值，记 $M=\max\big\{\lvert f''(\xi_1)\rvert,\ \lvert f''(\xi_2)\rvert\big\}=\lvert f''(\eta)\rvert$（$\lvert f''\rvert$ 连续，最大值可达）：</p>
+<p>$$\lvert f(a)-f(-a)\rvert\le\frac{M}{2}\big[(a-c)<sup>2</sup>+(a+c)<sup>2</sup>\big]<br/>=\frac{M}{2}(2a<sup>2</sup>+2c<sup>2</sup>)\le\frac{M}{2}\cdot4a<sup>2</sup>=2a<sup>2</sup>\lvert f''(\eta)\rvert,$$</p>
+<p>末步用 $\lvert c\rvert&lt;a\Rightarrow c<sup>2</sup>&lt;a<sup>2</sup>$。整理即 $\lvert f''(\eta)\rvert\ge\dfrac{1}{2a<sup>2</sup>}\lvert f(a)-f(-a)\rvert$。$\blacksquare$</p>
+<h3>易错点</h3>
+<ul><li><strong>展开点选错</strong>：(1) 只能在 $x=0$ 展开（条件只给 $f(0)=0$）；(2) 必须在极值点 $c$ 展开，靠 $f'(c)=0$ 消一阶项——在端点或别处展开都做不下去。</li><li><strong>余项中值点不交代区间</strong>：$\xi_1\in(0,a)$、$\xi_2\in(-a,0)$（或 (2) 中介于 $c$ 与端点）必须写明，介值与放缩才有落点。</li><li><strong>$\eta$ 的存在性漏证</strong>：$M$ 取到最大值靠 $f''$ 连续（在 $\xi_1,\xi_2$ 两点处取值必有最大），一句不能省。</li><li><strong>二次因子放缩方向</strong>：$(a-c)<sup>2</sup>+(a+c)<sup>2</sup>=2a<sup>2</sup>+2c<sup>2</sup>\le4a<sup>2</sup>$ 是放大，别缩反了方向。</li></ul>
+<blockquote>一句话结论：泰勒展开选对内点让一阶项消光——(1) 用 $f(0)=0$ 相加、介值取平均；(2) 用费马定理作差、最大值放大并卡 $2a<sup>2</sup>+2c<sup>2</sup>\le4a<sup>2</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

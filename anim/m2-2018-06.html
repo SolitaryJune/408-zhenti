@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·06 二次积分合并 + 对称性求面积</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-05.html" data-q="../question/m2-2018-05/">← <b>m2-2018-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-06/" data-q="../question/m2-2018-06/" data-no-anim="1">m2-2018-06 · 本题</a>
+  <a href="m2-2018-07.html" data-q="../question/m2-2018-07/"><b>m2-2018-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：把两块二次积分拼成一个二重积分</b>$$x\\in[-1,0]:\\ -x=|x|,\\qquad x\\in[0,1]:\\ x=|x|$$ 两段下限其实是同一个 $|x|$，上限同为 $2-x^2$：$$I=\\iint_D(1-xy)\\,\\mathrm dx\\,\\mathrm dy,\\qquad D:\\ -1\\le x\\le1,\\ |x|\\le y\\le2-x^2.$$</p>",
+  "<p><b>第二步：验证区域非空</b>$$2-x^2\\ge|x|\\ \\Longleftrightarrow\\ x^2+|x|-2\\le0\\ \\Longleftrightarrow\\ |x|\\le1$$ 与 $x$ 的范围正好吻合，区域有意义。</p>",
+  "<p><b>第三步：对称性消去 $xy$ 项</b>$$D\\ \\text{关于}\\ y\\ \\text{轴对称}，\\quad xy\\ \\text{是}\\ x\\ \\text{的奇函数}\\ \\Longrightarrow\\ \\iint_Dxy\\,\\mathrm dx\\,\\mathrm dy=0$$ 于是 $$I=\\iint_D1\\,\\mathrm dx\\,\\mathrm dy=S(D)\\quad(\\text{区域面积})。$$</p>",
+  "<p><b>第四步：对称性再省一半</b>$$S(D)=\\int_{-1}^{1}\\big[(2-x^2)-|x|\\big]\\mathrm dx=2\\int_0^1(2-x^2-x)\\,\\mathrm dx$$ 右半区域 $|x|=x$，算一半再乘 2。</p>",
+  "<p><b>第五步：算面积</b>$$\\int_0^1(2-x^2-x)\\,\\mathrm dx=\\Big[2x-\\frac{x^3}{3}-\\frac{x^2}{2}\\Big]_0^1=2-\\frac13-\\frac12=\\frac76$$ $$S(D)=2\\times\\frac76=\\frac73.$$</p>",
+  "<p><b>排错</b>：D 的 $\\dfrac76$ 恰好是只积右半、漏乘 2；A、B 的 $\\dfrac53$ 来自面积算错或漏用对称性、硬保留了 $xy$ 项。</p>",
+  "<p><b>结论</b>$$I=\\frac73\\quad(\\text{答案 C})$$ 合并区域 → 奇对称清零 → 算一半乘 2，三招收工。</p>"
+];
+
+AW.init({
+  title: '$\\displaystyle\\int_{-1}^0\\!dx\\!\\int_{-x}^{2-x^2}(1-xy)\\,dy+\\int_0^1\\!dx\\!\\int_x^{2-x^2}(1-xy)\\,dy$',
+  subtitle: '考点：二重积分 · 对称性 · 方法：合并区域 → 消奇项 → 面积',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」：合并区域 → 对称性消 xy → 算面积。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'合并区域', log:'两段下限都是 |x|，拼成 −1≤x≤1 的完整区域', show:1, count:0 },
+    { cls:'step',  tag:'验非空',   log:'2−x²≥|x| ⇔ |x|≤1，区域有意义', show:2, count:1 },
+    { cls:'ok',    tag:'对称清零', log:'xy 是 x 的奇函数，D 关于 y 轴对称 ⇒ 积分为 0', show:3, count:2, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'减半',     log:'算右半 2−x²−x，再乘 2', show:4, count:3, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'积分',     log:'右半 = 7/6，面积 = 2×7/6 = 7/3', show:5, count:4, ribbon:{k:3, ok:true} },
+    { cls:'miss',  tag:'排错',     log:'7/6 是漏乘 2 的半边值；5/3 是面积算错', show:6, count:5 },
+    { cls:'done',  tag:'完成',     log:'I = 7/3，选 C', show:7, count:6, done:true, ribbon:{k:4, ok:true} },
+  ],
+
+  result: {
+    big: '答案 C：$\\dfrac73$',
+    html: '记忆锚点：<b>二次积分先合并成二重积分再谈对称性</b>。$D:\\ |x|\\le y\\le2-x^2$ 关于 $y$ 轴对称，$xy$ 是 $x$ 的奇函数整体清零，$I=S(D)=2\\displaystyle\\int_0^1(2-x^2-x)\\,dx=\\dfrac73$。$\\dfrac76$ 是"只算一半"的经典陷阱（选项 D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：两个二次积分合并区域 + 对称性消项化成面积</h2>
+<p>答案：C（$\dfrac73$）</p>
+<h3>第一步：先懂机制——为什么先"拼区域"再"用对称"</h3>
+<p>两个二次积分的被积函数同为 $1-xy$、上限同为 $y=2-x<sup>2</sup>$，只有下限不同。注意到 $x\in[-1,0]$ 时 $-x=|x|$、$x\in[0,1]$ 时 $x=|x|$，两块下限其实同为 $|x|$——拼成一个整体区域之后，才谈得上"区域关于 $y$ 轴对称"，而对称性正是本题省算力的全部来源：</p>
+<p>$$D:\ -1\le x\le1,\quad |x|\le y\le2-x<sup>2</sup>,\qquad I=\iint_D(1-xy)\,dx\,dy.$$</p>
+<p>（区域非空：$2-x<sup>2</sup>\ge|x|\iff x<sup>2</sup>+|x|-2\le0\iff|x|\le1$，与 $x$ 的范围吻合。）</p>
+<h3>第二步：对称性为什么能把 $xy$ 项清零</h3>
+<p>$D$ 关于 $y$ 轴对称：把 $x$ 换成 $-x$，上下限 $2-x<sup>2</sup>$、$|x|$ 都不变，区域原地不动。而被积函数里的 $xy$ 满足 $(-x)y=-xy$，是 $x$ 的奇函数——<strong>对称区域内点成对出现 $(x,y)$ 与 $(-x,y)$，$xy$ 一正一负恰好抵消</strong>，故</p>
+<p>$$\iint_Dxy\,dx\,dy=0,\qquad I=\iint_D1\,dx\,dy=S(D).$$</p>
+<p>问题退化为求面积，计算量骤减。</p>
+<h3>第三步：算面积（对称性再省一半）</h3>
+<p>$D$ 与被积函数 $1$ 都左右对称，右半算一遍乘 $2$ 即可：</p>
+<p>$$S(D)=\int_{-1}<sup>1</sup>\left[(2-x<sup>2</sup>)-|x|\right]dx=2\int_0<sup>1</sup>(2-x<sup>2</sup>-x)\,dx=2\left(2-\frac13-\frac12\right)=2\times\frac76=\frac73.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 D（$\dfrac76$）</strong>：恰是只积右半 $x\in[0,1]$ 的值——对称区间要"算一半、乘 $2$"补全左半。</li><li><strong>误选 A、B（$\dfrac53$）</strong>：恰是 $\int_0<sup>1</sup>(2-x<sup>2</sup>)\,dx=2-\dfrac13$，即把区域下边界当成 $x$ 轴、忘了减去 $|x|$ 下方那部分——下边界是曲线 $y=|x|$，不是 $x$ 轴。</li><li><strong>硬算 $xy$ 项</strong>：先积 $\iint xy$ 再相减能得到同样结果但繁得多；看出奇对称后整项为零。</li><li><strong>区域拼错</strong>：把下限统一当成 $x$ 或 $-x$（不分正负半轴），会拼出不再关于 $y$ 轴对称的区域，对称性随之失效。</li></ul>
+<blockquote>结论：合并成 $D:\ |x|\le y\le2-x<sup>2</sup>$；$xy$ 关于 $x$ 是奇函数、区域关于 $y$ 轴对称 ⇒ 该项为零；$I=S(D)=2\times\dfrac76=\dfrac73$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

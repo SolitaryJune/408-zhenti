@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-04.html" data-q="../question/m2-2010-04/">← <b>m2-2010-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-05/" data-q="../question/m2-2010-05/" data-no-anim="1">m2-2010-05 · 本题</a>
+  <a href="m2-2010-06.html" data-q="../question/m2-2010-06/"><b>m2-2010-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导板：所有推导行在 build 时建好（含公式），render 按 i 逐行点亮 */
+var rows = [];
+function drow(html, at, green){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'margin:10px 0;padding:10px 16px;border-left:4px solid #cbd5e1;' +
+    'background:#f8fafc;border-radius:8px;font-size:15.5px;line-height:1.9;' +
+    'opacity:0.15;transform:translateX(-10px);transition:all .4s;';
+  rows.push({el: d, at: at, green: !!green});
+  return d;
+}
+
+AW.init({
+  title: '2010 数学二 第5题 · $F\\!\\left(\\dfrac yx,\\dfrac zx\\right)=0$，求 $x\\dfrac{\\partial z}{\\partial x}+y\\dfrac{\\partial z}{\\partial y}$',
+  subtitle: '考点：隐函数求导（链式法则） · 方法：两个方向求导后对称消元',
+  counterLabel: '已推导',
+  intro: '点击「▶ 播放」逐步演示隐函数求导与消元过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：$F$ 有两个中间变量 $\\dfrac yx$ 与 $\\dfrac zx$，后者分子含 $z$，求导勿漏'));
+    inner.appendChild(drow(
+      '<b>记中间变量</b>：$u=\\dfrac yx,\\ v=\\dfrac zx$，方程 $F(u,v)=0$ 确定 $z=z(x,y)$；目标是 $xz_x+yz_y$', 1));
+    inner.appendChild(drow(
+      '<b>对 $x$ 求导</b>：$F_1\'\\cdot\\Big(-\\dfrac{y}{x^2}\\Big)+F_2\'\\cdot\\dfrac{xz_x-z}{x^2}=0$' +
+      '$\\ \\Longrightarrow\\ xz_x=z+\\dfrac{yF_1\'}{F_2\'}$', 2));
+    inner.appendChild(drow(
+      '<b>对 $y$ 求导</b>：$\\dfrac{F_1\'}{x}+\\dfrac{F_2\'z_y}{x}=0\\ \\Longrightarrow\\ z_y=-\\dfrac{F_1\'}{F_2\'}$' +
+      '$\\ \\Longrightarrow\\ yz_y=-\\dfrac{yF_1\'}{F_2\'}$', 3));
+    inner.appendChild(drow(
+      '<b>两式相加</b>：$xz_x+yz_y=z+\\dfrac{yF_1\'}{F_2\'}-\\dfrac{yF_1\'}{F_2\'}=z$，含 $F_1\'$ 的项恰好抵消', 4));
+    inner.appendChild(drow(
+      '<b>结论</b>：$x\\dfrac{\\partial z}{\\partial x}+y\\dfrac{\\partial z}{\\partial y}=z$，选 B。' +
+      '另解：把 $(x,y,z)$ 换成 $(tx,ty,tz)$ 方程不变，$z$ 是一次齐次函数，欧拉定理直接给出', 5, true));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '审题',   log: '方程里 z 藏在第二个中间变量的分子上，先记好两个中间变量，目标是对 x 和 y 的两个偏导的加权和', count: 1 },
+    { cls: 'shift', tag: '对 x 求', log: '对 x 求导：第一个中间变量给负的 y 比 x 平方，第二个用商的求导法则出现 x 乘 z 下标 x 再减 z', count: 2 },
+    { cls: 'step',  tag: '对 y 求', log: '对 y 求导干净利落，直接解出 z 对 y 的偏导等于负的 F1 比 F2', count: 3 },
+    { cls: 'shift', tag: '相加',   log: '两条结果相加，含 F1 的项一正一负恰好抵消，只剩 z', count: 4 },
+    { cls: 'done',  tag: '完成',   log: '答案是 z 本身，选 B；齐次函数的欧拉定理也直接给出同一结论', count: 5, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < rows.length; k++){
+      var r = rows[k];
+      var revealed = i >= r.at;
+      var active = revealed && r.at === i && !sn.done;
+      var green = sn.done && r.green;
+      r.el.style.opacity = revealed ? '1' : '0.15';
+      r.el.style.transform = revealed ? 'none' : 'translateX(-10px)';
+      r.el.style.background = green ? '#ecfdf3' : (active ? '#fff7e0' : '#f8fafc');
+      r.el.style.borderLeftColor = green ? '#16a34a' : (active ? '#f59e0b' : '#cbd5e1');
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 B：原式 $=z$',
+    html: '记忆锚点：<b>分母带 $z$ 的隐函数，商的求导法则必出 $xz_x-z$</b>；两方向求导后相加常整体消元。另记：$F\\!\\big(\\frac yx,\\frac zx\\big)=0$ 对 $(x,y,z)$ 的一次缩放不变 $\\Rightarrow$ $z$ 一次齐次 $\\Rightarrow$ 欧拉关系 $xz_x+yz_y=z$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：隐函数求导——比值结构锁定答案是 $z$（欧拉关系）</h2>
+<p>答案：<strong>B</strong>（结果等于 $z$）。</p>
+<h3>第 0 步：先立模型——方程里全是「比值」意味着什么</h3>
+<p>方程 $F\Big(\dfrac yx,\ \dfrac zx\Big)=0$ 中，$x,y,z$ 从不以单独身份出现，只以<strong>比值</strong> $y/x,\ z/x$ 出现。这是结构性信息：把 $(x,y,z)$ 换成 $(tx,\ ty,\ tz)$，两个比值原封不动，方程仍成立（$F_2'\neq0$ 保证局部解唯一，题目已给）。于是由方程确定的 $z=z(x,y)$ 满足</p>
+<p>$$z(tx,\ ty)=t\,z(x,y)\qquad(\text{一次齐次函数}),$$</p>
+<p>而一次齐次函数必满足<strong>欧拉关系</strong> $x z_x+y z_y=z$。答案其实已被结构锁定为 $z$；下面用求导把这条关系「现场验证」一遍，也看清每个 $F$ 项去哪了。</p>
+<h3>第一步：对 $x$ 求偏导——为什么会出现 $xz_x-z$</h3>
+<p>记 $F_1'=F_u',\ F_2'=F_v'$。对 $x$ 求导时 $z$ 是 $x$ 的函数，商 $\dfrac zx$ 的<strong>分子也在动</strong>，商法则给出</p>
+<p>$$F_1'\cdot\Big(-\frac{y}{x<sup>2</sup>}\Big)+F_2'\cdot\frac{xz_x-z}{x<sup>2</sup>}=0\ \Longrightarrow\ xz_x=z+\frac{yF_1'}{F_2'}.$$</p>
+<p>（$\dfrac{xz_x-z}{x<sup>2</sup>}$ 里的 $-z$ 正是「分子也依赖 $x$」的体现，丢掉它是最常见的错。）</p>
+<h3>第二步：对 $y$ 求偏导并相加——为什么 $F_1'$ 恰好抵消</h3>
+<p>对 $y$ 求导时 $\dfrac yx$ 的分子在动、$\dfrac zx$ 的分子不动：</p>
+<p>$$F_1'\cdot\frac1x+F_2'\cdot\frac{z_y}{x}=0\ \Longrightarrow\ z_y=-\frac{F_1'}{F_2'},\qquad yz_y=-\frac{yF_1'}{F_2'}.$$</p>
+<p>两式相加：</p>
+<p>$$xz_x+yz_y=\Big(z+\frac{yF_1'}{F_2'}\Big)-\frac{yF_1'}{F_2'}=z.$$</p>
+<p><strong>为什么抵消得这么整齐？</strong> 第 0 步的结构保证：对 $x$ 求导冒出的 $F_1'\cdot\big(-y/x<sup>2</sup>\big)$ 与对 $y$ 求导冒出的 $F_1'\cdot(1/x)$，乘上权 $x$、$y$ 后变成同一个量 $\dfrac{yF_1'}{F_2'}$，一正一负——这正是欧拉关系的代数化身。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 D（$-z$）</strong>：对 $x$ 求导丢了 $\dfrac zx$ 分子中的 $-z$，或相加时符号弄反，都会把右端算成 $-z$。</li><li><strong>误选 A（$x$）/ C（$-x$）</strong>：把欧拉关系右端记成自变量——右端是<strong>函数值</strong> $z$。可用特例检验：$z=x$（$y$ 不出现）时 $xz_x+yz_y=x\cdot1+y\cdot0=x=z$ ✓。</li><li><strong>不利用结构硬算</strong>：识别出「方程只含比值」就能先锁定答案，求导只是验证；两方向求导后相加是对称结构的标准收尾。</li></ul>
+<blockquote>方程只含 $y/x,\ z/x$ ⟹ $z$ 是一次齐次函数 ⟹ 欧拉关系给出 $xz_x+yz_y=z$；求导相加时 $F_1'$ 项必抵消。选 <strong>B</strong>。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

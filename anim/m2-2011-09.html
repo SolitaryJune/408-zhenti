@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 9 题 · 1^∞ 型极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-08.html" data-q="../question/m2-2011-08/">← <b>m2-2011-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-09/" data-q="../question/m2-2011-09/" data-no-anim="1">m2-2011-09 · 本题</a>
+  <a href="m2-2011-10.html" data-q="../question/m2-2011-10/"><b>m2-2011-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>求 $$\\lim_{x\\to0}\\Bigl(\\frac{1+2^x}{2}\\Bigr)^{\\frac1x}.$$</p>',
+  '<p><b>定型：</b>底数 $\\dfrac{1+2^x}{2}\\to1$、指数 $\\dfrac1x\\to\\infty$，是 $1^\\infty$ 型。设原极限为 $A$，取对数 $$\\ln A=\\lim_{x\\to0}\\frac1x\\ln\\frac{1+2^x}{2}.$$</p>',
+  '<p><b>第一步替换：</b>令 $u=\\dfrac{2^x-1}{2}\\to0$，则 $$\\ln\\frac{1+2^x}{2}=\\ln(1+u)\\sim u=\\frac{2^x-1}{2}.$$</p>',
+  '<p><b>第二步替换：</b>$2^x-1=e^{x\\ln2}-1\\sim x\\ln2$，故 $$\\ln\\frac{1+2^x}{2}\\sim\\frac{x\\ln2}{2}.$$</p>',
+  '<p><b>求 ln A：</b>$$\\ln A=\\lim_{x\\to0}\\frac1x\\cdot\\frac{x\\ln2}{2}=\\frac{\\ln2}{2}.$$</p>',
+  '<p><b>还原指数：</b>$$A=e^{\\frac{\\ln2}{2}}=2^{\\frac12}=\\sqrt2.$$</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 9 题 · $\\lim\\limits_{x\\to0}\\left(\\dfrac{1+2^x}{2}\\right)^{\\frac1x}$',
+  subtitle: '考点：$1^\\infty$ 型极限 · 方法：取对数 + 等价无穷小',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：定型 → 取对数 → 两次等价替换 → 还原指数。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'定型', log:'底数趋于 1、指数趋于无穷，是 1 的无穷次方型，先取对数', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'替换一', log:'对数里是 ln(1+u) 形状，用 ln(1+u) 与 u 等价', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'替换二', log:'2 的 x 次方减 1 与 x·ln2 等价，分子分母同时化简', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'求对数', log:'lnA 算出等于 ln2 的一半', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：A = e^(ln2/2) = √2', count:5, reveal:6, hl:5, good:true, done:true, ribbon:{k:5, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '填 √2',
+    html: '记忆锚点：$1^\\infty$ 型 ⇒ 取对数 $\\ln A=\\lim\\limits_{x\\to0}\\frac1x\\ln\\frac{1+2^x}{2}$，再用 $\\ln(1+t)\\sim t$ 与 $2^x-1\\sim x\\ln2$，得 $\\ln A=\\frac{\\ln2}{2}\\Rightarrow A=\\sqrt2$。易错：算完 $\\ln A$ 别忘了<b>还原成指数</b>；$a^x-1\\sim x\\ln a$ 别记成 $x$。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：1^∞ 型极限——为什么取对数、等价量从哪来</h2>
+<p>答案：$\sqrt 2$</p>
+<h3>第一步：先懂机制——为什么取对数</h3>
+<p>底数 $\dfrac{1+2<sup>x</sup>}{2}\to1$、指数 $\dfrac1x\to\infty$，属 $1^\infty$ 型，不能把底数代成 $1$ 了事——$1^\infty$ 是不定型，结果由「底数离 1 多近」与「指数跑多快」的赛跑决定。取对数是标准解法，理由在于恒等式 $u<sup>v</sup>=\mathrm e<sup>v\ln u</sup>$ 与 $\mathrm e<sup>x</sup>$ 的连续性：只要 $\lim v\ln u$ 存在，极限就能「穿过」指数，于是</p>
+<p>$$A=\lim_{x\to0}\Bigl(\frac{1+2<sup>x</sup>}{2}\Bigr)<sup>\frac1x</sup>,\qquad \ln A=\lim_{x\to0}\frac{1}{x}\ln\frac{1+2<sup>x</sup>}{2}.$$</p>
+<p>幂指结构由此化成乘积结构，等价无穷小才有了用武之地。</p>
+<h3>第二步：两个等价替换——每个都给出来源</h3>
+<p>令 $u=\dfrac{2<sup>x</sup>-1}{2}\to0$，则 $\ln\dfrac{1+2<sup>x</sup>}{2}=\ln(1+u)$。为什么 $\ln(1+u)\sim u$？因为 $\ln(1+u)$ 在 $u=0$ 处的切线斜率恰为 $1$（泰勒首项 $\ln(1+u)=u+o(u)$），一阶近似就是 $u$ 本身。</p>
+<p>再用 $2<sup>x</sup>-1=e<sup>x\ln2</sup>-1$。为什么等价于 $x\ln 2$？因为 $e<sup>v</sup>-1\sim v$，取 $v=x\ln2$ 即得——几何地说，$2<sup>x</sup>$ 在 $x=0$ 处的切线斜率是 $\ln 2$（不是 $1$），它偏离 $1$ 的速度就是 $x\ln2$。于是</p>
+<p>$$\ln\frac{1+2<sup>x</sup>}{2}\sim\frac{2<sup>x</sup>-1}{2}\sim\frac{x\ln 2}{2}.$$</p>
+<h3>第三步：求出 ln A 再还原指数</h3>
+<p>$$\ln A=\lim_{x\to0}\frac1x\cdot\frac{x\ln2}{2}=\frac{\ln2}{2}\ \Longrightarrow\ A=e<sup>\frac{\ln2</sup>{2}}=2<sup>\frac12</sup>=\sqrt 2.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>底数直接代 1</strong>：$1^\infty$ 型不能代入求值，必须先取对数（或套 $\lim u<sup>v</sup>=e<sup>\lim v(u-1)</sup>$——它正是取对数法的快捷版）。</li><li><strong>$2<sup>x</sup>-1$ 的等价量记错</strong>：应为 $x\ln 2$，来源是 $(2<sup>x</sup>)'\big|_{0}=\ln2$；写成 $x$ 或 $2x$ 都是记错了切线斜率。</li><li><strong>等价替换越界</strong>：$\ln(1+u)$ 与 $u$ 在本题里处于乘积因子的位置，替换合法；若出现在加减项中要先展开再判。</li><li><strong>算完对数忘了还原</strong>：$\ln A=\frac{\ln2}{2}$ 只是中间量，最终答案要写成 $A=e<sup>\cdots</sup>=\sqrt2$。</li></ul>
+<blockquote>结论：填 $\sqrt 2$。取对数把幂指化乘积；两个等价量 $\ln(1+u)\sim u$、$2<sup>x</sup>-1\sim x\ln2$ 各自源于「切线斜率」。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

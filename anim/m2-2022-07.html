@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画：三个定积分比大小</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-06.html" data-q="../question/m2-2022-06/">← <b>m2-2022-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-07/" data-q="../question/m2-2022-07/" data-no-anim="1">m2-2022-07 · 本题</a>
+  <a href="m2-2022-08.html" data-q="../question/m2-2022-08/"><b>m2-2022-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：同区间，比被积函数',
+    cls: 'key',
+    log: '三个积分同在 [0,1]，逐对比较被积函数即可定序',
+    body: '<p>$I_1=\\displaystyle\\int_0^1\\frac{x}{2(1+\\cos x)}\\mathrm{d}x$，$I_2=\\displaystyle\\int_0^1\\frac{\\ln(1+x)}{1+\\cos x}\\mathrm{d}x$，$I_3=\\displaystyle\\int_0^1\\frac{2x}{1+\\sin x}\\mathrm{d}x$。区间相同 ⟹ <b>统一分母、逐对比分子</b>，用保号性传递。</p>' },
+  { title: 'I₁ vs I₂：比分子 x 与 2ln(1+x)',
+    cls: 'good',
+    log: 'φ=2ln(1+x)−x 递增且 φ(0)=0 ⟹ 2ln(1+x)>x ⟹ I₁<I₂',
+    body: '<p>统一分母 $2(1+\\cos x)$，比 $x$ 与 $2\\ln(1+x)$。令 $\\varphi=2\\ln(1+x)-x$：$\\varphi(0)=0$，$\\varphi\'=\\dfrac{1-x}{1+x}\\ge0$ 于 $[0,1]$，故 $2\\ln(1+x)>x$，得 $$I_1<I_2.$$</p>' },
+  { title: 'I₂ vs I₃ 之一：先用 ln(1+x)≤x 放缩',
+    cls: 'step',
+    log: 'ln(1+x)≤x ⟹ I₂ ≤ ∫ x/(1+cos x) dx',
+    body: '<p>经典不等式 $\\ln(1+x)\\le x$ 给出 $$\\frac{\\ln(1+x)}{1+\\cos x}\\le\\frac{x}{1+\\cos x}.$$ 只需再比 $\\dfrac{x}{1+\\cos x}$ 与 $I_3$ 的被积函数 $\\dfrac{2x}{1+\\sin x}$。</p>' },
+  { title: 'I₂ vs I₃ 之二：比分母 1+sin x 与 2(1+cos x)',
+    cls: 'good',
+    log: 'cos x > cos1 > 1/2 ⟹ 2(1+cos x) > 3 > 1+sin x ⟹ I₂<I₃',
+    body: '<p>交叉相乘（分母皆正）。由 $x\\le1<\\frac{\\pi}{3}$ 与 $\\cos$ 递减：$\\cos x>\\cos\\frac{\\pi}{3}=\\frac12$，故 $2(1+\\cos x)>3$；而 $1+\\sin x\\le2<3$。于是 $$\\frac{x}{1+\\cos x}<\\frac{2x}{1+\\sin x},\\qquad I_2<I_3.$$</p>' },
+  { title: '串联定序：I₁ < I₂ < I₃',
+    cls: 'good',
+    log: '两段不等式串联：I₁ < I₂ < I₃，选 A',
+    body: '<p>$$I_1<I_2<I_3.$$ 答案选 <b>A</b>。B 把 $I_1,I_2$ 关系弄反；C、D 把 $I_3$ 排在中间或最小，都与被积函数比较矛盾。</p>' },
+  { title: '结论与记忆点',
+    cls: 'done',
+    log: '比大小三板斧：统一分母、经典不等式、单调性估分母',
+    body: '<p>答案 <b>A</b>。三个工具：$\\varphi=2\\ln(1+x)-x$ 的单调性；$\\ln(1+x)\\le x$；$\\cos$ 在 $[0,\\frac{\\pi}{2}]$ 递减估 $\\cos x>\\frac12$。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$I_1,\\ I_2,\\ I_3$ 三个定积分比大小',
+  subtitle: '考点：定积分保号性 · 方法：统一分母 + 经典不等式 + 单调性估计',
+  counterLabel: '比较步',
+  intro: '点击「▶ 播放」逐步展开比较链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（$I_1<I_2<I_3$）',
+    html: '记忆锚点：<b>$2\\ln(1+x)>x$（系数 2 让不等式反向）</b>与 <b>$1+\\sin x\\le2<3<2(1+\\cos x)$</b>。易错：把 $\\ln(1+x)\\le x$ 直接搬到 $2\\ln(1+x)$ 上，方向就错了。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：同区间定积分比大小——统一分母后逐对比较被积函数</h2>
+<p>答案：A</p>
+<h3>第一步：确立比较框架——为什么这条路走得通</h3>
+<p>三个积分都在 $[0,1]$ 上，区间相同，只需<strong>逐对比较被积函数</strong>，再用保号性（被积函数严格小则积分严格小）定序。比大小的通用手法是<strong>统一分母</strong>：两个分式化成同分母后，二元比较就坍缩成一元不等式。三个被积函数在 $(0,1]$ 上均为正，保证不等号严格。</p>
+<h3>第二步：I₁ 与 I₂ 比较</h3>
+<p>$I_1$ 写成同分母：$\dfrac{x}{2(1+\cos x)}$ 对 $\dfrac{2\ln(1+x)}{2(1+\cos x)}$，只比分子 $x$ 与 $2\ln(1+x)$。令 $\varphi(x)=2\ln(1+x)-x$，$\varphi(0)=0$，$\varphi'(x)=\dfrac{1-x}{1+x}\ge0$ 于 $[0,1]$，故 $2\ln(1+x)&gt;x$ 于 $(0,1]$，得</p>
+<p>$$I_1&lt;I_2.$$</p>
+<h3>第三步：I₂ 与 I₃ 比较（放缩链）</h3>
+<p>先用 $\ln(1+x)\le x$：</p>
+<p>$$\frac{\ln(1+x)}{1+\cos x}\le\frac{x}{1+\cos x}.$$</p>
+<p>再比 $\dfrac{1}{1+\cos x}$ 与 $\dfrac{2}{1+\sin x}$，交叉相乘比 $1+\sin x$ 与 $2(1+\cos x)$：由 $x\le1&lt;\dfrac{\pi}{3}$ 及 $\cos$ 在 $[0,\frac{\pi}{2}]$ 递减得 $\cos x&gt;\cos\dfrac{\pi}{3}=\dfrac12$，故 $2(1+\cos x)&gt;3$；而 $1+\sin x\le2&lt;3$。于是 $\dfrac{x}{1+\cos x}&lt;\dfrac{2x}{1+\sin x}$，串联得</p>
+<p>$$I_2&lt;I_3.$$</p>
+<h3>第四步：定序</h3>
+<p>$I_1&lt;I_2&lt;I_3$，选 A。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $\ln(1+x)$ 与 $x$ 的大小记反</strong>：$\ln(1+x)\le x$ 但 $2\ln(1+x)&gt;x$，系数 $2$ 让方向反转，这是 $I_1&lt;I_2$ 的关键——误选 B（$I_2&lt;I_1$）正源于此。</li><li><strong>估 $\cos x$ 时硬算小数</strong>：用 $\cos x\ge\cos1&gt;\cos\dfrac{\pi}{3}=\dfrac12$（单调性）即可，干净且严谨。</li><li><strong>误选 C（$I_3&lt;I_2$）</strong>：没有交叉相乘做严格比较。$[0,1]$ 上恒有 $1+\sin x&lt;2(1+\cos x)$（一边不超过 $2$、另一边严格大于 $3$），故 $I_2$ 的被积函数严格小。</li><li><strong>误选 D（$I_3$ 最小）</strong>：只盯分母的直觉排序。实际上 $1+\sin x\le1+\sin1&lt;2&lt;3&lt;2(1+\cos x)$——$I_3$ 的分母才是三者中最小的，分子 $2x$ 又最大，$I_3$ 应当最大。</li></ul>
+<blockquote>一句话结论：$2\ln(1+x)&gt;x$ 给 $I_1&lt;I_2$；$1+\sin x&lt;2(1+\cos x)$ 给 $I_2&lt;I_3$，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

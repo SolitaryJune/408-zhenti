@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-13.html" data-q="../question/m2-2010-13/">← <b>m2-2010-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-14/" data-q="../question/m2-2010-14/" data-no-anim="1">m2-2010-14 · 本题</a>
+  <a href="m2-2010-15.html" data-q="../question/m2-2010-15/"><b>m2-2010-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导板：所有推导行在 build 时建好（含公式），render 按 i 逐行点亮 */
+var rows = [];
+function drow(html, at, green){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'margin:10px 0;padding:10px 16px;border-left:4px solid #cbd5e1;' +
+    'background:#f8fafc;border-radius:8px;font-size:15.5px;line-height:1.9;' +
+    'opacity:0.15;transform:translateX(-10px);transition:all .4s;';
+  rows.push({el: d, at: at, green: !!green});
+  return d;
+}
+
+AW.init({
+  title: '2010 数学二 第14题 · 已知 $|\\boldsymbol A|=3$、$|\\boldsymbol B|=2$、$\\big|\\boldsymbol A^{-1}+\\boldsymbol B\\big|=2$，求 $\\big|\\boldsymbol A+\\boldsymbol B^{-1}\\big|$',
+  subtitle: '考点：行列式乘法性质 · 方法：插入单位阵 $I$ 凑公因子 $I+\\boldsymbol A\\boldsymbol B$',
+  counterLabel: '已推导',
+  intro: '点击「▶ 播放」逐步演示因式分解串联两个行列式。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：两个和式矩阵共享同一个「桥墩」$I+\\boldsymbol A\\boldsymbol B$'));
+    inner.appendChild(drow(
+      '<b>盘点已知</b>：$|\\boldsymbol A|=3,\\ |\\boldsymbol B|=2,\\ \\big|\\boldsymbol A^{-1}+\\boldsymbol B\\big|=2$；目标 $\\big|\\boldsymbol A+\\boldsymbol B^{-1}\\big|$', 1));
+    inner.appendChild(drow(
+      '<b>恒等式一</b>：$\\boldsymbol A^{-1}+\\boldsymbol B=\\boldsymbol A^{-1}\\big(I+\\boldsymbol A\\boldsymbol B\\big)$' +
+      '（展开：$\\boldsymbol A^{-1}\\cdot I+\\boldsymbol A^{-1}\\boldsymbol A\\boldsymbol B=\\boldsymbol A^{-1}+\\boldsymbol B$ ✓）', 2));
+    inner.appendChild(drow(
+      '<b>恒等式二</b>：$\\boldsymbol A+\\boldsymbol B^{-1}=\\big(I+\\boldsymbol A\\boldsymbol B\\big)\\boldsymbol B^{-1}$' +
+      '（展开：$I\\cdot\\boldsymbol B^{-1}+\\boldsymbol A\\boldsymbol B\\boldsymbol B^{-1}=\\boldsymbol B^{-1}+\\boldsymbol A$ ✓）', 3));
+    inner.appendChild(drow(
+      '<b>取行列式串联</b>：$2=\\big|\\boldsymbol A^{-1}+\\boldsymbol B\\big|=\\dfrac{\\big|I+\\boldsymbol A\\boldsymbol B\\big|}{|\\boldsymbol A|}$' +
+      '$\\ \\Longrightarrow\\ \\big|I+\\boldsymbol A\\boldsymbol B\\big|=2\\times3=6$', 4));
+    inner.appendChild(drow(
+      '<b>收尾</b>：$\\big|\\boldsymbol A+\\boldsymbol B^{-1}\\big|=\\big|I+\\boldsymbol A\\boldsymbol B\\big|\\cdot\\dfrac{1}{|\\boldsymbol B|}=\\dfrac{6}{2}=3$', 5, true));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '审题',   log: '已知条件里都是逆矩阵与和式的行列式，目标是另一对和式的行列式，需要找共同因子把两边串起来', count: 1 },
+    { cls: 'shift', tag: '拆式一', log: '给和式 A 逆加 B 提出左因子 A 逆，括号里剩下单位阵加 A 乘 B，展开验证成立', count: 2 },
+    { cls: 'step',  tag: '拆式二', log: '目标式 A 加 B 逆从右边提出 B 逆，括号里同样是单位阵加 A 乘 B，展开验证成立', count: 3 },
+    { cls: 'shift', tag: '串联',   log: '对恒等式一取行列式：2 等于 3 分之 A 乘 B 加单位阵的行列式，解出这个中间量等于 6', count: 4 },
+    { cls: 'done',  tag: '完成',   log: '对恒等式二取行列式：6 除以 B 的行列式 2，得到 3', count: 5, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < rows.length; k++){
+      var r = rows[k];
+      var revealed = i >= r.at;
+      var active = revealed && r.at === i && !sn.done;
+      var green = sn.done && r.green;
+      r.el.style.opacity = revealed ? '1' : '0.15';
+      r.el.style.transform = revealed ? 'none' : 'translateX(-10px)';
+      r.el.style.background = green ? '#ecfdf3' : (active ? '#fff7e0' : '#f8fafc');
+      r.el.style.borderLeftColor = green ? '#16a34a' : (active ? '#f59e0b' : '#cbd5e1');
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\big|\\boldsymbol A+\\boldsymbol B^{-1}\\big|=3$',
+    html: '记忆锚点：<b>拆不出因子时插入 $I=\\boldsymbol A\\boldsymbol A^{-1}$（或 $I=\\boldsymbol B\\boldsymbol B^{-1}$）凑公因子</b>，再用 $|\\boldsymbol X\\boldsymbol Y|=|\\boldsymbol X||\\boldsymbol Y|$ 与 $|\\boldsymbol A^{-1}|=\\frac1{|\\boldsymbol A|}$ 串联。易错：硬凑 $(\\boldsymbol A+\\boldsymbol B)$ 是死路，正确桥梁是 $I+\\boldsymbol A\\boldsymbol B$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：行列式求值——插单位阵凑公因子，桥接两个「和」的行列式</h2>
+<p>答案：$\big|\boldsymbol A+\boldsymbol B<sup>-1</sup>\big|=3$。</p>
+<h3>第 0 步：先立机制——为什么必须先因式分解，以及怎么想到 $\boldsymbol E+\boldsymbol A\boldsymbol B$</h3>
+<p>已知 $|\boldsymbol A|=3,\ |\boldsymbol B|=2,\ |\boldsymbol A<sup>-1</sup>+\boldsymbol B|=2$，目标 $\big|\boldsymbol A+\boldsymbol B<sup>-1</sup>\big|$。<strong>行列式对乘法友好、对加法完全不友好</strong>：$|\boldsymbol X\boldsymbol Y|=|\boldsymbol X||\boldsymbol Y|$，但 $|\boldsymbol X+\boldsymbol Y|$ 没有任何公式。所以全部希望都在把两个「和」各自分解成乘积。</p>
+<p>怎么想到公共因子？用<strong>「消化」</strong>的思路：要消灭 $\boldsymbol A<sup>-1</sup>$，就左乘 $\boldsymbol A$（$\boldsymbol A\boldsymbol A<sup>-1</sup>=\boldsymbol E$）；要消灭 $\boldsymbol B<sup>-1</sup>$，就右乘 $\boldsymbol B$。两个「和」提公因子时恰好同时完成：</p>
+<p>$$\boldsymbol A<sup>-1</sup>+\boldsymbol B=\boldsymbol A<sup>-1</sup>\big(\boldsymbol E+\boldsymbol A\boldsymbol B\big),\qquad\boldsymbol A+\boldsymbol B<sup>-1</sup>=\big(\boldsymbol E+\boldsymbol A\boldsymbol B\big)\boldsymbol B<sup>-1</sup>.$$</p>
+<p><strong>展开验证</strong>（不怕 $\boldsymbol A\boldsymbol B\neq\boldsymbol B\boldsymbol A$，括号内是按乘法顺序拼出来的）：$\boldsymbol A<sup>-1</sup>\boldsymbol E+\boldsymbol A<sup>-1</sup>\boldsymbol A\boldsymbol B=\boldsymbol A<sup>-1</sup>+\boldsymbol B$ ✓；$\boldsymbol E\boldsymbol B<sup>-1</sup>+\boldsymbol A\boldsymbol B\boldsymbol B<sup>-1</sup>=\boldsymbol B<sup>-1</sup>+\boldsymbol A$ ✓。两个「和」共享同一块积木 $\boldsymbol E+\boldsymbol A\boldsymbol B$——它就是桥。</p>
+<h3>第一步：从已知一侧过桥，求出桥的行列式</h3>
+<p>$$\big|\boldsymbol A<sup>-1</sup>+\boldsymbol B\big|=\big|\boldsymbol A<sup>-1</sup>\big|\cdot\big|\boldsymbol E+\boldsymbol A\boldsymbol B\big|=\frac{\big|\boldsymbol E+\boldsymbol A\boldsymbol B\big|}{|\boldsymbol A|}=2,$$</p>
+<p>代 $|\boldsymbol A|=3$ 得 $\big|\boldsymbol E+\boldsymbol A\boldsymbol B\big|=6$。</p>
+<h3>第二步：从桥走向目标</h3>
+<p>$$\big|\boldsymbol A+\boldsymbol B<sup>-1</sup>\big|=\big|\boldsymbol E+\boldsymbol A\boldsymbol B\big|\cdot\big|\boldsymbol B<sup>-1</sup>\big|=\frac{6}{|\boldsymbol B|}=\frac62=3.$$</p>
+<p>（$|\boldsymbol A<sup>-1</sup>|=\dfrac1{|\boldsymbol A|}$、$|\boldsymbol B<sup>-1</sup>|=\dfrac1{|\boldsymbol B|}$：由 $|\boldsymbol X\boldsymbol Y|=|\boldsymbol X||\boldsymbol Y|$ 与 $\boldsymbol X\boldsymbol X<sup>-1</sup>=\boldsymbol E$ 直接得 $\det(\boldsymbol X<sup>-1</sup>)=(\det\boldsymbol X)<sup>-1</sup>$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>把矩阵当数算</strong>：拿 $1/3+2$ 这类「标量代入」毫无意义——矩阵非交换、和的行列式没有加法公式，必须先因式分解成乘积，再用 $|\boldsymbol X\boldsymbol Y|=|\boldsymbol X||\boldsymbol Y|$ 串联。</li><li><strong>硬凑 $(\boldsymbol A+\boldsymbol B)$</strong>：$\boldsymbol A<sup>-1</sup>+\boldsymbol B$ 与 $\boldsymbol A+\boldsymbol B<sup>-1</sup>$ 之间没有直接互逆关系，正路是公共因子 $\boldsymbol E+\boldsymbol A\boldsymbol B$。</li><li><strong>乘法性质用错对象</strong>：$|\boldsymbol X\boldsymbol Y|=|\boldsymbol X||\boldsymbol Y|$ 要求同阶方阵；$|\boldsymbol A<sup>-1</sup>|$ 是倒数关系而非负号。</li></ul>
+<blockquote>拆「和」必先凑「积」：左乘 $\boldsymbol A$ 消化 $\boldsymbol A<sup>-1</sup>$、右乘 $\boldsymbol B$ 消化 $\boldsymbol B<sup>-1</sup>$，公共因子 $\boldsymbol E+\boldsymbol A\boldsymbol B$ 串联两侧。本题答案 $3$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·03 两分段函数之和在全轴连续定参数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-02.html" data-q="../question/m2-2018-02/">← <b>m2-2018-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-03/" data-q="../question/m2-2018-03/" data-no-anim="1">m2-2018-03 · 本题</a>
+  <a href="m2-2018-04.html" data-q="../question/m2-2018-04/"><b>m2-2018-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：先把 $h=f+g$ 逐段相加拼出来</b>$$h(x)=\\begin{cases}1-ax, & x\\le-1,\\\\ -1+x, & -1<x<0,\\\\ x+1-b, & x\\ge0.\\end{cases}$$ 三段都是多项式（初等函数），段内必连续——只需检查两个拼接点 $x=-1$ 与 $x=0$。</p>",
+  "<p><b>第二步：在 $x=-1$ 处列方程（用相邻两段）</b>$$\\text{左极限}=1-a(-1)=1+a,\\qquad \\text{右极限}=-1+(-1)=-2$$ 令其相等：$$1+a=-2\\ \\Longrightarrow\\ a=-3.$$</p>",
+  "<p><b>第三步：在 $x=0$ 处列方程（注意 $f$ 在此跳变）</b>$$\\text{左极限}=-1+0=-1,\\qquad \\text{右极限}=0+1-b=1-b$$ 令其相等：$$-1=1-b\\ \\Longrightarrow\\ b=2.$$</p>",
+  "<p><b>第四步：验证</b>$$h(-1)=-2\\ (\\text{两段衔接})，\\qquad h(0)=-1\\ (\\text{两段衔接})$$ 全轴连续成立，没有第三处可疑点。</p>",
+  "<p><b>排错</b>：A、B 的 $a=3$ 使 $x=-1$ 处左极限 $=4\\ne-2$，不连续；C 的 $b=1$ 使 $x=0$ 处右值 $=0\\ne-1$，不连续。</p>",
+  "<p><b>结论</b>$$a=-3,\\ b=2\\quad(\\text{答案 D})$$ $a$ 只归 $x=-1$ 管，$b$ 只归 $x=0$ 管，两个方程互相独立。</p>"
+];
+
+AW.init({
+  title: '$f+g$ 在 $\\mathbf R$ 上连续：拼接点列方程定 $a,b$',
+  subtitle: '考点：分段函数连续性 · 方法：拼接点左右极限对齐',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」：拼出 h → 两个拼接点列方程 → 验证。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'拼接',   log:'f 与 g 逐段相加，h 分三段，段内自动连续', show:1, count:0 },
+    { cls:'step',  tag:'x=-1',   log:'左极限 1+a，右极限 -2，相等得 a=-3', show:2, count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'x=0',    log:'f 在 0 处从 -1 跳到 1：-1=1-b，得 b=2', show:3, count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'验证',   log:'h(-1)=-2、h(0)=-1 两处衔接，全轴连续', show:4, count:3 },
+    { cls:'miss',  tag:'排错',   log:'a=3 左极限 4；b=1 右值 0，都断', show:5, count:4, ribbon:{k:3, ok:false} },
+    { cls:'done',  tag:'完成',   log:'a=-3、b=2，选 D', show:6, count:5, done:true, ribbon:{k:4, ok:true} },
+  ],
+
+  result: {
+    big: '答案 D：$a=-3,\\ b=2$',
+    html: '记忆锚点：<b>分段连续 = 拼接点对齐</b>。先把 $f+g$ 逐段拼好再取极限，千万别只对 $g$ 列方程——$f$ 在 $x=0$ 从 $-1$ 跳到 $1$，必须整体考虑。两个方程互相独立：$x=-1$ 定 $a$，$x=0$ 定 $b$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：两个分段函数之和在全轴连续——拼接点左极限 = 右极限 = 函数值</h2>
+<p>答案：D（$a=-3,\ b=2$）</p>
+<h3>第一步：先懂机制——为什么只查两个拼接点</h3>
+<p>连续的定义是<strong>左极限 = 右极限 = 该点函数值</strong>。把 $h=f+g$ 逐段相加：</p>
+<p>$$h(x)=\begin{cases}1-ax, &amp; x\le-1,\\ -1+x, &amp; -1&lt;x&lt;0,\\ x+1-b, &amp; x\ge0.\end{cases}$$</p>
+<p>三段都是多项式，段内天然连续、函数值各段自带，所以唯一的隐患在<strong>段与段的接缝</strong> $x=-1$ 与 $x=0$：接缝两侧解析式不同，左右极限可能对不上。"全轴连续"就缩成两条：在两个接缝上把左、右极限捏齐。</p>
+<p>另外注意 $f$ 在 $x=0$ 处从 $-1$ 跳到 $1$、跳幅为 $2$——$x=0$ 这条接缝的方程里藏着这个跳变，必须对 $h$ <strong>整体</strong>取极限，不能只盯着 $g$。</p>
+<h3>第二步：$x=-1$ 处捏齐左右极限</h3>
+<ul><li>左极限（$x\le-1$ 段）：$1-a\cdot(-1)=1+a$；</li><li>右极限（$-1&lt;x&lt;0$ 段）：$-1+(-1)=-2$。</li></ul>
+<p>令相等：$1+a=-2\Rightarrow a=-3$。</p>
+<h3>第三步：$x=0$ 处捏齐左右极限</h3>
+<ul><li>左极限（$-1&lt;x&lt;0$ 段）：$-1+0=-1$；</li><li>右极限兼函数值（$x\ge0$ 段）：$0+1-b=1-b$。</li></ul>
+<p>令相等：$-1=1-b\Rightarrow b=2$。</p>
+<p>验证：$x=-1$ 处三式给值均为 $-2$，$x=0$ 处均为 $-1$，全轴连续成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A、B（$a=3$）</strong>：典型错法是把 $x=-1$ 处左极限写成 $1-a$（$-ax$ 在 $x=-1$ 处取值是 $+a$ 不是 $-a$），解出 $a=3$；此时左极限 $4\ne-2$，接缝断开。</li><li><strong>误选 A、C（$b=1$）</strong>：典型错法是在 $x=0$ 处把左极限只算 $g$ 的 $0$、漏掉 $f$ 左侧的 $-1$，写成 $0=1-b$ 得 $b=1$；正确的左极限是 $-1$，$f$ 的跳变必须算进来。</li><li><strong>取错段的解析式</strong>：$x=-1$ 的右极限必须用 $-1&lt;x&lt;0$ 段，不能用 $x\ge0$ 段——分段点属于哪段严格按题干。</li><li><strong>把两处方程混联</strong>：$a$ 只在 $x=-1$ 的方程里出现，$b$ 只在 $x=0$ 的方程里出现，两个方程互相独立，各解各的。</li></ul>
+<blockquote>结论：段内连续 ⇒ 只查接缝；$x=-1$：$1+a=-2$ 给 $a=-3$，$x=0$：$-1=1-b$（含 $f$ 的跳变）给 $b=2$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

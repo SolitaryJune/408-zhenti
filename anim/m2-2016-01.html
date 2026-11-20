@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·01 三个无穷小量按阶数排序</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-23.html" data-q="../question/m2-2015-23/">← <b>m2-2015-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-01/" data-q="../question/m2-2016-01/" data-no-anim="1">m2-2016-01 · 本题</a>
+  <a href="m2-2016-02.html" data-q="../question/m2-2016-02/"><b>m2-2016-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：比阶 = 比幂次',
+    cls: 'key',
+    tag: '方法',
+    body: '<p>当 $x\\to0^+$，把每个无穷小的主部写成 $C\\,x^{p}$（$C\\neq0$）。<b>幂次 $p$ 越小，趋于零越慢，阶数越低</b>。手头三件标准等价：$\\cos u-1\\sim-\\dfrac{u^2}{2}$、$\\ln(1+u)\\sim u$、$(1+u)^a-1\\sim au$。</p>',
+    log: '把三个量逐个标定成 C·x^p，再按 p 排序' },
+  { title: '标定 α₁：二阶',
+    cls: 'step',
+    tag: 'α₁',
+    body: '<p>$\\cos\\sqrt{x}-1\\sim-\\dfrac{(\\sqrt{x})^2}{2}=-\\dfrac{x}{2}$，注意外面还挂着因子 $x$：$$\\alpha_1=x\\cdot\\Big(-\\frac{x}{2}\\Big)=-\\frac{x^2}{2},\\qquad p_1=2.$$</p>',
+    log: 'cos√x−1 是一阶，乘外因子 x 后 α₁ 是二阶' },
+  { title: '标定 α₂：5/6 阶（最低）',
+    cls: 'key',
+    tag: 'α₂',
+    body: '<p>$\\ln(1+\\sqrt[3]{x})\\sim x^{\\frac13}$，幂次相加：$$\\alpha_2=x^{\\frac12}\\cdot x^{\\frac13}=x^{\\frac56},\\qquad p_2=\\frac56.$$</p>',
+    log: '幂次相加 1/2 + 1/3 = 5/6，三者中最低' },
+  { title: '标定 α₃：一阶',
+    cls: 'step',
+    tag: 'α₃',
+    body: '<p>$\\alpha_3=(1+x)^{\\frac13}-1\\sim\\dfrac{1}{3}x$，即 $p_3=1$。</p>',
+    log: 'α₃ 是标准一阶无穷小' },
+  { title: '排序定答案',
+    cls: 'good',
+    tag: '排序',
+    ribbon: {k:1, ok:true},
+    body: '<p>$p_2=\\dfrac56<p_3=1<p_1=2$，从低阶到高阶为 $\\alpha_2,\\ \\alpha_3,\\ \\alpha_1$——恰是选项 <b>B</b>。</p>',
+    log: '5/6 < 1 < 2：α₂, α₃, α₁，选 B' },
+  { title: '干扰项复盘',
+    cls: 'bad',
+    tag: '防坑',
+    body: '<p><b>A</b>：把 $\\alpha_1$ 当最低阶——漏乘了外面的 $x$。<b>C</b>：$\\alpha_2$ 判对了，却把 2 阶的 $\\alpha_1$ 排在 1 阶的 $\\alpha_3$ 前。<b>D</b>：起点就错，$\\alpha_3$（1 阶）不是最低，$\\alpha_2$（$\\frac56$ 阶）才是。</p>',
+    log: '三个干扰项全是「阶数标错 / 排序方向反」' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>B</b>。记忆锚点：先化主部 $C\\,x^p$，<b>幂次小的阶低</b>；乘积因子幂次相加、复合（$\\cos\\sqrt x$）先平方。</p>',
+    log: '选 B：α₂ → α₃ → α₁' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$x\\to0^+$ 时 $\\alpha_1,\\alpha_2,\\alpha_3$ 从低阶到高阶的排序',
+  subtitle: '考点：无穷小阶数比较 · 方法：主部标定 $C\\,x^p$ → 幂次排序',
+  counterLabel: '推理步',
+  ribbonTitle: '排序结果（✓ 低→高）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B（α₂ → α₃ → α₁）',
+    html: '记忆锚点：<b>比阶先化主部</b>——$\\alpha_1=-\\frac{x^2}{2}$（2 阶）、$\\alpha_2=x^{\\frac56}$（$\\frac56$ 阶）、$\\alpha_3=\\frac x3$（1 阶）；幂次 $\\frac56<1<2$。易错：$\\cos\\sqrt x-1$ 外面还有个 $x$ 别漏乘。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：三个无穷小量按阶数从低到高排序</h2>
+<p>答案：B</p>
+<h3>第 0 步：先立机制——"比阶"为什么就是"比幂次"</h3>
+<p>阶数由定义而来：若 $\alpha\sim Cx<sup>p</sup>$（$C\ne0$），称 $\alpha$ 是 $x$ 的 $p$ 阶无穷小。比高低靠<strong>作商</strong>：$\dfrac{\alpha}{x<sup>q</sup>}\sim Cx<sup>p-q</sup>$——$p&gt;q$ 时商趋于 $0$（$\alpha$ 阶高）、$p&lt;q$ 时商趋于 $\infty$（阶低）、$p=q$ 时商为非零常数（同阶）。<strong>幂次一小一大，高下立判</strong>，这就是排序题的全部原理。再预答一个"为什么可以放心用等价无穷小"：$\beta\sim\alpha$ 的含义是 $\beta/\alpha\to1$，在<strong>乘除因子</strong>里替换只换系数壳、不换幂次；而三个标准件 $\cos u-1\sim-\frac{u<sup>2</sup>}{2}$、$\ln(1+u)\sim u$、$(1+u)<sup>a</sup>-1\sim au$ 都要求 $u\to0$——本题 $u$ 取 $\sqrt x$、$\sqrt[3]x$、$x$，随 $x\to0^+$ 恰好都趋零，合法。</p>
+<h3>第一步：逐个标定主部幂次</h3>
+<ul><li>$\alpha_1=x(\cos\sqrt x-1)$：$\cos\sqrt x-1\sim-\frac{(\sqrt x)<sup>2</sup>}{2}=-\frac x2$，外因子 $x$ 再乘上去，$\alpha_1\sim-\frac{x<sup>2</sup>}{2}$，$p_1=2$；</li><li>$\alpha_2=\sqrt x\ln(1+\sqrt[3]x)$：$\ln(1+\sqrt[3]x)\sim x<sup>\frac13</sup>$，幂次相加 $\frac12+\frac13=\frac56$，$p_2=\frac56$；</li><li>$\alpha_3=\sqrt[3]{x+1}-1=(1+x)<sup>\frac13</sup>-1\sim\frac13x$，$p_3=1$。</li></ul>
+<h3>第二步：按幂次从小到大排序</h3>
+<p>$$p_2=\frac56&lt;p_3=1&lt;p_1=2,$$<br/>从低阶到高阶为 $\alpha_2,\ \alpha_3,\ \alpha_1$，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏乘外因子</strong>（A）：把 $\cos\sqrt x-1$ 单独的一阶当成了 $\alpha_1$ 的阶——平方已把 $\sqrt x$ 降为 $x$ 的一次，外面还挂着 $x$，合计 2 阶，漏乘会让 $\alpha_1$ 假装最低。</li><li><strong>幂次相加算错</strong>（C 的根源）：$x<sup>\frac12</sup>\cdot x<sup>\frac13</sup>=x<sup>\frac56</sup>$；算成 $x<sup>\frac12</sup>$ 或 $x<sup>\frac13</sup>$ 就会把 $\alpha_1$、$\alpha_3$ 的次序排反。</li><li><strong>方向搞反</strong>（D）：以为 1 阶的 $\alpha_3$ 最低——分数阶 $\frac56$ 才是更小的幂次，$\alpha_2$ 才是"趋于零最慢"的那个。</li></ul>
+<blockquote>结论：主部幂次 $\frac56&lt;1&lt;2$，$\alpha_2\to\alpha_3\to\alpha_1$，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

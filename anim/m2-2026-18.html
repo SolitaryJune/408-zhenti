@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2026 数二第 18 题 · 含参变限积分求导与连续性（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-17.html" data-q="../question/m2-2026-17/">← <b>m2-2026-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-18/" data-q="../question/m2-2026-18/" data-no-anim="1">m2-2026-18 · 本题</a>
+  <a href="m2-2026-19.html" data-q="../question/m2-2026-19/"><b>m2-2026-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: "2026·18　$f(x)=\\int_0^{x^2}g(xt)\\,dt$：求 $f'(x)$ 并讨论其在 $x=0$ 处的连续性",
+  subtitle: "考点：含参变限积分 · 关键：<b>先换元 $u=xt$ 消参</b>；$x=0$ 处必须用导数定义",
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: "点击「▶ 播放」或「下一步」，先消参化标准形，再补 x=0 的定义法求导。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "<b>题目：</b>$g(x)$ 连续，$$f(x)=\\int_0^{x^2}g(xt)\\,dt$$　求 $f'(x)$，并判断 $f'(x)$ 在 $x=0$ 处的连续性",
+      "<b>审题：</b>被积函数 $g(xt)$ 里带着参数 $x$，上限 $x^2$ 也含 $x$ —— <b>不能直接套</b>变限积分求导公式，第一步必须换元消参",
+      "<b>换元：</b>令 $u=xt$，则 $dt=\\dfrac{du}{x}$；$t:0\\to x^2$ 对应 $u:0\\to x^3$：$$f(x)=\\frac{1}{x}\\int_0^{x^3}g(u)\\,du\\qquad(x\\ne0)$$",
+      "<b>求导：</b>记 $\\Phi(x)=\\int_0^{x^3}g(u)\\,du$，则 $\\Phi'(x)=3x^2g(x^3)$；对 $f=\\dfrac{\\Phi}{x}$ 用商法则：$$f'(x)=\\frac{x\\Phi'(x)-\\Phi(x)}{x^2}=3xg(x^3)-\\frac{1}{x^2}\\int_0^{x^3}g(u)\\,du\\quad(x\\ne0)$$",
+      "<b>特殊点 $x=0$：</b>换元时除了 $x$，上面的表达式失效；$f(0)=\\int_0^0g(0)\\,dt=0$，改用<b>导数定义</b>：$$f'(0)=\\lim_{x\\to0}\\frac{f(x)-f(0)}{x}=\\lim_{x\\to0}\\frac{1}{x^2}\\int_0^{x^3}g(u)\\,du$$",
+      "<b>算 $f'(0)$：</b>由 $g$ 连续，$\\int_0^{x^3}g(u)\\,du=g(0)x^3+o(x^3)$（积分区间长 $x^3$，比 $x^2$ 高一阶），故 $$f'(0)=\\lim_{x\\to0}\\big(g(0)x+o(x)\\big)=0$$",
+      "<b>连续性：</b>回到 $x\\ne0$ 的表达式取极限：第一项 $3xg(x^3)\\to0$；第二项 $\\dfrac{1}{x^2}\\int_0^{x^3}g(u)\\,du=g(0)x+o(x)\\to0$，于是 $\\lim_{x\\to0}f'(x)=0=f'(0)$",
+      "<b>最终结论：</b>$$f'(x)=\\begin{cases}3xg(x^3)-\\dfrac{1}{x^2}\\displaystyle\\int_0^{x^3}g(u)\\,du, & x\\ne0,\\\\ 0, & x=0,\\end{cases}$$　且 $f'(x)$ 在 $x=0$ 处<b>连续</b>"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'被积函数 g(xt) 里混着参数 x，直接套变限积分求导公式会出错，先想清楚这一点', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'定策略', log:'第一步永远是换元消参：令 u = xt，把被积函数变成只含 u 的形式', count:1, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'换元',   log:'换元后 t 的范围 0 到 x² 变成 u 的范围 0 到 x³，外面多出系数 1/x', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'求导',   log:'对上限 x³ 用链式求导得 3x²·g(x³)，再用商法则，得到 x≠0 时 f′ 的表达式', count:3, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'分界点', log:'x = 0 处换元时除了 x，表达式失效，f′ 必须回到定义去算', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'算极限', log:'积分区间长度是 x³ 量级，比 x² 高一阶，所以 f′(0) = 0', count:5, ribbon:{k:6, ok:true} },
+    { cls:'step',  tag:'连续性', log:'再对表达式取极限：两项在 0 处都趋于 0，极限值恰好等于 f′(0)', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'拼结果', log:'写出分段形式的 f′，并确认它在 x = 0 处连续', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：f′ 的分段表达式如推导板所示，且 f′ 在 x = 0 处连续', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$f'(0)=0$，$f'(x)$ 在 $x=0$ 处连续",
+    html: "$x\\ne0$：$f'(x)=3xg(x^3)-\\dfrac{1}{x^2}\\displaystyle\\int_0^{x^3}g(u)\\,du$；$x=0$：$f'(0)=0$。<br>记忆锚点：<b>含参变限积分先换元 $u=xt$ 消参</b>；分界点必须用导数定义单独算；连续性验证 $\\lim_{x\\to0}f'(x)=f'(0)$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含参变限积分求导——为什么公式失效、x=0 为什么要回到定义</h2>
+<p><strong>答案：</strong> $x\ne0$ 时 $f'(x)=3xg(x<sup>3</sup>)-\dfrac{1}{x<sup>2</sup>}\displaystyle\int_0<sup>x^3</sup>g(u)\,du$；$f'(0)=0$，且 $f'(x)$ 在 $x=0$ 处<strong>连续</strong>。</p>
+<h3>第一步：先弄清标准公式为什么在这里失效</h3>
+<p>变限积分求导公式 $\dfrac{d}{dx}\displaystyle\int_a<sup>\varphi(x)</sup>h(t)\,dt=h\big(\varphi(x)\big)\varphi'(x)$ 有个前提：<strong>被积函数里只出现积分变量，不含 $x$</strong>。原因要看求导的本意——求导是问"$x$ 动一点点，整个积分变多少"。本题中 $x$ 出现在<strong>两处</strong>：上限 $x<sup>2</sup>$（公式管得了）和被积函数 $g(xt)$ 内部（公式管不了，公式对 $h(\varphi)$ 的修正只覆盖上限那一处变化）。所以对 $\displaystyle\int_0<sup>x^2</sup>g(xt)\,dt$ 硬套公式必错。</p>
+<p><strong>为什么想到换元 $u=xt$</strong>：被积函数含参的标准对策是把参数"吸收"进积分变量。令 $u=xt$ 后 $g$ 的自变量只写 $u$，$x$ 从被积函数里彻底消失；而 $x$ 对积分的影响全部集中到上限——这正是公式能处理的形态。</p>
+<h3>第二步：换元把 f(x) 化成标准变限积分</h3>
+<p>$u=xt$ 给出 $dt=\dfrac{du}{x}$；$t=0$ 时 $u=0$，$t=x<sup>2</sup>$ 时 $u=x\cdot x<sup>2</sup>=x<sup>3</sup>$（<strong>为什么上限变 $x<sup>3</sup>$</strong>：参数被"推"到了上限，多乘的那个 $x$ 与前面的 $\dfrac1x$ 配平）。于是</p>
+<p>$$f(x)=\frac{1}{x}\int_0<sup>x^3</sup>g(u)\,du\qquad(x\ne0).$$</p>
+<h3>第三步：x≠0 时用商法则求 f′</h3>
+<p>记 $\Phi(x)=\displaystyle\int_0<sup>x^3</sup>g(u)du$。求 $\Phi'$ 时 $x$ 只在上限出现，公式适用，但要过复合函数链：先对外层上限取 $g(x<sup>3</sup>)$，再乘上限导数 $3x<sup>2</sup>$，即 $\Phi'(x)=3x<sup>2g</sup>(x<sup>3</sup>)$。由 $f=\dfrac{\Phi}{x}$：</p>
+<p>$$f'(x)=\frac{x\Phi'(x)-\Phi(x)}{x<sup>2</sup>}=3xg(x<sup>3</sup>)-\frac{1}{x<sup>2</sup>}\int_0<sup>x^3</sup>g(u)\,du .$$</p>
+<h3>第四步：x=0 用定义单独求 f′(0)——为什么不能用第三步的式子</h3>
+<p>换元时除了 $x$，$\dfrac1x\displaystyle\int_0<sup>x^3</sup>g(u)du$ 在 $x=0$ 处无定义（$f$ 本身没问题：$f(0)=\displaystyle\int_0<sup>0g</sup>(0)\,dt=0$）。凡表达式失效的点，导数只能回到定义：</p>
+<p>$$f'(0)=\lim_{x\to0}\frac{f(x)-f(0)}{x-0}=\lim_{x\to0}\frac{1}{x<sup>2</sup>}\int_0<sup>x^3</sup>g(u)\,du .$$</p>
+<p><strong>为什么敢写 $\displaystyle\int_0<sup>x^3</sup>g=g(0)x<sup>3</sup>+o(x<sup>3</sup>)$</strong>：$g$ 连续，当区间长度 $x<sup>3</sup>\to0$ 时，区间上的函数值都贴着 $g(0)$，积分就约等于 $g(0)\times$ 区间长 $x<sup>3</sup>$，误差是高阶小量。关键量级：积分"身高 $g(0)$、体宽 $x<sup>3</sup>$"，除以 $x<sup>2</sup>$ 后还剩一个 $x$，故</p>
+<p>$$f'(0)=\lim_{x\to0}\frac{g(0)x<sup>3</sup>+o(x<sup>3</sup>)}{x<sup>2</sup>}=\lim_{x\to0}\big(g(0)x+o(x)\big)=0 .$$</p>
+<h3>第五步：连续性——判据与两头核对</h3>
+<p>$f'$ 在 $0$ 连续的判据是 $\lim_{x\to0}f'(x)=f'(0)$。对 $x\ne0$ 的表达式取极限：第一项 $3xg(x<sup>3</sup>)\to0$（$x$ 因子压住有界的 $g$）；第二项与第四步同一个估计，$\dfrac{g(0)x<sup>3</sup>+o(x<sup>3</sup>)}{x<sup>2</sup>}=g(0)x+o(x)\to0$。两项极限都存在，故可逐项取：</p>
+<p>$$\lim_{x\to0}f'(x)=0=f'(0),$$</p>
+<p>即 $f'(x)$ 在 $x=0$ 处<strong>连续</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>对 $\int_0<sup>x^2</sup>g(xt)dt$ 直接套公式</strong>：$x$ 在被积函数里也有一份变化率，公式只算上限那份，必须先换元。</li><li><strong>忘记单独处理 $x=0$</strong>：除过 $x$ 的表达式在 $0$ 失效，$f'(0)$ 只能回到定义算。</li><li><strong>链式法则漏 $3x<sup>2</sup>$</strong>：上限是 $x<sup>3</sup>$，先 $g(x<sup>3</sup>)$ 再乘 $3x<sup>2</sup>$，少一个因子全错。</li><li><strong>误判 $f'(0)$ 不存在或 $f'$ 不连续</strong>：量级对比是关键——积分区间长 $x<sup>3</sup>$ 比 $x<sup>2</sup>$ 高一阶，极限存在且为 $0$。</li></ul>
+<blockquote>结论：机制上 $x$ 占了两处变化率，公式只管一处 → 换元 $u=xt$ 消参得 $f=\frac1x\int_0<sup>x^3</sup>g$；商法则给 $x\ne0$ 的 $f'$；$f'(0)=0$ 由定义（区间长 $x<sup>3</sup>$ 压过 $x<sup>2</sup>$）；$\lim_{x\to0}f'(x)=0=f'(0)$，$f'$ 在 $x=0$ 连续。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

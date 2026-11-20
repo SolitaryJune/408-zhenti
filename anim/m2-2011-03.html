@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 3 题 · 对数函数的驻点计数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-02.html" data-q="../question/m2-2011-02/">← <b>m2-2011-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-03/" data-q="../question/m2-2011-03/" data-no-anim="1">m2-2011-03 · 本题</a>
+  <a href="m2-2011-04.html" data-q="../question/m2-2011-04/"><b>m2-2011-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>求 $f(x)=\\ln\\lvert(x-1)(x-2)(x-3)\\rvert$ 的驻点个数（定义域 $x\\neq1,2,3$）。</p>',
+  '<p><b>拆对数求导：</b>$$f(x)=\\ln\\lvert x-1\\rvert+\\ln\\lvert x-2\\rvert+\\ln\\lvert x-3\\rvert,$$ $$f\'(x)=\\frac{1}{x-1}+\\frac{1}{x-2}+\\frac{1}{x-3}.$$</p>',
+  '<p><b>通分：</b>令 $f\'(x)=0$，分母 $(x-1)(x-2)(x-3)$ 恒非零，只需分子为零：$$(x-2)(x-3)+(x-1)(x-3)+(x-1)(x-2)=3x^2-12x+11=0.$$</p>',
+  '<p><b>解二次方程：</b>判别式 $\\Delta=144-132=12>0$，两根 $$x=2\\pm\\frac{\\sqrt3}{3}\\approx1.42,\\ 2.58.$$</p>',
+  '<p><b>检验定义域：</b>两根都不是 $1,2,3$，全部落在定义域内，都是有效驻点。</p>',
+  '<p><b>结论：</b>驻点共 <b>2 个</b>，<b>选 C</b>。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 3 题 · $\\ln\\lvert(x-1)(x-2)(x-3)\\rvert$ 的驻点个数',
+  subtitle: '考点：导数与驻点 · 方法：拆对数求导 + 解二次方程',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：拆对数 → 通分 → 解方程 → 检验定义域。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'拆对数', log:'用 ln|uvw| = ln|u| + ln|v| + ln|w| 拆成三项再求导', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'通分', log:'令导数等于零，通分后分母不为零，只需分子为零，得到二次方程', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'解方程', log:'判别式 144 − 132 = 12 > 0，两个不同实根', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'检验', log:'两根约 1.42 与 2.58，都不等于 1、2、3，均在定义域内', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：驻点共 2 个，选 C', count:5, reveal:6, hl:5, good:true, done:true, ribbon:{k:5, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '选 C：2 个驻点',
+    html: '关键链条：<b>拆对数 → $f\'=\\frac1{x-1}+\\frac1{x-2}+\\frac1{x-3}$ → 分子 $3x^2-12x+11=0$ → $\\Delta=12>0$ 两根</b>，且都落在定义域内。易错：$x=1,2,3$ 处 $f\\to-\\infty$，函数无定义，不是驻点候选。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：对数型函数的驻点计数——ln|x| 求导免分段</h2>
+<p>答案：C（2 个）</p>
+<h3>第一步：先解决最可能卡住的「为什么」——ln|x−a| 求导不用分段</h3>
+<p>定义域为 $x\neq1,2,3$。常见疑问：带绝对值求导要不要分区间讨论？其实不用：</p>
+<p>$$\bigl(\ln\lvert x-a\rvert\bigr)'=\frac{1}{x-a}.$$</p>
+<p>$x&gt;a$ 时就是普通的链式法则；$x&lt;a$ 时 $\ln\lvert x-a\rvert=\ln(a-x)$，求导得 $\dfrac{-1}{a-x}=\dfrac{1}{x-a}$——两条路给出同一个式子。直观地说，$\ln\lvert x-a\rvert$ 的图像在 $x=a$ 两侧镜像对称，斜率公式统一。于是放心拆开：</p>
+<p>$$f(x)=\ln\lvert x-1\rvert+\ln\lvert x-2\rvert+\ln\lvert x-3\rvert,\qquad f'(x)=\frac{1}{x-1}+\frac{1}{x-2}+\frac{1}{x-3}.$$</p>
+<h3>第二步：解 $f'(x)=0$</h3>
+<p>通分后分母 $(x-1)(x-2)(x-3)$ 在定义域内恒非零，只需分子为零：</p>
+<p>$$(x-2)(x-3)+(x-1)(x-3)+(x-1)(x-2)=3x<sup>2</sup>-12x+11=0.$$</p>
+<p>判别式 $\Delta=144-132=12&gt;0$，两根</p>
+<p>$$x=2\pm\frac{\sqrt3}{3}\approx1.42,\ 2.58,$$</p>
+<p>分别落在 $(1,2)$ 与 $(2,3)$ 内，都不等于 $1,2,3$，全部有效。</p>
+<h3>第三步：用单调性兜底——为什么不漏不重</h3>
+<p>不解方程也能先「数」出个数：$f''(x)=-\dfrac{1}{(x-1)<sup>2</sup>}-\dfrac{1}{(x-2)<sup>2</sup>}-\dfrac{1}{(x-3)<sup>2</sup>}&lt;0$，故 $f'$ 在四个区间上都严格递减。在 $(-\infty,1)$ 上三项全负、$f'&lt;0$；在 $(3,+\infty)$ 上三项全正、$f'&gt;0$——这两段没有零点。在 $(1,2)$ 上 $f'$ 从 $+\infty$（$x\to1^+$）降到 $-\infty$（$x\to2^-$），恰一个零点；$(2,3)$ 同理恰一个。合计恰好 $2$ 个，与二次方程的两根互相印证。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $x=1,2,3$ 卷进来（误选 D）</strong>：这些点函数无定义（$f\to-\infty$），是「奇点」不是「驻点」候选。</li><li><strong>只盯一个区间（误选 B）</strong>：$(1,2)$ 和 $(2,3)$ 各藏一个驻点，漏掉一边就数成 $1$。</li><li><strong>以为绝对值/对数会抹掉驻点（误选 A）</strong>：拆成对数和后 $f'$ 是货真价实的有理式，零点确实存在。</li><li><strong>通分展开算错</strong>：三个二次式相加是 $3x<sup>2</sup>-12x+11$，判别式要细心算出 $12&gt;0$ 才有两根。</li></ul>
+<blockquote>结论：选 <strong>C</strong>。$\ln\lvert\cdot\rvert$ 求导免分段是起手式；「$f'$ 严格递减 + 端点极限异号」保证每区间恰一个驻点。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

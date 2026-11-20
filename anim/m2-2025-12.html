@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：y=∛(x³−3x²+1) 的斜渐近线</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-11.html" data-q="../question/m2-2025-11/">← <b>m2-2025-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-12/" data-q="../question/m2-2025-12/" data-no-anim="1">m2-2025-12 · 本题</a>
+  <a href="m2-2025-13.html" data-q="../question/m2-2025-13/"><b>m2-2025-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '曲线 $y=\\sqrt[3]{x^3-3x^2+1}$ 的斜渐近线',
+  subtitle: '考点：渐近线 · 方法：$k=\\lim\\dfrac yx$ → 提主部 + $(1+t)^{1/3}$ 泰勒展开求 $b$',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示 k 与 b 的完整推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：$x\\to\\pm\\infty$ 时 $y\\to\\pm\\infty$（无水平渐近线），三次根号处处有定义（无铅直渐近线），只可能斜渐近线 $y=kx+b$。',
+      '<b>求 $k$</b>：根号内除以 $x^3$ $$k=\\lim_{x\\to\\infty}\\frac{y}{x}=\\lim_{x\\to\\infty}\\sqrt[3]{1-\\frac3x+\\frac1{x^3}}=1$$ 立方根保号，$x\\to-\\infty$ 同样成立，$k=1$。',
+      '<b>提主部</b>：把 $x$ 提出根号 $$y=x\\Bigl(1-\\frac3x+\\frac1{x^3}\\Bigr)^{1/3}$$ 令 $t=-\\dfrac3x+\\dfrac1{x^3}\\to0$。',
+      '<b>泰勒展开</b>：$(1+t)^{1/3}=1+\\dfrac{t}{3}+o(t)$ $$\\Bigl(1-\\frac3x+\\frac1{x^3}\\Bigr)^{1/3}=1+\\frac13\\Bigl(-\\frac3x+\\frac1{x^3}\\Bigr)+o\\Bigl(\\frac1x\\Bigr)=1-\\frac1x+o\\Bigl(\\frac1x\\Bigr)$$',
+      '<b>收尾求 $b$</b>：$$y=x\\Bigl(1-\\frac1x+o\\Bigl(\\frac1x\\Bigr)\\Bigr)=x-1+o(1)\\ \\Longrightarrow\\ b=\\lim_{x\\to\\infty}(y-x)=-1$$',
+      '<b>结论</b>：斜渐近线 $$y=x-1\\qquad(x\\to+\\infty\\ \\text{与}\\ x\\to-\\infty\\ \\text{同一条})$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题', log:'x→±∞ 时 y→±∞，只有斜渐近线 y=kx+b', count:0 },
+    { cls:'step',  tag:'定斜率', log:'根号内除以 x³，k = 1，两个方向都成立', count:1 },
+    { cls:'shift', tag:'提主部', log:'把 x 提出三次根号，括号内是 1 + 小量 t', count:2 },
+    { cls:'step',  tag:'展开', log:'(1+t)^(1/3) ≈ 1 + t/3，t 的首项 −3/x 贡献 −1/x', count:3 },
+    { cls:'ok',    tag:'求截距', log:'y − x → −1，b = −1', count:4 },
+    { cls:'done',  tag:'完成', log:'结论：斜渐近线 y = x − 1', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$y=x-1$',
+    html: '记忆锚点：<b>根式求 $b$ 必先提主部：$y=x\\bigl(1-\\tfrac3x+\\tfrac1{x^3}\\bigr)^{1/3}$，再对 $(1+t)^{1/3}$ 泰勒展开到一次项</b>。丢掉 $\\dfrac t3$ 的一次项、或对 $\\infty-\\infty$ 硬算，都会把截距算错。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：三次根式曲线的斜渐近线（提主部 + 泰勒展开）</h2>
+<p>答案：$y=x-1$</p>
+<h3>第一步：判断渐近线类型</h3>
+<p>$x\to\pm\infty$ 时 $y=\sqrt[3]{x<sup>3</sup>-3x<sup>2</sup>+1}\to\pm\infty$，无水平渐近线；$\sqrt[3]{\ \cdot\ }$ 处处有定义，无无穷间断点，故只可能存在<strong>斜渐近线</strong> $y=kx+b$。</p>
+<h3>第二步：求斜率 $k$</h3>
+<p>$$k=\lim_{x\to\infty}\frac{y}{x}=\lim_{x\to\infty}\sqrt[3]{1-\frac3x+\frac1{x<sup>3</sup>}}=1.$$</p>
+<p>根号内趋于 $1$，且三次根号对 $x\to-\infty$ 同样成立（立方根保号），故 $k=1$ 在两个方向都有效。</p>
+<h3>第三步：求截距 $b$ —— 提主部再展开</h3>
+<p>把主部 $x$ 提出根号：</p>
+<p>$$y=x\Big(1-\frac3x+\frac1{x<sup>3</sup>}\Big)<sup>1/3</sup>.$$</p>
+<p>令 $t=-\dfrac3x+\dfrac1{x<sup>3</sup>}\to0$，用 $(1+t)<sup>1/3</sup>=1+\dfrac{t}{3}+o(t)$：</p>
+<p>$$\Big(1-\frac3x+\frac1{x<sup>3</sup>}\Big)<sup>1/3</sup>=1-\frac1x+o\Big(\frac1x\Big)\ \Longrightarrow\ y=x\Big(1-\frac1x+o\Big(\frac1x\Big)\Big)=x-1+o(1).$$</p>
+<p>故 $b=\lim_{x\to\infty}(y-x)=-1$，渐近线为 $y=x-1$（$x\to+\infty$ 与 $x\to-\infty$ 得同一条直线）。</p>
+<h3>易错点</h3>
+<ul><li><strong>直接让根式减 $x$ 硬算 $\infty-\infty$</strong>：不提主部就展开，容易丢因子或算错符号。</li><li><strong>泰勒展开只展开到常数项</strong>：$(1+t)<sup>1/3</sup>$ 的一次项 $\dfrac t3$ 正是 $-\dfrac1x$ 的来源，丢了它 $b$ 就错。</li><li><strong>漏验 $x\to-\infty$</strong>：立方根保号使两个方向斜率相同，若是平方根就必须分方向讨论。</li></ul>
+<blockquote>一句话结论：$k=1$；提主部后 $(1+t)<sup>1/3</sup>\approx1-\dfrac1x$，得 $y=x-1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

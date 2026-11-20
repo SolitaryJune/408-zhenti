@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·23 从矩阵等式读特征对，谱分解还原 A</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-22.html" data-q="../question/m2-2011-22/">← <b>m2-2011-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-23/" data-q="../question/m2-2011-23/" data-no-anim="1">m2-2011-23 · 本题</a>
+  <a href="m2-2012-01.html" data-q="../question/m2-2012-01/"><b>m2-2012-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>按列拆开已知等式</b>：题给 $A\\begin{pmatrix}1&1\\\\0&0\\\\-1&1\\end{pmatrix}=\\begin{pmatrix}-1&1\\\\0&0\\\\1&1\\end{pmatrix}$ 的两列各是 $A$ 作用在一个向量上：$$A\\begin{pmatrix}1\\\\0\\\\-1\\end{pmatrix}=\\begin{pmatrix}-1\\\\0\\\\1\\end{pmatrix},\\qquad A\\begin{pmatrix}1\\\\0\\\\1\\end{pmatrix}=\\begin{pmatrix}1\\\\0\\\\1\\end{pmatrix}.$$</p>",
+  "<p><b>读出特征对</b>：右端恰是左向量的倍数——$$A\\boldsymbol\\xi_2=-1\\cdot\\boldsymbol\\xi_2\\ (\\boldsymbol\\xi_2=(1,0,-1)^{\\mathrm T}),\\qquad A\\boldsymbol\\xi_3=1\\cdot\\boldsymbol\\xi_3\\ (\\boldsymbol\\xi_3=(1,0,1)^{\\mathrm T}).$$ 得 $\\lambda_2=-1,\\ \\lambda_3=1$。</p>",
+  "<p><b>补出 $\\lambda=0$</b>：$r(A)=2<3\\Rightarrow\\det A=0\\Rightarrow\\lambda_1=0$ 必是第三个特征值（三个特征值 $0,-1,1$ 互异）。</p>",
+  "<p><b>正交定位 $\\boldsymbol\\xi_1$</b>：$A$ 实对称，不同特征值的特征向量相互正交。设 $\\boldsymbol\\xi_1=(a,b,c)^{\\mathrm T}$：$\\boldsymbol\\xi_1\\cdot\\boldsymbol\\xi_2=a-c=0$，$\\boldsymbol\\xi_1\\cdot\\boldsymbol\\xi_3=a+c=0$，解得 $a=c=0$，取 $\\boldsymbol\\xi_1=(0,1,0)^{\\mathrm T}$。</p>",
+  "<p><b>单位化</b>：$e_1=(0,1,0)^{\\mathrm T},\\ e_2=\\dfrac1{\\sqrt2}(1,0,-1)^{\\mathrm T},\\ e_3=\\dfrac1{\\sqrt2}(1,0,1)^{\\mathrm T}$，构成正交矩阵 $P=(e_1,e_2,e_3)$，$\\Lambda=\\mathrm{diag}(0,-1,1)$，且 $A=P\\Lambda P^{\\mathrm T}$。</p>",
+  "<p><b>谱分解计算</b>：$A=\\sum_i\\lambda_i e_ie_i^{\\mathrm T}=0\\cdot e_1e_1^{\\mathrm T}-e_2e_2^{\\mathrm T}+e_3e_3^{\\mathrm T}$，其中 $$e_2e_2^{\\mathrm T}=\\frac12\\begin{pmatrix}1&0&-1\\\\0&0&0\\\\-1&0&1\\end{pmatrix},\\qquad e_3e_3^{\\mathrm T}=\\frac12\\begin{pmatrix}1&0&1\\\\0&0&0\\\\1&0&1\\end{pmatrix}.$$</p>",
+  "<p><b>相加还原</b>：$$A=\\frac12\\begin{pmatrix}0&0&2\\\\0&0&0\\\\2&0&0\\end{pmatrix}=\\begin{pmatrix}0&0&1\\\\0&0&0\\\\1&0&0\\end{pmatrix}.$$</p>",
+  "<p><b>验算</b>：$A(1,0,-1)^{\\mathrm T}=(-1,0,1)^{\\mathrm T}$ ✓，$A(1,0,1)^{\\mathrm T}=(1,0,1)^{\\mathrm T}$ ✓，$r(A)=2$ ✓。特征值 $0,-1,1$，矩阵如上。</p>"
+];
+
+AW.init({
+  title: '实对称阵 $A$（$r(A)=2$）：求特征对并还原 $A$',
+  subtitle: '考点：特征值与实对称矩阵 · 方法：拆列读特征对 → 秩亏补 0 → 正交定位 → 谱分解',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示特征信息提取与矩阵重构。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'拆列',   log:'矩阵等式按列拆开，两列各是 A 乘一个具体向量', show:1, count:0 },
+    { cls:'ok',    tag:'读对',   log:'两列右端都是原向量的倍数：读出特征值 −1 和 1 及各自的特征向量', show:2, count:1 },
+    { cls:'key',   tag:'补 0',   log:'秩是 2，行列式为 0，第三个特征值必是 0', show:3, count:2 },
+    { cls:'ok',    tag:'正交',   log:'实对称阵不同特征值的特征向量互相垂直：与两条都垂直的只有 (0,1,0)ᵀ', show:4, count:3 },
+    { cls:'step',  tag:'单位化', log:'三条向量单位化拼成正交矩阵 P，对角阵对角线为 0、−1、1', show:5, count:4 },
+    { cls:'step',  tag:'谱分解', log:'用 A=Σλᵢeᵢeᵢᵀ：只有 −e₂e₂ᵀ 和 e₃e₃ᵀ 两块有份量', show:6, count:5 },
+    { cls:'ok',    tag:'还原',   log:'两块相加得 A：副对角线两个 1，其余全零', show:7, count:6 },
+    { cls:'done',  tag:'验算',   log:'代回两个特征向量与秩，全部吻合', show:8, count:7, done:true },
+  ],
+
+  result: {
+    big: '$\\lambda_1=0,\\ \\lambda_2=-1,\\ \\lambda_3=1$；$A=\\begin{pmatrix}0&0&1\\\\0&0&0\\\\1&0&0\\end{pmatrix}$',
+    html: '记忆锚点：<b>矩阵等式按列拆 = 一串现成的特征向量方程</b>；秩亏一维补出 $\\lambda=0$；实对称 ⇒ 正交定位第三条向量；谱分解 $A=\\sum\\lambda_ie_ie_i^{\\mathrm T}$ 记得先单位化。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：从矩阵等式读出特征对，再谱分解还原 A</h2>
+<p>最终答案：(1) 特征值 $\lambda_1=0,\ \lambda_2=-1,\ \lambda_3=1$，对应特征向量分别为 $k_1(0,1,0)<sup>\mathrm T</sup>$、$k_2(1,0,-1)<sup>\mathrm T</sup>$、$k_3(1,0,1)<sup>\mathrm T</sup>$（$k_i\neq0$）；(2) $\boldsymbol A=\begin{pmatrix}0&amp;0&amp;1\\0&amp;0&amp;0\\1&amp;0&amp;0\end{pmatrix}$。</p>
+<h3>第一步：立机制——矩阵乘法按列进行，所以等式按列拆开就是特征方程</h3>
+<p>矩阵乘法"按列"的机制：$A(\xi_1,\xi_2)=(A\xi_1,\ A\xi_2)$——左矩阵分别作用在每一列上。于是题给等式拆成两列各一条：</p>
+<p>$$A\begin{pmatrix}1\\0\\-1\end{pmatrix}=\begin{pmatrix}-1\\0\\1\end{pmatrix}=-1\cdot\begin{pmatrix}1\\0\\-1\end{pmatrix},\qquad<br/>A\begin{pmatrix}1\\0\\1\end{pmatrix}=\begin{pmatrix}1\\0\\1\end{pmatrix}=1\cdot\begin{pmatrix}1\\0\\1\end{pmatrix}.$$</p>
+<p>右端恰是"数 × 原向量"——这正是 $A\xi=\lambda\xi$ 的形状，直接读出 $\lambda=-1$（向量 $(1,0,-1)<sup>\mathrm T</sup>$）与 $\lambda=1$（向量 $(1,0,1)<sup>\mathrm T</sup>$）。<strong>为什么不用特征方程？</strong> $|\lambda E-A|=0$ 只有在 $A$ 具体已知时才用得起；本题 $A$ 未知，信息全在等式里，按列拆开是唯一入口。</p>
+<h3>第二步：为什么必有 λ=0，以及它的向量为什么用正交性找</h3>
+<p><strong>秩为什么给出零特征值</strong>——两条路殊途同归：其一，$r(A)=2&lt;3\Rightarrow\det A=0$，而 $\det A=\lambda_1\lambda_2\lambda_3$，乘积为零必有因子为零；其二，$A$ 奇异 $\Rightarrow Ax=0$ 有非零解，即 $Ax=0\cdot x$，这本身就是 $\lambda=0$ 的特征方程。故第三个特征值是 $0$。</p>
+<p>它的特征向量不硬解 $(A-0E)x=0$（$A$ 还没求出来），而是用<strong>实对称矩阵的正交性</strong>：不同特征值的特征向量正交。机制一行内积搬运就能看清——设 $\xi_i,\xi_j$ 属于不同特征值 $\lambda_i\neq\lambda_j$，中间一步用了 $A<sup>\mathrm T</sup>=A$：</p>
+<p>$$\lambda_i\,\xi_i<sup>\mathrm T</sup>\xi_j=(A\xi_i)<sup>\mathrm T</sup>\xi_j=\xi_i<sup>\mathrm T</sup>A<sup>\mathrm T</sup>\xi_j=\xi_i<sup>\mathrm T</sup>A\xi_j=\lambda_j\,\xi_i<sup>\mathrm T</sup>\xi_j\ \Longrightarrow\ (\lambda_i-\lambda_j)\,\xi_i<sup>\mathrm T</sup>\xi_j=0\ \Longrightarrow\ \xi_i<sup>\mathrm T</sup>\xi_j=0.$$</p>
+<p>设 $\xi_1=(a,b,c)<sup>\mathrm T</sup>$，与已知的两条正交：$a-c=0$ 与 $a+c=0$，解得 $a=c=0$，取 $\xi_1=(0,1,0)<sup>\mathrm T</sup>$。三个特征向量恰好两两正交，正交对角化的条件齐了。</p>
+<h3>第三步：谱分解还原 A——为什么公式是 λᵢeᵢeᵢᵀ 的和</h3>
+<p>正交对角化 $A=P\Lambda P<sup>\mathrm T</sup>$，其中 $P=(e_1,e_2,e_3)$ 由<strong>单位化</strong>特征向量拼成：$e_1=(0,1,0)<sup>\mathrm T</sup>,\ e_2=\dfrac1{\sqrt2}(1,0,-1)<sup>\mathrm T</sup>,\ e_3=\dfrac1{\sqrt2}(1,0,1)<sup>\mathrm T</sup>$，$\Lambda=\mathrm{diag}(0,-1,1)$。</p>
+<p><strong>为什么 $P\Lambda P<sup>\mathrm T</sup>$ 能写成和式？</strong> 按列展开：$\Lambda P<sup>\mathrm T</sup>$ 把 $P<sup>\mathrm T</sup>$ 的第 $i$ 行乘上 $\lambda_i$，再左乘 $P$ 按列组合，恰好</p>
+<p>$$A=P\Lambda P<sup>\mathrm T</sup>=\sum_i\lambda_i\,e_ie_i<sup>\mathrm T</sup>=0\cdot e_1e_1<sup>\mathrm T</sup>-e_2e_2<sup>\mathrm T</sup>+e_3e_3<sup>\mathrm T</sup>.$$</p>
+<p>（和式里的 $e_i$ 必须是单位向量，否则系数会差一个 $\xi_i<sup>\mathrm T</sup>\xi_i$——这就是"谱分解忘单位化"的错因。）计算：</p>
+<p>$$A=-e_2e_2<sup>\mathrm T</sup>+e_3e_3<sup>\mathrm T</sup>=\frac12\begin{pmatrix}-1+1&amp;0&amp;1+1\\0&amp;0&amp;0\\1+1&amp;0&amp;-1+1\end{pmatrix}=\begin{pmatrix}0&amp;0&amp;1\\0&amp;0&amp;0\\1&amp;0&amp;0\end{pmatrix}.$$</p>
+<p>验算：$A(1,0,-1)<sup>\mathrm T</sup>=(-1,0,1)<sup>\mathrm T</sup>$，$A(1,0,1)<sup>\mathrm T</sup>=(1,0,1)<sup>\mathrm T</sup>$，$r(A)=2$，全部吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉 λ=0</strong>：只盯着题给两列就收工；秩亏一维本身就是"第三个特征值是 0"的凭证（$\det A=\prod\lambda_i=0$）。</li><li><strong>λ=0 的向量硬解方程</strong>：$A$ 未知，$(A-0E)x=0$ 写不出；实对称阵先用正交性定形，快且稳。</li><li><strong>谱分解忘单位化</strong>：$A=\sum\lambda_ie_ie_i<sup>\mathrm T</sup>$ 要求 $e_i$ 单位化；若用未单位化的 $\xi_i$，公式应为 $A=\sum\lambda_i\dfrac{\xi_i\xi_i<sup>\mathrm T</sup>}{\xi_i<sup>\mathrm T</sup>\xi_i}$。</li><li><strong>忘记验算</strong>：把 $A$ 乘回题给两列、查秩，三条全过才收工。</li></ul>
+<blockquote>结论：两列读出 $\pm1$，秩亏补出 $0$（$\det A=0$），实对称正交性定位 $\xi_1$，谱分解 $\sum\lambda_ie_ie_i<sup>\mathrm T</sup>$ 一键还原 $A$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

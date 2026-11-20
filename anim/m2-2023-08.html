@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：分块上三角矩阵的伴随矩阵</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-07.html" data-q="../question/m2-2023-07/">← <b>m2-2023-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-08/" data-q="../question/m2-2023-08/" data-no-anim="1">m2-2023-08 · 本题</a>
+  <a href="m2-2023-09.html" data-q="../question/m2-2023-09/"><b>m2-2023-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$\\Bigl(\\begin{smallmatrix}A&E\\\\O&B\\end{smallmatrix}\\Bigr)^*$ 的完整推导',
+  subtitle: '考点：分块矩阵 + 伴随矩阵 · 方法：$M^*=|M|M^{-1}$ → 分块求逆 → 收标量',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示行列式、逆矩阵、伴随矩阵的计算链。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>主公式</b>：$\\boldsymbol M=\\Bigl(\\begin{smallmatrix}\\boldsymbol A&\\boldsymbol E\\\\\\boldsymbol O&\\boldsymbol B\\end{smallmatrix}\\Bigr)$ 可逆，$$\\boldsymbol M^*=|\\boldsymbol M|\\,\\boldsymbol M^{-1}$$ 先求行列式，再求逆，最后相乘',
+      '<b>行列式</b>：分块上三角，$$|\\boldsymbol M|=|\\boldsymbol A|\\,|\\boldsymbol B|\\neq0$$',
+      '<b>分块求逆</b>：设 $\\boldsymbol M^{-1}=\\Bigl(\\begin{smallmatrix}\\boldsymbol X&\\boldsymbol Y\\\\\\boldsymbol Z&\\boldsymbol W\\end{smallmatrix}\\Bigr)$，由 $\\boldsymbol M\\boldsymbol M^{-1}=\\boldsymbol E$ 比较各块：$\\boldsymbol X=\\boldsymbol A^{-1}$、$\\boldsymbol Z=\\boldsymbol O$、$\\boldsymbol W=\\boldsymbol B^{-1}$，而 $\\boldsymbol A\\boldsymbol Y+\\boldsymbol B^{-1}=\\boldsymbol O\\Rightarrow\\boldsymbol Y=-\\boldsymbol A^{-1}\\boldsymbol B^{-1}$',
+      '<b>逆的形状</b>：$$\\boldsymbol M^{-1}=\\begin{pmatrix}\\boldsymbol A^{-1}&-\\boldsymbol A^{-1}\\boldsymbol B^{-1}\\\\\\boldsymbol O&\\boldsymbol B^{-1}\\end{pmatrix}$$',
+      '<b>乘标量收伴随</b>：$|\\boldsymbol A||\\boldsymbol B|$ 分别乘进各块，用 $|\\boldsymbol A|\\boldsymbol A^{-1}=\\boldsymbol A^*$、$|\\boldsymbol B|\\boldsymbol B^{-1}=\\boldsymbol B^*$ 收拢 $$\\boldsymbol M^*=\\begin{pmatrix}|\\boldsymbol B|\\,\\boldsymbol A^*&-\\boldsymbol A^*\\boldsymbol B^*\\\\\\boldsymbol O&|\\boldsymbol A|\\,\\boldsymbol B^*\\end{pmatrix}$$',
+      '<b>对照选项</b>：左上 $|\\boldsymbol B|\\boldsymbol A^*$、右下 $|\\boldsymbol A|\\boldsymbol B^*$、右上 $-\\boldsymbol A^*\\boldsymbol B^*$ 三条全对 → <b>选 D</b>；C 的 $-\\boldsymbol B^*\\boldsymbol A^*$ 顺序颠倒，矩阵乘法不可交换',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'主公式', log:'可逆矩阵的伴随等于行列式乘逆矩阵，路线定了', count:0 },
+    { cls:'step',  tag:'行列式', log:'分块上三角，行列式等于主对角两块行列式相乘', count:1 },
+    { cls:'shift', tag:'求逆',   log:'设逆的分块形状，乘回去逐块对齐解出四个未知块', count:2 },
+    { cls:'shift', tag:'写逆',   log:'右上块由 A·Y = −B⁻¹ 解出，是两个逆的乘积带负号', count:3 },
+    { cls:'step',  tag:'收伴随', log:'行列式分别乘进各块，用 |A|A⁻¹=A* 收成伴随形式', count:4 },
+    { cls:'done',  tag:'完成',   log:'结论：左上 |B|A*、右上 −A*B*、右下 |A|B*，选 D', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '选 D',
+    html: '记忆锚点：<b>$\\Bigl(\\begin{smallmatrix}A&E\\\\O&B\\end{smallmatrix}\\Bigr)^*=\\Bigl(\\begin{smallmatrix}|B|A^*&-A^*B^*\\\\O&|A|B^*\\end{smallmatrix}\\Bigr)$</b>——左上标量属 $B$、右下标量属 $A$（交叉分配），右上块保持 $A^*$ 在前。易错：A、B 把标量分配进错块；C 交换了右上块顺序，$\\boldsymbol A^*\\boldsymbol B^*\\neq\\boldsymbol B^*\\boldsymbol A^*$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分块上三角矩阵的伴随——沿 M\*=|M|M⁻¹ 一条路走到底</h2>
+<p>答案：D</p>
+<h3>第一步：主公式</h3>
+<p>可逆矩阵满足 $\boldsymbol M^*=|\boldsymbol M|\,\boldsymbol M<sup>-1</sup>$。本题 $|\boldsymbol M|=|\boldsymbol A|\,|\boldsymbol B|\neq0$，故只需求出行列式与逆，再相乘。</p>
+<h3>第二步：求逆</h3>
+<p>设 $\boldsymbol M<sup>-1</sup>=\begin{pmatrix}\boldsymbol X&amp;\boldsymbol Y\\\boldsymbol Z&amp;\boldsymbol W\end{pmatrix}$，由 $\boldsymbol M\boldsymbol M<sup>-1</sup>=\boldsymbol E$ 比较各块：</p>
+<p>$$\boldsymbol X=\boldsymbol A<sup>-1</sup>,\quad\boldsymbol Z=\boldsymbol O,\quad\boldsymbol W=\boldsymbol B<sup>-1</sup>,\quad\boldsymbol A\boldsymbol Y+\boldsymbol B<sup>-1</sup>=\boldsymbol O\Rightarrow\boldsymbol Y=-\boldsymbol A<sup>-1</sup>\boldsymbol B<sup>-1</sup>.$$</p>
+<h3>第三步：乘出来</h3>
+<p>$$\boldsymbol M^*=|\boldsymbol A|\,|\boldsymbol B|\begin{pmatrix}\boldsymbol A<sup>-1</sup>&amp;-\boldsymbol A<sup>-1</sup>\boldsymbol B<sup>-1</sup>\\\boldsymbol O&amp;\boldsymbol B<sup>-1</sup>\end{pmatrix}=\begin{pmatrix}|\boldsymbol B|\,\boldsymbol A^*&amp;-\boldsymbol A^*\boldsymbol B^*\\\boldsymbol O&amp;|\boldsymbol A|\,\boldsymbol B^*\end{pmatrix},$$</p>
+<p>其中用了 $|\boldsymbol A|\boldsymbol A<sup>-1</sup>=\boldsymbol A^*$、$|\boldsymbol B|\boldsymbol B<sup>-1</sup>=\boldsymbol B^*$。</p>
+<h3>第四步：对照选项</h3>
+<p>左上 $|\boldsymbol B|\boldsymbol A^*$、右下 $|\boldsymbol A|\boldsymbol B^*$、右上 $-\boldsymbol A^*\boldsymbol B^*$——三条全对的是 D。C 把右上写成 $-\boldsymbol B^*\boldsymbol A^*$：由 $-\boldsymbol A<sup>-1</sup>\boldsymbol B<sup>-1</sup>$ 化来必须保持 $\boldsymbol A$ 在前，矩阵乘法不可交换。</p>
+<h3>易错点</h3>
+<ul><li><strong>标量进错块</strong>：$|\boldsymbol B|$ 跟着左上块的 $\boldsymbol A<sup>-1</sup>$ 走、$|\boldsymbol A|$ 跟着右下块走，想当然会写反成 A、B。</li><li><strong>交换右上块顺序</strong>：$\boldsymbol A^*\boldsymbol B^*\neq\boldsymbol B^*\boldsymbol A^*$，来自 $\boldsymbol Y=-\boldsymbol A<sup>-1</sup>\boldsymbol B<sup>-1</sup>$ 的顺序不可动。</li></ul>
+<blockquote>一句话结论：$\begin{pmatrix}A&amp;E\\O&amp;B\end{pmatrix}^*=\begin{pmatrix}|B|A^*&amp;-A^*B^*\\O&amp;|A|B^*\end{pmatrix}$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

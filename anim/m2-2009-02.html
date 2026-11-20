@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2009·02 等价无穷小定参</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-01.html" data-q="../question/m2-2009-01/">← <b>m2-2009-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-02/" data-q="../question/m2-2009-02/" data-no-anim="1">m2-2009-02 · 本题</a>
+  <a href="m2-2009-03.html" data-q="../question/m2-2009-03/"><b>m2-2009-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];   // 推导板的持久 DOM 行
+
+var LINES = [
+  "<p><b>目标</b>：$x\\to0$ 时 $f(x)=x-\\sin ax$ 与 $g(x)=x^2\\ln(1-bx)$ 等价，求 $a,\\ b$。等价 = <b>同阶</b> + <b>系数相等</b>，先做泰勒展开。</p>",
+  "<p>展开 $g$（$\\ln(1-bx)=-bx+o(x)$）：$$g(x)=x^2\\big(-bx+o(x)\\big)=-b\\,x^3+o(x^3)$$是三阶无穷小（$b\\neq0$）。</p>",
+  "<p>展开 $f$（$\\sin ax=ax-\\dfrac{a^3}{6}x^3+o(x^3)$）：$$f(x)=(1-a)x+\\frac{a^3}{6}x^3+o(x^3)$$</p>",
+  "<p><b>阶匹配</b>：$g$ 是三阶，$f$ 的一次项必须消失：$1-a=0\\ \\Longrightarrow\\ a=1$。</p>",
+  "<p><b>系数匹配</b>：$a=1$ 时 $f\\sim\\dfrac{1}{6}x^3$，而 $g\\sim -b\\,x^3$，令 $\\dfrac{1}{6}=-b\\ \\Longrightarrow\\ b=-\\dfrac{1}{6}$。</p>",
+  "<p><b>验证</b>：$\\dfrac{f}{g}\\to\\dfrac{1/6}{1/6}=1$，确为等价无穷小。$\\;a=1,\\ b=-\\dfrac{1}{6}$，<b>选 A</b>。</p>"
+];
+
+AW.init({
+  title: '等价无穷小定参数：$x-\\sin ax$ 与 $x^2\\ln(1-bx)$',
+  subtitle: '考点：无穷小比较 · 方法：泰勒展开，先对齐阶、再对齐系数',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'等价无穷小要求同阶加同系数，用泰勒展开到最低非零阶', show:1, count:0 },
+    { cls:'step',  tag:'展开 g', log:'对数展开后乘 x 的平方：g 是三阶无穷小', show:2, count:1 },
+    { cls:'step',  tag:'展开 f', log:'正弦展到三次项，一次项与三次项系数现形', show:3, count:2 },
+    { cls:'ok',    tag:'定 a',   log:'一次项必须消失，解出 a = 1', show:4, count:3 },
+    { cls:'ok',    tag:'定 b',   log:'三阶系数相等，解出 b = −1/6', show:5, count:4 },
+    { cls:'done',  tag:'完成',   log:'验证比值趋于 1，答案选 A', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: 'a = 1，b = −1/6（选 A）',
+    html: '记忆锚点：<b>先对齐阶，再对齐系数</b>。$g$ 的首项是 $-b\\,x^3$，$b$ 必为负；若 $a\\neq1$，$f$ 只是一阶无穷小，与三阶的 $g$ 不同阶，C、D 直接排除。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：用泰勒展开定等价无穷小中的参数</h2>
+<p>答案：A（$a=1,\ b=-\dfrac{1}{6}$）</p>
+<h3>第一步：先立机制——"等价"到底要求什么</h3>
+<p>$f\sim g$（$x\to0$）的定义是 $\lim\dfrac fg=1$。翻译成泰勒展开的语言：二者必须<strong>同阶</strong>，且最低非零项的<strong>系数相等</strong>。所以思路不是凑选项，而是把 $f$、$g$ 都展开到最低非零阶：先看阶是否对齐，再比系数。</p>
+<h3>第二步：为什么必须泰勒展开，不能直接"代等价公式"</h3>
+<p>对 $\sin ax$ 直接用等价替换 $\sin ax\sim ax$ 会在本题翻车：代入得 $f\approx x-ax=(1-a)x$，$a=1$ 时变成 $0$——把真正决定答案的三阶项<strong>抹掉了</strong>。原因在于：等价替换只保留最低阶主导项，而本题 $f$ 的一阶项 $(1-a)x$ 恰好要被减法消掉，答案藏在下一阶（三阶）里。<strong>加减运算中需要保留高阶信息时，泰勒展开到足够阶数是最稳的工具</strong>；$g$ 是三阶，故 $f$ 至少要展到 $x<sup>3</sup>$。</p>
+<h3>第三步：展开并对齐阶</h3>
+<p>$$g(x)=x<sup>2</sup>\ln(1-bx)=x<sup>2</sup>\big(-bx+o(x)\big)=-b\,x<sup>3</sup>+o(x<sup>3</sup>),$$</p>
+<p>$$\sin ax=ax-\frac{a<sup>3</sup>}{6}x<sup>3</sup>+o(x<sup>3</sup>)\ \Longrightarrow\ f(x)=(1-a)x+\frac{a<sup>3</sup>}{6}x<sup>3</sup>+o(x<sup>3</sup>).$$</p>
+<p>$g$ 的最低阶是 $3$；若 $a\neq1$，$f$ 的一次项 $(1-a)x\neq0$，$f$ 只是一阶无穷小，与 $g$ 阶数不同，比值极限只能是 $0$ 或 $\infty$，连"同阶"都达不到。<strong>必须先令 $1-a=0$，即 $a=1$。</strong></p>
+<h3>第四步：再对齐三阶系数</h3>
+<p>$a=1$ 时 $f\sim\dfrac16x<sup>3</sup>$，而 $g$ 的首项是 $-b\,x<sup>3</sup>$（注意是 $-b$ 不是 $b$，$b$ 的符号在这里定），令</p>
+<p>$$\frac{1}{6}=-b\ \Longrightarrow\ b=-\frac{1}{6}.$$</p>
+<p>验算：$\dfrac fg\to\dfrac{1/6}{1/6}=1$，确为等价无穷小。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 B（$b=+\dfrac16$）</strong>：$g$ 的首项是 $-b\,x<sup>3</sup>$，要等于 $\dfrac16x<sup>3</sup>$ 必须 $-b=\dfrac16$；符号丢在 $\ln(1-bx)=-bx+\cdots$ 的负号上。</li><li><strong>误选 C、D（$a=-1$）</strong>：此时 $(1-a)x=2x\neq0$，$f$ 一阶、$g$ 三阶，阶数不匹配，根本不可能等价。</li><li><strong>展开阶数不够</strong>：只展到一阶拿不到三阶系数，两个参数定不下来。</li></ul>
+<blockquote>记忆点：等价 $\Rightarrow$ 同阶 + 同首项系数；加减场景慎用等价替换，展开到足够阶最稳。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

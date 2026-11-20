@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：等价无穷小定参数 a、b</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-22.html" data-q="../question/m2-2025-22/">← <b>m2-2025-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-01/" data-q="../question/m2-2026-01/" data-no-anim="1">m2-2026-01 · 本题</a>
+  <a href="m2-2026-02.html" data-q="../question/m2-2026-02/"><b>m2-2026-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '等价无穷小定参数：$ax^2+bx+\\arcsin x\\sim\\sqrt[3]{1+x^2}-1$（$x\\to0$）',
+  subtitle: '考点：无穷小比较 · 泰勒展开 · 方法：主部对齐',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示主部对齐的全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：等价 $\\Longleftrightarrow$ 最低阶主部完全相同。右端是纯 $x^2$ 阶 $\\Rightarrow$ 左端一次项必须消失、二次项系数必须恰为 $\\dfrac13$。',
+      '<b>展开右端</b>：用 $(1+u)^{\\alpha}-1\\sim\\alpha u$，取 $u=x^2,\\ \\alpha=\\dfrac13$ $$\\sqrt[3]{1+x^2}-1\\sim \\frac13 x^2$$',
+      '<b>展开左端</b>：$\\arcsin x=x+\\dfrac{x^3}{6}+o(x^3)$，按幂排列 $$ax^2+bx+\\arcsin x=(b+1)x+ax^2+o(x^2)$$',
+      '<b>定 b</b>：一次项必须消失，否则左端是一阶无穷小、阶数不符 $$(b+1)x=0\\ \\Longrightarrow\\ b=-1$$',
+      '<b>定 a</b>：二次项系数对齐主部 $$a=\\dfrac13$$',
+      '<b>回代验证</b>：左端 $=\\dfrac13x^2+o(x^2)\\sim\\dfrac13x^2$，与右端主部相同 ✓',
+      '<b>排错</b>：B、D 的 $b=1$ 使左端 $\\sim 2x$（一阶，阶数不符）；C 的 $a=\\dfrac23$ 主部系数不对。',
+      '<b>结论</b>：$$a=\\dfrac13,\\qquad b=-1\\qquad\\Longrightarrow\\qquad \\text{选 A}$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'等价就是主部相同：右端是二阶，左端一次项必须消掉', count:0 },
+    { cls:'step',  tag:'右端',   log:'用 (1+u)^α−1 ~ αu，右端主部是 x²/3', count:1 },
+    { cls:'step',  tag:'左端',   log:'arcsin x 一次项起步，左端按幂排列成 (b+1)x + a x²', count:2 },
+    { cls:'shift', tag:'定 b',   log:'一次项系数 b+1 必须为 0，得 b = −1', count:3 },
+    { cls:'ok',    tag:'定 a',   log:'二次项系数 a 必须等于 1/3', count:4 },
+    { cls:'ok',    tag:'验证',   log:'左端主部恰为 x²/3，两端等价成立', count:5 },
+    { cls:'miss',  tag:'排错',   log:'B、D 一次项没消掉（阶数不符），C 的二次系数不对', count:6 },
+    { cls:'done',  tag:'完成',   log:'结论：a = 1/3，b = −1，选 A', count:7, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$a=\\dfrac13,\\quad b=-1$（选 A）',
+    html: '记忆锚点：<b>等价 = 主部相同</b>——右端 $(1+x^2)^{1/3}-1\\sim\\dfrac13x^2$；左端靠 $\\arcsin x=x+\\dfrac{x^3}{6}+\\cdots$ 的一次项逼出 $b=-1$，再对齐系数得 $a=\\dfrac13$。易错：$b=1$ 时左端成一阶无穷小，阶数先就错了。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：等价无穷小比主部——泰勒展开定参数 $a,b$</h2>
+<p>答案：A</p>
+<h3>第零步：机制——为什么"等价"就是"主部完全相同"</h3>
+<p>等价的定义是两者之比趋于 $1$。把两个无穷小都按 $x$ 的幂展开后相除：要使比值趋于 $1$，两者的<strong>最低次项（主部）必须次数相同、系数也相同</strong>——次数不齐，比值趋于 $0$ 或 $\infty$；系数不齐，比值趋于别的常数。所以"求等价参数"不是凑数，而是<strong>逐次幂对系数</strong>：右端主部长什么样，左端就得原样配出来。</p>
+<p><strong>为什么用泰勒展开而不用洛必达</strong>：左端带着待定参数 $a,b$，对含参式连用洛必达越求越繁、还容易丢参数；泰勒展开一次就把各阶系数全摆在桌面上，比较主部只是"对号入座"。</p>
+<h3>第一步：展开右端，看清目标主部</h3>
+<p>用 $(1+u)<sup>\alpha</sup>-1\sim \alpha u$，取 $u=x<sup>2</sup>$、$\alpha=\dfrac13$：</p>
+<p>$$\sqrt[3]{1+x<sup>2</sup>}-1\sim \frac13 x<sup>2</sup>,$$</p>
+<p>目标主部是 $\dfrac13x<sup>2</sup>$。</p>
+<h3>第二步：展开左端，按幂排列</h3>
+<p>$\arcsin x=x+\dfrac{x<sup>3</sup>}{6}+o(x<sup>3</sup>)$，于是</p>
+<p>$$ax<sup>2</sup>+bx+\arcsin x=(b+1)x+ax<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<h3>第三步：逐次幂对系数</h3>
+<ul><li><strong>一次项必须消失</strong>：右端从二阶起步；若 $b+1\ne0$，比值 $\dfrac{(b+1)x}{\frac13x<sup>2</sup>}\to\infty$，连极限有限都做不到，更谈不上趋于 $1$。故 $b+1=0$，得 $b=-1$；</li><li><strong>二次项系数对齐主部</strong>：$a=\dfrac13$。</li></ul>
+<p>此时左端 $=\dfrac13x<sup>2</sup>+o(x<sup>2</sup>)$，比值恰为 $1$，等价成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>只对系数不查阶数</strong>：$b=1$ 时左端 $\sim 2x$ 是一阶无穷小，与二阶右端谈不上等价——B、D 错在这里。</li><li><strong>记错 $\arcsin x$ 的展开</strong>：它一次项就是 $x$，要靠 $bx$ 来消；漏掉这条就丢掉 $b=-1$ 这个条件。</li><li><strong>主部系数算成 $\dfrac23$</strong>：$(1+u)<sup>1/3</sup>-1\sim\alpha u$ 的 $\alpha=\dfrac13$ 用错，C 的毛病。</li></ul>
+<blockquote>一句话结论：等价 = 主部逐字相同——先让一次项消失（$b=-1$），再把二次项对齐 $\dfrac13x<sup>2</sup>$（$a=\dfrac13$），选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：AB=C 的列视角与行视角（2013 年第 7 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-06.html" data-q="../question/m2-2013-06/">← <b>m2-2013-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-07/" data-q="../question/m2-2013-07/" data-no-anim="1">m2-2013-07 · 本题</a>
+  <a href="m2-2013-08.html" data-q="../question/m2-2013-08/"><b>m2-2013-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>$AB=C$，$B$ 可逆。问哪两组向量等价。工具：<b>列视角</b>与<b>行视角</b>看矩阵乘法——"左乘动行，右乘动列"。</p>' },
+  { title: '列视角：C 的列 ← A 的列', cls: 'key',
+    body: '<p>$C$ 的第 $j$ 列 $=$ $A$ 的各列以 $B$ 的第 $j$ 列元素为系数的线性组合：</p>' +
+          '<p>$$\\gamma_j=\\sum_k b_{kj}\\,\\alpha_k.$$</p>' +
+          '<p>所以 $C$ 的列向量组可由 $A$ 的列向量组线性表示。</p>' },
+  { title: '反方向：A = C·B⁻¹', cls: 'good',
+    body: '<p>$B$ 可逆给出 $A=CB^{-1}$，同理 $A$ 的列可由 $C$ 的列表示。两个方向都通，两组列向量<b>互相可表示</b>——列向量组等价！</p>' },
+  { title: '行视角：C 的行 ← B 的行', cls: '',
+    body: '<p>从行看 $C=AB$：$C$ 的第 $i$ 行是 $\\sum_k a_{ik}\\,(B$ 的第 $k$ 行$)$——被组合的是 <b>$B$ 的行</b>，不是 $A$ 的行。</p>' },
+  { title: '排除 A：C 行与 A 行', cls: 'bad',
+    body: '<p>$C$ 的行由 $B$ 的行组合而成，$A$ 的行只是"系数"；要谈 $C$ 行与 $A$ 行互相表示，题目没有任何工具。<b>排除 A</b>。</p>' },
+  { title: '排除 C：C 行与 B 行只有单向', cls: 'bad',
+    body: '<p>"$C$ 的行可由 $B$ 的行表示"是单向的；反向需要 $A$ 可逆（$B=A^{-1}C$），题目只说 $B$ 可逆。<b>排除 C</b>。</p>' },
+  { title: '排除 D：B 是系数不是对象', cls: 'bad',
+    body: '<p>$C$ 的列是 $A$ 的列的组合（$B$ 提供系数），与 $B$ 自己的列向量组无互相表示关系。<b>排除 D</b>。</p>' },
+  { title: '结论：B 的列向量组等价 ✓', cls: 'good',
+    body: '<p>右乘可逆矩阵 $=$ 对列做<b>可逆</b>线性变换，列空间不变。$A$ 与 $C$ 的列向量组等价，答案选 <b>B</b>。</p>' },
+];
+
+var RIBBONS = [null, null, null, null,
+  {k:1, ok:false}, {k:3, ok:false}, {k:4, ok:false}, {k:2, ok:true}];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : (s.cls === 'good' ? 'ok' : 'step')),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    ribbon: RIBBONS[i],
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$AB=C$（$B$ 可逆）与向量组等价',
+  subtitle: '考点：向量组的等价 · 方法：列视角 / 行视角 + 乘法的可逆性',
+  ribbonTitle: '选项判定（A=1 · B=2 · C=3 · D=4）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>左乘动行，右乘动列</b>。右乘可逆矩阵 $B$ 相当于对 $A$ 的列做可逆线性变换，列空间不变 ⇒ $A$、$C$ 的列向量组等价；行向量组没有这种保证（表示者是 $B$ 的行，且只有单向）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：矩阵乘法的"列视角"与向量组等价</h2>
+<p><strong>答案：B</strong></p>
+<h3>第一步：右乘可逆矩阵在做什么</h3>
+<p>$AB=C$ 且 $B$ 可逆。按<strong>列</strong>看乘法：$C$ 的第 $j$ 列是 $A$ 的各列以 $B$ 的第 $j$ 列元素为系数的线性组合，所以 <strong>$C$ 的列向量组可由 $A$ 的列向量组线性表示</strong>。</p>
+<h3>第二步：反方向也要通</h3>
+<p>$B$ 可逆给出 $A=CB<sup>-1</sup>$，同理 $A$ 的列向量组也可由 $C$ 的列向量组线性表示。两个方向都通——两组列向量<strong>互相可表示</strong>，按定义即等价。选 <strong>B</strong>。</p>
+<h3>第三步：行向量组为什么不行</h3>
+<p>从<strong>行</strong>的角度看 $C=AB$：$C$ 的第 $i$ 行是 $\sum_k a_{ik}\,(\boldsymbol B$ 的第 $k$ 行$)$——$C$ 的行向量组可由 $B$ 的行向量组表示，但表示者是 $B$ 而不是 $A$；要让 $B$ 的行反过来被 $C$ 的行表示需要 $A$ 可逆（$B=A<sup>-1</sup>C$），题目没给。所以 A、C 的"行向量组等价"没有依据，排除。</p>
+<h3>第四步：D 为什么错</h3>
+<p>$B$ 在本题里是"组合系数"的提供者（右乘的变换矩阵），$C$ 的列由 $A$ 的列组合而成，与 $B$ 自己的列向量组没有任何互相表示关系——D 混淆了"变换矩阵"与"被组合对象"。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为行列都等价</strong>：右乘可逆阵只保证<strong>列</strong>向量组等价（列空间不变）。口诀：<strong>左乘动行，右乘动列</strong>。</li><li><strong>只写单向表示</strong>：等价要求互相表示；$C=AB$ 只给了 $A\to C$ 方向，靠 $B$ 可逆补出 $A=CB<sup>-1</sup>$ 才闭环。</li><li><strong>把 $B$ 当成被组合对象</strong>：$C$ 的列是 $A$ 的列的组合，不是 $B$ 的列的组合。</li></ul>
+<blockquote>一句话结论：右乘可逆阵 = 对列做可逆线性变换，$A$ 与 $C$ 的列向量组等价，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

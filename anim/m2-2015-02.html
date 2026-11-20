@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·02 极限定义的函数与间断点类型</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-01.html" data-q="../question/m2-2015-01/">← <b>m2-2015-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-02/" data-q="../question/m2-2015-02/" data-no-anim="1">m2-2015-02 · 本题</a>
+  <a href="m2-2015-03.html" data-q="../question/m2-2015-03/"><b>m2-2015-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：谁是变量、哪里可疑',
+    cls: 'key',
+    body: '<p>极限对 $t\\to0$ 取，$x$ 只是参数。$x=0$ 时出现 $\\dfrac{\\sin t}{x}$，式子无定义——$f$ 的定义域是 $x\\neq0$，疑点全部集中在 $x=0$。</p>',
+    log: 'x 是参数；x=0 处无定义，重点考察' },
+  { title: '识别 1^∞ 型，取对数',
+    cls: 'key',
+    body: '<p>$\\Big(1+\\dfrac{\\sin t}{x}\\Big)^{x^2/t}$ 是 $1^{\\infty}$ 型。设 $L=\\lim_{t\\to0}\\Big(1+\\dfrac{\\sin t}{x}\\Big)^{x^2/t}$，取对数：$$\\ln L=\\lim_{t\\to0}\\frac{x^2}{t}\\,\\ln\\Big(1+\\dfrac{\\sin t}{x}\\Big).$$</p>',
+    log: '1^∞ 型：取对数化成乘积极限' },
+  { title: '等价无穷小化简，得 f(x)=eˣ',
+    cls: 'good',
+    body: '<p>$t\\to0$ 时 $\\dfrac{\\sin t}{x}\\to0$，故 $\\ln\\Big(1+\\dfrac{\\sin t}{x}\\Big)\\sim\\dfrac{\\sin t}{x}\\sim\\dfrac{t}{x}$，于是 $$\\ln L=\\lim_{t\\to0}\\frac{x^2}{t}\\cdot\\frac{t}{x}=x\\ \\Longrightarrow\\ f(x)=\\mathrm{e}^{x}\\ \\ (x\\neq0).$$</p>',
+    log: 'ln L = x，故 f(x)=e^x（x≠0）' },
+  { title: '给 x=0 定性：可去间断点',
+    cls: 'good',
+    body: '<p>$f$ 在 $x=0$ 无定义，但 $\\lim_{x\\to0}f(x)=\\lim_{x\\to0}\\mathrm{e}^x=1$ <b>存在且有限</b>——左右极限相等且有限，正是<b>可去间断点</b>。</p>',
+    ribbon: {k:1, ok:true},
+    log: 'x=0：极限为 1，存在有限 → 可去间断点' },
+  { title: '排除 A、C、D',
+    cls: 'bad',
+    body: '<p><b>A 连续</b>：错，$x=0$ 不在定义域内。<b>C 跳跃</b>：错，左右极限都等于 $1$，相等就不是跳跃。<b>D 无穷</b>：错，极限是有限值 $1$ 而非 $\\infty$。</p>',
+    ribbon: {k:2, ok:false},
+    log: 'A/C/D 都与 x=0 处的事实矛盾' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>无定义 + 极限存在且有限 = 可去间断点</b>；这类题必须先把 $f$ 的显式表达求出来，再谈连续性。</p>',
+    log: '选 B：x=0 是可去间断点' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f(x)=\\lim_{t\\to0}\\Big(1+\\dfrac{\\sin t}{x}\\Big)^{x^2/t}$ 的连续性',
+  subtitle: '考点：1^∞ 型极限 · 连续与间断 · 方法：先求显式表达，再给 x=0 定性',
+  counterLabel: '推理步',
+  ribbonTitle: '关键判定（✓ 定性成功 / ✗ 排除干扰项）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B（可去间断点）',
+    html: '记忆锚点：<b>无定义 + 极限存在且有限 = 可去间断点</b>。$f(x)=\\mathrm{e}^x$（$x\\neq0$）在 $x=0$ 处极限为 $1$：极限有限排除 D，左右相等排除 C，无定义排除 A——三个干扰项各错在一处。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：极限定义的函数——$1^\infty$ 型求显式与间断点定性</h2>
+<p>答案：<strong>B</strong>。</p>
+<h3>第 0 步：先立机制——谁在动、疑点在哪</h3>
+<p>极限过程是 $t\to0$，$x$ 只是参数；而 $x=0$ 时出现 $\dfrac{\sin t}{x}$，式子无定义——$f$ 的定义域是 $x\neq0$，全部疑点集中在 $x=0$ 这一个点上。先答一个必然的追问：<strong>$x=0$ 不在定义域里，凭什么还能叫"间断点"？</strong> 间断点考察的是去心邻域：只要 $x=0$ 两侧附近函数有定义、而它本身缺席或极限行为异常，它就是间断点候选——定义域上的"漏洞"正是考察对象。</p>
+<h3>第 1 步：为什么取对数——把"指数上的极限"拉成"乘积的极限"</h3>
+<p>$\Big(1+\dfrac{\sin t}{x}\Big)<sup>x^2/t</sup>$ 底数、指数都在动，属 $1^\infty$ 型，直接算无门。取对数的机制：对数把幂降成乘积 $\ln L=g\ln f$，且 $\ln$ 连续，$\lim\ln=\ln\lim$，极限可安全移入。接着用两个等价无穷小——$\ln(1+u)\sim u$（$\ln$ 在 $1$ 处的切线是 $y=u$）与 $\sin t\sim t$（$\sin$ 在 $0$ 处切线是 $y=t$，小角度下以弦代弧）。<strong>为什么这里替换安全</strong>：$\ln\big(1+\frac{\sin t}{x}\big)$ 处在乘法因子位置、整体是乘除结构，不是加减项里各换各的。于是</p>
+<p>$$\ln L=\lim_{t\to0}\frac{x<sup>2</sup>}{t}\cdot\frac{\sin t}{x}=\lim_{t\to0}\frac{x<sup>2</sup>}{t}\cdot\frac{t}{x}=x\ \Longrightarrow\ f(x)=\mathrm{e}<sup>x</sup>\quad(x\neq0).$$</p>
+<h3>第 2 步：给 $x=0$ 定性——为什么是"可去"</h3>
+<p>$\lim_{x\to0}f(x)=\lim_{x\to0}\mathrm{e}<sup>x</sup>=1$ 存在且有限：左右极限相等（都是 $1$），只差"这一格没定义"。补一个 $f(0)=1$ 函数就连续——洞能补上，故名<strong>可去</strong>。为什么不是跳跃：跳跃要求左右极限存在但不相等，这里两边都是 $1$；为什么不是无穷：无穷间断要求极限为 $\infty$，这里极限是有限的 $1$。其余点 $f=\mathrm{e}<sup>x</sup>$ 处处连续。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 A（连续）</strong>：$x=0$ 根本不在定义域内，"在 $(-\infty,+\infty)$ 内连续"不成立。</li><li><strong>选 C（跳跃）</strong>：左右极限相等，没有"跳"。</li><li><strong>选 D（无穷）</strong>：极限有限，不是 $\infty$。</li><li><strong>跳过定义域讨论</strong>：不先看 $x=0$ 无定义，就可能把 $f$ 当成 $\mathrm{e}<sup>x</sup>$ 直接判连续。</li></ul>
+<blockquote>记忆锚点：$1^\infty$ 先取对数化乘积；"漏洞点"是间断点候选；极限存在有限 + 该点无定义 = 可去间断。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·09 线性表出与齐次方程解集的包含关系</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-08.html" data-q="../question/m2-2021-08/">← <b>m2-2021-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-09/" data-q="../question/m2-2021-09/" data-no-anim="1">m2-2021-09 · 本题</a>
+  <a href="m2-2021-10.html" data-q="../question/m2-2021-10/"><b>m2-2021-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：把「可表出」翻译成矩阵等式',
+    cls: 'key',
+    log: '阿尔法组能由贝塔组表出，等价于存在方阵 C 使 A 等于 B 乘 C',
+    body: '<p>$\\alpha_1,\\alpha_2,\\alpha_3$ 可由 $\\beta_1,\\beta_2,\\beta_3$ 线性表出 $\\iff$ 每列 $\\alpha_i=Bc_i$ $\\iff$ 存在 3 阶方阵 $C$ 使 $$A=BC.$$</p>' },
+  { title: '转置出关键恒等式',
+    cls: 'key',
+    log: '对 A 等于 B C 取转置，得到 A 转置等于 C 转置乘 B 转置',
+    body: '<p>$$A^{\\mathrm T}=(BC)^{\\mathrm T}=C^{\\mathrm T}B^{\\mathrm T}.$$</p><p>于是若 $B^{\\mathrm T}X=\\mathbf{0}$，则 $A^{\\mathrm T}X=C^{\\mathrm T}\\left(B^{\\mathrm T}X\\right)=\\mathbf{0}$：<b>$B^{\\mathrm T}X=\\mathbf{0}$ 的解全是 $A^{\\mathrm T}X=\\mathbf{0}$ 的解</b>——这就是选项 D。</p>' },
+  { title: '用秩解释方向为什么对',
+    cls: 'good',
+    log: '被表出的一组秩更小，转置齐次方程的解空间反而更大',
+    body: '<p>$A=BC$ 保证列空间被包含：$r(A)\\le r(B)$。解空间维数 $3-r(A)\\ \\ge\\ 3-r(B)$——$A^{\\mathrm T}X=\\mathbf{0}$ 的解<b>更多</b>，「小解集装进大解集」正是 D 的方向。</p>' },
+  { title: '为什么 $AX=0$ 与 $BX=0$ 不可比',
+    cls: 'bad',
+    log: '行方向的解集由行向量决定，列关系 A 等于 B C 管不到',
+    body: '<p>$AX=\\mathbf{0}$、$BX=\\mathbf{0}$ 关心的是<b>行</b>方向，$A=BC$ 是列关系，推不出 A、C 的包含方向。</p>' },
+  { title: '反例封口 A 与 B',
+    cls: 'bad',
+    log: '取 B 为单位阵、A 为降秩对角阵，A 与 B 两个方向当场失效',
+    body: '<p>取 $B=E$（此时任何 $A$ 都可表出，$C=A$），再取 $A=\\mathrm{diag}(1,0,0)$：$B^{\\mathrm T}X=\\mathbf{0}$ 只有零解，而 $A^{\\mathrm T}X=\\mathbf{0}$ 有非零解——零解集合装不下非零解，A、B 均不成立。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '结论：B 转置的零解必然是 A 转置的零解，选 D',
+    body: '<p>答案选 <b>D</b>。记忆锚点：<b>$A=BC\\Rightarrow A^{\\mathrm T}=C^{\\mathrm T}B^{\\mathrm T}$，解从 $B^{\\mathrm T}$ 流向 $A^{\\mathrm T}$（小解集 $\\subseteq$ 大解集）</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2021·09　$\\alpha$ 组可由 $\\beta$ 组表出，谁是谁的解？',
+  subtitle: '考点：线性表出 $\\Leftrightarrow A=BC$ · 转置恒等式 · 齐次解集包含与秩',
+  intro: '点击「▶ 播放」逐步展开推理链，最后用反例封口干扰项。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D　$B^{\\mathrm T}X=\\mathbf{0}$ 的解均为 $A^{\\mathrm T}X=\\mathbf{0}$ 的解',
+    html: '推理主线：<b>$A=BC \\Rightarrow A^{\\mathrm T}=C^{\\mathrm T}B^{\\mathrm T} \\Rightarrow B^{\\mathrm T}X=0 \\Rightarrow A^{\\mathrm T}X=0$</b>。易错：把包含方向背反（秩小的解空间更大，解往大处流）；忘记 $AX=0$ 是行方向、$A=BC$ 管不到。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：线性表出 $\Rightarrow A=BC$，转置后解集往「大」处流</h2>
+<p>答案：D</p>
+<h3>第一步：把「可表出」翻译成矩阵等式</h3>
+<p>「$\alpha_1,\alpha_2,\alpha_3$ 可由 $\beta_1,\beta_2,\beta_3$ 线性表出」$\iff$ 每列 $\alpha_i=Bc_i$ $\iff$ 存在三阶方阵 $C$ 使 $A=BC$。</p>
+<h3>第二步：转置，得到关键恒等式</h3>
+<p>$$A<sup>\mathrm T</sup>=(BC)<sup>\mathrm T</sup>=C<sup>\mathrm T</sup>B<sup>\mathrm T</sup>.$$</p>
+<p>于是若 $X$ 满足 $B<sup>\mathrm T</sup>X=0$，则 $A<sup>\mathrm T</sup>X=C<sup>\mathrm T</sup>\left(B<sup>\mathrm T</sup>X\right)=0$：$B<sup>\mathrm T</sup>X=0$ 的解<strong>全部</strong>是 $A<sup>\mathrm T</sup>X=0$ 的解。这正是 D，也是唯一能从前提严格推出的选项。</p>
+<h3>第三步：用秩看清方向为什么对</h3>
+<p>$A=BC$ 保证列空间被包含：$r(A)\le r(B)$。$A<sup>\mathrm T</sup>X=0$ 的解空间维数是 $3-r(A)$，$B<sup>\mathrm T</sup>X=0$ 的是 $3-r(B)$，前者 $\ge$ 后者——「小的解集装进大的解集」，与 D 的包含方向吻合。而 $AX=0$、$BX=0$ 关心的是<strong>行</strong>方向，$A=BC$ 管不到它们。</p>
+<h3>第四步：反例封口 A 与 B</h3>
+<p>取 $B=E$（此时任何 $A$ 都可表出，$C=A$），再取 $A=\mathrm{diag}(1,0,0)$：$BX=0$ 与 $B<sup>\mathrm T</sup>X=0$ 都只有零解，而 $AX=0$、$A<sup>\mathrm T</sup>X=0$ 都有非零解——A、B 声称的「均为何者的解」当场不成立（零解集合装不下非零解）。C 与秩的单向推理相反，同样不恒真。</p>
+<h3>易错点</h3>
+<ul><li><strong>包含方向背反</strong>：被表出的一组「更弱」、秩更小，齐次解空间更大，所以解是从 $B<sup>\mathrm T</sup>$ 流向 $A<sup>\mathrm T</sup>$，不是反过来。</li><li><strong>转置忘了换方向</strong>：$A=BC$ 说的是列关系，$AX=0$ 是行关系，二者不能直接互推。</li><li><strong>以为四选一靠排除</strong>：本题 D 是正面推出的恒真命题，排除只是辅助验证。</li></ul>
+<blockquote>一句话结论：$A=BC\Rightarrow A<sup>\mathrm T</sup>=C<sup>\mathrm T</sup>B<sup>\mathrm T</sup>$，故 $B<sup>\mathrm T</sup>X=0\Rightarrow A<sup>\mathrm T</sup>X=0$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

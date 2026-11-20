@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：四个象限上二重积分的符号（2013 年第 6 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-05.html" data-q="../question/m2-2013-05/">← <b>m2-2013-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-06/" data-q="../question/m2-2013-06/" data-no-anim="1">m2-2013-06 · 本题</a>
+  <a href="m2-2013-07.html" data-q="../question/m2-2013-07/"><b>m2-2013-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>$I_k=\\iint_{D_k}(y-x)\\,\\mathrm dx\\,\\mathrm dy$，$D_k$ 是单位圆在第 $k$ 象限的四分之一扇形。不硬算——先看<b>对称性</b>与<b>被积函数符号</b>。</p>' },
+  { title: '一、三象限：关于 y=x 对称', cls: '',
+    body: '<p>$D_1$、$D_3$ 都关于直线 $y=x$ 对称。作代换 $(x,y)\\mapsto(y,x)$ 区域不变，而被积函数变号：</p>' +
+          '<p>$$I_k=\\iint_{D_k}(x-y)\\,\\mathrm dx\\,\\mathrm dy=-I_k\\;\\Rightarrow\\;I_1=I_3=0.$$</p>' },
+  { title: '排除 A：I1 = 0', cls: 'bad',
+    body: '<p>$I_1=0$，不满足"$&gt;0$"。<b>排除 A</b>。</p>' },
+  { title: '排除 C：I3 = 0', cls: 'bad',
+    body: '<p>$I_3=0$，同理不满足。<b>排除 C</b>。</p>' },
+  { title: '第二象限：y−x 恒正', cls: 'good',
+    body: '<p>第二象限内 $x&lt;0$、$y&gt;0$，两个加项都非负且不同时为零，于是区域内恒有</p>' +
+          '<p>$$y-x=y+(-x)&gt;0.$$</p>' +
+          '<p>正函数的积分必为正：<b>$I_2&gt;0$ ✓</b>。</p>' },
+  { title: '第四象限：y−x 恒负', cls: 'bad',
+    body: '<p>第四象限内 $x&gt;0$、$y&lt;0$，故 $y-x&lt;0$ 恒成立，$I_4&lt;0$。不满足。<b>排除 D</b>。</p>' },
+  { title: '结论：唯一正的是 I2 ✓', cls: 'good',
+    body: '<p>四个象限盘完：$I_1=I_3=0$，$I_2&gt;0$，$I_4&lt;0$。唯一成立的选项是 <b>B</b>。</p>' },
+];
+
+var RIBBONS = [null, null, {k:1, ok:false}, {k:3, ok:false},
+  {k:2, ok:true}, {k:4, ok:false}, null];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : (s.cls === 'good' ? 'ok' : 'step')),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    ribbon: RIBBONS[i],
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$I_k=\\iint_{D_k}(y-x)\\,\\mathrm dx\\,\\mathrm dy$ 的符号判定',
+  subtitle: '考点：二重积分对称性 · 方法：对称归零 → 定号区间',
+  ribbonTitle: '选项判定（A=1 · B=2 · C=3 · D=4）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B：$I_2&gt;0$',
+    html: '记忆锚点：<b>区域关于 $y=x$ 对称 + 被积函数对换 $x,y$ 变号 ⇒ 积分为 0</b>；一、三象限正中这一条。第二象限 $y-x$ 恒正、第四象限恒负。别硬算，符号与对称性先走。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：用对称性与符号定二重积分的正负</h2>
+<p><strong>答案：B</strong></p>
+<h3>第一步：别急着硬算</h3>
+<p>被积函数 $y-x$ 是线性函数，区域是单位圆在四个象限的四分之一扇形（第 1 象限 $x&gt;0,y&gt;0$；第 2 象限 $x&lt;0,y&gt;0$；第 3 象限 $x&lt;0,y&lt;0$；第 4 象限 $x&gt;0,y&lt;0$）。判断 $I_k$ 符号只需两件武器：<strong>对称性</strong>与<strong>定号性</strong>。</p>
+<h3>第二步：一、三象限——关于 $y=x$ 对称，积分归零</h3>
+<p>$D_1$ 与 $D_3$ 都关于直线 $y=x$ 对称。作代换 $(x,y)\mapsto(y,x)$ 区域不变，而被积函数变为 $x-y=-(y-x)$，于是</p>
+<p>$$I_k=-I_k\;\Rightarrow\;I_1=I_3=0\quad(k=1,3).$$</p>
+<p>所以 A、C 的"$&gt;0$"都不成立。</p>
+<h3>第三步：二、四象限——被积函数定号</h3>
+<p>第二象限内 $x&lt;0,\ y&gt;0$，故 $y-x=y+(-x)&gt;0$ 在区域内恒成立，$I_2&gt;0$；第四象限内 $x&gt;0,\ y&lt;0$，故 $y-x&lt;0$ 恒成立，$I_4&lt;0$。</p>
+<h3>第四步：对号</h3>
+<p>四个选项中唯一成立的是 $I_2&gt;0$，选 <strong>B</strong>。</p>
+<p>（若想核对量级：$I_2=\iint_{D_2}(y-x)\,\mathrm dx\,\mathrm dy$ 用极坐标 $y-x=r(\sin\theta-\cos\theta)$ 也可算出确定值，但选择题阶段符号判断已经足够。）</p>
+<h3>易错点</h3>
+<ul><li><strong>逐个硬算积分</strong>：四个二重积分逐个极坐标计算费时费力；先看对称性与符号几乎零成本。</li><li><strong>对称轴用错</strong>：让积分归零的对称轴是 $y=x$（对换 $x,y$ 后被积函数变号），不是坐标轴对称。</li><li><strong>第三象限想当然</strong>：$x,y$ 全负时 $y-x$ 既不恒正也不恒负——正是对称性让它归零，而不是简单的正或负。</li></ul>
+<blockquote>一句话结论：$I_1=I_3=0$，$I_2&gt;0$，$I_4&lt;0$，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

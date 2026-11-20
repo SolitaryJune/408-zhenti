@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>m2-2025-18 · 泰勒反解证可导，求 f′(0)</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-17.html" data-q="../question/m2-2025-17/">← <b>m2-2025-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-18/" data-q="../question/m2-2025-18/" data-no-anim="1">m2-2025-18 · 本题</a>
+  <a href="m2-2025-19.html" data-q="../question/m2-2025-19/"><b>m2-2025-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '由极限反解 $f$ 的展开 · 证明 $f$ 在 $x=0$ 可导并求 $f\\prime(0)$',
+  subtitle: '考点：泰勒展开 / 等价无穷小 + 连续性与导数定义 · 条件：极限 $=-3$',
+  counterLabel: '已完成',
+  intro: '点击「▶ 播放」逐步演示：化简分母 → 展开分子 → 反解结构 → 定义求导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var head = AW.el('div', '',
+      '<p>$$\\lim_{x\\to0}\\frac{x f(x)-e^{2\\sin x}+1}{\\ln(1+x)+\\ln(1-x)}=-3$$</p>');
+    stage.appendChild(head);
+    this._board = AW.el('div', '');
+    stage.appendChild(this._board);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'先用和的对数公式合并分母，认清它是二阶小量', count:1,
+      board: '<div class="aw-row-label"><b>第 1 步 · 化简分母</b></div>'
+        + '<p>$$\\ln(1+x)+\\ln(1-x)=\\ln(1-x^2)\\sim -x^2\\quad(x\\to0)$$</p>'
+        + '<p>分母是 $x^2$ 阶，极限为非零常数 $-3$：分子必为 $x^2$ 阶，这就是突破口。</p>' },
+    { cls:'step', tag:'展开', log:'把 e 的二次正弦展开到平方项，三次项不参与', count:2,
+      ribbon:{k:1, ok:true},
+      board: '<div class="aw-row-label"><b>第 2 步 · $e^{2\\sin x}$ 展到 $x^2$</b></div>'
+        + '<p>$2\\sin x=2x+o(x^2)$，代入 $e^u=1+u+\\dfrac{u^2}2+o(u^2)$：</p>'
+        + '<p>$$e^{2\\sin x}=1+2x+\\frac{(2x)^2}{2}+o(x^2)=1+2x+2x^2+o(x^2)$$</p>' },
+    { cls:'step', tag:'定分子', log:'极限是负 3、分母是负的平方小量，所以分子是 3 倍平方小量', count:3,
+      board: '<div class="aw-row-label"><b>第 3 步 · 由极限条件读出分子的阶</b></div>'
+        + '<p>分子 $=-3\\times$（分母）$+o(x^2)$：</p>'
+        + '<p>$$x f(x)-e^{2\\sin x}+1=3x^2+o(x^2)$$</p>' },
+    { cls:'ok', tag:'反解', log:'把 e 的展开代回去，移项解出 x 倍 f(x)', count:4,
+      ribbon:{k:2, ok:true},
+      board: '<div class="aw-row-label"><b>第 4 步 · 反解 $x f(x)$</b></div>'
+        + '<p>$$x f(x)=e^{2\\sin x}-1+3x^2+o(x^2)=(1+2x+2x^2)-1+3x^2+o(x^2)$$</p>'
+        + '<p>$$x f(x)=2x+5x^2+o(x^2)$$</p>' },
+    { cls:'step', tag:'出结构', log:'两边除以 x（x 不取零），得到 f 在零点附近的样子', count:5,
+      board: '<div class="aw-row-label"><b>第 5 步 · 除以 $x$ 得 $f$ 的结构（$x\\ne0$）</b></div>'
+        + '<p>$$f(x)=2+5x+o(x)\\qquad(x\\to0,\\ x\\ne0)$$</p>'
+        + '<p>注意：这一步只给出 $x\\ne0$ 处的信息，$f(0)$ 还悬着。</p>' },
+    { cls:'step', tag:'连续性', log:'用题设的连续性取极限，把 f(0) 补成 2', count:6,
+      ribbon:{k:3, ok:true},
+      board: '<div class="aw-row-label"><b>第 6 步 · 连续性补 $f(0)$</b></div>'
+        + '<p>$$f(0)=\\lim_{x\\to0}f(x)=\\lim_{x\\to0}\\big(2+5x+o(x)\\big)=2$$</p>' },
+    { cls:'ok', tag:'定义求导', log:'按导数定义写差商，一次项除以 x 剩下 5', count:7,
+      ribbon:{k:4, ok:true},
+      board: '<div class="aw-row-label"><b>第 7 步 · 导数定义</b></div>'
+        + '<p>$$f\\prime(0)=\\lim_{x\\to0}\\frac{f(x)-f(0)}{x}=\\lim_{x\\to0}\\frac{5x+o(x)}{x}=5$$</p>' },
+    { cls:'done', tag:'验算', log:'把 f 约等于 2 加 5x 代回原极限，恰好等于负 3，闭环', count:8, done:true,
+      board: '<div class="aw-row-label"><b>第 8 步 · 验算闭环</b></div>'
+        + '<p>取 $f\\approx2+5x$：分子 $=(2x+5x^2)-(2x+2x^2)+o(x^2)=3x^2+o(x^2)$，除以 $-x^2$ 得 $-3$ ✓，与条件一致。</p>'
+        + '<p>$$\\boxed{f\\text{ 在 }x=0\\text{ 处可导，}f\\prime(0)=5}$$</p>' },
+  ],
+
+  render: function(stage, sn, i){
+    this._board.innerHTML = sn.board || '';
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: 'f 在 x=0 可导，f′(0) = 5',
+    html: '结论：$$f\\prime(0)=5$$'
+      + '解题链条：<b>化简分母 $\\sim-x^2$ → 展开 $e^{2\\sin x}=1+2x+2x^2+o(x^2)$ → 极限反解 $xf(x)=2x+5x^2+o(x^2)$ → 连续性定 $f(0)=2$ → 定义算导数</b>。'
+      + '易错：$f$ 只知连续不能用洛必达；展开精度必须到 $x^2$；$f(0)$ 必须靠连续性单独补上。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：泰勒展开反解出 $f$ 的结构，再用定义证可导</h2>
+<p><strong>答案</strong>：$f(x)$ 在 $x=0$ 处可导，且 $f'(0)=5$。</p>
+<h3>第一步：看清分母的阶</h3>
+<p>$$\ln(1+x)+\ln(1-x)=\ln\big((1+x)(1-x)\big)=\ln(1-x<sup>2</sup>)\sim -x<sup>2</sup>\quad(x\to0).$$</p>
+<p>分母是 $x<sup>2</sup>$ 阶，极限等于 $-3$（非零常数），说明分子也必须是 $x<sup>2</sup>$ 阶：这正是本题的突破口——<strong>从极限条件反解出 $xf(x)$ 的二阶展开</strong>。</p>
+<h3>第二步：把 $e<sup>2\sin x</sup>$ 展到 $x<sup>2</sup>$ 精度</h3>
+<p>$\sin x=x-\dfrac{x<sup>3</sup>}6+\cdots$，故 $2\sin x=2x+o(x<sup>2</sup>)$。三次项为什么可以扔？后面要用 $u<sup>2</sup>=(2x+o(x<sup>2</sup>))<sup>2</sup>=4x<sup>2</sup>+o(x<sup>3</sup>)$，$x<sup>3</sup>$ 落在平方项里仍不超出 $x<sup>2</sup>$ 的精度预算，所以 $\sin$ 展到一阶就够。代入 $e<sup>u</sup>=1+u+\dfrac{u<sup>2</sup>}2+o(u<sup>2</sup>)$，取 $u=2x+o(x<sup>2</sup>)$：</p>
+<p>$$e<sup>2\sin x</sup>=1+2x+\frac{(2x)<sup>2</sup>}2+o(x<sup>2</sup>)=1+2x+2x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<h3>第三步：由极限条件反解 $xf(x)$</h3>
+<p>为什么"极限等于 $-3$"能变成等式？设分子 $N(x)=xf(x)-e<sup>2\sin x</sup>+1$、分母主部 $B(x)=-x<sup>2</sup>$。$\dfrac{N}{B}\to-3$ 等价于 $\dfrac{N-(-3)B}{B}\to0$，即分子与 $-3B$ 之差是比 $x<sup>2</sup>$ 更高阶的小量：</p>
+<p>$$N(x)-3x<sup>2</sup>=o(x<sup>2</sup>)\quad\Longleftrightarrow\quad N(x)=3x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<p>极限值只锁定到 $x<sup>2</sup>$ 主项，零头全部收进 $o(x<sup>2</sup>)$——这就是"极限条件"与"带余项展开"的互译，也是全题后文的源头。于是分子满足</p>
+<p>$$xf(x)-e<sup>2\sin x</sup>+1=3x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<p>代入第二步：</p>
+<p>$$xf(x)=e<sup>2\sin x</sup>-1+3x<sup>2</sup>+o(x<sup>2</sup>)=2x+2x<sup>2</sup>+3x<sup>2</sup>+o(x<sup>2</sup>)=2x+5x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<p>两端除以 $x$（$x\ne0$）得 $f$ 在 $0$ 附近的<strong>结构</strong>：</p>
+<p>$$f(x)=2+5x+o(x).$$</p>
+<h3>第四步：连续性补上 $f(0)$，定义算出 $f'(0)$</h3>
+<p>上面的展开只在 $x\ne0$ 处得出，$f(0)$ 由连续性补齐：</p>
+<p>$$f(0)=\lim_{x\to0}f(x)=\lim_{x\to0}\big(2+5x+o(x)\big)=2.$$</p>
+<p>再按导数定义：</p>
+<p>$$f'(0)=\lim_{x\to0}\frac{f(x)-f(0)}x=\lim_{x\to0}\frac{5x+o(x)}x=5.$$</p>
+<p>验算：取 $f\approx2+5x$，则分子 $=(2x+5x<sup>2</sup>)-(2x+2x<sup>2</sup>)+o(x<sup>2</sup>)=3x<sup>2</sup>+o(x<sup>2</sup>)$，除以分母 $-x<sup>2</sup>$ 恰为 $-3$，与条件吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>对分子用洛必达</strong>：$f$ 只知连续、未必可导，$xf(x)$ 没有导数可求；条件给的是"极限存在"，正确工具是泰勒展开反解，不是洛必达。</li><li><strong>$e<sup>2\sin x</sup>$ 展开精度不足</strong>：分母是 $x<sup>2</sup>$ 阶，$e$ 上必须展到 $x<sup>2</sup>$ 项 $\dfrac{(2x)<sup>2</sup>}2=2x<sup>2</sup>$；只展到 $1+2x$ 就定不出 $f'(0)$。</li><li><strong>跳过连续性直接写 $f(0)=2$</strong>：$f(x)=2+5x+o(x)$ 是在 $x\to0,\ x\ne0$ 过程中得到的，$f(0)$ 的值必须靠"在 $x=0$ 连续"这个条件取极限补上，这是证明中不可缺少的一环。</li><li><strong>导数定义写错对象</strong>：应写 $\dfrac{f(x)-f(0)}x$ 趋于 5；有人误把 $\dfrac{f(x)-2-5x}{x}$ 之类当导数定义。</li></ul>
+<blockquote>一句话结论：分母 $\sim-x<sup>2</sup>$、极限 $-3$ 反解出 $xf(x)=2x+5x<sup>2</sup>+o(x<sup>2</sup>)$；连续性给 $f(0)=2$，导数定义给 $f'(0)=5$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

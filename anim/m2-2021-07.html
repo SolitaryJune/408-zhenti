@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·07 定积分定义：黎曼和三要素</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-06.html" data-q="../question/m2-2021-06/">← <b>m2-2021-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-07/" data-q="../question/m2-2021-07/" data-no-anim="1">m2-2021-07 · 本题</a>
+  <a href="m2-2021-08.html" data-q="../question/m2-2021-08/"><b>m2-2021-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：三要素必须自洽',
+    cls: 'key',
+    log: '黎曼和检验三件事：分几份、取点落在哪、每份多宽',
+    body: '<p>定积分 = 「分割、取点、求和、取极限」：$\\displaystyle\\int_0^1f\\,\\mathrm{d}x=\\lim\\sum_k f(\\xi_k)\\,\\Delta x_k$。核心口诀：<b>宽度 = 总长 ÷ 项数</b>。$[0,1]$ 总长 1，$n$ 项配 $\\frac1n$，$2n$ 项配 $\\frac{1}{2n}$。</p>' },
+  { title: '构造合法方案',
+    cls: 'good',
+    log: 'n 等分取中点，宽度和取点完全自洽，就是选项 B',
+    body: '<p>$n$ 等分：第 $k$ 个小区间 $\\left[\\frac{k-1}{n},\\frac{k}{n}\\right]$，宽度 $\\frac1n$；取中点 $\\xi_k=\\frac{2k-1}{2n}$（确在区间内）。于是 $$\\int_0^1f\\,\\mathrm{d}x=\\lim_{n\\to\\infty}\\sum_{k=1}^{n}f\\!\\left(\\frac{2k-1}{2n}\\right)\\cdot\\frac1n.$$ 正是 B。</p>' },
+  { title: '排 A：宽度缩了一半',
+    cls: 'bad',
+    log: 'A 的取点与 B 相同，但宽度写成二 n 分之一，只有正确值一半',
+    body: '<p>A 的取点 $\\frac{2k-1}{2n}$ 与 B 相同且合法，但求和因子写成 $\\frac{1}{2n}$——$n$ 项却配了 $2n$ 等分的宽度，整个和是正确值的<b>一半</b>。</p>' },
+  { title: '排 C：项数与宽度错配',
+    cls: 'bad',
+    log: 'C 用二 n 个项却是 n 等分的宽度，结果翻倍',
+    body: '<p>C：$\\frac{k-1}{2n}$（$k=1,\\dots,2n$）是 $2n$ 等分的左端点，取点合法，但宽度本该 $\\frac{1}{2n}$，写成 $\\frac1n$ 后和是正确值的<b>两倍</b>。</p>' },
+  { title: '排 D：错得更离谱',
+    cls: 'bad',
+    log: 'D 是二 n 等分的右端点，宽度却写成 n 分之二，翻了四倍',
+    body: '<p>D：$\\frac{k}{2n}$ 是 $2n$ 等分的右端点，宽度该 $\\frac{1}{2n}$，写成 $\\frac2n$——和是正确值的<b>四倍</b>。</p>' },
+  { title: '澄清两个误区',
+    cls: 'key',
+    log: '四个选项取点全都合法，错误全藏在求和因子里',
+    body: '<p>四个选项的取点都合法（连续函数取左端点、右端点、中点极限都一样），<b>坑全在宽度与项数不匹配</b>。另外本题考定义本身，不能靠找原函数验证。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '结论：只有 B 做到项数、宽度、取点三者匹配，选 B',
+    body: '<p>答案选 <b>B</b>。记忆锚点：先数项数 $m$，宽度只能是 $\\frac1m$——B 的「$n$ 项 $\\times\\frac1n$ + 中点取点」三要素全部自洽。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2021·07　用定义表示 $\\displaystyle\\int_0^1 f(x)\\,\\mathrm{d}x$',
+  subtitle: '考点：定积分定义（黎曼和）· 分割、取点、宽度三要素',
+  intro: '点击「▶ 播放」逐步展开推理链：先立标准，再逐项排错。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B　$\\displaystyle\\int_0^1f\\,\\mathrm{d}x=\\lim_{n\\to\\infty}\\sum_{k=1}^{n}f\\!\\left(\\frac{2k-1}{2n}\\right)\\frac1n$',
+    html: '记忆锚点：<b>宽度 = 总长 ÷ 项数</b>（$n$ 项配 $\\frac1n$，$2n$ 项配 $\\frac{1}{2n}$）。干扰项 A/C/D 的取点都合法，错全在求和因子与分法不匹配：一半、两倍、四倍。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：黎曼和三要素——分几份、取哪个点、每份多宽</h2>
+<p>答案：B</p>
+<h3>第一步：写出定义作为检验标准</h3>
+<p>定积分是「分割、取点、求和、取极限」：$\displaystyle\int_0<sup>1f</sup>(x)\,\mathrm{d}x=\lim\sum_{k}f(\xi_k)\,\Delta x_k$。检验选项只看三件事是否<strong>自洽</strong>：分了多少份、$\xi_k$ 是否落在对应小区间内、每份宽度 $\Delta x_k$ 是否等于总长除以份数。</p>
+<h3>第二步：构造一套合法方案</h3>
+<p>对 $[0,1]$ 作 $n$ 等分：分点 $x_k=\dfrac{k}{n}$，第 $k$ 个小区间 $\left[\dfrac{k-1}{n},\dfrac{k}{n}\right]$，宽度 $\dfrac1n$。取中点</p>
+<p>$$\xi_k=\frac12\left(\frac{k-1}{n}+\frac{k}{n}\right)=\frac{2k-1}{2n}\in\left[\frac{k-1}{n},\frac{k}{n}\right].$$</p>
+<p>于是</p>
+<p>$$\int_0<sup>1f</sup>(x)\,\mathrm{d}x=\lim_{n\to\infty}\sum_{k=1}<sup>n</sup>f\!\left(\frac{2k-1}{2n}\right)\cdot\frac1n,$$</p>
+<p>这正是 B：$n$ 项、宽度 $\dfrac1n$、中点取点，三要素全部匹配。</p>
+<h3>第三步：逐项排错（核心口诀：宽度 = 总长 ÷ 项数）</h3>
+<table><thead><tr><th>选项</th><th>项数</th><th>取点</th><th>合法宽度</th><th>实际写的宽度</th><th>后果</th></tr></thead><tbody><tr><td>A</td><td>$n$</td><td>$\frac{2k-1}{2n}$（中点，合法）</td><td>$\frac1n$</td><td>$\frac{1}{2n}$</td><td>是正确值的一半</td></tr><tr><td>B</td><td>$n$</td><td>$\frac{2k-1}{2n}$（中点，合法）</td><td>$\frac1n$</td><td>$\frac1n$</td><td>正确</td></tr><tr><td>C</td><td>$2n$</td><td>$\frac{k-1}{2n}$（左端点，合法）</td><td>$\frac{1}{2n}$</td><td>$\frac1n$</td><td>正确值的两倍</td></tr><tr><td>D</td><td>$2n$</td><td>$\frac{k}{2n}$（右端点，合法）</td><td>$\frac{1}{2n}$</td><td>$\frac2n$</td><td>正确值的四倍</td></tr></tbody></table>
+<p>四个选项的取点都合法——坑全在<strong>宽度与项数不匹配</strong>上。</p>
+<h3>易错点</h3>
+<ul><li><strong>只检查取点</strong>：A、C、D 的取点都是真合法的，最隐蔽的错误藏在求和因子里。</li><li><strong>以为取点必须特殊</strong>：连续函数取左端点、右端点、中点、任意点极限都相同，错不在取点。</li><li><strong>忘记 $f$ 只是连续</strong>：这题考定义本身，不能靠找原函数验证。</li></ul>
+<blockquote>一句话结论：数出项数 $m$，宽度只能是 $\dfrac1m$；只有 B 做到「$n$ 项、宽 $\dfrac1n$、中点取点」自洽，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

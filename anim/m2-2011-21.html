@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·21 两次分部积分降阶求二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-20.html" data-q="../question/m2-2011-20/">← <b>m2-2011-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-21/" data-q="../question/m2-2011-21/" data-no-anim="1">m2-2011-21 · 本题</a>
+  <a href="m2-2011-22.html" data-q="../question/m2-2011-22/"><b>m2-2011-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$I=\\displaystyle\\iint_D xy\\,f_{xy}''(x,y)\\,\\mathrm dx\\,\\mathrm dy$，$D=[0,1]\\times[0,1]$。手上有三个条件：$f(1,y)=0$、$f(x,1)=0$、$\\displaystyle\\iint_D f=a$。思路：<b>分部降阶</b>，让边界项撞上条件。</p>",
+  "<p><b>化累次、对 $y$ 分部</b>（$f_{xy}''=\\dfrac{\\partial f_x'}{\\partial y}$）：$$\\int_0^1 y\\,f_{xy}''\\,\\mathrm dy=\\Big[y\\,f_x\'(x,y)\\Big]_{y=0}^{y=1}-\\int_0^1 f_x\'\\,\\mathrm dy=f_x\'(x,1)-\\int_0^1 f_x\'\\,\\mathrm dy.$$</p>",
+  "<p><b>条件一接管</b>：$f(x,1)\\equiv0$ 是恒等式，对 $x$ 求导得 $f_x\'(x,1)=0$，边界项消失：$$I=-\\int_0^1\\!\\!\\int_0^1 x\\,f_x\'(x,y)\\,\\mathrm dx\\,\\mathrm dy.$$</p>",
+  "<p><b>换序、对 $x$ 分部</b>（$f_x\'=\\dfrac{\\partial f}{\\partial x}$，$f$ 二阶连续偏导故换序合法）：$$\\int_0^1 x\\,f_x\'\\,\\mathrm dx=\\Big[x\\,f(x,y)\\Big]_{x=0}^{x=1}-\\int_0^1 f\\,\\mathrm dx=f(1,y)-\\int_0^1 f\\,\\mathrm dx.$$</p>",
+  "<p><b>条件二接力</b>：$f(1,y)=0$，上式成为 $-\\displaystyle\\int_0^1 f\\,\\mathrm dx$。</p>",
+  "<p><b>合拢</b>：两个负号负负得正，$$I=-\\int_0^1\\Big(-\\int_0^1 f\\,\\mathrm dx\\Big)\\mathrm dy=\\iint_D f(x,y)\\,\\mathrm dx\\,\\mathrm dy=a.$$</p>"
+];
+
+AW.init({
+  title: '$\\displaystyle\\iint_D xy\\,f_{xy}\'\'\\,\\mathrm dx\\,\\mathrm dy$ 的抽象计算：$I=?$',
+  subtitle: '考点：二重积分 + 分部积分 · 方法：降阶 $f_{xy}\'\'\\to f_x\'\\to f$，边界条件逐个化零',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示两次分部积分如何吃掉三个条件。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'f 是抽象函数，只有三个条件；正路是分部降阶，不是求 f', show:1, count:0 },
+    { cls:'step',  tag:'一分部', log:'先对 y 分部：y 挪到边界上，剩 f 对 x 的偏导', show:2, count:1 },
+    { cls:'ok',    tag:'条件一', log:'f(x,1)=0 对 x 求导得边界项为零，积分号前多出一个负号', show:3, count:2 },
+    { cls:'step',  tag:'换序',   log:'交换积分次序，改对 x 分部：x 挪到边界上', show:4, count:3 },
+    { cls:'ok',    tag:'条件二', log:'f(1,y)=0 直接让边界项消失', show:5, count:4 },
+    { cls:'done',  tag:'合拢',   log:'负负得正，剩下正是已知的三重条件：等于 a', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '$I=a$',
+    html: '记忆锚点：<b>抽象函数积分 = 分部降阶 + 边界条件化零</b>。$f\'_x(x,1)=0$ 来自对恒等式 $f(x,1)\\equiv0$ 整体求导；两次分部各带一个负号，最后负负得正。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：两次分部积分降阶，把三个条件逐个吃掉</h2>
+<p>最终答案：$I=\displaystyle\iint_D xy\,f_{xy}''(x,y)\,\mathrm dx\,\mathrm dy=a$。</p>
+<h3>第一步：立机制——分部是把"导数"搬走、把"边界"留下，边界正好对接条件</h3>
+<p>$f$ 是抽象函数，唯一出路是<strong>降阶</strong>：分部积分每做一次，$f$ 的导数阶数降一级，代价是冒出一个边界项。而题目给的三条条件恰好都是"边界/本体信息"：$f(x,1)=0$ 管上边界、$f(1,y)=0$ 管右边界、$\iint_D f=a$ 是最后剩下的本体。所以整道题的骨架就是：<strong>让每条边界条件各自吃掉一个边界项，剩下的正是已知积分</strong>。</p>
+<p><strong>为什么先对 $y$ 分部？</strong> 被积函数里 $y$ 搭配 $f''_{xy}$，且 $f''_{xy}=\dfrac{\partial}{\partial y}f_x'$——对 $y$ 分部后，边界项落在 $y$ 的端点上，正好对接 $f(x,1)=0$ 这条上边界；若先对 $x$ 分部，边界项落在 $x$ 端点，接的就是 $f(1,y)$。分部方向与条件是一一配对的，次序乱了条件就对不上号。</p>
+<h3>第二步：对 y 分部——条件 f(x,1)=0 接管，y=0 端自动为零</h3>
+<p>$$I=\int_0<sup>1</sup> x\left(\int_0<sup>1</sup> y\,\frac{\partial f_x'}{\partial y}\,\mathrm dy\right)\mathrm dx,\qquad<br/>\int_0<sup>1</sup> y\,f_{xy}''\,\mathrm dy=\big[y\,f_x'(x,y)\big]_{y=0}<sup>y=1</sup>-\int_0<sup>1</sup> f_x'(x,y)\,\mathrm dy.$$</p>
+<p>边界项两端逐个看：$y=0$ 处因子 $y=0$，<strong>自动消失</strong>；$y=1$ 处剩 $f_x'(x,1)$。而 $f(x,1)\equiv0$ 是关于 $x$ 的恒等式，两边对 $x$ 求导得 $f_x'(x,1)=0$——这条条件不是白给的，正是为这一步准备的。于是</p>
+<p>$$I=-\int_0<sup>1</sup> x\left(\int_0<sup>1</sup> f_x'(x,y)\,\mathrm dy\right)\mathrm dx=-\int_0<sup>1</sup>\!\!\int_0<sup>1</sup> x\,f_x'(x,y)\,\mathrm dx\,\mathrm dy.$$</p>
+<p>（$f$ 有二阶连续偏导，被积函数连续，交换积分次序合法。）</p>
+<h3>第三步：对 x 分部——条件 f(1,y)=0 接力，x=0 端同样自动为零</h3>
+<p>$$\int_0<sup>1</sup> x\,f_x'\,\mathrm dx=\big[x\,f(x,y)\big]_{x=0}<sup>x=1</sup>-\int_0<sup>1</sup> f(x,y)\,\mathrm dx=f(1,y)-\int_0<sup>1</sup> f\,\mathrm dx=-\int_0<sup>1</sup> f\,\mathrm dx,$$</p>
+<p>其中 $x=0$ 处因子 $x=0$ 自动为零，$x=1$ 处正是条件 $f(1,y)=0$。代回原式：</p>
+<p>$$I=-\int_0<sup>1</sup>\left(-\int_0<sup>1</sup> f(x,y)\,\mathrm dx\right)\mathrm dy=\iint_D f(x,y)\,\mathrm dx\,\mathrm dy=a.$$</p>
+<p>两次分部各贡献一个负号，负负得正——最后剩下的既不是边界也不是别的，恰是题目给的 $\iint_D f$。</p>
+<h3>易错点</h3>
+<ul><li><strong>想先求出 f</strong>：$f$ 只以抽象形式出现，不存在求 $f$ 的通道；正路是"分部降阶 + 边界条件化零"。</li><li><strong>漏掉 f′ₓ(x,1)=0 这一步</strong>：它不是题目直接给的，而是对恒等式 $f(x,1)=0$ <strong>整体对 $x$ 求导</strong>得来。</li><li><strong>分部次序随意选</strong>：先对 $y$ 分部，边界项才落在 $y=1$、接得上 $f(x,1)=0$；方向与条件一一配对，次序颠倒就接不上。</li><li><strong>负号管理混乱</strong>：两次分部各产生一个负号，建议每步写清"减去积分"再代入条件，最后负负得正。</li></ul>
+<blockquote>结论：$f_{xy}''\to f_x'\to f$ 连降两阶，$f(x,1)=0$ 与 $f(1,y)=0$ 分别消灭两个边界项（另两端被因子 $x,y$ 自动清零），剩 $\iint_D f=a$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

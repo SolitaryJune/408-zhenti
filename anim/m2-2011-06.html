@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 6 题 · 三个定积分比大小</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-05.html" data-q="../question/m2-2011-05/">← <b>m2-2011-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-06/" data-q="../question/m2-2011-06/" data-no-anim="1">m2-2011-06 · 本题</a>
+  <a href="m2-2011-07.html" data-q="../question/m2-2011-07/"><b>m2-2011-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：保序性，不算积分',
+    cls: 'key',
+    body: '<p>$I$、$J$、$K$ 三个积分的区间同为 $\\left(0,\\dfrac\\pi4\\right)$。定积分<b>保序</b>：被积函数逐点小者积分小——所以不必算积分值，只比 $\\ln\\sin x$、$\\ln\\cos x$、$\\ln\\cot x$ 的大小。</p>' },
+  { title: '先排 sin 与 cos',
+    cls: 'key',
+    body: '<p>$0<x<\\dfrac\\pi4$ 时（两者的分界在 $\\dfrac\\pi4$）：$$0<\\sin x<\\cos x<1,$$ 故 $\\ln\\sin x<\\ln\\cos x<0$，两个都是负的。</p>' },
+  { title: '再看 cot：它是正的',
+    cls: 'key',
+    body: '<p>$\\cot x=\\dfrac{\\cos x}{\\sin x}$：分子大、分母小，故 $\\cot x>1$，于是 $\\ln\\cot x>0$。</p>' },
+  { title: '连成一条链',
+    cls: 'step',
+    body: '<p>$\\ln$ 单调递增，把三条信息接起来：$$\\ln\\sin x<\\ln\\cos x<0<\\ln\\cot x.$$</p>' },
+  { title: '保序性出结论',
+    cls: 'good',
+    body: '<p>逐点不等号严格且不恒等，积分后保持：$$I=\\int_0^{\\frac\\pi4}\\ln\\sin x\\,\\mathrm dx<K=\\int_0^{\\frac\\pi4}\\ln\\cos x\\,\\mathrm dx<J=\\int_0^{\\frac\\pi4}\\ln\\cot x\\,\\mathrm dx,$$ 即 $I<K<J$，对应选项 B。</p>' },
+  { title: '干扰项剖析',
+    cls: 'bad',
+    body: '<p>A（$I<J<K$）把 $\\cot$ 的位置记反——$\\cot x>1$ 才有 $\\ln\\cot x>0$；C、D 同样败在符号排序。硬算 $\\int\\ln\\sin x$ 更是死路：它不是初等积分。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    count: i,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '第 6 题 · $I$、$J$、$K$ 三个定积分的大小关系',
+  subtitle: '考点：定积分保序性 · 方法：比较被积函数',
+  intro: '点击「▶ 播放」逐步展开推理链：保序原则 → 排被积函数 → 出结论。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B：I < K < J',
+    html: '记忆锚点：<b>同区间比积分＝比被积函数</b>。$(0,\\frac\\pi4)$ 上 $\\ln\\sin x<\\ln\\cos x<0<\\ln\\cot x$，故 $I<K<J$。易错：$(0,1)$ 上的对数为负、大于 $1$ 的对数为正——$J$ 排最后全靠这个符号差。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：同区间定积分比大小——先比被积函数</h2>
+<p>答案：B（$I&lt;K&lt;J$）</p>
+<h3>第一步：统一比较原则</h3>
+<p>三个积分的区间都是 $\left(0,\dfrac\pi4\right)$。定积分保序：被积函数逐点小（且不恒等）者积分小。于是问题转化为比较 $\ln\sin x$、$\ln\cos x$、$\ln\cot x$ 的大小，<strong>完全不必算积分值</strong>。</p>
+<h3>第二步：在区间上排被积函数</h3>
+<p>$0&lt;x&lt;\dfrac\pi4$ 时：$0&lt;\sin x&lt;\cos x&lt;1$（两者的分界在 $\dfrac\pi4$），且</p>
+<p>$$\cot x=\frac{\cos x}{\sin x}&gt;1.$$</p>
+<p>$\ln$ 单调递增，故</p>
+<p>$$\ln\sin x&lt;\ln\cos x&lt;0&lt;\ln\cot x.$$</p>
+<p>前两个为负、第三个为正，这一符号差异保证了不等号是严格的。</p>
+<h3>第三步：保序性给结论</h3>
+<p>逐点不等号严格，积分后保持：</p>
+<p>$$I&lt;K&lt;J.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>硬算三个积分</strong>：$\int\ln\sin x$ 不是初等积分，绕进死胡同；比较法一步出结果。</li><li><strong>$\sin$ 与 $\cos$ 大小记反</strong>：分界在 $x=\dfrac\pi4$，本题区间内 $\sin x&lt;\cos x$。</li><li><strong>忽视 $\ln$ 的符号</strong>：$(0,1)$ 上对数为负、大于 $1$ 时为正，这是 $J$ 排最前的根源。</li></ul>
+<blockquote>结论：选 <strong>B</strong>。同区间比积分，等于同区间比被积函数。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

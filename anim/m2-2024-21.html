@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024·21 泰勒展开加权消元 + 积分放缩证明</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-20.html" data-q="../question/m2-2024-20/">← <b>m2-2024-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-21/" data-q="../question/m2-2024-21/" data-no-anim="1">m2-2024-21 · 本题</a>
+  <a href="m2-2024-22.html" data-q="../question/m2-2024-22/"><b>m2-2024-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>条件：$f$ 二阶可导、$\\lvert f\'\'\\rvert\\le1$（$f\'(0)=f\'(1)$ 本解法用不到）。目标：用 $f(0),f(1)$ 的线性组合控制 $f(x)$。思路：<b>把两个端点值在动点 $x$ 处作带拉格朗日余项的一阶泰勒展开</b>，余项里出现 $f\'\'$，正好用 $\\lvert f\'\'\\rvert\\le1$ 放缩。</p>' },
+  { title: '两个端点值在 $x$ 处展开',
+    cls: '',
+    body: '<p>存在 $\\xi_1\\in(0,x)$、$\\xi_2\\in(x,1)$：</p>' +
+          '$$f(0)=f(x)-xf\'(x)+\\frac{x^2}{2}f\'\'(\\xi_1),\\qquad f(1)=f(x)+(1-x)f\'(x)+\\frac{(1-x)^2}{2}f\'\'(\\xi_2).$$' },
+  { title: '用 $(1-x)$ 与 $x$ 加权组合',
+    cls: 'key',
+    body: '<p>$(1-x)\\times$ 第一式 $+\\ x\\times$ 第二式：$f(x)$ 系数 $(1-x)+x=1$；<b>$f\'(x)$ 系数 $-x(1-x)+x(1-x)=0$，恰好消光</b>——这正是选这组权的原因。</p>' },
+  { title: '解出目标表达式',
+    cls: '',
+    body: '$$f(x)-f(0)(1-x)-f(1)x=-\\frac12\\Big[x^2(1-x)f\'\'(\\xi_1)+x(1-x)^2f\'\'(\\xi_2)\\Big]$$' },
+  { title: '放缩：第 (1) 问得证',
+    cls: 'good',
+    body: '<p>用 $\\lvert f\'\'\\rvert\\le1$ 与 $x+(1-x)=1$：</p>' +
+          '$$\\Big|f(x)-f(0)(1-x)-f(1)x\\Big|\\le\\frac12\\big[x^2(1-x)+x(1-x)^2\\big]=\\frac{x(1-x)}{2}.$$' +
+          '<p>$x=0,1$ 两端两边均为 $0$，式子在 $[0,1]$ 上都成立。</p>' },
+  { title: '过渡：梯形公式对接第 (2) 问',
+    cls: 'key',
+    body: '<p>记 $g(x)=f(x)-f(0)(1-x)-f(1)x$。线性部分积出来恰是梯形值：</p>' +
+          '$$\\int_0^1\\big[f(0)(1-x)+f(1)x\\big]\\mathrm dx=\\frac{f(0)+f(1)}{2}\\ \\Longrightarrow\\ \\int_0^1f\\,\\mathrm dx-\\frac{f(0)+f(1)}{2}=\\int_0^1g\\,\\mathrm dx.$$' },
+  { title: '对逐点界积分：第 (2) 问得证',
+    cls: 'good',
+    body: '<p>两步放缩：$\\Big|\\int_0^1 g\\Big|\\le\\int_0^1\\lvert g\\rvert\\ \\mathrm dx\\le\\int_0^1\\dfrac{x(1-x)}2\\,\\mathrm dx$，而</p>' +
+          '$$\\int_0^1 x(1-x)\\,\\mathrm dx=\\frac12-\\frac13=\\frac16\\ \\Longrightarrow\\ \\Big|\\int_0^1 f\\,\\mathrm dx-\\frac{f(0)+f(1)}{2}\\Big|\\le\\frac12\\cdot\\frac16=\\frac1{12}.$$' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>两问证毕。<b>记忆锚点</b>：展开点选动点 $x$；权取 $(1-x)$ 与 $x$ 让 $f\'$ 消光；第 (2) 问是第 (1) 问的「积分版」，梯形公式 $\\int_0^1[f(0)(1-x)+f(1)x]\\mathrm dx=\\frac{f(0)+f(1)}2$ 是桥梁。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title.replace(/\$/g, ''),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2024·21】证明 $\\Big|f(x)-f(0)(1-x)-f(1)x\\Big|\\le\\dfrac{x(1-x)}2$ 与积分版 $\\dfrac1{12}$',
+  subtitle: '考点：泰勒展开（拉格朗日余项）· 加权消元 · 积分放缩',
+  intro: '点击「▶ 播放」逐步展开证明推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '两问均得证',
+    html: '<p>(1) $\\Big|f(x)-f(0)(1-x)-f(1)x\\Big|\\le\\dfrac{x(1-x)}{2}$；(2) $\\Big|\\displaystyle\\int_0^1f\\,\\mathrm dx-\\dfrac{f(0)+f(1)}2\\Big|\\le\\dfrac1{12}$。</p>' +
+          '<p>核心套路：<b>在动点处展开端点值 + $(1-x),\\ x$ 加权消 $f\'$</b>；对逐点不等式积分时补一句端点处两边同为 $0$。条件 $f\'(0)=f\'(1)$ 在此证法中未用（留给其他证法）。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：在动点处泰勒展开、加权消去 $f'$，再积分放缩</h2>
+<p><strong>答案</strong>：两问均为不等式证明——(1) $\Big|f(x)-f(0)(1-x)-f(1)x\Big|\le\dfrac{x(1-x)}2$；(2) $\Big|\displaystyle\int_0<sup>1f</sup>(x)\mathrm dx-\frac{f(0)+f(1)}2\Big|\le\dfrac1{12}$。</p>
+<h3>第一步（1）：为什么用泰勒展开、在哪展开</h3>
+<p>条件只给了 $\lvert f''\rvert\le1$：要把这个界用进不等式，必须先让 $f''$ 出现在某个<strong>等式</strong>里，再对等式取绝对值放缩——把 $f''$ 引进等式的标准工具就是带拉格朗日余项的一阶泰勒展开。至于在哪展开：目标不等式的左端混着 $f(x)$ 与端点值 $f(0),f(1)$，把两个端点值<strong>往动点 $x$ 处展开</strong>，$f(x)$ 与 $f'(x)$ 会同时出现在两个展开式里，才存在「加权消去 $f'$」的机会。于是固定 $x\in(0,1)$，存在 $\xi_1\in(0,x),\ \xi_2\in(x,1)$，使</p>
+<p>$$f(0)=f(x)-xf'(x)+\frac{x<sup>2</sup>}{2}f''(\xi_1),\qquad<br/>f(1)=f(x)+(1-x)f'(x)+\frac{(1-x)<sup>2</sup>}{2}f''(\xi_2).$$</p>
+<h3>第二步（1）：权 $(1-x)$、$x$ 是解出来的，不是凑出来的</h3>
+<p>两式各带一个 $f'(x)$，想消去它：设组合权重为 $\alpha,\beta$，要求 $f(x)$ 的系数 $\alpha+\beta=1$、$f'(x)$ 的系数 $-\alpha x+\beta(1-x)=0$，解得 $\alpha=1-x,\ \beta=x$——<strong>恰好就是目标左端的两个权</strong>，说明目标不等式的形状本身已经把构造提示给你了。作组合 $(1-x)\times$ 第一式 $+\ x\times$ 第二式：</p>
+<p>$$f(0)(1-x)+f(1)x=f(x)+\frac12\Big[x<sup>2</sup>(1-x)f''(\xi_1)+x(1-x)<sup>2f</sup>''(\xi_2)\Big].$$</p>
+<p>移项即得目标表达式带余项的精确表示。</p>
+<h3>第三步（1）：用 $\lvert f''\rvert\le1$ 放缩</h3>
+<p>$$\Big|f(x)-f(0)(1-x)-f(1)x\Big|<br/>\le\frac12\big[x<sup>2</sup>(1-x)+x(1-x)<sup>2</sup>\big]<br/>=\frac12\,x(1-x)\big[x+(1-x)\big]=\frac{x(1-x)}2.$$</p>
+<p>$x=0,1$ 时不等式两边都是 $0$，故结论在整个 $[0,1]$ 上成立，(1) 得证。</p>
+<h3>第四步（2）：把逐点不等式积分——梯形公式是桥梁</h3>
+<p>为什么 (2) 是 (1) 的积分版？观察 $\dfrac{f(0)+f(1)}2$：它正是端点线性组合 $f(0)(1-x)+f(1)x$ 在 $[0,1]$ 上的积分（$\int_0<sup>1</sup>(1-x)\mathrm dx=\int_0<sup>1x</sup>\mathrm dx=\dfrac12$）。记 $g(x)=f(x)-f(0)(1-x)-f(1)x$，则</p>
+<p>$$\int_0<sup>1f</sup>(x)\,\mathrm dx-\frac{f(0)+f(1)}2=\int_0<sup>1g</sup>(x)\,\mathrm dx,$$</p>
+<p>对 (1) 的逐点界直接积分：</p>
+<p>$$\left|\int_0<sup>1f</sup>\,\mathrm dx-\frac{f(0)+f(1)}2\right|<br/>=\left|\int_0<sup>1g</sup>\,\mathrm dx\right|<br/>\le\int_0<sup>1</sup>|g|\,\mathrm dx<br/>\le\int_0<sup>1</sup>\frac{x(1-x)}2\,\mathrm dx<br/>=\frac12\Big(\frac12-\frac13\Big)=\frac1{12}.$$</p>
+<p>(2) 得证。注：条件 $f'(0)=f'(1)$ 在本解法中未用到（$\lvert f''\rvert\le1$ 已足够），它是为其他证法（如构造辅助函数分部积分）准备的，写卷时不必强凑。</p>
+<h3>易错点</h3>
+<ul><li><strong>展开点选错</strong>：应在动点 $x$ 处展开端点值 $f(0),f(1)$；若反过来在 $0$ 或 $1$ 处展开 $f(x)$，$f'(x)$ 项无法消去，凑不出左端组合。</li><li><strong>权系数死记</strong>：权重 $(1-x)$ 与 $x$ 由「$f(x)$ 系数为 $1$、$f'(x)$ 系数为 $0$」两个方程解出，理解来源才不会在考场上拼错。</li><li><strong>放缩链跳步</strong>：$\big|\int g\big|\le\int|g|\le\int\dfrac{x(1-x)}2$ 是两步，混成一步容易把绝对值套错对象。</li><li><strong>端点漏说明</strong>：积分要在整个 $[0,1]$ 上用 (1) 的界，需补一句端点处两边同为 $0$。</li></ul>
+<blockquote>一句话结论：把 $f''$ 引进等式靠泰勒展开——在动点 $x$ 处展开两端点、用 $(1-x)$ 与 $x$ 加权让 $f'$ 消光，得逐点界 $\dfrac{x(1-x)}2$；端点组合的积分恰是梯形值，对它积分即得 $\dfrac1{12}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

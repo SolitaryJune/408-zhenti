@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2013·21 完全平方弧长与形心横坐标</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-20.html" data-q="../question/m2-2013-20/">← <b>m2-2013-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-21/" data-q="../question/m2-2013-21/" data-no-anim="1">m2-2013-21 · 本题</a>
+  <a href="m2-2013-22.html" data-q="../question/m2-2013-22/"><b>m2-2013-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$L:\\ y=\\dfrac14x^2-\\dfrac12\\ln x$，$1\\le x\\le\\mathrm e$。(1) 求弧长；(2) 求 $D$（曲线、$x=1$、$x=\\mathrm e$ 与 $x$ 轴围成）的形心横坐标。</p>",
+  "<p><b>(1) 求导</b>：$$y'=\\frac x2-\\frac1{2x}=\\frac{x^2-1}{2x}$$</p>",
+  "<p><b>(1) 配完全平方</b>：$$1+(y')^2=1+\\frac{(x^2-1)^2}{4x^2}=\\frac{4x^2+(x^2-1)^2}{4x^2}=\\frac{(x^2+1)^2}{4x^2}$$</p>",
+  "<p><b>(1) 开方</b>：$x\\in[1,\\mathrm e]$ 时 $x>0$，$$\\sqrt{1+(y')^2}=\\frac{x^2+1}{2x}=\\frac x2+\\frac1{2x}$$</p>",
+  "<p><b>(1) 弧长</b>：$$s=\\int_1^{\\mathrm e}\\Big(\\frac x2+\\frac1{2x}\\Big)\\mathrm dx=\\Big[\\frac{x^2}4+\\frac{\\ln x}2\\Big]_1^{\\mathrm e}=\\frac{\\mathrm e^2}4+\\frac12-\\frac14=\\frac{\\mathrm e^2+1}4$$</p>",
+  "<p><b>(2) 形心公式</b>：$$\\bar x=\\frac{\\displaystyle\\int_1^{\\mathrm e}x\\,y\\,\\mathrm dx}{\\displaystyle\\int_1^{\\mathrm e}y\\,\\mathrm dx}$$ $1\\le x\\le\\mathrm e$ 时 $y\\ge0$（$x^2\\ge4\\ln x$），图形在 $x$ 轴上方。</p>",
+  "<p><b>(2) 分母：面积</b>：$$A=\\int_1^{\\mathrm e}\\Big(\\frac{x^2}4-\\frac{\\ln x}2\\Big)\\mathrm dx=\\frac{\\mathrm e^3-1}{12}-\\frac12\\cdot1=\\frac{\\mathrm e^3-7}{12}$$（$\\int_1^{\\mathrm e}\\ln x\\,\\mathrm dx=[x\\ln x-x]_1^{\\mathrm e}=1$）</p>",
+  "<p><b>(2) 分子：静矩</b>：$\\displaystyle\\int_1^{\\mathrm e}x\\ln x\\,\\mathrm dx=\\Big[\\frac{x^2}2\\ln x\\Big]_1^{\\mathrm e}-\\int_1^{\\mathrm e}\\frac x2\\,\\mathrm dx=\\frac{\\mathrm e^2}2-\\frac{\\mathrm e^2-1}4=\\frac{\\mathrm e^2+1}4$，$$\\int_1^{\\mathrm e}xy\\,\\mathrm dx=\\frac{\\mathrm e^4-1}{16}-\\frac{\\mathrm e^2+1}8=\\frac{\\mathrm e^4-2\\mathrm e^2-3}{16}$$</p>",
+  "<p><b>(2) 相除</b>：$$\\bar x=\\frac{\\dfrac{\\mathrm e^4-2\\mathrm e^2-3}{16}}{\\dfrac{\\mathrm e^3-7}{12}}=\\frac{12\\,(\\mathrm e^4-2\\mathrm e^2-3)}{16\\,(\\mathrm e^3-7)}=\\frac{3\\,(\\mathrm e^4-2\\mathrm e^2-3)}{4\\,(\\mathrm e^3-7)}$$</p>",
+  "<p><b>结论</b>：$$\\boxed{\\;s=\\frac{\\mathrm e^2+1}4,\\qquad \\bar x=\\frac{3\\,(\\mathrm e^4-2\\mathrm e^2-3)}{4\\,(\\mathrm e^3-7)}\\;}$$</p>"
+];
+
+AW.init({
+  title: '弧长 $\\dfrac{\\mathrm e^2+1}4$ 与形心横坐标的两步计算',
+  subtitle: '考点：定积分应用（弧长、形心） · 方法：完全平方 + 分部积分',
+  counterLabel: '推导步',
+  ribbonTitle: '两大问（✓ 已完成）',
+  intro: '点击「▶ 播放」逐步演示弧长与形心的计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',     log:'抛物线减对数的曲线，区间 [1, e]，两问：弧长与形心', show:1, count:0 },
+    { cls:'step',  tag:'(1)求导',  log:'导数是 x/2 − 1/(2x)，通分写成分式更好看', show:2, count:1 },
+    { cls:'key',   tag:'(1)配平方', log:'根号里 1 + 导数平方通分后正好是完全平方 (x²+1)²/(4x²)', show:3, count:2 },
+    { cls:'ok',    tag:'(1)开方',  log:'区间内 x 为正，开方得 (x²+1)/(2x)，拆成 x/2 + 1/(2x)', show:4, count:3 },
+    { cls:'ok',    tag:'(1)积分',  log:'积分出 (e²+1)/4，第一问完成', show:5, count:4, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'(2)公式',  log:'形心横坐标 = x 的静矩除以面积，分子分母各一个定积分', show:6, count:5 },
+    { cls:'ok',    tag:'(2)面积',  log:'分母：对 y 积分，对数部分用现成结果，面积 (e³−7)/12', show:7, count:6 },
+    { cls:'step',  tag:'(2)静矩',  log:'分子：对 x·y 积分，x·ln x 那项用分部积分，得 (e⁴−2e²−3)/16', show:8, count:7 },
+    { cls:'ok',    tag:'(2)相除',  log:'分子除分母：12 与 16 约，得 3(e⁴−2e²−3) / 4(e³−7)', show:9, count:8, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成',     log:'弧长 (e²+1)/4，形心横坐标 3(e⁴−2e²−3)/4(e³−7)', show:10, count:9, done:true },
+  ],
+
+  result: {
+    big: '$s=\\dfrac{\\mathrm e^2+1}4,\\qquad \\bar x=\\dfrac{3(\\mathrm e^4-2\\mathrm e^2-3)}{4(\\mathrm e^3-7)}$',
+    html: '记忆锚点：<b>$y=\\frac{x^2}4-\\frac12\\ln x$ 型曲线的 $1+(y\')^2$ 是完全平方</b>，弧长必可积。形心分子是静矩 $\\int xy\\,\\mathrm dx$（勿漏 $x$）；$\\int\\ln x\\,\\mathrm dx=x\\ln x-x$、$\\int x\\ln x\\,\\mathrm dx=\\frac{x^2}2\\ln x-\\frac{x^2}4$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：弧长的「完全平方」设计与形心的「加权平均」机制</h2>
+<p>答案：(1) $s=\dfrac{\mathrm e<sup>2</sup>+1}{4}$；(2) $\bar x=\dfrac{3\,(\mathrm e<sup>4</sup>-2\mathrm e<sup>2</sup>-3)}{4\,(\mathrm e<sup>3</sup>-7)}$。</p>
+<h3>第一步：(1) 弧长公式的来源与本题的设计点</h3>
+<p>弧长公式 $s=\int\sqrt{1+(y')<sup>2</sup>}\,\mathrm dx$ 来自微型勾股：把曲线切成小段，每段长 $\approx\sqrt{(\mathrm dx)<sup>2</sup>+(\mathrm dy)<sup>2</sup>}=\sqrt{1+(y')<sup>2</sup>}\,\mathrm dx$。一般情形 $\sqrt{1+(y')<sup>2</sup>}$ 积不出初等函数，<strong>出题人必先设计好完全平方</strong>——所以拿到题先配平方，而不是硬积。</p>
+<p>$$y'=\frac x2-\frac1{2x},\qquad 1+(y')<sup>2</sup>=\frac{4x<sup>2</sup>+(x<sup>2</sup>-1)<sup>2</sup>}{4x<sup>2</sup>}=\frac{(x<sup>2</sup>+1)<sup>2</sup>}{4x<sup>2</sup>}$$</p>
+<p><strong>为什么恰好能配平</strong>：记 $a=\frac x2,\ b=\frac1{2x}$，交叉项 $2ab=\frac12$。于是 $1+(a-b)<sup>2</sup>=a<sup>2</sup>+b<sup>2</sup>+(1-2ab)=a<sup>2</sup>+b<sup>2</sup>+\frac12=a<sup>2</sup>+b<sup>2</sup>+2ab=(a+b)<sup>2</sup>$——常数 $1$ 分一半给交叉项，剩下的半份恰好补成新的交叉项。看到 $y'$ 里 $x$ 与 $\frac1x$ 成对出现（乘积是常数），就该试 $(a+b)<sup>2</sup>$。</p>
+<h3>第二步：(1) 开方与积分——为什么开方不带绝对值</h3>
+<p>$x\in[1,\mathrm e]$ 时 $x&gt;0$，故 $\sqrt{1+(y')<sup>2</sup>}=\dfrac{x<sup>2</sup>+1}{2x}=\dfrac x2+\dfrac1{2x}$；开方取正号的依据正是 $x\ge1&gt;0$，若区间含 $x&lt;1$ 就必须写 $2\lvert x\rvert$。</p>
+<p>$$s=\int_1<sup>\mathrm e</sup>\Big(\frac x2+\frac1{2x}\Big)\mathrm dx=\Big[\frac{x<sup>2</sup>}4+\frac{\ln x}2\Big]_1<sup>\mathrm e</sup>=\frac{\mathrm e<sup>2</sup>}4+\frac12-\frac14=\frac{\mathrm e<sup>2</sup>+1}4$$</p>
+<h3>第三步：(2) 形心公式的机制——按面积加权平均</h3>
+<p>把 $D$ 想成均匀薄板，形心是杠杆平衡点：横坐标是每个点的 $x$ 按<strong>面积加权平均</strong>，$\bar x=\dfrac{\iint_D x\,\mathrm d\sigma}{\iint_D \mathrm d\sigma}$。$D$ 是 $X$ 型，先对 $y$ 积分时 $x$ 是常数因子，分子 $\iint x\,\mathrm d\sigma=\int_1<sup>\mathrm e</sup>x\cdot(\text{条长})\,\mathrm dx=\int_1<sup>\mathrm e</sup>xy\,\mathrm dx$，分母就是面积 $A=\int_1<sup>\mathrm e</sup>y\,\mathrm dx$（$1\le x\le\mathrm e$ 时 $y\ge0$）。</p>
+<p>分母：$\displaystyle A=\int_1<sup>\mathrm e</sup>\Big(\frac{x<sup>2</sup>}4-\frac{\ln x}2\Big)\mathrm dx=\frac{\mathrm e<sup>3</sup>-1}{12}-\frac12=\frac{\mathrm e<sup>3</sup>-7}{12}$，其中 $\int_1<sup>\mathrm e</sup>\ln x\,\mathrm dx=[x\ln x-x]_1<sup>\mathrm e</sup>=1$。</p>
+<p><strong>分部积分为什么让 $\ln x$ 当 $u$</strong>：分部的方向是「把难缠的函数换出去」——$\ln x$ 求导降为 $\frac1x$、幂函数积分升幂，两者各取所需；选反了 $\ln x$ 会升幂，越积越糟。</p>
+<h3>第四步：静矩分子（分部积分）并相除</h3>
+<p>$$\int_1<sup>\mathrm e</sup>x\ln x\,\mathrm dx=\Big[\frac{x<sup>2</sup>}2\ln x\Big]_1<sup>\mathrm e</sup>-\int_1<sup>\mathrm e</sup>\frac x2\,\mathrm dx=\frac{\mathrm e<sup>2</sup>}2-\frac{\mathrm e<sup>2</sup>-1}4=\frac{\mathrm e<sup>2</sup>+1}4$$</p>
+<p>$$M=\int_1<sup>\mathrm e</sup>xy\,\mathrm dx=\frac{\mathrm e<sup>4</sup>-1}{16}-\frac{\mathrm e<sup>2</sup>+1}{8}=\frac{\mathrm e<sup>4</sup>-2\mathrm e<sup>2</sup>-3}{16}$$</p>
+<p>$$\bar x=\frac{M}{A}=\frac{\dfrac{\mathrm e<sup>4</sup>-2\mathrm e<sup>2</sup>-3}{16}}{\dfrac{\mathrm e<sup>3</sup>-7}{12}}=\frac{3\,(\mathrm e<sup>4</sup>-2\mathrm e<sup>2</sup>-3)}{4\,(\mathrm e<sup>3</sup>-7)}$$</p>
+<p><strong>数值预检</strong>：$\bar x\approx2.11\in[1,\mathrm e]$；曲线在 $[1,\mathrm e]$ 上递增（$y'=\frac{x<sup>2</sup>-1}{2x}\ge0$），右侧面积大，形心应偏右——$\bar x&gt;\frac{1+\mathrm e}{2}\approx1.86$，吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>开方不讨论符号</strong>：$\sqrt{4x<sup>2</sup>}=2\lvert x\rvert$，本题靠 $x\ge1$ 才去掉绝对值；区间换了符号要补讨论。</li><li><strong>分子漏乘 $x$</strong>：$\bar x$ 的分子是静矩 $\int xy\,\mathrm dx$，不是面积 $\int y\,\mathrm dx$。</li><li><strong>分部方向反了</strong>：$\int x\ln x\,\mathrm dx$ 必须 $u=\ln x,\ v=\frac{x<sup>2</sup>}2$，选反了越积越复杂。</li></ul>
+<blockquote>记忆锚点：弧长题先配平方（$x$ 与 $1/x$ 成对是信号）；形心 = 静矩 ÷ 面积，$\ln x$ 分部永远当 $u$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

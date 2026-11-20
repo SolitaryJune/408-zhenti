@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017·20 二重积分：对称性 + 极坐标</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-19.html" data-q="../question/m2-2017-19/">← <b>m2-2017-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-20/" data-q="../question/m2-2017-20/" data-no-anim="1">m2-2017-20 · 本题</a>
+  <a href="m2-2017-21.html" data-q="../question/m2-2017-21/"><b>m2-2017-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2017·20　$D=\\{x^{2}+y^{2}\\le2y\\}$，求 $\\iint\\limits_{D}(x+1)^{2}\\,\\mathrm{d}x\\mathrm{d}y$',
+  subtitle: '考点：二重积分 · 方法：对称性拆项 → 极坐标 → 点火公式',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，三块拆开逐个击破。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "$$D:\\ x^{2}+y^{2}\\le2y\\ \\Longleftrightarrow\\ x^{2}+(y-1)^{2}\\le1\\quad(\\text{圆心}(0,1),\\ r=1,\\ \\text{关于}\\ y\\ \\text{轴对称})$$",
+      "<b>① 展开：</b>$(x+1)^{2}=x^{2}+2x+1$，三块分治",
+      "<b>② 奇函数归零：</b>$D$ 关于 $y$ 轴对称而 $2x$ 是 $x$ 的奇函数 $\\Rightarrow\\displaystyle\\iint_D2x\\,\\mathrm{d}x\\mathrm{d}y=0$",
+      "<b>③ 面积白捡：</b>$\\displaystyle\\iint_D1\\,\\mathrm{d}x\\mathrm{d}y=\\pi\\cdot1^{2}=\\pi$",
+      "<b>④ 极坐标：</b>边界 $x^{2}+y^{2}=2y\\Rightarrow r=2\\sin\\theta$，$\\theta\\in[0,\\pi]$；$x=r\\cos\\theta$，$\\mathrm{d}x\\mathrm{d}y=r\\,\\mathrm{d}r\\,\\mathrm{d}\\theta$",
+      "<b>⑤ 先积 $r$：</b>$\\displaystyle\\iint_Dx^{2}\\,\\mathrm{d}x\\mathrm{d}y=\\int_0^{\\pi}\\cos^{2}\\theta\\left[\\frac{r^{4}}{4}\\right]_0^{2\\sin\\theta}\\mathrm{d}\\theta=4\\int_0^{\\pi}\\sin^{4}\\theta\\cos^{2}\\theta\\,\\mathrm{d}\\theta$",
+      "<b>⑥ 对称折半：</b>被积函数关于 $\\theta=\\dfrac{\\pi}{2}$ 对称 $\\Rightarrow\\ 8\\displaystyle\\int_0^{\\pi/2}\\sin^{4}\\theta\\cos^{2}\\theta\\,\\mathrm{d}\\theta$",
+      "<b>⑦ 点火公式：</b>$\\displaystyle\\int_0^{\\pi/2}\\sin^{4}\\theta\\cos^{2}\\theta\\,\\mathrm{d}\\theta=\\frac{3\\cdot1\\cdot1}{6\\cdot4\\cdot2}\\cdot\\frac{\\pi}{2}=\\frac{\\pi}{32}\\ \\Rightarrow\\ 8\\cdot\\frac{\\pi}{32}=\\frac{\\pi}{4}$",
+      "<b>⑧ 合并：</b>$$\\iint_D(x+1)^{2}\\,\\mathrm{d}x\\mathrm{d}y=\\frac{\\pi}{4}+0+\\pi=\\frac{5\\pi}{4}$$"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'认域', log:'配方后看出：圆心在纵轴上一、半径为一的圆盘，左右对称', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'拆项', log:'平方展开成三块：x 平方、二 x、一，逐个处理', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'归零', log:'区域左右对称，二 x 是奇函数，这项直接为零', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'面积', log:'常数项的积分就是圆盘面积，白捡一个派', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'换极', log:'边界化成 r 等于二倍 sin theta，角度从零到派，别忘乘 r', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'积 r', log:'r 的三次方先积，上限代入得四倍 sin 四次方 cos 平方', count:5, ribbon:{k:6, ok:true} },
+    { cls:'step',  tag:'折半', log:'被积函数关于二分之派对称，积分区间折半、系数加倍', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'点火', log:'点火公式：降二连乘比上总次数降二连乘，再乘二分之派，得三十二分之派', count:7, ribbon:{k:8, ok:true} },
+    { cls:'ok',    tag:'合并', log:'四分之派加零加派，合为四分之五派', count:8, ribbon:{k:9, ok:true} },
+    { cls:'done',  tag:'完成', log:'结论：二重积分等于四分之五派', count:9, ribbon:{k:10, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\iint_D(x+1)^{2}\\,\\mathrm{d}x\\mathrm{d}y=\\dfrac{5\\pi}{4}$',
+    html: '记忆锚点：<b>圆 $x^{2}+y^{2}=2ay\\Rightarrow r=2a\\sin\\theta$；$=2ax\\Rightarrow r=2a\\cos\\theta$</b>，且 $\\mathrm{d}x\\mathrm{d}y=r\\,\\mathrm{d}r\\,\\mathrm{d}\\theta$ 别丢 $r$。流程：先查对称性扔奇函数项 → 面积项直接写 → 剩下一项点火公式。验算路：平移成单位圆，$\\iint x^{2}=\\dfrac12\\iint r^{2}=\\dfrac{\\pi}{4}$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：对称性拆项 + 极坐标算 $\iint x<sup>2</sup>$</h2>
+<p>答案：$\dfrac{5\pi}{4}$</p>
+<h3>第一步：认区域——为什么先配方</h3>
+<p>$x<sup>2</sup>+y<sup>2</sup>\le 2y$ 配方得 $x<sup>2</sup>+(y-1)<sup>2</sup>\le1$：圆心 $(0,1)$、半径 $1$ 的圆盘。配方不只是化简：一眼看出<strong>圆心在 $y$ 轴上</strong>（对称性可用）、<strong>原点到圆心距离恰为半径</strong>（圆过原点，后面极坐标从原点发射线才扫得干净）。面积 $\pi$。</p>
+<h3>第二步：展开被积函数——对称性为什么能「扔掉」一项</h3>
+<p>$$(x+1)<sup>2</sup>=x<sup>2</sup>+2x+1.$$</p>
+<p>$\iint 2x$ 为零的机制不是口诀，而是<strong>配对抵消</strong>：$D$ 关于 $y$ 轴对称，区域内的点 $(x,y)$ 与 $(-x,y)$ 成对出现且都在 $D$ 内；这两点上 $2x$ 的值互为相反数，贡献相加为零。所有点两两配对，积分必为 $0$。而 $x<sup>2</sup>$、$1$ 关于 $x$ 是偶函数，成对点上取值相同，不发生抵消，得实算。又 $\iint_D 1\,\mathrm{d}x\mathrm{d}y$ 就是面积本身 $=\pi$。于是只剩</p>
+<p>$$\iint_D x<sup>2</sup>\,\mathrm{d}x\mathrm{d}y.$$</p>
+<h3>第三步：为什么用极坐标、边界怎么变成 r=2sinθ</h3>
+<p>圆域且<strong>圆过原点</strong>，是极坐标的标准场景：从原点出发的射线与区域交成一段 $[0,\text{边界}]$，累次积分上下限直接可写；若在直角坐标下先 $y$ 后 $x$，边界 $\sqrt{2y-y<sup>2</sup>}$ 带根号，繁琐得多。代入 $x=r\cos\theta,\ y=r\sin\theta$ 到边界 $x<sup>2</sup>+y<sup>2</sup>=2y$：</p>
+<p>$$r<sup>2</sup>=2r\sin\theta\ \Longrightarrow\ r\,(r-2\sin\theta)=0.$$</p>
+<p>$r=0$ 只是原点，而原点已被 $r=2\sin\theta$ 在 $\theta=0,\pi$ 时取到，除以 $r$ 不丢点，故边界 $r=2\sin\theta$。圆盘全在 $x$ 轴上方一侧（$y$ 从 $0$ 到 $2$），射线从 $x$ 正半轴转到 $x$ 负半轴即扫完全域，故 $\theta\in[0,\pi]$；$\theta\in(\pi,2\pi)$ 时 $\sin\theta&lt;0$，$r=2\sin\theta&lt;0$ 无点。面积元 $\mathrm{d}x\mathrm{d}y=r\,\mathrm{d}r\mathrm{d}\theta$：</p>
+<p>$$\iint_D x<sup>2</sup>\,\mathrm{d}x\mathrm{d}y=\int_0<sup>\pi</sup>\!\!\int_0<sup>2\sin\theta</sup>r<sup>2</sup>\cos<sup>2</sup>\theta\cdot r\,\mathrm{d}r\,\mathrm{d}\theta=4\int_0<sup>\pi</sup>\sin<sup>4</sup>\theta\cos<sup>2</sup>\theta\,\mathrm{d}\theta.$$</p>
+<h3>第四步：点火公式收尾</h3>
+<p>被积函数 $\sin<sup>4</sup>\theta\cos<sup>2</sup>\theta$ 关于 $\theta=\dfrac{\pi}{2}$ 对称，折半到 $[0,\frac\pi2]$ 再用 Wallis 公式（$m,n$ 均偶时，系数为"分子分母各降二连乘之比"乘 $\dfrac\pi2$）：</p>
+<p>$$4\cdot2\int_0<sup>\pi/2</sup>\sin<sup>4</sup>\theta\cos<sup>2</sup>\theta\,\mathrm{d}\theta=8\cdot\frac{3\cdot1\cdot1}{6\cdot4\cdot2}\cdot\frac{\pi}{2}=8\cdot\frac{\pi}{32}=\frac{\pi}{4}.$$</p>
+<p>（不想背公式也可用 $\sin<sup>2</sup>\theta=\dfrac{1-\cos2\theta}{2}$ 降幂硬算，结果相同。）</p>
+<h3>第五步：合并与验算</h3>
+<p>$$\iint_D(x+1)<sup>2</sup>\,\mathrm{d}x\mathrm{d}y=\frac{\pi}{4}+0+\pi=\frac{5\pi}{4}.$$</p>
+<p>（验算的另一条路：平移 $u=y-1$，区域变成单位圆 $x<sup>2</sup>+u<sup>2</sup>\le1$ 而 $x<sup>2</sup>$ 不变；单位圆上由轮换对称 $\iint x<sup>2</sup>=\dfrac12\iint(x<sup>2</sup>+u<sup>2</sup>)=\dfrac12\int_0<sup>2\pi</sup>\!\!\int_0<sup>1r</sup><sup>3</sup>\,\mathrm{d}r\,\mathrm{d}\theta=\dfrac\pi4$，吻合。）</p>
+<h3>易错点</h3>
+<ul><li><strong>对称性只背结论</strong>：要会说清"配对抵消"——奇函数项在对称区域上成对相消；偶函数项不消，仍要算。</li><li><strong>极坐标忘乘 $r$</strong>：$\mathrm{d}x\mathrm{d}y=r\,\mathrm{d}r\mathrm{d}\theta$，漏 $r$ 全盘错。</li><li><strong>边界方程化错</strong>：$x<sup>2</sup>+y<sup>2</sup>=2y$ 化为 $r=2\sin\theta$（不是 $r=2\cos\theta$），$\theta$ 范围 $[0,\pi]$；除以 $r$ 时想一下原点是否被丢。</li><li><strong>点火公式代错</strong>：$\int_0<sup>\pi/2</sup>\sin<sup>4</sup>\cos<sup>2</sup>=\dfrac{3\cdot1\cdot1}{6\cdot4\cdot2}\cdot\dfrac{\pi}{2}=\dfrac{\pi}{32}$，上下都是"降二连乘"。</li></ul>
+<blockquote>一句话结论：奇函数项配对抵消、面积白捡 $\pi$、极坐标点火算得 $\dfrac\pi4$，合计 $\dfrac{5\pi}{4}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2009·08 合同变换 Q^T A Q</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-07.html" data-q="../question/m2-2009-07/">← <b>m2-2009-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-08/" data-q="../question/m2-2009-08/" data-no-anim="1">m2-2009-08 · 本题</a>
+  <a href="m2-2009-09.html" data-q="../question/m2-2009-09/"><b>m2-2009-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>目标</b>：$\\boldsymbol Q=(\\boldsymbol\\alpha_1+\\boldsymbol\\alpha_2,\\ \\boldsymbol\\alpha_2,\\ \\boldsymbol\\alpha_3)$，把它写成 $\\boldsymbol P\\boldsymbol M$ 的形式。</p>",
+  "<p><b>过渡矩阵</b>：每列 = $\\boldsymbol P$ 乘一个坐标向量，故 $$\\boldsymbol Q=\\boldsymbol P\\boldsymbol M,\\qquad \\boldsymbol M=\\begin{pmatrix}1&0&0\\\\1&1&0\\\\0&0&1\\end{pmatrix}$$</p>",
+  "<p><b>代入已知</b>（$\\boldsymbol P^{\\mathrm T}\\boldsymbol A\\boldsymbol P=D=\\mathrm{diag}(1,1,2)$）：$$\\boldsymbol Q^{\\mathrm T}\\boldsymbol A\\boldsymbol Q=\\boldsymbol M^{\\mathrm T}\\boldsymbol D\\boldsymbol M$$注意：左乘 $\\boldsymbol M^{\\mathrm T}$、右乘 $\\boldsymbol M$。</p>",
+  "<p><b>先右乘</b>：$$\\boldsymbol D\\boldsymbol M=\\begin{pmatrix}1&0&0\\\\1&1&0\\\\0&0&2\\end{pmatrix}$$</p>",
+  "<p><b>再左乘</b> $\\boldsymbol M^{\\mathrm T}=\\begin{pmatrix}1&1&0\\\\0&1&0\\\\0&0&1\\end{pmatrix}$：$$\\boldsymbol M^{\\mathrm T}\\boldsymbol D\\boldsymbol M=\\begin{pmatrix}2&1&0\\\\1&1&0\\\\0&0&2\\end{pmatrix}$$</p>",
+  "<p><b>结论</b>：左上 $2\\times2$ 块变为 $\\begin{pmatrix}2&1\\\\1&1\\end{pmatrix}$，右下仍是 $2$，与选项 <b>A</b> 一致。</p>"
+];
+
+AW.init({
+  title: '列组合下的合同变换：求 $\\boldsymbol Q^{\\mathrm T}\\boldsymbol A\\boldsymbol Q$',
+  subtitle: '考点：矩阵运算 / 合同 · 方法：$\\boldsymbol Q=\\boldsymbol P\\boldsymbol M \\Rightarrow \\boldsymbol Q^{\\mathrm T}\\boldsymbol A\\boldsymbol Q=\\boldsymbol M^{\\mathrm T}\\boldsymbol D\\boldsymbol M$',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',     log:'Q 的列是 P 的列的线性组合，找过渡矩阵 M', show:1, count:0 },
+    { cls:'step',  tag:'过渡矩阵', log:'第一列是 α1+α2，M 的第 (1,1)、(2,1) 处为 1', show:2, count:1 },
+    { cls:'step',  tag:'代入',     log:'合同变换：左乘 M 转置、右乘 M，方向别反', show:3, count:2 },
+    { cls:'step',  tag:'先右乘',   log:'D 右乘 M：把 M 的行乘进对角元', show:4, count:3 },
+    { cls:'ok',    tag:'再左乘',   log:'左乘 M 转置，第一行加到第二行上，出现非对角元 1', show:5, count:4 },
+    { cls:'done',  tag:'完成',     log:'结果左上块是 (2,1;1,1)，右下 2，选 A', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '选 A',
+    html: '记忆锚点：<b>左 $\\boldsymbol M^{\\mathrm T}$、右 $\\boldsymbol M$</b>，方向反了会得到选项 B 的矩阵；$\\boldsymbol M$ 非对角，乘完必然出现非对角元 $1$，C、D 的「仍是对角阵」都是错觉。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：列组合矩阵的合同变换</h2>
+<p>答案：A</p>
+<h3>第一步：先立机制——"新列是旧列的线性组合"⇒ 存在过渡矩阵 $M$</h3>
+<p>矩阵右乘一个矩阵，效果就是"对列做线性组合"。$\boldsymbol Q$ 的第 1 列 $\boldsymbol\alpha_1+\boldsymbol\alpha_2=\boldsymbol P(1,1,0)<sup>\mathrm T</sup>$，第 2、3 列不变，故</p>
+<p>$$\boldsymbol Q=\boldsymbol P\boldsymbol M,\qquad \boldsymbol M=\begin{pmatrix}1&amp;0&amp;0\\1&amp;1&amp;0\\0&amp;0&amp;1\end{pmatrix}.$$</p>
+<h3>第二步：为什么是左 $\boldsymbol M<sup>\mathrm T</sup>$ 右 $\boldsymbol M$，方向不能换</h3>
+<p>代入后只是转置运算与结合律的机械结果：</p>
+<p>$$\boldsymbol Q<sup>\mathrm T</sup>\boldsymbol A\boldsymbol Q=(\boldsymbol P\boldsymbol M)<sup>\mathrm T</sup>\boldsymbol A(\boldsymbol P\boldsymbol M)=\boldsymbol M<sup>\mathrm T</sup>\big(\boldsymbol P<sup>\mathrm T</sup>\boldsymbol A\boldsymbol P\big)\boldsymbol M=\boldsymbol M<sup>\mathrm T</sup>\boldsymbol D\boldsymbol M,$$</p>
+<p>关键在 $(\boldsymbol P\boldsymbol M)<sup>\mathrm T</sup>=\boldsymbol M<sup>\mathrm T</sup>\boldsymbol P<sup>\mathrm T</sup>$——<strong>转置会颠倒乘积顺序</strong>，所以 $\boldsymbol P<sup>\mathrm T</sup>$ 仍夹在 $\boldsymbol A$ 左侧。误算成 $\boldsymbol M\boldsymbol D\boldsymbol M<sup>\mathrm T</sup>$（选项 B 的来源）正是漏了这条：转置后 $\boldsymbol M<sup>\mathrm T</sup>$ 必须跑到左边去。</p>
+<h3>第三步：两次矩阵乘法</h3>
+<p>先右乘：</p>
+<p>$$\boldsymbol D\boldsymbol M=\begin{pmatrix}1&amp;0&amp;0\\1&amp;1&amp;0\\0&amp;0&amp;2\end{pmatrix},$$</p>
+<p>再左乘 $\boldsymbol M<sup>\mathrm T</sup>=\begin{pmatrix}1&amp;1&amp;0\\0&amp;1&amp;0\\0&amp;0&amp;1\end{pmatrix}$：</p>
+<p>$$\boldsymbol M<sup>\mathrm T</sup>\boldsymbol D\boldsymbol M=\begin{pmatrix}2&amp;1&amp;0\\1&amp;1&amp;0\\0&amp;0&amp;2\end{pmatrix}.$$</p>
+<p><strong>自检</strong>：$\boldsymbol D$ 对称，合同变换保持对称性（$(\boldsymbol Q<sup>\mathrm T</sup>\boldsymbol A\boldsymbol Q)<sup>\mathrm T</sup>=\boldsymbol Q<sup>\mathrm T</sup>\boldsymbol A<sup>\mathrm T</sup>\boldsymbol Q$），故结果的 $(1,2)$ 与 $(2,1)$ 元必须相等——本题都是 $1$，通过；若算出不对称的矩阵，乘法必有一处出错。</p>
+<h3>第四步：收尾</h3>
+<p>结果即选项 A。非对角元 $1$ 的来历：$\boldsymbol M$ 不是对角阵，那两个 $1$ 乘进去必然产生交叉项——"合同变换保对角"是错觉，它保对称、保惯性（正负特征值个数），不保"对角"。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 B</strong>：乘法方向写反成 $\boldsymbol M\boldsymbol D\boldsymbol M<sup>\mathrm T</sup>$，病根是忘了转置颠倒顺序。</li><li><strong>误选 C、D</strong>：以为结果仍是对角阵（$\operatorname{diag}(2,1,2)$、$\operatorname{diag}(1,2,2)$）或直接照搬 $\boldsymbol D$ 改数字；交叉项必须老实乘出来。</li></ul>
+<blockquote>记忆点：$\boldsymbol Q=\boldsymbol P\boldsymbol M\Rightarrow\boldsymbol Q<sup>\mathrm T</sup>\boldsymbol A\boldsymbol Q=\boldsymbol M<sup>\mathrm T</sup>(\boldsymbol P<sup>\mathrm T</sup>\boldsymbol A\boldsymbol P)\boldsymbol M$；转置颠倒顺序，故左 $\boldsymbol M<sup>\mathrm T</sup>$ 右 $\boldsymbol M$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

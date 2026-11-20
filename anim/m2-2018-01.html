@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·01 1^∞ 型幂指极限定参数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-23.html" data-q="../question/m2-2017-23/">← <b>m2-2017-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-01/" data-q="../question/m2-2018-01/" data-no-anim="1">m2-2018-01 · 本题</a>
+  <a href="m2-2018-02.html" data-q="../question/m2-2018-02/"><b>m2-2018-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：识别 $1^\\infty$ 型</b>$$\\lim_{x\\to0}\\left(e^x+ax^2+bx\\right)^{\\frac1{x^2}}=1,\\qquad x\\to0:\\ \\text{底数}\\to e^0=1,\\ \\frac1{x^2}\\to+\\infty$$ 幂指结构先取对数降维。</p>",
+  "<p><b>第二步：取对数</b>$$\\ln L=\\lim_{x\\to0}\\frac{\\ln\\left(e^x+ax^2+bx\\right)}{x^2}=0\\quad\\Longleftrightarrow\\quad L=1$$ 原极限为 1 等价于对数极限为 0。</p>",
+  "<p><b>第三步：泰勒展开到 $x^2$</b>$$e^x=1+x+\\frac{x^2}{2}+o(x^2)\\ \\Longrightarrow\\ u=e^x+ax^2+bx-1=(1+b)x+\\left(\\frac12+a\\right)x^2+o(x^2)$$ 底数 $=1+u$，$u\\to0$；分母是 $x^2$，一阶项不许丢。</p>",
+  "<p><b>第四步：$\\ln(1+u)\\sim u$ 整体替换</b>$$\\ln L=\\lim_{x\\to0}\\frac{(1+b)x+\\left(\\frac12+a\\right)x^2+o(x^2)}{x^2}=\\lim_{x\\to0}\\left[\\frac{1+b}{x}+\\left(\\frac12+a\\right)+o(1)\\right]$$ 一阶项与二阶项分别曝光。</p>",
+  "<p><b>第五步：一阶项必须消失 → 定 $b$</b>$$\\frac{1+b}{x}\\ \\text{发散}\\ \\Longrightarrow\\ 1+b=0\\ \\Longrightarrow\\ b=-1$$ 否则对数极限根本不存在。</p>",
+  "<p><b>第六步：二阶项归零 → 定 $a$</b>$$\\frac12+a=0\\ \\Longrightarrow\\ a=-\\frac12,\\qquad \\ln L=0$$ 对数极限恰好等于 0，两个条件全部用上。</p>",
+  "<p><b>结论</b>$$L=e^{\\ln L}=e^0=1\\ \\checkmark\\qquad a=-\\frac12,\\ b=-1\\quad(\\text{答案 B})$$ 一阶逼死 $b$，二阶定死 $a$。</p>"
+];
+
+AW.init({
+  title: '$1^\\infty$ 型定参数：$\\lim_{x\\to0}\\left(e^x+ax^2+bx\\right)^{1/x^2}=1$',
+  subtitle: '考点：幂指函数极限 · 方法：取对数 + 泰勒展开定阶',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示取对数与泰勒定阶的全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'识别类型', log:'底数→1、指数 1/x²→∞，1^∞ 型，先取对数', show:1, count:0 },
+    { cls:'step',  tag:'取对数',  log:'原式=1 等价于对数极限=0', show:2, count:1 },
+    { cls:'step',  tag:'泰勒展开', log:'e^x 展到二阶，底数=1+u，给 u 定阶', show:3, count:2 },
+    { cls:'step',  tag:'等价替换', log:'ln(1+u) 与 u 等价，一阶二阶项曝光', show:4, count:3 },
+    { cls:'ok',    tag:'定 b',   log:'一阶项发散 ⇒ 1+b=0，b=-1', show:5, count:4, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'定 a',   log:'二阶项归零 ⇒ 1/2+a=0，a=-1/2', show:6, count:5, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成',   log:'对数极限=0，原极限=1，选 B', show:7, count:6, done:true, ribbon:{k:3, ok:true} },
+  ],
+
+  result: {
+    big: '答案 B：$a=-\\dfrac12,\\ b=-1$',
+    html: '记忆锚点：<b>$1^\\infty$ 型三步走</b>：取对数 → 底数减 1 泰勒定阶 → 逐阶置零。分母 $x^2$ 先逼死一阶项（$1+b=0$，否则发散），再令二阶系数归零（$\\dfrac12+a=0$）。误选 A 是只让极限存在、忘了对数极限必须为 $0$——那会得 $e$ 而不是 $1$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$1^\infty$ 型幂指极限反求参数（取对数降维 + 泰勒定阶）</h2>
+<p>答案：B（$a=-\dfrac12,\ b=-1$）</p>
+<h3>第一步：先懂机制——幂指极限为什么一律先取对数</h3>
+<p>底数 $g(x)=e<sup>x</sup>+ax<sup>2</sup>+bx\to1$，指数 $\dfrac1{x<sup>2</sup>}\to+\infty$，是 $1^\infty$ 型。这种形式没法直接用极限四则运算（指数位置是 $\infty$，代不进去），处理机制只有一条：<strong>底数为正时 $g<sup>1/x^2</sup>=e<sup>\frac{\ln g</sup>{x<sup>2</sup>}}$</strong>，而 $e<sup>t</sup>$ 连续且严格单调，所以</p>
+<p>$$L=\lim_{x\to0}g<sup>1/x^2</sup>=e<sup>\lim_{x\to0</sup>\frac{\ln g}{x<sup>2</sup>}},$$</p>
+<p>"原极限 $=1$" 与 "对数极限 $=0$" 完全等价（$e<sup>0</sup>=1$，且 $e<sup>v(x)</sup>\to1$ 必推 $v(x)\to0$）。取对数把"幂"降成"乘积"，这就是为什么 $1^\infty$ 型一律先取对数。</p>
+<p>再把底数写成 $1+u$，由 $\ln(1+u)=u+o(u)$（$u\to0$），条件进一步等价于</p>
+<p>$$\lim_{x\to0}\frac{u}{x<sup>2</sup>}=0,\qquad u=e<sup>x</sup>+ax<sup>2</sup>+bx-1.$$</p>
+<p><strong>为什么 $\ln(1+u)\sim u$ 必须整块用、不能拆项？</strong> 对数只有乘除的分配律（$\ln(AB)=\ln A+\ln B$），对加减没有；$u$ 本身是 $(1+b)x+\left(\frac12+a\right)x<sup>2</sup>$ 的和，只能整体放进 $\ln(1+\ \cdot\ )$ 里作等价。</p>
+<h3>第二步：泰勒展开给 $u$ 定阶</h3>
+<p>分母是 $x<sup>2</sup>$，所以 $e<sup>x</sup>$ 必须展开到 $x<sup>2</sup>$ 项（只展到一阶，$a$ 根本现不了身）：</p>
+<p>$$u=(1+b)x+\left(\frac12+a\right)x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<h3>第三步：逐阶锁定参数</h3>
+<p>要 $\dfrac{u}{x<sup>2</sup>}\to0$：</p>
+<ul><li><strong>一阶项先消失</strong>：$u$ 里只要留着一阶项，$\dfrac{u}{x<sup>2</sup>}$ 就含 $\dfrac{1+b}{x}\to\infty$，对数极限发散，原极限根本不存在，更谈不上等于 $1$。故 $1+b=0\Rightarrow b=-1$。</li><li><strong>二阶项再归零</strong>：一阶消掉后 $\dfrac{u}{x<sup>2</sup>}\to\dfrac12+a$，要它恰好为 $0$，只能 $\dfrac12+a=0\Rightarrow a=-\dfrac12$。</li></ul>
+<p>此时 $\ln L=0$，$L=e<sup>0</sup>=1$。两个条件各管一件事：$b$ 管极限的<strong>存在性</strong>，$a$ 管<strong>值恰为 $1$</strong>，缺一不可。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 C、D（$b=1$）</strong>：$1+b=2$，一阶项不消，$\dfrac2x$ 发散——属"极限压根不存在"型错误。</li><li><strong>误选 A（$a=\dfrac12$）</strong>：一阶消掉了，但 $\ln L=1$，原极限是 $e$ 不是 $1$——属"只保证极限存在、忘了必须等于 $1$"。</li><li><strong>对 $e<sup>x</sup>$ 只展一阶</strong>：分母 $x<sup>2</sup>$ 逼着展开到二阶，否则第二个方程列不出来。</li></ul>
+<blockquote>结论：$1^\infty$ 型 = $g<sup>v</sup>=e<sup>v\ln g</sup>$ 降维，$L=1\iff\dfrac{g-1}{x<sup>2</sup>}\to0$；泰勒定阶先逼死一阶（$b=-1$）再归零二阶（$a=-\dfrac12$），选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

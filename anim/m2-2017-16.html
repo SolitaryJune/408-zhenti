@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017·16 抽象复合函数求二阶导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-15.html" data-q="../question/m2-2017-15/">← <b>m2-2017-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-16/" data-q="../question/m2-2017-16/" data-no-anim="1">m2-2017-16 · 本题</a>
+  <a href="m2-2017-17.html" data-q="../question/m2-2017-17/"><b>m2-2017-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2017·16　$y=f(\\mathrm{e}^{x},\\cos x)$，求 $\\left.\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}\\right|_{x=0}$ 与 $\\left.\\dfrac{\\mathrm{d}^{2}y}{\\mathrm{d}x^{2}}\\right|_{x=0}$',
+  subtitle: '考点：抽象复合函数链式法则 · 关键：$f_1\',f_2\'$ 仍是复合函数，二阶导要继续链式',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看链式法则如何一层层展开。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "$$y=f(u,v),\\quad u=\\mathrm{e}^{x},\\ v=\\cos x;\\qquad u'=\\mathrm{e}^{x},\\ v'=-\\sin x$$",
+      "<b>① 链式法则：</b>$\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}=f_1'\\,u'+f_2'\\,v'=\\mathrm{e}^{x}f_1'-\\sin x\\,f_2'$",
+      "<b>② 代 $x=0$：</b>$u=\\mathrm{e}^{0}=1,\\ v=\\cos0=1,\\ \\sin0=0\\ \\Rightarrow\\ y'(0)=f_1'(1,1)$",
+      "<b>③ 关键提醒：</b>$f_1',f_2'$ 的位置仍在 $(u,v)=(\\mathrm{e}^{x},\\cos x)$ 处——对 $x$ 求导<b>必须继续链式</b>",
+      "<b>④ 再链式：</b>$\\dfrac{\\mathrm{d}f_1'}{\\mathrm{d}x}=f_{11}''\\,\\mathrm{e}^{x}-f_{12}''\\sin x$；$\\dfrac{\\mathrm{d}f_2'}{\\mathrm{d}x}=f_{21}''\\,\\mathrm{e}^{x}-f_{22}''\\sin x$",
+      "<b>⑤ 乘积法则：</b>$y''=\\mathrm{e}^{x}f_1'+\\mathrm{e}^{x}\\left(f_{11}''\\mathrm{e}^{x}-f_{12}''\\sin x\\right)-\\cos x\\,f_2'-\\sin x\\left(f_{21}''\\mathrm{e}^{x}-f_{22}''\\sin x\\right)$",
+      "<b>⑥ 混合偏导：</b>$f$ 二阶偏导连续 $\\Rightarrow f_{12}''=f_{21}''$（可合并）",
+      "<b>⑦ 代 $x=0$：</b>$\\sin0=0$ 使含 $\\sin x$ 的项全为零，$\\mathrm{e}^{0}=1,\\ \\cos0=1$",
+      "<b>⑧ 结论：</b>$$y''(0)=f_{11}''(1,1)+f_1'(1,1)-f_2'(1,1)$$"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'设元', log:'设两个中间变量，先备好它们对 x 的导数', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'一阶', log:'链式法则：第一支乘 e 的 x 次方，第二支乘负 sin x', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'代入', log:'x 取零时两个中间变量都是一，sin 项消失，一阶导只剩第一支', count:2, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'提醒', log:'易错点来了：偏导数仍在原位置，对 x 求导不能当常数', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'链式', log:'两个偏导数各自继续走链式，各出两项二阶偏导', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'展开', log:'乘积法则逐项展开，四块合成完整的二阶导', count:5, ribbon:{k:6, ok:true} },
+    { cls:'step',  tag:'合并', log:'二阶偏导连续时混合偏导相等，可以合并', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'代入', log:'x 取零后含 sin 的项全部归零，只剩三块', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成', log:'结论：二阶导等于 f 下标 11 的二阶偏导加 f1 减 f2，都在点 (1,1) 取值', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$y\'(0)=f_1\'(1,1)$，$y\'\'(0)=f_{11}\'\'(1,1)+f_1\'(1,1)-f_2\'(1,1)$',
+    html: '记忆锚点：<b>「抽象函数求到几阶，偏导就复合到几层」</b>——$f_1\'$ 仍在 $(\\mathrm{e}^{x},\\cos x)$ 处，再求导必链式出 $f_{11}\'\',f_{12}\'\'$。易错：把 $f_1\'$ 当常数（丢二阶偏导项）；忘记乘积法则补出的 $f_1\'-f_2\'$；结果忘了写在 $(1,1)$ 处。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：抽象复合函数的一阶、二阶导数——链式法则别断链</h2>
+<p>答案：$\left.\dfrac{\mathrm{d}y}{\mathrm{d}x}\right|_{x=0}=f_1'(1,1)$；$\left.\dfrac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}\right|_{x=0}=f_{11}''(1,1)+f_1'(1,1)-f_2'(1,1)$</p>
+<h3>第一步：理清复合结构，先求一阶导</h3>
+<p>设 $u=\mathrm{e}<sup>x</sup>,\ v=\cos x$，则 $y=f(u,v)$ 是「一个自变量 $x$、两个中间变量」的复合。链式法则：</p>
+<p>$$\frac{\mathrm{d}y}{\mathrm{d}x}=f_1'\cdot u'+f_2'\cdot v'=\mathrm{e}<sup>x</sup>f_1'-\sin x\,f_2'.$$</p>
+<p>在 $x=0$ 处 $u=\mathrm{e}<sup>0</sup>=1,\ v=\cos 0=1,\ \sin 0=0$，故</p>
+<p>$$\left.\frac{\mathrm{d}y}{\mathrm{d}x}\right|_{x=0}=f_1'(1,1).$$</p>
+<h3>第二步：求二阶导——f₁′、f₂′ 仍是复合函数</h3>
+<p>关键提醒：$f_1',f_2'$ 的「位置」仍在 $(u,v)=(\mathrm{e}<sup>x</sup>,\cos x)$ 处，对 $x$ 求导必须继续链式：</p>
+<p>$$\frac{\mathrm{d}}{\mathrm{d}x}f_1'=f_{11}''\,\mathrm{e}<sup>x</sup>-f_{12}''\sin x,\qquad \frac{\mathrm{d}}{\mathrm{d}x}f_2'=f_{21}''\,\mathrm{e}<sup>x</sup>-f_{22}''\sin x.$$</p>
+<p>对 $y'=\mathrm{e}<sup>x</sup>f_1'-\sin x\,f_2'$ 用乘积法则展开：</p>
+<p>$$\frac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}=\mathrm{e}<sup>x</sup>f_1'+\mathrm{e}<sup>x</sup>\left(f_{11}''\mathrm{e}<sup>x</sup>-f_{12}''\sin x\right)-\cos x\,f_2'-\sin x\left(f_{21}''\mathrm{e}<sup>x</sup>-f_{22}''\sin x\right).$$</p>
+<p>因 $f$ 二阶偏导连续，$f_{12}''=f_{21}''$（本题代入后此项本身也是零）。</p>
+<h3>第三步：代 x=0，sin 项全部消失</h3>
+<p>$x=0$ 时 $e<sup>0</sup>=1,\ \sin0=0,\ \cos0=1$，所有含 $\sin x$ 的项归零：</p>
+<p>$$\left.\frac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}\right|_{x=0}=f_1'(1,1)+f_{11}''(1,1)-f_2'(1,1).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $f_1',f_2'$ 当常数</strong>：二阶导时对它们漏乘链式，丢掉 $f_{11}'',f_{12}''$ 等项，是最常见错误。</li><li><strong>忘记位置代入</strong>：结果要写在 $(1,1)$ 处，即 $x=0$ 对应的中间变量值 $u=v=1$。</li><li><strong>漏掉乘积法则产生的 $e<sup>x</sup> f_1'$ 与 $-\cos x f_2'$</strong>：这两项恰好构成答案里的 $f_1'(1,1)-f_2'(1,1)$，少了就错。</li></ul>
+<blockquote>一句话结论：一阶 $y'(0)=f_1'(1,1)$；二阶 = 二阶偏导项 $f_{11}''$ + 乘积法则补出的 $f_1'-f_2'$，全在 $(1,1)$ 处取值。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

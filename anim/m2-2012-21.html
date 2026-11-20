@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·21 方程根的存在唯一性与数列极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改 AW.init 区域（STEPS 与 result） -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-20.html" data-q="../question/m2-2012-20/">← <b>m2-2012-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-21/" data-q="../question/m2-2012-21/" data-no-anim="1">m2-2012-21 · 本题</a>
+  <a href="m2-2012-22.html" data-q="../question/m2-2012-22/"><b>m2-2012-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：两条证明线索',
+    cls: 'key',
+    body: '<p>方程 $x+x^2+\\cdots+x^n=1$（$n>1$ 为整数）。(1) 存在性用<b>零点定理</b>（区间两端异号），唯一性用<b>严格单调</b>；(2) 对 $x_n$ 满足的方程做<b>等比求和</b>逼出简洁关系式，再用单调有界收敛、在关系式中取极限。</p>' },
+  { title: '存在性：两端异号',
+    cls: 'good',
+    body: '<p>令 $f_n(x)=x+x^2+\\cdots+x^n-1$，在 $[\\tfrac12,1]$ 上连续：$$f_n(1)=n-1>0,\\qquad f_n\\Big(\\frac12\\Big)=\\frac{\\tfrac12\\big(1-2^{-n}\\big)}{1-\\tfrac12}-1=-\\frac{1}{2^n}<0.$$由零点定理，存在 $x_n\\in\\big(\\tfrac12,1\\big)$ 使 $f_n(x_n)=0$。</p>' },
+  { title: '唯一性：严格递增',
+    cls: 'good',
+    body: '<p>$f_n\'(x)=1+2x+\\cdots+nx^{n-1}>0$ 在 $(0,1)$ 内恒成立，$f_n$ 严格单调增，故根<b>唯一</b>。</p>' },
+  { title: '关键关系式：等比求和',
+    cls: 'good',
+    body: '<p>$x_n\\neq1$，对 $x_n+x_n^2+\\cdots+x_n^n=1$ 用等比求和：$$\\frac{x_n\\big(1-x_n^{n}\\big)}{1-x_n}=1\\ \\Longrightarrow\\ x_n-x_n^{n+1}=1-x_n\\ \\Longrightarrow\\ \\boxed{2x_n-1=x_n^{n+1}}.$$</p>' },
+  { title: '单调有界：极限存在',
+    cls: 'good',
+    body: '<p>对固定的 $x$，$f_{n+1}(x)=f_n(x)+x^{n+1}>f_n(x)$。在 $x=x_n$ 处：$$f_{n+1}(x_n)=1+x_n^{n+1}>1=f_{n+1}(x_{n+1}),$$而 $f_{n+1}$ 递增，故 $x_n>x_{n+1}$：$\\{x_n\\}$ 递减且有下界 $\\tfrac12$，由单调有界准则极限 $A$ 存在。</p>' },
+  { title: '取极限解出 A',
+    cls: 'good',
+    body: '<p>$n\\ge2$ 时 $x_n\\le x_2<1$，故 $0\\le x_n^{n+1}\\le x_2^{n+1}\\to0$。在 $2x_n-1=x_n^{n+1}$ 两边令 $n\\to\\infty$：$$2A-1=0\\ \\Longrightarrow\\ A=\\frac12.$$即 $\\lim_{n\\to\\infty}x_n=\\dfrac12$。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$x^n+x^{n-1}+\\cdots+x=1$：根的存在唯一性与 $\\lim\\limits_{n\\to\\infty}x_n$',
+  subtitle: '考点：零点定理 · 严格单调 · 等比求和 · 单调有界准则',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$\\lim\\limits_{n\\to\\infty}x_n=\\dfrac{1}{2}$',
+    html: '记忆锚点：<b>等比求和逼出 $2x_n-1=x_n^{n+1}$，右端因底数一致小于 $1$（$x_n\\le x_2<1$）而归零</b>。存在唯一性靠零点定理 + 严格递增；递减方向来自"项数变多、根必须左移"。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：零点定理 + 单调性定根，等比求和把 $n$ 压进一项求极限</h2>
+<p>最终答案：(1) 根存在且唯一；(2) $\displaystyle\lim_{n\to\infty}x_n=\frac12$。</p>
+<h3>第 0 步：先立机制——"根随 $n$ 移动"的题怎么做</h3>
+<p>这类题有两层固定打法。第一层（证根）：存在性靠零点定理（连续 + 端点异号），唯一性靠单调性（导数定号）。第二层（求根的极限）：方程里 $n$ 藏在"项数"里，直接取极限无从下手；要先用代数手段（本题是等比求和）把含 $n$ 的信息<strong>压缩成一个趋于零的小项</strong>，得到与 $n$ 的联系只剩这一项的关系式，极限便从关系式里直接解出。<strong>为什么必须先证收敛再取极限</strong>：对含 $x_n$ 的式子取极限，前提是 $\{x_n\}$ 的极限存在（单调有界准则是标准保证），否则"$A$"无处安放。</p>
+<h3>第一步：(1) 存在性——零点定理</h3>
+<p>令 $f_n(x)=x+x<sup>2</sup>+\cdots+x<sup>n</sup>-1$，在 $[\tfrac12,1]$ 上连续：</p>
+<p>$$f_n(1)=\underbrace{1+\cdots+1}_{n}-1=n-1&gt;0,\qquad f_n\Big(\frac12\Big)=\frac{\frac12\big(1-2<sup>-n</sup>\big)}{1-\frac12}-1=-\frac{1}{2<sup>n</sup>}&lt;0.$$</p>
+<p><strong>为什么端点选 $\tfrac12$ 与 $1$</strong>：$x=1$ 处左边显然超额（$n-1&gt;0$）；$x=\tfrac12$ 处等比求和给出"差一点点"——恰好差 $2<sup>-n</sup>$ 加不满 $1$。一正一负把根夹在中间，零点定理给出存在性。</p>
+<h3>第二步：(1) 唯一性——严格单调</h3>
+<p>$f_n'(x)=1+2x+\cdots+nx<sup>n-1</sup>$，各项非负且常项 $1&gt;0$，在 $(0,1)$ 内恒正，$f_n$ 严格递增，故根至多一个；结合第一步，根 $x_n\in\big(\tfrac12,1\big)$ 存在且唯一。</p>
+<h3>第三步：(2) 等比求和——为什么这一步是全局的钥匙</h3>
+<p>$n$ 项和 $x_n+x_n<sup>2</sup>+\cdots+x_n<sup>n</sup>=1$ 里，$n$ 藏在项数中，无法直接令 $n\to\infty$。等比求和把它打包成一项（$x_n\neq1$）：</p>
+<p>$$\frac{x_n(1-x_n<sup>n</sup>)}{1-x_n}=1\ \Longrightarrow\ x_n-x_n<sup>n+1</sup>=1-x_n\ \Longrightarrow\ 2x_n-1=x_n<sup>n+1</sup>.\qquad(\ast)$$</p>
+<p>$(\ast)$ 的妙处：<strong>$n$ 只出现在 $x_n<sup>n+1</sup>$ 这一项里</strong>。一旦说明这个小尾巴趋于 $0$，左边立即交出极限——"无限增长的项数"被压缩成"一个趋于零的尾巴"，这就是第三步存在的意义。</p>
+<h3>第四步：(2) 单调有界保收敛</h3>
+<p>直觉先走：右边的 $1$ 不变，$n$ 变大后方程左边"能力"更强（多出正项 $x<sup>n+1</sup>$），要维持等式根必须左移——$\{x_n\}$ 应递减。严格化：对固定 $x\in\big(\tfrac12,1\big)$，$f_{n+1}(x)=f_n(x)+x<sup>n+1</sup>&gt;f_n(x)$，在 $x=x_n$ 处</p>
+<p>$$f_{n+1}(x_n)=f_n(x_n)+x_n<sup>n+1</sup>=1+x_n<sup>n+1</sup>&gt;1=f_{n+1}(x_{n+1}),$$</p>
+<p>而 $f_{n+1}$ 严格增，故 $x_n&gt;x_{n+1}$；又有下界 $\tfrac12$（根都落在 $\big(\tfrac12,1\big)$ 内）。单调递减有下界，由单调有界准则 $A=\lim_{n\to\infty}x_n$ 存在。</p>
+<h3>第五步：令 $n\to\infty$ 解出 A</h3>
+<p><strong>为什么 $x_n<sup>n+1</sup>\to0$</strong>：关键是底数要"一致地"小于 $1$——若底数趋近 $1$，$n+1$ 次幂就是 $1^\infty$ 型，极限不明朗。这里 $\{x_n\}$ 递减，$n\ge2$ 时 $x_n\le x_2=\dfrac{\sqrt5-1}{2}&lt;1$，故</p>
+<p>$$0\le x_n<sup>n+1</sup>\le x_2<sup>n+1</sup>\to0.$$</p>
+<p>在 $(\ast)$ 两边取极限：$2A-1=0$，$A=\dfrac12$。与 (1) 相容：根都在 $\tfrac12$ 上方，极限恰好卡在下界上——数列从上方压向 $\tfrac12$。</p>
+<h3>易错点</h3>
+<ul><li><strong>存在性只代端点不验连续</strong>：零点定理三要素（连续、异号、闭区间）缺一不可。</li><li><strong>递减方向说反</strong>：$f_{n+1}$ 在同一位置取值更大，要凑成同一个 $1$，根必须左移，故 $x_n$ 递减。</li><li><strong>直接对 $x_n<sup>n+1</sup>$ 取极限</strong>：必须先用 $x_n\le x_2&lt;1$ 这个一致上界排除 $1^\infty$ 陷阱。</li><li><strong>不先证收敛就取极限</strong>：单调有界准则要先落地，$(\ast)$ 两边才能取极限。</li></ul>
+<blockquote>结论：$x_n\in\big(\tfrac12,1\big)$ 唯一存在，$\{x_n\}$ 递减收敛于 $\tfrac12$；等比求和把 $n$ 压进 $x_n<sup>n+1</sup>$ 是求解的钥匙。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

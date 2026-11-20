@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-06.html" data-q="../question/m2-2010-06/">← <b>m2-2010-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-07/" data-q="../question/m2-2010-07/" data-no-anim="1">m2-2010-07 · 本题</a>
+  <a href="m2-2010-08.html" data-q="../question/m2-2010-08/"><b>m2-2010-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：核心定理「能表示则秩不增」',
+    cls: 'key',
+    body: '<p>(I) 可由 (II) 线性表示 $\\Rightarrow$ $r(\\boldsymbol\\alpha_1,\\cdots,\\boldsymbol\\alpha_r)\\le r(\\boldsymbol\\beta_1,\\cdots,\\boldsymbol\\beta_s)$。理由：(I) 的极大无关组可由 (II) 的极大无关组表示，「被表示」的秩不超过「表示者」的秩。</p>' },
+  { title: '补一条常识：无关组的秩等于个数',
+    cls: 'key',
+    body: '<p>向量组线性无关 $\\iff$ 秩 $=$ 向量个数；线性相关 $\\iff$ 秩 $\\lt$ 向量个数。另外恒有 $r(\\mathrm{II})\\le s$（秩不超过组内向量个数）。两条合起来，链条是 $r(\\mathrm I)\\le r(\\mathrm{II})\\le s$。</p>' },
+  { title: '选项 A：无关组被表示，个数被卡死',
+    cls: 'good',
+    ribbon: {k: 1, ok: true},
+    body: '<p>(I) 无关 $\\Rightarrow r(\\mathrm I)=r$；代入链条 $r(\\mathrm I)\\le r(\\mathrm{II})\\le s$ 得 $r\\le s$。<b>推理闭合，A 正确</b>。</p>' },
+  { title: '选项 B：相关组给不出 $r$ 与 $s$ 的大小',
+    cls: 'bad',
+    ribbon: {k: 2, ok: false},
+    body: '<p>(I) 相关只给 $r(\\mathrm I)\\lt r$，对 $r$ 与 $s$ 的大小毫无约束。反例：$r=2$ 个相关向量（如 $\\boldsymbol\\alpha_2=2\\boldsymbol\\alpha_1$）可由 $s=3$ 个向量表示，此时 $r\\lt s$，推不出 $r\\gt s$。</p>' },
+  { title: '选项 C：少数无关向量能表示多数相关向量',
+    cls: 'bad',
+    ribbon: {k: 3, ok: false},
+    body: '<p>(II) 无关只给 $r(\\mathrm I)\\le s$；若 (I) 自身相关，$r$ 可以超过 $s$。反例：$\\boldsymbol\\beta_1\\neq\\boldsymbol0$（$s=1$，无关），取 $\\boldsymbol\\alpha_1=\\boldsymbol\\beta_1,\\ \\boldsymbol\\alpha_2=2\\boldsymbol\\beta_1$（$r=2$，相关），可表示但 $r=2\\gt s=1$。</p>' },
+  { title: '选项 D：(II) 相关同样约束不了 $r$',
+    cls: 'bad',
+    ribbon: {k: 4, ok: false},
+    body: '<p>(II) 相关只给 $r(\\mathrm{II})\\lt s$，与结论 $r\\gt s$ 无逻辑联系；反例同 B：相关组被更大的组表示，$r\\lt s$ 完全可能。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>「能表示 $\\Rightarrow$ 秩不增」+「无关组秩等于个数」共同推出：$r\\le s$。答案选 <b>A</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || undefined,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010 数学二 第7题 · 向量组 (I) 可由 (II) 线性表示，哪个推论成立',
+  subtitle: '考点：线性表示与秩 · 方法：秩的传递链 $r(\\mathrm I)\\le r(\\mathrm{II})\\le s$ + 反例',
+  intro: '点击「▶ 播放」逐步展开推理链：先立定理，再逐项用反例排除。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  ribbonTitle: '选项核对（✓ 正确 / ✗ 淘汰）',
+  snaps: snaps,
+  result: {
+    big: '答案 A（(I) 无关 $\\Rightarrow r\\le s$）',
+    html: '记忆锚点：<b>被表示的秩 $\\le$ 表示者的秩 $\\le$ 表示者的个数</b>；(I) 无关时 $r(\\mathrm I)=r$，链条闭合。B/C/D 的通病：相关、(II) 无关这些条件控制不了<b>个数</b> $r$ 与 $s$ 的大小——「一个向量可表示一串相关向量」是万能反例。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：线性表示对「个数」的制约——秩不增链条</h2>
+<p>答案：<strong>A</strong>。</p>
+<h3>第 0 步：先立机制——为什么「能表示」就压住了秩</h3>
+<p>(I) 可由 (II) 线性表示：每个 $\boldsymbol\alpha_i$ 都是 $\boldsymbol\beta_1,\cdots,\boldsymbol\beta_s$ 的线性组合。直觉是<strong>自由度账本</strong>：(II) 的极大无关组只有 $r(\mathrm{II})$ 个「独立方向」，(I) 里任何向量都由这些方向拼出来，独立方向不可能凭空变多，故</p>
+<p>$$r(\mathrm I)\le r(\mathrm{II})\le s.$$</p>
+<p>这条链条是四个选项的共同前提；判断每个选项，就是在链条上再挂一个条件，看能不能把 $r$ 与 $s$ 夹死。</p>
+<h3>第一步：A 为什么对——无关把秩钉死在个数上</h3>
+<p>(I) 线性无关 ⟹ $r(\mathrm I)=r$（无关向量的秩恰等于个数）。代入链条：</p>
+<p>$$r=r(\mathrm I)\le r(\mathrm{II})\le s\ \Longrightarrow\ r\le s.$$</p>
+<p>反过来想更透：若 $r&gt;s$，就是「多数向量被少数向量表示」——$r$ 个向量全落在 $s&lt;r$ 个方向张成的空间里，必线性相关，与 (I) 无关矛盾。所以 A 是「<strong>多数不能由少数无关地表示</strong>」的直接推论。</p>
+<h3>第二步：B、D 为什么错——「相关」根本管不住个数</h3>
+<ul><li><strong>B</strong>：(I) 相关只给 $r(\mathrm I)&lt;r$，对 $r$ 与 $s$ 的大小没有任何约束。反例：$\boldsymbol\alpha_1=(1,0),\ \boldsymbol\alpha_2=(2,0)$ 相关（$r=2$），可由三个向量 $\boldsymbol\beta_1=(1,0),\ \boldsymbol\beta_2=(0,1),\ \boldsymbol\beta_3=(0,0)$ 表示（$s=3$），此时 $r&lt;s$，命题「$r&gt;s$」被推翻。</li><li><strong>D</strong>：(II) 相关只给 $r(\mathrm{II})&lt;s$，与 $r$ 无关。反例：$\boldsymbol\beta_1=(1,0),\ \boldsymbol\beta_2=(2,0)$ 相关（$s=2$），(I) 取单个 $\boldsymbol\alpha_1=(1,0)$（$r=1$），当然可由 (II) 表示，此时 $r&lt;s$，命题又被推翻。</li></ul>
+<h3>第三步：C 为什么错——(II) 无关也钉不住 $r$</h3>
+<p>(II) 无关 ⟹ $r(\mathrm{II})=s$，链条变成 $r(\mathrm I)\le s$——但这约束的是 (I) 的<strong>秩</strong>，不是 (I) 的<strong>个数</strong> $r$；(I) 自己相关时，个数可以远超秩。反例：$s=1$，(II) 取 $\boldsymbol\beta_1=(1,0)$ 无关；(I) 取 $\boldsymbol\alpha_1=\boldsymbol\beta_1,\ \boldsymbol\alpha_2=2\boldsymbol\beta_1$，可由 (II) 表示、$r(\mathrm I)=1\le s$ 成立，但 $r=2&gt;s=1$，命题「$r\le s$」被推翻。</p>
+<p>四个选项汇成一张表（机制与反例已讲完，表只做对号）：</p>
+<table><thead><tr><th>选项</th><th>新增条件</th><th>能否夹住 $r$ 与 $s$</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>(I) 无关：$r(\mathrm I)=r$</td><td>链条闭合得 $r\le s$</td><td>对</td></tr><tr><td>B</td><td>(I) 相关：$r(\mathrm I)&lt;r$</td><td>对 $r$ 与 $s$ 无约束</td><td>错</td></tr><tr><td>C</td><td>(II) 无关：$r(\mathrm{II})=s$</td><td>只约束 $r(\mathrm I)$，管不住个数 $r$</td><td>错</td></tr><tr><td>D</td><td>(II) 相关：$r(\mathrm{II})&lt;s$</td><td>与 $r$ 无关</td><td>错</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>把定理反着用</strong>：A 是「无关 + 被表示 ⟹ 个数不超表示者个数」，不能倒推成「(I) 相关 ⟹ $r&gt;s$」。</li><li><strong>只背结论不备反例</strong>：否证 B、C、D 各需一例；C 的经典反例是「多个相关向量被一个非零向量表示」（$\boldsymbol\alpha_2=2\boldsymbol\beta_1$）。</li></ul>
+<blockquote>被表示的秩 $\le$ 表示者的秩 $\le$ 表示者的个数；(I) 无关时秩 $=$ 个数，链条闭合得 $r\le s$。选 <strong>A</strong>。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

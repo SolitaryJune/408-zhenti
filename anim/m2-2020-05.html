@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画：分段函数在原点的四条结论</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-04.html" data-q="../question/m2-2020-04/">← <b>m2-2020-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-05/" data-q="../question/m2-2020-05/" data-no-anim="1">m2-2020-05 · 本题</a>
+  <a href="m2-2020-06.html" data-q="../question/m2-2020-06/"><b>m2-2020-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：偏导回定义，极限分两种',
+    cls: 'key',
+    log: '偏导一律用差商定义；二重极限看路径，累次极限看顺序',
+    body: '<p>$f$ 在三段上分别是 $xy$（$xy\\ne0$）、$x$（$y=0$）、$y$（$x=0$），且 $f(0,0)=0$。规矩：<b>凡「在某点的偏导数」一律退回定义算差商极限</b>；二重极限看任意路径，累次极限按先后顺序算。有用的估计：$\\lvert f(x,y)\\rvert\\le\\lvert x\\rvert+\\lvert y\\rvert$。</p>' },
+  { title: '结论 (1)：$f_x(0,0)=1$',
+    cls: 'good',
+    log: '沿 x 轴 f = x，差商恒为 1，(1) 对',
+    ribbon: {k:1, ok:true},
+    body: '<p>沿 $x$ 轴 $f(x,0)=x$，由定义 $$\\left.\\frac{\\partial f}{\\partial x}\\right|_{(0,0)}=\\lim_{x\\to0}\\frac{f(x,0)-f(0,0)}{x-0}=\\lim_{x\\to0}\\frac{x}{x}=1.$$ <b>(1) 正确</b>。</p>' },
+  { title: '结论 (3)：二重极限为 0',
+    cls: 'good',
+    log: '夹住 |f| ≤ |x|+|y| → 0，(3) 对',
+    ribbon: {k:2, ok:true},
+    body: '<p>任意路径上三段表达式 $xy$、$x$、$y$ 都趋于 0；用估计 $\\lvert f(x,y)\\rvert\\le\\lvert x\\rvert+\\lvert y\\rvert\\to0$ 一步夹住：$$\\lim_{(x,y)\\to(0,0)}f(x,y)=0.$$ <b>(3) 正确</b>。</p>' },
+  { title: '结论 (4)：累次极限为 0',
+    cls: 'good',
+    log: '内层极限恒为 0，外层也是 0，(4) 对',
+    ribbon: {k:3, ok:true},
+    body: '<p>先固定 $y$ 求内层 $\\lim_{x\\to0}f(x,y)$：$y\\ne0$ 时 $f=xy\\to0$；$y=0$ 时 $f=x\\to0$——内层恒为 $0$，再令 $y\\to0$ 仍是 $0$：$$\\lim_{y\\to0}\\lim_{x\\to0}f(x,y)=0.$$ <b>(4) 正确</b>。</p>' },
+  { title: '结论 (2)：混合偏导根本无定义',
+    cls: 'bad',
+    log: 'fy 在 x≠0 处不存在，(2) 无从成立',
+    ribbon: {k:4, ok:false},
+    body: '<p>$\\dfrac{\\partial^2f}{\\partial x\\,\\partial y}\\Big|_{(0,0)}$ 要求先有 $f_y(x,0)$ 这条 $x$ 的函数再对 $x$ 求导。当 $x\\ne0$：$$f_y(x,0)=\\lim_{k\\to0}\\frac{f(x,k)-f(x,0)}{k}=\\lim_{k\\to0}\\frac{xk-x}{k}=\\lim_{k\\to0}x\\left(1-\\frac{1}{k}\\right)$$ 发散——$f_y$ 在整条 $x$ 轴上除原点外都<b>不存在</b>，一个只在单点有定义的函数谈不上对 $x$ 求导，<b>(2) 错误</b>。</p>' },
+  { title: '统计：3 对 1 错',
+    cls: 'good',
+    log: '(1)(3)(4) 对、(2) 错 → 选 B',
+    body: '<p>(1)(3)(4) 正确、(2) 错误，正确的个数是 $3$，选 <b>B</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '选 B：混合偏导卡在 fy 不存在',
+    body: '<p>答案 <b>B</b>。记忆锚点：$f_y(0,0)=1$ 是对的（沿 $y$ 轴 $f(0,y)=y$），但混合偏导 $f_{xy}(0,0)$ 需要 $f_y(x,0)$ 在原点<b>邻域</b>内有定义——本题它只在原点一个点存在。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f(x,y)=\\begin{cases}xy,&xy\\ne0\\\\x,&y=0\\\\y,&x=0\\end{cases}$：四条结论逐条核验',
+  subtitle: '考点：多元函数微分 · 方法：偏导数定义 + 二重极限与累次极限',
+  counterLabel: '推理步',
+  ribbonTitle: '四条结论（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐条核验结论 (1)–(4)。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B（正确的有 3 个）',
+    html: '记忆锚点：<b>(1)(3)(4) 成立，(2) 不成立</b>。(2) 的死穴：$f_y(x,0)=\\lim_{k\\to0}x\\left(1-\\frac1k\\right)$ 在 $x\\ne0$ 处发散，$f_y$ 只在原点一个点有值，混合偏导无从谈起。对比：$f_x(0,0)=1$、二重极限与累次极限恰好都为 $0$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分段函数在原点——偏导回定义，极限分「二重」与「累次」</h2>
+<p>答案：B</p>
+<h3>第一步：为什么凡"在某点"的偏导都要回定义</h3>
+<p>求导法则的前提是函数在邻域内有相应的初等结构，而分段点处表达式正在切换，"该点可不可导"恰恰是待检验的结论——法则没有资格先于结论使用。所以在 $(0,0)$ 一带的偏导一律退回定义（差商极限）算。本题 $f$ 在三段上分别是 $xy$（$xy\ne0$）、$x$（$y=0$）、$y$（$x=0$），且 $f(0,0)=0$——下面所有差商的分子都靠它。</p>
+<h3>第二步：(1)(3)(4) 逐条讲道理</h3>
+<p><strong>(1)</strong> 沿 $x$ 轴表达式唯一：$f(x,0)=x$，差商</p>
+<p>$$\frac{f(x,0)-f(0,0)}{x-0}=\frac{x-0}{x}=1,$$</p>
+<p>故 $f_x(0,0)=1$，(1) 对。</p>
+<p><strong>(3)</strong> 二重极限要求<strong>任意路径</strong>同时趋零。用夹逼：当 $\lvert x\rvert,\lvert y\rvert\le1$ 时 $\lvert xy\rvert\le\lvert x\rvert$（因 $\lvert y\rvert\le1$），轴上 $\lvert f\rvert=\lvert x\rvert$ 或 $\lvert y\rvert$，三段都满足</p>
+<p>$$\lvert f(x,y)\rvert\le\lvert x\rvert+\lvert y\rvert\to0,$$</p>
+<p>故二重极限为 0，(3) 对。</p>
+<p><strong>(4)</strong> 累次极限<strong>分先后</strong>：先固定 $y$ 令 $x\to0$——$y\ne0$ 时 $xy\ne0$、$f=xy\to0$；$y=0$ 时 $f=x\to0$。内层恒为 0，外层再令 $y\to0$ 仍是 0，(4) 对。(3)(4) 数值相同但考查对象不同：一个看路径、一个看顺序——一般情形二者可以不同，本题恰好一致。</p>
+<h3>第三步：(2) 为什么错</h3>
+<p>$\dfrac{\partial<sup>2f</sup>}{\partial x\,\partial y}\Big|_{(0,0)}$ 的意思是：先得到 $f_y(x,0)$ 这条 $x$ 的函数，再对 $x$ 求导——求导需要 $f_y$ 在原点的<strong>邻域</strong>内有定义。先查它：</p>
+<ul><li>在 $(0,0)$：沿 $y$ 轴 $f(0,y)=y$，$f_y(0,0)=\lim_{k\to0}\frac{f(0,k)-f(0,0)}{k}=\lim_{k\to0}\frac{k}{k}=1$——仅这一点有值；</li><li>在 $(x,0)$ 且 $x\ne0$：</li></ul>
+<p>$$f_y(x,0)=\lim_{k\to0}\frac{f(x,k)-f(x,0)}{k}=\lim_{k\to0}\frac{xk-x}{k}=\lim_{k\to0}x\left(1-\frac{1}{k}\right),$$</p>
+<p>$k\to0$ 时 $\frac1k$ 发散，故 $f_y(x,0)$ 在<strong>每个</strong> $x\ne0$ 处都不存在。</p>
+<p>于是 $f_y(x,0)$ 只在单点有定义：差商 $\frac{f_y(h,0)-f_y(0,0)}{h}$ 里的 $f_y(h,0)$ 根本不存在，"对 $x$ 求导"无从谈起，所以混合偏导 $\dfrac{\partial<sup>2f</sup>}{\partial x\,\partial y}\Big|_{(0,0)}$ 不存在，(2) 错。</p>
+<table><thead><tr><th>结论</th><th>判定</th><th>关键理由</th></tr></thead><tbody><tr><td>(1) $f_x(0,0)=1$</td><td>对</td><td>沿 $x$ 轴差商恒为 1</td></tr><tr><td>(2) $f_{xy}(0,0)=1$</td><td>错</td><td>$f_y(x,0)$ 在 $x\ne0$ 处不存在</td></tr><tr><td>(3) 二重极限为 0</td><td>对</td><td>$\lvert f\rvert\le\lvert x\rvert+\lvert y\rvert$ 夹逼</td></tr><tr><td>(4) 累次极限为 0</td><td>对</td><td>内层恒 0，外层亦 0</td></tr></tbody></table>
+<p>正确的有 (1)(3)(4) 共 $3$ 个，选 B。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 (2) 对</strong>：只算出 $f_y(0,0)=1$ 就下结论；混合偏导需要 $f_y(x,0)$ 在邻域内存在，不是一点有值就够。</li><li><strong>混淆 (3)(4)</strong>：两者都为 0 但路径不同——(3) 用夹逼看任意路径，(4) 按顺序先内后外。</li><li><strong>漏用 $f(0,0)=0$</strong>：所有差商的分子都靠它，别当成理所当然跳过。</li></ul>
+<blockquote>一句话结论：(1)(3)(4) 成立、(2) 因 $f_y(x,0)$ 在 $x\ne0$ 处不存在而不成立，正确的有 3 个，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

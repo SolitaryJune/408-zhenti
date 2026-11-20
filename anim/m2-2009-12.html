@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2009·12 隐函数的二阶导数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-11.html" data-q="../question/m2-2009-11/">← <b>m2-2009-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-12/" data-q="../question/m2-2009-12/" data-no-anim="1">m2-2009-12 · 本题</a>
+  <a href="m2-2009-13.html" data-q="../question/m2-2009-13/"><b>m2-2009-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>定点</b>：$x=0$ 代入 $xy+\\mathrm e^y=x+1$：$\\mathrm e^y=1\\ \\Longrightarrow\\ y=0$。</p>",
+  "<p><b>一阶求导</b>（$y$ 按 $y(x)$ 处理）：$$y+xy\'+\\mathrm e^y\\,y\'=1$$</p>",
+  "<p>代入 $x=0,\\ y=0$：$0+0+y\'=1\\ \\Longrightarrow\\ y\'(0)=1$。</p>",
+  "<p><b>二阶求导</b>（$xy\'$ 与 $\\mathrm e^y y\'$ 都是乘积，$\\mathrm e^y$ 还要链式）：$$2y\'+xy\'\'+\\mathrm e^y\\big[(y\')^2+y\'\'\\big]=0$$</p>",
+  "<p>代入 $x=0,\\ y=0,\\ y\'=1$：$2+0+1\\cdot(1+y\'\')=0\\ \\Longrightarrow\\ y\'\'(0)=-3$。</p>",
+  "<p><b>方法小结</b>：隐函数求高阶导不必解出通式——每求一次导就代入已知数值，逐层消元最快。</p>"
+];
+
+AW.init({
+  title: '隐函数 $xy+\\mathrm e^y=x+1$ 在 $x=0$ 处的二阶导',
+  subtitle: '考点：隐函数求导 · 方法：定点 → 一阶代值 → 二阶代值',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'定点',   log:'x = 0 时 e^y = 1，得 y = 0', show:1, count:0 },
+    { cls:'step',  tag:'一阶',   log:'两边对 x 求导，逐项处理', show:2, count:1 },
+    { cls:'ok',    tag:'代值',   log:'代 x=0、y=0，得 y′(0) = 1', show:3, count:2 },
+    { cls:'step',  tag:'二阶',   log:'乘积法则加链式：xy′ 与 e^y·y′ 都要按乘积求导', show:4, count:3 },
+    { cls:'ok',    tag:'代值',   log:'三个数值一次代入，解出 y″(0) = −3', show:5, count:4 },
+    { cls:'done',  tag:'完成',   log:'答案 y″(0) = −3', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '$y\'\'(0) = -3$',
+    html: '记忆锚点：<b>每求一阶就代一次值</b>。两个易错处：$xy\'$ 求导得 $y\'+xy\'\'$；$\\mathrm e^y$ 求导要带 $y\'$，二阶时出现 $\\mathrm e^y\\big[(y\')^2+y\'\'\\big]$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：隐函数在定点的二阶导数</h2>
+<p>答案：$-3$</p>
+<h3>第一步：定出切点的 $y$ 值</h3>
+<p>把 $x=0$ 代入 $xy+\mathrm e<sup>y</sup>=x+1$：$\mathrm e<sup>y</sup>=1\Rightarrow y=0$。</p>
+<h3>第二步：一阶求导（逐项求，不先解 $y'$）</h3>
+<p>对方程两边求导，$y$ 处处按 $y(x)$ 处理：</p>
+<p>$$y+xy'+\mathrm e<sup>y</sup>\,y'=1.$$</p>
+<p>代入 $x=0,\ y=0$：$0+0+y'=1$，得 $y'(0)=1$。</p>
+<h3>第三步：二阶求导</h3>
+<p>再对上式求一次导，注意 $xy'$ 与 $\mathrm e<sup>y</sup>\,y'$ 都是乘积，$\mathrm e<sup>y</sup>$ 还要链式：</p>
+<p>$$y'+y'+xy''+\mathrm e<sup>y</sup>(y')<sup>2</sup>+\mathrm e<sup>y</sup>\,y''=0,$$</p>
+<p>整理为</p>
+<p>$$2y'+xy''+\mathrm e<sup>y</sup>\big[(y')<sup>2</sup>+y''\big]=0.$$</p>
+<h3>第四步：一次代入全部已知值</h3>
+<p>把 $x=0,\ y=0,\ y'=1$ 一起代入：</p>
+<p>$$2\cdot1+0+1\cdot(1+y'')=0\ \Longrightarrow\ y''(0)=-3.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>求 $y''$ 时漏乘积法则</strong>：$xy'$ 对 $x$ 求导是 $y'+xy''$，不是只留 $xy''$。</li><li><strong>$\mathrm e<sup>y</sup>$ 忘链式</strong>：凡含 $y$ 的项求导都要带 $y'$。</li><li><strong>硬解通式再代值</strong>：每次求导后立刻代入已知数值，方程大幅简化；拖到最后再代反而容易算错。</li></ul>
+<blockquote>流程：定点 → 一阶导代值 → 二阶导代值，逐层消元。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

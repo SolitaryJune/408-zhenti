@@ -46,7 +46,7 @@
     }
   }
 
-  /* ---------- 选择题 ---------- */
+  /* ---------- 选择/多选题 ---------- */
   function setChoiceState(card, pick, graded){
     var qid = card.dataset.qid, ans = card.dataset.answer;
     var opts = card.querySelectorAll('.choice-option');
@@ -59,6 +59,28 @@
         if(L === ans){ o.classList.add('is-correct'); o.querySelector('.choice-mark').textContent = '✓'; }
         if(L === pick && pick !== ans){ o.classList.add('is-wrong'); o.querySelector('.choice-mark').textContent = '✗'; }
       } else if(L === pick){
+        o.classList.add('is-selected');
+      }
+    });
+    var btn = card.querySelector('.reveal-button');
+    if(btn && !graded){
+      btn.disabled = !pick;
+      btn.textContent = '提交答案';
+      btn.classList.remove('is-red');
+    }
+  }
+  function setMultiState(card, picks, graded){
+    var qid = card.dataset.qid, ans = card.dataset.answer;
+    var pick = (picks || '').split('').filter(Boolean).sort().join('');
+    card.querySelectorAll('.choice-option').forEach(function(o){
+      o.classList.remove('is-selected','is-correct','is-wrong','locked');
+      o.querySelector('.choice-mark').textContent = '';
+      var L = o.dataset.letter, inAns = ans.indexOf(L) >= 0, inPick = pick.indexOf(L) >= 0;
+      if(graded){
+        o.classList.add('locked');
+        if(inAns){ o.classList.add('is-correct'); o.querySelector('.choice-mark').textContent = '✓'; }
+        if(inPick && !inAns){ o.classList.add('is-wrong'); o.querySelector('.choice-mark').textContent = '✗'; }
+      } else if(inPick){
         o.classList.add('is-selected');
       }
     });
@@ -86,14 +108,35 @@
     revealStudy(card);
     sheetMark(qid);
   }
+  function gradeMulti(card, picks){
+    var qid = card.dataset.qid, ans = card.dataset.answer, pts = +card.dataset.points;
+    var pick = (picks || '').split('').filter(Boolean).sort().join('');
+    var ok = pick === ans;
+    setMultiState(card, pick, true);
+    var v = card.querySelector('.choice-verdict');
+    v.className = 'choice-verdict ' + (ok ? 'ok' : 'bad');
+    v.textContent = ok ? ('✓ 多选全对，+' + pts + ' 分') : ('✗ 多选错误（漏选/错选均不得分），正确答案是 ' + ans);
+    progress[qid] = {pick: pick, correct: ok, score: ok ? pts : 0, at: Date.now()};
+    save(LS.progress, progress);
+    delete drafts[qid]; save(LS.drafts, drafts);
+    if(!ok) addWrong(qid);
+    var rb = card.querySelector('.reveal-button');
+    if(rb){ rb.textContent = '重做'; rb.classList.add('is-red'); rb.disabled = false; }
+    showAnswer(card);
+    revealStudy(card);
+    sheetMark(qid);
+  }
 
   /* ---------- 恢复答题状态 ---------- */
   function restoreCard(card){
-    var qid = card.dataset.qid, type = card.dataset.type;
+    var qid = card.dataset.qid, kind = card.dataset.kind;
     var graded = progress[qid];
-    if(type === 'choice'){
-      if(graded && graded.pick){ setChoiceState(card, graded.pick, true); restoreVerdict(card); showAnswer(card); revealStudy(card); }
-      else if(drafts[qid]){ setChoiceState(card, drafts[qid], false); }
+    if(kind === 'choice' || kind === 'multi'){
+      if(graded && graded.pick){
+        if(kind === 'multi') setMultiState(card, graded.pick, true); else setChoiceState(card, graded.pick, true);
+        restoreVerdict(card); showAnswer(card); revealStudy(card);
+      }
+      else if(drafts[qid]){ if(kind === 'multi') setMultiState(card, drafts[qid], false); else setChoiceState(card, drafts[qid], false); }
       else if(revealAlways){ showAnswer(card); }
     } else {
       if(graded && graded.score != null){
@@ -125,7 +168,7 @@
 
   var cards = [].slice.call(document.querySelectorAll('.qcard'));
   cards.forEach(function(card){
-    var qid = card.dataset.qid, type = card.dataset.type;
+    var qid = card.dataset.qid, kind = card.dataset.kind;
     var fb = card.querySelector('.favorite-button');
     if(fb) fb.addEventListener('click', function(){
       var i = fav.indexOf(qid);
@@ -137,12 +180,20 @@
       addWrong(qid); syncMetaBtns(card);
     });
 
-    if(type === 'choice'){
+    if(kind === 'choice' || kind === 'multi'){
       card.querySelectorAll('.choice-option').forEach(function(o){
         o.addEventListener('click', function(){
           if(o.classList.contains('locked')) return;
-          drafts[qid] = o.dataset.letter; save(LS.drafts, drafts);
-          setChoiceState(card, o.dataset.letter, false);
+          if(kind === 'multi'){
+            var set = (drafts[qid] || '').split('').filter(Boolean);
+            var i2 = set.indexOf(o.dataset.letter);
+            if(i2 >= 0) set.splice(i2, 1); else set.push(o.dataset.letter);
+            drafts[qid] = set.sort().join(''); save(LS.drafts, drafts);
+            setMultiState(card, drafts[qid], false);
+          } else {
+            drafts[qid] = o.dataset.letter; save(LS.drafts, drafts);
+            setChoiceState(card, o.dataset.letter, false);
+          }
         });
       });
       var btn = card.querySelector('.reveal-button');
@@ -152,13 +203,13 @@
           delete progress[qid]; save(LS.progress, progress);
           delete drafts[qid]; save(LS.drafts, drafts);
           var v = card.querySelector('.choice-verdict'); v.className = 'choice-verdict';
-          setChoiceState(card, '', false);
+          if(kind === 'multi') setMultiState(card, '', false); else setChoiceState(card, '', false);
           var ap = card.querySelector('.answer-placeholder');
           if(ap && !revealAlways) ap.classList.remove('show');
           sheetMark(qid);
         } else {
           var pick = drafts[qid];
-          if(pick) gradeChoice(card, pick);
+          if(pick){ if(kind === 'multi') gradeMulti(card, pick); else gradeChoice(card, pick); }
         }
       });
     } else {
@@ -216,7 +267,7 @@
       var card = t.closest('.qcard');
       var pressed = t.getAttribute('aria-pressed') === 'true';
       t.setAttribute('aria-pressed', String(!pressed));
-      if(!pressed){ showAnswer(card); if(card.dataset.type === 'essay'){ var ra = card.querySelector('.reveal-ref'); if(ra) ra.click(); } }
+      if(!pressed){ showAnswer(card); if(card.dataset.kind === 'essay'){ var ra = card.querySelector('.reveal-ref'); if(ra) ra.click(); } }
       else {
         var ap = card.querySelector('.answer-placeholder');
         if(ap && !progress[card.dataset.qid]) ap.classList.remove('show');
@@ -293,7 +344,7 @@
       cards.forEach(function(c){
         if(!progress[c.dataset.qid]) showAnswer(c);
         var ra = c.querySelector('.reveal-ref');
-        if(c.dataset.type === 'essay' && ra && !progress[c.dataset.qid]) ra.click();
+        if(c.dataset.kind === 'essay' && ra && !progress[c.dataset.qid]) ra.click();
       });
     }
   }
@@ -312,16 +363,19 @@
     var card = document.querySelector('.qcard[data-qid="' + qid + '"]');
     a.className = '';
     if(!p){ if(drafts[qid]) a.classList.add('answered'); return; }
-    if(card && card.dataset.type === 'essay') a.classList.add(p.score > 0 ? 'correct' : 'incorrect');
+    if(card && card.dataset.kind === 'essay') a.classList.add(p.score > 0 ? 'correct' : 'incorrect');
     else a.classList.add(p.correct ? 'correct' : 'incorrect');
   }
   if(layer && year){
     var grid = layer.querySelector('.answer-sheet-grid');
     var html = '';
-    html += '<div class="grp">选择题 1–40（各 2 分）</div>';
+    var lastType = null;
     cards.forEach(function(c){
       var n = +c.dataset.number;
-      if(n === 41) html += '<div class="grp">综合应用题 41–47</div>';
+      if(c.dataset.type !== lastType){
+        lastType = c.dataset.type;
+        html += '<div class="grp">' + lastType + '</div>';
+      }
       var href = document.body.dataset.mode === 'question'
         ? ('../../question/' + c.dataset.qid + '/')
         : ('#q-' + c.dataset.qid);
@@ -344,7 +398,8 @@
     if(submit) submit.addEventListener('click', function(){
       cards.forEach(function(c){
         var qid = c.dataset.qid;
-        if(c.dataset.type === 'choice' && !progress[qid] && drafts[qid]) gradeChoice(c, drafts[qid]);
+        if(c.dataset.kind === 'choice' && !progress[qid] && drafts[qid]) gradeChoice(c, drafts[qid]);
+        if(c.dataset.kind === 'multi' && !progress[qid] && drafts[qid]) gradeMulti(c, drafts[qid]);
       });
       cards.forEach(function(c){ sheetMark(c.dataset.qid); });
       var total = 0, full = 0, correctN = 0, choiceN = 0;
@@ -353,7 +408,7 @@
         var pts = +c.dataset.points; full += pts;
         var p = progress[c.dataset.qid];
         if(p){ total += p.score || 0; }
-        if(c.dataset.type === 'choice'){
+        if(c.dataset.kind === 'choice' || c.dataset.kind === 'multi'){
           choiceN++;
           if(p && p.correct) correctN++;
           if(p && !p.correct) wrongIds.push(c.dataset.qid);
@@ -410,12 +465,29 @@
     if(state.loaded) return cb();
     if(state.loading) return setTimeout(function(){ ensureData(cb); }, 200);
     state.loading = true;
-    var years = []; for(var y=2009; y<=2026; y++) years.push(y);
-    var pending = years.length;
-    years.forEach(function(y){
-      fetch('../data/questions/' + y + '.json')
-        .then(function(r){ return r.json(); })
-        .then(function(js){ state.data = state.data.concat(js); if(--pending === 0){ state.loaded = true; cb(); } })
+    var EXAMD = [
+      {sk: '408',      name: null,      dir: '408'},
+      {sk: 'math2',    name: '数学二',   dir: 'math2'},
+      {sk: 'politics', name: '政治101', dir: 'politics'},
+      {sk: 'english2', name: '英语二',   dir: 'english2'}
+    ];
+    var jobs = [];
+    EXAMD.forEach(function(e){
+      for(var y = 2009; y <= 2026; y++) jobs.push({e: e, y: y});
+    });
+    var pending = jobs.length;
+    jobs.forEach(function(j){
+      fetch('../data/' + j.e.dir + '/questions/' + j.y + '.json')
+        .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+        .then(function(js){
+          var qs = js.questions || js;
+          qs.forEach(function(q){
+            if(!q.subject) q.subject = j.e.name;
+            if(!q.exam) q.exam = j.e.sk;
+          });
+          state.data = state.data.concat(qs);
+          if(--pending === 0){ state.loaded = true; cb(); }
+        })
         .catch(function(){ if(--pending === 0){ state.loaded = true; cb(); } });
     });
   }

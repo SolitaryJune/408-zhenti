@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-23.html" data-q="../question/m2-2009-23/">← <b>m2-2009-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-01/" data-q="../question/m2-2010-01/" data-no-anim="1">m2-2010-01 · 本题</a>
+  <a href="m2-2010-02.html" data-q="../question/m2-2010-02/"><b>m2-2010-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：什么叫「无穷间断点」',
+    cls: 'key',
+    ribbon: null,
+    body: '<p>无穷间断点 $=$ 该点极限为 $\\infty$ 的间断点。$f(x)=\\dfrac{x^2-x}{x^2-1}\\sqrt{1+\\dfrac{1}{x^2}}$ 的定义域挖掉 $x=0,\\ \\pm1$，候选点只有这三个，逐点判型即可。</p>' },
+  { title: '先化简，看清无穷从哪来',
+    cls: 'key',
+    ribbon: null,
+    body: '<p>$\\sqrt{1+\\dfrac{1}{x^2}}=\\dfrac{\\sqrt{x^2+1}}{\\lvert x\\rvert}$，并约去公因子 $(x-1)$（$x\\neq1$ 处合法）：</p><p>$$f(x)=\\frac{x}{x+1}\\cdot\\frac{\\sqrt{x^2+1}}{\\lvert x\\rvert}=\\pm\\frac{\\sqrt{x^2+1}}{x+1}.$$</p><p>分子 $\\sqrt{x^2+1}$ 恒为正且不为零——「趋于无穷」只能由 $\\lvert x\\rvert$ 或 $x+1\\to0$ 制造。</p>' },
+  { title: '检验 $x=1$：可去，不是无穷',
+    cls: 'bad',
+    ribbon: {k: 1, ok: false},
+    body: '<p>约去 $(x-1)$ 后 $\\lim_{x\\to1}f(x)=\\dfrac{\\sqrt{1^2+1}}{1+1}=\\dfrac{\\sqrt2}{2}$，极限存在。</p><p>$x=1$ 是<b>可去间断点</b>（第一类），不是无穷间断点——选项 D 把它计入就错了。</p>' },
+  { title: '检验 $x=0$：跳跃，不是无穷',
+    cls: 'bad',
+    ribbon: {k: 2, ok: false},
+    body: '<p>$x\\to0^+$ 时 $x/\\lvert x\\rvert=1$，$f\\to\\dfrac{\\sqrt{x^2+1}}{x+1}\\to1$；$x\\to0^-$ 时 $x/\\lvert x\\rvert=-1$，$f\\to-1$。</p><p>左右极限都<b>有限</b>但不相等 $\\Rightarrow$ <b>跳跃间断点</b>（第一类）。别被 $\\sqrt{1+1/x^2}\\to+\\infty$ 唬住：另一因子 $\\dfrac{x}{x+1}\\to0$，乘积极限有限。</p>' },
+  { title: '检验 $x=-1$：无穷间断点命中',
+    cls: 'good',
+    ribbon: {k: 3, ok: true},
+    body: '<p>$x\\lt0$ 附近 $f=-\\dfrac{\\sqrt{x^2+1}}{x+1}$，分母 $x+1\\to0$ 而分子 $\\to\\sqrt2\\neq0$：</p><p>$$\\lim_{x\\to-1}\\lvert f(x)\\rvert=+\\infty.$$</p><p><b>无穷间断点</b>（第二类）成立，且是唯一的一个。</p>' },
+  { title: '结论',
+    cls: 'good',
+    ribbon: {k: 4, ok: true},
+    body: '<p>三个候选点中：$x=1$ 可去、$x=0$ 跳跃、$x=-1$ 无穷。无穷间断点只有 <b>1 个</b>，答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || undefined,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010 数学二 第1题 · $f(x)=\\dfrac{x^2-x}{x^2-1}\\sqrt{1+\\dfrac{1}{x^2}}$ 的无穷间断点个数',
+  subtitle: '考点：连续与间断点分类 · 方法：化简 + 逐点求极限判型',
+  intro: '点击「▶ 播放」逐步展开推理链：先化简，再逐点判型。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  ribbonTitle: '候选点判型（✓ 无穷 / ✗ 非无穷）',
+  snaps: snaps,
+  result: {
+    big: '答案 B（无穷间断点 1 个）',
+    html: '记忆锚点：<b>先约分再判型</b>。$x=1$ 极限 $\\dfrac{\\sqrt2}{2}$ 存在（可去）、$x=0$ 左右极限 $\\pm1$（跳跃）、$x=-1$ 极限为 $\\infty$。干扰项的共同误区：把「因子趋于 $\\infty$」当成「乘积极限为 $\\infty$」——$\\infty\\times0$ 型要拆开看。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：无穷间断点的识别与计数</h2>
+<p>答案：<strong>B</strong>（无穷间断点 1 个）。</p>
+<h3>第 0 步：先立模型——间断点怎么找、怎么分类</h3>
+<p>初等函数只在「分母为零、开方无定义」的地方断开，区间内部处处连续，所以<strong>间断点只可能藏在无定义点里</strong>——本题候选只有 $x=0,\ \pm1$，一个都不能漏。判型只看一件事：<strong>左右极限</strong>。</p>
+<table><thead><tr><th>左右极限行为</th><th>类型</th></tr></thead><tbody><tr><td>都存在且相等</td><td>可去间断点（第一类）</td></tr><tr><td>都存在但不相等</td><td>跳跃间断点（第一类）</td></tr><tr><td>至少一侧趋于 $\infty$</td><td>无穷间断点（第二类）</td></tr></tbody></table>
+<p>题目只要「无穷」这一类。策略因此是：先化简 $f$，让「谁会冲到无穷」一眼可见，再逐点求左右极限对号入座。</p>
+<h3>第一步：化简——让无穷的来源现形</h3>
+<p>利用 $\sqrt{1+\dfrac{1}{x<sup>2</sup>}}=\dfrac{\sqrt{x<sup>2</sup>+1}}{\lvert x\rvert}$（根号内通分，$x\neq0$），并在 $x\neq1$ 处约去公因子 $(x-1)$：</p>
+<p>$$f(x)=\frac{x}{x+1}\cdot\frac{\sqrt{x<sup>2</sup>+1}}{\lvert x\rvert}\quad(x\neq0,\ \pm1).$$</p>
+<p>关键观察：因子 $\sqrt{x<sup>2</sup>+1}$ 恒为正、极限恒为 $1$，永远不制造无穷；<strong>无穷只可能来自分母 $\lvert x\rvert$ 或 $x+1\to0$</strong>。化简的意义就在于此——把嫌疑人从三个缩到两个。</p>
+<h3>第二步：逐点求左右极限，对号入座</h3>
+<ul><li><strong>$x=1$</strong>：$(x-1)$ 已约去（只在 $x\neq1$ 时约，这正是「可去」的含义），$\dfrac{x}{x+1}\to\dfrac12$、$\dfrac{\sqrt{x<sup>2</sup>+1}}{\lvert x\rvert}\to\sqrt2$，极限 $=\dfrac{\sqrt2}{2}$ 存在——可去间断点，<strong>不算</strong>。</li><li><strong>$x=0$</strong>：$\dfrac{x}{\lvert x\rvert}=\pm1$，右极限 $=1$、左极限 $=-1$，都有限但不相等——跳跃间断点，<strong>不算</strong>。</li><li><strong>$x=-1$</strong>：分母 $x+1\to0$ 而分子 $x\cdot\dfrac{\sqrt{x<sup>2</sup>+1}}{\lvert x\rvert}\to-\sqrt2\neq0$，故 $\lvert f\rvert\to+\infty$——<strong>无穷间断点，算！</strong></li></ul>
+<p>把第二步汇成一张表（叙事已讲清，表只做对号）：</p>
+<table><thead><tr><th>候选点</th><th>极限</th><th>类型</th><th>是否无穷间断</th></tr></thead><tbody><tr><td>$x=1$</td><td>$\dfrac{\sqrt2}{2}$，存在</td><td>可去（第一类）</td><td>否</td></tr><tr><td>$x=0$</td><td>右 $1$ / 左 $-1$，均有限</td><td>跳跃（第一类）</td><td>否</td></tr><tr><td>$x=-1$</td><td>$\lvert f\rvert\to+\infty$</td><td>无穷（第二类）</td><td>是</td></tr></tbody></table>
+<p>无穷间断点只有 $x=-1$ 一个，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A（0 个）</strong>：只盯着 $x=0$ 处唬人的 $\sqrt{1+1/x<sup>2</sup>}\to+\infty$，忘了真正的无穷在 $x=-1$——分母 $x+1\to0$、分子不为零才是标准的无穷间断点。</li><li><strong>误选 C（2 个）</strong>：把 $x=0$ 也计入。其实 $x\cdot\dfrac1{\lvert x\rvert}=\pm1$ 阶数恰好抵消，左右极限有限，是跳跃不是无穷——「一个因子趋于无穷」不等于「乘积极限为无穷」。</li><li><strong>误选 D（3 个）</strong>：见无定义就数。$x=1$ 的 $(x-1)$ 是可约去因子，极限存在，属可去间断点。</li></ul>
+<blockquote>无穷间断点 $=$ 极限为 $\infty$ 的无定义点；先化简找「无穷的来源」，再逐点求左右极限判型。本题只有 $x=-1$，选 <strong>B</strong>。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

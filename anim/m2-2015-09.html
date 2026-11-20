@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·09 参数方程求二阶导数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-08.html" data-q="../question/m2-2015-08/">← <b>m2-2015-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-09/" data-q="../question/m2-2015-09/" data-no-anim="1">m2-2015-09 · 本题</a>
+  <a href="m2-2015-10.html" data-q="../question/m2-2015-10/"><b>m2-2015-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题与流程',
+    h: '<p>$x=\\arctan t,\\ y=3t+t^3$，求 $\\left.\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\right|_{t=1}$。流程：先算 $\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}$，再对 $t$ 求导，最后<b>再除一次</b> $\\dfrac{\\mathrm{d}x}{\\mathrm{d}t}$。</p>' },
+  { label: '第 1 步 · 备好两个一阶导',
+    h: '<p>$\\dfrac{\\mathrm{d}x}{\\mathrm{d}t}=\\dfrac{1}{1+t^2},\\qquad \\dfrac{\\mathrm{d}y}{\\mathrm{d}t}=3+3t^2=3(1+t^2).$</p>' },
+  { label: '第 2 步 · 相除得一阶导 dy/dx',
+    h: '<p>$\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}=\\dfrac{3(1+t^2)}{1/(1+t^2)}=3(1+t^2)^2.$</p>' },
+  { label: '第 3 步 · 一阶导对 t 求导',
+    h: '<p>$\\dfrac{\\mathrm{d}}{\\mathrm{d}t}\\Big[3(1+t^2)^2\\Big]=3\\cdot 2(1+t^2)\\cdot 2t=12t(1+t^2).$（链式：内层导数 $2t$ 别丢）</p>' },
+  { label: '第 4 步 · 再除一次 x′(t)',
+    h: '<p>$\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}=\\dfrac{12t(1+t^2)}{1/(1+t^2)}=12t(1+t^2)^2.$</p>' },
+  { label: '第 5 步 · 代入 t=1',
+    h: '<p>$\\left.\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\right|_{t=1}=12\\cdot1\\cdot(1+1)^2=12\\cdot4=\\boxed{48}.$</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '$x=\\arctan t,\\ y=3t+t^3$ 的二阶导数',
+  subtitle: '考点：参数方程求导 · 方法：dy/dx → 对 t 求导 → 再除以 dx/dt',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的六步计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',     log:'流程三步走：一阶导 → 对 t 求导 → 再除 x′', count:0 },
+    { cls:'ok',    tag:'备料',    log:'dx/dt=1/(1+t²)，dy/dt=3(1+t²)', count:1 },
+    { cls:'ok',    tag:'一阶导',  log:'相除约去 (1+t²)，得 dy/dx=3(1+t²)²', count:2 },
+    { cls:'shift', tag:'再求导',  log:'一阶导对 t 求导（链式带内层 2t）得 12t(1+t²)', count:3 },
+    { cls:'ok',    tag:'再除一次', log:'除以 dx/dt=1/(1+t²)，得 12t(1+t²)²', count:4 },
+    { cls:'done',  tag:'完成',    log:'代 t=1：12·1·4=48', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '48',
+    html: '记忆锚点：<b>二阶导 = 「一阶导对 $t$ 的导数」再除以 $\\dfrac{\\mathrm{d}x}{\\mathrm{d}t}$</b>——漏掉最后这次相除会得到 24（最常见错答）。链式求导的内层因子 $2t$ 也不能丢。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：参数方程求二阶导——为什么必须"再除一次"</h2>
+<p>答案：<strong>48</strong>。</p>
+<h3>第 0 步：先立机制——"对 $x$ 求导"必须经 $t$ 中转</h3>
+<p>$x,y$ 都是 $t$ 的函数，"$\frac{\mathrm d}{\mathrm dx}$"这个算符没有独立通道，任何对 $x$ 的求导都要经过 $t$ 中转：</p>
+<p>$$\frac{\mathrm d}{\mathrm dx}=\frac{\mathrm dt}{\mathrm dx}\cdot\frac{\mathrm d}{\mathrm dt}=\frac{1}{\mathrm dx/\mathrm dt}\cdot\frac{\mathrm d}{\mathrm dt}.$$</p>
+<p>一阶导 $\frac{\mathrm dy}{\mathrm dx}=\frac{y'(t)}{x'(t)}$ 算出来后是 $t$ 的函数；要它<strong>再对 $x$</strong> 求导，还得再过一次中转——这就是公式</p>
+<p>$$\frac{\mathrm d<sup>2y</sup>}{\mathrm dx<sup>2</sup>}=\frac{\dfrac{\mathrm d}{\mathrm dt}\Big(\dfrac{\mathrm dy}{\mathrm dx}\Big)}{\dfrac{\mathrm dx}{\mathrm dt}}$$</p>
+<p>的来历。<strong>漏掉最后一步，等于把"对 $t$ 求导"冒充"对 $x$ 求导"。</strong></p>
+<h3>第 1 步：一阶导——为什么这么整齐</h3>
+<p>$x'(t)=\dfrac{1}{1+t<sup>2</sup>}$（$\arctan t$ 的导数）；$y'(t)=3+3t<sup>2</sup>=3(1+t<sup>2</sup>)$。一个带 $\dfrac{1}{1+t<sup>2</sup>}$、一个是 $3(1+t<sup>2</sup>)$，相除恰好约干净：</p>
+<p>$$\frac{\mathrm dy}{\mathrm dx}=\frac{3(1+t<sup>2</sup>)}{1/(1+t<sup>2</sup>)}=3(1+t<sup>2</sup>)<sup>2</sup>.$$</p>
+<h3>第 2 步：二阶导——先对 $t$ 求导，再除 $x'(t)$</h3>
+<p>$$\frac{\mathrm d}{\mathrm dt}\Big[3(1+t<sup>2</sup>)<sup>2</sup>\Big]=3\cdot2(1+t<sup>2</sup>)\cdot2t=12t(1+t<sup>2</sup>),$$</p>
+<p>（链式：外层导 $2(1+t<sup>2</sup>)$、内层导 $2t$，系数 $3\times2\times2=12$。）再除以 $x'(t)=\dfrac1{1+t<sup>2</sup>}$：</p>
+<p>$$\frac{\mathrm d<sup>2y</sup>}{\mathrm dx<sup>2</sup>}=12t(1+t<sup>2</sup>)\cdot(1+t<sup>2</sup>)=12t(1+t<sup>2</sup>)<sup>2</sup>.$$</p>
+<p>代 $t=1$：$12\times1\times4=48$。<strong>为什么不中途代值</strong>：二阶导表达式仍是 $t$ 的函数，代早了后续求导就没了对象。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘记再除 $\dfrac{\mathrm dx}{\mathrm dt}$</strong>：得到 $12t(1+t<sup>2</sup>)$，代 $t=1$ 得 $24$——把对 $t$ 的导数当成了对 $x$ 的。</li><li><strong>链式漏内层因子 $2t$</strong>：$(1+t<sup>2</sup>)<sup>2</sup>$ 的导数是 $2(1+t<sup>2</sup>)\cdot2t$。</li><li><strong>过早代入 $t=1$</strong>：先保住含 $t$ 的一般表达式，最后一步才代值。</li></ul>
+<blockquote>记忆锚点：参数二阶导 = 一阶导对 $t$ 求导后<strong>再除一次</strong> $x'(t)$；本题答案 $48$，漏除得 $24$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

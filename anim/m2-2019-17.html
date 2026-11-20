@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019·17 一阶线性方程与旋转体体积</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-16.html" data-q="../question/m2-2019-16/">← <b>m2-2019-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-17/" data-q="../question/m2-2019-17/" data-no-anim="1">m2-2019-17 · 本题</a>
+  <a href="m2-2019-18.html" data-q="../question/m2-2019-18/"><b>m2-2019-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$y'-xy=\\frac{1}{2\\sqrt{x}}\\,\\mathrm{e}^{x^2/2},\\qquad y(1)=\\sqrt{\\mathrm{e}}\\qquad\\text{一阶线性方程}\\ +\\ \\text{旋转体体积}$$",
+  "<b>① 定型：</b>$y'+P(x)y=Q(x)$，$P(x)=-x$；积分因子 $\\mathrm{e}^{\\int P\\,\\mathrm{d}x}=\\mathrm{e}^{-x^2/2}$",
+  "<b>② 乘积分因子：</b>$\\left(y\\,\\mathrm{e}^{-x^2/2}\\right)'=\\dfrac{1}{2\\sqrt{x}}\\,\\mathrm{e}^{x^2/2}\\cdot\\mathrm{e}^{-x^2/2}=\\dfrac{1}{2\\sqrt{x}}$——右端指数恰好抵消",
+  "<b>③ 积分：</b>$y\\,\\mathrm{e}^{-x^2/2}=\\displaystyle\\int\\frac{1}{2\\sqrt{x}}\\,\\mathrm{d}x=\\sqrt{x}+C\\ \\Rightarrow\\ y=\\mathrm{e}^{x^2/2}\\left(\\sqrt{x}+C\\right)$",
+  "<b>④ 定常数：</b>代入 $y(1)=\\sqrt{\\mathrm{e}}$：$\\mathrm{e}^{1/2}\\,(1+C)=\\mathrm{e}^{1/2}\\Rightarrow C=0$，得 (I) 的特解 $y=\\sqrt{x}\\,\\mathrm{e}^{x^2/2}$（回代验证成立）",
+  "<b>⑤ (II) 定方法：</b>$D$：$1\\le x\\le 2$，$0\\le y\\le y(x)$，绕 $x$ 轴旋转 → 圆盘法 $V=\\pi\\displaystyle\\int_1^2 y^2\\,\\mathrm{d}x$",
+  "<b>⑥ 代入：</b>$y^2=\\left(\\sqrt{x}\\,\\mathrm{e}^{x^2/2}\\right)^2=x\\,\\mathrm{e}^{x^2}$，故 $V=\\pi\\displaystyle\\int_1^2 x\\,\\mathrm{e}^{x^2}\\,\\mathrm{d}x$",
+  "<b>⑦ 凑微分收尾：</b>$x\\,\\mathrm{d}x=\\tfrac12\\,\\mathrm{d}\\left(x^2\\right)$：$$V=\\frac{\\pi}{2}\\,\\mathrm{e}^{x^2}\\Big|_1^2=\\frac{\\pi}{2}\\left(\\mathrm{e}^4-\\mathrm{e}\\right)$$"
+];
+
+AW.init({
+  title: '2019·17　一阶线性方程特解与旋转体体积',
+  subtitle: '考点：积分因子法 · 初值定常数 · 圆盘法 $V=\\pi\\int y^2\\,\\mathrm{d}x$',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，先解方程再算体积，两问一气呵成。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',     log:'两问结构：先解一阶线性方程，再把解代入旋转体体积', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'定型',     log:'识别为一阶线性方程，P 等于负 x，写出积分因子', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'消指数',   log:'乘积分因子后右端指数恰好抵消，只剩二倍根号 x 分之一', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'积分',     log:'两边积分得根号 x 加 C，通解是 e 的指数乘根号 x 加 C', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'定常数',   log:'代入初值 y 一 等于根号 e，常数 C 为零，特解确定', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'圆盘法',   log:'区域绕 x 轴旋转，用圆盘法，体积是派 乘 y 平方 的定积分', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'代入',     log:'特解平方后等于 x 乘 e 的 x 平方，被积函数大幅化简', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',     log:'结论：凑微分收尾，体积等于二分之派 乘 e 四次方减 e', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "(I) $y=\\sqrt{x}\\,\\mathrm{e}^{x^2/2}$；　(II) $V=\\dfrac{\\pi}{2}\\left(\\mathrm{e}^4-\\mathrm{e}\\right)$",
+    html: "记忆锚点：<b>一阶线性方程先乘积分因子 $\\mathrm{e}^{\\int P\\mathrm{d}x}$ 再移项；绕 $x$ 轴旋转用圆盘法 $\\pi\\int y^2\\mathrm{d}x$</b>。易错：公式指数符号记反；体积漏 $\\pi$；凑微分丢 $\\tfrac12$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：积分因子的坍缩机制 + 圆盘法的切片机制</h2>
+<p><strong>答案</strong>：(I) $y(x)=\sqrt{x}\,\mathrm{e}<sup>x^2/2</sup>$；(II) $V=\dfrac{\pi}{2}\left(\mathrm{e}<sup>4</sup>-\mathrm{e}\right)$。</p>
+<h3>第 (I) 问第一步：机制——积分因子为什么一乘就"坍缩"</h3>
+<p>$y'-xy=\dfrac{1}{2\sqrt{x}}\mathrm{e}<sup>x^2/2</sup>$ 是一阶线性方程 $y'+P(x)y=Q(x)$，$P(x)=-x$。卡点在于：左端 $y'+Py$ 不是任何一个现成函数的导数。<strong>乘一个因子 $\mu$ 试试</strong>：$\mu y'+\mu Py$，要它是 $(\mu y)'=\mu' y+\mu y'$，只需 $\mu'=P\mu$——两边除以 $\mu$ 得 $(\ln\mu)'=P$，故 $\mu=\mathrm{e}<sup>\int P\,\mathrm{d</sup>x}$。<strong>指数函数天生满足"对数导数"关系</strong>，这就是积分因子法的全部机制：乘 $\mu$ 后左端坍缩成一个导数，两边一积分，通解自动落袋。</p>
+<p>本题 $\int P\,\mathrm{d}x=-\dfrac{x<sup>2</sup>}2$，取 $\mu=\mathrm{e}<sup>-x^2/2</sup>$：</p>
+<p>$$\left(y\,\mathrm{e}<sup>-x^2/2</sup>\right)'=\frac{1}{2\sqrt{x}}\,\mathrm{e}<sup>x^2/2</sup>\cdot\mathrm{e}<sup>-x^2/2</sup>=\frac{1}{2\sqrt{x}}.$$</p>
+<p>右端指数恰好抵消——为什么这么巧？题目把 $Q$ 设计成 $\dfrac{1}{2\sqrt{x}}\mathrm{e}<sup>+x^2/2</sup>$，那个指数就是<strong>给积分因子准备的</strong>：命题人先造好 $\mu$，再除回去造出 $Q$。见到 $Q$ 里带指数，先想积分因子。</p>
+<h3>第 (I) 问第二步：积分、定常数、回验</h3>
+<p>$$y\,\mathrm{e}<sup>-x^2/2</sup>=\int\frac{1}{2\sqrt{x}}\,\mathrm{d}x=\sqrt{x}+C\ \Rightarrow\ y=\mathrm{e}<sup>x^2/2</sup>\left(\sqrt{x}+C\right).$$</p>
+<p>代入 $y(1)=\sqrt{\mathrm{e}}$：$\mathrm{e}<sup>1/2</sup>(1+C)=\mathrm{e}<sup>1/2</sup>$，得 $C=0$，故 $y=\sqrt{x}\,\mathrm{e}<sup>x^2/2</sup>$。回代验算：$y'=\dfrac{1}{2\sqrt{x}}\mathrm{e}<sup>x^2/2</sup>+x\cdot\sqrt{x}\,\mathrm{e}<sup>x^2/2</sup>$，即 $y'-xy=\dfrac{1}{2\sqrt{x}}\mathrm{e}<sup>x^2/2</sup>$，确满足方程且过初值点。</p>
+<p>（通解公式 $y=\mathrm{e}<sup>-\int P\mathrm{d</sup>x}\left(\int Q\,\mathrm{e}<sup>\int P\mathrm{d</sup>x}\mathrm{d}x+C\right)$ 与积分因子法是同一条路的两面；公式两处指数一负一正易记反，不如记住"乘 $\mu$ → 左端坍缩"这个动作本身。）</p>
+<h3>第 (II) 问：圆盘法——先把"切片"机制说清</h3>
+<p>绕 $x$ 轴旋转，用<strong>垂直于 $x$ 轴的平面</strong>把立体切成薄片：每片是一个圆盘，半径恰为该处的上边界 $y(x)$（区域 $D$ 中 $y$ 从 $0$ 到 $y(x)$，紧贴旋转轴，没有内孔要减）。薄片体积 = 底面积 × 厚度的极限 $=\pi y<sup>2</sup>\,\mathrm{d}x$，沿 $x$ 从 $1$ 到 $2$ 累加：</p>
+<p>$$V=\pi\int_1<sup>2</sup> y<sup>2</sup>\,\mathrm{d}x=\pi\int_1<sup>2</sup> x\,\mathrm{e}<sup>x^2</sup>\,\mathrm{d}x.$$</p>
+<p>（$(\sqrt{x})<sup>2</sup>$ 把根号吃掉、指数翻倍，被积函数干净成一项目标——第 (I) 问的答案替第 (II) 问铺好了路。）</p>
+<p>凑微分 $x\,\mathrm{d}x=\tfrac12\,\mathrm{d}(x<sup>2</sup>)$：为什么可行？$\mathrm{d}(x<sup>2</sup>)=2x\,\mathrm{d}x$，系数 $\tfrac12$ 是求导产生的 $2$ 的倒影，别忘了带：</p>
+<p>$$V=\frac{\pi}{2}\,\mathrm{e}<sup>x^2</sup>\Big|_1<sup>2</sup>=\frac{\pi}{2}\left(\mathrm{e}<sup>4</sup>-\mathrm{e}\right).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>通解公式两处指数记反</strong>：改背"乘 $\mu$、左端坍缩"的动作，$\mu$ 由 $(\ln\mu)'=P$ 现场推，不用死记。</li><li><strong>体积公式缺 $\pi$</strong>：圆盘底面积是 $\pi y<sup>2</sup>$，$\pi$ 在切片那一步就进来了。</li><li><strong>凑微分丢 $\tfrac12$</strong>：$\int x\mathrm{e}<sup>x^2</sup>\mathrm{d}x=\tfrac12\mathrm{e}<sup>x^2</sup>+C$，不是 $\mathrm{e}<sup>x^2</sup>+C$。</li></ul>
+<blockquote>结论：(I) $y=\sqrt{x}\,\mathrm{e}<sup>x^2/2</sup>$；(II) $V=\dfrac{\pi}{2}\left(\mathrm{e}<sup>4</sup>-\mathrm{e}\right)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

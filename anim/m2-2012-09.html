@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·09 隐函数的二阶导 y″(0)</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-08.html" data-q="../question/m2-2012-08/">← <b>m2-2012-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-09/" data-q="../question/m2-2012-09/" data-no-anim="1">m2-2012-09 · 本题</a>
+  <a href="m2-2012-10.html" data-q="../question/m2-2012-10/"><b>m2-2012-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];   // 推导板的持久 DOM 行
+
+var LINES = [
+  "<p><b>策略</b>：方程 $x^{2}-y+1=\\mathrm{e}^{y}$ 解不出 $y(x)$，走<b>先定值、逐阶求导、逐阶代入</b>的路线，目标 $y''\\big|_{x=0}$。</p>",
+  "<p><b>定初值</b>：代 $x=0$ 得 $1-y=\\mathrm{e}^{y}$，$y=0$ 成立（$h(y)=1-y-\\mathrm{e}^{y}$ 严格递减，解唯一）$\\Longrightarrow y(0)=0$。</p>",
+  "<p><b>一阶导</b>：两边对 $x$ 求导，$$2x-y'=\\mathrm{e}^{y}\\,y'\\ \\Longrightarrow\\ 2x=y'(1+\\mathrm{e}^{y}).$$</p>",
+  "<p><b>代入</b>：$x=0,\\ y=0$：$0=y'(1+1)\\Longrightarrow y'(0)=0$。</p>",
+  "<p><b>二阶导</b>：对 $2x=y'(1+\\mathrm{e}^{y})$ 再求导（乘积法则，$y'$ 仍是 $x$ 的函数），$$2=y''(1+\\mathrm{e}^{y})+\\mathrm{e}^{y}(y')^{2}.$$</p>",
+  "<p><b>代入</b>：$y=0,\\ y'=0$：$2=2y''\\Longrightarrow y''(0)=1$。</p>",
+  "<p><b>结论</b>：$\\left.\\dfrac{\\mathrm{d}^{2}y}{\\mathrm{d}x^{2}}\\right|_{x=0}=1$。</p>"
+];
+
+AW.init({
+  title: '隐函数求二阶导：$x^{2}-y+1=\\mathrm{e}^{y}$ 在 $x=0$ 处',
+  subtitle: '考点：隐函数求导 · 方法：先定 y(0) → 逐阶求导 → 逐阶代入',
+  counterLabel: '已推演',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'方程解不出 y(x)，改走"定值 + 逐阶代入"路线', show:1, count:0 },
+    { cls:'ok',    tag:'定初值', log:'x=0 时 1−y = e^y，y=0 成立且解唯一：y(0)=0', show:2, count:1 },
+    { cls:'step',  tag:'一阶导', log:'两边求导：2x − y′ = e^y·y′，整理出 2x = y′(1+e^y)', show:3, count:2 },
+    { cls:'ok',    tag:'代值',   log:'代 x=0, y=0：0 = 2y′，得 y′(0)=0', show:4, count:3 },
+    { cls:'step',  tag:'二阶导', log:'再求导（乘积法则）：2 = y″(1+e^y) + e^y(y′)²', show:5, count:4 },
+    { cls:'ok',    tag:'代值',   log:'代 y=0, y′=0：交叉项归零，2 = 2y″，得 y″(0)=1', show:6, count:5 },
+    { cls:'done',  tag:'完成',   log:'结论：二阶导在 x=0 处等于 1', show:7, count:6, done:true },
+  ],
+
+  result: {
+    big: 'y″|x=0 = 1',
+    html: '记忆锚点：<b>隐函数定点求导三步走——先定 $y(0)$、逐阶求导、逐阶代入</b>。一阶导整理成 $2x=y\'(1+\\mathrm{e}^{y})$ 形式可少抄一遍；二阶导里的 $\\mathrm{e}^{y}(y\')^{2}$ 交叉项因 $y\'(0)=0$ 自动归零。漏掉交叉项或不先定 $y(0)$ 是两大高频错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：隐函数在定点处的二阶导（逐阶代入法）</h2>
+<p>答案：$1$</p>
+<h3>第一步：先定 $y(0)$</h3>
+<p>令 $x=0$：$1-y=\mathrm{e}<sup>y</sup>$。$y=0$ 时左右同为 1，故 $y(0)=0$。（$h(y)=1-y-\mathrm{e}<sup>y</sup>$ 满足 $h'(y)=-1-\mathrm{e}<sup>y</sup>&lt;0$ 严格递减，解唯一。）</p>
+<h3>第二步：一阶导，边导边代</h3>
+<p>方程 $x<sup>2</sup>-y+1=\mathrm{e}<sup>y</sup>$ 两边对 $x$ 求导：</p>
+<p>$$2x-y'=\mathrm{e}<sup>y</sup>\,y'\ \Longrightarrow\ 2x=y'(1+\mathrm{e}<sup>y</sup>).$$</p>
+<p>代 $x=0,\ y=0$：$0=y'(1+1)$，得 $y'(0)=0$。</p>
+<h3>第三步：二阶导，再把旧值代入</h3>
+<p>对 $2x=y'(1+\mathrm{e}<sup>y</sup>)$ 再求导（右端用乘积法则，$y'$ 仍是 $x$ 的函数）：</p>
+<p>$$2=y''(1+\mathrm{e}<sup>y</sup>)+\mathrm{e}<sup>y</sup>\,(y')<sup>2</sup>.$$</p>
+<p>代 $y=0,\ y'=0$：$2=2y''$，故</p>
+<p>$$\left.\frac{\mathrm{d}<sup>2</sup>y}{\mathrm{d}x<sup>2</sup>}\right|_{x=0}=1.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>不先定 $y(0)$ 就乱代</strong>：方程两边处处有 $y$，必须先解出 $y(0)=0$，后续代入才有依托。</li><li><strong>漏掉 $\mathrm{e}<sup>y</sup>(y')<sup>2</sup>$ 项</strong>：对 $\mathrm{e}<sup>y</sup>\cdot y'$ 求导要用乘积法则，$y''$ 与 $\mathrm{e}<sup>y</sup>y'$ 都会出现；本题 $y'(0)=0$ 让交叉项恰好归零。</li><li><strong>把 $y'$ 当常数</strong>：隐函数求导里 $y$ 与 $y'$ 都是 $x$ 的函数，链式法则不能省。</li></ul>
+<blockquote>一句话结论：$y(0)=0\Rightarrow y'(0)=0\Rightarrow 2=2y''$，二阶导为 $1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

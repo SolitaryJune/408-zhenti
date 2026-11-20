@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·09 中值定理 + 夹逼求极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-08.html" data-q="../question/m2-2018-08/">← <b>m2-2018-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-09/" data-q="../question/m2-2018-09/" data-no-anim="1">m2-2018-09 · 本题</a>
+  <a href="m2-2018-10.html" data-q="../question/m2-2018-10/"><b>m2-2018-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：识别 $\\infty\\cdot0$ 型</b>$$x^2\\to+\\infty,\\qquad \\arctan(x+1)-\\arctan x\\to0$$ 两处 $\\arctan$ 都趋于 $\\dfrac\\pi2$，谁也代替不了谁——「都趋于 $\\dfrac\\pi2$ 所以差为 0」不够用，必须定量处理相邻函数值之差。</p>",
+  "<p><b>第二步：拉格朗日中值定理化差为导数</b>对 $f(t)=\\arctan t$（$f\'(t)=\\dfrac1{1+t^2}$）在 $[x,\\,x+1]$ 上：$$\\arctan(x+1)-\\arctan x=f\'(\\xi)\\cdot\\big[(x+1)-x\\big]=\\frac1{1+\\xi^2},\\qquad x<\\xi<x+1.$$ 区间长度恰为 1，差变成一个分式。</p>",
+  "<p><b>第三步：搭夹逼</b>由 $x<\\xi<x+1$ 得 $1+x^2<1+\\xi^2<1+(x+1)^2$，取倒数放大缩小（$x>0$）：$$\\frac{x^2}{1+(x+1)^2}<\\frac{x^2}{1+\\xi^2}<\\frac{x^2}{1+x^2}.$$</p>",
+  "<p><b>第四步：两端取极限</b>$$\\lim_{x\\to+\\infty}\\frac{x^2}{1+x^2}=1,\\qquad \\lim_{x\\to+\\infty}\\frac{x^2}{1+(x+1)^2}=1\\quad(\\text{分母最高次同为 } x^2)$$ 由夹逼定理，原式 $=1$。</p>",
+  "<p><b>第五步：换口径验算（等价无穷小）</b>$$\\arctan(x+1)-\\arctan x=\\arctan\\frac1{1+x(x+1)}\\sim\\frac1{1+x^2+x}$$ $$x^2\\cdot\\frac1{1+x^2+x}\\to1\\quad\\checkmark\\ \\text{两种方法一致}$$</p>",
+  "<p><b>结论</b>$$\\lim_{x\\to+\\infty}x^2\\big[\\arctan(x+1)-\\arctan x\\big]=1\\quad(\\text{填 } 1)$$ 相近函数值之差 = 中值定理；带未知点 $\\xi$ = 夹逼。</p>"
+];
+
+AW.init({
+  title: '$\\lim_{x\\to+\\infty}x^2\\big[\\arctan(x+1)-\\arctan x\\big]$',
+  subtitle: '考点：拉格朗日中值定理 · 夹逼定理 · 方法：化差为导数再夹逼',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」：识别型 → 中值定理 → 夹逼 → 验算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'识别类型', log:'∞·0 型：x² 发散、arctan 差趋于 0，需定量', show:1, count:0 },
+    { cls:'step',  tag:'中值定理', log:'在 [x, x+1] 用 MVT：差 = 1/(1+ξ²)，x<ξ<x+1', show:2, count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'搭夹逼',   log:'1+x² < 1+ξ² < 1+(x+1)²，倒数放缩', show:3, count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'夹逼定值', log:'两端都 →1，夹逼得原式 = 1', show:4, count:3, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'验算',     log:'arctan 差化为 arctan(1/(1+x(x+1))) ∼ 1/(1+x²+x)，也得 1', show:5, count:4 },
+    { cls:'done',  tag:'完成',     log:'填空答案：1', show:6, count:5, done:true, ribbon:{k:4, ok:true} },
+  ],
+
+  result: {
+    big: '填空答案：$1$',
+    html: '记忆锚点：<b>相邻函数值之差用中值定理</b>（区间长度 1 直接进公式），差里带未知点 $\\xi$ 就用<b>夹逼</b>收尾。别用洛必达硬算，也别只说「两个 arctan 都趋于 $\\dfrac\\pi2$」——$0\\cdot\\infty$ 必须定量。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$\infty\cdot0$ 型极限——两个相近函数值之差用拉格朗日中值定理 + 夹逼</h2>
+<p>答案：$1$</p>
+<h3>第一步：识别类型</h3>
+<p>$x<sup>2</sup>\to+\infty$，而 $\arctan(x+1)-\arctan x\to0$，是 $\infty\cdot0$ 型。两处 $\arctan$ 都趋于 $\dfrac\pi2$，谁也代替不了谁，必须<strong>定量</strong>处理这个"相邻函数值之差"。</p>
+<h3>第二步：拉格朗日中值定理化差为导数</h3>
+<p>对 $f(t)=\arctan t$（$f'(t)=\dfrac1{1+t<sup>2</sup>}$）在区间 $[x,\,x+1]$ 上用中值定理：存在 $\xi\in(x,x+1)$ 使</p>
+<p>$$\arctan(x+1)-\arctan x=f'(\xi)\cdot\big[(x+1)-x\big]=\frac1{1+\xi<sup>2</sup>}.$$</p>
+<p>区间长度恰为 $1$，差被化成一个带未知点 $\xi$ 的分式。</p>
+<h3>第三步：夹逼定值</h3>
+<p>由 $x&lt;\xi&lt;x+1$（$x&gt;0$）得 $1+x<sup>2</sup>&lt;1+\xi<sup>2</sup>&lt;1+(x+1)<sup>2</sup>$，取倒数放大缩小：</p>
+<p>$$\frac{x<sup>2</sup>}{1+(x+1)<sup>2</sup>}&lt;\frac{x<sup>2</sup>}{1+\xi<sup>2</sup>}&lt;\frac{x<sup>2</sup>}{1+x<sup>2</sup>}.$$</p>
+<p>两端极限：$\dfrac{x<sup>2</sup>}{1+x<sup>2</sup>}\to1$；$\dfrac{x<sup>2</sup>}{1+(x+1)<sup>2</sup>}\to1$（分母最高次也是 $x<sup>2</sup>$）。由夹逼定理，原极限 $=1$。</p>
+<h3>第四步：换个口径验算（等价无穷小）</h3>
+<p>用 $\arctan a-\arctan b=\arctan\dfrac{a-b}{1+ab}$：</p>
+<p>$$\arctan(x+1)-\arctan x=\arctan\frac1{1+x(x+1)}\sim\frac1{1+x<sup>2</sup>+x},$$</p>
+<p>$$x<sup>2</sup>\cdot\frac1{1+x<sup>2</sup>+x}\longrightarrow1.$$</p>
+<p>两种方法结果一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>用"都趋于 $\dfrac\pi2$，差为 $0$"草草了事</strong>：那只说明差趋于 $0$，本题还要乘上 $x<sup>2</sup>\to\infty$，属于 $0\cdot\infty$ 待定型，必须算出精确阶。</li><li><strong>洛必达硬算</strong>：对 $x<sup>2</sup>[\arctan(x+1)-\arctan x]$ 直接求导会越导越繁；中值定理一步到位。</li><li><strong>夹逼端点取错</strong>：放缩方向要对——$\xi$ 越大 $1+\xi<sup>2</sup>$ 越大、分式越小，别把不等号写反。</li></ul>
+<blockquote>结论：差 $=\dfrac1{1+\xi<sup>2</sup>}$（中值定理，$\xi\in(x,x+1)$），夹逼得 $x<sup>2</sup>\cdot\dfrac1{1+\xi<sup>2</sup>}\to1$，填 $1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

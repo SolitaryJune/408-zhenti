@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>m2-2010-23 由一列特征向量定参数并求正交矩阵 Q</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-22.html" data-q="../question/m2-2010-22/">← <b>m2-2010-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-23/" data-q="../question/m2-2010-23/" data-no-anim="1">m2-2010-23 · 本题</a>
+  <a href="m2-2011-01.html" data-q="../question/m2-2011-01/"><b>m2-2011-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PAGES = [
+  "<p>$\\boldsymbol A=\\begin{pmatrix}0&-1&4\\\\-1&3&a\\\\4&a&0\\end{pmatrix}$，正交矩阵 $\\boldsymbol Q$ 使 $\\boldsymbol Q^T\\boldsymbol A\\boldsymbol Q$ 为对角阵，且 $\\boldsymbol Q$ 第 1 列为 $\\dfrac1{\\sqrt6}(1,2,1)^T$。求 $a,\\boldsymbol Q$。</p>",
+  "<p>$\\boldsymbol Q$ 的列是 $\\boldsymbol A$ 的单位正交<b>特征向量</b>，故 $\\xi_1=(1,2,1)^T$ 满足 $\\boldsymbol A\\xi_1=\\lambda\\xi_1$：</p>$$\\boldsymbol A\\xi_1=\\begin{pmatrix}-2+4\\\\-1+6+a\\\\4+2a\\end{pmatrix}=\\begin{pmatrix}2\\\\a+5\\\\2a+4\\end{pmatrix}=\\lambda\\begin{pmatrix}1\\\\2\\\\1\\end{pmatrix}$$",
+  "<p>逐分量比较：第 1 分量 $\\lambda=2$；第 2 分量 $a+5=4\\Rightarrow a=-1$；第 3 分量 $2a+4=2\\Rightarrow a=-1$，两处一致 ✓</p><p>故 $a=-1,\\ \\lambda_1=2$。</p>",
+  "<p>$a=-1$ 后用迹与行列式求其余特征值：</p>$$\\mathrm{tr}\\,\\boldsymbol A=3\\Rightarrow\\lambda_2+\\lambda_3=1,\\qquad |\\boldsymbol A|=-40=2\\lambda_2\\lambda_3\\Rightarrow\\lambda_2\\lambda_3=-20$$",
+  "<p>解二次方程：</p>$$t^2-t-20=0\\ \\Longrightarrow\\ t=5\\ \\text{或}\\ t=-4$$",
+  "<p>$\\lambda=-4$：解 $(\\boldsymbol A+4\\boldsymbol E)\\boldsymbol x=\\boldsymbol0$，即 $\\begin{pmatrix}4&-1&4\\\\-1&7&-1\\\\4&-1&4\\end{pmatrix}\\boldsymbol x=\\boldsymbol0$，得 $x_2=0,\\ x_1=-x_3$：</p>$$\\xi_2=(-1,0,1)^T$$",
+  "<p>$\\lambda=5$：解 $(\\boldsymbol A-5\\boldsymbol E)\\boldsymbol x=\\boldsymbol0$，即 $\\begin{pmatrix}-5&-1&4\\\\-1&-2&-1\\\\4&-1&-5\\end{pmatrix}\\boldsymbol x=\\boldsymbol0$，得：</p>$$\\xi_3=(1,-1,1)^T$$",
+  "<p>三个向量两两正交（实对称阵不同特征值的特征向量自动正交），单位化：</p>$$\\frac{\\xi_1}{\\sqrt6},\\qquad \\frac{\\xi_2}{\\sqrt2},\\qquad \\frac{\\xi_3}{\\sqrt3}$$",
+  "<p>按题设顺序拼成 $\\boldsymbol Q$（第 1 列对应 $\\lambda=2$，第 2 列 $-4$，第 3 列 $5$；特征向量取反号不改变结论）：</p>$$\\boldsymbol Q^T\\boldsymbol A\\boldsymbol Q=\\mathrm{diag}(2,-4,5)$$"
+];
+
+AW.init({
+  title: "2010·23　由 $\\boldsymbol Q$ 的第 1 列反求 $a$ 与 $\\boldsymbol Q$",
+  subtitle: "考点：实对称矩阵正交对角化 · 特征向量定义 · 迹与行列式 · 单位化拼 Q",
+  counterLabel: "步数",
+  intro: "点击「▶ 播放」逐步演示：Aξ=λξ 定参 → 迹/行列式求根 → 特征向量 → 拼 Q。",
+
+  build: function(stage){
+    stage.innerHTML = "";
+    var wrap = AW.el("div", "aw-scroll");
+    wrap.appendChild(AW.el("div", "aw-row-label", "<b>推导板</b>：$\\boldsymbol Q^T\\boldsymbol A\\boldsymbol Q$ 对角 $\\iff$ $\\boldsymbol Q$ 的列是单位正交特征向量"));
+    this._board = AW.el("div", "", "");
+    wrap.appendChild(this._board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:"shift", tag:"审题", log:"正交对角化意味着 Q 的每一列都是 A 的特征向量——第 1 列 (1,2,1)ᵀ 直接可用", count:0 },
+    { cls:"step", tag:"Aξ₁", log:"计算 A·(1,2,1)ᵀ = (2, a+5, 2a+4)ᵀ，它必须与 (1,2,1)ᵀ 成比例", count:1 },
+    { cls:"ok", tag:"定 a 与 λ₁", log:"三个分量逐个比：λ₁=2，两处都解出 a=−1，互相印证", count:2 },
+    { cls:"step", tag:"迹+行列式", log:"迹 3 = 2+λ₂+λ₃ 给出和为 1；行列式 −40 给出积为 −20", count:3 },
+    { cls:"ok", tag:"解根", log:"t²−t−20=0 解得 λ=5 或 −4，特征值凑齐：2, 5, −4", count:4 },
+    { cls:"step", tag:"λ=−4 的向量", log:"解 (A+4E)x=0：x₂=0 且 x₁=−x₃，取 (−1,0,1)ᵀ", count:5 },
+    { cls:"step", tag:"λ=5 的向量", log:"解 (A−5E)x=0：取 (1,−1,1)ᵀ", count:6 },
+    { cls:"step", tag:"单位化", log:"三个向量两两正交，分别除以 √6、√2、√3 变成单位向量", count:7 },
+    { cls:"done", tag:"拼 Q", log:"按列拼成 Q，对角元与列一一对应：2, −4, 5", count:8, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    this._board.innerHTML = PAGES[i];
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "a = −1，QᵀAQ = diag(2, −4, 5)",
+    html: "最终答案：$a=-1$，$\\boldsymbol Q=\\begin{pmatrix}\\dfrac1{\\sqrt6}&-\\dfrac1{\\sqrt2}&\\dfrac1{\\sqrt3}\\\\[4pt]\\dfrac2{\\sqrt6}&0&-\\dfrac1{\\sqrt3}\\\\[4pt]\\dfrac1{\\sqrt6}&\\dfrac1{\\sqrt2}&\\dfrac1{\\sqrt3}\\end{pmatrix}$（第 2、3 列取反号亦可）。<br>" +
+          "记忆点：<b>给了一列就代 $\\boldsymbol A\\xi=\\lambda\\xi$ 逐分量定参定根</b>；其余特征值用 $\\mathrm{tr}\\,\\boldsymbol A$ 与 $|\\boldsymbol A|$ 速算，再解齐次组、单位化、按列拼 $\\boldsymbol Q$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由一列特征向量定参数，再拼正交矩阵 $\boldsymbol Q$</h2>
+<p><strong>答案</strong>：$a=-1$；$\boldsymbol Q=\begin{pmatrix}\dfrac1{\sqrt6}&amp;-\dfrac1{\sqrt2}&amp;\dfrac1{\sqrt3}\\[4pt]\dfrac2{\sqrt6}&amp;0&amp;-\dfrac1{\sqrt3}\\[4pt]\dfrac1{\sqrt6}&amp;\dfrac1{\sqrt2}&amp;\dfrac1{\sqrt3}\end{pmatrix}$（第 2、3 列取反号也对），此时 $Q<sup>TAQ</sup>=\mathrm{diag}(2,-4,5)$。</p>
+<h3>第一步：为什么 $Q$ 的列就是特征向量</h3>
+<p>把 $Q<sup>TAQ</sup>=\Lambda$ 左乘 $Q$（$Q$ 正交，$Q<sup>T</sup>=Q<sup>-1</sup>$）得 $AQ=Q\Lambda$，<strong>按列拆开</strong>：</p>
+<p>$$Aq_j=\lambda_j q_j\qquad(j=1,2,3).$$</p>
+<p>所以正交对角化的几何内容就是：$Q$ 的各列是 $A$ 的<strong>单位正交特征向量</strong>，对角元按列配对。第 1 列是 $\dfrac1{\sqrt6}(1,2,1)<sup>T</sup>$，故 $\xi_1=(1,2,1)<sup>T</sup>$ 必是特征向量，代 $A\xi_1=\lambda\xi_1$：</p>
+<p>$$A\xi_1=\begin{pmatrix}0&amp;-1&amp;4\\-1&amp;3&amp;a\\4&amp;a&amp;0\end{pmatrix}\begin{pmatrix}1\\2\\1\end{pmatrix}=\begin{pmatrix}2\\a+5\\2a+4\end{pmatrix}\overset{!}{=}\lambda\begin{pmatrix}1\\2\\1\end{pmatrix}.$$</p>
+<h3>第二步：逐分量比较定 $\lambda_1$ 与 $a$</h3>
+<p>第 1 分量：$\lambda=2$；第 2 分量：$a+5=2\lambda=4\Rightarrow a=-1$；第 3 分量：$2a+4=2\Rightarrow a=-1$，两处一致（自洽），故 $a=-1,\ \lambda_1=2$。</p>
+<h3>第三步：为什么能用迹与行列式"秒"出其余特征值</h3>
+<p>$a=-1$ 后 $A$ 实对称，必可正交对角化，全部特征值落进对角阵 $\Lambda$；而相似变换不改变迹与行列式（$\mathrm{tr}(Q<sup>TAQ</sup>)=\mathrm{tr}(AQQ<sup>T</sup>)=\mathrm{tr}A$），所以</p>
+<p>$$\lambda_1+\lambda_2+\lambda_3=\mathrm{tr}\,A=3,\qquad \lambda_1\lambda_2\lambda_3=|A|=-40.$$</p>
+<p>代入 $\lambda_1=2$：$\lambda_2+\lambda_3=1,\ \lambda_2\lambda_3=-20$，解 $t<sup>2</sup>-t-20=0$ 得 $\lambda=5,\ -4$。</p>
+<h3>第四步：求特征向量并拼 $Q$——为什么不用施密特</h3>
+<p>$\lambda=-4$：$(A+4E)x=0$ 化简得 $x_2=0,\ x_1=-x_3$，取 $\xi_2=(-1,0,1)<sup>T</sup>$；$\lambda=5$：$(A-5E)x=0$ 得 $\xi_3=(1,-1,1)<sup>T</sup>$。三个向量<strong>自动两两正交</strong>，原因是实对称性：$\lambda_1(\xi_1\!\cdot\!\xi_2)=(A\xi_1)\!\cdot\!\xi_2=\xi_1\!\cdot\!(A\xi_2)=\lambda_2(\xi_1\!\cdot\!\xi_2)$，而 $\lambda_1\ne\lambda_2$，内积只能为零——所以只需单位化（除以模长 $\sqrt6,\sqrt2,\sqrt3$），无需施密特正交化。按题设"第 1 列为 $\dfrac1{\sqrt6}(1,2,1)<sup>T</sup>$"的顺序拼列即得 $Q$，对角元按列配为 $2,-4,5$。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $(1,2,1)<sup>T</sup>$ 直接当某个固定特征值的向量</strong>：必须用 $A\xi=\lambda\xi$ 逐分量比较，先出 $\lambda_1=2$，再用它定 $a$。</li><li><strong>列的顺序与对角元不对应</strong>：$Q$ 第 2 列对应 $-4$、第 3 列对应 $5$；特征向量取反号不改变结论，但列与对角元必须一一配对。</li><li><strong>向量已正交还去做施密特</strong>：不同特征值的特征向量对实对称阵已自动正交，施密特是多余的（同一特征值有多余特征向量时才需要）。</li></ul>
+<blockquote>一句话：$AQ=Q\Lambda$ 按列拆开 $=$ 各列是单位正交特征向量；给了一列就代 $A\xi=\lambda\xi$ 同时定参定根，其余用 $\mathrm{tr}\,A$ 与 $|A|$ 速算，实对称保证不同根自动正交，单位化后按列拼 $Q$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

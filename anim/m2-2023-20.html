@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2023·20 扇环区域上的极坐标二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-19.html" data-q="../question/m2-2023-19/">← <b>m2-2023-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-20/" data-q="../question/m2-2023-20/" data-no-anim="1">m2-2023-20 · 本题</a>
+  <a href="m2-2023-21.html" data-q="../question/m2-2023-21/"><b>m2-2023-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>边界 $x^2+y^2-xy=c$（$c=1,2$）+ 射线 $y=0,\\ y=\\sqrt3x$ —— 第一象限内的<b>扇环</b>，选极坐标 $x=r\\cos\\theta,\\ y=r\\sin\\theta$",
+  "<b>② 定角：</b>$y=\\sqrt3x\\Rightarrow\\tan\\theta=\\sqrt3\\Rightarrow\\theta=\\frac\\pi3$，故 $\\theta\\in\\Big[0,\\frac\\pi3\\Big]$",
+  "<b>③ 边界极坐标化：</b>$x^2+y^2-xy=r^2\\big(1-\\frac12\\sin2\\theta\\big)$，故 $r^2=\\frac{c}{1-\\frac12\\sin2\\theta}$",
+  "<b>④ 两条边界：</b>$r_1^2=\\frac{1}{1-\\frac12\\sin2\\theta}$，$r_2^2=\\frac{2}{1-\\frac12\\sin2\\theta}\\ \\Rightarrow\\ \\frac{r_2^2}{r_1^2}=2$",
+  "<b>⑤ 被积函数：</b>$3x^2+y^2=r^2(3\\cos^2\\theta+\\sin^2\\theta)=r^2(1+2\\cos^2\\theta)$，且 $\\mathrm dx\\,\\mathrm dy=r\\,\\mathrm dr\\,\\mathrm d\\theta$",
+  "<b>⑥ 分离：</b>$\\displaystyle\\iint_D\\frac{\\mathrm dx\\,\\mathrm dy}{3x^2+y^2}=\\int_0^{\\pi/3}\\frac{\\mathrm d\\theta}{1+2\\cos^2\\theta}\\int_{r_1}^{r_2}\\frac{\\mathrm dr}{r}$",
+  "<b>⑦ 径向：</b>$\\displaystyle\\int_{r_1}^{r_2}\\frac{\\mathrm dr}{r}=\\ln\\frac{r_2}{r_1}=\\frac12\\ln\\frac{r_2^2}{r_1^2}=\\frac12\\ln2$（与 $\\theta$ 无关，可提出）",
+  "<b>⑧ 角向化简：</b>分子分母同除 $\\cos^2\\theta$：$\\displaystyle\\int_0^{\\pi/3}\\frac{\\sec^2\\theta\\,\\mathrm d\\theta}{\\tan^2\\theta+3}$",
+  "<b>⑨ 换元 $t=\\tan\\theta$：</b>$\\displaystyle\\int_0^{\\sqrt3}\\frac{\\mathrm dt}{t^2+3}=\\frac{1}{\\sqrt3}\\arctan\\frac{t}{\\sqrt3}\\Big|_0^{\\sqrt3}=\\frac1{\\sqrt3}\\cdot\\frac\\pi4=\\frac{\\sqrt3\\,\\pi}{12}$",
+  "<b>⑩ 合并：</b>$\\frac12\\ln2\\cdot\\frac{\\sqrt3\\,\\pi}{12}=\\boxed{\\,\\dfrac{\\sqrt3\\,\\pi\\ln2}{24}\\,}$"
+];
+var rowEls = [];
+
+AW.init({
+  title: '2023·20　扇环区域上的极坐标二重积分',
+  subtitle: '考点：极坐标变换 · $r$ 与 $\\theta$ 分离 · 凑 $\\tan\\theta$ 的角向积分',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」：定角、化边界、分离径向与角向，最后合并。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    rowEls = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      rowEls.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'第①步：两条同型二次曲线加两条过原点的射线，围成扇环，选极坐标', count:0, ribbon:{k:1,  ok:true} },
+    { cls:'ok',   tag:'定角',   log:'第②步：斜率根号 3 的射线对应六十度角，角度范围是零到三分之派', count:1, ribbon:{k:2,  ok:true} },
+    { cls:'ok',   tag:'化边界', log:'第③步：二次曲线在极坐标下左边是 r 平方乘一个只含角度的因子', count:2, ribbon:{k:3,  ok:true} },
+    { cls:'ok',   tag:'比半径', log:'第④步：两条边界的 r 平方只差常数倍两倍，比值与角度无关', count:3, ribbon:{k:4,  ok:true} },
+    { cls:'ok',   tag:'化被积', log:'第⑤步：分母提成 r 平方乘角度因子，面积元补上雅可比 r', count:4, ribbon:{k:5,  ok:true} },
+    { cls:'ok',   tag:'分离',   log:'第⑥步：r 的一次除以 r 的平方，径向只剩 dr 比 r，两个变量分开', count:5, ribbon:{k:6,  ok:true} },
+    { cls:'ok',   tag:'径向',   log:'第⑦步：径向积分是对数，用平方比化简得二分之 ln2，与角度无关', count:6, ribbon:{k:7,  ok:true} },
+    { cls:'ok',   tag:'角向化简', log:'第⑧步：分子分母同除余弦平方，凑出正切的微分', count:7, ribbon:{k:8,  ok:true} },
+    { cls:'ok',   tag:'换元',   log:'第⑨步：令 t 等于正切，积分上限变根号 3，反正切在一处取四分之派', count:8, ribbon:{k:9,  ok:true} },
+    { cls:'done', tag:'完成',   log:'第⑩步：径向乘角向，二分之 ln2 乘 12 分之根号 3 派，得出最终结果', count:9, ribbon:{k:10, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for (var j = 0; j < rowEls.length; j++){
+      rowEls[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$\\displaystyle\\iint_D\\frac{\\mathrm dx\\,\\mathrm dy}{3x^2+y^2}=\\frac{\\sqrt3\\,\\pi\\ln2}{24}$",
+    html: "结论：<b>$\\displaystyle\\iint_D\\frac{\\mathrm dx\\,\\mathrm dy}{3x^2+y^2}=\\frac{\\sqrt3\\,\\pi\\ln2}{24}$（径向 $\\frac12\\ln2$ × 角向 $\\frac{\\sqrt3\\pi}{12}$）</b>。记忆锚点：边界 $x^2+y^2-xy=c$ 与被积函数同为二次型 → 极坐标后<b>径向只剩 $\\frac{\\mathrm dr}{r}$</b>，$r$ 与 $\\theta$ 自动分离；角向 $\\frac{\\mathrm d\\theta}{1+2\\cos^2\\theta}$ 靠同除 $\\cos^2\\theta$ 凑 $\\tan\\theta$。易错：极径上下限写成常数；丢雅可比 $r$；倾角 $\\frac\\pi3$ 记成 $\\frac\\pi4$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：扇环形区域上的极坐标二重积分</h2>
+<p><strong>答案</strong>：$\dfrac{\sqrt3\,\pi\ln 2}{24}$。</p>
+<h3>第 0 步：先立模型——为什么这道题「天生」适合极坐标</h3>
+<p>选坐标的依据要看两头：<strong>边界</strong>与<strong>被积函数</strong>。</p>
+<ul><li>边界：$x<sup>2</sup>+y<sup>2</sup>-xy=c$（$c=1,2$）是两条同型的、中心在原点的二次曲线；$y=0$ 与 $y=\sqrt3\,x$ 是过原点的两条射线。极坐标里「过原点的射线」就是 $\theta=$ 常数，二次曲线给出 $r$ 的上下限——区域是标准<strong>扇环</strong>；</li><li>被积函数：$\dfrac{1}{3x<sup>2</sup>+y<sup>2</sup>}$ 的分母是二次齐次式（每一项都是二次），代入 $x=r\cos\theta,\ y=r\sin\theta$ 后分母必写成 $r<sup>2</sup>\times$（只含 $\theta$ 的因子），除以雅可比 $r$ 后，径向必出 $\displaystyle\int\frac{\mathrm dr}{r}$ 型。</li></ul>
+<p>两条线索都指向极坐标 $x=r\cos\theta,\ y=r\sin\theta$。射线 $y=\sqrt3x$ 即 $\tan\theta=\sqrt3$，故 $\theta\in\left[0,\dfrac\pi3\right]$。</p>
+<h3>第一步：两条边界在极坐标下的 r</h3>
+<p>$x<sup>2</sup>+y<sup>2</sup>-xy=r<sup>2</sup>-r<sup>2</sup>\cos\theta\sin\theta=r<sup>2</sup>\Big(1-\dfrac12\sin2\theta\Big)$，中间用到 $xy=r<sup>2</sup>\sin\theta\cos\theta=\dfrac12r<sup>2</sup>\sin2\theta$。于是边界 $x<sup>2</sup>+y<sup>2</sup>-xy=c$ 即</p>
+<p>$$r<sup>2</sup>=\frac{c}{1-\frac12\sin2\theta},\qquad r_1<sup>2</sup>=\frac{1}{1-\frac12\sin2\theta},\qquad r_2<sup>2</sup>=\frac{2}{1-\frac12\sin2\theta}.$$</p>
+<p><strong>几何直观</strong>：同一条射线 $\theta$ 上，内外两条边界的 $r<sup>2</sup>$ 恰差常数倍 $2$——两条曲线互为「以原点为中心、缩放 $\sqrt2$ 倍」的相似曲线，扇环内外径之比 $r_2/r_1=\sqrt2$ 与 $\theta$ 无关。这个比值恒定，是后面能分离变量的全部伏笔。（顺带一提：$\theta\in\left[0,\frac\pi3\right]$ 上 $\frac12\sin2\theta\le\frac{\sqrt3}{4}&lt;1$，分母恒正，$r<sup>2</sup>$ 表达式有效。）</p>
+<h3>第二步：分离径向与角向</h3>
+<p>分母 $3x<sup>2</sup>+y<sup>2</sup>=r<sup>2</sup>(3\cos<sup>2</sup>\theta+\sin<sup>2</sup>\theta)=r<sup>2</sup>(2\cos<sup>2</sup>\theta+1)=r<sup>2</sup>(1+2\cos<sup>2</sup>\theta)$，代入 $\mathrm dx\,\mathrm dy=r\,\mathrm dr\,\mathrm d\theta$：</p>
+<p>$$\iint_D\frac{\mathrm dx\,\mathrm dy}{3x<sup>2</sup>+y<sup>2</sup>}<br/>=\int_0<sup>\pi/3</sup>\frac{\mathrm d\theta}{1+2\cos<sup>2</sup>\theta}\int_{r_1}<sup>r_2</sup>\frac{\mathrm dr}{r}.$$</p>
+<p><strong>为什么径向积分能整体提出去</strong>：$\displaystyle\int_{r_1}<sup>r_2</sup>\frac{\mathrm dr}{r}=\ln\frac{r_2}{r_1}=\frac12\ln\frac{r_2<sup>2</sup>}{r_1<sup>2</sup>}=\frac12\ln2$——上下限虽随 $\theta$ 变，但积分值只依赖<strong>比值</strong>，而比值恒为 $\sqrt2$，与 $\theta$ 无关，当然可以提到积分号外。</p>
+<h3>第三步：角向积分</h3>
+<p>分子分母同除 $\cos<sup>2</sup>\theta$（$\theta\in\left[0,\frac\pi3\right]$ 上 $\cos\theta&gt;0$，除法合法），凑出 $\mathrm d(\tan\theta)=\sec<sup>2</sup>\theta\,\mathrm d\theta$：</p>
+<p>$$\int_0<sup>\pi/3</sup>\frac{\sec<sup>2</sup>\theta\,\mathrm d\theta}{\tan<sup>2</sup>\theta+3}<br/>\ \xrightarrow{\ t=\tan\theta\ }\ \int_0<sup>\sqrt3</sup>\frac{\mathrm dt}{t<sup>2</sup>+3}<br/>=\frac{1}{\sqrt3}\arctan\frac{t}{\sqrt3}\Big|_0<sup>\sqrt3</sup><br/>=\frac{1}{\sqrt3}\cdot\frac\pi4=\frac{\sqrt3\,\pi}{12}.$$</p>
+<h3>第四步：合并</h3>
+<p>$$\frac12\ln2\cdot\frac{\sqrt3\,\pi}{12}=\frac{\sqrt3\,\pi\ln2}{24}.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>极径上下限写成常数</strong>：$r_{1,2}$ 都随 $\theta$ 变，必须带上分母 $1-\frac12\sin2\theta$；能提出去的是比值 $\ln\frac{r_2}{r_1}=\frac12\ln2$。</li><li><strong>丢雅可比 $r$</strong>：$\mathrm dx\,\mathrm dy=r\,\mathrm dr\,\mathrm d\theta$，漏掉 $r$ 后径向积分就配不成 $\frac{\mathrm dr}{r}$，分离随之瓦解。</li><li><strong>$\theta$ 上限记成 $\frac\pi4$</strong>：$y=\sqrt3x$ 的斜率是 $\sqrt3$，倾角为 $\frac\pi3$。</li><li><strong>角向积分硬凑失败</strong>：同除 $\cos<sup>2</sup>\theta$ 化成 $\tan$ 是标准动作，末尾 $\arctan1=\frac\pi4$。</li></ul>
+<blockquote>一句话结论：边界是过原点的射线 + 同型二次曲线（扇环）、被积函数是二次齐次式的倒数，两重信号都指向极坐标；$r_2<sup>2</sup>/r_1<sup>2</sup>=2$ 恒定让径向出 $\frac12\ln2$，角向出 $\frac{\sqrt3\pi}{12}$，答案 $\dfrac{\sqrt3\,\pi\ln2}{24}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

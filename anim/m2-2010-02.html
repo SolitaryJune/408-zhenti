@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-01.html" data-q="../question/m2-2010-01/">← <b>m2-2010-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-02/" data-q="../question/m2-2010-02/" data-no-anim="1">m2-2010-02 · 本题</a>
+  <a href="m2-2010-03.html" data-q="../question/m2-2010-03/"><b>m2-2010-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：用线性算子统一两条条件',
+    cls: 'key',
+    body: '<p>记 $L[y]=y\'+p(x)y$，它是<b>线性算子</b>：$L[ay_1+by_2]=aL[y_1]+bL[y_2]$。已知 $L[y_1]=L[y_2]=q(x)$，且方程<b>非齐次</b>即 $q(x)\\not\\equiv0$——这两个事实是全部推理的原材料。</p>' },
+  { title: '叠加：两个组合解作用算子',
+    cls: 'key',
+    body: '<p>$$L[\\lambda y_1+\\mu y_2]=(\\lambda+\\mu)\\,q,\\qquad L[\\lambda y_1-\\mu y_2]=(\\lambda-\\mu)\\,q.$$</p><p>组合解落进哪个方程，就看右端该等于 $q$ 还是等于 $0$。</p>' },
+  { title: '条件一：仍是非齐次解 ⟹ 系数和为 1',
+    cls: 'good',
+    body: '<p>$\\lambda y_1+\\mu y_2$ 是<b>非齐次</b>方程的解：$(\\lambda+\\mu)\\,q=q$。由 $q\\not\\equiv0$ 得</p><p>$$\\lambda+\\mu=1.$$</p>' },
+  { title: '条件二：是齐次解 ⟹ 系数差为 0',
+    cls: 'good',
+    body: '<p>$\\lambda y_1-\\mu y_2$ 是<b>齐次</b>方程的解：$(\\lambda-\\mu)\\,q=0$，得</p><p>$$\\lambda-\\mu=0.$$</p>' },
+  { title: '逐项核对 A',
+    cls: 'good',
+    ribbon: {k: 1, ok: true},
+    body: '<p>A：$\\lambda=\\mu=\\dfrac12$。和 $\\lambda+\\mu=1$ <b>✓</b>，差 $\\lambda-\\mu=0$ <b>✓</b>，两条全满足。</p>' },
+  { title: '逐项核对 B',
+    cls: 'bad',
+    ribbon: {k: 2, ok: false},
+    body: '<p>B：$\\lambda=\\mu=-\\dfrac12$。满足 $\\lambda=\\mu$（条件二成立），但 $\\lambda+\\mu=-1\\neq1$，条件一破坏。</p>' },
+  { title: '逐项核对 C',
+    cls: 'bad',
+    ribbon: {k: 3, ok: false},
+    body: '<p>C：$\\lambda=\\dfrac23,\\ \\mu=\\dfrac13$。和为 $1$ <b>✓</b>，但差 $\\dfrac23-\\dfrac13=\\dfrac13\\neq0$，$\\lambda y_1-\\mu y_2$ 仍带非齐次右端，不是齐次解。</p>' },
+  { title: '逐项核对 D',
+    cls: 'bad',
+    ribbon: {k: 4, ok: false},
+    body: '<p>D：$\\lambda=\\mu=\\dfrac23$。差为 $0$ <b>✓</b>，但和 $\\dfrac43\\neq1$，条件一破坏。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>联立 $\\begin{cases}\\lambda+\\mu=1\\\\ \\lambda-\\mu=0\\end{cases}$ 得 $\\lambda=\\mu=\\dfrac12$，只有 A 同时满足两条，答案选 <b>A</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || undefined,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010 数学二 第2题 · $\\lambda y_1+\\mu y_2$ 与 $\\lambda y_1-\\mu y_2$ 的解的身份',
+  subtitle: '考点：一阶线性方程解的叠加原理 · 方法：线性算子作用比较右端',
+  intro: '点击「▶ 播放」逐步展开推理链：两个条件各给一条方程，再核对选项。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  ribbonTitle: '选项核对（✓ 通过 / ✗ 淘汰）',
+  snaps: snaps,
+  result: {
+    big: '答案 A（$\\lambda=\\mu=\\dfrac12$）',
+    html: '记忆锚点：<b>非齐次解的组合仍是非齐次解 ⟹ 系数和为 1；组合是齐次解 ⟹ 系数差为 0</b>。「非齐次」前提不可丢：若 $q\\equiv0$，条件一就推不出 $\\lambda+\\mu=1$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：非齐次线性方程解的线性组合条件</h2>
+<p>答案：A（$\lambda=\mu=\dfrac12$）</p>
+<h3>第一步：把条件翻译成算子语言</h3>
+<p>记 $L[y]=y'+p(x)y$，这是线性算子：$L[ay_1+by_2]=aL[y_1]+bL[y_2]$。题设 $L[y_1]=L[y_2]=q(x)$，且方程<strong>非齐次</strong>意味着 $q(x)\not\equiv0$。对两个组合解分别作用：</p>
+<p>$$L[\lambda y_1+\mu y_2]=(\lambda+\mu)\,q,\qquad L[\lambda y_1-\mu y_2]=(\lambda-\mu)\,q.$$</p>
+<h3>第二步：两个条件各自给出一条方程</h3>
+<ul><li>$\lambda y_1+\mu y_2$ 仍是<strong>非齐次</strong>方程的解：$(\lambda+\mu)q=q$，由 $q\not\equiv0$ 得 $\lambda+\mu=1$；</li><li>$\lambda y_1-\mu y_2$ 是<strong>齐次</strong>方程的解：$(\lambda-\mu)q=0$，得 $\lambda-\mu=0$。</li></ul>
+<p>联立解得 $\lambda=\mu=\dfrac12$。核对选项：A 两条全满足；B 满足 $\lambda=\mu$ 但 $\lambda+\mu=-1$；C 满足和为 1 但差为 $\dfrac13$；D 的和为 $\dfrac43$，两条都不满足。</p>
+<h3>易错点</h3>
+<ul><li><strong>忽视「非齐次」这个前提</strong>：若 $q\equiv0$，条件一只给出 $(\lambda+\mu)q=0$，推不出 $\lambda+\mu=1$；题干强调非齐次正是为了让两条方程都有内容。</li><li><strong>只验证一条就下结论</strong>：B、C 都恰好满足一条条件，必须两条同时成立。</li></ul>
+<blockquote>非齐次解的组合仍是非齐次解 ⟹ 系数和为 $1$；组合为齐次解 ⟹ 系数差为 $0$。选 <strong>A</strong>。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

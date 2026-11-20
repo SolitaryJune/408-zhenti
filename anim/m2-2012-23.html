@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·23 AᵀA 的秩定参数与正交变换化标准形</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-22.html" data-q="../question/m2-2012-22/">← <b>m2-2012-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-23/" data-q="../question/m2-2012-23/" data-no-anim="1">m2-2012-23 · 本题</a>
+  <a href="m2-2013-01.html" data-q="../question/m2-2013-01/"><b>m2-2013-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  '<p><b>审题</b>：$f$ 的矩阵是 $B=A^{\\mathrm T}A$（实对称），且 $r(B)=r(A)=2<3$ $\\Rightarrow$ $A$ 的三个列向量线性相关，由此定 $a$；再对 $B$ 求特征值与单位正交特征向量，拼 $Q$ 写标准形。</p>',
+  '<p><b>列向量</b>：$$\\boldsymbol\\alpha_1=(1,0,-1,0)^{\\mathrm T},\\quad \\boldsymbol\\alpha_2=(0,1,0,a)^{\\mathrm T},\\quad \\boldsymbol\\alpha_3=(1,1,a,-1)^{\\mathrm T}.$$前两列显然无关，故 $\\boldsymbol\\alpha_3=k_1\\boldsymbol\\alpha_1+k_2\\boldsymbol\\alpha_2$。</p>',
+  '<p><b>定 $a$</b>：比较前两个分量得 $k_1=k_2=1$；于是第 3 分量给 $a=-1$，第 4 分量给 $-1=a$——两处一致，$a=-1$。</p>',
+  '<p><b>算 $B$</b>：元素 $B_{ij}=\\boldsymbol\\alpha_i\\cdot\\boldsymbol\\alpha_j$：$$B=A^{\\mathrm T}A=\\begin{pmatrix}2&0&2\\\\0&2&2\\\\2&2&4\\end{pmatrix}.$$</p>',
+  '<p><b>特征值</b>：迹 $=8$，二阶主子式之和 $=12$，$|B|=0$：$$\\lambda^3-8\\lambda^2+12\\lambda=\\lambda(\\lambda-2)(\\lambda-6)\\ \\Rightarrow\\ \\lambda=0,\\,2,\\,6.$$（恰一个零特征值，与 $r(B)=2$ 相符。）</p>',
+  '<p><b>$\\lambda=0$</b>：$B\\boldsymbol x=\\boldsymbol 0$ 给 $x_1=-x_3,\\ x_2=-x_3$：$$\\boldsymbol\\xi_1=\\frac{1}{\\sqrt3}(-1,-1,1)^{\\mathrm T}.$$</p>',
+  '<p><b>$\\lambda=2$</b>：$(B-2E)\\boldsymbol x=\\boldsymbol 0$ 给 $x_3=0,\\ x_1+x_2=0$：$$\\boldsymbol\\xi_2=\\frac{1}{\\sqrt2}(1,-1,0)^{\\mathrm T}.$$</p>',
+  '<p><b>$\\lambda=6$</b>：$(B-6E)\\boldsymbol x=\\boldsymbol 0$ 给 $x_1=x_2,\\ x_3=2x_1$：$$\\boldsymbol\\xi_3=\\frac{1}{\\sqrt6}(1,1,2)^{\\mathrm T}.$$</p>',
+  '<p><b>拼 $Q$</b>：特征值互异，特征向量自动正交，单位化后按 $0,2,6$ 的次序拼列：$$Q=\\begin{pmatrix}-\\frac{1}{\\sqrt3}&\\frac{1}{\\sqrt2}&\\frac{1}{\\sqrt6}\\\\-\\frac{1}{\\sqrt3}&-\\frac{1}{\\sqrt2}&\\frac{1}{\\sqrt6}\\\\\\frac{1}{\\sqrt3}&0&\\frac{2}{\\sqrt6}\\end{pmatrix}.$$</p>',
+  '<p><b>标准形</b>：正交变换 $\\boldsymbol x=Q\\boldsymbol y$ 下：$$f=0\\cdot y_1^2+2y_2^2+6y_3^2=2y_2^2+6y_3^2.$$</p>',
+  '<p><b>结论</b>：(1) $a=-1$；(2) 如上 $Q$，标准形 $f=2y_2^2+6y_3^2$。</p>',
+];
+
+AW.init({
+  title: '二次型 $f=\\boldsymbol x^{\\mathrm T}(A^{\\mathrm T}A)\\boldsymbol x$：定 $a$，正交变换化标准形',
+  subtitle: '考点：$r(A^{\\mathrm T}A)=r(A)$ · 特征值特征向量 · 正交变换',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示定参、求特征值与拼正交矩阵。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var strip = AW.el('div', '');
+    strip.style.cssText = 'display:flex;gap:10px;margin:2px 0 12px;flex-wrap:wrap;';
+    this._chips = [];
+    this._labels = ['$a=\\,?$', '特征值 $=\\,?$', '标准形 $=\\,?$'];
+    for(var k = 0; k < this._labels.length; k++){
+      var c = AW.el('div', '', this._labels[k]);
+      c.style.cssText = 'padding:6px 12px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;background:#f8fafc;color:#94a3b8;';
+      strip.appendChild(c);
+      this._chips.push(c);
+    }
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(strip);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var chips = this._chips, labels = this._labels;
+    var known = [sn.show >= 3, sn.show >= 5, sn.show >= 10];
+    var vals = ['$a=-1$', '$0,\\ 2,\\ 6$', '$f=2y_2^2+6y_3^2$'];
+    for(var k = 0; k < chips.length; k++){
+      if(known[k]){
+        chips[k].style.border = '2px solid #16a34a';
+        chips[k].style.background = '#f6fef9';
+        chips[k].style.color = '#14532d';
+        chips[k].innerHTML = '<b>' + vals[k] + '</b>';
+      } else {
+        chips[k].style.border = '2px solid #e2e8f0';
+        chips[k].style.background = '#f8fafc';
+        chips[k].style.color = '#94a3b8';
+        chips[k].innerHTML = labels[k];
+      }
+    }
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',    log:'二次型矩阵是 A 转置乘 A，秩相等是定 a 的钥匙', show:1, count:0 },
+    { cls:'step',  tag:'列相关',  log:'秩 2 小于 3，三列必相关，前两列无关可作基底', show:2, count:1 },
+    { cls:'ok',    tag:'定 a',   log:'第三列写成前两列之和，第 3、4 分量都指向 a=−1', show:3, count:2 },
+    { cls:'step',  tag:'算 B',   log:'逐对点乘列向量，得到三阶实对称矩阵', show:4, count:3 },
+    { cls:'ok',    tag:'特征值', log:'迹、主子式和、行列式三件套，分解出 0、2、6', show:5, count:4 },
+    { cls:'step',  tag:'λ=0',   log:'解齐次方程组得零特征值的单位特征向量', show:6, count:5 },
+    { cls:'step',  tag:'λ=2',   log:'第三个分量归零、前两个互为相反数', show:7, count:6 },
+    { cls:'step',  tag:'λ=6',   log:'前两个相等、第三个是它们的两倍', show:8, count:7 },
+    { cls:'ok',    tag:'拼 Q',   log:'特征值互异故自动正交，单位化后按 0,2,6 顺序拼列', show:9, count:8 },
+    { cls:'ok',    tag:'标准形', log:'第 1 列对应特征值 0，标准形只剩 2y₂² 与 6y₃²', show:10, count:9 },
+    { cls:'done',  tag:'完成',   log:'结论：a=−1，标准形 f=2y₂²+6y₃²', show:11, count:10, done:true },
+  ],
+
+  result: {
+    big: '$a=-1$，标准形 $f=2y_2^2+6y_3^2$',
+    html: '记忆锚点：<b>$r(A^{\\mathrm T}A)=r(A)$（$A$ 实矩阵）逼出列相关定 $a$</b>；特征值 $0,2,6$ 恰一个零，与秩 $2$ 相符。$Q$ 的列必须单位化且与特征值顺序对应——第 1 列对应 $0$，$y_1^2$ 项消失。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$r(A<sup>\mathrm T</sup>A)=r(A)$ 定参数，正交变换化二次型标准形</h2>
+<p>最终答案：(1) $a=-1$；(2) 取 $\boldsymbol Q$ 的列为 $\boldsymbol\xi_1=\frac{1}{\sqrt3}(-1,-1,1)<sup>\mathrm T</sup>$、$\boldsymbol\xi_2=\frac{1}{\sqrt2}(1,-1,0)<sup>\mathrm T</sup>$、$\boldsymbol\xi_3=\frac{1}{\sqrt6}(1,1,2)<sup>\mathrm T</sup>$（依次对应特征值 $0,2,6$），标准形 $f=2y_2<sup>2</sup>+6y_3<sup>2</sup>$。</p>
+<h3>第 0 步：先立机制——三把钥匙的"为什么"</h3>
+<p><strong>钥匙一：为什么 $r(A<sup>\mathrm T</sup>A)=r(A)$（实矩阵）</strong>。看两个齐次方程组：$A\boldsymbol x=\boldsymbol0$ 的解显然满足 $A<sup>\mathrm T</sup>A\boldsymbol x=\boldsymbol0$；反过来，若 $A<sup>\mathrm T</sup>A\boldsymbol x=\boldsymbol0$，两边左乘 $\boldsymbol x<sup>\mathrm T</sup>$ 得 $\boldsymbol x<sup>\mathrm T</sup>A<sup>\mathrm T</sup>A\boldsymbol x=\lVert A\boldsymbol x\rVert<sup>2</sup>=0$，实向量模长为零即 $A\boldsymbol x=\boldsymbol0$。两组同解 ⇒ 同秩。于是二次型矩阵 $B=A<sup>\mathrm T</sup>A$ 的秩直接读作 $A$ 的秩——这是 (1) 的入口。</p>
+<p><strong>钥匙二：为什么秩 $2&lt;3$ 能定 $a$</strong>。$A$ 是 $4\times3$，$r(A)=2$ 意味着三列线性相关（列秩 = 秩）；前两列线性无关，故第三列必是前两列的组合，比较分量即可解出 $a$。</p>
+<p><strong>钥匙三：为什么正交变换能把 $f$ 化成"系数 = 特征值"的标准形</strong>。$B$ 实对称，谱定理保证存在标准正交的特征向量组，拼成 $Q$ 后 $Q<sup>\mathrm T</sup>BQ=\mathrm{diag}(\lambda_1,\lambda_2,\lambda_3)$；代入 $f=\boldsymbol x<sup>\mathrm T</sup>B\boldsymbol x=\boldsymbol y<sup>\mathrm T</sup>(Q<sup>\mathrm T</sup>BQ)\boldsymbol y=\sum\lambda_i y_i<sup>2</sup>$。<strong>互异特征值的特征向量为什么自动正交</strong>：$\lambda_1\,\boldsymbol\xi_1<sup>\mathrm T</sup>\boldsymbol\xi_2=(B\boldsymbol\xi_1)<sup>\mathrm T</sup>\boldsymbol\xi_2=\boldsymbol\xi_1<sup>\mathrm T</sup>B\boldsymbol\xi_2=\lambda_2\,\boldsymbol\xi_1<sup>\mathrm T</sup>\boldsymbol\xi_2$（用到 $B$ 对称），于是 $(\lambda_1-\lambda_2)\boldsymbol\xi_1<sup>\mathrm T</sup>\boldsymbol\xi_2=0$，而 $\lambda_1\neq\lambda_2$，故内积为零。本题三特征值互异，只需单位化、无需正交化。</p>
+<h3>第一步：(1) 列相关定 a</h3>
+<p>记三列</p>
+<p>$$\boldsymbol\alpha_1=(1,0,-1,0)<sup>\mathrm T</sup>,\quad\boldsymbol\alpha_2=(0,1,0,a)<sup>\mathrm T</sup>,\quad\boldsymbol\alpha_3=(1,1,a,-1)<sup>\mathrm T</sup>.$$</p>
+<p>$\boldsymbol\alpha_1,\boldsymbol\alpha_2$ 的前两个分量构成单位阵片段 $\begin{pmatrix}1&amp;0\\0&amp;1\end{pmatrix}$，线性无关，故 $\boldsymbol\alpha_3=k_1\boldsymbol\alpha_1+k_2\boldsymbol\alpha_2$。由前两个分量读出 $k_1=k_2=1$；第 3 分量给 $a=-1$，第 4 分量给 $-1=a$——两处相互印证，$a=-1$。</p>
+<h3>第二步：(2) 按内积写出二次型矩阵</h3>
+<p>$a=-1$ 时 $B_{ij}=\boldsymbol\alpha_i\cdot\boldsymbol\alpha_j$：对角元是列长度的平方（$B_{11}=2$，$B_{22}=2$，$B_{33}=4$），非对角如 $B_{13}=\boldsymbol\alpha_1\cdot\boldsymbol\alpha_3=1+0+1+0=2$、$B_{23}=\boldsymbol\alpha_2\cdot\boldsymbol\alpha_3=0+1+0+1=2$：</p>
+<p>$$B=A<sup>\mathrm T</sup>A=\begin{pmatrix}2&amp;0&amp;2\\0&amp;2&amp;2\\2&amp;2&amp;4\end{pmatrix}.$$</p>
+<h3>第三步：求特征值——为什么用迹与主子式拼</h3>
+<p>三阶特征多项式硬展开容易出符号错，改用不变量拼系数：特征值之和 = 迹 $=8$，两两乘积之和 = 二阶主子式之和 $=12$，乘积 = 行列式 $=0$（与 $r(B)=2$ ⇔ 恰一个零特征值相符）：</p>
+<p>$$\lambda<sup>3</sup>-8\lambda<sup>2</sup>+12\lambda=\lambda(\lambda<sup>2</sup>-8\lambda+12)=\lambda(\lambda-2)(\lambda-6),$$</p>
+<p>特征值 $\lambda_1=0,\ \lambda_2=2,\ \lambda_3=6$。核验：$0+2+6=8$ ✓。</p>
+<h3>第四步：求单位正交特征向量</h3>
+<ul><li>$\lambda=0$：$B\boldsymbol x=\boldsymbol0$ 给 $x_1=-x_3,\ x_2=-x_3$，取 $\boldsymbol\xi_1=\frac{1}{\sqrt3}(-1,-1,1)<sup>\mathrm T</sup>$；</li><li>$\lambda=2$：$(B-2E)\boldsymbol x=\boldsymbol0$ 给 $x_3=0,\ x_1+x_2=0$，取 $\boldsymbol\xi_2=\frac{1}{\sqrt2}(1,-1,0)<sup>\mathrm T</sup>$；</li><li>$\lambda=6$：$(B-6E)\boldsymbol x=\boldsymbol0$ 给 $x_1=x_2,\ x_3=2x_1$，取 $\boldsymbol\xi_3=\frac{1}{\sqrt6}(1,1,2)<sup>\mathrm T</sup>$。</li></ul>
+<p>特征值互异故自动正交（第 0 步钥匙三），只需单位化——正交变换要求 $Q<sup>\mathrm T</sup>Q=E$，漏除 $\sqrt3,\sqrt2,\sqrt6$ 不算正交矩阵。按列拼成 $\boldsymbol Q=(\boldsymbol\xi_1,\boldsymbol\xi_2,\boldsymbol\xi_3)$。</p>
+<h3>第五步：写出标准形</h3>
+<p>正交变换 $\boldsymbol x=\boldsymbol Q\boldsymbol y$ 下：</p>
+<p>$$f=0\cdot y_1<sup>2</sup>+2y_2<sup>2</sup>+6y_3<sup>2</sup>=2y_2<sup>2</sup>+6y_3<sup>2</sup>.$$</p>
+<p><strong>为什么没有 $y_1<sup>2</sup>$ 项</strong>：$\lambda_1=0$ 的方向上二次型是"平"的——这正是秩为 $2$ 的体现：三个变量只有两个平方项。列序与系数一一对应，$Q$ 换序则标准形同步换序。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $r(A<sup>\mathrm T</sup>A)=r(A)$ 当成对任何矩阵成立</strong>：实矩阵才相等（本题可用），机制是 $A\boldsymbol x=\boldsymbol0$ 与 $A<sup>\mathrm T</sup>A\boldsymbol x=\boldsymbol0$ 同解。</li><li><strong>特征向量只正交不单位化</strong>：正交矩阵要求列为单位向量。</li><li><strong>标准形系数与 $Q$ 列序不匹配</strong>：第 1 列对应 $\lambda=0$，$y_1<sup>2</sup>$ 项消失；列序一换，标准形跟着换。</li><li><strong>特征多项式硬展开出错</strong>：用迹、主子式和、行列式三个不变量拼系数更快，还能互相核验。</li></ul>
+<blockquote>结论：$a=-1$；正交变换（列依次对应 $0,2,6$）把 $f$ 化为 $2y_2<sup>2</sup>+6y_3<sup>2</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

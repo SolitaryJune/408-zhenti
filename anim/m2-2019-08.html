@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2019·08 由矩阵多项式与行列式求二次型规范形</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-07.html" data-q="../question/m2-2019-07/">← <b>m2-2019-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-08/" data-q="../question/m2-2019-08/" data-no-anim="1">m2-2019-08 · 本题</a>
+  <a href="m2-2019-09.html" data-q="../question/m2-2019-09/"><b>m2-2019-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：两件武器',
+    cls: 'key',
+    body: '<p>条件一：$\\boldsymbol{A}^2+\\boldsymbol{A}=2\\boldsymbol{E}$——矩阵多项式把每个特征值锁进同一个数量方程；条件二：$|\\boldsymbol{A}|=4$——行列式等于全体特征值之积，负责数出各值重数。目标：正负惯性指数 $p,q$ → 规范形。</p>',
+    log: '多项式锁取值，行列式数个数' },
+  { title: '武器一：逼出特征值候选',
+    cls: 'step',
+    body: '<p>设 $\\lambda$ 是 $\\boldsymbol{A}$ 的特征值，$\\boldsymbol{\\xi}\\neq\\boldsymbol{0}$ 对应特征向量，则 $$(\\boldsymbol{A}^2+\\boldsymbol{A}-2\\boldsymbol{E})\\,\\boldsymbol{\\xi}=(\\lambda^2+\\lambda-2)\\,\\boldsymbol{\\xi}=\\boldsymbol{0},$$ 故 $(\\lambda-1)(\\lambda+2)=0$：每个特征值只能是 $1$ 或 $-2$。</p>',
+    log: '特征值只可能是 1 或 −2' },
+  { title: '武器二：用行列式数重数',
+    cls: 'step',
+    body: '<p>设 $1$ 出现 $k$ 次、$-2$ 出现 $3-k$ 次：$$|\\boldsymbol{A}|=1^k(-2)^{3-k}=(-2)^{3-k}=4=(-2)^2\\ \\Longrightarrow\\ 3-k=2,\\ k=1.$$ 特征值为 $1,\\,-2,\\,-2$。</p>',
+    log: '行列式等于 4 逼出 1 一个、−2 两个', ribbon: {k:1, ok:true} },
+  { title: '惯性指数 → 规范形',
+    cls: 'good',
+    body: '<p>$\\boldsymbol{A}$ 实对称，可正交规范化；规范形由正负惯性指数决定：$p=1$（一个正特征值）、$q=2$（两个负特征值），故 $$\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{A}\\boldsymbol{x}\\ \\xrightarrow{\\text{规范}}\\ y_1^2-y_2^2-y_3^2.$$</p>',
+    log: '正惯性指数 1、负惯性指数 2' },
+  { title: '逐项排错 A / B / D',
+    cls: 'bad',
+    body: '<p>A（全正）：要求三个特征值都是 $1$，则 $|\\boldsymbol{A}|=1\\neq4$。B（两正一负）：$p=2,q=1$ 与实际恰好颠倒。D（全负）：$|\\boldsymbol{A}|=(-2)^3=-8\\neq4$，与条件矛盾。</p>',
+    log: 'A、D 行列式对不上，B 正负个数反了' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>规范形为 $y_1^2-y_2^2-y_3^2$——答案选 <b>C</b>。</p>',
+    log: '选 C：y1² − y2² − y3²' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$\\boldsymbol{A}^2+\\boldsymbol{A}=2\\boldsymbol{E}$ 且 $|\\boldsymbol{A}|=4$，求规范形',
+  subtitle: '考点：特征值性质与二次型规范形 · 方法：多项式锁值 + 行列式数个数',
+  counterLabel: '推理步',
+  ribbonTitle: '关键结论（✓ 达成）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C：$y_1^2-y_2^2-y_3^2$',
+    html: '记忆锚点：<b>$\\boldsymbol{A}^2+\\boldsymbol{A}=2\\boldsymbol{E}\\Rightarrow\\lambda\\in\\{1,-2\\}$；$|\\boldsymbol{A}|=4$ 强制特征值为 $1,-2,-2$，$p=1,q=2$</b>。全负时行列式为 $-8$、全正时为 $1$，都对不上 4——行列式是排除干扰项的快刀。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：矩阵多项式锁死特征值，行列式定正负个数</h2>
+<p>答案：C（规范形 $y_1<sup>2</sup>-y_2<sup>2</sup>-y_3<sup>2</sup>$）</p>
+<h3>第一步：由 $A<sup>2</sup>+A=2E$ 逼出特征值的候选</h3>
+<p>设 $\lambda$ 是 $A$ 的特征值，$\xi\neq\boldsymbol{0}$ 为对应特征向量，则</p>
+<p>$$(A<sup>2</sup>+A-2E)\,\xi=(\lambda<sup>2</sup>+\lambda-2)\,\xi=\boldsymbol{0}\ \Longrightarrow\ (\lambda-1)(\lambda+2)=0,$$</p>
+<p>每个特征值只能是 $1$ 或 $-2$。</p>
+<h3>第二步：用 $|A|=4$ 数出各值的重数</h3>
+<p>$|A|$ 等于全部特征值之积。设 $1$ 出现 $k$ 次、$-2$ 出现 $3-k$ 次：</p>
+<p>$$|A|=1<sup>k</sup>(-2)<sup>3-k</sup>=(-2)<sup>3-k</sup>=4=(-2)<sup>2</sup>\ \Longrightarrow\ 3-k=2,\ k=1.$$</p>
+<p>故特征值为 $1,\,-2,\,-2$：一个正、两个负。</p>
+<h3>第三步：写规范形</h3>
+<p>实对称矩阵保证可以正交规范化，规范形由正负惯性指数决定：$p=1,\ q=2$，所以二次型的规范形为</p>
+<p>$$y_1<sup>2</sup>-y_2<sup>2</sup>-y_3<sup>2</sup>.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>用 $|A|$ 定重数时忽视符号</strong>：$(-2)<sup>3-k</sup>=4$ 依赖偶次幂为正；若三个全是 $-2$，则 $|A|=-8\neq4$，这正是 D 项的死因。</li><li><strong>正负个数弄反</strong>：$y_1<sup>2</sup>+y_2<sup>2</sup>-y_3<sup>2</sup>$ 对应 $p=2,q=1$（B 项），与实际的 $p=1,q=2$ 恰好颠倒。</li><li><strong>忘记实对称这一前提</strong>：惯性定理保证正负惯性指数是合同不变量，规范形才唯一；题目给实对称就是为此。</li></ul>
+<blockquote>一句话结论：$\lambda\in\{1,-2\}$，$|A|=4$ 强制特征值为 $1,-2,-2$，$p=1,q=2$，规范形 $y_1<sup>2</sup>-y_2<sup>2</sup>-y_3<sup>2</sup>$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

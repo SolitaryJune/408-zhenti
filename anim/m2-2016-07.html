@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·07 相似关系的保持性：哪条会断</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-06.html" data-q="../question/m2-2016-06/">← <b>m2-2016-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-07/" data-q="../question/m2-2016-07/" data-no-anim="1">m2-2016-07 · 本题</a>
+  <a href="m2-2016-08.html" data-q="../question/m2-2016-08/"><b>m2-2016-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：同一副「眼镜」P',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>$A\\sim B$ 即存在可逆 $P$ 使 $A=P^{-1}BP$。判断每条结论，就看能否用<b>一个</b>可逆矩阵把两边连起来。注意题目问的是「<b>错误的</b>」结论。</p>',
+    log: '核心问题：变形后还能不能共用一个可逆矩阵' },
+  { title: '选项 A：转置 → 换成 Pᵀ，仍相似 ✓',
+    cls: 'good',
+    tag: 'A ✓',
+    ribbon: {k:1, ok:true},
+    body: '<p>$A^{T}=(P^{-1}BP)^{T}=P^{T}B^{T}(P^{T})^{-1}$。取 $Q=(P^{T})^{-1}$，则 $A^{T}=Q^{-1}B^{T}Q$：虽然矩阵从 $P$ 换成了 $Q$，但<b>总归存在</b>一个，相似成立。</p>',
+    log: 'A^T 与 B^T 相似（用 Q=(Pᵀ)⁻¹）' },
+  { title: '选项 B：取逆 → 同一个 P ✓',
+    cls: 'good',
+    tag: 'B ✓',
+    ribbon: {k:2, ok:true},
+    body: '<p>$A^{-1}=(P^{-1}BP)^{-1}=P^{-1}B^{-1}P$，眼镜都不用换，$A^{-1}\\sim B^{-1}$ 成立。</p>',
+    log: 'A⁻¹ = P⁻¹B⁻¹P，同一 P，相似' },
+  { title: '选项 C：转置混进来 → 配不成对 ✗',
+    cls: 'bad',
+    tag: 'C ✗',
+    ribbon: {k:3, ok:false},
+    body: '<p>$$A+A^{T}=\\underbrace{P^{-1}BP}_{\\text{配 }P}+\\underbrace{P^{T}B^{T}(P^{T})^{-1}}_{\\text{配 }(P^{T})^{-1}}$$ 两块用的矩阵一般<b>不相同</b>，提不出公因子，一般不相似。</p>',
+    log: 'P 与 (Pᵀ)⁻¹ 一般不同，合并不了' },
+  { title: '选项 D：多项式组合 → 同一个 P ✓',
+    cls: 'good',
+    tag: 'D ✓',
+    ribbon: {k:4, ok:true},
+    body: '<p>$A+A^{-1}=P^{-1}BP+P^{-1}B^{-1}P=P^{-1}(B+B^{-1})P$：两块都用 $P$，直接提出，$A+A^{-1}\\sim B+B^{-1}$ 成立。</p>',
+    log: 'A + A⁻¹ 用同一 P 提出，相似' },
+  { title: '反例坐实 C',
+    cls: 'bad',
+    tag: '反例',
+    body: '<p>取 $B=\\mathrm{diag}(1,2)$，$P=\\begin{pmatrix}1&1\\\\0&1\\end{pmatrix}$，$A=P^{-1}BP=\\begin{pmatrix}1&-1\\\\0&2\\end{pmatrix}$。则 $\\det(A+A^{T})=2\\cdot4-(-1)^2=7$，而 $\\det(B+B^{T})=2\\cdot4=8$。相似必须同行列式，$7\\ne8$，确不相似。</p>',
+    log: '行列式 7 ≠ 8，C 的说法被反例击穿' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>错误结论是 <b>C</b>。记忆锚点：<b>取逆、幂、多项式组合都用同一个 $P$；一碰转置就换成 $P^{T}$，混搭便合不拢</b>。</p>',
+    log: '答案选 C' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$A\\sim B$ 时，$A^{T},\\ A^{-1},\\ A+A^{-1},\\ A+A^{T}$ 谁不相似于对应物',
+  subtitle: '考点：矩阵相似的定义与运算保持性 · 方法：同一 $P$ 能否贯穿',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 相似 / ✗ 不相似）',
+  intro: '点击「▶ 播放」逐项推演 A、B、C、D。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C（A + Aᵀ 一般不相似于 B + Bᵀ）',
+    html: '记忆锚点：<b>多项式组合共享 $P$，转置把 $P$ 换成 $P^{T}$</b>——所以 $A^{-1},\\ A+A^{-1}$ 都相似，唯独 $A+A^{T}$ 里 $P$ 与 $(P^{T})^{-1}$ 配不成对；反例 $\\det 7\\ne\\det 8$ 坐实。题目问「错误的」，别顺手选成正确项。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：相似关系经得起哪些运算（转置是个例外）</h2>
+<p>答案：C</p>
+<h3>第 0 步：先立机制——相似就是"同一变换换基看"</h3>
+<p>$A\sim B$ 的全部内容：存在可逆 $P$ 使 $A=P<sup>-1</sup>BP$。$P$ 是换基矩阵，$A,B$ 是<strong>同一个线性变换在不同基下的坐标</strong>。于是判断"对 $A,B$ 同做某运算后还相似吗"，只看一件事：该运算还能否用<strong>同一个 $P$</strong> 贯穿成 $P<sup>-1</sup>(\cdot)P$ 的形状。取逆、乘方、多项式组合是"整块"运算，$P$ 直接穿过；<strong>转置会把矩阵"翻面"</strong>，$P$ 被翻成 $P<sup>T</sup>$，与原来的 $P$ 一般不配对——这就是 C 要出事的机制根源。（题干强调 $A,B$ 可逆，是为了让选项 B、D 里的 $A<sup>-1</sup>,B<sup>-1</sup>$ 有意义。）</p>
+<h3>第一步：逐项过"同一个 P"的关</h3>
+<ul><li><strong>B 成立</strong>：$A<sup>-1</sup>=(P<sup>-1</sup>BP)<sup>-1</sup>=P<sup>-1</sup>B<sup>-1</sup>P$，同一 $P$。</li><li><strong>D 成立</strong>：$A+A<sup>-1</sup>=P<sup>-1</sup>BP+P<sup>-1</sup>B<sup>-1</sup>P=P<sup>-1</sup>(B+B<sup>-1</sup>)P$，同一 $P$ 直接提出；同理 $A<sup>k</sup>$ 与 $B<sup>k</sup>$、任何多项式 $h(A)$ 与 $h(B)$ 都相似。</li><li><strong>A 成立</strong>：$A<sup>T</sup>=(P<sup>-1</sup>BP)<sup>T</sup>=P<sup>T</sup>B<sup>T</sup>(P<sup>T</sup>)<sup>-1</sup>$。转置确实换走了 $P$，但这是<strong>整体翻面</strong>，可取 $Q=(P<sup>T</sup>)<sup>-1</sup>$，则 $A<sup>T</sup>=Q<sup>-1</sup>B<sup>T</sup>Q$，仍相似。</li><li><strong>C 不成立</strong>：$A+A<sup>T</sup>=P<sup>-1</sup>BP+P<sup>T</sup>B<sup>T</sup>(P<sup>T</sup>)<sup>-1</sup>$——一半用 $P$、一半用 $P<sup>T</sup>$，<strong>两套基拼不回一起</strong>，提不出 $P<sup>-1</sup>(B+B<sup>T</sup>)P$，一般不相似。</li></ul>
+<h3>第二步：给 C 造反例钉死</h3>
+<p>取 $B=\begin{pmatrix}1&amp;0\\0&amp;2\end{pmatrix}$，$P=\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$，则 $A=P<sup>-1</sup>BP=\begin{pmatrix}1&amp;-1\\0&amp;2\end{pmatrix}$。</p>
+<p>$$A+A<sup>T</sup>=\begin{pmatrix}2&amp;-1\\-1&amp;4\end{pmatrix},\ \det=7;\qquad B+B<sup>T</sup>=\begin{pmatrix}2&amp;0\\0&amp;4\end{pmatrix},\ \det=8.$$</p>
+<p>相似矩阵必同行列式，$7\ne8$，C 确实不成立，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为转置也共享 $P$</strong>：把 $(P<sup>-1</sup>BP)<sup>T</sup>$ 粗心写成 $P<sup>-1</sup>B<sup>T</sup>P$——转置的"逆序 + 翻面"正是 C 陷阱的全部机关。</li><li><strong>没看清问法</strong>：本题找"错误的结论"，A/B/D 都是真命题，选了它们就反向了。</li><li><strong>对 A 选项犹豫</strong>："换 $P$"与"不相似"不是一回事——$A<sup>T</sup>,B<sup>T</sup>$ 之间可以用新矩阵 $Q=(P<sup>T</sup>)<sup>-1</sup>$ 配对；出事的是"一半 $P$、一半 $P<sup>T</sup>$"的混搭。</li></ul>
+<blockquote>结论：逆与多项式共享同一个 $P$；转置翻面换走 $P$，混搭（$A+A<sup>T</sup>$）即散架，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

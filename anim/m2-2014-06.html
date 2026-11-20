@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：调和函数最值在哪里取得（2014 年第 6 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-05.html" data-q="../question/m2-2014-05/">← <b>m2-2014-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-06/" data-q="../question/m2-2014-06/" data-no-anim="1">m2-2014-06 · 本题</a>
+  <a href="m2-2014-07.html" data-q="../question/m2-2014-07/"><b>m2-2014-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：认出调和函数', cls: 'key', tag: '审题', log: 'u_xx + u_yy = 0，内部是调和函数；u_xy 非零排除退化',
+    body: '<p>$\\dfrac{\\partial^{2}u}{\\partial x^{2}}+\\dfrac{\\partial^{2}u}{\\partial y^{2}}=0$ 在 $D$ 内处处成立——$u$ 是<b>调和函数</b>。条件 $u_{xy}\\neq0$ 排除常函数、线性函数等退化情形。</p>' },
+  { title: '反证：假设内点取极大', cls: '', tag: '反证', log: '极大值点要求 Hessian 半负定：u_xx≤0 且 u_yy≤0',
+    body: '<p>若 $u$ 在内点取极大值，则该点 $u_x=u_y=0$，且 Hessian 半负定，特别要求</p>' +
+          '<p>$$u_{xx}\\le0,\\qquad u_{yy}\\le0.$$</p>' },
+  { title: '方程逼出两者为零', cls: '', tag: '推导', log: '两个非正数互为相反数，只能同时为零',
+    body: '<p>由 $u_{xx}+u_{yy}=0$ 知 $u_{xx}=-u_{yy}$：两个非正数互为相反数，只能</p>' +
+          '<p>$$u_{xx}=u_{yy}=0.$$</p>' },
+  { title: 'Hessian 不定型 → 鞍点', cls: 'bad', tag: '矛盾', log: '行列式等于负的 u_xy 平方，小于零，是鞍点不是极值点',
+    ribbon: {k:1, ok:true},
+    body: '<p>此时 Hessian $=\\begin{pmatrix}0&u_{xy}\\\\ u_{xy}&0\\end{pmatrix}$，行列式</p>' +
+          '<p>$$0\\cdot0-u_{xy}^{2}=-u_{xy}^{2}<0\\quad(u_{xy}\\neq0),$$</p>' +
+          '<p><b>不定型</b>——该点是鞍点，不是极值点。极小值情形同理（两个非负数互为相反数）。</p>' },
+  { title: '最值只能在边界', cls: 'good', tag: '收口', log: '闭区域上连续函数必有最值，内部取不到，只能在边界',
+    ribbon: {k:2, ok:true},
+    body: '<p>$u$ 在有界闭区域 $D$ 上连续，最大、最小值<b>必存在</b>；内部取不到，故二者都在 $D$ 的<b>边界</b>上取得。</p>' },
+  { title: '结论', cls: 'good', tag: '完成', log: '最大值和最小值都在边界取得，选 A',
+    body: '<p>最大值与最小值都在 $D$ 的边界上取得，选 <b>A</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : 'step'),
+    tag: s.tag,
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2014 数二·6】$u_{xx}+u_{yy}=0$ 时最值落在何处',
+  subtitle: '考点：多元极值 / 极值原理 · 推理链推演',
+  counterLabel: '步数',
+  ribbonTitle: '推理节点（✓ 对 / ✗ 错）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（最值都在边界取得）',
+    html: '记忆锚点：<b>$u_{xx}=-u_{yy}$ 使两个二阶偏导无法同号</b> → Hessian 不定（行列式 $-u_{xy}^{2}<0$）→ 内部无极值 → 闭区域上连续必有最值，只能在边界。$u_{xy}\\neq0$ 负责排除退化平顶情形。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：调和函数的极值原理——内部没有「山顶谷底」</h2>
+<p><strong>答案：A</strong></p>
+<h3>第一步：先立机制——调和函数与它的物理原型</h3>
+<p>$u_{xx}+u_{yy}=0$ 说明 $u$ 是<strong>调和函数</strong>。物理原型是稳态温度场（或静电位）：区域内部没有热源，每个内点的值等于四周的<strong>平均值</strong>。平均值的几何后果很直观：内点若是「山顶」，四周平均应比它低；若是「谷底」，四周平均应比它高——都和「等于平均」矛盾。所以内部既无最大也无最小，最值只能去<strong>边界</strong>找——这就是极值原理。</p>
+<h3>第二步：严格论证（顺便看清 $u_{xy}\neq0$ 的作用）</h3>
+<p>若 $u$ 在内点 $P$ 取极大，则 $u_x=u_y=0$，且 Hessian 半负定，特别要求 $u_{xx}\le0$、$u_{yy}\le0$（对角元的含义：沿坐标轴的一元截线 $g(t)=u(P+t\boldsymbol{e}_x)$ 在 $t=0$ 取极大，$g''(0)=u_{xx}\le0$）。但方程给 $u_{xx}=-u_{yy}$：两个非正数互为相反数，只能</p>
+<p>$$u_{xx}=u_{yy}=0.$$</p>
+<p>Hessian 剩 $\begin{pmatrix}0&amp;u_{xy}\\ u_{xy}&amp;0\end{pmatrix}$，行列式 $=-u_{xy}<sup>2</sup>&lt;0$——<strong>不定型</strong>，$P$ 是鞍点，与「极大」矛盾。极小同理（两个非负数互为相反数）。若没有 $u_{xy}\neq0$，Hessian 可能全零，「平顶」退化情形排除不掉——这就是题给这个条件的用途。</p>
+<h3>第三步：收口</h3>
+<p>$u$ 在有界闭区域 $D$ 上连续，最大、最小值必存在（最值定理）；内部取不到，故<strong>二者都在边界取得</strong>，选 <strong>A</strong>。</p>
+<h3>干扰项归因</h3>
+<ul><li><strong>B</strong>：与极值原理正好相反。</li><li><strong>C、D</strong>：「一内一边」也不行——调和函数在内部既无极大又无极小，任何最值都进不了内部。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>只背结论不懂理由</strong>：机制是 $u_{xx}=-u_{yy}$ 逼 Hessian 不定型，鞍点当不成极值点。</li><li><strong>忽略 $u_{xy}\neq0$</strong>：它排除常值/平顶的退化情形。</li><li><strong>与一元情形混淆</strong>：二元极值要看 Hessian 定型，行列式 $&lt;0$ 直接判鞍点。</li></ul>
+<blockquote>一句话结论：$u_{xx}+u_{yy}=0$ 在内部取不到最值（平均值原理 / 鞍点论证），最大、最小都在边界，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

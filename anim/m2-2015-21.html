@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：切线交点落位证明（2015 年第 21 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-20.html" data-q="../question/m2-2015-20/">← <b>m2-2015-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-21/" data-q="../question/m2-2015-21/" data-no-anim="1">m2-2015-21 · 本题</a>
+  <a href="m2-2015-22.html" data-q="../question/m2-2015-22/"><b>m2-2015-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先把 $x_0$ 写成显式',
+    cls: 'key', tag: '审题', log: '条件给足：f 增、下凸、f(a)=0，目标是交点落位 a 与 b 之间',
+    body: '<p>$f$ 二阶可导，$f(a)=0$，$f\'>0$（严格增），$f\'\'>0$（下凸）。切线 $y-f(b)=f\'(b)(x-b)$ 令 $y=0$，交点横坐标</p><p>$$x_0=b-\\frac{f(b)}{f\'(b)}.$$</p><p>要证 $a<x_0<b$，分左右两半。</p>' },
+  { title: '右半：$x_0<b$',
+    cls: 'good', tag: '右半', log: '分子分母都正，减项为正，交点必在 b 左侧',
+    ribbon: {k:1, ok:true},
+    body: '<p>$f\'>0$ 且 $f(b)>f(a)=0\\ \\Rightarrow\\ f(b)>0$；又 $f\'(b)>0$，故 $\\dfrac{f(b)}{f\'(b)}>0$，</p><p>$$x_0=b-\\frac{f(b)}{f\'(b)}<b.$$</p>' },
+  { title: '左半的目标转化',
+    cls: 'key', tag: '转化', log: '把 x0 大于 a 等价改写成 f(b) 小于 f\'(b) 乘区间长',
+    ribbon: {k:2, ok:true},
+    body: '<p>$x_0>a\\ \\Longleftrightarrow\\ b-\\dfrac{f(b)}{f\'(b)}>a\\ \\Longleftrightarrow\\ f(b)<f\'(b)(b-a).$</p><p>关键是把 $f(b)$ 与「$b$ 处的导数乘区间长」作比较——这正是中值定理的用武之地。</p>' },
+  { title: '拉格朗日中值定理接手',
+    cls: 'good', tag: '中值', log: '在 a 到 b 上用中值定理，f(b) 被 f\'(ξ) 表出',
+    ribbon: {k:3, ok:true},
+    body: '<p>存在 $\\xi\\in(a,b)$ 使 $f(b)-f(a)=f\'(\\xi)(b-a)$，即</p><p>$$f(b)=f\'(\\xi)(b-a).$$</p><p>$f(b)$ 从「函数值」变成「某中间点导数乘区间长」，可以和 $f\'(b)$ 直接比大小。</p>' },
+  { title: '$f\'\'>0\\Rightarrow f\'$ 严格增：完成左半',
+    cls: 'good', tag: '左半', log: '中间点的导数更小，f(b) 严格小于 f\'(b) 乘区间长',
+    ribbon: {k:4, ok:true},
+    body: '<p>$f\'\'(x)>0$ 说明 $f\'$ 在 $[a,+\\infty)$ 严格增；$\\xi<b$ 给出 $f\'(\\xi)<f\'(b)$。又 $b-a>0$，故</p><p>$$f(b)=f\'(\\xi)(b-a)<f\'(b)(b-a),$$</p><p>即 $\\dfrac{f(b)}{f\'(b)}<b-a$，于是 $x_0=b-\\dfrac{f(b)}{f\'(b)}>b-(b-a)=a$。</p>' },
+  { title: '结论',
+    cls: 'good', tag: '完成', log: '两半合起来：a 小于 x0 小于 b，证毕',
+    body: '<p>综合两半：<b>$a<x_0<b$</b>。几何直观：曲线下凸且上升，切线整条压在曲线下方，切线与 $x$ 轴的交点被压进 $\\bigl(a,b\\bigr)$ 内部。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : 'step'),
+    tag: s.tag,
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2015 数二·21】证明：切线与 $x$ 轴交点满足 $a<x_0<b$',
+  subtitle: '考点：切线方程 · 拉格朗日中值定理 · $f\'\'>0$ 与 $f\'$ 单调增',
+  counterLabel: '步数',
+  ribbonTitle: '证明进度（✓ 已完成环节）',
+  intro: '点击「▶ 播放」逐步展开证明链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$a<x_0=b-\\dfrac{f(b)}{f\'(b)}<b$',
+    html: '记忆锚点：<b>右半靠符号（$f(b)>0,f\'(b)>0$），左半靠中值定理</b>——$f(b)=f\'(\\xi)(b-a)$ 且 $f\'(\\xi)<f\'(b)$。易错：只证 $x_0<b$ 就收工；$f\'\'>0$ 给的是 $f\'$ 递<b>增</b>，方向反了整段证明作废。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：切线交点夹逼——右半靠符号，左半靠"平均斜率 &lt; 末端斜率"</h2>
+<p><strong>结论（证明题）：$a&lt;x_0&lt;b$。</strong></p>
+<h3>第 0 步：先立机制——下凸曲线在切线上方</h3>
+<p>条件 $f''(x)&gt;0$ 的几何内容是：曲线<strong>下凸</strong>，且<strong>曲线位于其任一条切线的上方</strong>。这是本题的灵魂图景：曲线过 $(a,0)$（因 $f(a)=0$）且单调上升，切线在 $(b,f(b))$ 处从下方托着曲线；要证的 $a&lt;x_0&lt;b$，说的就是切线落回 $x$ 轴的位置被夹在"曲线自己与 $x$ 轴的交点 $a$"与"切点 $b$"之间。</p>
+<h3>第 1 步：把 $x_0$ 显式化</h3>
+<p>切线 $y-f(b)=f'(b)(x-b)$，令 $y=0$ 解出</p>
+<p>$$x_0=b-\frac{f(b)}{f'(b)}.$$</p>
+<p>于是问题化成两个不等式：$\dfrac{f(b)}{f'(b)}$ 大于 $0$（给右半）、小于 $b-a$（给左半）。</p>
+<h3>第 2 步：右半 $x_0&lt;b$——为什么只靠符号就够</h3>
+<p>$f'(x)&gt;0$ 且 $b&gt;a$，故 $f(b)&gt;f(a)=0$；又 $f'(b)&gt;0$，于是 $\dfrac{f(b)}{f'(b)}&gt;0$，减去一个正数：</p>
+<p>$$x_0=b-\frac{f(b)}{f'(b)}&lt;b.$$</p>
+<h3>第 3 步：左半 $x_0&gt;a$——为什么必须请中值定理（预答）</h3>
+<p>$x_0&gt;a\iff b-\dfrac{f(b)}{f'(b)}&gt;a\iff f(b)&lt;f'(b)(b-a)$。左边 $f(b)$ 是<strong>整体增量</strong>，右边是<strong>末端瞬时斜率乘长度</strong>——比较"平均变化率"与"端点变化率"，正是拉格朗日中值定理的领地：对 $[a,b]$ 用中值定理，存在 $\xi\in(a,b)$ 使</p>
+<p>$$f(b)=f(b)-f(a)=f'(\xi)(b-a).$$</p>
+<p>$f''&gt;0\Rightarrow f'$ 严格增，而 $\xi&lt;b$，故 $f'(\xi)&lt;f'(b)$；乘正数 $b-a$ 得</p>
+<p>$$f(b)=f'(\xi)(b-a)&lt;f'(b)(b-a)\ \Longrightarrow\ \frac{f(b)}{f'(b)}&lt;b-a\ \Longrightarrow\ x_0&gt;b-(b-a)=a.$$</p>
+<p>几何上再看一眼：下凸曲线越走越陡，弦的平均斜率 $f'(\xi)$ 小于末端斜率 $f'(b)$——"按平均斜率走完 $b-a$ 的路"必然比"按末端斜率算"要矮，这就是 $f(b)&lt;f'(b)(b-a)$ 的直观来源。</p>
+<p>综合两半：$a&lt;x_0&lt;b$，证毕。</p>
+<h3>易错点</h3>
+<ul><li><strong>只证右半收工</strong>：$x_0&lt;b$ 是符号层面白送的，$x_0&gt;a$ 才是本题主体，须中值定理。</li><li><strong>单调方向记反</strong>：$f''&gt;0$ 说明 $f'$ 递<strong>增</strong>，小自变量 $\xi$ 处 $f'(\xi)&lt;f'(b)$——不等号方向正是左半的来源。</li><li><strong>变形不看符号</strong>：$f'(b)&gt;0$、$b-a&gt;0$ 是 $\dfrac{f(b)}{f'(b)}&lt;b-a\iff x_0&gt;a$ 方向不反转的前提。</li></ul>
+<blockquote>记忆锚点：下凸 $\Rightarrow$ 曲线在切线上方；$x_0=b-\dfrac{f(b)}{f'(b)}$；右半看符号，左半用"平均斜率 $&lt;$ 末端斜率"（中值定理 + $f'$ 增）。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

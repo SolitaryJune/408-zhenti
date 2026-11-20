@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 10 题 · 一阶线性微分方程</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-09.html" data-q="../question/m2-2011-09/">← <b>m2-2011-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-10/" data-q="../question/m2-2011-10/" data-no-anim="1">m2-2011-10 · 本题</a>
+  <a href="m2-2011-11.html" data-q="../question/m2-2011-11/"><b>m2-2011-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>解 $y\'+y=\\mathrm e^{-x}\\cos x$，满足 $y(0)=0$。</p>',
+  '<p><b>定型与积分因子：</b>一阶线性非齐次方程 $y\'+P(x)y=Q(x)$，这里 $P(x)=1$，积分因子 $$\\mu=e^{\\int 1\\,\\mathrm dx}=e^{x}.$$</p>',
+  '<p><b>乘 μ 凑导数：</b>两边乘 $e^x$，左边凑成乘积导数：$$\\bigl(y\\,e^{x}\\bigr)\'=e^{x}\\cdot e^{-x}\\cos x=\\cos x.$$</p>',
+  '<p><b>积分：</b>$$y\\,e^{x}=\\sin x+C.$$</p>',
+  '<p><b>通解：</b>$$y=e^{-x}\\bigl(\\sin x+C\\bigr).$$</p>',
+  '<p><b>代初值：</b>$y(0)=0\\Rightarrow e^{0}(\\sin0+C)=C=0$，故 $C=0$。</p>',
+  '<p><b>结论：</b>$$y=e^{-x}\\sin x.$$（验算：$y\'+y=e^{-x}\\cos x$ 且 $y(0)=0$，成立。）</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 10 题 · $y\'+y=\\mathrm e^{-x}\\cos x$ 满足 $y(0)=0$ 的解',
+  subtitle: '考点：一阶线性非齐次方程 · 方法：积分因子法',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：积分因子 → 凑导数 → 积分 → 定常数。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'定型', log:'一阶线性方程，P(x)=1，积分因子是 e 的 x 次方', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'凑导数', log:'两边乘 e^x 后，左边正好是 (y·e^x) 的导数，右边抵消成 cos x', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'积分', log:'两边积分得 y·e^x = sin x + C', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'通解', log:'除回 e^x 得通解 y = e^(-x)(sin x + C)', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'定常数', log:'代入 y(0)=0，解出 C=0', count:5, reveal:6, hl:5, ribbon:{k:5, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：y = e^(-x)·sin x（求导回代验算成立）', count:6, reveal:7, hl:6, good:true, done:true, ribbon:{k:6, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '填 y = e^(−x)·sin x',
+    html: '通解公式：$y=e^{-\\int P\\mathrm dx}\\Bigl(\\int Q\\,e^{\\int P\\mathrm dx}\\mathrm dx+C\\Bigr)$。本题 $P=1$：积分因子 $e^x$，$(ye^x)\'=\\cos x$，代 $y(0)=0$ 得 <b>$y=e^{-x}\\sin x$</b>。易错：积分因子是 $e^{+x}$ 不是 $e^{-x}$；通解必须带 $C$ 并用初值定值。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：一阶线性方程——积分因子为什么是 e<sup>x</sup></h2>
+<p>答案：$y=e<sup>-x</sup>\sin x$</p>
+<h3>第一步：先懂机制——积分因子是被「设计」出来的</h3>
+<p>一阶线性方程 $y'+P(x)y=Q(x)$ 的困难在左边不是任何函数的导数。积分因子的目标是找一个 $\mu(x)$，使 $\mu y'+\mu Py$ 恰好凑成 $(\mu y)'=\mu y'+\mu' y$。对比系数，只需</p>
+<p>$$\mu'=\mu P\quad\Longleftrightarrow\quad \frac{\mu'}{\mu}=P\quad\Longleftrightarrow\quad \mu=e<sup>\int P\,\mathrm dx</sup>.$$</p>
+<p>所以「乘 $e<sup>\int P</sup>$」不是口诀，而是解一个极简单的可分离方程的结果。本题 $P=1$，$\mu=e<sup>x</sup>$——乘上去恰好把左边的 $y'+y$ 打包成 $(ye<sup>x</sup>)'$。</p>
+<h3>第二步：乘 $\mu$ 后积分</h3>
+<p>两边乘 $e<sup>x</sup>$，左边凑成导数：$(y\,e<sup>x</sup>)'=e<sup>x</sup>\cdot e<sup>-x</sup>\cos x=\cos x$，积分得</p>
+<p>$$y\,e<sup>x</sup>=\sin x+C\ \Longrightarrow\ y=e<sup>-x</sup>(\sin x+C).$$</p>
+<p>也可以换个视角看穿答案结构：右端 $e<sup>-x</sup>\cos x$ 与齐次解同带 $e<sup>-x</sup>$ 因子，试探 $y=e<sup>-x</sup>z$，则 $y'+y=e<sup>-x</sup>(z'-z)+e<sup>-x</sup>z=e<sup>-x</sup>z'$，方程变成 $e<sup>-x</sup>z'=e<sup>-x</sup>\cos x$，约去 $e<sup>-x</sup>$ 得 $z'=\cos x$——两条路给出同一个 $z=\sin x+C$。</p>
+<h3>第三步：代初值定 C 并验算</h3>
+<p>$y(0)=0$：$e<sup>0</sup>(\sin 0+C)=C=0$，故 $C=0$，特解为</p>
+<p>$$y=e<sup>-x</sup>\sin x.$$</p>
+<p>验算：$y'+y=e<sup>-x</sup>(\cos x-\sin x)+e<sup>-x</sup>\sin x=e<sup>-x</sup>\cos x$，且 $y(0)=0$，成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>积分因子方向反了</strong>：应乘 $e<sup>+x</sup>$ 而不是 $e<sup>-x</sup>$——判据是 $\mu'=\mu P$：取 $\mu=e<sup>-x</sup>$ 时 $\mu'=-\mu\ne\mu P$，左边凑不成全导数。</li><li><strong>丢常数 C 或忘定 C</strong>：通解必须带 $C$，给了初值就必须定值。</li><li><strong>结果不验算</strong>：求导回代一次即可确认，成本极低，别省。</li></ul>
+<blockquote>结论：填 $y=e<sup>-x</sup>\sin x$。积分因子由 $\mu'=\mu P$ 反解出来；「右端与齐次解同因子」时换元 $y=e<sup>-x</sup>z$ 同样一击即中。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

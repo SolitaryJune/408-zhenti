@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：四阶稀疏行列式的值（2014 年第 7 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-06.html" data-q="../question/m2-2014-06/">← <b>m2-2014-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-07/" data-q="../question/m2-2014-07/" data-no-anim="1">m2-2014-07 · 本题</a>
+  <a href="m2-2014-08.html" data-q="../question/m2-2014-08/"><b>m2-2014-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var D4 = '$$D=\\begin{vmatrix}0&a&b&0\\\\a&0&0&b\\\\0&c&d&0\\\\c&0&0&d\\end{vmatrix}$$';
+
+var CARDS = [
+  { cls: 'key', title: '观察非零元分布',
+    body: '<p>' + D4 + '</p><p>非零元「交错」分布：第 1、3 行的非零元只落在第 2、3 列，第 2、4 行的非零元只落在第 1、4 列。选好展开方式，只剩两个二阶行列式。</p>' },
+  { cls: '', title: '按第 1、3 行拉普拉斯展开',
+    body: '<p>这两行的非零列只有 $\\{2,3\\}$，非零二阶子式只有一个：</p>' +
+          '<p>$$\\Delta_{1}=\\begin{vmatrix}a&b\\\\c&d\\end{vmatrix}=ad-bc.$$</p>' +
+          '<p>取自第 1、3 行与第 2、3 列。</p>' },
+  { cls: '', title: '写出对应余子式',
+    body: '<p>划掉第 1、3 行与第 2、3 列，剩第 2、4 行与第 1、4 列：</p>' +
+          '<p>$$\\Delta_{2}=\\begin{vmatrix}a&b\\\\c&d\\end{vmatrix}=ad-bc.$$</p>' },
+  { cls: 'shift', title: '算符号因子',
+    body: '<p>$$(-1)^{(1+3)+(2+3)}=(-1)^{9}=-1.$$</p>' },
+  { cls: 'ok', title: '合并得值',
+    body: '<p>$$D=(-1)\\,(ad-bc)(ad-bc)=-(ad-bc)^{2}.$$</p>' },
+  { cls: 'good', title: '另解验证与结论',
+    body: '<p>按第一列展开验证：$M_{21}=d(ad-bc)$，$M_{41}=-b(ad-bc)$，</p>' +
+          '<p>$$D=-ad(ad-bc)+bc(ad-bc)=(ad-bc)(bc-ad)=-(ad-bc)^{2}.$$</p>' +
+          '<p>一致，选 <b>B</b>。</p>' },
+];
+
+AW.init({
+  title: '【2014 数二·7】$\\begin{vmatrix}0&a&b&0\\\\a&0&0&b\\\\0&c&d&0\\\\c&0&0&d\\end{vmatrix}$ 的值',
+  subtitle: '考点：行列式 · 方法：拉普拉斯展开（按 1、3 行）',
+  counterLabel: '已执行',
+  ribbonTitle: '关键节点',
+  intro: '点击「▶ 播放」逐步演示展开过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一张卡'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'非零元交错分布，挑第 1、3 行展开最省事', count:0 },
+    { cls:'step',  tag:'选子式', log:'第 1、3 行的非零元只占第 2、3 列，子式 = ad−bc', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'找余子式', log:'划掉 1、3 行与 2、3 列，剩下 2、4 行 1、4 列，还是 ad−bc', count:2 },
+    { cls:'shift', tag:'定符号', log:'行标和加列标和 = 9，奇数取负号', count:3 },
+    { cls:'ok',    tag:'合并', log:'D = −(ad−bc)²', count:4, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成', log:'按第一列展开验证一致，答案 B', count:5, ribbon:{k:3, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 B（D = −(ad−bc)²）',
+    html: '记忆锚点：<b>稀疏行列式先找「成块」的行</b>：两行非零元只占两列时，拉普拉斯展开只剩一个子式。负号来自 $(1+3)+(2+3)=9$ 为奇数；A 是漏负号的典型错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：稀疏行列式——拉普拉斯展开与符号机制</h2>
+<p><strong>答案：B</strong></p>
+<h3>第一步：先立机制——非零元住哪儿，就沿哪儿展开</h3>
+<p>稀疏行列式的效率来自选对展开的行/列：第 1、3 行的非零元只落在第 2、3 列，于是按这两行作<strong>拉普拉斯展开</strong>时，非零二阶子式只有一个，整个行列式只剩一项——这就是「为什么选第 1、3 行」。按 $k$ 行展开的符号规则是</p>
+<p>$$(-1)<sup>(\text{所选行号之和</sup>)+(\text{所选列号之和})},$$</p>
+<p>来历：把所选行换到最上面、所选列换到最左边需要这么多次相邻交换，每换一次变一次号。</p>
+<h3>第二步：两个子式</h3>
+<p>所选行 $\{1,3\}$、列 $\{2,3\}$：</p>
+<p>$$\Delta_{1}=\begin{vmatrix}a&amp;b\\ c&amp;d\end{vmatrix}=ad-bc.$$</p>
+<p>划掉这两行两列，余下行 $\{2,4\}$、列 $\{1,4\}$：</p>
+<p>$$\Delta_{2}=\begin{vmatrix}a&amp;b\\ c&amp;d\end{vmatrix}=ad-bc.$$</p>
+<p>两个子式相同——这决定了结果必是<strong>完全平方</strong>结构，直接排除 C、D 的平方差形状 $(ad-bc)(ad\pm bc)$。</p>
+<h3>第三步：符号与合并</h3>
+<p>$$(-1)<sup>(1+3)+(2+3)</sup>=(-1)<sup>9</sup>=-1,\qquad D=-(ad-bc)<sup>2</sup>.$$</p>
+<p>符号拿不准时用特例校验：取 $a=d=1$、$b=c=0$，原行列式恰是单位阵交换第 1、2 行，值为 $-1$；公式给 $-(1)<sup>2</sup>=-1$，吻合。</p>
+<h3>第四步：另解（按第一列展开）交叉验证</h3>
+<p>$M_{21}=d(ad-bc)$，$M_{41}=-b(ad-bc)$，故</p>
+<p>$$D=(-1)<sup>3</sup>a\,M_{21}+(-1)<sup>5</sup>c\,M_{41}=-ad(ad-bc)+bc(ad-bc)=(ad-bc)(bc-ad)=-(ad-bc)<sup>2</sup>.$$</p>
+<p>选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>符号弄丢</strong>：负号来自行号和加列号和为奇数，A 正是漏了它。</li><li><strong>余子式选错块</strong>：划去行 $\{1,3\}$、列 $\{2,3\}$，剩下的是第 2、4 行与第 1、4 列的交叉块。</li><li><strong>把结果当平方差</strong>：两个子式相同 $\Rightarrow$ 完全平方 $-(ad-bc)<sup>2</sup>$，不是 $(ad-bc)(ad\pm bc)$。</li></ul>
+<blockquote>一句话结论：两个相同的二阶子式 $ad-bc$ 配上奇数负号，$D=-(ad-bc)<sup>2</sup>$，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·16 四阶行列式中 x³ 项的系数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-15.html" data-q="../question/m2-2021-15/">← <b>m2-2021-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-16/" data-q="../question/m2-2021-16/" data-no-anim="1">m2-2021-16 · 本题</a>
+  <a href="m2-2021-17.html" data-q="../question/m2-2021-17/"><b>m2-2021-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$f(x)=\\begin{vmatrix}x&x&1&2x\\\\1&x&2&-1\\\\2&1&x&1\\\\2&-1&1&x\\end{vmatrix}$，按定义每项取「不同行不同列」四元素——盯住含 $x$ 的位置",
+  "<b>② 标记含 $x$ 元素：</b>第 1 行：$a_{11}=x,\\ a_{12}=x,\\ a_{14}=2x$；第 2 行 $a_{22}=x$；第 3 行 $a_{33}=x$；第 4 行 $a_{44}=x$。$x^3$ = 恰选 3 个 $x$ 元素 + 1 个常数",
+  "<b>③ 先排死路：</b>第 2/3/4 行的 $x$ 钉死在列 2/3/4，三行全用则第 1 行只能拿 $a_{11}=x$——那是 $x^4$（主对角项），不是 $x^3$",
+  "<b>④ 合法排列一：$\\sigma=(2,1,3,4)$</b>——$a_{12}a_{21}a_{33}a_{44}=x\\cdot1\\cdot x\\cdot x=x^3$；逆序数 $\\tau=1$，符号 $-$，贡献 $-x^3$",
+  "<b>⑤ 合法排列二：$\\sigma=(4,2,3,1)$</b>——$a_{14}a_{22}a_{33}a_{41}=2x\\cdot x\\cdot x\\cdot2=4x^3$；逆序数 $\\tau=5$（$4>2,4>3,4>1,2>1,3>1$），符号 $-$，贡献 $-4x^3$",
+  "<b>⑥ 其余排列核对：</b>$x$ 因子个数要么 4 个（$x^4$）、要么 2 个以下（$x^2,x$），且无列冲突的其他三项组合——不再有 $x^3$",
+  "<b>⑦ 累加：</b>$x^3$ 系数 $=-1-4=-5$；数值复核：取 $x=0,1,2,3,-1$ 得行列式 $5,12,-1,-28,-4$，五点插值 $f(x)=x^4-5x^3-2x^2+13x+5$ 吻合",
+  "<b>⑧ 结论：</b>$x^3$ 项的系数为 $-5$"
+];
+
+AW.init({
+  title: '2021·16　四阶行列式中 $x^3$ 项的系数',
+  subtitle: '考点：行列式定义（排列 + 逆序数定符号）· 按含 $x$ 元素枚举',
+  counterLabel: '已枚举',
+  ribbonTitle: '枚举进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，标记 x 元素 → 排死路 → 枚举合法排列 → 累加。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'行列式展开共二十四个项，只需关心能凑出 x 三次方的那几个', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'标记',   log:'含 x 的元素只有六个位置，第一行占三个，其余各行各一个', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'排死路', log:'二三四行的 x 全用上时第一行只能拿列一的 x，凑成的是 x 四次方', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'枚举一', log:'列排列二一三四：三个 x 配一个常数一，奇排列取负，贡献负 x 三次方', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'枚举二', log:'列排列四二三一：二倍 x 乘两个 x 再乘二，逆序数五取负，贡献负四倍 x 三次方', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'收尾枚举', log:'其余排列要么 x 个数不对要么列冲突，不再产生 x 三次方项', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'累加验证', log:'负一加负四等于负五，数值代入插值复核完全吻合', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：x 三次方项的系数为负五', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$x^3$ 项的系数 $=-5$',
+    html: '记忆锚点：<b>行列式取 $x^k$ 项 = 选出恰好 $k$ 个含 $x$ 元素且不同行不同列，符号由逆序数定</b>。本题合法排列只有 $(2,1,3,4)$ 与 $(4,2,3,1)$，都是奇排列，$-1-4=-5$。易错：漏掉数字因子 $2\\times2=4$；把主对角的 $x^4$ 项误当 $x^3$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：盯住含 $x$ 的六个位置，按列排列枚举 $x<sup>3</sup>$ 项</h2>
+<p>答案：$-5$</p>
+<h3>第一步：标记所有含 $x$ 的元素</h3>
+<p>四阶行列式每项 = 不同行不同列四个元素之积 × 排列符号。含 $x$ 的位置只有：第 1 行 $a_{11}=x,\ a_{12}=x,\ a_{14}=2x$；第 2 行 $a_{22}=x$；第 3 行 $a_{33}=x$；第 4 行 $a_{44}=x$。$x<sup>3</sup>$ 项 = 恰选 3 个含 $x$ 元素 + 1 个常数元素。</p>
+<h3>第二步：先排除「三行全用」的死路</h3>
+<p>第 2、3、4 行的 $x$ 分别钉死在列 2、3、4。若三行全取各自的 $x$，第 1 行只能拿列 1——而 $a_{11}=x$ 不是常数，凑出的恰是 $x<sup>4</sup>$（主对角项）。所以 $x<sup>3</sup>$ 必然是「第 1 行的 $x$ + 第 2/3/4 行中两个 $x$ + 一行取常数」。</p>
+<h3>第三步：逐个列排列检查，只有两项合法</h3>
+<ul><li>$\sigma=(2,1,3,4)$：取 $a_{12}\,a_{21}\,a_{33}\,a_{44}=x\cdot1\cdot x\cdot x=x<sup>3</sup>$；逆序数 $\tau=1$，符号 $-$，贡献 $-x<sup>3</sup>$。</li><li>$\sigma=(4,2,3,1)$：取 $a_{14}\,a_{22}\,a_{33}\,a_{41}=2x\cdot x\cdot x\cdot2=4x<sup>3</sup>$；逆序数 $\tau=5$（$4&gt;2,4&gt;3,4&gt;1,2&gt;1,3&gt;1$），符号 $-$，贡献 $-4x<sup>3</sup>$。</li></ul>
+<p>其余排列要么 $x$ 因子个数不对（落成 $x<sup>4</sup>,x<sup>2</sup>,x$），要么列冲突。</p>
+<h3>第四步：累加系数</h3>
+<p>$$x<sup>3</sup>\ \text{系数}=-1-4=-5.$$</p>
+<p>数值复核：对 $x=0,1,2,3,-1$ 算行列式得 $5,12,-1,-28,-4$，五点插值给出 $f(x)=x<sup>4</sup>-5x<sup>3</sup>-2x<sup>2</sup>+13x+5$，$x<sup>3</sup>$ 系数正是 $-5$。</p>
+<h3>易错点</h3>
+<ul><li><strong>只盯主对角线</strong>：$\sigma=(1,2,3,4)$ 全取 $x$ 是 $x<sup>4</sup>$ 不是 $x<sup>3</sup>$；$(2,1,3,4)$ 这种「一行换成常数」的项最容易漏。</li><li><strong>逆序数定错符号</strong>：$(4,2,3,1)$ 有 5 个逆序对，奇排列取负号。</li><li><strong>数字因子漏乘</strong>：$a_{14}=2x$ 与 $a_{41}=2$ 的常数因子 $2\times2=4$ 要进系数。</li></ul>
+<blockquote>一句话结论：合法排列只有 $(2,1,3,4)$ 与 $(4,2,3,1)$，符号都是负，$-1-4=-5$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

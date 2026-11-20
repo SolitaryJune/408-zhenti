@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016 数二第 19 题 · 代已知解降阶求 u 与通解（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-18.html" data-q="../question/m2-2016-18/">← <b>m2-2016-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-19/" data-q="../question/m2-2016-19/" data-no-anim="1">m2-2016-19 · 本题</a>
+  <a href="m2-2016-20.html" data-q="../question/m2-2016-20/"><b>m2-2016-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2016·19　$(2x-1)y^{\\prime\\prime}-(2x+1)y^{\\prime}+2y=0$，代 $y=u\\,\\mathrm{e}^{x}$ 降阶',
+  subtitle: '考点：二阶方程降阶 · 方法：<b>已知一解 ⇒ $u$ 项自动消去</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看 $\\mathrm{e}^{x}$ 这把钥匙如何把二阶方程降成一阶。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '<b>题式：</b>$(2x-1)y^{\\prime\\prime}-(2x+1)y^{\\prime}+2y=0$，$y_{1}=\\mathrm{e}^{x}$、$y_{2}=u\\,\\mathrm{e}^{x}$ 是两个解；条件 $u(-1)=\\mathrm{e},\\ u(0)=-1$',
+      '<b>① 代入：</b>$y^{\\prime}=(u^{\\prime}+u)\\mathrm{e}^{x},\\ y^{\\prime\\prime}=(u^{\\prime\\prime}+2u^{\\prime}+u)\\mathrm{e}^{x}$，约去 $\\mathrm{e}^{x}$ 得 $(2x-1)(u^{\\prime\\prime}+2u^{\\prime}+u)-(2x+1)(u^{\\prime}+u)+2u=0$',
+      '<b>② 整理：</b>$u$ 的系数 $(2x-1)-(2x+1)+2=0$（$\\mathrm{e}^{x}$ 已是解的必然回报），得 $(2x-1)u^{\\prime\\prime}+(2x-3)u^{\\prime}=0$ —— 降为一阶',
+      '<b>③ 令 $p=u^{\\prime}$ 分离变量：</b>$\\frac{p^{\\prime}}{p}=-1+\\frac{2}{2x-1}\\ \\Rightarrow\\ p=u^{\\prime}=C(2x-1)\\mathrm{e}^{-x}$',
+      '<b>④ 再积分：</b>$\\int(2x-1)\\mathrm{e}^{-x}\\,\\mathrm{d}x=-(2x+1)\\mathrm{e}^{-x}$，故 $u=-C(2x+1)\\mathrm{e}^{-x}+D$',
+      '<b>⑤ 定常数：</b>$u(0)=-C+D=-1,\\ u(-1)=C\\mathrm{e}+D=\\mathrm{e}\\ \\Rightarrow\\ C=1,\\ D=0$，故 $u=-(2x+1)\\mathrm{e}^{-x}$',
+      '<b>⑥ 通解：</b>$y_{2}=u\\mathrm{e}^{x}=-(2x+1)$，即 $2x+1$ 是解；$y_{1},y_{2}$ 线性无关，$y=C_{1}\\mathrm{e}^{x}+C_{2}(2x+1)$'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'已知 e 的 x 次方是一个解，另一个解是它乘 u，这把钥匙能降阶', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'代入',   log:'把 u 乘 e 的 x 次方连同导数代进方程，公共因子约掉', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'整理',   log:'逐项并系数：u 那一项恰好消失，方程降到只含 u 的二阶与一阶导', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'降阶',   log:'换元 p 等于 u 的一阶导，分离变量积分出 p', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'再积分', log:'再积一次分出现常数 C 与 D，注意负号和加一来自分部积分', count:4, ribbon:{k:5, ok:true} },
+    { cls:'shift', tag:'定常数', log:'两个条件代进去：零处负 C 加 D 等于负一，负一处 C 乘 e 加 D 等于 e，解得 C 等于一、D 等于零', count:5, ribbon:{k:6, ok:true} },
+    { cls:'done',  tag:'完成',   log:'u 乘回 e 的 x 次方得第二个解二 x 加一，通解随之写出', count:6, ribbon:{k:7, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$u(x)=-(2x+1)\\,\\mathrm{e}^{-x}$，通解 $y=C_{1}\\mathrm{e}^{x}+C_{2}(2x+1)$',
+    html: '记忆锚点：<b>已知一个解 ⇒ 代 $y=u\\cdot$（已知解），$u$ 项必消、方程降一阶</b>。易错：$u(-1)=\\mathrm e$ 是在 $x=-1$ 处取值；$\\int(2x-1)\\mathrm e^{-x}\\mathrm dx=-(2x+1)\\mathrm e^{-x}$ 别丢负号。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：已知一解就降阶——代 $y=u\,\mathrm e<sup>x</sup>$ 把二阶方程降为一阶</h2>
+<p><strong>答案：$u(x)=-(2x+1)\mathrm e<sup>-x</sup>$；通解 $y=C_1\mathrm e<sup>x</sup>+C_2(2x+1)$。</strong></p>
+<h3>第 0 步：为什么设 $y=u\mathrm e<sup>x</sup>$——降阶的机制</h3>
+<p>二阶方程已有解 $y_1=\mathrm e<sup>x</sup>$，要找第二个解。把它写成「已知解 × 待定修正因子」$y=u(x)\,\mathrm e<sup>x</sup>$ 不是拍脑袋：任何 $y=u\,y_1$ 代入 $ay''+by'+cy=0$，按 $u''$、$u'$、$u$ 归类后，$u$ 的系数恰为 $L[y_1]$——而 $y_1$ 是解，这一项注定消失，方程只剩 $u'$、$u''$，二阶降一阶（刘维尔公式同源）。本题可先验掉：$L[\mathrm e<sup>x</sup>]=(2x-1)-(2x+1)+2=0$。</p>
+<h3>第一步：代入并整理</h3>
+<p>$y<sup>\prime</sup>=(u<sup>\prime</sup>+u)\mathrm e<sup>x</sup>$，$y<sup>\prime\prime</sup>=(u<sup>\prime\prime</sup>+2u<sup>\prime</sup>+u)\mathrm e<sup>x</sup>$，代入 $(2x-1)y<sup>\prime\prime</sup>-(2x+1)y<sup>\prime</sup>+2y=0$ 并约去 $\mathrm e<sup>x</sup>$：</p>
+<p>$$(2x-1)(u<sup>\prime\prime</sup>+2u<sup>\prime</sup>+u)-(2x+1)(u<sup>\prime</sup>+u)+2u=0.$$</p>
+<h3>第二步：$u$ 的系数恰好为零——降为一阶</h3>
+<p>逐项整理系数：</p>
+<table><thead><tr><th>项</th><th>系数</th></tr></thead><tbody><tr><td>$u<sup>\prime\prime</sup>$</td><td>$2x-1$</td></tr><tr><td>$u<sup>\prime</sup>$</td><td>$2(2x-1)-(2x+1)=2x-3$</td></tr><tr><td>$u$</td><td>$(2x-1)-(2x+1)+2=0$</td></tr></tbody></table>
+<p>$u$ 的系数为零正是第 0 步预告的回报。于是方程降为</p>
+<p>$$(2x-1)u<sup>\prime\prime</sup>+(2x-3)u<sup>\prime</sup>=0.$$</p>
+<h3>第三步：令 $p=u<sup>\prime</sup>$，分离变量</h3>
+<p>方程缺 $u$，正是「可降阶」的标志：令 $p=u<sup>\prime</sup>$，</p>
+<p>$$(2x-1)p<sup>\prime</sup>+(2x-3)p=0\ \Rightarrow\ \frac{p<sup>\prime</sup>}{p}=-1+\frac{2}{2x-1}\ \Rightarrow\ p=u<sup>\prime</sup>=C(2x-1)\mathrm e<sup>-x</sup>.$$</p>
+<h3>第四步：再积分一次，用条件定常数</h3>
+<p>分部积分：$\displaystyle\int(2x-1)\mathrm e<sup>-x</sup>\,\mathrm dx=-(2x-1)\mathrm e<sup>-x</sup>-2\mathrm e<sup>-x</sup>=-(2x+1)\mathrm e<sup>-x</sup>$，故</p>
+<p>$$u(x)=-C(2x+1)\mathrm e<sup>-x</sup>+D.$$</p>
+<p><strong>为什么恰好两个条件</strong>：$u'$ 满足一阶方程，积分出一个常数 $C$；再积一次又出一个 $D$——两个积分常数，正好被 $u(0)=-1$、$u(-1)=\mathrm e$ 两个条件钉死。代条件：$u(0)=-C+D=-1$；$u(-1)=C\mathrm e+D=\mathrm e$。两式相减得 $C=1$，$D=0$，所以</p>
+<p>$$u(x)=-(2x+1)\mathrm e<sup>-x</sup>.$$</p>
+<h3>第五步：为什么通解是这两个解的叠加</h3>
+<p>$y_2=u\mathrm e<sup>x</sup>=-(2x+1)$，即 $2x+1$ 是方程的解。二阶齐次线性方程的解空间是二维的，通解 = 两个<strong>线性无关</strong>解的任意线性叠加；判线性无关看比值：$\dfrac{2x+1}{\mathrm e<sup>x</sup>}$ 不是常数，故无关。通解</p>
+<p>$$y=C_1\mathrm e<sup>x</sup>+C_2(2x+1).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>系数整理出错</strong>：$u<sup>\prime</sup>$ 的系数 $2(2x-1)-(2x+1)=2x-3$，符号连错一步全盘皆输；$u$ 的系数若不为零，说明代错或抄错方程。</li><li><strong>分部积分丢负号</strong>：$\int(2x-1)\mathrm e<sup>-x</sup>\mathrm dx=-(2x+1)\mathrm e<sup>-x</sup>$，求导回验：$[-(2x+1)\mathrm e<sup>-x</sup>]'=(2x-1)\mathrm e<sup>-x</sup>$ ✓。</li><li><strong>条件代错位置</strong>：$u(-1)=\mathrm e$ 给在 $x=-1$ 处，代成 $u(1)$ 则 $C,D$ 全错。</li><li><strong>通解缺一项</strong>：只写 $C_1\mathrm e<sup>x</sup>$ 是漏解；两个线性无关解一个都不能少。</li></ul>
+<blockquote>结论：$u=-(2x+1)\mathrm e<sup>-x</sup>$，第二个解为 $2x+1$，通解 $y=C_1\mathrm e<sup>x</sup>+C_2(2x+1)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

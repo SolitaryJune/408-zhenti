@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·15 泰勒展开求 a 与同阶常数 k</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-14.html" data-q="../question/m2-2012-14/">← <b>m2-2012-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-15/" data-q="../question/m2-2012-15/" data-no-anim="1">m2-2012-15 · 本题</a>
+  <a href="m2-2012-16.html" data-q="../question/m2-2012-16/"><b>m2-2012-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  '<p><b>审题</b>：$f(x)=\\dfrac{1+x}{\\sin x}-\\dfrac{1}{x}$，$a=\\lim_{x\\to 0}f(x)$。两项各自趋于无穷，属 $\\infty-\\infty$ 型，不能拆成两个极限相减，先通分聚成一只分式。</p>',
+  '<p><b>通分</b>：$$f(x)=\\frac{(1+x)x-\\sin x}{x\\sin x}=\\frac{x+x^2-\\sin x}{x\\sin x}.$$</p>',
+  '<p><b>泰勒展开</b>：$\\sin x=x-\\dfrac{x^3}{6}+o(x^3)$，故分子 $x+x^2-\\sin x=x^2+\\dfrac{x^3}{6}+o(x^3)$，分母 $x\\sin x=x^2+o(x^2)$。</p>',
+  '<p><b>求 $a$</b>：$$a=\\lim_{x\\to 0}\\frac{x^2+\\frac{x^3}{6}+o(x^3)}{x^2+o(x^2)}=\\lim_{x\\to 0}\\frac{1+\\frac{x}{6}+o(x)}{1+o(1)}=1.$$</p>',
+  '<p><b>转向 (2)</b>：同阶常数 = 找 $f(x)-a$ 的最低次幂。$$f(x)-1=\\frac{x+x^2-\\sin x-x\\sin x}{x\\sin x}.$$</p>',
+  '<p><b>分子再展一层</b>：$x\\sin x=x^2-\\dfrac{x^4}{6}+o(x^4)$，于是分子 $=x+x^2-\\Big(x-\\dfrac{x^3}{6}+o(x^3)\\Big)-\\Big(x^2-\\dfrac{x^4}{6}+o(x^4)\\Big)=\\dfrac{x^3}{6}+o(x^3)$。</p>',
+  '<p><b>相除定阶</b>：$$f(x)-1=\\frac{\\frac{x^3}{6}+o(x^3)}{x^2+o(x^2)}=\\frac{x}{6}+o(x),$$即 $f(x)-a\\sim\\dfrac{x}{6}$（$x\\to 0$）。</p>',
+  '<p><b>定 $k$</b>：与 $x^k$ 同阶，即 $\\lim_{x\\to 0}\\dfrac{f(x)-a}{x^k}=c\\neq 0$ 存在。首项是 $\\dfrac{x}{6}$，一次幂，故 $k=1$。</p>',
+  '<p><b>结论</b>：$$a=1,\\qquad k=1.$$</p>',
+];
+
+AW.init({
+  title: '$f(x)=\\dfrac{1+x}{\\sin x}-\\dfrac{1}{x}$：求 $a$，再定同阶常数 $k$',
+  subtitle: '考点：$\\infty-\\infty$ 型极限 · 泰勒展开比阶 · 同阶无穷小定幂次',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示通分、展开、比阶的全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'无穷减无穷型，两项不能各自拆，先通分合并', show:1, count:0 },
+    { cls:'step',  tag:'通分',   log:'通分后分子是 x 加 x 平方减 sin x，分母是 x sin x', show:2, count:1 },
+    { cls:'step',  tag:'展开',   log:'sin x 展开到三次项，分子分母同除 x 平方比阶', show:3, count:2 },
+    { cls:'ok',    tag:'求 a',   log:'一次项留痕、高阶归零，极限为 1，得 a=1', show:4, count:3 },
+    { cls:'shift', tag:'转向',   log:'第二问改为挖 f(x) 减 a 的最低次幂，先写成通分形式', show:5, count:4 },
+    { cls:'step',  tag:'细展',   log:'x sin x 里的四次项这次要留着，分子首项是 x 的三次方系数六分之一', show:6, count:5 },
+    { cls:'ok',    tag:'比阶',   log:'分子除以分母，得到 x/6 加高阶小量，首项是一次幂', show:7, count:6 },
+    { cls:'ok',    tag:'定 k',   log:'同阶只要求比值极限存在且非零，一次幂对应 k=1', show:8, count:7 },
+    { cls:'done',  tag:'完成',   log:'结论：a=1，k=1', show:9, count:8, done:true },
+  ],
+
+  result: {
+    big: '$a=1,\\qquad k=1$',
+    html: '记忆锚点：<b>求同阶常数 = 求最低次幂</b>：通分后把 $\\sin x$ 展开到足够阶，$f(x)-a$ 的首项是 $\\dfrac{x}{6}$，即 $k=1$。易错：$\\infty-\\infty$ 必须先通分；(2) 中 $x\\sin x$ 的 $-\\dfrac{x^4}{6}$ 不能省，否则首项恰好被抹掉。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：通分 + 泰勒展开求极限，再按首项幂次定同阶常数 k</h2>
+<p>最终答案：(1) $a=1$；(2) $k=1$。</p>
+<h3>第 0 步：先立机制——分式比阶就是"分子分母首项的对话"</h3>
+<p>分式极限 $\lim_{x\to0}\dfrac{N(x)}{D(x)}$ 的本质：分子、分母各提出最低次幂，首项系数相除。一切工作都围绕"找出分子、分母各自的首项"展开。<strong>为什么选泰勒展开而不选洛必达</strong>：其一，洛必达每求导一次只能剥掉一层皮，本题分母 $x\sin x$ 在 $0$ 处的前几阶导数轮流为零，要连导两三轮才见分晓，且每轮表达式更繁；其二，第 (2) 问要找的是 $f(x)-a$ 的<strong>首个非零项</strong>，泰勒展开把各阶系数一次性摆在桌面上、首项直接可见，洛必达只能一轮轮摸黑剥皮。故本题全程用泰勒。</p>
+<h3>第一步：(1) 通分——为什么不能直接拆</h3>
+<p>$\dfrac{1+x}{\sin x}\sim\dfrac1x\to\infty$，$\dfrac1x\to\infty$：两项各自发散，"$\infty-\infty$"没有意义，不能拆成两个极限相减。通分把它们捆成一只 $\dfrac00$ 分式，才能动用第 0 步的比阶机制：</p>
+<p>$$f(x)=\frac{(1+x)x-\sin x}{x\sin x}=\frac{x+x<sup>2</sup>-\sin x}{x\sin x}.$$</p>
+<h3>第二步：(1) 泰勒展开、首项对话</h3>
+<p>用 $\sin x=x-\dfrac{x<sup>3</sup>}{6}+o(x<sup>3</sup>)$（展到三阶即可：分母首项是 $x<sup>2</sup>$，只需看清分子不高于三阶的部分）：</p>
+<ul><li>分子 $x+x<sup>2</sup>-\sin x=x<sup>2</sup>+\dfrac{x<sup>3</sup>}{6}+o(x<sup>3</sup>)$——一阶项相消，首项 $x<sup>2</sup>$；</li><li>分母 $x\sin x=x<sup>2</sup>+o(x<sup>2</sup>)$——首项 $x<sup>2</sup>$。</li></ul>
+<p>两个首项同为 $x<sup>2</sup>$，极限就是系数比：</p>
+<p>$$a=\lim_{x\to0}\frac{x<sup>2</sup>+\frac{x<sup>3</sup>}{6}+o(x<sup>3</sup>)}{x<sup>2</sup>+o(x<sup>2</sup>)}=1.$$</p>
+<h3>第三步：(2) 低阶相消，必须多展一层</h3>
+<p>$$f(x)-1=\frac{x+x<sup>2</sup>-\sin x-x\sin x}{x\sin x}.$$</p>
+<p><strong>为什么这次要多保留一层</strong>：分子里 $x$ 与 $x<sup>2</sup>$ 的系数都恰好相消（$x<sup>2</sup>$ 一份来自 $+x<sup>2</sup>$、一份来自 $-x\sin x$ 里的 $-x<sup>2</sup>$），首项被抹掉了，商的首项只能由更高阶的存活项决定——这就是"多保留一层"的机制：<strong>低阶相消时，展开精度必须盖过相消的阶</strong>。取 $\sin x=x-\dfrac{x<sup>3</sup>}{6}+o(x<sup>3</sup>)$ 与 $x\sin x=x<sup>2</sup>-\dfrac{x<sup>4</sup>}{6}+o(x<sup>4</sup>)$（$-\dfrac{x<sup>4</sup>}{6}$ 这层正是为把误差压到 $o(x<sup>3</sup>)$ 而保留的）：</p>
+<p>$$\text{分子}=x+x<sup>2</sup>-\Big(x-\frac{x<sup>3</sup>}{6}+o(x<sup>3</sup>)\Big)-\Big(x<sup>2</sup>-\frac{x<sup>4</sup>}{6}+o(x<sup>4</sup>)\Big)=\frac{x<sup>3</sup>}{6}+o(x<sup>3</sup>),$$</p>
+<p>分母首项仍是 $x<sup>2</sup>$，相除得</p>
+<p>$$f(x)-1=\frac{x}{6}+o(x).$$</p>
+<h3>第四步：定 k——同阶的机制</h3>
+<p>同阶无穷小的定义：$\lim_{x\to0}\dfrac{f(x)-a}{x<sup>k</sup>}=c\neq0$（$c$ 为非零常数，不必为 $1$）。$f(x)-a\sim\dfrac{x}{6}$ 首项是一次幂，故 $k=1$。直观检验：拿 $x<sup>k</sup>$ 去除，$k$ 除"低"了商趋于 $0$（如 $k=0$），除"高"了商发散（如 $k=2$ 时 $\dfrac{x/6}{x<sup>2</sup>}=\dfrac1{6x}\to\infty$），只有 $k=1$ 把商压成非零常数 $\dfrac16$。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $\infty-\infty$ 型直接拆成两个极限</strong>：两项各自发散，相减无意义，必须先通分。</li><li><strong>(2) 里展开阶数不够</strong>：低阶相消后首项藏在更高阶，$x\sin x$ 必须展到 $-\dfrac{x<sup>4</sup>}{6}$ 才能把分子的精度传到 $o(x<sup>3</sup>)$。</li><li><strong>把同阶误解为极限等于 1</strong>：极限为非零常数即同阶，等于 $1$ 才叫等价；本题 $\lim_{x\to0}\dfrac{f(x)-1}{x}=\dfrac16\neq0$。</li><li><strong>(2) 用洛必达硬剥</strong>：分母 $x\sin x$ 的低阶导数在 $0$ 处轮流为零，剥到三、四轮才能露出首项；泰勒展开一次到位。</li></ul>
+<blockquote>结论：$a=1$；$f(x)-a\sim\dfrac{x}{6}$，与 $x<sup>1</sup>$ 同阶，$k=1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

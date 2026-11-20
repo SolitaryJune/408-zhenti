@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：变限积分函数的极值点与拐点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-01.html" data-q="../question/m2-2025-01/">← <b>m2-2025-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-02/" data-q="../question/m2-2025-02/" data-no-anim="1">m2-2025-02 · 本题</a>
+  <a href="m2-2025-03.html" data-q="../question/m2-2025-03/"><b>m2-2025-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：主项定生死',
+    cls: 'key',
+    log: '判极值看一阶导变号，判拐点看二阶导变号；乘积函数先估 0 点主项',
+    body: '<p>$f(x)=\\int_0^x \\mathrm e^{t^2}\\sin t\\,\\mathrm dt$，$g(x)=\\Bigl(\\int_0^x \\mathrm e^{t^2}\\mathrm dt\\Bigr)\\sin^2x$。判极值看一阶导变号，判拐点看二阶导变号；$g$ 是乘积，先定 $x=0$ 附近的<b>主项</b>：偶次主项 $\\Rightarrow$ 极值点；奇次主项（次数 $\\ge3$）$\\Rightarrow$ 拐点。</p>' },
+  { title: 'f 求导 + 估主项：极小值点',
+    cls: 'good',
+    log: 'f′ = e^(x²)·sin x，f(x) ~ x²/2 两侧同号为正，x=0 是极小值点',
+    ribbon: {k:1, ok:true},
+    body: '<p>$f\'(x)=\\mathrm e^{x^2}\\sin x$，$f\'(0)=0$；且 $t\\to0$ 时 $\\mathrm e^{t^2}\\sin t\\sim t$，故 $f(x)\\sim\\dfrac{x^2}{2}>0$——两侧同号，$x=0$ 是 $f$ 的<b>极小值点</b> ✓。</p>' },
+  { title: 'f 的拐点检验：不是拐点 → 砍掉 C、D',
+    cls: 'bad',
+    log: 'f″(0)=1 ≠ 0，二阶导在 0 处不变号，(0,0) 不是 y=f 的拐点',
+    ribbon: {k:2, ok:true},
+    body: '<p>$f\'\'(x)=\\mathrm e^{x^2}(2x\\sin x+\\cos x)$，$f\'\'(0)=1\\ne0$，二阶导在 $0$ 处<b>不变号</b>，$(0,0)$ 不是 $y=f(x)$ 的拐点——凡是说 "$(0,0)$ 是 $f$ 的拐点" 的 <b>C、D 出局</b>。</p>' },
+  { title: 'g 估主项：g ~ x³，不是极值点 → 砍掉 A',
+    cls: 'bad',
+    log: '∫₀ˣ ~ x，sin²x ~ x²，g ~ x³ 奇次两侧异号，不是极值点',
+    ribbon: {k:3, ok:true},
+    body: '<p>$\\int_0^x \\mathrm e^{t^2}\\mathrm dt\\sim x$，$\\sin^2x\\sim x^2$，故 $g(x)\\sim x^3$。奇次主项在 $0$ 两侧<b>异号</b>，$x=0$ 不是 $g$ 的极值点——<b>A 出局</b>。</p>' },
+  { title: 'g 的拐点检验：是拐点 ✓',
+    cls: 'good',
+    log: 'g″ ~ 6x 在 0 两侧变号，且 g(0)=0，(0,0) 是 y=g 的拐点',
+    ribbon: {k:4, ok:true},
+    body: '<p>$g\'\'(x)$ 的主项 $\\sim 6x$ 在 $0$ 两侧<b>变号</b>，且 $g(0)=0$ 曲线过该点，故 $(0,0)$ 是 $y=g(x)$ 的<b>拐点</b> ✓。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: 'x=0 是 f 的极值点，(0,0) 是 y=g 的拐点，选 B',
+    body: '<p>$x=0$ 是 $f(x)$ 的极值点，$(0,0)$ 是 $y=g(x)$ 的拐点，答案选 <b>B</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '变限积分定义的 $f,\\,g$：谁有极值点、谁是拐点',
+  subtitle: '考点：变限积分求导 · 极值与拐点判定 · 主项（最低次幂）分析法',
+  counterLabel: '判定步',
+  ribbonTitle: '判定关卡（✓ 通过 / ✗ 卡壳）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B',
+    html: '记忆锚点：<b>主项定生死——偶次主项（如 $x^2/2$）给极值点、不给拐点；奇次主项（如 $x^3$）给拐点、不给极值点</b>。$f\'\'(0)=1\\ne0$ 一票否决 C、D；$g\\sim x^3$ 一票否决 A。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分函数的极值点与拐点判定（主项定生死）</h2>
+<p>答案：B</p>
+<h3>第一步：审题定型</h3>
+<p>$f(x)=\int_0<sup>x</sup> \mathrm e<sup>t^2</sup>\sin t\,\mathrm dt$，$g(x)=\Big(\int_0<sup>x</sup> \mathrm e<sup>t^2</sup>\,\mathrm dt\Big)\sin<sup>2x</sup>$。判极值看一阶导是否变号，判拐点看二阶导是否变号。</p>
+<p><strong>为什么「主项」能定生死？</strong> 用泰勒展开的视角看：若 $f(x)=c_kx<sup>k</sup>+o(x<sup>k</sup>)$（$c_k\ne0$），则 $x\to0$ 附近低阶项是主角，高阶小量压不过它——$k$ 为偶数时两侧同号，$f$ 有极值；$k$ 为奇数（$\ge3$）时两侧异号，无极值，但凹凸性在 $0$ 两侧改变（$f''$ 变号），曲线过该点且有拐点。所以最快路线是先定出 $x=0$ 附近的主项（最低次幂）。乘积形式的 $g$ 逐阶求导项数爆炸，主项法一步定位。</p>
+<h3>第二步：$f$ —— 主项 $x<sup>2</sup>/2$</h3>
+<p>求导 $f'(x)=\mathrm e<sup>x^2</sup>\sin x$，$f'(0)=0$。$x\to0$ 时 $\mathrm e<sup>t^2</sup>\sin t\sim t$，故</p>
+<p>$$f(x)\sim\int_0<sup>x</sup> t\,\mathrm dt=\frac{x<sup>2</sup>}{2}&gt;0\quad(x\ne0\ \text{附近两侧同号}).$$</p>
+<p>所以 $x=0$ 是 $f$ 的<strong>极小值点</strong>。再验拐点：$f''(x)=\mathrm e<sup>x^2</sup>(2x\sin x+\cos x)$，$f''(0)=1\ne0$——$f''$ 连续，由保号性在 $0$ 的某邻域内 $f''&gt;0$，凹凸性不变号，$(0,0)$ 不是 $y=f(x)$ 的拐点 —— 含"$(0,0)$ 是 $f$ 的拐点"的 C、D 被排除。</p>
+<h3>第三步：$g$ —— 主项 $x<sup>3</sup>$</h3>
+<p>$x\to0$：$\int_0<sup>x</sup> \mathrm e<sup>t^2</sup>\mathrm dt\sim x$，$\sin<sup>2x</sup>\sim x<sup>2</sup>$，故 $g(x)\sim x<sup>3</sup>$。奇次主项在 $0$ 两侧异号，$x=0$ <strong>不是</strong> $g$ 的极值点（排除 A）；主项逐阶求导（两个因子各展开一层）：$\displaystyle\int_0<sup>x</sup> \mathrm e<sup>t^2</sup>\mathrm dt=x+\frac{x<sup>3</sup>}{3}+O(x<sup>5</sup>)$，$\sin<sup>2x</sup>=x<sup>2</sup>-\dfrac{x<sup>4</sup>}{3}+O(x<sup>6</sup>)$，相乘得 $g(x)=x<sup>3</sup>+O(x<sup>5</sup>)$，故 $g''(x)=6x+O(x<sup>3</sup>)$ 在 $0$ 两侧变号，且 $g(0)=0$，故 $(0,0)$ <strong>是</strong> $y=g(x)$ 的拐点。</p>
+<h3>易错点</h3>
+<ul><li><strong>对 $g$ 硬乘求导</strong>：乘积求二阶导项数爆炸；先估主项 $x<sup>3</sup>$ 一步定位。</li><li><strong>把 $f\sim x<sup>2</sup>/2$ 误读成拐点</strong>：偶次主项凹凸性不改变，恰好不是拐点。</li><li><strong>漏查曲线过点</strong>：拐点须曲线真的经过 $(0,0)$，$f(0)=g(0)=0$ 都满足，否决 $f$ 靠的是二阶导不变号。</li></ul>
+<blockquote>一句话结论：$f$ 主项 $x<sup>2</sup>/2$（极值点、非拐点），$g$ 主项 $x<sup>3</sup>$（拐点、非极值点），选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

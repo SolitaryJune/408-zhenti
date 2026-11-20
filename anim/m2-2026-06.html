@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：变限积分的反函数求导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-05.html" data-q="../question/m2-2026-05/">← <b>m2-2026-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-06/" data-q="../question/m2-2026-06/" data-no-anim="1">m2-2026-06 · 本题</a>
+  <a href="m2-2026-07.html" data-q="../question/m2-2026-07/"><b>m2-2026-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$f(x)=\\displaystyle\\int_1^{x^3}\\frac{\\mathrm e^t}{1+t^2}\\,dt$ 的反函数 $g$：求 $g(0)$ 与 $g\'(0)$',
+  subtitle: "考点：变限积分求导 · 链式法则 · 反函数求导（先定位点再取倒数）",
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示完整流程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：$f(x)=\\displaystyle\\int_1^{x^3}\\frac{\\mathrm e^t}{1+t^2}dt$，$g$ 是反函数。反函数问题两步走：<b>先定位点，再取倒数</b>。',
+      '<b>定位点</b>：上限 $x^3$ 在 $x=1$ 时等于下限 $1$，故 $f(1)=0$，即 $y=0$ 对应 $x=1$：$$g(0)=1.$$（C、D 写成 $g(1)=0$，把 $g$ 的自变量与函数值弄反了。）',
+      '<b>变限求导 + 链式</b>：上限是 $x^3$，别漏内层导数 $3x^2$ $$f\'(x)=\\frac{\\mathrm e^{x^3}}{1+(x^3)^2}\\cdot 3x^2=\\frac{3x^2\\mathrm e^{x^3}}{1+x^6}$$',
+      '<b>代入 $x=1$</b>：$$f\'(1)=\\frac{3\\mathrm e}{2}$$',
+      '<b>反函数求导</b>：$g\'(y_0)=\\dfrac{1}{f\'(x_0)}$（$y_0=f(x_0)$），在 $y=0$ 处 $$g\'(0)=\\frac{1}{f\'(1)}=\\frac{2}{3\\mathrm e}$$',
+      '<b>排错</b>：A 的 $\\dfrac{3\\mathrm e}{2}$ 是 $f\'(1)$，忘了取倒数；C、D 的定位点写反。只有 B 两处都对。',
+      '<b>结论</b>：$$g(0)=1,\\qquad g\'(0)=\\frac{2}{3\\mathrm e}\\qquad\\Longrightarrow\\qquad \\text{选 B}$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'反函数问题两步走：先定位点，再取倒数', count:0 },
+    { cls:'ok',    tag:'定位点', log:'x=1 时上限=下限，f(1)=0，所以 g(0)=1（不是 g(1)=0）', count:1 },
+    { cls:'shift', tag:'求导',   log:'变限求导别漏链式：上限 x³ 的内层导数 3x²', count:2 },
+    { cls:'step',  tag:'代值',   log:'代入 x=1：f′(1) = 3e/2', count:3 },
+    { cls:'ok',    tag:'取倒数', log:'反函数导数取倒数：g′(0) = 1/f′(1) = 2/(3e)', count:4 },
+    { cls:'miss',  tag:'排错',   log:'A 忘取倒数；C、D 把 g 的自变量和函数值弄反', count:5 },
+    { cls:'done',  tag:'完成',   log:'结论：g(0)=1，g′(0)=2/(3e)，选 B', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$g(0)=1,\\qquad g'(0)=\\dfrac{2}{3\\mathrm e}$（选 B）",
+    html: '记忆锚点：<b>反函数两步走——先定位点（$f(1)=0\\Rightarrow g(0)=1$），再取倒数（$g\'(0)=1/f\'(1)$）</b>。易错：上限 $x^3$ 的链式漏乘 $3x^2$；把 $g(0)$ 写成 $g(1)$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分 + 反函数求导——先定位点再取倒数</h2>
+<p>答案：B</p>
+<h3>第零步：机制——反函数为什么"交换输入输出、斜率取倒数"</h3>
+<p>反函数 $g$ 就是把 $f$ 的动作倒着做：$f$ 把 $1$ 变成 $0$，$g$ 就把 $0$ 变回 $1$——所以 $g$ 的自变量永远是 $f$ 的<strong>函数值</strong>。导数上，$f'$ 是"输出随输入的变化率"，$g'$ 是"输入随输出的变化率"，同一小段增量对两者之比互为倒数，得 $g'(y_0)=\dfrac{1}{f'(x_0)}$（其中 $y_0=f(x_0)$）；几何上就是图像关于 $y=x$ 镜像后切线斜率互为倒数。本题路线由此确定：先定位 $y=0$ 对应的 $x_0$，再算 $f'(x_0)$ 取倒数。</p>
+<h3>第一步：定位特殊点</h3>
+<p>$f(x)=\displaystyle\int_1<sup>x^3</sup>\frac{e<sup>t</sup>}{1+t<sup>2</sup>}\,dt$。上限 $x<sup>3</sup>$ 在 $x=1$ 时等于下限 $1$，故 $f(1)=0$。即 "$f$ 把 $1$ 变成 $0$"，倒过来</p>
+<p>$$g(0)=1.$$</p>
+<p>C、D 写成 $g(1)=0$，是把输入输出又换了回去——这一步就出局。</p>
+<h3>第二步：变限积分求导（链式别漏）</h3>
+<p>上限是 $x<sup>3</sup>$：先代上限再乘内层导数——上限自己也在动，链式必须补上 $3x<sup>2</sup>$：</p>
+<p>$$f'(x)=\frac{e<sup>x^3</sup>}{1+(x<sup>3</sup>)<sup>2</sup>}\cdot 3x<sup>2</sup>=\frac{3x<sup>2e</sup><sup>x^3</sup>}{1+x<sup>6</sup>}.$$</p>
+<h3>第三步：代值并取倒数</h3>
+<p>$$f'(1)=\frac{3e}{2},\qquad g'(0)=\frac{1}{f'(1)}=\frac{2}{3e}.$$</p>
+<p>选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘了取倒数</strong>：A 的 $\dfrac{3e}{2}$ 就是 $f'(1)$ 本身——反函数导数是原函数导数的倒数。</li><li><strong>定位点写反</strong>：$g(1)=0$ 把输入输出搞混；$f$ 把 $1$ 变成 $0$，$g$ 才是把 $0$ 变成 $1$。</li><li><strong>链式漏乘 $3x<sup>2</sup>$</strong>：上限是 $x<sup>3</sup>$ 不是 $x$。</li></ul>
+<blockquote>一句话结论：$f(1)=0\Rightarrow g(0)=1$；$f'(1)=\dfrac{3e}{2}$，取倒数得 $g'(0)=\dfrac{2}{3e}$，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

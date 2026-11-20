@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：高阶无穷小运算性质逐项辨析</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-03.html" data-q="../question/m2-2025-03/">← <b>m2-2025-03</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-04/" data-q="../question/m2-2025-04/" data-no-anim="1">m2-2025-04 · 本题</a>
+  <a href="m2-2025-05.html" data-q="../question/m2-2025-05/"><b>m2-2025-05</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：判据只有一个比值极限',
+    cls: 'key',
+    log: 'f = o(g) 即 f/g → 0；判断 A = o(B) 就算 lim A/B 是否为 0',
+    body: '<p>已知 $\\lim_{x\\to0}\\dfrac{f(x)}{g(x)}=0$（记 $f=o(g)$），且 $f,g$ 在去心邻域恒不为零。要判「$A=o(B)$」是否成立，就老实算 $\\lim_{x\\to0}\\dfrac{A}{B}$：等于 $0$ 才成立。</p>' },
+  { title: 'C 项：等价无穷小搭桥 → 成立',
+    cls: 'good',
+    log: 'e^g − 1 ~ g（g→0），比值拆成 0 × 1 = 0，C 正确',
+    ribbon: {k:1, ok:true},
+    body: '<p>由 $f=o(g)$ 知 $g\\to0$，故 $\\mathrm e^g-1\\sim g$。于是 $$\\lim_{x\\to0}\\frac{f}{\\mathrm e^g-1}=\\lim_{x\\to0}\\frac fg\\cdot\\frac{g}{\\mathrm e^g-1}=0\\cdot1=0,$$ 所以 $f=o\\bigl(\\mathrm e^g-1\\bigr)$ <b>成立</b> ✓。</p>' },
+  { title: 'A 项：主部吞并高阶 → 同阶不是高阶',
+    cls: 'bad',
+    log: '(f+g)/g = f/g + 1 → 1 ≠ 0，A 错',
+    ribbon: {k:2, ok:true},
+    body: '<p>$\\dfrac{f+g}{g}=\\dfrac fg+1\\to0+1=1\\ne0$：$f+g$ 与 $g$ <b>同阶</b>，不是高阶。低阶主部 $g$ 把高阶的 $f$ 吞并了。</p>' },
+  { title: 'B 项：关系恰好反向 → 错',
+    cls: 'bad',
+    log: 'fg/f² = g/f → ∞，真实关系是 f² = o(fg)',
+    ribbon: {k:3, ok:true},
+    body: '<p>$\\dfrac{fg}{f^2}=\\dfrac{g}{f}=\\dfrac{1}{f/g}\\to\\infty$：比值趋于无穷不是零，$fg=o(f^2)$ 不成立；恰好<b>反过来</b>才有 $f^2=o(fg)$。</p>' },
+  { title: 'D 项：0·∞ 型不定，反例否决 → 错',
+    cls: 'bad',
+    log: 'f/g² = (f/g)(1/g) 极限不定；取 g=x, f=x^(3/2) 比值 → +∞',
+    ribbon: {k:4, ok:true},
+    body: '<p>$\\dfrac{f}{g^2}=\\dfrac fg\\cdot\\dfrac1g$ 是 $0\\cdot\\infty$ 型。反例：取 $g=x$，$f=x^{3/2}$（$x>0$），则 $\\dfrac fg=x^{1/2}\\to0$ 满足题设，但 $\\dfrac{f}{g^2}=x^{-1/2}\\to+\\infty$，故 $f=o(g^2)$ 不成立。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '只有 C 能严格证出比值极限为 0，选 C',
+    body: '<p>四个选项里只有 C 能严格证出比值为 $0$，答案选 <b>C</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f=o(g)$ 时，四个运算式哪个仍成立',
+  subtitle: '考点：无穷小阶的比较 · 判据 $\\lim A/B=0$ · 等价无穷小 $\\mathrm e^g-1\\sim g$',
+  counterLabel: '检验步',
+  ribbonTitle: '选项裁决（✓ 已裁决 / ✗ 待复核）',
+  intro: '点击「▶ 播放」逐项检验 A–D。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>验 $o(\\cdot)$ 就是算 $\\lim\\dfrac AB$</b>；$o(g)+g$ 与 $g$ 同阶（主部吞并高阶）；$\\dfrac{fg}{f^2}=\\dfrac gf\\to\\infty$（关系反向）；$\\dfrac{f}{g^2}$ 是 $0\\cdot\\infty$ 不定型，反例 $g=x,\\ f=x^{3/2}$ 直接否决。C 靠 $\\mathrm e^g-1\\sim g$ 拆成已知比值。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：高阶无穷小 $o(\cdot)$ 的判定——比值极限说了算</h2>
+<p>答案：C</p>
+<h3>第一步：机制先行——$o(\cdot)$ 就是比值极限的语言</h3>
+<p>「$x\to0$ 时 $f$ 是 $g$ 的高阶无穷小」拆开读：$g\to0$（无穷小）、$f\to0$，且 $\displaystyle\lim_{x\to0}\dfrac{f(x)}{g(x)}=0$，记作 $f=o(g)$；$f,g$ 在去心邻域内恒不为零保证比值有意义。于是判断「$A=o(B)$」只有一个标准动作：算 $\lim\dfrac AB$。为 $0$ 则成立；为非零常数叫同阶；为 $\infty$ 或不存在则连同阶都谈不上。</p>
+<h3>第二步：逐项叙事——每个选项都在问「比值去哪」</h3>
+<p><strong>C（对）</strong>：题设里 $g$ 本是无穷小（$g\to0$），恰好触发等价无穷小 $\mathrm e<sup>g</sup>-1\sim g$——它来自泰勒式 $\mathrm e<sup>g</sup>=1+g+o(g)$：指数位置只有「小量 $g$」。于是比值拆成两段已知：</p>
+<p>$$\lim_{x\to0}\frac{f}{\mathrm e<sup>g</sup>-1}=\lim\frac{f}{g}\cdot\frac{g}{\mathrm e<sup>g</sup>-1}=0\times1=0.$$</p>
+<p><strong>A（错）</strong>：$\dfrac{f+g}{g}=\dfrac fg+1\to1$。这不是笔误，而是无穷小加法法则在说话：高阶小量 $f$ 加上低阶主部 $g$，主部吞并高阶项，$f+g\sim g$ 是<strong>同阶</strong>，不是高阶。</p>
+<p><strong>B（错）</strong>：$\dfrac{fg}{f<sup>2</sup>}=\dfrac gf=\dfrac1{f/g}\to\infty$——倒数因子把趋零放大成发散。阶数关系恰好<strong>反过来</strong>：$f<sup>2</sup>=o(fg)$。</p>
+<p><strong>D（错）</strong>：$\dfrac f{g<sup>2</sup>}=\dfrac fg\cdot\dfrac1g$ 是 $0\cdot\infty$ 型：一个因子趋 $0$、一个趋于 $\infty$，极限定不下来——<strong>不能拍脑袋下结论，必须举反例或严格论证</strong>。反例：取 $g=x$，$f=x<sup>3/2</sup>$（限制在 $x&gt;0$），则 $f/g=x<sup>1/2</sup>\to0$ 满足题设，但 $f/g<sup>2</sup>=x<sup>-1/2</sup>\to+\infty$。</p>
+<h3>第三步：汇总对号入座</h3>
+<table><thead><tr><th>选项</th><th>比值化简</th><th>极限走向</th><th>归因</th></tr></thead><tbody><tr><td>A</td><td>$\dfrac{f+g}{g}=\dfrac fg+1$</td><td>$\to1$</td><td>主部吞并，同阶非高阶</td></tr><tr><td>B</td><td>$\dfrac{fg}{f<sup>2</sup>}=\dfrac gf$</td><td>$\to\infty$</td><td>关系恰好反向</td></tr><tr><td>C</td><td>$\dfrac f{\mathrm e<sup>g</sup>-1}=\dfrac fg\cdot\dfrac g{\mathrm e<sup>g</sup>-1}$</td><td>$0$</td><td>等价无穷小触发，成立</td></tr><tr><td>D</td><td>$\dfrac f{g<sup>2</sup>}=\dfrac fg\cdot\dfrac1g$</td><td>不定</td><td>$0\cdot\infty$ 型，有反例</td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>以为高阶+低阶还是高阶</strong>：加法取最低阶，$o(g)+g\sim g$。</li><li><strong>把阶数关系乘反</strong>：$fg$ 与 $f<sup>2</sup>$ 之比是 $g/f$ 不是 $f/g$。</li><li><strong>对 $0\cdot\infty$ 型直接下结论</strong>：必须像 D 一样构造反例或严格论证。</li></ul>
+<blockquote>一句话结论：判 $o(\cdot)$ 只看比值极限；C 借 $\mathrm e<sup>g</sup>-1\sim g$（源于 $\mathrm e<sup>g</sup>=1+g+o(g)$）把比值拆成已知因子，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

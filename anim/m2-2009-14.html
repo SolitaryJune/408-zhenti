@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2009·14 秩 1 矩阵的迹与相似</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-13.html" data-q="../question/m2-2009-13/">← <b>m2-2009-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-14/" data-q="../question/m2-2009-14/" data-no-anim="1">m2-2009-14 · 本题</a>
+  <a href="m2-2009-15.html" data-q="../question/m2-2009-15/"><b>m2-2009-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题：认清两个对象',
+    cls: 'key',
+    body: '<p>$\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T}$ 是 $3\\times3$ 矩阵（列乘行），$\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha$ 是一个数（内积）；已知前者相似于 $\\mathrm{diag}(2,0,0)$。把矩阵和数连起来的桥梁是<b>迹</b>。</p>',
+    log: '矩阵与数之间，靠迹搭桥' },
+  { title: '关键恒等式',
+    cls: 'key',
+    body: '<p>$$\\operatorname{tr}\\big(\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T}\\big)=\\sum_{i=1}^{3}\\alpha_i\\beta_i=\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha$$对角元恰是各对 $\\alpha_i\\beta_i$，求和正是内积。</p>',
+    log: 'tr(αβᵀ) = βᵀα' },
+  { title: '相似传迹',
+    cls: 'step',
+    body: '<p>相似矩阵迹相等：$\\operatorname{tr}\\big(\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T}\\big)=\\operatorname{tr}\\,\\mathrm{diag}(2,0,0)=2+0+0=2$。</p>',
+    log: '相似矩阵迹相等，读出 2' },
+  { title: '得到结论',
+    cls: 'good',
+    body: '<p>$\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha=\\operatorname{tr}\\big(\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T}\\big)=2$。</p>',
+    log: 'βᵀα = 2' },
+  { title: '特征值再印证',
+    cls: 'good',
+    body: '<p>$\\big(\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T}\\big)\\boldsymbol\\alpha=\\boldsymbol\\alpha\\big(\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha\\big)$：$\\boldsymbol\\alpha$ 是特征向量，非零特征值恰为 $\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha=2$，与对角阵的非零特征值一致。</p>',
+    log: '秩 1 矩阵唯一非零特征值 = βᵀα' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>填 $\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha=2$。秩 1 矩阵必有 $n-1$ 个零特征值，唯一非零特征值就是 $\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha$。</p>',
+    log: '答案 2' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T}\\sim\\mathrm{diag}(2,0,0)$，求 $\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha$',
+  subtitle: '考点：秩 1 矩阵 / 相似 · 方法：迹不变性 $\\operatorname{tr}(\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T})=\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha$',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha = 2$',
+    html: '记忆锚点：<b>$\\operatorname{tr}(\\boldsymbol\\alpha\\boldsymbol\\beta^{\\mathrm T})=\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha$，相似矩阵迹相等</b>。不需要求出具体向量；秩 1 矩阵还有 $n-1$ 个零特征值别忘掉。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：秩 1 矩阵的迹与相似</h2>
+<p>答案：$\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha=2$</p>
+<h3>第一步：先立机制——一个 $3\times3$ 矩阵和一个数，靠什么连接</h3>
+<p>$\boldsymbol\alpha\boldsymbol\beta<sup>\mathrm T</sup>$ 是 $3\times3$ 矩阵（列乘行），$\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha$ 是一个数（行乘列，内积）。连接二者的桥梁是<strong>迹</strong>，而相似矩阵恰好保持迹——两条性质接力，就能从已知对角阵"读出"这个数。</p>
+<h3>第二步：关键恒等式——对角元之和就是内积</h3>
+<p>$$\operatorname{tr}\big(\boldsymbol\alpha\boldsymbol\beta<sup>\mathrm T</sup>\big)=\sum_{i=1}<sup>3</sup>\alpha_i\beta_i=\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha.$$</p>
+<p>矩阵的对角元恰是配对乘积 $\alpha_i\beta_i$，求和正是内积——这解释了"为什么一个矩阵的性质能决定一个数"。</p>
+<h3>第三步：为什么相似矩阵的迹相等</h3>
+<p>用迹的<strong>轮换性质</strong> $\operatorname{tr}(\boldsymbol X\boldsymbol Y)=\operatorname{tr}(\boldsymbol Y\boldsymbol X)$：若 $\boldsymbol B=\boldsymbol P<sup>-1</sup>\boldsymbol A\boldsymbol P$，则</p>
+<p>$$\operatorname{tr}\boldsymbol B=\operatorname{tr}\big(\boldsymbol P<sup>-1</sup>\boldsymbol A\boldsymbol P\big)=\operatorname{tr}\big(\boldsymbol A\boldsymbol P\boldsymbol P<sup>-1</sup>\big)=\operatorname{tr}\boldsymbol A.$$</p>
+<p>于是由 $\boldsymbol\alpha\boldsymbol\beta<sup>\mathrm T</sup>\sim\operatorname{diag}(2,0,0)$ 得</p>
+<p>$$\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha=\operatorname{tr}\big(\boldsymbol\alpha\boldsymbol\beta<sup>\mathrm T</sup>\big)=\operatorname{tr}\operatorname{diag}(2,0,0)=2.$$</p>
+<h3>第四步：从特征值再印证——为什么秩 1 矩阵只剩一个非零特征值</h3>
+<p>一方面，$(\boldsymbol\alpha\boldsymbol\beta<sup>\mathrm T</sup>)\boldsymbol\alpha=\boldsymbol\alpha(\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha)$，说明 $\boldsymbol\alpha$ 是特征向量、特征值恰为 $\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha$。另一方面，秩 1 矩阵的核是 $\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol x=0$ 的解空间，维数 $3-1=2$，故 $0$ 至少是二重特征值；三个特征值之和等于迹 $\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha$，于是特征值只能是 $0,\ 0,\ \boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha$。相似矩阵特征值完全相同，对角阵给出 $2,0,0$，故 $\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha=2$——与迹法殊途同归。</p>
+<h3>易错点</h3>
+<ul><li><strong>想先求出 $\boldsymbol\alpha,\boldsymbol\beta$ 的具体值</strong>：题目根本不需要，迹不变性一步到位。</li><li><strong>秩 1 矩阵特征值乱猜</strong>：$n$ 阶秩 1 矩阵的特征值为 $\underbrace{0,\cdots,0}_{n-1},\ \boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha$，依据是核的维数与迹。</li><li><strong>迹与行列式混淆</strong>：相似同时保持迹、行列式与特征多项式，但这里用迹最快。</li></ul>
+<blockquote>记忆锚点：$\operatorname{tr}(\boldsymbol\alpha\boldsymbol\beta<sup>\mathrm T</sup>)=\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha$；相似矩阵迹相等（轮换性质）。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

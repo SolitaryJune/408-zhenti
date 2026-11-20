@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·15 由平均速度反求参数 k</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-14.html" data-q="../question/m2-2024-14/">← <b>m2-2024-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-15/" data-q="../question/m2-2024-15/" data-no-anim="1">m2-2024-15 · 本题</a>
+  <a href="m2-2024-16.html" data-q="../question/m2-2024-16/"><b>m2-2024-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导行工具：acc 取 key/ok/bad/blue 决定高亮色；未揭示时隐去 */
+var ACC = { key:'#f59e0b', ok:'#22c55e', bad:'#ef4444', blue:'#3b82f6' };
+var BGS = { key:'#fffbeb', ok:'#f6fef9', bad:'#fff8f8', blue:'#eff6ff' };
+function row(accent, html){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'border-left:4px solid #cbd5e1;padding:7px 14px;margin:9px 0;border-radius:10px;'
+    + 'opacity:0;transform:translateX(-12px);transition:all .45s ease;font-size:15px;line-height:2;';
+  d.dataset.acc = accent;
+  return d;
+}
+
+// 每行推导内容（html 里可写 $..$ / $$..$$ 公式）
+var ROWS = [
+  { acc: 'key', html: '<p><b>翻译条件</b>：平均速度 = 位移 ÷ 时间 = 函数平均值，$$\\bar v=\\frac1{3-0}\\int_0^3\\big(t+k\\sin\\pi t\\big)\\,\\mathrm dt=\\frac52.$$</p>' },
+  { acc: 'blue', html: '<p><b>第一项积分</b>：$$\\int_0^3 t\\,\\mathrm dt=\\Big[\\frac{t^2}2\\Big]_0^3=\\frac92.$$</p>' },
+  { acc: 'key', html: '<p><b>第二项积分（关键）</b>：$$\\int_0^3\\sin\\pi t\\,\\mathrm dt=\\Big[-\\frac{\\cos\\pi t}\\pi\\Big]_0^3=\\frac{-\\cos3\\pi+\\cos0}\\pi=\\frac{1+1}\\pi=\\frac2\\pi.$$ 直觉：周期为 $2$，$[0,3]$ 是"两个完整周期 + 半个"，完整部分归零，$[2,3]$ 贡献 $\\tfrac2\\pi$。</p>' },
+  { acc: 'blue', html: '<p><b>列方程</b>：$$\\frac13\\Big(\\frac92+\\frac{2k}\\pi\\Big)=\\frac52\\ \\Longrightarrow\\ \\frac92+\\frac{2k}\\pi=\\frac{15}2.$$</p>' },
+  { acc: 'ok', html: '<p><b>解出 $k$</b>：$\\dfrac{2k}\\pi=\\dfrac{15}2-\\dfrac92=3$，$$k=\\frac{3\\pi}2.$$</p>' },
+  { acc: 'blue', html: '<p><b>验算</b>：$k=\\dfrac{3\\pi}2$ 时 $\\displaystyle\\int_0^3 v\\,\\mathrm dt=\\frac92+\\frac{3\\pi}2\\cdot\\frac2\\pi=\\frac92+3=\\frac{15}2$，除以 $3$ 得 $\\dfrac52$ ✓。</p>' },
+  { acc: 'bad', html: '<p><b>易错对照</b>：把 $\\displaystyle\\int_0^3\\sin\\pi t\\,\\mathrm dt$ 当成 $0$（以为整数个周期——实际 $1.5$ 个）；或忘了除以区间长 $3$，把位移 $\\frac{15}2$ 当成平均速度去解方程。</p>' },
+];
+
+AW.init({
+  title: '平均速度 $\\frac52$ 反求 $v(t)=t+k\\sin\\pi t$ 中的 $k$',
+  subtitle: '考点：定积分应用（函数平均值）· 方法：积分方程 → 分项计算 → 解 $k$',
+  counterLabel: '计算步',
+  intro: '点击「▶ 播放」逐步演示推导。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，最新一行高亮）'));
+    var board = AW.el('div', '');
+    this.rows = [];
+    ROWS.forEach(function(r){
+      var d = row(r.acc, r.html);
+      board.appendChild(d);
+      this.rows.push(d);
+    }, this);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    (this.rows || []).forEach(function(d, j){
+      var on = j < i;
+      d.style.opacity = on ? '1' : '0';
+      d.style.transform = on ? 'none' : 'translateX(-12px)';
+      d.style.borderLeftColor = on ? (ACC[d.dataset.acc] || ACC.blue) : '#cbd5e1';
+      d.style.background = on ? (BGS[d.dataset.acc] || BGS.blue) : '#f8fafc';
+    });
+    renderMathAfterSnap(stage);
+  },
+  snaps: [
+    { cls: 'key',   tag: '审题', log: '平均速度 = 位移/时间 = (1/3)∫₀³ v dt = 5/2', count: 0 },
+    { cls: 'step',  tag: '积分①', log: '∫₀³ t dt = 9/2', count: 1 },
+    { cls: 'key',   tag: '积分②', log: '∫₀³ sin πt dt = 2/π：1.5 个周期，不是 0', count: 2 },
+    { cls: 'step',  tag: '方程', log: '(1/3)(9/2 + 2k/π) = 5/2', count: 3 },
+    { cls: 'ok',    tag: '求解', log: '2k/π = 3，k = 3π/2', count: 4 },
+    { cls: 'step',  tag: '验算', log: '代回：9/2 + 3 = 15/2，除以 3 得 5/2 ✓', count: 5 },
+    { cls: 'done',  tag: '完成', log: '结论：k = 3π/2', count: 6, done: true },
+  ],
+  result: {
+    big: '答案：k = 3π/2',
+    html: '记忆锚点：平均速度 $\\bar v=\\dfrac1{b-a}\\int_a^b v\\,\\mathrm dt$（<b>别忘除以区间长</b>）。$\\sin\\pi t$ 周期 $2$，$[0,3]$ 只有 $1.5$ 个周期，$\\displaystyle\\int_0^3\\sin\\pi t\\,\\mathrm dt=\\frac2\\pi\\neq0$——这是本题最大的坑。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由平均速度反求参数 $k$（定积分平均值方程）</h2>
+<p>答案：$\dfrac32\pi$</p>
+<h3>第一步：翻译"平均速度"为积分方程</h3>
+<p>区间上的平均速度 = 位移 ÷ 时间，即函数平均值公式：</p>
+<p>$$\bar v=\frac{1}{3-0}\int_0<sup>3</sup> v(t)\,\mathrm dt=\frac{1}{3}\int_0<sup>3</sup>\big(t+k\sin\pi t\big)\,\mathrm dt=\frac52.$$</p>
+<h3>第二步：分项算两个积分</h3>
+<p>$$\int_0<sup>3</sup> t\,\mathrm dt=\frac92.$$</p>
+<p>$$\int_0<sup>3</sup>\sin\pi t\,\mathrm dt=\Big[-\frac{\cos\pi t}{\pi}\Big]_0<sup>3</sup>=\frac{-\cos3\pi+\cos0}{\pi}=\frac{1+1}{\pi}=\frac2\pi.$$</p>
+<p>几何直觉：$\sin\pi t$ 周期为 $2$，$[0,3]$ 是"两个完整周期 + 半个"——完整周期部分积分为 $0$，剩下 $[2,3]$ 这半段贡献 $\dfrac2\pi$。</p>
+<h3>第三步：解方程</h3>
+<p>$$\frac13\Big(\frac92+\frac{2k}{\pi}\Big)=\frac52\ \Longrightarrow\ \frac92+\frac{2k}{\pi}=\frac{15}2\ \Longrightarrow\ \frac{2k}{\pi}=3\ \Longrightarrow\ k=\frac{3\pi}2.$$</p>
+<h3>第四步：验算</h3>
+<p>$k=\dfrac{3\pi}2$ 时：$\displaystyle\int_0<sup>3</sup> v\,\mathrm dt=\frac92+\frac{3\pi}2\cdot\frac2\pi=\frac92+3=\frac{15}2$，除以 $3$ 得 $\dfrac52$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $\int_0<sup>3</sup>\sin\pi t$ 当成 $0$</strong>：以为 $[0,3]$ 是整数个周期——实际是 $1.5$ 个周期，$[2,3]$ 那半段的 $\dfrac2\pi$ 必须算进去。</li><li><strong>忘了除以区间长</strong>：把 $\int_0<sup>3</sup> v\,\mathrm dt=\dfrac52$ 当方程解（平均速度与位移混为一谈），会解出完全不同的 $k$。</li><li><strong>$\cos3\pi$ 的符号</strong>：$\cos3\pi=-1$，代入 $-\frac{\cos\pi t}{\pi}$ 时要带好自己的负号。</li></ul>
+<blockquote>一句话结论：$\frac13\big(\frac92+\frac{2k}\pi\big)=\frac52$ 解出 $k=\frac{3\pi}2$；核心易错是 $\sin\pi t$ 在 $[0,3]$ 上积分是 $\frac2\pi$ 而非 $0$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

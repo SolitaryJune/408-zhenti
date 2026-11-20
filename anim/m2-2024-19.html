@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024·19 旋转体体积的最值：变限积分求导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<style>
+.mb-line{border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin:8px 0;background:#fff;font-size:14.5px;line-height:1.9;transition:all .25s}
+.mb-line.act{border-color:#d97706;background:#fffbeb;box-shadow:0 2px 8px rgba(217,119,6,.14)}
+.mb-line.past{opacity:.7}
+.mb-title{font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px}
+.mb-signrow{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
+.mb-sign{border-radius:10px;padding:6px 12px;font-size:13.5px;border:2px solid #cbd5e1;background:#f8fafc}
+.mb-sign.up{border-color:#16a34a;background:#f6fef9}
+.mb-sign.down{border-color:#dc2626;background:#fff8f8}
+</style>
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-18.html" data-q="../question/m2-2024-18/">← <b>m2-2024-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-19/" data-q="../question/m2-2024-19/" data-no-anim="1">m2-2024-19 · 本题</a>
+  <a href="m2-2024-20.html" data-q="../question/m2-2024-20/"><b>m2-2024-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var SECS = [
+  { t: '第一步 · 圆盘法写出体积',
+    h: '<p>曲边 $y=\\sqrt x\\,\\mathrm e^{-x}$ 在 $[t,2t]$ 绕 $x$ 轴旋转，截面是半径 $y$ 的圆盘：</p>' +
+       '$$V(t)=\\pi\\int_t^{2t}y^2\\,\\mathrm dx=\\pi\\int_t^{2t}\\big(\\sqrt x\\,\\mathrm e^{-x}\\big)^2\\mathrm dx=\\pi\\int_t^{2t}x\\,\\mathrm e^{-2x}\\,\\mathrm dx$$' },
+  { t: '第二步 · 变限积分求导公式',
+    h: '<p>上下限都含 $t$，不必先积分，直接用公式（上限 $2t$ 求导<b>乘 2</b>）：</p>' +
+       '$$\\frac{\\mathrm d}{\\mathrm dt}\\int_t^{2t}f(x)\\,\\mathrm dx=2f(2t)-f(t),\\qquad f(x)=x\\,\\mathrm e^{-2x}$$' },
+  { t: '第三步 · 求出 $V\'(t)$',
+    h: '$$V\'(t)=\\pi\\big[2\\cdot 2t\\,\\mathrm e^{-4t}-t\\,\\mathrm e^{-2t}\\big]=\\pi t\\,\\mathrm e^{-4t}\\big(4-\\mathrm e^{2t}\\big)$$' +
+       '<p>提出公因子 $\\pi t\\,\\mathrm e^{-4t}$（$t>0$ 时恒为正），符号由 $4-\\mathrm e^{2t}$ 决定。</p>' },
+  { t: '第四步 · 找驻点',
+    h: '<p>令 $4-\\mathrm e^{2t}=0$：$\\mathrm e^{2t}=4=\\mathrm e^{2\\ln2}$，</p>' +
+       '$$t=\\frac{\\ln4}{2}=\\ln 2$$' },
+  { t: '第五步 · 判号定最大值',
+    h: '<div class="mb-signrow">' +
+       '<span class="mb-sign up">$0<t<\\ln2$：$\\mathrm e^{2t}<4$，$V\'>0$ ↗ 递增</span>' +
+       '<span class="mb-sign down">$t>\\ln2$：$\\mathrm e^{2t}>4$，$V\'<0$ ↘ 递减</span></div>' +
+       '<p>先增后减、驻点唯一 → $t=\\ln2$ 是<b>最大值点</b>。</p>' },
+  { t: '第六步 · 分部积分算原函数',
+    h: '<p>$u=x,\\ \\mathrm dv=\\mathrm e^{-2x}\\mathrm dx$：</p>' +
+       '$$\\int x\\,\\mathrm e^{-2x}\\,\\mathrm dx=-\\frac{x}{2}\\mathrm e^{-2x}-\\frac14\\mathrm e^{-2x}=-\\frac{2x+1}{4}\\,\\mathrm e^{-2x}+C$$' },
+  { t: '第七步 · 写出 $V(t)$ 的表达式',
+    h: '$$V(t)=\\pi\\left[-\\frac{2x+1}{4}\\mathrm e^{-2x}\\right]_t^{2t}=\\frac\\pi4\\Big[(2t+1)\\mathrm e^{-2t}-(4t+1)\\mathrm e^{-4t}\\Big]$$' },
+  { t: '第八步 · 代入 $t=\\ln 2$',
+    h: '<p>$\\mathrm e^{-2t}=\\mathrm e^{-2\\ln2}=\\dfrac14$，$\\mathrm e^{-4t}=\\dfrac1{16}$：</p>' +
+       '$$V(\\ln2)=\\frac\\pi4\\left[\\frac{2\\ln2+1}{4}-\\frac{4\\ln2+1}{16}\\right]=\\frac\\pi{64}\\Big[4(2\\ln2+1)-(4\\ln2+1)\\Big]$$' },
+  { t: '结论',
+    h: '<p>方括号内 $=8\\ln2+4-4\\ln2-1=4\\ln2+3$：</p>' +
+       '$$V_{\\max}=V(\\ln2)=\\frac\\pi{64}(4\\ln2+3)=\\frac\\pi{16}\\ln2+\\frac{3\\pi}{64}$$' },
+];
+
+var snaps = [
+  { cls:'step',  tag:'建模', log:'圆盘法：体积等于 pi 乘以 y 平方从 t 到 2t 的积分，被积函数化简为 x 乘 e 的负 2x', count:0 },
+  { cls:'shift', tag:'求导', log:'上下限都含 t，用变限积分求导公式，上限 2t 求导要乘 2', count:1, ribbon:{k:1, ok:true} },
+  { cls:'step',  tag:'化简', log:'提出恒正的公因子，导数符号完全由 4 减 e 的 2t 次方决定', count:2 },
+  { cls:'ok',    tag:'驻点', log:'令 4 减 e 的 2t 次方为零，解出驻点 t 等于 ln2', count:3, ribbon:{k:2, ok:true} },
+  { cls:'ok',    tag:'判号', log:'驻点左侧导数为正、右侧为负，先增后减，最大值在 ln2 处', count:4, ribbon:{k:3, ok:true} },
+  { cls:'shift', tag:'积分', log:'分部积分一次：原函数是负的 2x 加 1 除以 4，再乘 e 的负 2x', count:5 },
+  { cls:'step',  tag:'表达式', log:'代上下限相减，得到 V(t) 的显式表达式', count:6 },
+  { cls:'step',  tag:'代入', log:'把 t 等于 ln2 代入：两个指数因子分别是四分之一和十六分之一', count:7 },
+  { cls:'done',  tag:'完成', log:'化简得最大值：64 分之 pi 乘以 4 ln2 加 3', count:8, done:true, ribbon:{k:4, ok:true} },
+];
+
+AW.init({
+  title: '【2024·19】$V(t)=\\pi\\int_t^{2t}x\\mathrm e^{-2x}\\mathrm dx$ 的最大值',
+  subtitle: '考点：旋转体体积（圆盘法）· 变限积分求导 · 最值',
+  counterLabel: '已完成',
+  intro: '点击「▶ 播放」逐步演示：建模 → 求导 → 驻点 → 判号 → 代回。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    this._board = AW.el('div', '');
+    wrap.appendChild(this._board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    var b = this._board;
+    b.innerHTML = '';
+    for(var k = 0; k <= i && k < SECS.length; k++){
+      var cur = (k === Math.min(i, SECS.length - 1));
+      b.appendChild(AW.el('div', 'mb-line' + (cur ? ' act' : ' past'),
+        '<div class="mb-title">' + SECS[k].t + '</div>' + SECS[k].h));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: snaps,
+
+  result: {
+    big: '$V_{\\max}=\\dfrac\\pi{16}\\ln 2+\\dfrac{3\\pi}{64}$（在 $t=\\ln2$ 取得）',
+    html: '<p>记忆锚点：$\\dfrac{\\mathrm d}{\\mathrm dt}\\displaystyle\\int_t^{2t}f\\,\\mathrm dx=2f(2t)-f(t)$ —— <b>上限是 $2t$ 必须乘 2</b>，漏了它驻点会错成 $\\frac12\\ln2$。</p>' +
+          '<p>易错：$y^2=x\\,\\mathrm e^{-2x}$（指数是 $-2x$）；下最大值结论要交代导数变号（先增后减），不能只给驻点。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：圆盘法写旋转体体积 + 变限积分求导找最值</h2>
+<p><strong>答案</strong>：$V(t)$ 在 $t=\ln2$ 处取最大值 $V_{\max}=\dfrac\pi{16}\ln2+\dfrac{3\pi}{64}$。</p>
+<h3>第一步：圆盘法——为什么 $V=\pi\int y<sup>2</sup>\,\mathrm dx$</h3>
+<p>旋转体的体积来自「切片」：在位置 $x$ 处用垂直于 $x$ 轴的平面切下一片厚度 $\mathrm dx$ 的薄圆盘，盘的半径就是该处曲线的高度 $y=\sqrt x\,\mathrm e<sup>-x</sup>$，薄盘体积 $\approx\pi\times\text{半径}<sup>2</sup>\times\text{厚度}=\pi y<sup>2</sup>\,\mathrm dx$，把 $x$ 从 $t$ 到 $2t$ 的所有薄盘累加：</p>
+<p>$$V(t)=\pi\int_t<sup>2t</sup>\big(\sqrt x\,\mathrm e<sup>-x</sup>\big)<sup>2</sup>\mathrm dx<br/>=\pi\int_t<sup>2t</sup>x\mathrm e<sup>-2x</sup>\,\mathrm dx,\qquad t&gt;0.$$</p>
+<p>注意 $y<sup>2</sup>=(\sqrt x)<sup>2</sup>(\mathrm e<sup>-x</sup>)<sup>2</sup>=x\mathrm e<sup>-2x</sup>$，指数是 $-2x$。上下限都含 $t$，是<strong>双变限积分</strong>。</p>
+<h3>第二步：为什么「先求导、后积分」，而不是先积出来再求导</h3>
+<p>$V(t)$ 要最大值，套路是求导找驻点。两条路：先把分部积分做完得 $V(t)$ 的显式表达式再求导；或用<strong>变限积分求导公式</strong>直接读出 $V'(t)$。后者只用到被积函数在两个端点的值，省去一遍完整的分部积分——分部积分留到代驻点值那一步再做一次就够。为什么公式成立？把积分在中间点拆开：</p>
+<p>$$\int_t<sup>2t</sup>f(x)\,\mathrm dx=\int_0<sup>2t</sup>f(x)\,\mathrm dx-\int_0<sup>t</sup> f(x)\,\mathrm dx,$$</p>
+<p>右边两个都是标准变上限积分，对 $t$ 求导各用一次链式法则（上限是 $t$ 的函数，求导要乘上限的导数）：</p>
+<p>$$\frac{\mathrm d}{\mathrm dt}\int_t<sup>2t</sup>f(x)\,\mathrm dx=f(2t)\cdot 2-f(t).$$</p>
+<p>上限 $2t$ 求导出来的因子 $2$ 就是链式法则的外层导数。这里 $f(x)=x\mathrm e<sup>-2x</sup>$：</p>
+<p>$$V'(t)=\pi\big[2\cdot 2t\,\mathrm e<sup>-4t</sup>-t\,\mathrm e<sup>-2t</sup>\big]<br/>=\pi t\,\mathrm e<sup>-4t</sup>\big(4-\mathrm e<sup>2t</sup>\big).$$</p>
+<h3>第三步：驻点与判号</h3>
+<p>$t&gt;0$ 时 $\pi t\mathrm e<sup>-4t</sup>&gt;0$，符号由 $4-\mathrm e<sup>2t</sup>$ 决定：$4=\mathrm e<sup>2t</sup>$ 给驻点 $t=\dfrac{\ln4}{2}=\ln2$。</p>
+<ul><li>$0&lt;t&lt;\ln2$：$\mathrm e<sup>2t</sup>&lt;4$，$V'(t)&gt;0$，递增；</li><li>$t&gt;\ln2$：$\mathrm e<sup>2t</sup>&gt;4$，$V'(t)&lt;0$，递减。</li></ul>
+<p>先增后减且驻点唯一：$V$ 从 $t\to0^+$ 的 $0$ 一路升到峰值再衰减，故 $t=\ln2$ 是最大值点。</p>
+<h3>第四步：分部积分算出 $V(\ln2)$</h3>
+<p>分部积分选 $u=x,\ \mathrm dv=\mathrm e<sup>-2x</sup>\mathrm dx$：让指数函数进微分（它求导不变形）、多项式 $x$ 被求导降次：</p>
+<p>$$\int x\mathrm e<sup>-2x</sup>\,\mathrm dx=-\frac{x}{2}\mathrm e<sup>-2x</sup>-\frac14\mathrm e<sup>-2x</sup><br/>=-\frac{2x+1}{4}\mathrm e<sup>-2x</sup>+C,$$</p>
+<p>所以</p>
+<p>$$V(t)=\frac\pi4\Big[(2t+1)\mathrm e<sup>-2t</sup>-(4t+1)\mathrm e<sup>-4t</sup>\Big].$$</p>
+<p>代入 $t=\ln2$：$\mathrm e<sup>-2t</sup>=\mathrm e<sup>-2\ln2</sup>=\dfrac14$，$\mathrm e<sup>-4t</sup>=\dfrac1{16}$，</p>
+<p>$$V(\ln2)=\frac\pi4\left[\frac{2\ln2+1}{4}-\frac{4\ln2+1}{16}\right]<br/>=\frac\pi{64}\big[4(2\ln2+1)-(4\ln2+1)\big]<br/>=\frac\pi{64}(4\ln2+3)=\frac\pi{16}\ln2+\frac{3\pi}{64}.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>上限是 $2t$ 忘乘 $2$</strong>：漏了因子得 $V'(t)=\pi t\mathrm e<sup>-4t</sup>(2-\mathrm e<sup>2t</sup>)$，驻点变成 $\dfrac12\ln2$，后面全错——因子 $2$ 来自链式法则对上限 $2t$ 的外层求导。</li><li><strong>只求驻点不判号</strong>：必须说明两侧 $V'$ 变号（先正后负）才能下「最大值」结论，单说「驻点即最值」会被扣分。</li><li><strong>$y<sup>2</sup>$ 算错</strong>：$y=\sqrt x\,\mathrm e<sup>-x</sup>$ 的平方是 $x\mathrm e<sup>-2x</sup>$，指数是 $-2x$；别写成 $x\mathrm e<sup>-x^2</sup>$。</li><li><strong>分部积分符号</strong>：原函数是 $-\dfrac{2x+1}{4}\mathrm e<sup>-2x</sup>$，代上下限时 $V(t)=\pi\big[F(2t)-F(t)\big]$ 的减序别写反。</li></ul>
+<blockquote>一句话结论：$V(t)=\pi\displaystyle\int_t<sup>2t</sup>x\mathrm e<sup>-2x</sup>\mathrm dx$，$V'(t)=\pi t\mathrm e<sup>-4t</sup>(4-\mathrm e<sup>2t</sup>)$ 在 $t=\ln2$ 处由正变负，$V_{\max}=V(\ln2)=\dfrac\pi{16}\ln2+\dfrac{3\pi}{64}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

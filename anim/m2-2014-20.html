@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2014·20 迭代函数列的面积极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-19.html" data-q="../question/m2-2014-19/">← <b>m2-2014-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-20/" data-q="../question/m2-2014-20/" data-no-anim="1">m2-2014-20 · 本题</a>
+  <a href="m2-2014-21.html" data-q="../question/m2-2014-21/"><b>m2-2014-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$f(x)=\\dfrac{x}{1+x}$（$x\\in[0,1]$），$f_n$ 是 $f$ 自身迭代 $n$ 次；$S_n$ 是曲线 $y=f_n(x)$、直线 $x=1$ 与 $x$ 轴围成的面积，求 $\\lim\\limits_{n\\to\\infty}nS_n$。题眼：<b>先找出 $f_n$ 的显式</b>。</p>",
+  "<p><b>找规律</b>：$f$ 是分式线性函数，复合不改变形式、只改分母系数：$f_1=\\dfrac{x}{1+x}$，$f_2=f(f_1)=\\dfrac{x}{1+2x}$。猜 $f_n(x)=\\dfrac{x}{1+nx}$。</p>",
+  "<p><b>归纳验证</b>：设 $f_n=\\dfrac{x}{1+nx}$，则 $$f_{n+1}=f(f_n)=\\frac{\\frac{x}{1+nx}}{1+\\frac{x}{1+nx}}=\\frac{x}{1+(n+1)x},$$ 形式保持，归纳成立。</p>",
+  "<p><b>面积</b>：$[0,1]$ 上 $f_n(x)\\ge0$，$$S_n=\\int_0^1\\frac{x}{1+nx}\\,\\mathrm dx.$$</p>",
+  "<p><b>拆分被积函数</b>：$$\\frac{x}{1+nx}=\\frac1n\\cdot\\frac{nx}{1+nx}=\\frac1n\\left(1-\\frac{1}{1+nx}\\right).$$</p>",
+  "<p><b>算积分</b>：$$S_n=\\frac1n\\left[x-\\frac1n\\ln(1+nx)\\right]_0^1=\\frac1n-\\frac{\\ln(1+n)}{n^2}.$$</p>",
+  "<p><b>乘 $n$</b>：$$nS_n=1-\\frac{\\ln(1+n)}{n}.$$</p>",
+  "<p><b>取极限</b>：$\\dfrac{\\ln(1+n)}{n}\\to0$（对数增长慢于幂），故 $nS_n\\to1$。</p>",
+  "<p><b>验算</b>：$n=1$ 时 $S_1=\\int_0^1\\frac{x}{1+x}\\,\\mathrm dx=1-\\ln2\\approx0.307$，公式给 $\\frac11-\\frac{\\ln2}{1}$，一致。$$\\lim_{n\\to\\infty}nS_n=\\boxed{1}.$$</p>"
+];
+
+AW.init({
+  title: "迭代函数列 $f_n=\\dfrac{x}{1+nx}$ 与面积极限",
+  subtitle: "考点：函数迭代（归纳） · 定积分计算 · 极限（2014 年数学二第 20 题）",
+  counterLabel: "推导步",
+  ribbonTitle: "关键节点（✓ 已完成）",
+  intro: "点击「▶ 播放」逐步演示从找规律到求极限的全过程。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:"shift", tag:"审题",   log:"函数自己迭代自己，先把第 n 次迭代的显式公式找出来", show:1, count:0 },
+    { cls:"step",  tag:"找规律", log:"复合只改分母系数：一、二次迭代后分母里出现 1 和 2", show:2, count:1 },
+    { cls:"ok",    tag:"归纳验证", log:"假设第 n 次成立，代一层复合果然得到 n 加一，形式保持", show:3, count:2, ribbon:{k:1, ok:true} },
+    { cls:"step",  tag:"写面积", log:"曲线在第一象限非负，面积就是一个定积分", show:4, count:3 },
+    { cls:"step",  tag:"拆分",   log:"被积函数提出 n 分之一，拆成 1 减去一个分式", show:5, count:4 },
+    { cls:"ok",    tag:"算积分", log:"积出来是 n 分之一减去 n 平方分之对数", show:6, count:5, ribbon:{k:2, ok:true} },
+    { cls:"step",  tag:"乘 n",   log:"面积乘 n，得到 1 减去 n 分之对数", show:7, count:6 },
+    { cls:"step",  tag:"取极限", log:"对数增长慢于幂，那一项趋于零", show:8, count:7 },
+    { cls:"done",  tag:"完成",   log:"用 n 等于 1 验算公式一致，极限为 1", show:9, count:8, done:true },
+  ],
+
+  result: {
+    big: "$\\lim\\limits_{n\\to\\infty}nS_n=1$",
+    html: "记忆锚点：<b>分式线性函数 $\\frac{x}{1+x}$ 迭代 $n$ 次得 $\\frac{x}{1+nx}$（分母系数每次加一）</b>；$S_n=\\frac1n-\\frac{\\ln(1+n)}{n^2}$，面积按 $\\frac1n$ 速度衰减，故 $nS_n\\to1$。易错：把迭代猜成 $\\frac{nx}{1+nx}$ 或 $\\frac{x}{(1+x)^n}$；提出 $\\frac1n$ 后 $\\ln$ 项还带一个 $\\frac1n$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：迭代函数列显式化——分式线性函数复合"只改系数"</h2>
+<p>答案：$\displaystyle\lim_{n\to\infty}nS_n=1$。</p>
+<h3>第 0 步：先立机制——三道关卡的通关顺序</h3>
+<p>本题路线由三道关卡串成：<strong>显式化 $f_n$</strong>（迭代没有现成公式，必须找规律并归纳证明）→ <strong>面积化定积分</strong>（$S_n=\int_0<sup>1f</sup>_n\,\mathrm dx$）→ <strong>取极限</strong>（$\lim nS_n$）。顺序不能颠倒：不显式化就没法积分，不积分就没法谈极限。题眼在 $f(x)=\dfrac{x}{1+x}$ 的<strong>保形性</strong>：分式线性函数复合分式线性函数仍是分式线性函数——分子分母各乘一次 $1+$（上一次的结果），效果只是给分母的常数项<strong>累加</strong>。看清这一点，$f_n$ 的形状一猜即中。</p>
+<h3>第一步：找规律并归纳——为什么必须归纳</h3>
+<p>$f_1(x)=\dfrac{x}{1+x}$，算一层看变化：</p>
+<p>$$f_2(x)=f(f_1(x))=\frac{\frac{x}{1+x}}{1+\frac{x}{1+x}}=\frac{x}{1+2x}.$$</p>
+<p>分母常数项 $1\to2$，其余纹丝不动。<strong>为什么看规律还不够、必须归纳</strong>：$f_n$ 要对每个具体的 $n$ 成立，"看两个样例"只是猜测，数学归纳法是把猜测合法化的唯一手段。设 $f_n(x)=\dfrac{x}{1+nx}$，验证传承：</p>
+<p>$$f_{n+1}(x)=f(f_n(x))=\frac{\frac{x}{1+nx}}{1+\frac{x}{1+nx}}=\frac{x}{1+nx+x}=\frac{x}{1+(n+1)x}.$$</p>
+<p>形式保持、常数项加一，归纳成立：$f_n(x)=\dfrac{x}{1+nx}$（$x\in[0,1]$）。<strong>为什么迭代不会长出别的花样</strong>：$f$ 的复合规则是"$x$ 除以（$x$ 加 1）"，作用在 $\dfrac{x}{1+nx}$ 上只把分母的 $nx$ 变成 $(n+1)x$——分式线性映射复合时系数按固定规则更新，不会产生 $x<sup>2</sup>$ 或嵌套分数。</p>
+<h3>第二步：面积写成定积分——为什么是曲边梯形</h3>
+<p>$[0,1]$ 上 $x\ge0$、$1+nx&gt;0$，故 $f_n(x)\ge0$；曲线 $y=f_n(x)$、直线 $x=1$ 与 $x$ 轴围成标准的曲边梯形，面积</p>
+<p>$$S_n=\int_0<sup>1</sup>\frac{x}{1+nx}\,\mathrm dx.$$</p>
+<p>顺带看一眼远景：固定 $x$，$f_n(x)=\dfrac{x}{1+nx}\to0$，曲线随 $n$ 被压向 $x$ 轴——$S_n\to0$，所以题目才问 $nS_n$：<strong>零极限没有信息量，要乘 $n$ 提取衰减的主阶</strong>（这就是设问写 $nS_n$ 的用意）。</p>
+<h3>第三步：拆项积分——为什么这样拆</h3>
+<p>$$\frac{x}{1+nx}=\frac1n\cdot\frac{nx}{1+nx}=\frac1n\left(1-\frac{1}{1+nx}\right).$$</p>
+<p><strong>动机</strong>：$\dfrac{1}{1+nx}$ 的原函数是 $\dfrac1n\ln(1+nx)$，把被积函数写成"常数减倒数"，两项都是立即可积的；分子分母同乘 $\dfrac1n$ 是凑这个形状的最短路径。于是</p>
+<p>$$S_n=\frac1n\left[x-\frac1n\ln(1+nx)\right]_0<sup>1</sup>=\frac1n-\frac{\ln(1+n)}{n<sup>2</sup>}.$$</p>
+<p><strong>易漏点</strong>：提出 $\dfrac1n$ 后，$\ln(1+nx)$ 前还挂着 $\dfrac1n$（来自内层 $\int\frac{\mathrm d(1+nx)}{1+nx}$ 的换元系数）。</p>
+<h3>第四步：求极限——为什么 $\dfrac{\ln(1+n)}{n}\to0$</h3>
+<p>$$nS_n=1-\frac{\ln(1+n)}{n}\xrightarrow[n\to\infty]{}1.$$</p>
+<p><strong>为什么对数比幂慢</strong>：这是增长速度的层级关系；要严格论证，对 $\dfrac{\ln(1+n)}{n}$ 用洛必达（$\dfrac\infty\infty$ 型）：</p>
+<p>$$\lim_{n\to\infty}\frac{\ln(1+n)}{n}=\lim_{x\to\infty}\frac{\frac1{1+x}}{1}=0.$$</p>
+<p>故极限值为 $1$。几何意义：$S_n\sim\dfrac1n$，曲线压向 $x$ 轴的速度恰是 $\dfrac1n$ 阶，$nS_n$ 收敛到的 $1$ 就是这个渐近高度系数。</p>
+<p><strong>验算 $n=1$</strong>：$S_1=\displaystyle\int_0<sup>1</sup>\frac{x}{1+x}\,\mathrm dx=\int_0<sup>1</sup>\left(1-\frac1{1+x}\right)\mathrm dx=1-\ln2$，与公式 $\dfrac11-\dfrac{\ln2}{1<sup>2</sup>}$ 一致 ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>迭代规律猜错</strong>：不是 $\dfrac{nx}{1+nx}$（那等于 $f$ 自身的另一种写法），也不是 $\dfrac{x}{(1+x)<sup>n</sup>}$（复合不连乘分母）；必须动手算 $f_2$ 再归纳。</li><li><strong>只用"看规律"不证明</strong>：解答题里 $f_n$ 的显式是后续一切的地基，归纳一步不能省。</li><li><strong>积分丢系数</strong>：$\ln(1+nx)$ 前的 $\dfrac1n$ 来自换元，丢了它 $nS_n$ 就不再是 $1-\dfrac{\ln(1+n)}n$。</li><li><strong>直接对 $S_n$ 取极限</strong>：$S_n\to0$ 是真话但没有回答设问； $nS_n$ 才是命题人要的主阶信息。</li></ul>
+<blockquote>结论：$f_n(x)=\dfrac{x}{1+nx}$，$S_n=\dfrac1n-\dfrac{\ln(1+n)}{n<sup>2</sup>}$，$\lim\limits_{n\to\infty}nS_n=1$；面积按 $\dfrac1n$ 衰减。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

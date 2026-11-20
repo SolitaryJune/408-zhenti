@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：等价无穷小定参数 ab</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-10.html" data-q="../question/m2-2023-10/">← <b>m2-2023-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-11/" data-q="../question/m2-2023-11/" data-no-anim="1">m2-2023-11 · 本题</a>
+  <a href="m2-2023-12.html" data-q="../question/m2-2023-12/"><b>m2-2023-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$f=ax+bx^2+\\ln(1+x)$ 与 $g=\\mathrm e^{x^2}-\\cos x$ 等价，求 $ab$',
+  subtitle: '考点：等价无穷小 + 泰勒展开 · 方法：逐阶对齐首项系数',
+  counterLabel: '对齐步',
+  intro: '点击「▶ 播放」逐步演示：先展 g 定阶，再展 f 对系数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：$f\\sim g\\iff$ 两者同阶且首项系数相等。先把 $g$ 展开定出「模板」',
+      '<b>展开 g</b>：$$g=\\Bigl(1+x^2+\\frac{x^4}2+\\cdots\\Bigr)-\\Bigl(1-\\frac{x^2}2+\\frac{x^4}{24}+\\cdots\\Bigr)=\\frac32x^2+o(x^2)$$ $g$ 是 <b>2 阶</b>无穷小，首项系数 $\\dfrac32$',
+      '<b>展开 f</b>：由 $\\ln(1+x)=x-\\dfrac{x^2}2+o(x^2)$，$$f=(a+1)x+\\Bigl(b-\\frac12\\Bigr)x^2+o(x^2)$$',
+      '<b>一次项归零</b>：$f$ 必须也是 2 阶——一次项必须消失 $$a+1=0\\quad\\Rightarrow\\quad a=-1$$',
+      '<b>二次项对齐</b>：首项系数与 $g$ 相等 $$b-\\frac12=\\frac32\\quad\\Rightarrow\\quad b=2$$',
+      '<b>结算</b>：$$ab=(-1)\\times2=\\boxed{-2}$$ 复核：此时 $f=\\dfrac32x^2+o(x^2)\\sim g$ ✓',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'等价就是同阶同系数，先把右边的函数展开定阶', count:0 },
+    { cls:'shift', tag:'展 g',   log:'两个展开相减，常数抵消，剩二阶项 3/2 x²', count:1 },
+    { cls:'shift', tag:'展 f',   log:'ln(1+x) 展到二阶，与 ax、bx² 合并同类项', count:2 },
+    { cls:'step',  tag:'消一次', log:'一次项必须消失，否则阶数对不上，解出 a = −1', count:3 },
+    { cls:'step',  tag:'对系数', log:'二阶系数等于 3/2，解出 b = 2', count:4 },
+    { cls:'done',  tag:'完成',   log:'结论：ab = −2，代回验证等价成立', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$ab=-2$',
+    html: '记忆锚点：<b>等价 $\\iff$ 同阶 + 首项系数相等，泰勒展开逐阶对齐</b>。易错：忘了先让一次项归零（$a\\neq-1$ 时阶数都不同）；$\\ln(1+x)$ 的二次系数是 $-\\dfrac12$，记成正的会解出 $b=1$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：等价无穷小定参数——泰勒展开逐阶对齐</h2>
+<p>答案：$ab=-2$</p>
+<h3>第一步：先展开 g(x)，定出目标阶数</h3>
+<p>$$g(x)=\mathrm e<sup>x^2</sup>-\cos x=\Bigl(1+x<sup>2</sup>+\frac{x<sup>4</sup>}2+\cdots\Bigr)-\Bigl(1-\frac{x<sup>2</sup>}2+\frac{x<sup>4</sup>}{24}+\cdots\Bigr)=\frac32x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<p>$g$ 是 2 阶无穷小，首项系数 $\dfrac32$——这就是 $f$ 要对齐的「模板」。</p>
+<h3>第二步：展开 f(x)</h3>
+<p>由 $\ln(1+x)=x-\dfrac{x<sup>2</sup>}2+\dfrac{x<sup>3</sup>}3-\cdots$：</p>
+<p>$$f(x)=ax+bx<sup>2</sup>+\ln(1+x)=(a+1)x+\Bigl(b-\frac12\Bigr)x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<h3>第三步：逐阶匹配</h3>
+<ul><li>一次项必须消失（否则 $f$ 是 1 阶，与 2 阶的 $g$ 不同阶）：$a+1=0\Rightarrow a=-1$。</li><li>二次项系数对齐：$b-\dfrac12=\dfrac32\Rightarrow b=2$。</li></ul>
+<h3>第四步：结算</h3>
+<p>$$ab=(-1)\times2=-2.$$</p>
+<p>复核：此时 $f(x)=\dfrac32x<sup>2</sup>+o(x<sup>2</sup>)\sim g(x)$，等价确实成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>只对系数、忘了先消一次项</strong>：若 $a\neq-1$，$f$ 与 $g$ 连阶数都不同，比值极限是 0 或 $\infty$。</li><li><strong>$\ln(1+x)$ 的二次系数记成正的</strong>：是 $-\dfrac12$，符号错会解出 $b=1$。</li><li><strong>$g$ 展开漏项</strong>：$\mathrm e<sup>x^2</sup>$ 与 $\cos x$ 都要展到 $x<sup>2</sup>$ 项，漏掉会误判阶数。</li></ul>
+<blockquote>一句话结论：$a=-1$、$b=2$，$ab=-2$；要点是「同阶 + 首项系数相等」逐阶对齐。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

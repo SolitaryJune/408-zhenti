@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·15 三阶常系数齐次方程 y'''−y=0 的通解</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-14.html" data-q="../question/m2-2021-14/">← <b>m2-2021-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-15/" data-q="../question/m2-2021-15/" data-no-anim="1">m2-2021-15 · 本题</a>
+  <a href="m2-2021-16.html" data-q="../question/m2-2021-16/"><b>m2-2021-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$y\'\'\'-y=0$——三阶常系数齐次线性方程，走特征方程路线",
+  "<b>② 写特征方程：</b>$r^3-1=0$，用立方差公式分解：$$r^3-1=(r-1)(r^2+r+1)=0$$",
+  "<b>③ 实根：</b>$r_1=1$，对应独立解 $\\mathrm{e}^{x}$",
+  "<b>④ 共轭复根：</b>$r^2+r+1=0$，求根公式 $r=\\dfrac{-1\\pm\\sqrt{1-4}}{2}=-\\dfrac12\\pm\\dfrac{\\sqrt3}{2}i$，即 $\\alpha=-\\dfrac12,\\ \\beta=\\dfrac{\\sqrt3}{2}$",
+  "<b>⑤ 复根翻解：</b>$\\alpha\\pm\\beta i$ 对应 $\\mathrm{e}^{\\alpha x}\\cos\\beta x$ 与 $\\mathrm{e}^{\\alpha x}\\sin\\beta x$——即 $\\mathrm{e}^{-\\frac x2}\\cos\\dfrac{\\sqrt3}{2}x$ 与 $\\mathrm{e}^{-\\frac x2}\\sin\\dfrac{\\sqrt3}{2}x$",
+  "<b>⑥ 组装通解：</b>三阶方程需 3 个线性无关解、3 个任意常数：$$y=C_1\\mathrm{e}^{x}+\\mathrm{e}^{-\\frac12x}\\left(C_2\\cos\\frac{\\sqrt3}{2}x+C_3\\sin\\frac{\\sqrt3}{2}x\\right)$$",
+  "<b>⑦ 结论：</b>通解为 $y=C_1\\mathrm{e}^x+\\mathrm{e}^{-\\frac12x}\\left(C_2\\cos\\frac{\\sqrt3}{2}x+C_3\\sin\\frac{\\sqrt3}{2}x\\right)$（$C_1,C_2,C_3$ 为任意常数）"
+];
+
+AW.init({
+  title: '2021·15　$y\'\'\'-y=0$ 的通解',
+  subtitle: '考点：特征方程 · 立方差公式 · 实根与共轭复根对应解型',
+  counterLabel: '已推导',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，特征方程 → 分解 → 按根型翻译 → 组装通解。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'三阶常系数齐次方程，直接上特征方程法', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'分解',   log:'立方差公式拆成一个一次因式和一个二次因式', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'实根',   log:'实根为一，给出指数解 e 的 x 次方', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'复根',   log:'判别式为负，得到一对共轭复根：实部负二分之一，虚部二分之根号三', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'翻解',   log:'复根翻成衰减振荡的两个实值解：衰减因子乘余弦与正弦', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'组装',   log:'三个独立解配三个任意常数，通解成形', count:5, ribbon:{k:6, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：指数项加衰减振荡项，即为通解', count:6, ribbon:{k:7, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$y=C_1\\mathrm{e}^x+\\mathrm{e}^{-\\frac12x}\\left(C_2\\cos\\frac{\\sqrt3}{2}x+C_3\\sin\\frac{\\sqrt3}{2}x\\right)$',
+    html: '记忆锚点：<b>$r^3-1=(r-1)(r^2+r+1)$：单实根给 $\\mathrm{e}^{rx}$，共轭复根 $\\alpha\\pm\\beta i$ 给 $\\mathrm{e}^{\\alpha x}(\\cos\\beta x,\\sin\\beta x)$</b>。易错：只取实根少两个解；复根实部符号写成 $+\\frac12$；忘乘衰减因子 $\\mathrm{e}^{-x/2}$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：特征方程法——为什么微分方程会变成代数方程</h2>
+<p>答案：$y=C_1\mathrm{e}<sup>x</sup>+\mathrm{e}<sup>-\frac12 x</sup>\left(C_2\cos\frac{\sqrt3}{2}x+C_3\sin\frac{\sqrt3}{2}x\right)$（$C_1,C_2,C_3$ 为任意常数）</p>
+<h3>第一步：机制——为什么拿 $\mathrm{e}<sup>rx</sup>$ 试根</h3>
+<p>指数函数求导"不变型"：每求导一次只乘一个常数 $r$。把 $y=\mathrm{e}<sup>rx</sup>$ 代入 $y'''-y=0$，提出公因子 $\mathrm{e}<sup>rx</sup>\neq0$ 约去，微分方程就降维成代数方程</p>
+<p>$$r<sup>3</sup>-1=0.$$</p>
+<p>于是"解微分方程"变成"找哪些 $r$ 能让 $\mathrm{e}<sup>rx</sup>$ 是解"。又因方程线性齐次，解的线性组合仍是解，通解由<strong>全部</strong>独立解拼成——$n$ 阶方程解空间的维数是 $n$，三阶必须凑够三个线性无关解、三个任意常数。</p>
+<h3>第二步：因式分解，解出全部根</h3>
+<p>用立方差公式 $r<sup>3</sup>-1=(r-1)\left(r<sup>2</sup>+r+1\right)$：实根 $r_1=1$；对 $r<sup>2</sup>+r+1=0$ 用求根公式</p>
+<p>$$r=\frac{-1\pm\sqrt{1-4}}{2}=-\frac12\pm\frac{\sqrt3}{2}\,i,$$</p>
+<p>得一对共轭复根 $\alpha\pm\beta i$，其中 $\alpha=-\dfrac12,\ \beta=\dfrac{\sqrt3}{2}$。</p>
+<h3>第三步：复根为什么给出 $\cos,\sin$——按"根型→解型"翻译</h3>
+<p>机制在欧拉公式：$\mathrm{e}<sup>(\alpha+\beta i)x</sup>=\mathrm{e}<sup>\alpha x</sup>\left(\cos\beta x+i\sin\beta x\right)$。这是复值解；方程系数全为实数，它的<strong>实部</strong>与<strong>虚部</strong>各自单独都是原方程的解，一对共轭复根恰好贡献两个实解——衰减因子 $\mathrm{e}<sup>\alpha x</sup>$ 与振荡频率 $\beta$ 都从根里直接读出。</p>
+<table><thead><tr><th>特征根</th><th>对应的独立解</th></tr></thead><tbody><tr><td>单实根 $r_1=1$</td><td>$\mathrm{e}<sup>x</sup>$</td></tr><tr><td>共轭复根 $\alpha\pm\beta i$</td><td>$\mathrm{e}<sup>\alpha x</sup>\cos\beta x$ 与 $\mathrm{e}<sup>\alpha x</sup>\sin\beta x$</td></tr></tbody></table>
+<h3>第四步：三个独立解组合成通解</h3>
+<p>$$y=C_1\mathrm{e}<sup>x</sup>+\mathrm{e}<sup>-\frac12x</sup>\left(C_2\cos\frac{\sqrt3}{2}x+C_3\sin\frac{\sqrt3}{2}x\right).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>只取实根</strong>：$r<sup>3</sup>=1$ 在复数范围内有三个根，只写 $C_1\mathrm{e}<sup>x</sup>$ 少两个独立解，不是通解（三阶要凑够三个常数）。</li><li><strong>复根实部符号错</strong>：$-\dfrac12$ 是负的，通解必须带衰减因子 $\mathrm{e}<sup>-x/2</sup>$；只写 $\cos,\sin$ 不完整。</li><li><strong>虚部算错</strong>：$\beta=\dfrac{\sqrt{4-1}}{2}=\dfrac{\sqrt3}{2}$，来自判别式开方，别丢根号。</li></ul>
+<blockquote>一句话结论：$r<sup>3</sup>-1=(r-1)(r<sup>2</sup>+r+1)$，根为 $1$ 与 $-\dfrac12\pm\dfrac{\sqrt3}{2}i$；实根给指数项，共轭复根经欧拉公式给衰减振荡项。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

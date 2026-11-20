@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·12 二元函数的极值点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-11.html" data-q="../question/m2-2024-11/">← <b>m2-2024-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-12/" data-q="../question/m2-2024-12/" data-no-anim="1">m2-2024-12 · 本题</a>
+  <a href="m2-2024-13.html" data-q="../question/m2-2024-13/"><b>m2-2024-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导行工具：acc 取 key/ok/bad/blue 决定高亮色；未揭示时隐去 */
+var ACC = { key:'#f59e0b', ok:'#22c55e', bad:'#ef4444', blue:'#3b82f6' };
+var BGS = { key:'#fffbeb', ok:'#f6fef9', bad:'#fff8f8', blue:'#eff6ff' };
+function row(accent, html){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'border-left:4px solid #cbd5e1;padding:7px 14px;margin:9px 0;border-radius:10px;'
+    + 'opacity:0;transform:translateX(-12px);transition:all .45s ease;font-size:15px;line-height:2;';
+  d.dataset.acc = accent;
+  return d;
+}
+
+// 每行推导内容（html 里可写 $..$ / $$..$$ 公式）
+var ROWS = [
+  { acc: 'blue', html: '<p><b>一阶偏导</b>（偏导可分离，各自只含一个变量）：$$f_x=6x^2-18x+12=6(x-1)(x-2),\\qquad f_y=-24y^3+24=24(1-y^3).$$</p>' },
+  { acc: 'key', html: '<p><b>求驻点</b>：$f_x=0\\Rightarrow x=1$ 或 $x=2$；$f_y=0\\Rightarrow y=1$。驻点两个：$\\boxed{(1,1)}$ 与 $\\boxed{(2,1)}$。</p>' },
+  { acc: 'blue', html: '<p><b>二阶偏导</b>：$$A=f_{xx}=12x-18,\\qquad B=f_{xy}=0,\\qquad C=f_{yy}=-72y^2.$$</p>' },
+  { acc: 'ok', html: '<p><b>判 $(1,1)$</b>：$A=-6$，$C=-72$，$$AC-B^2=(-6)(-72)-0=432>0\\quad\\text{且}\\quad A\\lt 0,$$ 故 $(1,1)$ 是<b>极大值点</b>（极大值 $f(1,1)=2-9-6+12+24=23$）。</p>' },
+  { acc: 'bad', html: '<p><b>判 $(2,1)$</b>：$A=6$，$C=-72$，$$AC-B^2=(6)(-72)-0=-432\\lt 0,$$ 判别式为负，$(2,1)$ 是<b>鞍点</b>，不是极值点。</p>' },
+  { acc: 'ok', html: '<p><b>结论</b>：极值点只有 $\\boxed{(1,1)}$（极大值点）。</p>' },
+];
+
+AW.init({
+  title: '$f(x,y)=2x^3-9x^2-6y^4+12x+24y$ 的极值点',
+  subtitle: '考点：二元函数极值 · 方法：驻点全找齐 → $AC-B^2$ 逐点判别',
+  counterLabel: '计算步',
+  intro: '点击「▶ 播放」逐步演示推导。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，最新一行高亮）'));
+    var board = AW.el('div', '');
+    this.rows = [];
+    ROWS.forEach(function(r){
+      var d = row(r.acc, r.html);
+      board.appendChild(d);
+      this.rows.push(d);
+    }, this);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    (this.rows || []).forEach(function(d, j){
+      var on = j < i;
+      d.style.opacity = on ? '1' : '0';
+      d.style.transform = on ? 'none' : 'translateX(-12px)';
+      d.style.borderLeftColor = on ? (ACC[d.dataset.acc] || ACC.blue) : '#cbd5e1';
+      d.style.background = on ? (BGS[d.dataset.acc] || BGS.blue) : '#f8fafc';
+    });
+    renderMathAfterSnap(stage);
+  },
+  snaps: [
+    { cls: 'step',  tag: '审题', log: '偏导可分离：f_x 只含 x，f_y 只含 y', count: 0 },
+    { cls: 'shift', tag: '驻点', log: 'x=1 或 2，y=1：驻点 (1,1) 与 (2,1)', count: 1 },
+    { cls: 'shift', tag: '二阶导', log: 'A=12x−18，B=0，C=−72y²', count: 2 },
+    { cls: 'ok',    tag: '判(1,1)', log: 'AC−B²=432>0 且 A=−6<0：极大值点', count: 3 },
+    { cls: 'miss',  tag: '判(2,1)', log: 'AC−B²=−432<0：鞍点，不是极值点', count: 4 },
+    { cls: 'step',  tag: '汇总', log: '极值点只剩 (1,1)', count: 5 },
+    { cls: 'done',  tag: '完成', log: '结论：极值点是 (1,1)，极大值 23', count: 6, done: true },
+  ],
+  result: {
+    big: '答案：(1, 1)',
+    html: '记忆锚点：<b>驻点要找齐</b>——$f_x=6(x-1)(x-2)$ 有两个根；判别式 $AC-B^2$：<b>&gt;0 且 $A&lt;0$ 极大、$A&gt;0$ 极小；$&lt;0$ 是鞍点</b>。$(2,1)$ 因 $AC-B^2=-432&lt;0$ 出局，极值点仅 $(1,1)$（极大值 $23$）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：二元函数极值点——驻点全找齐，再用 $AC-B<sup>2</sup>$ 定号</h2>
+<p>答案：$(1,1)$。</p>
+<h3>第 0 步：先立模型——判别式为什么长成 $AC-B<sup>2</sup>$ 这样</h3>
+<p>极值判定的机制来自二阶泰勒：驻点 $P_0$ 附近 $f\approx f(P_0)+\dfrac12\big(A\,\Delta x<sup>2</sup>+2B\,\Delta x\,\Delta y+C\,\Delta y<sup>2</sup>\big)$，增量二次型是否<strong>定号</strong>决定有无极值。$AC-B<sup>2</sup>&gt;0$ 时二次型定号（椭圆型，各方向弯向一致），符号跟 $A$ 走：$A&lt;0$ 处处往下弯为极大，$A&gt;0$ 处处往上弯为极小；$AC-B<sup>2</sup>&lt;0$ 时不定号（双曲型），有的方向向上弯、有的向下弯——驻点必是鞍点；$=0$ 时判别法失效，回定义另判。这就是"一元看 $f''$ 符号、二元看 $AC-B<sup>2</sup>$ 与 $A$"的来历。</p>
+<h3>第 1 步：求驻点——偏导恰好可分离</h3>
+<p>$$f_x=6x<sup>2</sup>-18x+12=6(x-1)(x-2),\qquad f_y=-24y<sup>3</sup>+24=24(1-y<sup>3</sup>).$$</p>
+<p>$f_x$ 只含 $x$、$f_y$ 只含 $y$，联立得 $x\in\{1,2\}$、$y=1$，驻点 $(1,1)$ 与 $(2,1)$。<strong>为什么两个都要查？</strong> 题目问"极值点是"——若 $(2,1)$ 也是极值点就必须都写，只有用判别法确认它不是，才能只填一个。</p>
+<h3>第 2 步：二阶偏导</h3>
+<p>$$A=f_{xx}=12x-18,\qquad B=f_{xy}=0,\qquad C=f_{yy}=-72y<sup>2</sup>.$$</p>
+<p>$B=0$ 让交叉项消失、判别式退化为纯 $AC$ 乘积：$x$ 方向弯向看 $A$，$y$ 方向弯向看 $C$，两方向"各管各"。</p>
+<h3>第 3 步：逐点定号——先叙事，再对号</h3>
+<p><strong>$(1,1)$</strong>：$A=-6&lt;0$（$x$ 方向下弯）、$C=-72&lt;0$（$y$ 方向下弯），各方向一致向下，$AC-B<sup>2</sup>=(-6)(-72)-0=432&gt;0$ 印证定号——<strong>极大值点</strong>，极大值 $f(1,1)=2-9-6+12+24=23$。</p>
+<p><strong>$(2,1)$</strong>：$A=6&gt;0$ 而 $C=-72&lt;0$——$x$ 方向上弯、$y$ 方向下弯，弯向相反，$AC-B<sup>2</sup>=(6)(-72)-0=-432&lt;0$ 印证不定号——<strong>鞍点</strong>，非极值。直觉：站在 $(2,1)$，沿 $x$ 走是谷底、沿 $y$ 走是山脊，两句话同时成立，这正是"鞍"。</p>
+<table><thead><tr><th>驻点</th><th>$A$</th><th>$C$</th><th>$AC-B<sup>2</sup>$</th><th>结论</th></tr></thead><tbody><tr><td>$(1,1)$</td><td>$-6$</td><td>$-72$</td><td>$432&gt;0$，$A&lt;0$</td><td>极大值点</td></tr><tr><td>$(2,1)$</td><td>$6$</td><td>$-72$</td><td>$-432&lt;0$</td><td>鞍点</td></tr></tbody></table>
+<h3>第 4 步：合题</h3>
+<p>极值点只有 $(1,1)$（极大值点），填 $(1,1)$。</p>
+<h3>易错点</h3>
+<ul><li><strong>只找一个驻点</strong>：$f_x=6(x-1)(x-2)=0$ 有两个根，漏掉 $x=2$ 会误判。</li><li><strong>把 $(2,1)$ 直接舍掉</strong>：不算判别式就说"不是极值"没有依据——定案靠的是 $AC-B<sup>2</sup>&lt;0$。</li><li><strong>判别式符号记反</strong>：$AC-B<sup>2</sup>&gt;0$ 才有极值（极大极小跟 $A$）；$&lt;0$ 是鞍点；$=0$ 失效回定义。</li></ul>
+<blockquote>一句话结论：驻点 $(1,1),(2,1)$；$432&gt;0$ 且 $A=-6&lt;0$ 判 $(1,1)$ 极大，$-432&lt;0$ 判 $(2,1)$ 鞍点——极值点填 $(1,1)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

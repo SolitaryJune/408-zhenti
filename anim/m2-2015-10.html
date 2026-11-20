@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·10 用幂级数系数求高阶导数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-09.html" data-q="../question/m2-2015-09/">← <b>m2-2015-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-10/" data-q="../question/m2-2015-10/" data-no-anim="1">m2-2015-10 · 本题</a>
+  <a href="m2-2015-11.html" data-q="../question/m2-2015-11/"><b>m2-2015-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题与策略',
+    h: '<p>$f(x)=x^2 2^x$，求 $f^{(n)}(0)$。策略：展成幂级数 $\\sum_k c_k x^k$ 后，<b>$f^{(n)}(0)=n!\\,c_n$</b>——导数值就是系数乘 $n!$。</p>' },
+  { label: '第 1 步 · 指数化展开 2^x',
+    h: '<p>$2^x=\\mathrm{e}^{x\\ln2}=\\sum_{k=0}^{\\infty}\\dfrac{(\\ln2)^k}{k!}\\,x^k.$</p>' },
+  { label: '第 2 步 · 乘 x²，幂次整体平移',
+    h: '<p>$f(x)=x^2\\,2^x=\\sum_{k=0}^{\\infty}\\dfrac{(\\ln2)^k}{k!}\\,x^{k+2}.$</p>' },
+  { label: '第 3 步 · 定位 x^n 的系数',
+    h: '<p>令 $k+2=n$（即 $k=n-2$，$n\\ge2$）：$c_n=\\dfrac{(\\ln2)^{n-2}}{(n-2)!}.$</p>' },
+  { label: '第 4 步 · 乘 n! 得导数值',
+    h: '<p>$f^{(n)}(0)=n!\\cdot\\dfrac{(\\ln2)^{n-2}}{(n-2)!}=n(n-1)(\\ln2)^{n-2}.$</p>' },
+  { label: '第 5 步 · 验证 n=2',
+    h: '<p>公式给 $f^{\\prime\\prime}(0)=2\\cdot1\\cdot(\\ln2)^0=2$；直接求导 $f^{\\prime\\prime}(x)=\\big(2+4x\\ln2+x^2(\\ln2)^2\\big)2^x$ 在 $x=0$ 处 $=2$，吻合 ✓。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '$f(x)=x^2 2^x$ 在 $x=0$ 处的 $n$ 阶导数',
+  subtitle: '考点：高阶导数 · 幂级数展开 · 方法：f⁽ⁿ⁾(0) = n! × xⁿ 系数',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示展开与系数定位。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'求 n 阶导在 0 的值：展开成幂级数，抓 xⁿ 系数', count:0 },
+    { cls:'shift', tag:'指数化', log:'2^x = e^(x ln2)，套指数级数展开', count:1 },
+    { cls:'ok',    tag:'乘 x²',  log:'乘 x² 让所有幂次加 2，级数整体平移', count:2 },
+    { cls:'ok',    tag:'定位',   log:'xⁿ 对应 k=n−2，系数 (ln2)^(n−2)/(n−2)!', count:3 },
+    { cls:'ok',    tag:'乘 n!',  log:'n! 抵掉 (n−2)!，得 n(n−1)(ln2)^(n−2)', count:4 },
+    { cls:'done',  tag:'完成',   log:'n=2 验证得 2，与直接求导一致，答案成立', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$n(n-1)(\\ln 2)^{n-2}$',
+    html: '记忆锚点：<b>$f^{(n)}(0)=n!\\times x^n$ 系数</b>。三件套：$2^x=\\mathrm{e}^{x\\ln2}$ 展开指数级数 → 乘 $x^2$ 幂次平移（$k=n-2$）→ 乘 $n!$。只抄系数不乘 $n!$ 是最高频错误。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$x<sup>2</sup>\cdot2<sup>x</sup>$ 的高阶导数——读系数就是读导数</h2>
+<p>答案：$f<sup>(n)</sup>(0)=n(n-1)(\ln 2)<sup>n-2</sup>$（$n\ge2$）。</p>
+<h3>第 0 步：先立机制——为什么系数里藏着 $f<sup>(n)</sup>(0)$</h3>
+<p>$c_kx<sup>k</sup>$ 对 $x$ 求 $n$ 阶导：每求一次幂次降一、掉一个因子，成为 $c_k\,k(k-1)\cdots(k-n+1)\,x<sup>k-n</sup>$；在 $x=0$ 处只有 $k=n$ 的项存活——$k\lt n$ 的项经 $n$ 次求导已耗尽为 $0$，$k\gt n$ 的项仍含 $x$ 因子——存活值恰为 $c_n\,n!$。所以</p>
+<p>$$f<sup>(n)</sup>(0)=n!\,c_n,$$</p>
+<p><strong>求 $f<sup>(n)</sup>(0)$ = 求展开式中 $x<sup>n</sup>$ 的系数再乘 $n!$</strong>。为什么选这条路：莱布尼茨公式对 $x<sup>2</sup>\cdot2<sup>x</sup>$ 也可行（$x<sup>2</sup>$ 三阶以上导数为零），但要把各因子配平；幂级数路线"哪一项存活"一目了然，不易漏因子。</p>
+<h3>第 1 步：为什么先化 $\mathrm e<sup>x\ln2</sup>$——标准展开只有 $\mathrm e<sup>u</sup>$ 有</h3>
+<p>$2<sup>x</sup>$ 本身没有现成幂级数，但它的定义就是 $2<sup>x</sup>=\mathrm e<sup>x\ln2</sup>$，套指数级数：</p>
+<p>$$2<sup>x</sup>=\sum_{k=0}<sup>\infty</sup>\frac{(\ln2)<sup>k</sup>}{k!}x<sup>k</sup>\ \Longrightarrow\ f(x)=x<sup>2</sup>\,2<sup>x</sup>=\sum_{k=0}<sup>\infty</sup>\frac{(\ln2)<sup>k</sup>}{k!}x<sup>k+2</sup>.$$</p>
+<p>乘 $x<sup>2</sup>$ 只把幂次整体后移两位，系数不动。</p>
+<h3>第 2 步：定位 $x<sup>n</sup>$ 的系数，乘 $n!$</h3>
+<p>令 $k+2=n$（即 $k=n-2$，需 $n\ge2$）：$c_n=\dfrac{(\ln2)<sup>n-2</sup>}{(n-2)!}$，于是</p>
+<p>$$f<sup>(n)</sup>(0)=n!\cdot\frac{(\ln2)<sup>n-2</sup>}{(n-2)!}=n(n-1)(\ln2)<sup>n-2</sup>.$$</p>
+<p>验算 $n=2$：公式给 $2\cdot1\cdot(\ln2)<sup>0</sup>=2$；直接求导 $f''(x)=\big(2+4x\ln2+x<sup>2</sup>(\ln2)<sup>2</sup>\big)2<sup>x</sup>$，代 $x=0$ 得 $2$，吻合。$n=0,1$ 时 $f(0)=f'(0)=0$：$x<sup>2</sup>$ 因子让前两阶在原点全灭。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏乘 $n!$</strong>：把系数 $c_n$ 直接当导数值。</li><li><strong>幂次错位</strong>：乘 $x<sup>2</sup>$ 后 $x<sup>n</sup>$ 对应 $k=n-2$，不是 $k=n$。</li><li><strong>没化 $\mathrm e<sup>x\ln2</sup>$</strong>：没有指数级数就无从按幂展开。</li></ul>
+<blockquote>记忆锚点：$f<sup>(n)</sup>(0)=n!\times$（$x<sup>n</sup>$ 系数）；$a<sup>x</sup>=\mathrm e<sup>x\ln a</sup>$ 先化再展。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-16 含参变限积分求导 · 逐步推导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-15.html" data-q="../question/m2-2020-15/">← <b>m2-2020-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-16/" data-q="../question/m2-2020-16/" data-no-anim="1">m2-2020-16 · 本题</a>
+  <a href="m2-2020-17.html" data-q="../question/m2-2020-17/"><b>m2-2020-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域 ================== */
+var rows = [];
+
+AW.init({
+  title: '$g(x)=\\int_0^1 f(xt)\\,\\mathrm dt$ 的导数与连续性',
+  subtitle: '考点：变限积分求导 · 条件：$f$ 连续且 $\\lim_{x\\to0}\\frac{f(x)}x=1$',
+  counterLabel: '已推进',
+  intro: '点击「▶ 播放」：先化简 g，再分段求导，最后验证连续。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rows = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：$g(x)=\\int_0^1 f(xt)\\,\\mathrm dt$，$f$ 连续，$\\lim_{x\\to0}\\frac{f(x)}x=1$'));
+    var ROWS = [
+      '$$\\lim_{x\\to0}\\frac{f(x)}x=1\\ \\text{且}\\ f\\ \\text{连续}\\ \\Rightarrow\\ f(0)=0;\\qquad g(0)=\\int_0^1 f(0)\\,\\mathrm dt=0$$',
+      '$$g(x)=\\int_0^1 f(xt)\\,\\mathrm dt\\ \\xrightarrow{\\ u=xt\\ }\\ \\frac1x\\int_0^x f(u)\\,\\mathrm du\\qquad(x\\neq0)$$',
+      '$$g\'(x)=\\frac{x f(x)-\\int_0^x f(u)\\,\\mathrm du}{x^2}=\\frac{f(x)}x-\\frac{1}{x^2}\\int_0^x f(u)\\,\\mathrm du\\qquad(x\\neq0)$$',
+      '$$g\'(0)=\\lim_{x\\to0}\\frac{g(x)-g(0)}x=\\lim_{x\\to0}\\frac{1}{x^2}\\int_0^x f(u)\\,\\mathrm du=\\lim_{x\\to0}\\frac{f(x)}{2x}=\\frac12$$',
+      '$$\\lim_{x\\to0}g\'(x)=1-\\frac12=\\frac12=g\'(0)\\ \\Rightarrow\\ g\'(x)\\ \\text{在}\\ x=0\\ \\text{处连续}$$',
+      '$$g\'(x)=\\begin{cases}\\dfrac{f(x)}x-\\dfrac{1}{x^2}\\displaystyle\\int_0^x f(t)\\,\\mathrm dt, & x\\neq0,\\\\[2mm]\\dfrac12, & x=0.\\end{cases}$$'
+    ];
+    ROWS.forEach(function(html){
+      var row = AW.el('div', 'derive-row', html);
+      row.style.cssText = 'padding:6px 14px;margin:8px 0;border-radius:8px;' +
+        'border-left:4px solid #cbd5e1;background:#f8fafc;opacity:0;' +
+        'transform:translateY(8px);transition:all .35s ease;';
+      wrap.appendChild(row);
+      rows.push(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    rows.forEach(function(row, j){
+      var vis = j < i;
+      var cur = vis && j === i - 1;
+      row.style.opacity = vis ? '1' : '0';
+      row.style.transform = vis ? 'translateY(0)' : 'translateY(8px)';
+      row.style.borderLeftColor = cur ? '#f59e0b' : (vis ? '#10b981' : '#cbd5e1');
+      row.style.background = cur ? '#fffbeb' : (vis ? '#f0fdf4' : '#f8fafc');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'被积函数含参数 x，先换元再求导；x=0 处单独处理', count:0 },
+    { cls:'step',  tag:'定 f(0)', log:'极限 f(x)/x=1 分母趋于 0，逼出 f(0)=0，g(0) 也随之算出', count:1 },
+    { cls:'step',  tag:'换元', log:'令 u=xt，把含参积分化成变限积分乘 1/x', count:2 },
+    { cls:'ok',    tag:'求导', log:'商法则加变限积分求导，得到 x 不为 0 时的 g 一撇', count:3 },
+    { cls:'step',  tag:'补点', log:'x=0 用导数定义，洛必达后用条件极限得 1/2', count:4 },
+    { cls:'ok',    tag:'验证连续', log:'g 一撇的极限是 1 减 1/2，恰好等于 g 一撇在 0 点的值', count:5 },
+    { cls:'done',  tag:'结论', log:'分段导函数拼成完整答案，且在 x=0 连续', count:6, done:true },
+  ],
+
+  result: {
+    big: '$g\'(0)=\\dfrac12$，且 $g\'(x)$ 在 $x=0$ 处连续',
+    html: '正确答案：$x\\neq0$ 时 $g\'(x)=\\dfrac{f(x)}x-\\dfrac{1}{x^2}\\displaystyle\\int_0^x f(t)\\,\\mathrm dt$，$g\'(0)=\\dfrac12$，$g\'(x)$ 在 $x=0$ 处连续。记忆点：<b>含参积分先换元 $u=xt$</b>；分段点处<b>必须用定义补导数</b>，再用「极限值 = 函数值」收尾。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含参变限积分求导 + 导函数在一点的连续性</h2>
+<p><strong>答案：$x\neq0$ 时 $g'(x)=\dfrac{f(x)}x-\dfrac{1}{x<sup>2</sup>}\displaystyle\int_0<sup>x</sup> f(t)\,\mathrm dt$；$g'(0)=\dfrac12$，且 $g'(x)$ 在 $x=0$ 处连续。</strong></p>
+<h3>第零步：为什么必须换元——把参数从被积函数里搬出来</h3>
+<p>先立机制：变限积分求导公式 $\dfrac{\mathrm d}{\mathrm dx}\displaystyle\int_a<sup>x</sup> f(t)\,\mathrm dt=f(x)$ 只对「被积函数与 $x$ 无关」的积分有效。$g(x)=\displaystyle\int_0<sup>1</sup> f(xt)\,\mathrm dt$ 里参数 $x$ 混在被积函数内部，公式管不着；而换元 $u=xt$ 正是把 $x$ 从被积函数里搬到积分限上，化为标准变限积分——这一步是全题的机制基础，后面求导、算 $g'(0)$ 全都建立在它之上。</p>
+<h3>第一步：先从条件里抠出 f(0)</h3>
+<p>$f$ 连续且 $\lim\limits_{x\to0}\dfrac{f(x)}x=1$：分母趋于 $0$ 而极限有限，分子必须同样趋于 $0$（否则比值发散），故 $f(0)=0$。从而</p>
+<p>$$g(0)=\int_0<sup>1</sup> f(0)\,\mathrm dt=0.$$</p>
+<h3>第二步：x≠0 时换元化为变限积分</h3>
+<p>令 $u=xt$（$t:0\to1$ 对应 $u:0\to x$），$\mathrm du=x\,\mathrm dt$：</p>
+<p>$$g(x)=\frac1x\int_0<sup>x</sup> f(u)\,\mathrm du.$$</p>
+<p>再用商的求导法则与变限积分求导公式：</p>
+<p>$$g'(x)=\frac{x f(x)-\displaystyle\int_0<sup>x</sup> f(u)\,\mathrm du}{x<sup>2</sup>}=\frac{f(x)}x-\frac{1}{x<sup>2</sup>}\int_0<sup>x</sup> f(u)\,\mathrm du.$$</p>
+<h3>第三步：x=0 处为什么必须回到定义</h3>
+<p>$g'(x)$ 的表达式分母是 $x<sup>2</sup>$，在 $x=0$ 处公式<strong>不存在</strong>——不是不想代，是没得代。导数在一点是否存在的最终裁判是定义：</p>
+<p>$$g'(0)=\lim_{x\to0}\frac{g(x)-g(0)}x=\lim_{x\to0}\frac{1}{x<sup>2</sup>}\int_0<sup>x</sup> f(u)\,\mathrm du.$$</p>
+<p>$\dfrac00$ 型用洛必达，合法性有两块：分子 $\displaystyle\int_0<sup>x</sup> f(u)\,\mathrm du$ 关于 $x$ 可导且导数为 $f(x)$（变限积分求导定理，条件正是 $f$ 连续）；分母 $x<sup>2</sup>$ 可导且在极限过程中非零。分子求导得 $f(x)$：</p>
+<p>$$g'(0)=\lim_{x\to0}\frac{f(x)}{2x}=\frac12\lim_{x\to0}\frac{f(x)}x=\frac12.$$</p>
+<h3>第四步：证连续——要验证的正是连续的定义本身</h3>
+<p>$g'(x)$ 在 $x=0$ 连续，按定义就是 $\lim\limits_{x\to0}g'(x)=g'(0)$，所以要算的恰是第二步公式在 $x\to0$ 的极限。两个极限都已入手：</p>
+<p>$$\lim_{x\to0}\frac{f(x)}x=1,\qquad \lim_{x\to0}\frac{1}{x<sup>2</sup>}\int_0<sup>x</sup> f(u)\,\mathrm du=\frac12,$$</p>
+<p>故 $\lim\limits_{x\to0}g'(x)=1-\dfrac12=\dfrac12=g'(0)$，$g'(x)$ 在 $x=0$ 处连续。</p>
+<h3>易错点</h3>
+<ul><li><strong>在 x=0 硬代公式</strong>：$g'(x)$ 的表达式分母是 $x<sup>2</sup>$，$x=0$ 处必须用导数定义另算。</li><li><strong>漏掉 f(0)=0 这一步</strong>：没有它，$g(0)$ 算不出、换元后的下限也对不上。</li><li><strong>连续性只写极限值不写等于 g'(0)</strong>：连续的定义是极限值等于函数值，两边都要落笔。</li></ul>
+<blockquote>一句话结论：换元化成变限积分 → 分段求导 → 定义补上 $g'(0)=\dfrac12$ → 极限对账证连续。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021·17 变限积分型无穷减无穷极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-16.html" data-q="../question/m2-2021-16/">← <b>m2-2021-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-17/" data-q="../question/m2-2021-17/" data-no-anim="1">m2-2021-17 · 本题</a>
+  <a href="m2-2021-18.html" data-q="../question/m2-2021-18/"><b>m2-2021-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$L=\\lim_{x\\to0}\\left(\\frac{1+\\int_0^x \\mathrm{e}^{t^2}\\,\\mathrm{d}t}{\\mathrm{e}^x-1}-\\frac{1}{\\sin x}\\right)\\qquad\\text{型：}\\infty-\\infty\\text{，先通分}$$",
+  "<b>① 通分合并：</b>$$L=\\lim_{x\\to0}\\frac{\\left(1+\\int_0^x \\mathrm{e}^{t^2}\\,\\mathrm{d}t\\right)\\sin x-\\left(\\mathrm{e}^x-1\\right)}{\\left(\\mathrm{e}^x-1\\right)\\sin x}$$",
+  "<b>② 分母降阶：</b>$\\mathrm{e}^x-1\\sim x,\\ \\sin x\\sim x$，故分母 $\\sim x^2$ —— 分子只需展开到 $x^2$ 项",
+  "<b>③ 变限积分展开：</b>由 $\\mathrm{e}^{t^2}=1+t^2+o(t^2)$ 逐项积分：$$\\int_0^x \\mathrm{e}^{t^2}\\,\\mathrm{d}t=x+\\frac{x^3}{3}+o(x^3)\\ \\Rightarrow\\ 1+\\int_0^x \\mathrm{e}^{t^2}\\,\\mathrm{d}t=1+x+o(x)$$",
+  "<b>④ 乘到 $x^2$：</b>由 $\\sin x=x+o(x^2)$：$$\\left(1+\\int_0^x \\mathrm{e}^{t^2}\\,\\mathrm{d}t\\right)\\sin x=\\left(1+x+o(x)\\right)\\left(x+o(x^2)\\right)=x+x^2+o(x^2)$$",
+  "<b>⑤ 减指数项：</b>$\\mathrm{e}^x-1=x+\\dfrac{x^2}{2}+o(x^2)$，分子 $=\\left(x+x^2\\right)-\\left(x+\\dfrac{x^2}{2}\\right)+o(x^2)=\\dfrac{x^2}{2}+o(x^2)$",
+  "<b>⑥ 取极限：</b>$$L=\\lim_{x\\to0}\\frac{\\dfrac{x^2}{2}+o(x^2)}{x^2}=\\dfrac{1}{2}$$"
+];
+
+AW.init({
+  title: "2021·17　变限积分型 $\\infty-\\infty$ 型极限",
+  subtitle: "考点：通分合并 · 等价无穷小降阶 · 泰勒展开定系数",
+  counterLabel: "推导步数",
+  ribbonTitle: "推导进度（✓ 完成）",
+  intro: "点击「▶ 播放」或「下一步」，逐步完成通分、降阶与泰勒展开。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前步亮琥珀色，已完成步变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    {"cls": "step", "tag": "审题", "log": "无穷减无穷型，两个分母 e 的 x 次方减一与 sin x 都趋于零，先通分合并", "count": 0, "ribbon": {"k": 1, "ok": true}},
+    {"cls": "shift", "tag": "通分", "log": "通分写成一个分式，分子是两项相减", "count": 1, "ribbon": {"k": 2, "ok": true}},
+    {"cls": "ok", "tag": "降阶", "log": "分母两个因子都等价于 x，整个分母是 x 平方量级，分子只需展开到 x 平方项", "count": 2, "ribbon": {"k": 3, "ok": true}},
+    {"cls": "ok", "tag": "展开", "log": "被积函数先泰勒再逐项积分，变限积分等于 x 加三分之 x 立方，一加它等于一加 x 加余项", "count": 3, "ribbon": {"k": 4, "ok": true}},
+    {"cls": "ok", "tag": "乘积", "log": "与 sin x 相乘保留到 x 平方项，乘积为 x 加 x 平方加余项", "count": 4, "ribbon": {"k": 5, "ok": true}},
+    {"cls": "ok", "tag": "定阶", "log": "指数项展开后相减，一阶项抵消，分子只剩二分之 x 平方", "count": 5, "ribbon": {"k": 6, "ok": true}},
+    {"cls": "ok", "tag": "收尾", "log": "分子除以 x 平方取极限，答案为二分之一", "count": 6, "ribbon": {"k": 7, "ok": true}},
+    {"cls": "done", "tag": "完成", "log": "完成：极限值等于二分之一，关键是展开阶数要够到 x 平方", "count": 7, "ribbon": {"k": 8, "ok": true}, "done": true}
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$L=\\dfrac{1}{2}$",
+    html: "记忆锚点：<b>分母等价降阶到 $x^2$，分子泰勒也只到 $x^2$，$x^2$ 的系数之差即极限</b>。易错：加减项不能直接用等价无穷小；变限积分要积出 $\\dfrac{x^3}{3}$ 才能对上 $x^2$ 阶。"
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$\infty-\infty$ 极限的流水线——通分、分母定阶、分子同阶泰勒</h2>
+<p><strong>答案：原极限 $=\dfrac{1}{2}$。</strong></p>
+<h3>第 0 步：先把套路立起来——这类题为什么这么走</h3>
+<p>$\infty-\infty$ 型的基本困境：两块各自冲向无穷，"差"才是信息所在，但无穷减无穷没有运算法则。出路是<strong>把两块合并成一个分式</strong>（本题两项分母不同，通分最直接），变成 $\dfrac00$ 型，泰勒、洛必达这些工具才能上场。合并之后走"<strong>分母定阶、分子同阶展开</strong>"的流水线：分母等价于几阶，分子就展到几阶，极限等于分子首项系数除以分母首项系数。</p>
+<p>变限积分 $\displaystyle\int_0<sup>x</sup> e<sup>t^2</sup>\,\mathrm dt$ 为什么必须泰勒而不能硬算：$e<sup>t^2</sup>$ 没有初等原函数，直接积是死路。但<strong>被积函数的泰勒展开可以逐项积分</strong>——积分是线性的，$\displaystyle\int_0<sup>x</sup> t<sup>n</sup>\,\mathrm dt=\dfrac{x<sup>n+1</sup>}{n+1}$，每积一次阶数升一级。于是由 $e<sup>t^2</sup>=1+t<sup>2</sup>+o(t<sup>2</sup>)$ 得</p>
+<p>$$\int_0<sup>x</sup> e<sup>t^2</sup>\,\mathrm dt=x+\frac{x<sup>3</sup>}{3}+o(x<sup>3</sup>).$$</p>
+<h3>第一步：通分定型</h3>
+<p>$$L=\lim_{x\to0}\frac{\left(1+\int_0<sup>x</sup> e<sup>t^2</sup>\,\mathrm dt\right)\sin x-\left(e<sup>x</sup>-1\right)}{\left(e<sup>x</sup>-1\right)\sin x}.$$</p>
+<p>分子、分母都趋于 $0$，$\dfrac00$ 型成立。</p>
+<h3>第二步：分母定阶——为什么分母敢换等价、分子不敢</h3>
+<p>分母 $(e<sup>x</sup>-1)\sin x$ 是<strong>纯乘法结构</strong>：等价无穷小替换相当于把因子换成"本身除以一个趋于 $1$ 的量"，整体只多乘一个趋于 $1$ 的因子，极限值不变。$e<sup>x</sup>-1\sim x$、$\sin x\sim x$，故分母 $\sim x<sup>2</sup>$。</p>
+<p>分子是<strong>加减法结构</strong>，不能随手换等价：本题分子里两个一阶项（来自 $\left(1+\int\right)\sin x$ 的 $x$ 与来自 $e<sup>x</sup>-1$ 的 $x$）恰好相消，真正决定结果的是 $x<sup>2</sup>$ 项；而等价无穷小只保留首项，丢掉的正是首项相消后"顶上来"的高阶项。所以分子必须用<strong>带余项的泰勒展开</strong>，把 $x<sup>2</sup>$ 系数原样保住。</p>
+<h3>第三步：分子各件展开到 $x<sup>2</sup>$</h3>
+<p>由第 0 步，$1+\displaystyle\int_0<sup>x</sup> e<sup>t^2</sup>\,\mathrm dt=1+x+o(x)$——$\dfrac{x<sup>3</sup>}{3}$ 那项乘上 $\sin x$ 的 $x$ 是 $x<sup>4</sup>$ 阶，本题用不上，但知道它在才能安心截断。$\sin x=x+o(x<sup>2</sup>)$；$e<sup>x</sup>-1=x+\dfrac{x<sup>2</sup>}{2}+o(x<sup>2</sup>)$，<strong>这一项必须带上</strong>，它是答案的另一半。乘法保留到 $x<sup>2</sup>$：</p>
+<p>$$\left(1+x+o(x)\right)\left(x+o(x<sup>2</sup>)\right)=x+x<sup>2</sup>+o(x<sup>2</sup>).$$</p>
+<h3>第四步：相减定系数</h3>
+<p>$$\text{分子}=x+x<sup>2</sup>+o(x<sup>2</sup>)-x-\frac{x<sup>2</sup>}{2}+o(x<sup>2</sup>)=\frac{x<sup>2</sup>}{2}+o(x<sup>2</sup>),$$</p>
+<p>$$L=\lim_{x\to0}\frac{\frac{x<sup>2</sup>}{2}+o(x<sup>2</sup>)}{x<sup>2</sup>}=\frac{1}{2}.$$</p>
+<h3>为什么不用洛必达——合法但费劲</h3>
+<p>通分后确是 $\dfrac00$，洛必达<strong>合法</strong>；但分子是"变限积分 × 三角 − 指数"的乘减混合，每求导一次链条更长（变限积分求导、乘积法则轮番上），要连导两次并反复整理，一步求错全盘皆输。泰勒法把三个标准展开一次拼好，"展到分母同阶"天然给出截断标准。记住分工：<strong>乘除因子处用等价无穷小，加减相消处用泰勒展开</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>对加减项乱用等价无穷小</strong>：一阶项相消后，等价替换把起决定作用的 $x<sup>2</sup>$ 项也一起丢掉，结果必错——等价无穷小只在乘除因子位置安全。</li><li><strong>余项精度不足</strong>：各部件都只展到一阶（余项 $o(x)$），相减得 $x<sup>2</sup>+o(x)$，除以 $x<sup>2</sup>$ 仍是未定式。每个部件的余项都要比目标阶细一层（本题处处 $o(x<sup>2</sup>)$），这就是变限积分要写出 $x+\dfrac{x<sup>3</sup>}{3}+o(x<sup>3</sup>)$ 的原因。</li><li><strong>变限积分硬积</strong>：$\int_0<sup>x</sup> e<sup>t^2</sup>\mathrm dt$ 无初等原函数，先展开被积函数再逐项积分才是正路。</li></ul>
+<blockquote>一句话结论：通分 $\to$ 分母 $\sim x<sup>2</sup>$ 定阶 $\to$ 分子泰勒到 $x<sup>2</sup>$，分子首项 $\dfrac{x<sup>2</sup>}{2}$ 除以 $x<sup>2</sup>$ 得 $\dfrac{1}{2}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

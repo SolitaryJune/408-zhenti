@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·22 由"不能表示"定 a，再求线性表示</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-21.html" data-q="../question/m2-2011-21/">← <b>m2-2011-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-22/" data-q="../question/m2-2011-22/" data-no-anim="1">m2-2011-22 · 本题</a>
+  <a href="m2-2011-23.html" data-q="../question/m2-2011-23/"><b>m2-2011-23</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$\\boldsymbol\\alpha$ 组<b>不能</b>由 $\\boldsymbol\\beta$ 组线性表示。记 $A=(\\boldsymbol\\alpha_1,\\boldsymbol\\alpha_2,\\boldsymbol\\alpha_3)$，$B=(\\boldsymbol\\beta_1,\\boldsymbol\\beta_2,\\boldsymbol\\beta_3)$，其中 $\\boldsymbol\\alpha_1=(1,0,1)^{\\mathrm T},\\ \\boldsymbol\\alpha_2=(0,1,1)^{\\mathrm T},\\ \\boldsymbol\\alpha_3=(1,3,5)^{\\mathrm T}$。</p>",
+  "<p><b>$\\boldsymbol\\alpha$ 组满秩</b>：$$\\det A=\\begin{vmatrix}1&0&1\\\\0&1&3\\\\1&1&5\\end{vmatrix}=1\\neq0,$$ 故 $\\boldsymbol\\alpha$ 组线性无关，张满 $\\mathbb R^3$。</p>",
+  "<p><b>反证</b>：若 $\\det B\\neq0$，则 $\\boldsymbol\\beta$ 组也张满 $\\mathbb R^3$，任何向量（含每个 $\\boldsymbol\\alpha_i$）都能由 $\\boldsymbol\\beta$ 组表示——与题设矛盾。故必有 $\\det B=0$。</p>",
+  "<p><b>消元求 $\\det B$</b>：$$\\det B=\\begin{vmatrix}1&1&3\\\\1&2&4\\\\1&3&a\\end{vmatrix}\\ \\xrightarrow[\\ r_3-r_1\\ ]{\\ r_2-r_1\\ }\\ \\begin{vmatrix}1&1&3\\\\0&1&1\\\\0&2&a-3\\end{vmatrix}=a-5,$$ 由 $a-5=0$ 得 $a=5$（此时 $\\boldsymbol\\beta$ 组秩为 $2$，条件自洽）。</p>",
+  "<p><b>(2) 化成矩阵方程</b>：三组表示式合写为 $B=AX$，解为 $X=A^{-1}B$。由 $\\det A=1$ 求逆：$$A^{-1}=\\begin{pmatrix}2&1&-1\\\\3&4&-3\\\\-1&-1&1\\end{pmatrix}.$$</p>",
+  "<p><b>矩阵乘法</b>：$$X=A^{-1}B=\\begin{pmatrix}2&1&-1\\\\3&4&-3\\\\-1&-1&1\\end{pmatrix}\\begin{pmatrix}1&1&3\\\\1&2&4\\\\1&3&5\\end{pmatrix}=\\begin{pmatrix}2&1&5\\\\4&2&10\\\\-1&0&-2\\end{pmatrix}.$$</p>",
+  "<p><b>按列读答案</b>：$X$ 的第 $j$ 列就是 $\\boldsymbol\\beta_j$ 的坐标：$$\\boldsymbol\\beta_1=2\\boldsymbol\\alpha_1+4\\boldsymbol\\alpha_2-\\boldsymbol\\alpha_3,\\quad \\boldsymbol\\beta_2=\\boldsymbol\\alpha_1+2\\boldsymbol\\alpha_2+0\\cdot\\boldsymbol\\alpha_3,\\quad \\boldsymbol\\beta_3=5\\boldsymbol\\alpha_1+10\\boldsymbol\\alpha_2-2\\boldsymbol\\alpha_3.$$</p>",
+  "<p><b>验算</b>：$2\\boldsymbol\\alpha_1+4\\boldsymbol\\alpha_2-\\boldsymbol\\alpha_3=(2-1,\\ 4-3,\\ 2+4-5)^{\\mathrm T}=(1,1,1)^{\\mathrm T}=\\boldsymbol\\beta_1$ ✓。结论：$a=5$，三组表示式如上。</p>"
+];
+
+AW.init({
+  title: '$\\boldsymbol\\alpha$ 组不能由 $\\boldsymbol\\beta$ 组表示：求 $a$ 与表示式',
+  subtitle: '考点：向量组的线性表示与秩 · 方法：满秩反证 det B=0 → X=A⁻¹B 按列读坐标',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示推理与矩阵计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',    log:'方向别弄反：是 α 组不能由 β 组表示；A、B 各三列摆好', show:1, count:0 },
+    { cls:'ok',    tag:'α 满秩',  log:'A 的行列式等于 1，α 组无关、张满整个三维空间', show:2, count:1 },
+    { cls:'key',   tag:'反证',    log:'若 B 也满秩，则什么向量都能表示，与题设矛盾，所以 det B=0', show:3, count:2 },
+    { cls:'ok',    tag:'定 a',    log:'B 消元后行列式剩 a−5，为零得 a=5', show:4, count:3 },
+    { cls:'step',  tag:'列方程',  log:'表示式合写成矩阵方程 B=AX，先求 A 的逆矩阵', show:5, count:4 },
+    { cls:'step',  tag:'乘法',    log:'X=A⁻¹B 一次算出三组坐标', show:6, count:5 },
+    { cls:'ok',    tag:'读答案',  log:'X 的三列按顺序读出，就是 β₁、β₂、β₃ 的表示系数', show:7, count:6 },
+    { cls:'done',  tag:'验算',    log:'代回第一列检查：正好等于 β₁=(1,1,1)ᵀ，全部成立', show:8, count:7, done:true },
+  ],
+
+  result: {
+    big: '$a=5$；$\\boldsymbol\\beta_1=2\\boldsymbol\\alpha_1+4\\boldsymbol\\alpha_2-\\boldsymbol\\alpha_3$ 等',
+    html: '记忆锚点：<b>「不能表示」+ 一组满秩 ⇒ 另一组必不满秩</b>。表示式不必逐个解方程组：合写成 $B=AX$，一次 $A^{-1}B$ 三列全出。最后至少代回一列验算。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由"不能表示"逼出 det B = 0，再用 A⁻¹B 读出表示式</h2>
+<p>最终答案：(1) $a=5$；(2) $\boldsymbol\beta_1=2\boldsymbol\alpha_1+4\boldsymbol\alpha_2-\boldsymbol\alpha_3$，$\boldsymbol\beta_2=\boldsymbol\alpha_1+2\boldsymbol\alpha_2+0\cdot\boldsymbol\alpha_3$，$\boldsymbol\beta_3=5\boldsymbol\alpha_1+10\boldsymbol\alpha_2-2\boldsymbol\alpha_3$。</p>
+<h3>第一步：(1) 从"不能表示"读出行列式条件</h3>
+<p>记 $A=(\boldsymbol\alpha_1,\boldsymbol\alpha_2,\boldsymbol\alpha_3)$，$B=(\boldsymbol\beta_1,\boldsymbol\beta_2,\boldsymbol\beta_3)$。先算</p>
+<p>$$\det A=\begin{vmatrix}1&amp;0&amp;1\\0&amp;1&amp;3\\1&amp;1&amp;5\end{vmatrix}=1\neq0,$$</p>
+<p>故 $\boldsymbol\alpha$ 组线性无关、张满 $\mathbb R<sup>3</sup>$。反证：若 $\det B\neq0$，则 $\boldsymbol\beta$ 组也张满 $\mathbb R<sup>3</sup>$，任何向量（包括每个 $\boldsymbol\alpha_i$）都能由 $\boldsymbol\beta$ 组线性表示，与题设矛盾。故必有 $\det B=0$。</p>
+<h3>第二步：消元算 det B，解出 a</h3>
+<p>$$\det B=\begin{vmatrix}1&amp;1&amp;3\\1&amp;2&amp;4\\1&amp;3&amp;a\end{vmatrix}\ \xrightarrow[\ r_3-r_1\ ]{\ r_2-r_1\ }\ \begin{vmatrix}1&amp;1&amp;3\\0&amp;1&amp;1\\0&amp;2&amp;a-3\end{vmatrix}=1\cdot\big(a-3-2\big)=a-5,$$</p>
+<p>令 $a-5=0$ 得 $a=5$。此时 $\boldsymbol\beta$ 组秩为 $2$，张成一张平面，而三个无关的 $\boldsymbol\alpha$ 不可能全落进平面里，"不能表示"成立，条件自洽。</p>
+<h3>第三步：(2) 解 B=AX，一次读出三组坐标</h3>
+<p>表示式 $\boldsymbol\beta_j=x_{1j}\boldsymbol\alpha_1+x_{2j}\boldsymbol\alpha_2+x_{3j}\boldsymbol\alpha_3$ 合起来就是矩阵方程 $B=AX$，解为 $X=A<sup>-1</sup>B$。由 $\det A=1$ 求得</p>
+<p>$$A<sup>-1</sup>=\begin{pmatrix}2&amp;1&amp;-1\\3&amp;4&amp;-3\\-1&amp;-1&amp;1\end{pmatrix},\qquad<br/>X=A<sup>-1</sup>B=\begin{pmatrix}2&amp;1&amp;5\\4&amp;2&amp;10\\-1&amp;0&amp;-2\end{pmatrix}.$$</p>
+<p>$X$ 的第 $j$ 列就是 $\boldsymbol\beta_j$ 的坐标。验算一列：$2\boldsymbol\alpha_1+4\boldsymbol\alpha_2-\boldsymbol\alpha_3=(2-1,\ 4-3,\ 2+4-5)<sup>\mathrm T</sup>=(1,1,1)<sup>\mathrm T</sup>=\boldsymbol\beta_1$，成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>把"不能表示"的方向弄反</strong>：是 $\boldsymbol\alpha$ 组<strong>不能由</strong> $\boldsymbol\beta$ 组表示。因为 $\boldsymbol\alpha$ 组无关，才反推出 $\boldsymbol\beta$ 组必须退化（$\det B=0$）。</li><li><strong>逐个解三个方程组</strong>：把 $\boldsymbol\beta_1,\boldsymbol\beta_2,\boldsymbol\beta_3$ 并成 $B$ 一次算 $A<sup>-1</sup>B$，比解三次非齐次方程组省力得多。</li><li><strong>忘记验算</strong>：至少代回一列检查，防止矩阵乘法抄错行。</li></ul>
+<blockquote>结论：秩是这道题的钥匙——$\boldsymbol\alpha$ 组满秩 + "不能表示" $\Rightarrow$ $\boldsymbol\beta$ 组不满秩 $\Rightarrow a=5$；表示式就是 $A<sup>-1</sup>B$ 的三列。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

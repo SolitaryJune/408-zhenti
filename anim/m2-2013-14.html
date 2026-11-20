@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：代数余子式条件定行列式（2013 年第 14 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-13.html" data-q="../question/m2-2013-13/">← <b>m2-2013-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-14/" data-q="../question/m2-2013-14/" data-no-anim="1">m2-2013-14 · 本题</a>
+  <a href="m2-2013-15.html" data-q="../question/m2-2013-15/"><b>m2-2013-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>$a_{ij}+A_{ij}=0$ 即 $A_{ij}=-a_{ij}$：每个元素的代数余子式是其相反数。$A$ 是 3 阶<b>非零</b>矩阵，求 $|A|$。两条工具链：按行展开、伴随矩阵。</p>' },
+  { title: '按行展开：先排除 |A|=0', cls: 'key',
+    body: '<p>任取第 $i$ 行展开：</p>' +
+          '<p>$$|A|=\\sum_{j=1}^3a_{ij}A_{ij}=-\\sum_{j=1}^3a_{ij}^2\\le0.$$</p>' +
+          '<p>$A\\ne O$ 保证某一行含非零元，取该行展开得 $|A|&lt;0$，特别地 $|A|\\ne0$。</p>' },
+  { title: '伴随矩阵的形状', cls: '',
+    body: '<p>$A^*=(A_{ij})^{\\mathrm T}$，代 $A_{ij}=-a_{ij}$ 得</p>' +
+          '<p>$$A^*=-A^{\\mathrm T}.$$</p>' +
+          '<p>先转置再添负号——直接写 $-A$ 是错的。</p>' },
+  { title: '两条 |A*| 公式联立', cls: 'key',
+    body: '<p>其一，直接取行列式（3 阶，负号提出因子 $(-1)^3$）：</p>' +
+          '<p>$$|A^*|=\\big|-A^{\\mathrm T}\\big|=-|A|.$$</p>' +
+          '<p>其二，伴随矩阵行列式公式：$|A^*|=|A|^{n-1}=|A|^2$。</p>' },
+  { title: '解方程并舍根', cls: 'good',
+    body: '<p>$$|A|^2=-|A|\\;\\Rightarrow\\;|A|\\big(|A|+1\\big)=0.$$</p>' +
+          '<p>$|A|=0$ 或 $-1$；由第 2 步 $|A|\\ne0$，故 $|A|=-1$。验算：$|A^*|=|A|^2=1=-|A|$ ✓。</p>' },
+  { title: '结论', cls: 'good',
+    body: '<p>答案：<b>$|A|=-1$</b>。核心链条：行展开定 $|A|&lt;0$ → 伴随公式出方程 → 舍掉零根。</p>' },
+];
+
+var RIBBONS = [null, {k:1, ok:true}, {k:2, ok:true}, {k:3, ok:true}, {k:4, ok:true}, {k:5, ok:true}];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : (s.cls === 'good' ? 'ok' : 'step')),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    ribbon: RIBBONS[i],
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '由 $A_{ij}=-a_{ij}$ 求 $|A|$',
+  subtitle: '考点：伴随矩阵与行列式 · 方法：行展开排除零根 + $|A^*|=|A|^{n-1}$',
+  ribbonTitle: '关键节点',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$|A|=-1$',
+    html: '记忆锚点：<b>$|A^*|=|A|^{n-1}$ 与 $A^*=-A^{\\mathrm T}$ 联立出方程 $|A|^2=-|A|$</b>；"按行展开 $-\\sum a_{ij}^2$，非零行使其为负"这一步负责把 $|A|=0$ 挤掉——<b>非零矩阵条件就是干这个用的</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：代数余子式条件 + 伴随矩阵行列式公式</h2>
+<p><strong>答案：$|A|=-1$</strong></p>
+<h3>第一步：翻译条件</h3>
+<p>$a_{ij}+A_{ij}=0$ 即每个元素的代数余子式是其相反数：$A_{ij}=-a_{ij}$。把它连到 $|A|$ 有两条工具链：按行展开公式、伴随矩阵。</p>
+<h3>第二步：按行展开，先排除 $|A|=0$</h3>
+<p>任取第 $i$ 行展开：</p>
+<p>$$|A|=\sum_{j=1}<sup>3a</sup>_{ij}A_{ij}=-\sum_{j=1}<sup>3a</sup>_{ij}<sup>2</sup>\le0.$$</p>
+<p>$A$ 是<strong>非零</strong>矩阵，必有一行含非零元素，取那一行展开则 $-\sum_j a_{ij}<sup>2</sup>&lt;0$，所以 $|A|&lt;0$，特别地 $|A|\ne0$——这一步是后面舍根的依据。</p>
+<h3>第三步：用伴随矩阵建立方程</h3>
+<p>$A^*=(A_{ij})<sup>\mathrm T</sup>$，代 $A_{ij}=-a_{ij}$ 得 $A^*=-A<sup>\mathrm T</sup>$（先转置再添负号）。两边取行列式，3 阶提出公因子 $(-1)<sup>3</sup>$：</p>
+<p>$$|A^*|=\big|-A<sup>\mathrm T</sup>\big|=(-1)<sup>3</sup>|A|=-|A|.$$</p>
+<p>另一方面伴随矩阵行列式给出 $|A^*|=|A|<sup>n-1</sup>=|A|<sup>2</sup>$。这个公式别硬背，用基本恒等式 $AA^*=|A|E$ 两边取行列式现推：$|A|\cdot|A^*|=\bigl\lvert |A|E\bigr\rvert=|A|<sup>3</sup>$，$|A|\ne0$ 时约去一个 $|A|$ 即得 $|A^*|=|A|<sup>2</sup>$——本题第二步恰好已证 $|A|\ne0$，公式在此合法。两条路必须相等：</p>
+<p>$$|A|<sup>2</sup>=-|A|.$$</p>
+<h3>第四步：解方程并舍根</h3>
+<p>$|A|\big(|A|+1\big)=0$，得 $|A|=0$ 或 $|A|=-1$；由第二步 $|A|\ne0$，故</p>
+<p>$$|A|=-1.$$</p>
+<p>（验算：$|A|=-1$ 时 $|A^*|=|A|<sup>2</sup>=1$，而 $-|A|=1$，两边吻合。）</p>
+<h3>易错点</h3>
+<ul><li><strong>由 $-\sum a_{ij}<sup>2</sup>\le0$ 就收工</strong>：$\le0$ 包含 $0$，必须用"$A$ 非零"把 $|A|=0$ 挤掉，否则舍根环节失去依据。</li><li><strong>伴随矩阵写错</strong>：$A^*=(A_{ij})<sup>\mathrm T</sup>$，先转置再代负号；直接写 $A^*=-A$ 是错的。</li><li><strong>符号因子错代</strong>：$|-A<sup>\mathrm T</sup>|$ 提出 $(-1)<sup>3</sup>=-1$（$n=3$）；若 $n$ 为偶数则是 $+1$，这里千万别背成 $(-1)<sup>n-1</sup>$ 乱套——提取的是矩阵前的负号。</li></ul>
+<blockquote>一句话结论：$|A|=-1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

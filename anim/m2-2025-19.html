@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>m2-2025-19 · 全微分还原原函数并求极值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-18.html" data-q="../question/m2-2025-18/">← <b>m2-2025-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-19/" data-q="../question/m2-2025-19/" data-no-anim="1">m2-2025-19 · 本题</a>
+  <a href="m2-2025-20.html" data-q="../question/m2-2025-20/"><b>m2-2025-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '由 $\\mathrm{d}f$ 还原 $f(x,y)$ 并求极值',
+  subtitle: '考点：全微分 / 偏积分 + 二元极值 $AC-B^2$ 判别法 · 初值 $f(0,0)=2$',
+  counterLabel: '已完成',
+  intro: '点击「▶ 播放」逐步演示：偏积分 → 定 φ(y) → 定常数 → 驻点 → 二阶判别。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var head = AW.el('div', '',
+      '<p>$$\\mathrm{d}f=-2x\\mathrm{e}^{-y}\\,\\mathrm{d}x+\\mathrm{e}^{-y}(x^2-y-1)\\,\\mathrm{d}y,\\qquad f(0,0)=2$$</p>');
+    stage.appendChild(head);
+    this._board = AW.el('div', '');
+    stage.appendChild(this._board);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'全微分展开后两个系数就是两个偏导数，从 f 对 x 的偏导数入手', count:1,
+      board: '<div class="aw-row-label"><b>第 1 步 · 读出偏导数</b></div>'
+        + '<p>$$f_x=-2x\\mathrm{e}^{-y},\\qquad f_y=\\mathrm{e}^{-y}(x^2-y-1)$$</p>'
+        + '<p>（可自查恰当性：$P_y=2x\\mathrm{e}^{-y}=Q_x$，全微分确实可还原。）</p>' },
+    { cls:'step', tag:'偏积分', log:'对 x 偏积分：积分常数换成待定函数 φ(y)', count:2,
+      ribbon:{k:1, ok:true},
+      board: '<div class="aw-row-label"><b>第 2 步 · 对 $x$ 偏积分</b></div>'
+        + '<p>$$f(x,y)=-x^2\\mathrm{e}^{-y}+\\varphi(y)$$</p>'
+        + '<p>与 $x$ 无关的部分全藏在 $\\varphi(y)$ 里，不能当常数 0。</p>' },
+    { cls:'step', tag:'定 φ′', log:'对 y 求偏导再和题设系数比对，解出 φ 的一元导数', count:3,
+      board: '<div class="aw-row-label"><b>第 3 步 · 比较 $f_y$ 定 $\\varphi\\prime(y)$</b></div>'
+        + '<p>$$f_y=x^2\\mathrm{e}^{-y}+\\varphi\\prime(y)=x^2\\mathrm{e}^{-y}-(y+1)\\mathrm{e}^{-y}$$</p>'
+        + '<p>$$\\varphi\\prime(y)=-(y+1)\\mathrm{e}^{-y}$$</p>' },
+    { cls:'step', tag:'分部积分', log:'对 y 加 1 乘 e 的负 y 次方做一次分部积分，两个负号相消', count:4,
+      board: '<div class="aw-row-label"><b>第 4 步 · 积出 $\\varphi$</b></div>'
+        + '<p>$$\\int (y+1)\\mathrm{e}^{-y}\\,\\mathrm{d}y=-(y+1)\\mathrm{e}^{-y}-\\mathrm{e}^{-y}=-(y+2)\\mathrm{e}^{-y}$$</p>'
+        + '<p>$$\\varphi(y)=(y+2)\\mathrm{e}^{-y}+C$$</p>' },
+    { cls:'ok', tag:'定常数', log:'代初值：x、y 全取零，2 加 C 等于 2，C 归零', count:5,
+      ribbon:{k:2, ok:true},
+      board: '<div class="aw-row-label"><b>第 5 步 · 初值 $f(0,0)=2$ 定 $C$</b></div>'
+        + '<p>$$f(0,0)=0+(0+2)\\cdot1+C=2\\ \\Longrightarrow\\ C=0$$</p>'
+        + '<p>$$f(x,y)=(y+2-x^2)\\mathrm{e}^{-y}$$</p>' },
+    { cls:'step', tag:'驻点', log:'两个一阶偏导同时为零：x 必为零，进而 y 是负 1', count:6,
+      ribbon:{k:3, ok:true},
+      board: '<div class="aw-row-label"><b>第 6 步 · 解驻点</b></div>'
+        + '<p>$$f_x=-2x\\mathrm{e}^{-y}=0\\ \\Rightarrow\\ x=0;\\qquad f_y=\\mathrm{e}^{-y}(x^2-y-1)=0\\ \\Rightarrow\\ y=x^2-1=-1$$</p>'
+        + '<p>唯一驻点 $(0,-1)$。</p>' },
+    { cls:'step', tag:'二阶判别', log:'算三个二阶偏导，在驻点处 A 是负的、B 是零、C 也是负的', count:7,
+      board: '<div class="aw-row-label"><b>第 7 步 · 二阶偏导在 $(0,-1)$</b></div>'
+        + '<p>$$A=f_{xx}=-2\\mathrm{e}^{-y}=-2\\mathrm{e}<0,\\quad B=f_{xy}=2x\\mathrm{e}^{-y}=0,\\quad C=f_{yy}=\\mathrm{e}^{-y}(y-x^2)=-\\mathrm{e}$$</p>'
+        + '<p>$$AC-B^2=(-2\\mathrm{e})(-\\mathrm{e})-0=2\\mathrm{e}^2>0$$</p>' },
+    { cls:'done', tag:'完成', log:'判别式为正且 A 小于零：唯一驻点是极大值点，函数没有极小值', count:8, done:true,
+      ribbon:{k:4, ok:true},
+      board: '<div class="aw-row-label"><b>第 8 步 · 结论</b></div>'
+        + '<p>$$f(0,-1)=(-1+2-0)\\,\\mathrm{e}^{1}=\\mathrm{e}$$</p>'
+        + '<p>$AC-B^2>0$ 且 $A<0$：极大值点；驻点唯一 $\\Rightarrow$ <b>无极小值</b>。</p>' },
+  ],
+
+  render: function(stage, sn, i){
+    this._board.innerHTML = sn.board || '';
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '极大值 f(0,−1) = e，无极小值',
+    html: '结论：$$f(x,y)=-x^2\\mathrm{e}^{-y}+(y+2)\\mathrm{e}^{-y},\\qquad \\text{极大值 } f(0,-1)=\\mathrm{e},\\ \\text{无极小值}$$'
+      + '记忆点：<b>偏积分的「常数」是 $\\varphi(y)$</b>；还原后必代初值定 $C$；'
+      + '极值判定永远是「驻点 + $AC-B^2$ 与 $A$ 的符号」，驻点唯一且判为极大 $\\Rightarrow$ 无极小值。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由全微分还原原函数，再判极值</h2>
+<p><strong>答案</strong>：$f(x,y)=-x<sup>2</sup>\mathrm{e}<sup>-y</sup>+(y+2)\mathrm{e}<sup>-y</sup>$；$f$ 有极大值 $f(0,-1)=\mathrm e$，无极小值。</p>
+<h3>第一步：偏积分还原（"积分常数"是待定函数）</h3>
+<p>$\mathrm df=P\,\mathrm dx+Q\,\mathrm dy$ 意味着 $f_x=P,\ f_y=Q$。<strong>为什么先对 $x$ 偏积分？</strong> 两个方向都能走，但 $f_x=-2x\mathrm e<sup>-y</sup>$ 关于 $x$ 是一次式，积一次立刻出 $-x<sup>2</sup>\mathrm e<sup>-y</sup>$；若先对 $y$ 积 $Q=\mathrm e<sup>-y</sup>(x<sup>2</sup>-y-1)$ 则必带一次分部积分，多一处负号风险。选"好积的那一半"先做。于是对 $x$ 偏积分：</p>
+<p>$$f_x=-2x\mathrm{e}<sup>-y</sup>\ \Longrightarrow\ f(x,y)=-x<sup>2</sup>\mathrm{e}<sup>-y</sup>+\varphi(y),$$</p>
+<p>其中 $\varphi(y)$ 是待定的一元函数——对 $x$ 积分时，与 $x$ 无关的部分都藏在它里面。</p>
+<h3>第二步：用 $f_y=Q$ 定出 $\varphi$</h3>
+<p>$$f_y=x<sup>2</sup>\mathrm{e}<sup>-y</sup>+\varphi'(y)\overset{\text{题设}}=x<sup>2</sup>\mathrm{e}<sup>-y</sup>-(y+1)\mathrm{e}<sup>-y</sup>\ \Longrightarrow\ \varphi'(y)=-(y+1)\mathrm{e}<sup>-y</sup>.$$</p>
+<p>分部积分一次：$\displaystyle\int(y+1)\mathrm{e}<sup>-y</sup>\mathrm{d}y=-(y+1)\mathrm{e}<sup>-y</sup>-\mathrm{e}<sup>-y</sup>=-(y+2)\mathrm{e}<sup>-y</sup>$，故</p>
+<p>$$\varphi(y)=(y+2)\mathrm{e}<sup>-y</sup>+C,\qquad f(x,y)=-x<sup>2</sup>\mathrm{e}<sup>-y</sup>+(y+2)\mathrm{e}<sup>-y</sup>+C.$$</p>
+<h3>第三步：初值定常数，写出 $f$</h3>
+<p>代入 $f(0,0)=2$：$0+(0+2)\cdot1+C=2$，得 $C=0$：</p>
+<p>$$f(x,y)=(y+2-x<sup>2</sup>)\mathrm{e}<sup>-y</sup>.$$</p>
+<h3>第四步：驻点与二阶判别</h3>
+<p>一阶条件：</p>
+<p>$$f_x=-2x\mathrm{e}<sup>-y</sup>=0\Rightarrow x=0;\qquad f_y=\mathrm{e}<sup>-y</sup>(x<sup>2</sup>-y-1)=0\Rightarrow y=x<sup>2</sup>-1=-1.$$</p>
+<p>$f_y=0$ 之所以能直接扔掉因子 $\mathrm e<sup>-y</sup>$，依据是 $\mathrm e<sup>-y</sup>&gt;0$ 恒成立——指数函数永不为零。唯一驻点 $(0,-1)$。二阶偏导：</p>
+<table><thead><tr><th>偏导</th><th>表达式</th><th>在 $(0,-1)$</th></tr></thead><tbody><tr><td>$A=f_{xx}$</td><td>$-2\mathrm{e}<sup>-y</sup>$</td><td>$-2\mathrm{e}&lt;0$</td></tr><tr><td>$B=f_{xy}$</td><td>$2x\mathrm{e}<sup>-y</sup>$</td><td>$0$</td></tr><tr><td>$C=f_{yy}$</td><td>$\mathrm{e}<sup>-y</sup>(y-x<sup>2</sup>)$</td><td>$-\mathrm e$</td></tr></tbody></table>
+<p><strong>为什么 $AC-B<sup>2</sup>$ 与 $A$ 的符号能判极值？</strong> 驻点处泰勒展开的一阶项消失，只剩二阶主部 $\Delta f\approx\frac12\big(A\,\Delta x<sup>2</sup>+2B\,\Delta x\,\Delta y+C\,\Delta y<sup>2</sup>\big)$，这是关于增量 $(\Delta x,\Delta y)$ 的二次型。$AC-B<sup>2</sup>&gt;0$ 迫使 $A,C$ 同号、二次型<strong>定号</strong>：$A&lt;0$ 时无论朝哪个方向走函数值都下降——四面低是山顶（极大）；$A&gt;0$ 四面高是谷底（极小）；$AC-B<sup>2</sup>&lt;0$ 则有升有降，是鞍点。这与一元情形"$f''&lt;0$ 为极大"一脉相承。</p>
+<p>$AC-B<sup>2</sup>=(-2\mathrm e)(-\mathrm e)-0=2\mathrm e<sup>2</sup>&gt;0$ 且 $A&lt;0$，故 $(0,-1)$ 是<strong>极大值点</strong>，极大值 $f(0,-1)=(-1+2-0)\mathrm{e}<sup>1</sup>=\mathrm e$。</p>
+<p><strong>为什么无极小值？</strong> 可微函数的极值点必是驻点（费马引理），而驻点方程组只有唯一解 $(0,-1)$，它已被判为极大——极值"名额"用完，故不存在极小值。</p>
+<h3>易错点</h3>
+<ul><li><strong>偏积分漏 $\varphi(y)$</strong>：对 $x$ 积分的"常数"是含 $y$ 的函数，写成常数 0 后面全部无解。</li><li><strong>$\varphi'$ 的双重负号</strong>：由 $f_y$ 比较得 $\varphi'(y)=-(y+1)\mathrm e<sup>-y</sup>$，分部积分又出一个负号 $\int(y+1)\mathrm e<sup>-y</sup>\mathrm dy=-(y+2)\mathrm e<sup>-y</sup>$，两个负号相消才得到 $+(y+2)\mathrm e<sup>-y</sup>$。</li><li><strong>$f_{yy}$ 漏乘积法则</strong>：$f_y=\mathrm e<sup>-y</sup>(x<sup>2</sup>-y-1)$ 对 $y$ 求导是两项 $-\mathrm e<sup>-y</sup>(x<sup>2</sup>-y-1)-\mathrm e<sup>-y</sup>$，合并成 $\mathrm e<sup>-y</sup>(y-x<sup>2</sup>)$；只求一层就错了。</li><li><strong>只解驻点不判型</strong>：解出 $(0,-1)$ 不算完，必须算 $AC-B<sup>2</sup>$ 与 $A$ 的符号；也别忘交代"为什么无极小值"——驻点唯一且为极大。</li></ul>
+<blockquote>一句话结论：偏积分得 $f=(y+2-x<sup>2</sup>)\mathrm e<sup>-y</sup>$，唯一驻点 $(0,-1)$ 处 $AC-B<sup>2</sup>=2\mathrm e<sup>2</sup>&gt;0$、$A&lt;0$，极大值 $\mathrm e$，无极小值。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

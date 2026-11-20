@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·11 由两个特解反构微分方程</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-10.html" data-q="../question/m2-2016-10/">← <b>m2-2016-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-11/" data-q="../question/m2-2016-11/" data-no-anim="1">m2-2016-11 · 本题</a>
+  <a href="m2-2016-12.html" data-q="../question/m2-2016-12/"><b>m2-2016-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>已知 $y_1=x^2-\\mathrm e^x$ 与 $y_2=x^2$ 都是某<b>一阶非齐次线性</b>方程 $y\'+P(x)y=Q(x)$ 的特解，求这个方程。武器：解的结构定理。</p>' },
+  { label: '第 1 步 · 两特解之差 = 齐次解',
+    h: '<p>$$y_1-y_2=(x^2-\\mathrm e^x)-x^2=-\\mathrm e^x.$$ 结构定理：任两特解之差必满足对应<b>齐次</b>方程 $y\'+Py=0$。齐次解里藏着 $\\mathrm e^x$。</p>' },
+  { label: '第 2 步 · 定 P(x)',
+    h: '<p>齐次通解为 $C\\mathrm e^{-\\int P\\mathrm dx}$。既然 $C\\mathrm e^{x}$ 形式的 $-\\mathrm e^x$ 是解，代回 $\\bar y\'+P\\bar y=0$：$$\\mathrm e^x+P(x)\\mathrm e^x=0\\ \\Longrightarrow\\ P(x)=-1.$$ 方程形如 $y\'-y=Q(x)$。</p>' },
+  { label: '第 3 步 · 代特解定 Q(x)',
+    h: '<p>用最干净的 $y=x^2$（$y\'=2x$）：$$Q(x)=y\'-y=2x-x^2.$$</p>' },
+  { label: '第 4 步 · 用另一个特解验收',
+    h: '<p>$y=x^2-\\mathrm e^x$：$y\'=2x-\\mathrm e^x$，$$y\'-y=(2x-\\mathrm e^x)-(x^2-\\mathrm e^x)=2x-x^2\\ \\checkmark$$ 两个特解全部吻合，方程无误。</p>' },
+  { label: '第 5 步 · 结论',
+    h: '<p>$$y\'-y=2x-x^2$$ 即所求的一阶非齐次线性微分方程。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '以 $y=x^2-\\mathrm e^x$ 与 $y=x^2$ 为特解的一阶方程',
+  subtitle: '考点：线性方程解的结构 · 方法：特解之差 → 定 $P$ → 代特解 → 定 $Q$',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的六步反构。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'两个特解已知，倒推方程 y′ + P·y = Q', count:0 },
+    { cls:'ok',   tag:'作差',   log:'y₁ − y₂ = −e^x，特解之差是齐次方程的解', count:1 },
+    { cls:'ok',   tag:'定 P',   log:'齐次解含 e^x ⇒ P(x) = −1，方程形如 y′ − y = Q', count:2 },
+    { cls:'step', tag:'定 Q',   log:'代 y = x²：Q = 2x − x²', count:3 },
+    { cls:'ok',   tag:'验收',   log:'另一特解 y₁ 代入同样成立，双重验证通过', count:4 },
+    { cls:'done', tag:'完成',   log:'方程为 y′ − y = 2x − x²', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "y′ − y = 2x − x²",
+    html: '记忆锚点：<b>特解之差 = 齐次解</b>——作差露出 $\\mathrm e^x$，齐次通解 $C\\mathrm e^{x}$ 钉死 $P=-1$；再用干净的特解 $x^2$ 定出 $Q=2x-x^2$。易错：别把 $-\\mathrm e^x$ 误当非齐次项。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由两个特解反构一阶线性方程</h2>
+<p>答案：$y<sup>\prime</sup>-y=2x-x<sup>2</sup>$</p>
+<h3>第 0 步：先立机制——特解之差为什么是齐次解</h3>
+<p>设方程为 $y'+P(x)y=Q(x)$，$y_1,y_2$ 都是解，两式相减：</p>
+<p>$$(y_1'-y_2')+P(x)(y_1-y_2)=Q-Q=0.$$</p>
+<p>右端 $Q$ 在减法里<strong>自我消去</strong>——这是"线性"二字的馈赠：非齐次项只决定整体"平移"，两特解之差必然落回齐次方程。所以本题的两步分工是：从 $y_1-y_2$ 读出 $P(x)$（齐次结构），再用任一特解代回读出 $Q(x)$（非齐次信息），两步各司其职，互不越位。</p>
+<h3>第一步：用差值定 P(x)</h3>
+<p>$$y_1-y_2=(x<sup>2</sup>-\mathrm e<sup>x</sup>)-x<sup>2</sup>=-\mathrm e<sup>x</sup>$$</p>
+<p>是齐次方程 $y'+P(x)y=0$ 的解。齐次方程（可分离变量）的通解本形是 $C\mathrm e<sup>-\int P\mathrm dx</sup>$；把 $\bar y=-\mathrm e<sup>x</sup>$ 代回去：</p>
+<p>$$\bar y'+P\bar y=-\mathrm e<sup>x</sup>+P\cdot(-\mathrm e<sup>x</sup>)=0\ \Longrightarrow\ -1-P=0\ \Longrightarrow\ P(x)=-1.$$</p>
+<p>一句话的直觉：$\mathrm e<sup>x</sup>$ 求导还是 $\mathrm e<sup>x</sup>$，要让 $y'+Py\equiv0$，只有 $P=-1$ 能让两块抵消。方程形如 $y'-y=Q(x)$。</p>
+<h3>第二步：代干净特解定 Q(x)</h3>
+<p>取 $y=x<sup>2</sup>$（多项式，求导不生新花样）：$y'=2x$，</p>
+<p>$$Q(x)=y'-y=2x-x<sup>2</sup>.$$</p>
+<p>所求方程为 $y'-y=2x-x<sup>2</sup>$。</p>
+<h3>第三步：用另一个特解验收</h3>
+<p>$y=x<sup>2</sup>-\mathrm e<sup>x</sup>$：$y'-y=(2x-\mathrm e<sup>x</sup>)-(x<sup>2</sup>-\mathrm e<sup>x</sup>)=2x-x<sup>2</sup>$ ✓——$\mathrm e<sup>x</sup>$ 两侧同现同消，与 $P=-1$ 的机制互相印证，构造闭环。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $-\mathrm e<sup>x</sup>$ 当成非齐次项</strong>：差值里 $x<sup>2</sup>$ 恰好相消，露出的是<strong>齐次</strong>成分；$Q$ 要从代特解那一步来——两步的分工不能乱。</li><li><strong>$P$ 的符号定反</strong>：齐次解 $\mathrm e<sup>x</sup>$ 对应 $P=-1$，齐次解 $C\mathrm e<sup>-x</sup>$ 才对应 $P=1$；用"$\mathrm e<sup>x</sup>$ 求导不变"这个指纹可以秒查。</li><li><strong>不验第二个特解</strong>：一行代入就能堵住抄错号的漏洞——反构题必须用另一个解收口。</li></ul>
+<blockquote>结论：差定 $P=-1$、特解定 $Q=2x-x<sup>2</sup>$，所求方程为 $y'-y=2x-x<sup>2</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

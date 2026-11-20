@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2017·03 收敛数列的复合式极限反解</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-02.html" data-q="../question/m2-2017-02/">← <b>m2-2017-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-03/" data-q="../question/m2-2017-03/" data-no-anim="1">m2-2017-03 · 本题</a>
+  <a href="m2-2017-04.html" data-q="../question/m2-2017-04/"><b>m2-2017-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：统一成"解方程验根"',
+    cls: 'key',
+    body: '<p>设 $\\lim_{n\\to\\infty}x_n=a$（题设收敛）。由连续性，$\\lim_{n\\to\\infty}g(x_n)=g(a)$。每个选项都在问：由 $g(a)=0$ 能否<b>强制</b> $a=0$？——看方程 $g(a)=0$ 是否只有零根，有非零根就构造常值反例。</p>',
+    log: '设极限为 a，各选项化为 g(a)=0' },
+  { title: 'A：$\\sin a=0$ 根太多',
+    cls: 'bad',
+    body: '<p>$\\sin$ 连续，得 $\\sin a=0$，解为 $a=k\\pi$，不止 $a=0$。反例：$x_n\\equiv\\pi$，则 $\\sin x_n\\to0$ 但 $x_n\\to\\pi\\neq0$。A 否。</p>',
+    ribbon: {k:1, ok:false},
+    log: 'a=kπ，反例 xₙ≡π，A 错' },
+  { title: 'B：$a+\\sqrt{\\lvert a\\rvert}=0$ 有负根',
+    cls: 'bad',
+    body: '<p>$\\sqrt{\\lvert\\cdot\\rvert}$ 连续，得 $a+\\sqrt{\\lvert a\\rvert}=0$。$a=-1$ 时 $-1+\\sqrt{1}=0$，是根。反例：$x_n\\equiv-1$，复合式 $\\to0$ 但 $x_n\\to-1$。B 否。</p>',
+    ribbon: {k:2, ok:false},
+    log: 'a=−1 也是根，反例 xₙ≡−1，B 错' },
+  { title: 'C：$a+a^2=0$ 有非零根',
+    cls: 'bad',
+    body: '<p>$x^2$ 连续，得 $a+a^2=a(a+1)=0$，根为 $a=0$ 或 $a=-1$。反例：$x_n\\equiv-1$，则 $x_n+x_n^2\\to0$ 但极限为 $-1$。C 否。</p>',
+    ribbon: {k:3, ok:false},
+    log: 'a=−1 使 a+a²=0，C 错' },
+  { title: 'D：$a+\\sin a=0$ 只有零根',
+    cls: 'good',
+    body: '<p>方程 $\\sin a=-a$，取绝对值：$\\lvert\\sin a\\rvert=\\lvert a\\rvert$。而 $\\lvert\\sin a\\rvert\\le\\lvert a\\rvert$ 且<b>等号仅在 $a=0$</b>（$a\\neq0$ 时 $\\lvert\\sin a\\rvert<\\lvert a\\rvert$）。故唯一根 $a=0$，即 $\\lim_{n\\to\\infty}x_n=0$，D 成立。</p>',
+    ribbon: {k:4, ok:true},
+    log: '|sin a|<|a|（a≠0），唯一根 a=0' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>A、B、C 各有非零反例，D 的方程只有 $a=0$ 一个根——答案选 <b>D</b>。</p>',
+    log: '选 D' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '收敛数列 $\\{x_n\\}$：哪个条件能强制 $\\lim x_n=0$？',
+  subtitle: '考点：数列极限 + 连续函数复合 · 方法：解 g(a)=0 验根，非零根即反例',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 成立 / ✗ 反例否定）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>$\\lvert\\sin a\\rvert<\\lvert a\\rvert$（$a\\neq0$）</b>是 $a+\\sin a=0$ 只有零根的关键；A/B/C 的套路是"<b>方程有非零根 ⟹ 常值数列 $x_n\\equiv$ 非零根 就是反例</b>"（$\\pi$、$-1$、$-1$）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由复合式极限反解数列极限（找非零根排除）</h2>
+<p>答案：D</p>
+<h3>第一步：统一框架</h3>
+<p>题设 $\{x_n\}$ 收敛，记 $\lim\limits_{n\to\infty}x_n=a$。四个选项都是同一句话："某个含 $x_n$ 的连续复合式趋于 $0$，能否强制 $a=0$？"由连续性，复合式极限就是 $g(a)$，于是每个选项都归结为：<strong>方程 $g(a)=0$ 是否只有零根</strong>。有非零根就当场构造常值反例 $x_n\equiv a$，选项即被否定。</p>
+<h3>第二步：A、B、C 各找一个非零根</h3>
+<table><thead><tr><th>选项</th><th>方程</th><th>非零根</th><th>反例</th></tr></thead><tbody><tr><td>A</td><td>$\sin a=0$</td><td>$a=k\pi$</td><td>$x_n\equiv\pi$：$\sin x_n\to0$ 但 $x_n\to\pi$</td></tr><tr><td>B</td><td>$a+\sqrt{\lvert a\rvert}=0$</td><td>$a=-1$（$-1+1=0$）</td><td>$x_n\equiv-1$</td></tr><tr><td>C</td><td>$a+a<sup>2</sup>=0$</td><td>$a=-1$</td><td>$x_n\equiv-1$：$x_n+x_n<sup>2</sup>\to0$ 但极限为 $-1$</td></tr></tbody></table>
+<p>三项全部被反例否掉。注意 B 的坑：$\sqrt{\lvert a\rvert}$ 允许 $a$ 取负值，$a=-1$ 恰好使两项抵消。</p>
+<h3>第三步：D 的零根是唯一的</h3>
+<p>D 要求 $a+\sin a=0$，即 $\sin a=-a$。取绝对值得 $\lvert\sin a\rvert=\lvert a\rvert$；而熟知 $\lvert\sin a\rvert\le\lvert a\rvert$ 且<strong>等号仅在 $a=0$ 处成立</strong>（$a\ne0$ 时 $\lvert\sin a\rvert&lt;\lvert a\rvert$）。所以方程只有唯一根 $a=0$，从而 $\lim\limits_{n\to\infty}x_n=0$，D 成立。</p>
+<p>（也可以用单调性论证：$g(t)=t+\sin t$ 满足 $g'(t)=1+\cos t\ge0$ 且零点孤立，故严格增，$g(0)=0$ 是唯一零点。）</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 $\sin x_n\to0$ 就有 $x_n\to0$</strong>：$\sin$ 不是单射，$\pi$ 也满足，A 的反例就是这么来的。</li><li><strong>给 B 找根时漏掉负根</strong>：心里默认 $x_n\ge0$ 就会漏掉 $a=-1$。</li><li><strong>对 D 用"排除法凑答案"</strong>：要知道 D 成立的完整理由——"$\lvert\sin a\rvert&lt;\lvert a\rvert$（$a\ne0$）"或严格单调性，二选一写清。</li></ul>
+<blockquote>结论：A、B、C 各有非零极限的反例，D 的方程只有 $a=0$ 一个根，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

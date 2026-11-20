@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021·18 含绝对值函数的凹凸区间与渐近线</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-17.html" data-q="../question/m2-2021-17/">← <b>m2-2021-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-18/" data-q="../question/m2-2021-18/" data-no-anim="1">m2-2021-18 · 本题</a>
+  <a href="m2-2021-19.html" data-q="../question/m2-2021-19/"><b>m2-2021-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$f(x)=\\frac{x|x|}{1+x}\\qquad\\text{含 } |x|\\text{，先分段去绝对值}$$",
+  "<b>① 右段 $x\\ge0$：</b>$|x|=x$，$$f(x)=\\frac{x^2}{1+x}=x-1+\\frac{1}{1+x}$$",
+  "<b>② 左段 $x<0$：</b>$|x|=-x$，$$f(x)=\\frac{-x^2}{1+x}=-x+1-\\frac{1}{1+x}$$",
+  "<b>③ 右段二阶导：</b>$f^{\\prime}(x)=1-\\dfrac{1}{(1+x)^2}$，$f^{\\prime\\prime}(x)=\\dfrac{2}{(1+x)^3}>0$（$x>0$）$\\Rightarrow$ 凹",
+  "<b>④ 左段二阶导：</b>$f^{\\prime}(x)=-1+\\dfrac{1}{(1+x)^2}$，$f^{\\prime\\prime}(x)=-\\dfrac{2}{(1+x)^3}$（$x<0$ 且 $x\\ne-1$）",
+  "<b>⑤ 左段判号：</b>$-1<x<0$ 时 $(1+x)^3>0\\Rightarrow f^{\\prime\\prime}<0$（凸）；$x<-1$ 时 $(1+x)^3<0\\Rightarrow f^{\\prime\\prime}>0$（凹）",
+  "<b>⑥ 凹凸结论：</b>凹区间 $(-\\infty,-1)$ 与 $(0,+\\infty)$；凸区间 $(-1,0)$（$x=-1$ 处无定义，不并入）",
+  "<b>⑦ 铅直渐近线：</b>$x\\to-1$ 时分子 $\\to-1\\ne0$、分母 $\\to0$，$\\lim_{x\\to-1}f(x)=\\infty\\ \\Rightarrow\\ x=-1$",
+  "<b>⑧ 右侧斜渐近线：</b>$x\\to+\\infty$：$f(x)=x-1+\\dfrac{1}{1+x}\\ \\Rightarrow\\ y=x-1$",
+  "<b>⑨ 左侧斜渐近线：</b>$x\\to-\\infty$：$f(x)=-x+1-\\dfrac{1}{1+x}\\ \\Rightarrow\\ y=-x+1$"
+];
+
+AW.init({
+  title: "2021·18　$f(x)=\\dfrac{x|x|}{1+x}$ 的凹凸区间与渐近线",
+  subtitle: "考点：分段去绝对值 · $f^{\\prime\\prime}$ 判凹凸 · 铅直渐近线与双侧斜渐近线",
+  counterLabel: "推导步数",
+  ribbonTitle: "推导进度（✓ 完成）",
+  intro: "点击「▶ 播放」或「下一步」，先分段化简，再判凹凸、找渐近线。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前步亮琥珀色，已完成步变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    {"cls": "step", "tag": "审题", "log": "函数含绝对值，先按 x 大于等于零与小于零分两段化简", "count": 0, "ribbon": {"k": 1, "ok": true}},
+    {"cls": "shift", "tag": "右段", "log": "右段化成 x 减一加真分式，求导方便", "count": 1, "ribbon": {"k": 2, "ok": true}},
+    {"cls": "shift", "tag": "左段", "log": "左段化成负 x 加一减真分式，注意整体变号", "count": 2, "ribbon": {"k": 3, "ok": true}},
+    {"cls": "ok", "tag": "右段导", "log": "右段二阶导恒为正，零到正无穷是凹区间", "count": 3, "ribbon": {"k": 4, "ok": true}},
+    {"cls": "ok", "tag": "左段导", "log": "左段二阶导带负号，正负取决于一加 x 的立方的符号", "count": 4, "ribbon": {"k": 5, "ok": true}},
+    {"cls": "ok", "tag": "判号", "log": "负一到零之间二阶导为负是凸，负一到负无穷之间为正是凹", "count": 5, "ribbon": {"k": 6, "ok": true}},
+    {"cls": "ok", "tag": "凹凸结论", "log": "汇总：凹区间两个，凸区间一个，负一处无定义要切开", "count": 6, "ribbon": {"k": 7, "ok": true}},
+    {"cls": "ok", "tag": "铅直", "log": "负一处分母为零分子不为零，x 等于负一是铅直渐近线", "count": 7, "ribbon": {"k": 8, "ok": true}},
+    {"cls": "ok", "tag": "右斜", "log": "右侧无穷远处贴直线 y 等于 x 减一", "count": 8, "ribbon": {"k": 9, "ok": true}},
+    {"cls": "ok", "tag": "左斜", "log": "左侧无穷远处贴直线 y 等于负 x 加一，两条斜渐近线都要写", "count": 9, "ribbon": {"k": 10, "ok": true}},
+    {"cls": "done", "tag": "完成", "log": "完成：凹凸区间与三条渐近线全部确定", "count": 10, "ribbon": {"k": 11, "ok": true}, "done": true}
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "凹 $(-\\infty,-1)$、$(0,+\\infty)$；凸 $(-1,0)$",
+    html: "渐近线共三条：<b>铅直 $x=-1$；斜 $y=x-1$（$x\\to+\\infty$）与 $y=-x+1$（$x\\to-\\infty$）</b>。记忆锚点：两侧一次项不同，斜渐近线必查左右两向；易错：把 $x=-1$ 并入凹凸区间（无定义点必须切开）。"
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含 $\lvert x\rvert$ 函数的凹凸与渐近线——先拆段化简，再"读"出结论</h2>
+<p><strong>答案</strong>：凹区间 $(-\infty,-1)$ 与 $(0,+\infty)$；凸区间 $(-1,0)$；铅直渐近线 $x=-1$；斜渐近线 $y=-x+1$ 与 $y=x-1$。</p>
+<h3>第 0 步：两条判定的机制先立起来</h3>
+<p><strong>凹凸看什么</strong>：$f''&gt;0$ 时曲线"向下兜"（凹，下凸），$f''&lt;0$ 时"向上拱"（凸）。判定就是求二阶导、定符号，符号改变的位置是凹凸分界的候选。</p>
+<p><strong>渐近线看什么</strong>：渐近线是"贴身"直线——$x$ 趋于有限值 $a$ 时 $f\to\infty$，贴竖直线 $x=a$；$\lvert x\rvert\to\infty$ 时贴 $y=kx+b$（$k=0$ 退化为水平线）。</p>
+<p>$f(x)=\dfrac{x\lvert x\rvert}{1+x}$ 两头都占：分子带 $\lvert x\rvert$、分母在 $x=-1$ 归零。<strong>为什么先拆段再做除法</strong>：$\lvert x\rvert$ 在 $x=0$ 两侧是两个不同表达式，不拆没法求导；拆完做一次多项式除法化成「一次式 + 真分式」，二阶导轻快，渐近线甚至不用公式——真分式在 $\lvert x\rvert\to\infty$ 时趋于 $0$，剩下的一次式<strong>就是</strong>贴身直线。</p>
+<h3>第一步：拆绝对值 + 多项式除法</h3>
+<p>$x\ge0$：$f(x)=\dfrac{x<sup>2</sup>}{1+x}=x-1+\dfrac{1}{1+x}$；$x&lt;0$：$f(x)=\dfrac{-x<sup>2</sup>}{1+x}=-x+1-\dfrac{1}{1+x}$。</p>
+<p>除法的收益：$\dfrac{1}{1+x}$ 只是"残余"，跑远时 $\to0$，主部一次式直接暴露——渐近线的 $k$ 与 $b$ 不用另算，就在这一行里。</p>
+<h3>第二步：二阶导定凹凸</h3>
+<p>$x&gt;0$：$f'(x)=1-\dfrac{1}{(1+x)<sup>2</sup>}$，$f''(x)=\dfrac{2}{(1+x)<sup>3</sup>}&gt;0$，恒凹。</p>
+<p>$x&lt;0$（$x\ne-1$）：$f'(x)=-1+\dfrac{1}{(1+x)<sup>2</sup>}$，$f''(x)=-\dfrac{2}{(1+x)<sup>3</sup>}$。<strong>为什么与右侧只差一个负号</strong>：分子 $x\lvert x\rvert$ 两侧分别是 $x<sup>2</sup>$ 与 $-x<sup>2</sup>$，负号经求导的线性性一路传到二阶导。于是 $f''$ 的符号由 $(1+x)<sup>3</sup>$ 决定：</p>
+<table><thead><tr><th>范围</th><th>$f''(x)$</th><th>弯曲方向</th></tr></thead><tbody><tr><td>$x&lt;-1$</td><td>$-\dfrac{2}{(1+x)<sup>3</sup>}&gt;0$</td><td>凹</td></tr><tr><td>$-1&lt;x&lt;0$</td><td>$-\dfrac{2}{(1+x)<sup>3</sup>}&lt;0$</td><td>凸</td></tr></tbody></table>
+<h3>第三步：汇总区间——为什么 $-1$ 与 $0$ 都不并入</h3>
+<p>凹区间 $(-\infty,-1)$ 与 $(0,+\infty)$，凸区间 $(-1,0)$。</p>
+<ul><li><strong>$x=-1$ 不并入</strong>：函数无定义，且左侧 $f\to+\infty$、右侧 $f\to-\infty$（分子 $\to-1$，分母 $\to0$），曲线在这里断开，凹凸区间不能跨界合并。</li><li><strong>$x=0$ 不并入</strong>：它是分段点，但函数本身没断——$f$ 在 $0$ 连续，且用定义可算 $f'(0)=\lim_{h\to0}\dfrac{f(h)}{h}=0$（$h&gt;0$ 时等于 $\dfrac{h}{1+h}$，$h&lt;0$ 时等于 $\dfrac{-h}{1+h}$，都趋于 $0$）。$f''$ 在 $0$ 左侧趋于 $-2$、右侧趋于 $+2$，符号在此改变，$x=0$ 是凹凸转折点（拐点）——所以凹凸区间按段分别写。</li></ul>
+<h3>第四步：渐近线</h3>
+<ul><li><strong>铅直</strong>：唯一候选是分母零点 $x=-1$（分子在该处为 $-1\ne0$）；两侧极限一侧 $+\infty$ 一侧 $-\infty$，都爆炸，故 $x=-1$ 是铅直渐近线。</li><li><strong>斜（右侧）</strong>：$x\to+\infty$ 时 $f=x-1+\dfrac{1}{1+x}$，残余 $\to0$，贴 $y=x-1$。用定义式验算：$k=\lim\dfrac{f}{x}=1$，$b=\lim(f-x)=-1$ ✓。</li><li><strong>斜（左侧）</strong>：$x\to-\infty$ 时 $f=-x+1-\dfrac{1}{1+x}$，残余 $\to0$，贴 $y=-x+1$（$k=-1$，$b=1$）。</li></ul>
+<p><strong>为什么两侧渐近线不同</strong>：$\lvert x\rvert$ 让主部一次项变号——含绝对值的函数跑远时左右"姿势"可以完全不同，两个方向必须分别问。$k=\pm1\ne0$，故不存在水平渐近线。</p>
+<h3>易错点</h3>
+<ul><li><strong>不拆绝对值直接求导</strong>：$x=0$ 两侧表达式不同，导数公式不能整体套用。</li><li><strong>只算一侧斜渐近线</strong>：左右主部一正一负，丢 $y=-x+1$ 或 $y=x-1$ 都算半错。</li><li><strong>把 $x=0$ 当间断点</strong>：$f$ 在 $0$ 连续且 $f'(0)=0$，它只是凹凸转折点，不是函数的破洞。</li><li><strong>区间开闭</strong>：$x=-1$ 无定义、$x=0$ 是分界点，凹凸区间一律写开区间。</li></ul>
+<blockquote>一句话结论：分段除法化成「一次式 + 残余」；$f''$ 在 $x&lt;-1$ 与 $x&gt;0$ 为正（凹）、$-1&lt;x&lt;0$ 为负（凸）；渐近线三条：$x=-1$、$y=x-1$、$y=-x+1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

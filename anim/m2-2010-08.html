@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-07.html" data-q="../question/m2-2010-07/">← <b>m2-2010-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-08/" data-q="../question/m2-2010-08/" data-no-anim="1">m2-2010-08 · 本题</a>
+  <a href="m2-2010-09.html" data-q="../question/m2-2010-09/"><b>m2-2010-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：三个条件各管一件事',
+    cls: 'key',
+    body: '<p>4 阶<b>实对称</b>矩阵 $\\boldsymbol A$：保证可对角化；$\\boldsymbol A^2+\\boldsymbol A=\\boldsymbol O$：限定特征值的取值范围；$r(\\boldsymbol A)=3$：确定非零特征值的个数。三者合起来即可写出相似对角阵。</p>' },
+  { title: '矩阵方程 $\\Rightarrow$ 特征值方程',
+    cls: 'key',
+    body: '<p>设 $\\boldsymbol A\\boldsymbol\\xi=\\lambda\\boldsymbol\\xi$（$\\boldsymbol\\xi\\neq\\boldsymbol0$），代入 $\\boldsymbol A^2+\\boldsymbol A=\\boldsymbol O$：</p><p>$$(\\lambda^2+\\lambda)\\,\\boldsymbol\\xi=\\boldsymbol0\\ \\Longrightarrow\\ \\lambda(\\lambda+1)=0\\ \\Longrightarrow\\ \\lambda\\in\\{0,\\,-1\\}.$$</p><p>特征值<b>绝不可能取 1</b>——这是第一个关键事实。</p>' },
+  { title: '秩的含义：非零特征值有几个',
+    cls: 'good',
+    body: '<p>实对称矩阵必可对角化，可对角化矩阵的秩 $=$ 非零特征值的个数。$r(\\boldsymbol A)=3$，而 4 个特征值只能取 $0$ 或 $-1$，所以恰好是<b>三个非零 + 一个零</b>。</p>' },
+  { title: '定出特征值组合',
+    cls: 'good',
+    body: '<p>非零特征值只能取 $-1$，于是 4 个特征值为</p><p>$$\\lambda_1=\\lambda_2=\\lambda_3=-1,\\qquad\\lambda_4=0.$$</p><p>由实对称性，$\\boldsymbol A$ 相似于 $\\operatorname{diag}(-1,-1,-1,0)$。</p>' },
+  { title: '排除 A、B、C：都混进了特征值 1',
+    cls: 'bad',
+    ribbon: {k: 1, ok: false},
+    body: '<p>A 为 $\\operatorname{diag}(1,1,1,0)$、B 为 $\\operatorname{diag}(1,-1,-1,0)$、C 为 $\\operatorname{diag}(1,1,-1,0)$——三者都含 $1$，违反 $\\lambda^2+\\lambda=0$，全部淘汰。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>特征值集合 $\\{0,-1\\}$ + 秩 $3$ $\\Rightarrow$ 相似于 $\\operatorname{diag}(-1,-1,-1,0)$，答案选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon || undefined,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2010 数学二 第8题 · $\\boldsymbol A^2+\\boldsymbol A=\\boldsymbol O$、$r(\\boldsymbol A)=3$，$\\boldsymbol A$ 相似于谁',
+  subtitle: '考点：矩阵方程定特征值 + 秩定重数 · 实对称保证可对角化',
+  intro: '点击「▶ 播放」逐步展开推理链：先限特征值，再数非零个数。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  ribbonTitle: '选项核对（✓ 正确 / ✗ 淘汰）',
+  snaps: snaps,
+  result: {
+    big: '答案 D（$\\operatorname{diag}(-1,-1,-1,0)$）',
+    html: '记忆锚点：<b>$\\boldsymbol A^2+\\boldsymbol A=\\boldsymbol O\\Rightarrow\\lambda\\in\\{0,-1\\}$；实对称 $\\Rightarrow$ 秩 $=$ 非零特征值个数</b>。把 $1$ 塞进对角阵是最常见的陷阱（本题 A/B/C 全踩）。「秩 $=$ 非零特征值个数」只对可对角化矩阵使用。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：矩阵方程锁特征值，秩定重数，实对称保对角化</h2>
+<p>答案：<strong>D</strong>（相似于 $\operatorname{diag}(-1,-1,-1,0)$）。</p>
+<h3>第 0 步：先立模型——三个条件各管一件事</h3>
+<p>题干给了三样东西，分工明确：$\boldsymbol A<sup>2</sup>+\boldsymbol A=\boldsymbol O$ 管<strong>特征值候选集</strong>；「实对称」管<strong>可对角化</strong>（相似标准形就是对角阵）；$r(\boldsymbol A)=3$ 管<strong>各特征值出现几次</strong>。想清楚分工，推导就是顺着走。</p>
+<h3>第一步：矩阵方程为什么能「锁」特征值</h3>
+<p>设 $\lambda$ 是特征值，$\boldsymbol\xi\neq\boldsymbol0$ 为对应特征向量。<strong>幂算子不改变特征向量的方向，只放大倍数</strong>：$\boldsymbol A\xi=\lambda\xi$，再作用一次 $\boldsymbol A<sup>2</sup>\xi=\boldsymbol A(\lambda\xi)=\lambda(\boldsymbol A\xi)=\lambda<sup>2</sup>\xi$。代入矩阵方程：</p>
+<p>$$(\lambda<sup>2</sup>+\lambda)\,\xi=\boldsymbol0\ \Longrightarrow\ \lambda(\lambda+1)=0\ \Longrightarrow\ \lambda\in\{0,\ -1\}.$$</p>
+<p>（$(\lambda<sup>2</sup>+\lambda)\xi=\boldsymbol0$ 且 $\xi\neq\boldsymbol0$，故系数必须为零。）特征值绝无可能是 $1$——若 $\lambda=1$，则 $2\xi=\boldsymbol0$ 矛盾。<strong>A、B、C 的对角阵里都含 $1$，当场淘汰。</strong></p>
+<h3>第二步：秩为什么等于非零特征值个数——前提是可对角化</h3>
+<p>实对称矩阵必可（正交）对角化：存在可逆 $\boldsymbol P$ 使 $\boldsymbol P<sup>-1</sup>\boldsymbol A\boldsymbol P=\boldsymbol\Lambda$。乘可逆矩阵不改变秩，而对角阵的秩一眼可见——<strong>非零对角元个数</strong>。所以</p>
+<p>$$r(\boldsymbol A)=r(\boldsymbol\Lambda)=\#\{\text{非零特征值}\}=3.$$</p>
+<p>四阶矩阵共 $4$ 个特征值（计重数）：$3$ 个非零、$1$ 个零。由第一步，非零的只能取 $-1$，于是</p>
+<p>$$\lambda_1=\lambda_2=\lambda_3=-1,\qquad\lambda_4=0,\qquad \boldsymbol A\sim\operatorname{diag}(-1,-1,-1,0).$$</p>
+<p>另一条等价看法：$r(\boldsymbol A)=3$ ⟹ $\dim\ker\boldsymbol A=4-3=1$ ⟹ $0$ 特征值的几何重数为 $1$（可对角化时几何重数 $=$ 代数重数）。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A/B/C</strong>：共性是把特征值候选集想成 $\{1,0\}$ 或 $\{1,-1,0\}$——$\lambda<sup>2</sup>+\lambda=0$ 的根只有 $0$ 与 $-1$，出现 $1$ 就错，三个干扰项全踩这一个坑。</li><li><strong>对一般矩阵直接用「秩 = 非零特征值个数」</strong>：该关系以可对角化为前提，题目给「实对称」正是为补这个前提。一般矩阵秩为 $3$ 未必恰有 $3$ 个非零特征值（含 $\lambda=0$ 的约当块时，秩会多于非零特征值个数）。</li><li><strong>只求候选集就下结论</strong>：知道 $\lambda\in\{0,-1\}$ 还不够——对角阵里 $-1$ 出现几次、$0$ 出现几次，全靠秩来定重数。</li></ul>
+<blockquote>矩阵方程给候选集 $\{0,-1\}$；实对称 ⟹ 可对角化 ⟹ 秩 $=$ 非零特征值个数 $=3$；故特征值为 $-1,-1,-1,0$。选 <strong>D</strong>。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

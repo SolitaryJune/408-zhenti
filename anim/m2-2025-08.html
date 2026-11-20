@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：一正两负特征值的参数条件</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-07.html" data-q="../question/m2-2025-07/">← <b>m2-2025-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-08/" data-q="../question/m2-2025-08/" data-no-anim="1">m2-2025-08 · 本题</a>
+  <a href="m2-2025-09.html" data-q="../question/m2-2025-09/"><b>m2-2025-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：分块对角拆特征值',
+    cls: 'key',
+    log: '实对称分块对角：特征值 = 二阶块两个特征值 ∪ {b}',
+    body: '<p>$M=\\begin{pmatrix}1&2&0\\\\2&a&0\\\\0&0&b\\end{pmatrix}$ 是实对称分块对角阵，特征值 = 左上二阶块 $\\begin{pmatrix}1&2\\\\2&a\\end{pmatrix}$ 的 $\\lambda_1,\\lambda_2$ 并上 $b$。二阶块符号用迹与行列式读：$$\\lambda_1\\lambda_2=\\det=a-4,\\qquad \\lambda_1+\\lambda_2=\\operatorname{tr}=1+a$$</p>' },
+  { title: '符号约束：乘积必为正',
+    cls: 'key',
+    log: '一正两负 ⇒ (a−4)b > 0，a−4 与 b 同号',
+    body: '<p>三个特征值一正两负，乘积 $(+)(-)(-)>0$：$$(a-4)\\,b>0,$$ 即 $a-4$ 与 $b$ 同号。下面对 $b$ 分两种情况讨论。</p>' },
+  { title: '假设 b>0：二阶块须两根皆负 → 矛盾',
+    cls: 'bad',
+    log: '两根皆负需 a>4 且 a<−1，打架无解',
+    ribbon: {k:1, ok:true},
+    body: '<p>$b>0$ 是唯一正根，则二阶块两根须皆负：需 $\\lambda_1\\lambda_2=a-4>0\\Rightarrow a>4$，且 $\\lambda_1+\\lambda_2=1+a<0\\Rightarrow a<-1$——<b>互相矛盾，无解</b> ✗。</p>' },
+  { title: '假设 b<0：二阶块须一正一负 → 可行',
+    cls: 'good',
+    log: '两根异号只需积 a−4<0，即 a<4；b 当负根，恰好一正两负',
+    ribbon: {k:2, ok:true},
+    body: '<p>$b<0$ 是一个负根，则二阶块须一正一负，判据就是积为负：$$\\lambda_1\\lambda_2=a-4<0\\ \\Longrightarrow\\ a<4.$$ 此时 $b$ 补上第二个负根，恰好一正两负 ✓（异号时迹 $1+a$ 的正负无约束）。</p>' },
+  { title: '数值验算：a=0, b=−1',
+    cls: 'key',
+    log: '二阶块特征值 (1±√17)/2 ≈ 2.56 与 −1.56，加 b=−1 一正两负',
+    body: '<p>取 $a=0,\\,b=-1$：二阶块 $\\begin{pmatrix}1&2\\\\2&0\\end{pmatrix}$ 的特征值 $\\dfrac{1\\pm\\sqrt{17}}{2}\\approx2.56,\\,-1.56$ 一正一负，加 $b=-1$ 共一正两负，结论成立；且 $(a-4)b=(-4)(-1)>0$ 与乘积约束吻合。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: 'a<4 且 b<0，选 D',
+    body: '<p>$a<4$ 且 $b<0$，答案选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '矩阵 $\\begin{pmatrix}1&2&0\\\\2&a&0\\\\0&0&b\\end{pmatrix}$ 一正两负特征值：求 $a,\\,b$ 条件',
+  subtitle: '考点：分块对角特征值 · 迹与行列式定符号 · 分类讨论',
+  counterLabel: '推理步',
+  ribbonTitle: '情形裁决（✓ 收口 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D（$a<4,\\ b<0$）',
+    html: '记忆锚点：<b>二阶块两根皆负 = 积正且迹负（两条缺一不可）；两根异号 = 积负</b>。$b>0$ 逼出 $a>4$ 且 $a<-1$ 矛盾，所以 $b$ 只能当负根、$a<4$。乘积约束 $(a-4)b>0$ 可秒验答案。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分块对角实对称矩阵「一正两负」特征值的参数条件</h2>
+<p>答案：D</p>
+<h3>第一步：分块对角拆特征值</h3>
+<p>$M=\begin{pmatrix}1&amp;2&amp;0\\2&amp;a&amp;0\\0&amp;0&amp;b\end{pmatrix}$ 是实对称的分块对角阵。</p>
+<p><strong>为什么特征值能拆着算？</strong> 特征多项式按含 $b$ 的第三行（列）展开，三阶行列式直接因式分解：</p>
+<p>$$\lvert M-\lambda E\rvert=\begin{vmatrix}1-\lambda&amp;2\\2&amp;a-\lambda\end{vmatrix}\cdot(b-\lambda),$$</p>
+<p>所以三个特征值 = 左上二阶块 $\begin{pmatrix}1&amp;2\\2&amp;a\end{pmatrix}$ 的两个特征值 $\lambda_1,\lambda_2$ 再并上 $b$——各算各的，互不干扰。</p>
+<p><strong>为什么用迹与行列式读二阶块的符号？</strong> 解出 $\lambda_{1,2}=\dfrac{1+a\pm\sqrt{(1+a)<sup>2</sup>-4(a-4)}}{2}$ 再逐个判符号又慢又繁，韦达定理把「根的符号」翻译成「系数的符号」：</p>
+<p>$$\lambda_1\lambda_2=\det=a-4,\qquad \lambda_1+\lambda_2=\operatorname{tr}=1+a.$$</p>
+<p>要用的两条法则：两根皆负 $\iff$ 积为正<strong>且</strong>和为负；两根异号 $\iff$ 积为负（此时和的正负无约束）。</p>
+<h3>第二步：符号分配的乘积约束</h3>
+<p>要求三个特征值「一正两负」，乘积必为正：$\lambda_1\lambda_2\,b=(a-4)b&gt;0$，即 $a-4$ 与 $b$ 同号。下面对半分：</p>
+<table><thead><tr><th>假设</th><th>二阶块需满足</th><th>是否可行</th></tr></thead><tbody><tr><td>$b&gt;0$（$b$ 是唯一正根）</td><td>两根皆负：$a-4&gt;0$ 且 $1+a&lt;0$，即 $a&gt;4$ 且 $a&lt;-1$</td><td>矛盾，无解</td></tr><tr><td>$b&lt;0$（$b$ 是负根之一）</td><td>两根异号：$a-4&lt;0$，即 $a&lt;4$</td><td>可行 ✓</td></tr></tbody></table>
+<p>$b&lt;0$ 时二阶块一正一负，加 $b$ 恰好一正两负；迹 $1+a$ 的正负在异号时无约束。</p>
+<h3>第三步：结论与验算</h3>
+<p>$$a&lt;4\quad\text{且}\quad b&lt;0\qquad(\text{此时 }(a-4)b&gt;0\ \text{自动满足}).$$</p>
+<p>验算：取 $a=0,\,b=-1$，二阶块 $\begin{pmatrix}1&amp;2\\2&amp;0\end{pmatrix}$ 的特征值 $\dfrac{1\pm\sqrt{17}}{2}\approx2.56,\,-1.56$ 一正一负，加 $b=-1$ 共一正两负，成立。选 <strong>D</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>以为 $b&gt;0$ 行得通</strong>：二阶块要两根皆负需「积正迹负」，$a&gt;4$ 与 $a&lt;-1$ 打架，无解。</li><li><strong>只看行列式不看迹</strong>：判「两根皆负」必须积正且迹负两条同时成立，只用一条会错分。</li><li><strong>忘记乘积约束</strong>：一正两负的乘积为正，$(a-4)b&gt;0$ 可快速交叉验证答案。</li></ul>
+<blockquote>一句话结论：$b$ 必须当负根，二阶块出「一正一负」只需 $a-4&lt;0$，合起来 $a&lt;4,\ b&lt;0$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

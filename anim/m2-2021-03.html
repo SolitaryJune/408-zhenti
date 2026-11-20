@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·03 相关变化率：体积与表面积</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-02.html" data-q="../question/m2-2021-02/">← <b>m2-2021-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-03/" data-q="../question/m2-2021-03/" data-no-anim="1">m2-2021-03 · 本题</a>
+  <a href="m2-2021-04.html" data-q="../question/m2-2021-04/"><b>m2-2021-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$\\dfrac{\\mathrm{d}r}{\\mathrm{d}t}=2,\\ \\dfrac{\\mathrm{d}h}{\\mathrm{d}t}=-3$，在 $r=10,\\ h=5$ 处求 $\\dfrac{\\mathrm{d}V}{\\mathrm{d}t},\\dfrac{\\mathrm{d}S}{\\mathrm{d}t}$——相关变化率=公式+链式法则+代值",
+  "<b>② 列公式：</b>$V=\\pi r^2h$；封闭圆柱全面积 $S=2\\pi r^2+2\\pi rh$（两底 + 侧面）——两底不能漏",
+  "<b>③ 体积求导：</b>链式法则 $\\dfrac{\\mathrm{d}V}{\\mathrm{d}t}=\\pi\\left(2r\\dfrac{\\mathrm{d}r}{\\mathrm{d}t}h+r^2\\dfrac{\\mathrm{d}h}{\\mathrm{d}t}\\right)$——两项一个来自半径、一个来自高",
+  "<b>④ 代入算体积率：</b>$\\pi\\left(2\\cdot10\\cdot2\\cdot5+10^2\\cdot(-3)\\right)=\\pi(200-300)=-100\\pi\\ \\mathrm{cm^3/s}$——高在缩，负项占上风",
+  "<b>⑤ 表面积求导：</b>$\\dfrac{\\mathrm{d}S}{\\mathrm{d}t}=4\\pi r\\dfrac{\\mathrm{d}r}{\\mathrm{d}t}+2\\pi\\left(\\dfrac{\\mathrm{d}r}{\\mathrm{d}t}h+r\\dfrac{\\mathrm{d}h}{\\mathrm{d}t}\\right)$——底与侧各算各的",
+  "<b>⑥ 代入算表面率：</b>$4\\pi\\cdot10\\cdot2+2\\pi(2\\cdot5+10\\cdot(-3))=80\\pi-40\\pi=40\\pi\\ \\mathrm{cm^2/s}$",
+  "<b>⑦ 结论：</b>$\\dfrac{\\mathrm{d}V}{\\mathrm{d}t}=-100\\pi\\ \\mathrm{cm^3/s}$（体积在减小），$\\dfrac{\\mathrm{d}S}{\\mathrm{d}t}=40\\pi\\ \\mathrm{cm^2/s}$（表面积在增大）——选 C"
+];
+
+AW.init({
+  title: '2021·03　圆柱体体积与表面积的变化率',
+  subtitle: '考点：相关变化率 · 链式法则 · $V=\\pi r^2h$，$S=2\\pi r^2+2\\pi rh$',
+  counterLabel: '已推导',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，公式 → 求导 → 代值，两个几何量一气呵成。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'已知半径和高各自的变化速率，求体积和表面积的瞬时变化率', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'列公式', log:'体积是派 r 方乘 h，表面积要算全：两个底加一个侧', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'求导',   log:'体积对时间求导出两项：半径贡献一项、高贡献一项', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'代值',   log:'正二百派减负三百派，体积每秒减少一百派立方厘米', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'求导',   log:'表面积分底和侧两块：底随半径变大，侧随高缩短而收缩', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'代值',   log:'八十派减四十派，表面积每秒增加四十派平方厘米', count:5, ribbon:{k:6, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：体积率负一百派、表面率正四十派，选 C', count:6, ribbon:{k:7, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '选 C　$\\dfrac{\\mathrm{d}V}{\\mathrm{d}t}=-100\\pi\\ \\mathrm{cm^3/s}$，$\\dfrac{\\mathrm{d}S}{\\mathrm{d}t}=40\\pi\\ \\mathrm{cm^2/s}$',
+    html: '记忆锚点：<b>相关变化率三步：写公式 → 链式求导 → 代瞬时值；封闭圆柱 $S$ 含两底</b>。易错：漏两底得 $-40\\pi$（选项 D）；$\\frac{\\mathrm{d}h}{\\mathrm{d}t}=-3$ 的负号丢失会把体积率算成正。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：相关变化率——对时间求导，两个几何量一起算</h2>
+<p>答案：C</p>
+<h3>第一步：列公式，认清「谁是谁的函数」</h3>
+<p>体积 $V=\pi r<sup>2h</sup>$；封闭圆柱的全面积 $S=2\pi r<sup>2</sup>+2\pi rh$（上下两底 + 侧面）。$r,h$ 都随 $t$ 变，已知 $\dfrac{\mathrm{d}r}{\mathrm{d}t}=2,\ \dfrac{\mathrm{d}h}{\mathrm{d}t}=-3$，在 $r=10,\ h=5$ 处求 $\dfrac{\mathrm{d}V}{\mathrm{d}t}$ 与 $\dfrac{\mathrm{d}S}{\mathrm{d}t}$。</p>
+<h3>第二步：链式法则算体积变化率</h3>
+<p>$$\frac{\mathrm{d}V}{\mathrm{d}t}=\pi\left(2r\frac{\mathrm{d}r}{\mathrm{d}t}h+r<sup>2</sup>\frac{\mathrm{d}h}{\mathrm{d}t}\right)=\pi\left(2\cdot10\cdot2\cdot5+10<sup>2</sup>\cdot(-3)\right)=\pi(200-300)=-100\pi.$$</p>
+<p>半径增大想把体积「撑大」（贡献 $+200\pi$），高在缩短（贡献 $-300\pi$），负项占上风：体积正在减少。</p>
+<h3>第三步：链式法则算表面积变化率</h3>
+<p>$$\frac{\mathrm{d}S}{\mathrm{d}t}=4\pi r\frac{\mathrm{d}r}{\mathrm{d}t}+2\pi\left(\frac{\mathrm{d}r}{\mathrm{d}t}h+r\frac{\mathrm{d}h}{\mathrm{d}t}\right)=80\pi+2\pi(10-30)=80\pi-40\pi=40\pi.$$</p>
+<p>两底随半径变大贡献 $+80\pi$，侧面因高缩短贡献 $-40\pi$，合计增加 $40\pi$。故选 C。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉两底</strong>：只算侧面积 $S=2\pi rh$ 得 $-40\pi$，正好掉进选项 D。</li><li><strong>漏掉侧面</strong>：只算两底得 $80\pi$，也不对。</li><li><strong>体积项丢一半</strong>：只算 $2r\dfrac{\mathrm{d}r}{\mathrm{d}t}h$ 得 $+200\pi$ 再除 $\pi$ 之外的系数误差，A 的 $125\pi$ 就是漏了 $r<sup>2</sup>\dfrac{\mathrm{d}h}{\mathrm{d}t}$ 或符号算乱的产物。</li><li><strong>负号丢失</strong>：$\dfrac{\mathrm{d}h}{\mathrm{d}t}=-3$ 代入时漏负号，体积变化率会算成正值。</li></ul>
+<blockquote>一句话结论：$V$ 的两项一正一负合出 $-100\pi$；$S$ 必须算全（底 $80\pi$ 加侧 $-40\pi$）得 $40\pi$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

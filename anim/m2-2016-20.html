@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2016 数二第 20 题 · 月牙区域旋转体体积与表面积（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-19.html" data-q="../question/m2-2016-19/">← <b>m2-2016-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-20/" data-q="../question/m2-2016-20/" data-no-anim="1">m2-2016-20 · 本题</a>
+  <a href="m2-2016-21.html" data-q="../question/m2-2016-21/"><b>m2-2016-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2016·20　月牙区域绕 $x$ 轴旋转：体积与表面积',
+  subtitle: '考点：定积分应用 · 方法：<b>垫圈法体积 + $2\\pi\\int y\\,\\mathrm{d}s$ 侧面积</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看外减内的体积与两段侧面积如何拼出来。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '<b>区域（文字描述）：</b>圆弧 $y=\\sqrt{1-x^{2}}$ 与星形线 $x=\\cos^{3}t,\\ y=\\sin^{3}t$ 都连 $(1,0)$ 与 $(0,1)$；星形线在圆弧<b>内侧</b>，$D$ 为月牙形',
+      '<b>① 体积=外减内：</b>$V=\\pi\\int_{0}^{1}\\bigl(y_{\\text{圆}}^{2}-y_{\\text{星}}^{2}\\bigr)\\,\\mathrm{d}x$',
+      '<b>② 外圆盘：</b>$\\pi\\int_{0}^{1}(1-x^{2})\\,\\mathrm{d}x=\\pi\\Bigl(1-\\frac{1}{3}\\Bigr)=\\frac{2\\pi}{3}$',
+      '<b>③ 内星形线（参数式）：</b>$\\mathrm{d}x=-3\\cos^{2}t\\sin t\\,\\mathrm{d}t$，$\\pi\\int_{0}^{1}y^{2}\\mathrm{d}x=3\\pi\\int_{0}^{\\pi/2}\\sin^{7}t\\cos^{2}t\\,\\mathrm{d}t=3\\pi\\cdot\\frac{6!!\\cdot1!!}{9!!}=\\frac{16\\pi}{105}$',
+      '<b>④ 体积：</b>$V=\\frac{2\\pi}{3}-\\frac{16\\pi}{105}=\\frac{54\\pi}{105}=\\frac{18\\pi}{35}$',
+      '<b>⑤ 圆弧旋转面：</b>半径 $1$ 的半球面，$S_{1}=2\\pi\\cdot1^{2}=2\\pi$',
+      '<b>⑥ 星形线侧面积：</b>$x^{\\prime}=-3\\cos^{2}t\\sin t,\\ y^{\\prime}=3\\sin^{2}t\\cos t\\ \\Rightarrow\\ \\mathrm{d}s=3\\sin t\\cos t\\,\\mathrm{d}t$，$S_{2}=6\\pi\\int_{0}^{\\pi/2}\\sin^{4}t\\cos t\\,\\mathrm{d}t=\\frac{6\\pi}{5}$',
+      '<b>⑦ 结论：</b>$S=S_{1}+S_{2}=2\\pi+\\frac{6\\pi}{5}=\\frac{16\\pi}{5}$'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'认区域', log:'两条曲线都从 (1,0) 走到 (0,1)，星形线更贴近 x 轴、在圆弧内侧，围出月牙形', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'垫圈法', log:'旋转体体积用垫圈法：大圆盘减小圆盘', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'外圈',   log:'外圈是四分之一圆盘旋转，直接积分得三分之二π', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'内圈',   log:'内圈没有显式函数，走参数式换元再用点火公式，得一百零五分之十六π', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'体积',   log:'两者相减通分：体积十八个π除以三十五', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'球面',   log:'圆弧部分转出半径为一的半球面，面积直接是二π', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'侧面积', log:'星形线的弧微分按参数式先平方和再开方，凑微分收尾得五分之六π', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',  log:'两段侧面积相加：表面积十六个π除以五', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$V=\\dfrac{18\\pi}{35}$，$\\quad S=\\dfrac{16\\pi}{5}$',
+    html: '记忆锚点：<b>体积垫圈法外减内；表面积两段分别 $2\\pi\\int y\\,\\mathrm{d}s$ 再相加</b>。易错：星形线在内侧（体积要挖掉它）；点火公式 $\\int_{0}^{\\pi/2}\\sin^{7}t\\cos^{2}t\\,\\mathrm{d}t=\\frac{6!!\\cdot1!!}{9!!}$（含奇数次幂时不带 $\\frac{\\pi}{2}$ 因子）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：月牙区域旋转——垫圈法求体积，两段曲线分别算侧面积</h2>
+<p><strong>答案：$V=\dfrac{18\pi}{35}$，$S=\dfrac{16\pi}{5}$。</strong></p>
+<h3>第一步：认清区域（文字描述几何结构）</h3>
+<p>两条边界都从 $(1,0)$ 走到 $(0,1)$：圆弧 $y=\sqrt{1-x<sup>2</sup>}\ (0\le x\le1)$ 在外侧，星形线 $x=\cos<sup>3t</sup>,\ y=\sin<sup>3t</sup>\ \bigl(0\le t\le\frac\pi2\bigr)$ 在内侧——例如 $x=\frac12$ 处，圆弧 $y=\frac{\sqrt3}2\approx0.87$，星形线 $y=\bigl(1-2<sup>-2/3</sup>\bigr)<sup>3/2</sup>\approx0.23$。$D$ 是两曲线之间的<strong>月牙形</strong>区域。</p>
+<h3>第二步：体积——垫圈法的切片机制</h3>
+<p>垂直于 $x$ 轴切一片，截面是<strong>圆环</strong>：外半径 $y_{\text{圆}}=\sqrt{1-x<sup>2</sup>}$、内半径 $y_{\text{星}}$，面积 $\pi\bigl(y_{\text{圆}}<sup>2</sup>-y_{\text{星}}<sup>2</sup>\bigr)$——「外减内」来自圆环面积，不是死记公式：</p>
+<p>$$V=\pi\int_0<sup>1</sup>\bigl(y_{\text{圆}}<sup>2</sup>-y_{\text{星}}<sup>2</sup>\bigr)\,\mathrm{d}x.$$</p>
+<p>外圈（圆弧）：</p>
+<p>$$\pi\int_0<sup>1</sup>(1-x<sup>2</sup>)\,\mathrm{d}x=\pi\Bigl(1-\frac13\Bigr)=\frac{2\pi}{3}.$$</p>
+<p>内圈（星形线，参数式；$x:0\to1$ 对应 $t:\frac\pi2\to0$，$\mathrm{d}x=-3\cos<sup>2t</sup>\sin t\,\mathrm{d}t$，交换积分限把负号吃掉）：</p>
+<p>$$\pi\int_0<sup>1y</sup><sup>2</sup>\,\mathrm{d}x=3\pi\int_0<sup>\pi/2</sup>\sin<sup>7t</sup>\cos<sup>2t</sup>\,\mathrm{d}t=3\pi\cdot\frac{6!!\cdot1!!}{9!!}=\frac{16\pi}{105}.$$</p>
+<p>$$V=\frac{2\pi}{3}-\frac{16\pi}{105}=\frac{70\pi-16\pi}{105}=\frac{18\pi}{35}.$$</p>
+<h3>第三步：表面积——微元机制与「两段都要算」</h3>
+<p>旋转面由曲线扫出，其微元是一小段细锥台带：侧面积 $\approx2\pi y\,\mathrm{d}s$（周长 × 斜高），故 $S=2\pi\int y\,\mathrm{d}s$。<strong>关键：月牙区域有两条边界，旋转后各自扫出一个曲面</strong>——外表面（圆弧的）与内表面（星形线的），总面积是两段之和，漏一段就少算一半表面。</p>
+<p>圆弧绕 $x$ 轴转出<strong>半球面</strong>（半径 $1$，可回验球面公式）：</p>
+<p>$$S_1=2\pi\cdot1<sup>2</sup>=2\pi.$$</p>
+<p>星形线段：$x<sup>\prime</sup>=-3\cos<sup>2t</sup>\sin t,\ y<sup>\prime</sup>=3\sin<sup>2t</sup>\cos t$，故 $x'<sup>2</sup>+y'<sup>2</sup>=9\sin<sup>2t</sup>\cos<sup>2t</sup>$，$\mathrm{d}s=3\sin t\cos t\,\mathrm{d}t$，于是</p>
+<p>$$S_2=2\pi\int_0<sup>\pi/2</sup>y\,\mathrm{d}s=2\pi\int_0<sup>\pi/2</sup>\sin<sup>3t</sup>\cdot3\sin t\cos t\,\mathrm{d}t=6\pi\int_0<sup>\pi/2</sup>\sin<sup>4t</sup>\cos t\,\mathrm{d}t=\frac{6\pi}{5}.$$</p>
+<p>$$S=S_1+S_2=2\pi+\frac{6\pi}{5}=\frac{16\pi}{5}.$$</p>
+<h3>为什么星形线走参数式</h3>
+<p>体积项其实有显式 $y<sup>2</sup>=(1-x<sup>2/3</sup>)<sup>3</sup>$（由 $x=\cos<sup>3t</sup>$ 得 $\cos t=x<sup>1/3</sup>$，代入 $y=(1-\cos<sup>2t</sup>)<sup>3/2</sup>$），直接展开积分同样得 $\dfrac{16}{105}$，可作验算；但表面积的 $\mathrm{d}s$ 走显式会陷入 $x<sup>-1/3</sup>$ 与根式的纠缠，参数式配点火公式是标准且不易错的路。</p>
+<h3>易错点</h3>
+<ul><li><strong>内外弄反</strong>：星形线在圆弧<strong>内侧</strong>，体积是「圆的旋转体挖掉星形线的」；减反了会得到更大的错误值。</li><li><strong>星形线参数上下限弄反</strong>：$x:0\to1$ 对应 $t:\frac\pi2\to0$，$\mathrm{d}x$ 里的负号靠交换积分限消化，两头同时改号会错出负值。</li><li><strong>点火公式误带 $\frac\pi2$</strong>：$\int_0<sup>\pi/2</sup>\sin<sup>7t</sup>\cos<sup>2t</sup>\,\mathrm{d}t=\dfrac{6!!\,1!!}{9!!}$——幂次含奇数时不带 $\frac\pi2$ 因子；而 $\int\sin<sup>4t</sup>\cos t\,\mathrm{d}t$ 可直接凑微分 $\mathrm{d}(\sin t)$。</li></ul>
+<blockquote>结论：$V=\dfrac{18\pi}{35}$；表面积 $=$ 半球面 $2\pi+$ 星形线侧面积 $\dfrac{6\pi}5=\dfrac{16\pi}{5}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

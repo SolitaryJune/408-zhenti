@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：反常积分两段判敛（2013 年第 4 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-03.html" data-q="../question/m2-2013-03/">← <b>m2-2013-03</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-04/" data-q="../question/m2-2013-04/" data-no-anim="1">m2-2013-04 · 本题</a>
+  <a href="m2-2013-05.html" data-q="../question/m2-2013-05/"><b>m2-2013-05</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CARDS = [
+  { cls: 'key', title: '拆成两段',
+    body: '<p>第一段 $\\int_1^{\\mathrm e}\\dfrac{\\mathrm dx}{(x-1)^{\\alpha-1}}$：瑕点 $x=1$ 的瑕积分；第二段 $\\int_{\\mathrm e}^{+\\infty}\\dfrac{\\mathrm dx}{x\\ln^{\\alpha+1}x}$：无穷限积分。整体收敛 $\\iff$ <b>两段都收敛</b>。</p>' },
+  { cls: '', title: '第一段标准化',
+    body: '<p>$\\dfrac1{(x-1)^{\\alpha-1}}=(x-1)^{1-\\alpha}=(x-1)^{-p}$，即判敛参数</p>' +
+          '<p>$$p=\\alpha-1.$$</p>' },
+  { cls: 'key', title: '瑕积分判敛',
+    body: '<p>$x\\to1^+$ 处 $\\int\\frac{\\mathrm dx}{(x-1)^p}$ 收敛 $\\iff p&lt;1$：</p>' +
+          '<p>$$\\alpha-1&lt;1\\;\\Longleftrightarrow\\;\\alpha&lt;2.$$</p>' },
+  { cls: '', title: '第二段换元',
+    body: '<p>令 $u=\\ln x$，$\\mathrm du=\\dfrac{\\mathrm dx}{x}$：</p>' +
+          '<p>$$\\int_{\\mathrm e}^{+\\infty}\\frac{\\mathrm dx}{x\\ln^{\\alpha+1}x}=\\int_1^{+\\infty}\\frac{\\mathrm du}{u^{\\alpha+1}}.$$</p>' },
+  { cls: 'key', title: '无穷限判敛',
+    body: '<p>$\\int_1^{+\\infty}\\dfrac{\\mathrm du}{u^{q}}$ 收敛 $\\iff q&gt;1$，这里 $q=\\alpha+1$：</p>' +
+          '<p>$$\\alpha+1&gt;1\\;\\Longleftrightarrow\\;\\alpha&gt;0.$$</p>' },
+  { cls: 'good', title: '取交集并对号',
+    body: '<p>$\\{\\alpha&lt;2\\}\\cap\\{\\alpha&gt;0\\}=\\{0&lt;\\alpha&lt;2\\}$。A、C 含 $\\alpha\\le0$（第二段发散），B 含 $\\alpha\\ge2$（瑕点发散），只有 <b>D</b> 同时满足。</p>' },
+];
+
+AW.init({
+  title: '$\\int_1^{+\\infty}f\\,\\mathrm dx$ 收敛的条件推演',
+  subtitle: '考点：反常积分判敛 · 方法：拆段 → 标准幂型 → 取交集',
+  counterLabel: '步数',
+  ribbonTitle: '选项判定（A=1 · B=2 · C=3 · D=4）',
+  intro: '点击「▶ 播放」逐步演示判敛过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一行'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'拆分', log:'积分拆成瑕积分与无穷限两段，都要收敛' },
+    { cls:'step',  tag:'标准化', log:'第一段写成标准幂型，判敛参数 p=α−1' },
+    { cls:'ok',    tag:'判敛一', log:'瑕积分收敛要求幂次小于 1，得 α<2' },
+    { cls:'step',  tag:'换元', log:'第二段令 u=ln x，化成幂积分' },
+    { cls:'ok',    tag:'判敛二', log:'无穷限收敛要求幂次大于 1，得 α>0' },
+    { cls:'done',  tag:'完成', log:'交集为 0<α<2，答案 D', ribbon:{k:4, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 D（0 &lt; α &lt; 2）',
+    html: '记忆锚点：<b>瑕积分看 $p&lt;1$，无穷限看 $q&gt;1$</b>——同样是幂积分，幂次与 1 的比较方向相反；两段判敛取交集，缺一即发散。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：反常积分收敛——两段分别判敛再取交集</h2>
+<p><strong>答案：D</strong></p>
+<h3>第一步：拆分积分区间</h3>
+<p>$$\int_1<sup>+\infty</sup>f\,\mathrm dx=\int_1<sup>\mathrm e</sup>\frac{\mathrm dx}{(x-1)<sup>\alpha-1</sup>}+\int_{\mathrm e}<sup>+\infty</sup>\frac{\mathrm dx}{x\ln<sup>\alpha+1</sup>x}.$$</p>
+<p>第一段在 $x=1^+$ 是瑕积分，第二段是无穷限积分。整体收敛 $\iff$ 两段<strong>各自</strong>收敛——两处奇性不同类（瑕点与无穷端），任何一段发散整体就发散，必须逐段把关。</p>
+<h3>第二步：第一段标准化（瑕点 $x=1$）</h3>
+<p>$\dfrac1{(x-1)<sup>\alpha-1</sup>}=(x-1)<sup>1-\alpha</sup>$，即标准幂型 $(x-1)<sup>-p</sup>$ 中 $p=\alpha-1$。瑕积分 $\int_1\frac{\mathrm dx}{(x-1)<sup>p</sup>}$ 收敛 $\iff p&lt;1$——为什么边界在这？原函数 $\frac{(x-1)<sup>1-p</sup>}{1-p}$ 当 $p&lt;1$ 时在 $1^+$ 处有有限极限，$p\ge1$ 时爆掉；$p=1$ 的临界情形正是对数 $\ln(x-1)\to-\infty$，发散。故要求</p>
+<p>$$\alpha-1&lt;1\;\Longleftrightarrow\;\alpha&lt;2.$$</p>
+<h3>第三步：第二段换元（无穷限）</h3>
+<p>令 $u=\ln x$（$\mathrm du=\frac{\mathrm dx}x$），积分变为 $\int_1<sup>+\infty</sup>\frac{\mathrm du}{u<sup>\alpha+1</sup>}$。无穷端的口味与瑕点相反：要衰减得够快，$\int_1<sup>+\infty</sup>u<sup>-q</sup>\mathrm du$ 仅当 $q&gt;1$ 时尾部面积收得完，$q=1$ 临界时是 $\ln u\to+\infty$。一句话记忆：<strong>瑕点附近看"尖不尖"（$p&lt;1$），无穷远处看"衰不衰"（$q&gt;1$）</strong>。故要求</p>
+<p>$$\alpha+1&gt;1\;\Longleftrightarrow\;\alpha&gt;0.$$</p>
+<h3>第四步：取交集并对号</h3>
+<p>$$\{\alpha&lt;2\}\cap\{\alpha&gt;0\}=\{0&lt;\alpha&lt;2\}.$$</p>
+<p>对照选项：A、C 的区间含 $\alpha\le0$，第二段发散；B 的 $\alpha&gt;2$ 让第一段幂指数 $p\ge1$，瑕点处发散；只有 <strong>D</strong> 两段同时满足。</p>
+<h3>易错点</h3>
+<ul><li><strong>只查一段就下结论</strong>：两段必须同时收敛，漏一段就可能选到"半对"区间。</li><li><strong>指数符号搞反</strong>：$\frac1{(x-1)<sup>\alpha-1</sup>}$ 展开后是 $(x-1)<sup>1-\alpha</sup>$，但判敛参数 $p=\alpha-1$（$p$ 是分母幂次），别把 $1-\alpha$ 直接当 $p$ 用。</li><li><strong>$\frac{\mathrm dx}{x\ln<sup>qx</sup>}$ 不换元硬凑</strong>：它的标准结论就是换元 $u=\ln x$ 化为 $u<sup>-q</sup>$ 幂积分，$q&gt;1$ 才收敛。</li></ul>
+<blockquote>一句话结论：$\alpha&lt;2$ 且 $\alpha&gt;0$，即 $0&lt;\alpha&lt;2$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

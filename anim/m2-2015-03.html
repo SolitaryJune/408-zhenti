@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·03 分段振荡函数导函数的连续性</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-02.html" data-q="../question/m2-2015-02/">← <b>m2-2015-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-03/" data-q="../question/m2-2015-03/" data-no-anim="1">m2-2015-03 · 本题</a>
+  <a href="m2-2015-04.html" data-q="../question/m2-2015-04/"><b>m2-2015-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：连续 = 两个要求',
+    cls: 'key',
+    body: '<p>$f^{\\prime}(x)$ 在 $x=0$ 连续：① $f^{\\prime}(0)$ 存在；② $\\lim_{x\\to0}f^{\\prime}(x)=f^{\\prime}(0)$。$x\\le0$ 时 $f\\equiv0$，故左导数 $=0$，必须 $f^{\\prime}(0)=0$，真正门槛是右极限是否趋于 $0$。</p>',
+    log: '左导数为 0，关键看右极限是否趋于 0' },
+  { title: '验证 f′(0) 存在',
+    cls: 'step',
+    body: '<p>$f^{\\prime}(0)=\\lim_{x\\to0^+}\\dfrac{x^{\\alpha}\\cos\\frac{1}{x^{\\beta}}-0}{x}=\\lim_{x\\to0^+}x^{\\alpha-1}\\cos\\dfrac{1}{x^{\\beta}}$：有界 $\\times$ 幂，需 $\\alpha>1$ 才为 $0$（下面会看到该条件被自动满足）。</p>',
+    log: 'f′(0)=0 需要 α>1，稍后自动满足' },
+  { title: '求 x>0 一侧的 f′(x)',
+    cls: 'key',
+    body: '<p>$$f^{\\prime}(x)=\\alpha x^{\\alpha-1}\\cos\\frac{1}{x^{\\beta}}+\\beta x^{\\alpha-\\beta-1}\\sin\\frac{1}{x^{\\beta}},$$ 第二项来自 $\\Big(\\cos\\dfrac{1}{x^{\\beta}}\\Big)^{\\prime}=\\beta x^{-\\beta-1}\\sin\\dfrac{1}{x^{\\beta}}$ 再乘幂 $x^{\\alpha}$。</p>',
+    log: '两项的幂次分别是 α−1 与 α−β−1' },
+  { title: '逐项定临界条件',
+    cls: 'step',
+    body: '<p>$\\sin\\dfrac{1}{x^{\\beta}},\\ \\cos\\dfrac{1}{x^{\\beta}}$ 有界但振荡不趋零，靠幂次压制：第一项 $\\to0\\iff\\alpha>1$；第二项 $\\to0\\iff\\alpha-\\beta-1>0$，即 $\\alpha-\\beta>1$。由 $\\beta>0$，它已蕴含 $\\alpha>1$。</p>',
+    log: '临界条件：α−β>1（自动涵盖 α>1）' },
+  { title: '临界情形反证：α−β=1 不连续',
+    cls: 'bad',
+    body: '<p>若 $\\alpha-\\beta=1$：第二项恰为 $\\beta\\sin\\dfrac{1}{x^{\\beta}}$，振荡而不趋零，$\\lim_{x\\to0^+}f^{\\prime}(x)$ 不存在——$f^{\\prime}$ 在 $0$ 不连续，故 B（$0<\\alpha-\\beta\\le1$）不成立。</p>',
+    log: 'α−β=1 时第二项振荡，导函数不连续' },
+  { title: '核对四个选项',
+    cls: 'good',
+    body: '<p><b>A</b> $\\alpha-\\beta>1$：恰为充要条件。<b>B</b>：含 $\\alpha-\\beta\\le1$ 的坏情形。<b>C</b> $>2$：过强，漏掉 $1<\\alpha-\\beta\\le2$。<b>D</b> $\\le2$：包含 $\\alpha-\\beta\\le1$ 的不连续情形。</p>',
+    ribbon: {k:1, ok:true},
+    log: 'A 充要 ✓；B/C/D 均不成立' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。记忆锚点：振荡因子 $\\sin\\frac{1}{x^{\\beta}}$ 靠<b>幂次压制</b>才趋零——指数最低的那一项 $x^{\\alpha-\\beta-1}$ 决定临界线 $\\alpha-\\beta>1$。</p>',
+    log: '选 A：α−β>1' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f^{\\prime}(x)$ 在 $x=0$ 连续的充要条件（振荡型分段函数）',
+  subtitle: '考点：导数连续 · 振荡有界量 · 方法：拆两个要求 + 逐项看幂次压制',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 充要 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（α−β>1）',
+    html: '记忆锚点：<b>谁指数最低谁说了算</b>——第二项 $\\beta x^{\\alpha-\\beta-1}\\sin\\frac{1}{x^{\\beta}}$ 的指数 $\\alpha-\\beta-1$ 必须为正；$\\alpha-\\beta=1$ 的临界情形第二项振荡不趋零，直接排除 B/C/D。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：振荡因子乘幂——$f'$ 在 $0$ 处连续的条件</h2>
+<p>答案：<strong>A</strong>。</p>
+<h3>第 0 步：先立机制——"连续"拆成两件事</h3>
+<p>$f'(x)$ 在 $x=0$ 连续 = ① $f'(0)$ 存在；② $\lim_{x\to0}f'(x)=f'(0)$。左半边 $f\equiv0$（常函数导数为零），左导数与 $f'(0)$ 的左极限都是 $0$；整个问题压在<strong>右侧</strong>：$f'(0)=0$ 与 $\lim_{x\to0^+}f'(x)=0$ 能否同时成立。核心机制提前说破：$x\to0^+$ 时 $\dfrac1{x^\beta}\to+\infty$，$\cos\dfrac1{x^\beta}$、$\sin\dfrac1{x^\beta}$ 无限振荡、绝不归零——<strong>唯一能救它们的是旁边的幂因子衰减得够快</strong>。</p>
+<h3>第 1 步：$f'(0)$ 本身要存在——幂次 $\alpha-1&gt;0$</h3>
+<p>$f'(0)=\lim_{x\to0^+}\dfrac{x<sup>\alpha</sup>\cos\frac1{x^\beta}-0}{x}=\lim_{x\to0^+}x<sup>\alpha-1</sup>\cos\dfrac1{x^\beta}$。有界振荡 × 幂因子：要极限为 $0$，需 $\alpha-1&gt;0$，即 $\alpha&gt;1$；$\alpha\le1$ 时振荡不归零（或振幅不衰减），导数不存在。</p>
+<h3>第 2 步：右侧导函数两项，逐项过筛</h3>
+<p>$x&gt;0$ 时乘积 + 链式求导：$\big(\cos\frac1{x^\beta}\big)'=-\sin\frac1{x^\beta}\cdot(-\beta x<sup>-\beta-1</sup>)=\beta x<sup>-\beta-1</sup>\sin\frac1{x^\beta}$（负负得正），乘回 $x<sup>\alpha</sup>$：</p>
+<p>$$f'(x)=\alpha x<sup>\alpha-1</sup>\cos\frac1{x^\beta}+\beta x<sup>\alpha-\beta-1</sup>\sin\frac1{x^\beta}.$$</p>
+<ul><li>第一项 $\to0$ 需要 $\alpha-1&gt;0$；</li><li>第二项（<strong>命门</strong>，幂次 $\alpha-\beta-1$ 更低）$\to0$ 需要 $\alpha-\beta-1&gt;0$，即 $\alpha-\beta&gt;1$。</li></ul>
+<h3>第 3 步：合并条件与临界验证</h3>
+<p>由 $\beta&gt;0$，$\alpha-\beta&gt;1\Rightarrow\alpha&gt;\beta+1&gt;1$，第一项条件自动满足——充要条件就是 $\alpha-\beta&gt;1$。为什么临界情形必败：$\alpha-\beta=1$ 时第二项恰为 $\beta\sin\frac1{x^\beta}$，只剩振荡因子、无极限（$\alpha-\beta&lt;1$ 时振幅 $\to\infty$ 更不可能），此时第一项虽 $\to0$ 也救不了，$f'$ 在 $0$ 不连续。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 C</strong>：$\alpha-\beta&gt;2$ 条件过强，把 $1&lt;\alpha-\beta\le2$ 这段合法情形排除在外。</li><li><strong>只验 $f'(0)$ 存在就收工</strong>：存在 $\neq$ 连续，还必须右极限等于 $f'(0)=0$。</li><li><strong>链式第二项幂次算错</strong>：$x<sup>\alpha</sup>\cdot\beta x<sup>-\beta-1</sup>$ 的指数是 $\alpha-\beta-1$，漏了 $-1$ 条件就看错。</li></ul>
+<blockquote>记忆锚点：振荡因子不归零，全靠幂因子压；第二项幂次最低，$\alpha-\beta&gt;1$ 是命门。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

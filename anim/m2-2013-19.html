@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2013·19 隐式曲线上的距离最值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-18.html" data-q="../question/m2-2013-18/">← <b>m2-2013-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-19/" data-q="../question/m2-2013-19/" data-no-anim="1">m2-2013-19 · 本题</a>
+  <a href="m2-2013-20.html" data-q="../question/m2-2013-20/"><b>m2-2013-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：曲线 $x^3-xy+y^3=1$ 在第一象限的一段（$x\\ge0,y\\ge0$）。点到原点距离 $d=\\sqrt{x^2+y^2}$，比较 $d$ 等价于比较 $d^2=x^2+y^2$——目标函数免开方。</p>",
+  "<p><b>先抓端点</b>：令 $y=0$ 得 $x^3=1$，端点 $(1,0)$；令 $x=0$ 得 $y^3=1$，端点 $(0,1)$。$$d^2(1,0)=d^2(0,1)=1$$</p>",
+  "<p><b>拉格朗日乘数法</b>：记 $g=x^3-xy+y^3-1$，$$L=x^2+y^2-\\lambda\\,(x^3-xy+y^3-1)$$ 驻点条件：$$2x=\\lambda(3x^2-y),\\qquad 2y=\\lambda(3y^2-x)$$</p>",
+  "<p><b>消去 $\\lambda$（交叉相乘）</b>：$$x(3y^2-x)=y(3x^2-y)\\ \\Longrightarrow\\ 3xy^2-x^2=3x^2y-y^2$$ 整理：$$3xy(y-x)+(y-x)(x+y)=0\\ \\Longrightarrow\\ (y-x)(3xy+x+y)=0$$</p>",
+  "<p><b>取舍</b>：第一象限内 $x\\ge0,y\\ge0$，$3xy+x+y>0$ 不可能为零，只能 $$x=y$$</p>",
+  "<p><b>代入约束</b>：$2x^3-x^2=1$，即 $2x^3-x^2-1=0$。分解：$$(x-1)(2x^2+x+1)=0$$ 二次因子判别式 $1-8<0$ 无实根，唯一解 $x=1$。</p>",
+  "<p><b>内部驻点 $(1,1)$</b>：验证 $1-1+1=1$ 在曲线上，$$d^2=1^2+1^2=2\\quad\\Rightarrow\\quad d=\\sqrt2$$</p>",
+  "<p><b>候选比较</b>：端点 $(1,0),(0,1)$ 距离 $1$；驻点 $(1,1)$ 距离 $\\sqrt2$。曲线是连续有界闭弧，最值必在端点或驻点取得：$\\sqrt2>1$。</p>",
+  "<p><b>结论</b>：$$\\boxed{\\;d_{\\max}=\\sqrt2\\ (\\text{点 }(1,1)),\\qquad d_{\\min}=1\\ (\\text{点 }(1,0),(0,1))\\;}$$</p>"
+];
+
+AW.init({
+  title: '曲线 $x^3-xy+y^3=1$ 上的最长与最短距离',
+  subtitle: '考点：条件极值（拉格朗日乘数法） · 方法：目标取 $d^2$，端点与驻点比较',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步演示端点、驻点与比较。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'比距离等于比距离平方，目标函数不用开根号', show:1, count:0 },
+    { cls:'ok',    tag:'端点',   log:'第一象限弧的两个端点落在坐标轴上：距离都是 1', show:2, count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'列条件', log:'拉格朗日乘数法：两个偏导方程，目标梯度等于 λ 乘约束梯度', show:3, count:2 },
+    { cls:'step',  tag:'消 λ',   log:'交叉相乘消掉 λ，整理出因式乘积等于零', show:4, count:3 },
+    { cls:'ok',    tag:'取舍',   log:'第一象限里第二个因子恒正，只剩 x=y', show:5, count:4 },
+    { cls:'step',  tag:'解方程', log:'代入约束得三次方程，分解出 x=1，二次因子判别式为负无实根', show:6, count:5 },
+    { cls:'ok',    tag:'驻点',   log:'对称驻点 (1,1)，距离是根号 2', show:7, count:6, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'比较',   log:'候选只有三个：两端点距离 1，驻点距离根号 2，取最大最小', show:8, count:7 },
+    { cls:'done',  tag:'完成',   log:'最长 √2 在 (1,1)，最短 1 在两个端点', show:9, count:8, done:true },
+  ],
+
+  result: {
+    big: '$d_{\\max}=\\sqrt2,\\quad d_{\\min}=1$',
+    html: '记忆锚点：<b>有界闭弧上最值 = 内部驻点 + 端点，一起比较</b>；约束曲线关于 $y=x$ 对称，优先试 $x=y$。易错：只算驻点忘端点；消 $\\lambda$ 用交叉相乘回避分母为零的讨论。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：隐式曲线上的距离最值——候选清单只有「端点 + 驻点」</h2>
+<p>答案：最长距离 $\sqrt2$，在点 $(1,1)$；最短距离 $1$，在点 $(1,0)$ 与 $(0,1)$。</p>
+<h3>第一步：机制——最值候选从哪来、为什么这样找就完备</h3>
+<p>弧段 $g(x,y)=x<sup>3</sup>-xy+y<sup>3</sup>-1=0$（$x\ge0,\ y\ge0$）是一条<strong>有界闭弧</strong>（紧集），$d<sup>2</sup>$ 连续，故最值必取到，且只落在两类点：弧的<strong>端点</strong>（约束集合的边界，乘数法管不着）与<strong>内部驻点</strong>（弧的光滑内点处，$d<sup>2</sup>$ 取最值时其梯度必须垂直切向，即与 $\nabla g$ 平行——这正是拉格朗日乘数方程组的几何来源）。所以流程固定：端点全找出来、乘数法解驻点、比大小，清单之外没有别的候选。</p>
+<p><strong>为什么比较 $d<sup>2</sup>$ 不比较 $d$</strong>：$\sqrt{\cdot}$ 严格单调，两者在同一点取最值；$d<sup>2</sup>=x<sup>2</sup>+y<sup>2</sup>$ 是多项式，偏导是 $2x,2y$，干净得多。</p>
+<p><strong>为什么用乘数法而不把 $y$ 解出来</strong>：约束对 $y$ 是三次方程 $y<sup>3</sup>-xy+(x<sup>3</sup>-1)=0$，根式解没法继续求导；乘数法把约束当等式直接联立，绕开显式化——隐式约束场合选它的理由。</p>
+<h3>第二步：先抓端点</h3>
+<p>令 $y=0$：$x<sup>3</sup>=1$，端点 $(1,0)$；令 $x=0$：$y<sup>3</sup>=1$，端点 $(0,1)$。两点到原点距离都是 $1$。</p>
+<h3>第三步：乘数法解内部驻点——消 $\lambda$ 的手法</h3>
+<p>$L=x<sup>2</sup>+y<sup>2</sup>-\lambda(x<sup>3</sup>-xy+y<sup>3</sup>-1)$，驻点条件：</p>
+<p>$$2x=\lambda(3x<sup>2</sup>-y),\qquad 2y=\lambda(3y<sup>2</sup>-x)$$</p>
+<p><strong>为什么交叉相乘消 $\lambda$ 而不用除法</strong>：第一式两边同乘 $(3y<sup>2</sup>-x)$、第二式两边同乘 $(3x<sup>2</sup>-y)$，右边都等于 $\lambda(3x<sup>2</sup>-y)(3y<sup>2</sup>-x)$，故</p>
+<p>$$2x(3y<sup>2</sup>-x)=2y(3x<sup>2</sup>-y)$$</p>
+<p>这个乘法对任意情形恒成立、不丢分支；用除法消 $\lambda$ 则必须先特判 $3x<sup>2</sup>-y\neq0$，容易漏情形。</p>
+<p>整理：$6xy(y-x)+2(y<sup>2</sup>-x<sup>2</sup>)=2(y-x)(3xy+x+y)=0$。第一象限内 $x,y\ge0$ 且 $(0,0)$ 不在曲线上（代入得 $0=1$），故 $3xy+x+y&gt;0$，只能 $x=y$。代入约束：$2x<sup>3</sup>-x<sup>2</sup>=1$，即 $(x-1)(2x<sup>2</sup>+x+1)=0$；二次因子判别式 $1-8&lt;0$ 无实根，唯一内部驻点 $(1,1)$（验证 $1-1+1=1$ 在曲线上），距离 $\sqrt2$。</p>
+<h3>第四步：比较定答案</h3>
+<p>候选全部到齐：端点 $(1,0),(0,1)$ 距离 $1$；内部驻点 $(1,1)$ 距离 $\sqrt2$。几何直觉可以预检：弧关于直线 $y=x$ 对称，$(1,1)$ 在对称轴上，是弧向外拱出的顶点，理应最远；两端点贴在坐标轴上，理应最近。由 $\sqrt2&gt;1$：</p>
+<p>$$d_{\max}=\sqrt2\ (\text{在 }(1,1)),\qquad d_{\min}=1\ (\text{在 }(1,0),(0,1))$$</p>
+<h3>易错点</h3>
+<ul><li><strong>只算驻点忘端点</strong>：乘数法只覆盖内部驻点，端点是独立候选——本题最短距离恰恰在端点。</li><li><strong>消 $\lambda$ 用除法</strong>：分母 $3x<sup>2</sup>-y$ 可能为零，须分支讨论；交叉相乘一次到位。</li><li><strong>分解后硬找根</strong>：$2x<sup>2</sup>+x+1$ 判别式为负没有实根，唯一解就是 $x=1$，别在虚根上耗时间。</li></ul>
+<blockquote>记忆锚点：约束最值 = 端点 + 驻点，缺一不可；$\sqrt{\cdot}$ 单调故比 $d<sup>2</sup>$；隐式约束解不出 $y$ 就上乘数法。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

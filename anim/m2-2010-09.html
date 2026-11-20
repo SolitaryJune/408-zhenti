@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-08.html" data-q="../question/m2-2010-08/">← <b>m2-2010-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-09/" data-q="../question/m2-2010-09/" data-no-anim="1">m2-2010-09 · 本题</a>
+  <a href="m2-2010-10.html" data-q="../question/m2-2010-10/"><b>m2-2010-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导板：所有推导行在 build 时建好（含公式），render 按 i 逐行点亮 */
+var rows = [];
+function drow(html, at, green){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'margin:10px 0;padding:10px 16px;border-left:4px solid #cbd5e1;' +
+    'background:#f8fafc;border-radius:8px;font-size:15.5px;line-height:1.9;' +
+    'opacity:0.15;transform:translateX(-10px);transition:all .4s;';
+  rows.push({el: d, at: at, green: !!green});
+  return d;
+}
+
+AW.init({
+  title: '2010 数学二 第9题 · $y^{\\prime\\prime\\prime}-2y^{\\prime\\prime}+y^{\\prime}-2y=0$ 的通解',
+  subtitle: '考点：常系数齐次线性微分方程 · 方法：特征方程试根 + 分组分解',
+  counterLabel: '已推导',
+  intro: '点击「▶ 播放」逐步演示特征方程分解与按根写解。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：几阶方程配几个独立常数，特征根的类型决定解的类型'));
+    inner.appendChild(drow(
+      '<b>写特征方程</b>：$r^3-2r^2+r-2=0$（把 $y^{(k)}$ 换成 $r^k$）', 1));
+    inner.appendChild(drow(
+      '<b>试根 + 分组分解</b>：$r=2$ 代入得 $8-8+2-2=0$ ✓；' +
+      '$r^2(r-2)+(r-2)=(r-2)(r^2+1)=0$', 2));
+    inner.appendChild(drow(
+      '<b>三个根</b>：单实根 $r=2$；共轭复根 $r=\\pm\\mathrm i$，即 $\\alpha\\pm\\beta\\mathrm i$ 其中 $\\alpha=0,\\ \\beta=1$', 3));
+    inner.appendChild(drow(
+      '<b>按根写解</b>：单实根 $r=2\\ \\to\\ C_1\\mathrm e^{2x}$；' +
+      '共轭复根 $\\alpha\\pm\\beta\\mathrm i=0\\pm\\mathrm i\\ \\to\\ \\mathrm e^{0\\cdot x}(C_2\\cos x+C_3\\sin x)$', 4));
+    inner.appendChild(drow(
+      '<b>通解</b>：$y=C_1\\mathrm e^{2x}+C_2\\cos x+C_3\\sin x$（$C_1,C_2,C_3$ 为任意常数）。' +
+      '自检：独立常数 3 个 $=$ 方程阶数 3 阶 ✓', 5, true));
+    wrap.appendChild(inner);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '审题',     log: '三阶常系数齐次方程，标准流程：先写特征方程，分解出全部特征根，再按根的类型拼装通解', count: 1 },
+    { cls: 'shift', tag: '分解',     log: '先试整数根 r 等于 2，代入刚好为零；再用分组提公因式，把方程分解成 r 减 2 乘 r 平方加 1', count: 2 },
+    { cls: 'ok',    tag: '认根',     log: '三个根：r 等于 2 是单实根，r 等于正负 i 是一对共轭复根，实部为零、虚部为一', count: 3, ribbon: { k: 1, ok: true } },
+    { cls: 'step',  tag: '拼解',     log: '单实根给指数项 C1 e 的 2x 次方；共轭复根给正弦余弦项，实部是零所以指数因子就是 1', count: 4 },
+    { cls: 'done',  tag: '完成',     log: '通解三个任意常数，恰好等于方程的阶数，结构自洽', count: 5, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < rows.length; k++){
+      var r = rows[k];
+      var revealed = i >= r.at;
+      var active = revealed && r.at === i && !sn.done;
+      var green = sn.done && r.green;
+      r.el.style.opacity = revealed ? '1' : '0.15';
+      r.el.style.transform = revealed ? 'none' : 'translateX(-10px)';
+      r.el.style.background = green ? '#ecfdf3' : (active ? '#fff7e0' : '#f8fafc');
+      r.el.style.borderLeftColor = green ? '#16a34a' : (active ? '#f59e0b' : '#cbd5e1');
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$y=C_1\\mathrm e^{2x}+C_2\\cos x+C_3\\sin x$',
+    html: '记忆锚点：<b>三次特征方程先试整数根，再分组提公因式</b>；单实根给 $C\\mathrm e^{rx}$，共轭复根 $\\alpha\\pm\\beta\\mathrm i$ 给 $\\mathrm e^{\\alpha x}(C\\cos\\beta x+D\\sin\\beta x)$。易错：实部为 0 时不要多写 $\\mathrm e^{x}$ 因子，也不要把 $\\mathrm i$ 留在答案里。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：三阶常系数齐次方程——特征方程为什么这样用</h2>
+<p>答案：$y=C_1\mathrm e<sup>2x</sup>+C_2\cos x+C_3\sin x$（$C_1,C_2,C_3$ 为任意常数）。</p>
+<h3>第 0 步：先立机制——为什么找 $\mathrm e<sup>rx</sup>$ 当试解</h3>
+<p>求导对 $\mathrm e<sup>rx</sup>$ 只做一件事：<strong>乘 $r$</strong>（$\dfrac{\mathrm d}{\mathrm dx}\mathrm e<sup>rx</sup>=r\,\mathrm e<sup>rx</sup>$）。代回方程 $y'''-2y''+y'-2y=0$，每项都含因子 $\mathrm e<sup>rx</sup>&gt;0$，整体提出后剩下的就是代数条件</p>
+<p>$$r<sup>3</sup>-2r<sup>2</sup>+r-2=0.$$</p>
+<p>于是「解微分方程」降维成「解三次代数方程」；微分方程的解空间（$3$ 维）由特征根按规则张成——<strong>每个单实根贡献 $\mathrm e<sup>rx</sup>$，一对共轭复根贡献 $\cos$ 与 $\sin$ 两项</strong>。$3$ 个根恰好张满 $3$ 维，这就是通解里有 $3$ 个任意常数的原因。</p>
+<h3>第一步：解特征方程——为什么先试整数根</h3>
+<p>首一整系数多项式的有理根必是常数项 $-2$ 的因子：$\pm1,\ \pm2$。代 $r=2$：$8-8+2-2=0$，命中。用<strong>分组</strong>提公因式（或多项式除法）拆掉这个根：</p>
+<p>$$r<sup>2</sup>(r-2)+(r-2)=(r-2)(r<sup>2</sup>+1)=0,$$</p>
+<p>得 $r_1=2$（单实根）与 $r_{2,3}=\pm\mathrm i$（共轭复根，$\alpha=0,\ \beta=1$）。</p>
+<h3>第二步：按根型组装通解——复根为什么变成 $\cos$ 与 $\sin$</h3>
+<ul><li>$r=2$：贡献 $C_1\mathrm e<sup>2x</sup>$。</li><li>$r=\pm\mathrm i$：形式解是 $\mathrm e<sup>(\alpha\pm\beta\mathrm i)x</sup>$；由<strong>欧拉公式</strong> $\mathrm e<sup>\mathrm i\beta x</sup>=\cos\beta x+\mathrm i\sin\beta x$，实值解取其实部、虚部的线性组合 $\mathrm e<sup>\alpha x</sup>(C_2\cos\beta x+C_3\sin\beta x)$。此处 $\alpha=0,\ \beta=1$，即 $C_2\cos x+C_3\sin x$——<strong>没有指数因子</strong>，$\mathrm i$ 也不留在答案里。</li></ul>
+<p>三根互异，通解为</p>
+<p>$$y=C_1\mathrm e<sup>2x</sup>+C_2\cos x+C_3\sin x.$$</p>
+<p>自检：独立常数 $3$ 个 $=$ 方程阶数；把 $y=\mathrm e<sup>2x</sup>$ 的各阶导数代入原方程，对应 $r=2$ 的条件 $8-8+2-2=0$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>三次式分解不出来就放弃</strong>：先试常数项的因子（$\pm1,\pm2$），找到 $r=2$ 后用分组提 $(r-2)$，不必硬上求根公式。</li><li><strong>复根组装错</strong>：$\alpha\pm\beta\mathrm i$ 对应 $\mathrm e<sup>\alpha x</sup>(C\cos\beta x+D\sin\beta x)$；此处 $\alpha=0$，凭空添 $\mathrm e<sup>x</sup>$ 或把 $\mathrm i$ 写进答案是高频错误。</li><li><strong>常数个数与阶数不符</strong>：少写一项（如漏 $\sin x$）就不是通解——解空间维数由阶数决定。</li></ul>
+<blockquote>求导 $=$ 对 $\mathrm e<sup>rx</sup>$ 乘 $r$ ⟹ 特征方程 $P(r)=0$；单实根给指数项，$\alpha\pm\beta\mathrm i$ 给 $\mathrm e<sup>\alpha x</sup>(\cos,\sin)$。本题 $y=C_1\mathrm e<sup>2x</sup>+C_2\cos x+C_3\sin x$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

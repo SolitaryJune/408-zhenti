@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：极坐标面积——玫瑰线一瓣（2013 年第 11 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-10.html" data-q="../question/m2-2013-10/">← <b>m2-2013-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-11/" data-q="../question/m2-2013-11/" data-no-anim="1">m2-2013-11 · 本题</a>
+  <a href="m2-2013-12.html" data-q="../question/m2-2013-12/"><b>m2-2013-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CARDS = [
+  { cls: 'key', title: '认清图形与公式',
+    body: '<p>$r=\\cos3\\theta$ 在 $\\theta\\in\\big[-\\frac\\pi6,\\frac\\pi6\\big]$ 上 $r\\ge0$ 且两端 $r=0$——三叶玫瑰线的<b>一整片花瓣</b>。扇形面积公式：</p>' +
+          '<p>$$S=\\frac12\\int_{-\\pi/6}^{\\pi/6}r^2\\,\\mathrm d\\theta.$$</p>' },
+  { cls: '', title: '写出积分并用对称性',
+    body: '<p>$$S=\\frac12\\int_{-\\pi/6}^{\\pi/6}\\cos^23\\theta\\,\\mathrm d\\theta=\\int_0^{\\pi/6}\\cos^23\\theta\\,\\mathrm d\\theta.$$</p>' +
+          '<p>被积函数是偶函数，区间减半。</p>' },
+  { cls: 'key', title: '降幂公式',
+    body: '<p>$$\\cos^23\\theta=\\frac{1+\\cos6\\theta}2\\;\\Rightarrow\\;S=\\frac12\\int_0^{\\pi/6}(1+\\cos6\\theta)\\,\\mathrm d\\theta.$$</p>' },
+  { cls: 'good', title: '算积分',
+    body: '<p>$$S=\\frac12\\Big[\\theta+\\frac{\\sin6\\theta}6\\Big]_0^{\\pi/6}=\\frac12\\Big(\\frac\\pi6+0\\Big)=\\frac\\pi{12}.$$</p>' +
+          '<p>$\\sin\\pi=0$，正弦项归零。</p>' },
+  { cls: '', title: '量级验算',
+    body: '<p>三瓣总面积 $3\\times\\frac\\pi{12}=\\frac\\pi4$，恰为单位圆面积的 $\\frac14$——三叶玫瑰线均匀铺开，量级合理，答案可信。</p>' },
+];
+
+AW.init({
+  title: '$r=\\cos3\\theta$ 一瓣围成的面积',
+  subtitle: '考点：极坐标面积 · 方法：扇形公式 → 降幂 → 定积分',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一行（区域：极角从 −π/6 扫到 π/6，r 从 0 起又回到 0 的一瓣）'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'识图', log:'r≥0 且两端为零，正是一瓣；记住扇形公式的 1/2' },
+    { cls:'step',  tag:'化简', log:'偶函数对称，积分区间减半' },
+    { cls:'shift', tag:'降幂', log:'余弦平方写成 1 加余弦二倍角再除以 2' },
+    { cls:'ok',    tag:'积分', log:'正弦项在两端都归零，只剩 π/12' },
+    { cls:'done',  tag:'完成', log:'三瓣合计 π/4，量级自洽', done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$S=\\dfrac{\\pi}{12}$',
+    html: '记忆锚点：<b>极坐标面积 $S=\\frac12\\int_\\alpha^\\beta r^2\\,\\mathrm d\\theta$</b>（公式自带 $\\frac12$、用 $r^2$）；玫瑰线一瓣的角度范围由 $\\cos3\\theta\\ge0$ 解出 $\\big[-\\frac\\pi6,\\frac\\pi6\\big]$；降幂公式 $\\cos^2\\alpha=\\frac{1+\\cos2\\alpha}2$ 是标配。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：极坐标扇形面积公式算玫瑰线一瓣</h2>
+<p><strong>答案：$\dfrac{\pi}{12}$</strong></p>
+<h3>第一步：认清图形与公式</h3>
+<p>$r=\cos3\theta$ 在 $-\dfrac\pi6\le\theta\le\dfrac\pi6$ 上 $r\ge0$，且两端 $r=\cos\big(\pm\frac\pi2\big)=0$——从极点出发又回到极点，这正是三叶玫瑰线的<strong>一整片花瓣</strong>（角度范围由 $3\theta\in[-\frac\pi2,\frac\pi2]$ 解出）。极坐标面积用扇形公式：</p>
+<p>$$S=\frac12\int_{-\pi/6}<sup>\pi/6</sup>r<sup>2</sup>\,\mathrm d\theta=\frac12\int_{-\pi/6}<sup>\pi/6</sup>\cos<sup>23</sup>\theta\,\mathrm d\theta.$$</p>
+<p>公式从哪来？把张角 $\mathrm d\theta$ 处切出一条极细的扇形微元：半径 $r$、弧长近似 $r\,\mathrm d\theta$，按"底 $\times$ 高的一半"估为三角形面积 $\frac12\,r\cdot r\,\mathrm d\theta$——系数 $\frac12$ 是三角形面积带来的，不是凭空规定。另注意公式要求 $r\ge0$：$r&lt;0$ 时点会落到极点对侧，扇形拼图失效；本题已验证 $\cos3\theta\ge0$。</p>
+<h3>第二步：对称性减半 + 降幂</h3>
+<p>被积函数是偶函数，$S=\displaystyle\int_0<sup>\pi/6</sup>\cos<sup>23</sup>\theta\,\mathrm d\theta$。降幂公式 $\cos<sup>23</sup>\theta=\dfrac{1+\cos6\theta}2$：</p>
+<p>$$S=\frac12\int_0<sup>\pi/6</sup>(1+\cos6\theta)\,\mathrm d\theta.$$</p>
+<h3>第三步：算积分</h3>
+<p>$$S=\frac12\Big[\theta+\frac{\sin6\theta}6\Big]_0<sup>\pi/6</sup>=\frac12\Big(\frac\pi6+\frac{\sin\pi}6\Big)=\frac12\cdot\frac\pi6=\frac{\pi}{12}.$$</p>
+<p>（顺带验算：三瓣总面积 $3\times\frac\pi{12}=\frac\pi4$，恰为单位圆面积的四分之一，量级合理。）</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉系数 $\frac12$</strong>：扇形面积微元是 $\frac12r<sup>2</sup>\,\mathrm d\theta$，公式自带 $\frac12$。</li><li><strong>角度范围取错</strong>：一瓣对应 $\theta\in[-\frac\pi6,\frac\pi6]$（由 $\cos3\theta\ge0$ 定），不是 $[0,\frac\pi3]$，更不是整周期。</li><li><strong>$\int\cos6\theta\,\mathrm d\theta$ 忘除以 6</strong>：结果应为 $\frac16\sin6\theta$。</li><li><strong>直接对 $r$ 积分</strong>：面积公式里是 $r<sup>2</sup>$，不是 $r$。</li></ul>
+<blockquote>一句话结论：一瓣面积 $S=\dfrac{\pi}{12}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

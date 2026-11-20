@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：曲线 y=∫√(3−t²)dt 的弧长</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-11.html" data-q="../question/m2-2023-11/">← <b>m2-2023-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-12/" data-q="../question/m2-2023-12/" data-no-anim="1">m2-2023-12 · 本题</a>
+  <a href="m2-2023-13.html" data-q="../question/m2-2023-13/"><b>m2-2023-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '曲线 $y=\\displaystyle\\int_{-\\sqrt3}^{x}\\sqrt{3-t^2}\\,\\mathrm dt$ 的弧长',
+  subtitle: '考点：变限积分 + 弧长公式 · 方法：$y\'$ 白送 → 化成 $\\sqrt{4-x^2}$ 的积分',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示弧长的计算与几何自检。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：变限积分给出的曲线，用弧长公式 $$L=\\int_a^b\\sqrt{1+(y\')^2}\\,\\mathrm dx$$ 变限积分求导白送：$y\'=\\sqrt{3-x^2}$（下限是常数）',
+      '<b>定积分限</b>：被积函数要有意义：$3-x^2\\ge0\\Rightarrow x\\in[-\\sqrt3,\\sqrt3]$——这就是曲线的定义域',
+      '<b>代入化简</b>：$$L=\\int_{-\\sqrt3}^{\\sqrt3}\\sqrt{1+3-x^2}\\,\\mathrm dx=\\int_{-\\sqrt3}^{\\sqrt3}\\sqrt{4-x^2}\\,\\mathrm dx$$ 偶函数：$L=2\\displaystyle\\int_0^{\\sqrt3}\\sqrt{4-x^2}\\,\\mathrm dx$',
+      '<b>算积分</b>：套公式 $\\displaystyle\\int\\sqrt{4-x^2}\\,\\mathrm dx=\\frac x2\\sqrt{4-x^2}+2\\arcsin\\frac x2$（或令 $x=2\\sin\\theta$）：$$\\int_0^{\\sqrt3}\\sqrt{4-x^2}\\,\\mathrm dx=\\frac{\\sqrt3}2+\\frac{2\\pi}3$$',
+      '<b>收尾</b>：$$L=2\\Bigl(\\frac{\\sqrt3}2+\\frac{2\\pi}3\\Bigr)=\\sqrt3+\\frac{4\\pi}3$$',
+      '<b>几何自检</b>：$\\sqrt{4-x^2}$ 是半径 2 的上半圆，弓形面积 $=$ 圆心角 $\\frac{2\\pi}3$ 的扇形 $\\frac12\\cdot4\\cdot\\frac{2\\pi}3=\\frac{4\\pi}3$，加两块直角三角形 $2\\cdot\\frac{\\sqrt3}2=\\sqrt3$，一致 ✓',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'求导',   log:'变限积分求导，导数就是根号里的被积函数', count:0 },
+    { cls:'step',  tag:'定限',   log:'根号内不能为负，曲线只在 ±√3 之间有定义', count:1 },
+    { cls:'shift', tag:'化简',   log:'1 加 3 得 4，被积函数变成半径 2 的半圆弧高', count:2 },
+    { cls:'shift', tag:'积分',   log:'套现成公式，√3 处代出半个 √3 加 2π/3', count:3 },
+    { cls:'step',  tag:'收尾',   log:'偶函数乘 2，得 √3 + 4π/3', count:4 },
+    { cls:'done',  tag:'完成',   log:'结论：弧长 = √3 + 4π/3，扇形加三角形几何验证一致', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$L=\\dfrac{4\\pi}{3}+\\sqrt3$',
+    html: '记忆锚点：<b>变限积分给曲线，$y\'=$ 被积函数（上限代 $x$）</b>；弧长公式是 $\\sqrt{1+(y\')^2}$ 不是 $\\sqrt{(y\')^2}$。易错：积分限由「被积函数有意义」定在 $[-\\sqrt3,\\sqrt3]$；$\\arcsin\\frac{\\sqrt3}2=\\frac\\pi3$ 不是 $\\frac\\pi4$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分给出的曲线求弧长——y′ 白送，积分化成圆弧</h2>
+<p>答案：$\dfrac{4\pi}3+\sqrt3$</p>
+<h3>第一步：写出弧长公式并求 y′</h3>
+<p>变限积分求导白送被积函数：$y'=\sqrt{3-x<sup>2</sup>}$（下限是常数）。由 $3-x<sup>2</sup>\ge0$ 知曲线定义在 $x\in[-\sqrt3,\sqrt3]$。</p>
+<h3>第二步：代入化简</h3>
+<p>$$L=\int_{-\sqrt3}<sup>\sqrt3</sup>\sqrt{1+(y')<sup>2</sup>}\,\mathrm dx=\int_{-\sqrt3}<sup>\sqrt3</sup>\sqrt{4-x<sup>2</sup>}\,\mathrm dx.$$</p>
+<p>被积函数是偶函数：$L=2\displaystyle\int_0<sup>\sqrt3</sup>\sqrt{4-x<sup>2</sup>}\,\mathrm dx$。</p>
+<h3>第三步：算定积分</h3>
+<p>套公式（或令 $x=2\sin\theta$）：$\displaystyle\int\sqrt{4-x<sup>2</sup>}\,\mathrm dx=\frac x2\sqrt{4-x<sup>2</sup>}+2\arcsin\frac x2$，代入：</p>
+<p>$$\int_0<sup>\sqrt3</sup>\sqrt{4-x<sup>2</sup>}\,\mathrm dx=\frac{\sqrt3}2\cdot1+2\arcsin\frac{\sqrt3}2=\frac{\sqrt3}2+\frac{2\pi}3.$$</p>
+<h3>第四步：收尾并几何自检</h3>
+<p>$$L=2\Bigl(\frac{\sqrt3}2+\frac{2\pi}3\Bigr)=\sqrt3+\frac{4\pi}3.$$</p>
+<p>几何验证：$\sqrt{4-x<sup>2</sup>}$ 是半径 2 的上半圆，$x\in[-\sqrt3,\sqrt3]$ 上方的弓形面积 $=$ 圆心角 $\dfrac{2\pi}3$ 的扇形 $\dfrac12\cdot4\cdot\dfrac{2\pi}3=\dfrac{4\pi}3$，再加两块直角三角形 $2\cdot\dfrac{\sqrt3}2=\sqrt3$，一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘写弧长公式里的 1</strong>：$\int\sqrt{3-x<sup>2</sup>}\,\mathrm dx$ 算的是面积不是弧长。</li><li><strong>积分限拿错</strong>：曲线只在 $|x|\le\sqrt3$ 有定义，不是 $[-2,2]$，也不是 $[0,\sqrt3]$。</li><li><strong>$\arcsin\frac{\sqrt3}2$ 记成 $\frac\pi4$</strong>：是 $\frac\pi3$。</li></ul>
+<blockquote>一句话结论：$L=\displaystyle\int_{-\sqrt3}<sup>\sqrt3</sup>\sqrt{4-x<sup>2</sup>}\,\mathrm dx=\sqrt3+\dfrac{4\pi}3$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

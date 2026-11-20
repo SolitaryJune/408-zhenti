@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2019·03 哪个反常积分发散</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-02.html" data-q="../question/m2-2019-02/">← <b>m2-2019-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-03/" data-q="../question/m2-2019-03/" data-no-anim="1">m2-2019-03 · 本题</a>
+  <a href="m2-2019-04.html" data-q="../question/m2-2019-04/"><b>m2-2019-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：四个都是无穷限反常积分 $\\int_0^{+\\infty}$。判断敛散最稳的一招：<b>求出原函数、代上限看极限</b>；再看 $x\\to+\\infty$ 时被积函数的衰减速度作旁证。</p>",
+  "<p><b>A 项</b>：分部积分，$\\int x\\mathrm{e}^{-x}\\mathrm{d}x=-(x+1)\\mathrm{e}^{-x}$，$$\\int_0^{+\\infty}x\\mathrm{e}^{-x}\\,\\mathrm{d}x=\\Big[-(x+1)\\mathrm{e}^{-x}\\Big]_0^{+\\infty}=0-(-1)=1,$$ 收敛。</p>",
+  "<p><b>B 项</b>：不用分部，凑微分 $x\\,\\mathrm{d}x=\\tfrac12\\,\\mathrm{d}(x^2)$，原函数 $-\\tfrac12\\mathrm{e}^{-x^2}$，$$\\int_0^{+\\infty}x\\mathrm{e}^{-x^2}\\,\\mathrm{d}x=\\Big[-\\tfrac12\\mathrm{e}^{-x^2}\\Big]_0^{+\\infty}=0-\\Big(-\\tfrac12\\Big)=\\tfrac12,$$ 收敛。</p>",
+  "<p><b>C 项</b>：认出 $(\\arctan x)'=\\dfrac{1}{1+x^2}$，整体凑微分，原函数 $\\tfrac12(\\arctan x)^2$，$$\\int_0^{+\\infty}\\frac{\\arctan x}{1+x^2}\\,\\mathrm{d}x=\\Big[\\tfrac12(\\arctan x)^2\\Big]_0^{+\\infty}=\\tfrac12\\Big(\\tfrac{\\pi}{2}\\Big)^2=\\tfrac{\\pi^2}{8},$$ 收敛。</p>",
+  "<p><b>D 项</b>：原函数 $\\tfrac12\\ln(1+x^2)$，$$\\int_0^{+\\infty}\\frac{x}{1+x^2}\\,\\mathrm{d}x=\\Big[\\tfrac12\\ln(1+x^2)\\Big]_0^{+\\infty}=+\\infty.$$ <b>发散！</b></p>",
+  "<p><b>衰减速度旁证 D</b>：$\\dfrac{x}{1+x^2}\\sim\\dfrac{1}{x}$（$x\\to+\\infty$），与 $\\int^{+\\infty}\\dfrac{\\mathrm{d}x}{x}$ 同阶、衰减太慢必发散；而 A、B 带 $\\mathrm{e}^{-x}$、$\\mathrm{e}^{-x^2}$ 指数衰减，C 的分子 $\\arctan x$ 有界，都收敛。</p>",
+  "<p><b>结论</b>：A、B、C 分别等于 $1$、$\\tfrac12$、$\\tfrac{\\pi^2}{8}$ 都收敛，发散的只有 <b>D</b>。</p>"
+];
+
+AW.init({
+  title: '下列反常积分中发散的是？',
+  subtitle: '考点：反常积分敛散 · 方法：求原函数代限 + 衰减速度比较',
+  counterLabel: '已执行',
+  intro: '点击「▶ 播放」逐项验算 A、B、C、D。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = sn.doneK === k ? '#dc2626' : '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',  log:'四个都是无穷限反常积分，先求原函数再代上限', show:1, count:0 },
+    { cls:'ok',    tag:'验A',   log:'A 分部积分得值 1，收敛', show:2, count:1, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'验B',   log:'B 凑微分得值二分之一，收敛', show:3, count:2, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'验C',   log:'C 凑微分得 π²/8，收敛', show:4, count:3, ribbon:{k:3, ok:true} },
+    { cls:'miss',  tag:'验D',   log:'D 的原函数二分之一 ln(1+x²) 上限处爆炸，发散', show:5, count:4, doneK:4, ribbon:{k:4, ok:false} },
+    { cls:'step',  tag:'旁证',  log:'x/(1+x²) 等价于 1/x，衰减太慢必发散；其余三项衰减快', show:6, count:5 },
+    { cls:'done',  tag:'完成',  log:'发散的是 D，答案选 D', show:7, count:6, done:true },
+  ],
+
+  result: {
+    big: '答案 D：发散',
+    html: '记忆锚点：<b>$\\dfrac{x}{1+x^2}\\sim\\dfrac1x$，慢衰减必发散</b>。三个收敛项的套路：A 分部积分得 $1$；B 凑 $\\mathrm{d}(x^2)$ 得 $\\tfrac12$；C 认出 $(\\arctan x)\'$ 凑微分得 $\\tfrac{\\pi^2}{8}$。见到 $\\dfrac{x}{1+x^2}$ 别被分母的 $x^2$ 骗到——分子也有 $x$，整体就是 $\\dfrac1x$ 的级别。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：四个反常积分谁发散——敛散问的是原函数在 $+\infty$ 处是否有限</h2>
+<p>答案：D</p>
+<h3>第一步：机制先行——反常积分的敛散到底在问什么</h3>
+<p>$\displaystyle\int_0<sup>+\infty</sup>f(x)\,\mathrm{d}x$ 的定义是极限 $\lim_{b\to+\infty}\displaystyle\int_0<sup>b</sup> f\,\mathrm{d}x$：敛，就是原函数 $F(x)$ 在 $+\infty$ 处有<strong>有限</strong>极限；散，就是 $F$ 无界。所以最稳的路子是求出原函数、代上限。<strong>为什么这题选"直接算"？</strong> 四个被积函数的原函数都能一步找到（分部或凑微分），比逐个估阶更快、不留悬念。备用标尺是衰减速度：$\displaystyle\int_1<sup>+\infty</sup>\dfrac{\mathrm{d}x}{x<sup>p</sup>}$ 当 $p&gt;1$ 收敛、$p\le1$ 发散——原函数分别是 $\dfrac{x<sup>1-p</sup>}{1-p}$ 与 $\ln x$，临界恰在 $p=1$：$\ln x$ 增长无界。</p>
+<h3>第二步：收敛的三个，逐步算出来</h3>
+<p><strong>A</strong>：分部积分，$\displaystyle\int_0<sup>+\infty</sup>x\mathrm{e}<sup>-x</sup>\,\mathrm{d}x=\Big[-(x+1)\mathrm{e}<sup>-x</sup>\Big]_0<sup>+\infty</sup>=0-(-1)=1$（$b\to+\infty$ 时 $(b+1)\mathrm{e}<sup>-b</sup>\to0$：指数衰减压过幂增长）。</p>
+<p><strong>B</strong>：凑微分 $x\,\mathrm{d}x=\dfrac12\,\mathrm{d}(x<sup>2</sup>)$，原函数 $-\dfrac12\mathrm{e}<sup>-x^2</sup>$，值为 $\dfrac12$。</p>
+<p><strong>C</strong>：认出 $(\arctan x)'=\dfrac{1}{1+x<sup>2</sup>}$，整体凑成 $\dfrac12(\arctan x)<sup>2</sup>$，值为 $\dfrac{\pi<sup>2</sup>}{8}$。</p>
+<p>三个都落出有限值，收敛。</p>
+<h3>第三步：D 为什么炸掉</h3>
+<p>$$\int_0<sup>+\infty</sup>\frac{x}{1+x<sup>2</sup>}\,\mathrm{d}x=\Big[\frac12\ln(1+x<sup>2</sup>)\Big]_0<sup>+\infty</sup>=+\infty.$$</p>
+<p>从衰减速度看原因：分子分母约去一个 $x$，$\dfrac{x}{1+x<sup>2</sup>}\sim\dfrac1x$，恰是 $p=1$ 的临界情形——分母的 $x<sup>2</sup>$ 只是外壳，真实衰减率只有 $\dfrac1x$，而 $\ln$ 型原函数在 $+\infty$ 处无界，必发散。对照其余三个：A、B 靠 $\mathrm{e}<sup>-x</sup>$、$\mathrm{e}<sup>-x^2</sup>$ 指数衰减（快过任何幂），C 的分子 $\arctan x$ 有界，被积函数约等于 $\dfrac{\text{常数}}{x<sup>2</sup>}$，$p=2&gt;1$，都跑得够快。</p>
+<h3>第四步：汇总对号</h3>
+<table><thead><tr><th>选项</th><th>真实衰减</th><th>原函数极限</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>指数衰减</td><td>$1$</td><td>收敛</td></tr><tr><td>B</td><td>指数衰减</td><td>$\dfrac12$</td><td>收敛</td></tr><tr><td>C</td><td>$\sim\dfrac{\pi/2}{x<sup>2</sup>}$，$p=2&gt;1$</td><td>$\dfrac{\pi<sup>2</sup>}{8}$</td><td>收敛</td></tr><tr><td>D</td><td>$\sim\dfrac1x$，$p=1$ 临界</td><td>$+\infty$</td><td><strong>发散</strong></td></tr></tbody></table>
+<h3>易错点</h3>
+<ul><li><strong>见到 $x\mathrm{e}<sup>-x^2</sup>$ 就分部积分</strong>：完全不必，凑微分一步出结果。</li><li><strong>凭直觉认为 $\dfrac{x}{1+x<sup>2</sup>}$ 收敛</strong>：分母是 $x<sup>2</sup>$ 不代表收敛——分子也有 $x$，约分后真实身份是 $\dfrac1x$，这正是 D 的典型误解来源。</li><li><strong>在 C 里硬拆被积函数</strong>：见 $\dfrac{1}{1+x<sup>2</sup>}$ 应条件反射 $(\arctan x)'$，整体凑微分即可。</li></ul>
+<blockquote>一句话结论：A、B、C 分别等于 $1$、$\dfrac12$、$\dfrac{\pi<sup>2</sup>}{8}$ 都收敛；D 的原函数 $\dfrac12\ln(1+x<sup>2</sup>)$ 无界，发散选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

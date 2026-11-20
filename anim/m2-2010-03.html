@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-02.html" data-q="../question/m2-2010-02/">← <b>m2-2010-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-03/" data-q="../question/m2-2010-03/" data-no-anim="1">m2-2010-03 · 本题</a>
+  <a href="m2-2010-04.html" data-q="../question/m2-2010-04/"><b>m2-2010-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导板：所有推导行在 build 时建好（含公式），render 按 i 逐行点亮。
+   行状态：未揭示（半透明）/ 当步揭示（琥珀高亮）/ 已揭示（普通）/ 末步结论（绿色） */
+var rows = [];
+function drow(html, at, green){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'margin:10px 0;padding:10px 16px;border-left:4px solid #cbd5e1;' +
+    'background:#f8fafc;border-radius:8px;font-size:15.5px;line-height:1.9;' +
+    'opacity:0.15;transform:translateX(-10px);transition:all .4s;';
+  rows.push({el: d, at: at, green: !!green});
+  return d;
+}
+
+AW.init({
+  title: '2010 数学二 第3题 · 曲线 $y=x^2$ 与 $y=a\\ln x$ 相切，求 $a$',
+  subtitle: '考点：导数的几何意义 · 方法：过同点 + 斜率相同，双条件联立',
+  counterLabel: '已推导',
+  intro: '点击「▶ 播放」逐步演示相切条件的联立求解。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：相切 $=$ 函数值相等 $+$ 切线斜率相等（两条件缺一不可）'));
+    inner.appendChild(drow(
+      '<b>设切点</b>：横坐标 $x_0\\gt0$（$\\ln x$ 的定义域），两曲线在 $x_0$ 处相切', 1));
+    inner.appendChild(drow(
+      '<b>斜率相等</b>：$(x^2)\'=2x$，$(a\\ln x)\'=\\dfrac{a}{x}$，令 $2x_0=\\dfrac{a}{x_0}$' +
+      '$\\ \\Longrightarrow\\ a=2x_0^2$', 2));
+    inner.appendChild(drow(
+      '<b>函数值相等</b>：$x_0^2=a\\ln x_0$', 3));
+    inner.appendChild(drow(
+      '<b>消元</b>：把 $a=2x_0^2$ 代入，$x_0^2=2x_0^2\\ln x_0$，约去 $x_0^2\\neq0$ 得' +
+      '$\\ \\ln x_0=\\dfrac12$', 4));
+    inner.appendChild(drow(
+      '<b>解出切点</b>：$x_0=\\mathrm e^{1/2}=\\sqrt{\\mathrm e}$（取正根，因 $x_0\\gt0$）', 5));
+    inner.appendChild(drow(
+      '<b>回代</b>：$a=2x_0^2=2\\cdot\\mathrm e=2\\,\\mathrm e$ —— 验证：切点 $(\\sqrt{\\mathrm e},\\,\\mathrm e)$ 处两曲线斜率同为 $2\\sqrt{\\mathrm e}$ ✓', 6, true));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '审题',     log: '相切要同时满足：过同一个点、切线斜率相同。设切点横坐标 x0，对数函数要求 x0 大于 0', count: 1 },
+    { cls: 'shift', tag: '斜率方程', log: '两条曲线分别求导，令导数相等，解出 a 等于 2 倍 x0 的平方', count: 2 },
+    { cls: 'step',  tag: '值方程',   log: '切点处两条曲线的纵坐标相等，得到第二条方程', count: 3 },
+    { cls: 'shift', tag: '消元',     log: '把 a 的表达式代入函数值方程，约去 x0 的平方，得到 ln x0 等于二分之一', count: 4 },
+    { cls: 'ok',    tag: '解切点',   log: '解出 x0 等于根号 e，切点在第一象限', count: 5 },
+    { cls: 'done',  tag: '完成',     log: '回代求出 a 等于 2e，答案选 C', count: 6, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < rows.length; k++){
+      var r = rows[k];
+      var revealed = i >= r.at;
+      var active = revealed && r.at === i && !sn.done;
+      var green = sn.done && r.green;
+      r.el.style.opacity = revealed ? '1' : '0.15';
+      r.el.style.transform = revealed ? 'none' : 'translateX(-10px)';
+      r.el.style.background = green ? '#ecfdf3' : (active ? '#fff7e0' : '#f8fafc');
+      r.el.style.borderLeftColor = green ? '#16a34a' : (active ? '#f59e0b' : '#cbd5e1');
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 C：$a=2\\,\\mathrm e$',
+    html: '记忆锚点：<b>相切 $=$ 过同点 $+$ 斜率相同</b>，两条方程联立消元。易错：只用斜率相等（$a$ 与 $x_0$ 都不定）；把 $(x^2)\'$ 的系数 2 丢了会得到错误的倍数。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：两曲线相切——同一点 + 同切线，两条方程缺一不可</h2>
+<p>答案：<strong>C</strong>（$a=2\mathrm e$）。</p>
+<h3>第 0 步：先立模型——「相切」到底要满足什么</h3>
+<p>两曲线相切的几何含义：它们<strong>交于同一点</strong>，且在该点<strong>有同一条切线</strong>。只满足一半都不行：</p>
+<ul><li>只有斜率相等：两条曲线在该处切线<strong>平行</strong>，但可能根本不相交（上下错开）；</li><li>只过同一个点：两曲线相交，但可以<strong>交叉穿过</strong>（斜率不同）。</li></ul>
+<p>所以「相切」翻译成方程就是两个条件。设切点横坐标为 $x_0$（$\ln x$ 要求 $x_0&gt;0$，且 $a\neq0$）：</p>
+<p>$$\begin{cases} x_0<sup>2</sup>=a\ln x_0 &amp; (\text{过同一点})\\[2pt] 2x_0=\dfrac{a}{x_0} &amp; (\text{切线斜率相同})\end{cases}$$</p>
+<h3>第一步：选消元顺序——为什么先从斜率方程解出 $a$</h3>
+<p>未知数是 $x_0$ 与 $a$ 两个。斜率方程 $2x_0=\dfrac a{x_0}$ 里 $a$ 已经「孤立」（$a=2x_0<sup>2</sup>$），代入函数值方程后只剩 $x_0$ 一个未知量。反过来若先从函数值方程解 $a=\dfrac{x_0<sup>2</sup>}{\ln x_0}$，代入后 $\ln x_0$ 混在分母里反而化不开——<strong>先从能「孤立」未知数的方程下手，是这类题少走弯路的关键</strong>。</p>
+<h3>第二步：解出切点，回代求 $a$</h3>
+<p>$$x_0<sup>2</sup>=2x_0<sup>2</sup>\ln x_0.$$</p>
+<p>两边约去 $x_0<sup>2</sup>$ 合法吗？合法——$x_0&gt;0$ 保证 $x_0<sup>2</sup>\neq0$（这正是第 0 步强调定义域的用处）。于是</p>
+<p>$$1=2\ln x_0\ \Longrightarrow\ \ln x_0=\frac12\ \Longrightarrow\ x_0=\sqrt{\mathrm e},\qquad a=2x_0<sup>2</sup>=2\mathrm e.$$</p>
+<p><strong>验算</strong>：切点 $(\sqrt{\mathrm e},\ \mathrm e)$ 处，$x_0<sup>2</sup>=\mathrm e$，$a\ln x_0=2\mathrm e\cdot\dfrac12=\mathrm e$ ✓；斜率 $2\sqrt{\mathrm e}=\dfrac{2\mathrm e}{\sqrt{\mathrm e}}$ ✓。两条曲线同点同切线，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>只列一个方程</strong>：只用斜率相等得 $a=2x_0<sup>2</sup>$，$x_0$ 仍是自由的，$a$ 定不下来；只用「过同点」同样解不出。漏条件是错误答案（如 D 一类）的主要来源。</li><li><strong>求导漏系数</strong>：把 $2x_0=\dfrac a{x_0}$ 误写成 $x_0=\dfrac a{x_0}$，或把 $a\ln x$ 的导数算错，$a$ 的倍数立刻乱掉（A、B 一类）。</li><li><strong>忽略定义域</strong>：$\ln x$ 限定 $x_0&gt;0$；由 $\ln x_0=\dfrac12$ 只取 $\sqrt{\mathrm e}$，且约去 $x_0<sup>2</sup>$ 正因 $x_0\neq0$。</li></ul>
+<blockquote>相切 $=$ 同点 + 同斜率，两条方程联立；消元先从能「孤立」未知数的方程下手。本题 $a=2\mathrm e$，选 <strong>C</strong>。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

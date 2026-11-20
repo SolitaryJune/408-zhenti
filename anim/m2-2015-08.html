@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·08 换正交矩阵后二次型标准形的变化</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-07.html" data-q="../question/m2-2015-07/">← <b>m2-2015-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-08/" data-q="../question/m2-2015-08/" data-no-anim="1">m2-2015-08 · 本题</a>
+  <a href="m2-2015-09.html" data-q="../question/m2-2015-09/"><b>m2-2015-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：系数跟着列走',
+    cls: 'key',
+    body: '<p>正交变换下标准形的系数 = $P$ 各列（单位正交特征向量）对应的特征值。由 $P=(e_1,e_2,e_3)$ 下 $f=2y_1^2+y_2^2-y_3^2$ 读出：$Ae_1=2e_1,\\ Ae_2=e_2,\\ Ae_3=-e_3$。</p>',
+    log: 'e₁→2，e₂→1，e₃→−1' },
+  { title: '确认 Q 仍是正交矩阵',
+    cls: 'step',
+    body: '<p>$Q=(e_1,-e_3,e_2)$：各列仍是单位向量且两两正交——<b>列反号、换序都不破坏正交性</b>。故 $x=Qy$ 仍是正交变换，新标准形系数 = $Q$ 各列的特征值。</p>',
+    log: 'Q 仍正交：反号与换序都合法' },
+  { title: '第 1 列 e₁：特征值 2',
+    cls: 'good',
+    body: '<p>$Ae_1=2e_1$，故 $y_1^2$ 的系数是 $2$。</p>',
+    ribbon: {k:1, ok:true},
+    log: '第 1 列 e₁ → 2' },
+  { title: '第 2 列 −e₃：特征值仍是 −1',
+    cls: 'good',
+    body: '<p>$A(-e_3)=-Ae_3=-(-e_3)=(-1)\\cdot(-e_3)$——<b>特征向量反号不改变特征值</b>，$y_2^2$ 的系数是 $-1$。</p>',
+    ribbon: {k:2, ok:true},
+    log: '第 2 列 −e₃ → −1（反号不变号）' },
+  { title: '第 3 列 e₂：特征值 1，组装',
+    cls: 'good',
+    body: '<p>$Ae_2=e_2$，$y_3^2$ 的系数是 $1$。组装：$$f=2y_1^2-y_2^2+y_3^2.$$</p>',
+    ribbon: {k:3, ok:true},
+    log: '第 3 列 e₂ → 1，得 2y₁²−y₂²+y₃²' },
+  { title: '排除干扰项',
+    cls: 'bad',
+    body: '<p><b>B</b>：照抄原标准形，没按 $Q$ 重排列。<b>C</b>：误以为 $-e_3$ 使特征值变 $+1$。<b>D</b>：把 $-1$ 丢成 $+1$，三项全正，符号信息全丢。</p>',
+    log: 'B 没换列，C 反号误解，D 丢负号' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>新标准形 $f=2y_1^2-y_2^2+y_3^2$，答案选 <b>A</b>。记忆锚点：<b>标准形系数 = 正交矩阵第 $j$ 列对应的特征值</b>；列向量乘 $-1$ 或换位置，都不改变它对应的特征值。</p>',
+    log: '选 A' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '换 $Q=(e_1,-e_3,e_2)$ 后的二次型标准形',
+  subtitle: '考点：二次型 · 特征值 · 方法：标准形系数 = 正交矩阵各列的特征值',
+  counterLabel: '推理步',
+  ribbonTitle: 'Q 的各列（✓ 特征值已定）',
+  intro: '点击「▶ 播放」逐列确定新标准形的系数。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（2y₁²−y₂²+y₃²）',
+    html: '记忆锚点：<b>系数跟列走</b>——第 2 列从 $e_2$ 换成 $-e_3$，系数就从 $1$ 换成 $-1$；<b>特征向量反号不改变特征值</b>（排除 C），换列必须重排系数（排除 B），负特征值不能丢（排除 D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：换一组正交列，标准形系数怎么跟着走</h2>
+<p>答案：<strong>A</strong>。</p>
+<h3>第 0 步：先立机制——标准形的系数从哪里来</h3>
+<p>把 $x=Py$ 代入 $f=x<sup>\mathrm T</sup>Ax$，得 $f=y<sup>\mathrm T</sup>(P<sup>\mathrm T</sup>AP)y$。$P$ 正交意味着 $P<sup>-1</sup>=P<sup>\mathrm T</sup>$，所以 $P<sup>\mathrm T</sup>AP$ 与 $A$ 相似且是对角阵——<strong>对角元就是 $A$ 的特征值</strong>。这不是巧合：正交变换化标准形就是相似对角化，第 $j$ 个系数 = $P$ 第 $j$ 列对应的特征值。由已知 $P=(e_1,e_2,e_3)$ 下标准形为 $2y_1<sup>2</sup>+y_2<sup>2</sup>-y_3<sup>2</sup>$，读出</p>
+<p>$$Ae_1=2e_1,\qquad Ae_2=e_2,\qquad Ae_3=-e_3.$$</p>
+<h3>第 1 步：$Q$ 为什么还是正交矩阵——反号与换序都不碰内积</h3>
+<p>$Q=(e_1,-e_3,e_2)$：列反号不改变模长（$\lVert -e_3\rVert=\lVert e_3\rVert=1$），也不破坏与其他列的正交（$\langle -e_3,e_i\rangle=-\langle e_3,e_i\rangle=0$）；换列序更不碰内积。所以 $Q$ 正交，$x=Qy$ 仍是正交变换，新标准形系数 = $Q$ 各列对应的特征值。</p>
+<h3>第 2 步：逐列读特征值——为什么反号不翻特征值</h3>
+<ul><li>第 1 列 $e_1$：特征值 $2$；</li><li>第 2 列 $-e_3$：$A(-e_3)=-Ae_3=-(-e_3)=(-1)\cdot(-e_3)$——特征值仍是 $-1$。<strong>为什么</strong>：特征值刻画"这个方向被放大多少倍"，$-e_3$ 与 $e_3$ 是同一条直线上的方向，只是箭头反向；定义式 $Ax=\lambda x$ 中把 $x$ 换成 $cx$（$c\neq0$）等式依然成立，$\lambda$ 不动。</li><li>第 3 列 $e_2$：特征值 $1$。</li></ul>
+<p>$$f=2y_1<sup>2</sup>-y_2<sup>2</sup>+y_3<sup>2</sup>,$$</p>
+<p>选 <strong>A</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 B</strong>：照抄原标准形——$Q$ 已把第 2、3 列换成 $-e_3,e_2$，系数必须跟着列走。</li><li><strong>选 C</strong>：以为列向量乘 $-1$ 特征值也变号——特征值属于"方向"，不属于"箭头"。</li><li><strong>选 D</strong>：把 $-1$ 丢成正的，三个系数全正——符号信息全丢。</li></ul>
+<blockquote>记忆锚点：正交标准形的系数 = 各列特征值；列反号、换序都行，特征值只认方向不认箭头。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

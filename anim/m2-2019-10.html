@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2019·10 摆线在 t=3π/2 处切线的 y 轴截距</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-09.html" data-q="../question/m2-2019-09/">← <b>m2-2019-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-10/" data-q="../question/m2-2019-10/" data-no-anim="1">m2-2019-10 · 本题</a>
+  <a href="m2-2019-11.html" data-q="../question/m2-2019-11/"><b>m2-2019-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：摆线 $\\begin{cases}x=t-\\sin t,\\\\ y=1-\\cos t\\end{cases}$ 在 $t=\\frac{3\\pi}{2}$ 处的切线。三件事：<b>切点坐标 → 切线斜率 → $y$ 轴截距</b>。斜率公式 $\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}=\\dfrac{y\'_t}{x\'_t}$。</p>",
+  "<p><b>备好弹药</b>：$t=\\frac{3\\pi}{2}$ 处 $\\sin\\frac{3\\pi}{2}=\\boldsymbol{-1}$（易错点！）、$\\cos\\frac{3\\pi}{2}=0$；导数 $x\'_t=1-\\cos t$、$y\'_t=\\sin t$。</p>",
+  "<p><b>切点</b>：$$x_0=\\frac{3\\pi}{2}-(-1)=\\frac{3\\pi}{2}+1,\\qquad y_0=1-0=1.$$</p>",
+  "<p><b>斜率</b>：$$k=\\frac{\\sin t}{1-\\cos t}\\bigg|_{t=\\frac{3\\pi}{2}}=\\frac{-1}{1-0}=-1.$$</p>",
+  "<p><b>切线方程</b>：$$y-1=-\\left(x-\\Big(\\frac{3\\pi}{2}+1\\Big)\\right)\\ \\Longrightarrow\\ y=-x+\\frac{3\\pi}{2}+2.$$</p>",
+  "<p><b>取截距</b>：$y$ 轴截距是令 $x=0$ 后的 $y$ 值（不是令 $y=0$）：$$y\\big|_{x=0}=\\frac{3\\pi}{2}+2.$$</p>",
+  "<p><b>结论</b>：切线在 $y$ 轴上的截距为 $\\boldsymbol{\\dfrac{3\\pi}{2}+2}$。</p>"
+];
+
+AW.init({
+  title: '摆线 $\\begin{cases}x=t-\\sin t\\\\ y=1-\\cos t\\end{cases}$ 在 $t=\\frac{3\\pi}{2}$ 处切线的 $y$ 轴截距',
+  subtitle: '考点：参数方程求切线 · 方法：切点、dy/dx=y′t/x′t、令 x=0',
+  counterLabel: '已执行',
+  intro: '点击「▶ 播放」逐步演示切线推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'三件事：切点、斜率、截距；斜率用参数式相除', show:1, count:0 },
+    { cls:'step',  tag:'备弹药', log:'三π/2 处正弦是负 1、余弦是 0；两个对 t 的导数就位', show:2, count:1 },
+    { cls:'ok',    tag:'切点',   log:'x0 = 3π/2 加 1，y0 = 1', show:3, count:2 },
+    { cls:'ok',    tag:'斜率',   log:'分子负 1、分母 1，斜率为负 1', show:4, count:3, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'切线',   log:'点斜式写切线，整理得 y = −x + 3π/2 + 2', show:5, count:4 },
+    { cls:'ok',    tag:'截距',   log:'令 x=0 得 y 轴截距 3π/2 + 2', show:6, count:5, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成',   log:'截距为 3π/2 + 2', show:7, count:6, done:true },
+  ],
+
+  result: {
+    big: '答案：$\\dfrac{3\\pi}{2}+2$',
+    html: '记忆锚点：<b>参数切线三件事：切点 → $k=\\dfrac{y\'_t}{x\'_t}$ → 令 $x=0$</b>。易错：$\\sin\\frac{3\\pi}{2}=-1$，于是 $x_0=\\frac{3\\pi}{2}-(-1)=\\frac{3\\pi}{2}+1$；$y$ 轴截距是 $x=0$ 的 $y$ 值，别解成 $x$ 轴截距。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：摆线的切线——参数求导三件事：切点、斜率、截距</h2>
+<p>答案：$\dfrac{3\pi}{2}+2$</p>
+<h3>第一步：备好三角值与导数</h3>
+<p>$x=t-\sin t,\ y=1-\cos t$，在 $t=\dfrac{3\pi}{2}$ 处 $\sin\dfrac{3\pi}{2}=-1,\ \cos\dfrac{3\pi}{2}=0$；导数 $x'_t=1-\cos t,\ y'_t=\sin t$。</p>
+<h3>第二步：切点与斜率</h3>
+<p>$$x_0=\frac{3\pi}{2}-(-1)=\frac{3\pi}{2}+1,\qquad y_0=1-0=1.$$</p>
+<p>参数方程求斜率用 $y$ 对 $t$、$x$ 对 $t$ 的导数相除：</p>
+<p>$$k=\frac{\mathrm{d}y}{\mathrm{d}x}\bigg|_{t=\frac{3\pi}{2}}=\frac{\sin t}{1-\cos t}\bigg|_{t=\frac{3\pi}{2}}=\frac{-1}{1-0}=-1.$$</p>
+<p><strong>为什么斜率是 $\dfrac{y'_t}{x'_t}$？</strong> 链式法则把 $t$ 当桥梁：$\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{\mathrm{d}y/\mathrm{d}t}{\mathrm{d}x/\mathrm{d}t}$，分子分母的 $\mathrm{d}t$ 相除约掉；前提是 $x'_t\neq0$——本题 $1-\cos t$ 只在 $t=0,2\pi$（摆线的尖点）为零，$t=\dfrac{3\pi}{2}$ 处安全。</p>
+<h3>第三步：写切线，令 $x=0$ 取 $y$ 轴截距</h3>
+<p>$$y-1=-\left(x-\Big(\frac{3\pi}{2}+1\Big)\right)\quad\Longrightarrow\quad y=-x+\frac{3\pi}{2}+2.$$</p>
+<p>令 $x=0$，得 $y$ 轴截距 $\dfrac{3\pi}{2}+2$。</p>
+<h3>易错点</h3>
+<ul><li><strong>$\sin\dfrac{3\pi}{2}$ 代成 $1$</strong>：它是 $-1$；于是 $x_0=\dfrac{3\pi}{2}+1$，符号一错截距全错。</li><li><strong>斜率上下颠倒</strong>：$\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{y'_t}{x'_t}$，分母是 $x'_t$。</li><li><strong>求成 $x$ 轴截距</strong>：$y$ 轴截距是令 $x=0$ 后的 $y$ 值，不是令 $y=0$ 解出的 $x$。</li></ul>
+<blockquote>一句话结论：切点 $\left(\dfrac{3\pi}{2}+1,\,1\right)$、斜率 $-1$，切线 $y=-x+\dfrac{3\pi}{2}+2$，$y$ 轴截距为 $\dfrac{3\pi}{2}+2$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

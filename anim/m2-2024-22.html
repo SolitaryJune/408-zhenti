@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2024·22 解空间真包含定参数 + 正交变换化标准形</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-21.html" data-q="../question/m2-2024-21/">← <b>m2-2024-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-22/" data-q="../question/m2-2024-22/" data-no-anim="1">m2-2024-22 · 本题</a>
+  <a href="m2-2025-01.html" data-q="../question/m2-2025-01/"><b>m2-2025-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：翻译成解空间语言',
+    cls: 'key',
+    body: '<p>「$A\\boldsymbol x=\\boldsymbol 0$ 的解均是 $B^{\\mathrm T}\\boldsymbol x=\\boldsymbol 0$ 的解，但两方程组不同解」$\\iff$</p>' +
+          '$$N(A)\\subsetneq N(B^{\\mathrm T})\\quad(\\text{真包含}).$$' },
+  { title: '维数比较',
+    cls: '',
+    body: '<p>$A=\\begin{pmatrix}0&1&a\\\\1&0&1\\end{pmatrix}$ 两行无关，$r(A)=2$，故 $\\dim N(A)=3-2=1$。真包含要求</p>' +
+          '$$\\dim N(B^{\\mathrm T})\\ge2\\ \\Longleftrightarrow\\ r(B^{\\mathrm T})\\le1.$$' },
+  { title: '先定 $b$',
+    cls: 'good',
+    body: '<p>$B^{\\mathrm T}=\\begin{pmatrix}1&1&b\\\\1&1&2\\end{pmatrix}$，两行成比例 $\\iff b=2$，此时 $r(B^{\\mathrm T})=1$、$\\dim N(B^{\\mathrm T})=2$。</p>' +
+          '<p>（若 $r(B^{\\mathrm T})=2$，则两个解空间都是 $1$ 维，包含变同解，与「不同解」矛盾。）</p>' },
+  { title: '再定 $a$：第 (1) 问完成',
+    cls: 'good',
+    body: '<p>解 $A\\boldsymbol x=\\boldsymbol 0$：$x_2+ax_3=0,\\ x_1+x_3=0$，基础解系 $\\boldsymbol\\xi=(-1,-a,1)^{\\mathrm T}$。它必须满足 $x_1+x_2+2x_3=0$：</p>' +
+          '$$-1-a+2=0\\ \\Longrightarrow\\ a=1.$$' +
+          '<p>$\\dim N(A)=1<2$，真包含成立：<b>$a=1,\\ b=2$</b>。</p>' },
+  { title: '第 (2) 问：写二次型矩阵',
+    cls: 'key',
+    body: '<p>代入 $a=1,b=2$：</p>' +
+          '$$BA=\\begin{pmatrix}1&1\\\\1&1\\\\2&2\\end{pmatrix}\\begin{pmatrix}0&1&1\\\\1&0&1\\end{pmatrix}=\\begin{pmatrix}1&1&2\\\\1&1&2\\\\2&2&4\\end{pmatrix}.$$' +
+          '<p>它<b>恰已对称</b>，故二次型矩阵 $S=BA$；且 $S=\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}$，$\\boldsymbol\\alpha=(1,1,2)^{\\mathrm T}$，$r(S)=1$。</p>' },
+  { title: '特征值：秩 1 直接读出',
+    cls: '',
+    body: '<p>秩 $1$ 的对称阵只有一个非零特征值，等于迹：</p>' +
+          '$$\\lambda_1=\\operatorname{tr}(S)=1+1+4=6,\\qquad \\lambda_2=\\lambda_3=0.$$' },
+  { title: '求正交特征向量组',
+    cls: '',
+    body: '<p>$\\lambda=6$：特征向量即 $\\boldsymbol\\alpha$，$q_3=\\dfrac1{\\sqrt6}(1,1,2)^{\\mathrm T}$。</p>' +
+          '<p>$\\lambda=0$：解 $x_1+x_2+2x_3=0$，在解平面内取两个<b>互相正交</b>的单位向量：$q_1=\\dfrac1{\\sqrt2}(-1,1,0)^{\\mathrm T}$，$q_2=\\dfrac1{\\sqrt3}(-1,-1,1)^{\\mathrm T}$。三者两两正交。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>令 $Q=(q_1,q_2,q_3)$（正交阵），在 $\\boldsymbol x=Q\\boldsymbol y$ 下：</p>' +
+          '$$f=0\\cdot y_1^2+0\\cdot y_2^2+6y_3^2=6y_3^2.$$' +
+          '<p>$Q$ 不唯一（特征向量取法/排列不同），但非零系数必为 $6$。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title.replace(/\$/g, ''),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2024·22】由解空间真包含定 $a,b$，正交变换化 $f=\\boldsymbol x^{\\mathrm T}BA\\boldsymbol x$ 为标准形',
+  subtitle: '考点：解空间与秩 · 实对称矩阵正交对角化 · 二次型标准形',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$a=1,\\ b=2$；标准形 $f=6y_3^2$',
+    html: '<p>记忆锚点：<b>「解均是解但不同解」$\\Rightarrow N(A)\\subsetneq N(B^{\\mathrm T})\\Rightarrow$ 维数严格变大</b>，先定 $r(B^{\\mathrm T})\\le1$ 得 $b=2$，再代基础解系得 $a=1$。</p>' +
+          '<p>易错：$f$ 的矩阵一般要对称化 $\\tfrac12(BA+(BA)^{\\mathrm T})$（本题 $BA$ 恰已对称但要写明）；秩 $1$ 矩阵非零特征值 $=\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol\\alpha=6$；$\\lambda=0$ 的两个特征向量要先正交化再单位化。</p>',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：解空间真包含定参数 + 秩 1 对称阵的正交对角化</h2>
+<p><strong>答案</strong>：(1) $a=1,\ b=2$；(2) 取</p>
+<p>$$Q=\begin{pmatrix}<br/>-\dfrac1{\sqrt2} &amp; -\dfrac1{\sqrt3} &amp; \dfrac1{\sqrt6}\\[4pt]<br/>\dfrac1{\sqrt2} &amp; -\dfrac1{\sqrt3} &amp; \dfrac1{\sqrt6}\\[4pt]<br/>0 &amp; \dfrac1{\sqrt3} &amp; \dfrac2{\sqrt6}<br/>\end{pmatrix},$$</p>
+<p>则在 $\boldsymbol x=Q\boldsymbol y$ 下 $f$ 化为标准形 $f=6y_3<sup>2</sup>$（$Q$ 不唯一，非零系数必为 $6$）。</p>
+<h3>第一步（1）：把条件翻译成解空间的语言</h3>
+<p>「$\boldsymbol A\boldsymbol x=\boldsymbol 0$ 的解均是 $B<sup>\mathrm T</sup>\boldsymbol x=\boldsymbol 0$ 的解」即 $N(A)\subseteq N(B<sup>\mathrm T</sup>)$；「两方程组不同解」把它升级为<strong>真包含</strong> $N(A)\subsetneq N(B<sup>\mathrm T</sup>)$。为什么真包含能变成维数不等式：若 $\dim N(A)=\dim N(B<sup>\mathrm T</sup>)$，被包含的有限维子空间与母空间维数相同，二者必然重合——与「不同解」矛盾。所以必须 $\dim N(A)&lt;\dim N(B<sup>\mathrm T</sup>)$。$A$ 的两行 $(0,1,a),(1,0,1)$ 无论 $a$ 取何值都线性无关，$r(A)=2$，故</p>
+<p>$$\dim N(A)=3-2=1\ \Longrightarrow\ \dim N(B<sup>\mathrm T</sup>)\ge2\ \Longleftrightarrow\ r(B<sup>\mathrm T</sup>)\le1.$$</p>
+<p>（注意：单靠「解均是解」的包含关系推不出参数——任何 $b$ 都有 $\dim N(B<sup>\mathrm T</sup>)\ge1$；真正发力的是「不同解」逼出的维数严格不等式。）</p>
+<h3>第二步（1）：先用维数定 $b$，再用包含定 $a$</h3>
+<p>$B<sup>\mathrm T</sup>=\begin{pmatrix}1&amp;1&amp;b\\1&amp;1&amp;2\end{pmatrix}$，$r(B<sup>\mathrm T</sup>)\le1$ 要求两行成比例，即 $b=2$（结构条件）。再解 $\boldsymbol A\boldsymbol x=\boldsymbol 0$：由 $x_2+ax_3=0,\ x_1+x_3=0$ 得基础解系 $\boldsymbol\xi=(-1,-a,1)<sup>\mathrm T</sup>$；包含关系要求它满足 $B<sup>\mathrm T</sup>\boldsymbol x=\boldsymbol 0$，即 $x_1+x_2+2x_3=0$：</p>
+<p>$$-1-a+2=0\ \Longrightarrow\ a=1.$$</p>
+<p>此时 $\dim N(A)=1&lt;2=\dim N(B<sup>\mathrm T</sup>)$，确为真包含。故 $a=1,\ b=2$。</p>
+<h3>第三步（2）：二次型矩阵——为什么 $BA$ 天然对称</h3>
+<p>代入 $a=1,b=2$ 后 $B$ 的三行全部成比例，可写成 $B=\boldsymbol\alpha(1,1)$（$\boldsymbol\alpha=(1,1,2)<sup>\mathrm T</sup>$），于是</p>
+<p>$$BA=\boldsymbol\alpha\,\big[(1,1)A\big],\qquad (1,1)A=(1,1,2)=\boldsymbol\alpha<sup>\mathrm T</sup><br/>\ \Longrightarrow\ BA=\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup><br/>=\begin{pmatrix}1&amp;1&amp;2\\1&amp;1&amp;2\\2&amp;2&amp;4\end{pmatrix}.$$</p>
+<p><strong>这一步同时解释了两件事</strong>：$BA$ 形如 $\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$，天然对称，二次型矩阵就是 $S=BA$（一般情形必须写对称化 $S=\tfrac12\big(BA+(BA)<sup>\mathrm T</sup>\big)$，本题恰好免了）；且外积结构直接给出 $r(S)=1$。</p>
+<h3>第四步（2）：秩 1 的特征值为什么是 $6,0,0$</h3>
+<p>不必硬解特征方程，机制两条：其一，$S\boldsymbol\alpha=\boldsymbol\alpha(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha)=6\boldsymbol\alpha$，所以 $6$ 是特征值、$\boldsymbol\alpha$ 是对应特征向量；其二，$r(S)=1$ 给出 $0$ 的几何重数 $=3-1=2$，代数重数只多不少，而特征值连同重数只有 $3$ 个名额——已用掉 $1$ 个给 $6$，剩下 $2$ 个必都是 $0$。校对：特征值之和 $6+0+0=$ 迹 $=1+1+4=6$ ✓（特征值之和恒等于迹，任何方阵都成立）。</p>
+<ul><li>$\lambda=6$：特征向量即 $\boldsymbol\alpha$，单位化 $q_3=\dfrac1{\sqrt6}(1,1,2)<sup>\mathrm T</sup>$；</li><li>$\lambda=0$：解 $x_1+x_2+2x_3=0$，在其中取两个<strong>互相正交</strong>的单位向量 $q_1=\dfrac1{\sqrt2}(-1,1,0)<sup>\mathrm T</sup>$、$q_2=\dfrac1{\sqrt3}(-1,-1,1)<sup>\mathrm T</sup>$（先取一个，再在解平面内取与它垂直的）。</li></ul>
+<p><strong>为什么必须正交化？</strong> 实对称矩阵属于<strong>不同</strong>特征值的特征向量自动正交（$q_3$ 与 $q_1,q_2$ 不用管）；但同一特征值（二重 $0$）内部的两个解向量一般不正交，不挑正交的一对，$Q$ 就不是正交矩阵，「正交变换」名不副实。排成 $Q=(q_1,q_2,q_3)$，则</p>
+<p>$$f=\boldsymbol x<sup>\mathrm T</sup>S\boldsymbol x=\boldsymbol y<sup>\mathrm T</sup>(Q<sup>\mathrm T</sup>SQ)\boldsymbol y=0\cdot y_1<sup>2</sup>+0\cdot y_2<sup>2</sup>+6y_3<sup>2</sup>=6y_3<sup>2</sup>.$$</p>
+<p>（$Q<sup>TSQ</sup>=\mathrm{diag}(0,0,6)$ 的原理：$Q$ 的第 $i$ 列是特征向量，$SQ$ 的第 $i$ 列是 $\lambda_i$ 乘它，故 $Q<sup>TSQ</sup>$ 的对角元恰为特征值。$Q$ 不唯一，标准形里非零系数必为 $6$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>只用「解均是解」定 $b$</strong>：单靠包含关系推不出 $b$（任何 $b$ 都有 $\dim N(B<sup>\mathrm T</sup>)\ge1$）；必须再用「不同解」排除 $\dim N(B<sup>\mathrm T</sup>)=1$，才得 $r(B<sup>\mathrm T</sup>)\le1$。</li><li><strong>二次型矩阵直接取 $BA$ 而不说明</strong>：一般要对称化 $\tfrac12\big(BA+(BA)<sup>\mathrm T</sup>\big)$；本题 $BA=\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ 恰好已对称，但这句话要写，否则特征值理论的前提缺失。</li><li><strong>秩 1 矩阵硬解三次行列式</strong>：$S\boldsymbol\alpha=6\boldsymbol\alpha$ 与 $r(S)=1$ 直接给出特征值 $6,0,0$，硬解特征方程既慢又易算错。</li><li><strong>重根特征向量忘了正交化</strong>：$\lambda=0$ 是二重根，取的两个解必须先互相正交再单位化；$Q$ 的列顺序影响标准形写法（$6y_3<sup>2</sup>$ 还是 $6y_1<sup>2</sup>$），要与 $Q$ 的排列一致。</li></ul>
+<blockquote>一句话结论：$N(A)\subsetneq N(B<sup>\mathrm T</sup>)$ 给出 $b=2,\ a=1$；$S=BA=\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ 秩 $1$，特征值 $6,0,0$，正交变换 $\boldsymbol x=Q\boldsymbol y$ 化 $f=6y_3<sup>2</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

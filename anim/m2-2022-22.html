@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022·22 二次型正交对角化与瑞利商最小值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-21.html" data-q="../question/m2-2022-21/">← <b>m2-2022-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-22/" data-q="../question/m2-2022-22/" data-no-anim="1">m2-2022-22 · 本题</a>
+  <a href="m2-2023-01.html" data-q="../question/m2-2023-01/"><b>m2-2023-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$f=3x_1^2+4x_2^2+3x_3^2+2x_1x_3\\qquad(1)\\ \\text{求 } Q \\text{ 与标准形}\\qquad(2)\\ \\text{证 } \\min_{\\boldsymbol{x}\\neq0}\\frac{f(\\boldsymbol{x})}{\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}}=2$$",
+  "<b>① 写矩阵：</b>交叉项系数 $2$ 平分到两端：$A=\\begin{pmatrix}3&0&1\\\\0&4&0\\\\1&0&3\\end{pmatrix}$（实对称）",
+  "<b>② 特征多项式：</b>按第 2 行展开：$\\lvert A-\\lambda E\\rvert=(4-\\lambda)\\big[(3-\\lambda)^2-1\\big]=(4-\\lambda)(\\lambda-2)(\\lambda-4)$",
+  "<b>③ 特征值：</b>$\\lambda_1=2$（单根），$\\lambda_2=\\lambda_3=4$（二重根）",
+  "<b>④ $\\lambda=2$：</b>$(A-2E)\\boldsymbol{x}=\\boldsymbol{0}\\Rightarrow x_1+x_3=0,\\ x_2=0$，取 $\\xi_1=(-1,0,1)^{\\mathrm{T}}$",
+  "<b>⑤ $\\lambda=4$：</b>$(A-4E)\\boldsymbol{x}=\\boldsymbol{0}\\Rightarrow x_1=x_3,\\ x_2$ 任意，取 $\\xi_2=(0,1,0)^{\\mathrm{T}},\\ \\xi_3=(1,0,1)^{\\mathrm{T}}$",
+  "<b>⑥ 正交单位化：</b>不同特征值的向量自动正交，$\\xi_2\\cdot\\xi_3=0$ 直接验证；单位化 $\\eta_1=\\frac{1}{\\sqrt2}(-1,0,1)^{\\mathrm{T}},\\ \\eta_2=(0,1,0)^{\\mathrm{T}},\\ \\eta_3=\\frac{1}{\\sqrt2}(1,0,1)^{\\mathrm{T}}$，拼成 $Q=(\\eta_1,\\eta_2,\\eta_3)$",
+  "<b>⑦ (1) 收尾：</b>$\\boldsymbol{x}=Q\\boldsymbol{y}$ 化为标准形 $f=2y_1^2+4y_2^2+4y_3^2$（对角系数就是特征值）",
+  "<b>⑧ (2) 保范数：</b>$Q^{\\mathrm{T}}Q=E\\Rightarrow\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}=(Q\\boldsymbol{y})^{\\mathrm{T}}(Q\\boldsymbol{y})=\\boldsymbol{y}^{\\mathrm{T}}\\boldsymbol{y}$，且 $\\boldsymbol{x}\\ne\\boldsymbol{0}\\iff\\boldsymbol{y}\\ne\\boldsymbol{0}$",
+  "<b>⑨ 放缩：</b>$f=2y_1^2+4y_2^2+4y_3^2\\ge2(y_1^2+y_2^2+y_3^2)=2\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}$，故 $\\dfrac{f}{\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}}\\ge2$",
+  "<b>⑩ 取等：</b>取 $\\boldsymbol{y}=(1,0,0)^{\\mathrm{T}}$ 即 $\\boldsymbol{x}=\\eta_1=\\frac{1}{\\sqrt2}(-1,0,1)^{\\mathrm{T}}\\ne\\boldsymbol{0}$：$f=2,\\ \\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}=1$，比值恰为 $2$——下界可达到",
+  "<b>⑪ 结论：</b>$\\min\\limits_{\\boldsymbol{x}\\neq0}\\dfrac{f(\\boldsymbol{x})}{\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}}=2$，即 $A$ 的最小特征值，证毕"
+];
+
+AW.init({
+  title: '2022·22　二次型正交对角化 + 瑞利商最小值',
+  subtitle: '考点：实对称矩阵正交对角化 · 标准形 · 正交变换保范数与放缩取等',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，(1) 求特征值拼 Q，(2) 用保范数放缩证明最小值。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'两问结构：先正交对角化拿标准形，再证比值的最小值', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'写矩阵', log:'交叉项系数 2 平分到对称的两个位置，各为一', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'特征式', log:'中间一行只有一个元素，按它展开最快，得到三个一次因式', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'特征值', log:'特征值是 2 和两个 4，单根加重根', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'解向量一', log:'二倍 A 减 2E 的零空间里取向量负一零一', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'解向量二', log:'特征值 4 的两个解向量天然正交，直接取零一零和一一', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'正交化', log:'只需单位化，三个单位向量按列拼成正交矩阵 Q', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'标准形', log:'标准形系数就是特征值，二四四，第一问完成', count:7, ribbon:{k:8, ok:true} },
+    { cls:'ok',    tag:'保范数', log:'正交变换不改变向量长度，分母原样搬到 y 上', count:8, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'放缩',   log:'分子逐项把 4 降到 2，得到比值不小于 2 的下界', count:9, ribbon:{k:10, ok:true} },
+    { cls:'ok',    tag:'取等',   log:'取第一个特征向量方向，比值恰好等于 2，下界取到', count:10, ribbon:{k:11, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：最小值就是最小特征值 2，证明完毕', count:11, ribbon:{k:12, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$f=2y_1^2+4y_2^2+4y_3^2,\\qquad \\min_{\\boldsymbol{x}\\neq0}\\frac{f(\\boldsymbol{x})}{\\boldsymbol{x}^{\\mathrm{T}}\\boldsymbol{x}}=2$",
+    html: "记忆锚点：<b>标准形系数 = 特征值；正交变换保范数 ⇒ $\\frac{x^{\\mathrm T}Ax}{x^{\\mathrm T}x}$ 的最小值 = 最小特征值</b>，下界要配取等向量才算证完。易错：交叉项系数忘平分；重根向量不验正交；只证下界不取等。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：正交对角化求标准形 + 瑞利商最小值</h2>
+<p><strong>答案</strong>：(1) $Q=\begin{pmatrix}-\frac{1}{\sqrt2}&amp;0&amp;\frac{1}{\sqrt2}\\0&amp;1&amp;0\\\frac{1}{\sqrt2}&amp;0&amp;\frac{1}{\sqrt2}\end{pmatrix}$，标准形 $f=2y_1<sup>2</sup>+4y_2<sup>2</sup>+4y_3<sup>2</sup>$；(2) $\min\limits_{\boldsymbol{x}\neq0}\dfrac{f(\boldsymbol{x})}{\boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}}=2$。</p>
+<h3>第一步：写出二次型矩阵</h3>
+<p>交叉项 $2x_1x_3$ 的系数平分到 $a_{13}=a_{31}=1$——原因：矩阵展开里 $x_1x_3$ 出现两次，$a_{13}x_1x_3+a_{31}x_3x_1=2a_{13}x_1x_3$，故 $2a_{13}=2$：</p>
+<p>$$A=\begin{pmatrix}3&amp;0&amp;1\\0&amp;4&amp;0\\1&amp;0&amp;3\end{pmatrix}.$$</p>
+<h3>第二步：特征值（第 2 行展开最省力）</h3>
+<p>$$\lvert A-\lambda E\rvert=\begin{vmatrix}3-\lambda&amp;0&amp;1\\0&amp;4-\lambda&amp;0\\1&amp;0&amp;3-\lambda\end{vmatrix}=(4-\lambda)\big[(3-\lambda)<sup>2</sup>-1\big]=(4-\lambda)(\lambda-2)(\lambda-4),$$</p>
+<p>特征值 $\lambda_1=2$（单根），$\lambda_2=\lambda_3=4$（二重根）。</p>
+<h3>第三步：特征向量 → 单位正交组</h3>
+<ul><li>$\lambda=2$：$(A-2E)\boldsymbol{x}=\boldsymbol{0}$ 给出 $x_1+x_3=0,\ x_2=0$，取 $\xi_1=(-1,0,1)<sup>\mathrm T</sup>$；</li><li>$\lambda=4$：$(A-4E)\boldsymbol{x}=\boldsymbol{0}$ 给出 $x_1=x_3,\ x_2$ 任意，取 $\xi_2=(0,1,0)<sup>\mathrm T</sup>,\ \xi_3=(1,0,1)<sup>\mathrm T</sup>$。</li></ul>
+<p>不同特征值的特征向量自动正交——这不是巧合而是定理：设 $A\xi_1=\lambda_1\xi_1$，$A\xi_2=\lambda_2\xi_2$，$\lambda_1\ne\lambda_2$，用 $A$ 对称得 $\lambda_1\xi_1<sup>\mathrm T</sup>\xi_2=(A\xi_1)<sup>\mathrm T</sup>\xi_2=\xi_1<sup>\mathrm T</sup>A\xi_2=\lambda_2\xi_1<sup>\mathrm T</sup>\xi_2$，于是 $(\lambda_1-\lambda_2)\xi_1<sup>\mathrm T</sup>\xi_2=0$，即 $\xi_1\perp\xi_2$。重根内部（$\xi_2,\xi_3$）没有这个保证，必须另验或施密特；本题验得 $\xi_2\cdot\xi_3=0$，直接单位化：</p>
+<p>$$\eta_1=\frac{1}{\sqrt2}(-1,0,1)<sup>\mathrm T</sup>,\quad\eta_2=(0,1,0)<sup>\mathrm T</sup>,\quad\eta_3=\frac{1}{\sqrt2}(1,0,1)<sup>\mathrm T</sup>,\qquad Q=(\eta_1,\eta_2,\eta_3),$$</p>
+<p>$$\boldsymbol{x}=Q\boldsymbol{y}\ \Rightarrow\ f=2y_1<sup>2</sup>+4y_2<sup>2</sup>+4y_3<sup>2</sup>\ (\text{标准形系数}=\text{特征值}).$$</p>
+<p><strong>为什么标准形系数就是特征值？</strong> 代进定义看：$f=\boldsymbol{x}<sup>\mathrm T</sup>A\boldsymbol{x}=\boldsymbol{y}<sup>\mathrm T</sup>(Q<sup>\mathrm T</sup>AQ)\boldsymbol{y}$。$Q$ 的列是单位特征向量 $\eta_i$，把 $A\eta_i=\lambda_i\eta_i$ 按列拼起来就是 $AQ=Q\Lambda$，两边左乘 $Q<sup>\mathrm T</sup>$（用 $Q<sup>\mathrm T</sup>Q=E$）得 $Q<sup>\mathrm T</sup>AQ=\Lambda$，故 $f=\lambda_1y_1<sup>2</sup>+\lambda_2y_2<sup>2</sup>+\lambda_3y_3<sup>2</sup>$——系数即特征值，且<strong>顺序跟着 $Q$ 的列走</strong>。</p>
+<h3>第四步：(2) 保范数 + 放缩 + 取等</h3>
+<p>作正交变换 $\boldsymbol{x}=Q\boldsymbol{y}$。分子化简、分母不变（$Q<sup>\mathrm T</sup>Q=E$）：</p>
+<p>$$f=2y_1<sup>2</sup>+4y_2<sup>2</sup>+4y_3<sup>2</sup>,\qquad \boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}=(Q\boldsymbol{y})<sup>\mathrm T</sup>(Q\boldsymbol{y})=\boldsymbol{y}<sup>\mathrm T</sup>\boldsymbol{y}.$$</p>
+<p>由 $\boldsymbol{x}\ne\boldsymbol{0}\iff\boldsymbol{y}\ne\boldsymbol{0}$，对一切非零 $\boldsymbol{y}$：</p>
+<p>$$\frac{f}{\boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}}=\frac{2y_1<sup>2</sup>+4y_2<sup>2</sup>+4y_3<sup>2</sup>}{y_1<sup>2</sup>+y_2<sup>2</sup>+y_3<sup>2</sup>}\ \ge\ \frac{2(y_1<sup>2</sup>+y_2<sup>2</sup>+y_3<sup>2</sup>)}{y_1<sup>2</sup>+y_2<sup>2</sup>+y_3<sup>2</sup>}=2.$$</p>
+<p>取等：$\boldsymbol{y}=(1,0,0)<sup>\mathrm T</sup>$，即 $\boldsymbol{x}=\eta_1=\frac{1}{\sqrt2}(-1,0,1)<sup>\mathrm T</sup>\ne\boldsymbol{0}$，此时 $f=2$、$\boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}=1$，比值恰为 $2$。下界可达到，故最小值为 $2$——它就是 $A$ 的最小特征值。</p>
+<p><strong>为什么 (2) 必须用"正交"变换？</strong> 分母 $\boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}$ 要参与比值：若 $Q$ 只是可逆矩阵，$\boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}=\boldsymbol{y}<sup>\mathrm T</sup>Q<sup>\mathrm T</sup>Q\boldsymbol{y}\ne\boldsymbol{y}<sup>\mathrm T</sup>\boldsymbol{y}$，分子分母就对不上号。正交恰好保范数（$(Q\boldsymbol{y})<sup>\mathrm T</sup>(Q\boldsymbol{y})=\boldsymbol{y}<sup>\mathrm T</sup>\boldsymbol{y}$），这是全题的枢纽。</p>
+<p><strong>这个结论的一般名字</strong>：对实对称矩阵，$\dfrac{\boldsymbol{x}<sup>\mathrm T</sup>A\boldsymbol{x}}{\boldsymbol{x}<sup>\mathrm T</sup>\boldsymbol{x}}$（瑞利商）的最小值就是最小特征值、最大值是最大特征值；"放缩给下界 + 最小特征向量取等"正是本题的两个动作，取等向量就是 $\lambda_{\min}$ 对应的单位特征向量。</p>
+<h3>易错点</h3>
+<ul><li><strong>交叉项系数直接抄</strong>：$2x_1x_3$ 对应 $a_{13}=a_{31}=1$，矩阵写成对角元 $2$ 会全盘皆错。</li><li><strong>重根向量不做正交性说明</strong>：$\lambda=4$ 的两个向量必须验证（或施密特）正交后才能拼 $Q$，本题 $\xi_2\perp\xi_3$ 天然成立但要写出来。</li><li><strong>只证下界不取等</strong>：没有取等向量 $\boldsymbol{x}=\eta_1$，「min」就退化为「inf」，证明不完整。</li></ul>
+<blockquote>一句话结论：$A$ 的特征值为 $2,4,4$，$Q$ 由单位正交特征向量拼成，标准形 $f=2y_1<sup>2</sup>+4y_2<sup>2</sup>+4y_3<sup>2</sup>$；瑞利商最小值 = 最小特征值 $2$，在 $\boldsymbol{x}=\eta_1$ 方向取到。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

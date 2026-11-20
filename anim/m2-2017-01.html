@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2017·01 分段函数在 x=0 处连续求 ab</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-23.html" data-q="../question/m2-2016-23/">← <b>m2-2016-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-01/" data-q="../question/m2-2017-01/" data-no-anim="1">m2-2017-01 · 本题</a>
+  <a href="m2-2017-02.html" data-q="../question/m2-2017-02/"><b>m2-2017-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：连续 = 三个值相等',
+    cls: 'key',
+    body: '<p>分段函数在分界点 $x=0$ 连续，要求<b>左极限 = 右极限 = $f(0)$</b>。这道题其实是把一个条件翻译成一个小方程。</p>',
+    log: '连续三值相等，目标锁定右极限' },
+  { title: '左侧与函数值：都是 b',
+    cls: 'step',
+    body: '<p>$x\\le 0$ 时 $f(x)=b$，故 $f(0)=b$，且左极限 $\\lim_{x\\to0^-}f(x)=b$。于是连续性等价于：右极限 $=b$。</p>',
+    log: 'x≤0 时 f 恒为 b，f(0)=b' },
+  { title: '右极限：等价无穷小 $1-\\cos u\\sim\\dfrac{u^2}{2}$',
+    cls: 'step',
+    body: '<p>$x\\to0^+$ 时 $\\sqrt{x}\\to0$，取 $u=\\sqrt{x}$：$$1-\\cos\\sqrt{x}\\sim\\frac{(\\sqrt{x})^2}{2}=\\frac{x}{2}$$ 故右极限 $\\lim_{x\\to0^+}\\dfrac{1-\\cos\\sqrt{x}}{ax}=\\lim_{x\\to0^+}\\dfrac{x/2}{ax}=\\dfrac{1}{2a}$。</p>',
+    ribbon: {k:1, ok:true},
+    log: '等价无穷小：1−cos√x 与 x 同阶' },
+  { title: '解方程得 ab',
+    cls: 'good',
+    body: '<p>令右极限等于 $b$：$\\dfrac{1}{2a}=b\\ \\Longrightarrow\\ 2ab=1\\ \\Longrightarrow\\ ab=\\dfrac{1}{2}$。</p>',
+    ribbon: {k:2, ok:true},
+    log: '1/(2a)=b，得 ab=1/2' },
+  { title: '逐项排错 B / C / D',
+    cls: 'bad',
+    body: '<p>B（$ab=-\\dfrac12$）：$1-\\cos\\sqrt{x}>0$、$x>0$，比值为正，负号无来由。C（$ab=0$）：误把 $1-\\cos\\sqrt{x}$ 当 $x$ 的高阶无穷小，实际<b>同阶</b>。D（$ab=2$）：漏了 $1-\\cos u\\sim\\dfrac{u^2}{2}$ 里的 $\\dfrac12$，多算一倍。</p>',
+    log: 'B 符号错、C 阶数错、D 漏系数' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>右极限 $=\\dfrac{1}{2a}=b$，即 $ab=\\dfrac{1}{2}$——答案选 <b>A</b>。</p>',
+    log: 'ab = 1/2，选 A' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '分段函数在 $x=0$ 处连续：$f(x)=\\begin{cases}\\dfrac{1-\\cos\\sqrt{x}}{ax}, & x>0\\\\ b, & x\\le0\\end{cases}$',
+  subtitle: '考点：连续与间断 · 等价无穷小 · 方法：左右极限与函数值对齐',
+  counterLabel: '推理步',
+  ribbonTitle: '关键环节（✓ 完成）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A：$ab=\\dfrac{1}{2}$',
+    html: '记忆锚点：<b>$1-\\cos u\\sim\\dfrac{u^2}{2}$</b>，取 $u=\\sqrt{x}$ 得 $1-\\cos\\sqrt{x}\\sim\\dfrac{x}{2}$（与 $x$ <b>同阶</b>）。分段点连续 = 左右极限与函数值三者对齐，剩下的就是解 $\\dfrac{1}{2a}=b$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分段函数分界点连续 + 等价无穷小求右极限</h2>
+<p>答案：<strong>A</strong>（$ab=\dfrac{1}{2}$）。</p>
+<h3>第 0 步：连续在分界点意味着什么——为什么只剩一个右极限</h3>
+<p>连续的定义是"极限值 = 函数值"。分段函数在分界点 $x=0$ 两侧表达式不同，极限必须<strong>分左右算</strong>再对账：左极限 = 右极限 = $f(0)$。本题左侧 $f(x)=b$ 是常数，左极限与 $f(0)$ 天然都等于 $b$，三个条件当场塌缩成一个——<strong>右极限也必须等于 $b$</strong>。所以全部工作就是算一个右极限。</p>
+<h3>第 1 步：右极限怎么算——为什么用等价无穷小、为什么替换合法</h3>
+<p>右极限 $\lim\limits_{x\to0^+}\dfrac{1-\cos\sqrt{x}}{ax}$ 是 $\dfrac00$ 型。洛必达也可行（求导后出现 $\dfrac{\sin\sqrt{x}}{2\sqrt{x}}$，收尾仍要靠 $\sin u\sim u$），更直接的路是等价无穷小。它的依据来自泰勒展开：</p>
+<p>$$\cos u=1-\frac{u<sup>2</sup>}{2}+o(u<sup>2</sup>)\ \Longrightarrow\ 1-\cos u=\frac{u<sup>2</sup>}{2}+o(u<sup>2</sup>)\sim\frac{u<sup>2</sup>}{2},$$</p>
+<p>系数 $\dfrac12$ 就是 $\cos$ 的二阶泰勒系数，"平方减半"即是 $1-\cos u$ 的阶数。这里 $u=\sqrt{x}\to0$，故</p>
+<p>$$1-\cos\sqrt{x}\sim\frac{(\sqrt{x})<sup>2</sup>}{2}=\frac{x}{2}.$$</p>
+<p><strong>为什么分子可以整体替换？</strong> 等价替换发生在<strong>乘除结构</strong>里才安全，本题恰是商：$1-\cos\sqrt x=\dfrac x2\,(1+o(1))$，除以 $ax$ 后多出的因子 $1+o(1)\to1$，不改变比值极限。于是</p>
+<p>$$\lim_{x\to0^+}\frac{1-\cos\sqrt{x}}{ax}=\lim_{x\to0^+}\frac{x/2}{ax}=\frac{1}{2a},$$</p>
+<p>其中 $a\ne0$ 是隐含前提（否则 $ax\equiv0$，表达式无意义）。</p>
+<h3>第 2 步：解出 $ab$</h3>
+<p>令右极限等于 $f(0)=b$：$\dfrac{1}{2a}=b$，即 $2ab=1$，$ab=\dfrac12$，选 <strong>A</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 D</strong>：把 $1-\cos u$ 背成 $\sim u<sup>2</sup>$，丢掉泰勒系数 $\dfrac12$，多算一倍得 $ab=2$。</li><li><strong>误选 C</strong>：以为 $1-\cos\sqrt x$ 是比 $x$ 高阶的无穷小、极限为 $0$；实际 $\sqrt x$ 平方后恰与 $x$ <strong>同阶</strong>。</li><li><strong>误选 B</strong>：$1-\cos\sqrt x\ge0$ 且 $x&gt;0$，右极限必为正，$ab$ 为负没有来源。</li></ul>
+<blockquote>记忆锚点：分界点连续 = 左右极限与函数值三方对账；$1-\cos u\sim\dfrac{u<sup>2</sup>}{2}$（泰勒系数）；等价替换在乘除结构里安全。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

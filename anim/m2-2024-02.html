@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·02 参数方程求导 + 导数定义式极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-01.html" data-q="../question/m2-2024-01/">← <b>m2-2024-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-02/" data-q="../question/m2-2024-02/" data-no-anim="1">m2-2024-02 · 本题</a>
+  <a href="m2-2024-03.html" data-q="../question/m2-2024-03/"><b>m2-2024-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导行工具：acc 取 key/ok/bad/blue 决定高亮色；未揭示时隐去 */
+var ACC = { key:'#f59e0b', ok:'#22c55e', bad:'#ef4444', blue:'#3b82f6' };
+var BGS = { key:'#fffbeb', ok:'#f6fef9', bad:'#fff8f8', blue:'#eff6ff' };
+function row(accent, html){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'border-left:4px solid #cbd5e1;padding:7px 14px;margin:9px 0;border-radius:10px;'
+    + 'opacity:0;transform:translateX(-12px);transition:all .45s ease;font-size:15px;line-height:2;';
+  d.dataset.acc = accent;
+  return d;
+}
+
+// 每行推导内容（html 里可写 $..$ / $$..$$ 公式）
+var ROWS = [
+  { acc: 'blue', html: '<p><b>目标</b>：$L=\\lim\\limits_{x\\to+\\infty}x\\Big[f\\big(2+\\tfrac2x\\big)-f(2)\\Big]$。增量 $\\tfrac2x\\to0$（$x\\to+\\infty$），指向<b>导数定义</b>的变式。</p>' },
+  { acc: 'blue', html: '<p><b>参数方程求导</b>：$x=1+t^3,\\ y=\\mathrm e^{t^2}$，$$\\frac{\\mathrm dy}{\\mathrm dx}=\\frac{2t\\,\\mathrm e^{t^2}}{3t^2}=\\frac{2\\,\\mathrm e^{t^2}}{3t}.$$</p>' },
+  { acc: 'ok', html: '<p><b>定参数</b>：$x=2\\Rightarrow1+t^3=2\\Rightarrow t=1$，代入得 $f\'(2)=\\dfrac{2\\,\\mathrm e^{1}}{3\\cdot1}=\\dfrac{2\\mathrm e}{3}$。</p>' },
+  { acc: 'key', html: '<p><b>换元凑定义</b>：令 $\\Delta=\\tfrac2x$（$\\Delta\\to0^+$），则 $x=\\tfrac2\\Delta$，$$L=\\frac2\\Delta\\,\\big[f(2+\\Delta)-f(2)\\big]=2\\cdot\\frac{f(2+\\Delta)-f(2)}{\\Delta}.$$</p>' },
+  { acc: 'ok', html: '<p><b>取极限</b>：$\\Delta\\to0^+$ 时差商趋于 $f\'(2)$，$$L=2f\'(2)=2\\cdot\\frac{2\\mathrm e}{3}=\\frac{4\\mathrm e}{3}.$$</p>' },
+  { acc: 'bad', html: '<p><b>对照选项</b>：$\\dfrac{4\\mathrm e}{3}$ 为 <b>B</b>。C 是漏乘系数 2 的 $f\'(2)$；A 把 $f\'(2)$ 误算成 $\\mathrm e$；D 系数与求导双错。</p>' },
+];
+
+AW.init({
+  title: '$\\lim\\limits_{x\\to+\\infty}x\\big[f(2+\\frac2x)-f(2)\\big]$ 的逐步求值',
+  subtitle: '考点：导数定义 + 参数方程求导 · 方法：换元 $\\Delta=\\frac2x$ 凑差商',
+  counterLabel: '计算步',
+  intro: '点击「▶ 播放」逐步演示推导。',
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，最新一行高亮）'));
+    var board = AW.el('div', '');
+    this.rows = [];
+    ROWS.forEach(function(r){
+      var d = row(r.acc, r.html);
+      board.appendChild(d);
+      this.rows.push(d);
+    }, this);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+  render: function(stage, sn, i){
+    (this.rows || []).forEach(function(d, j){
+      var on = j < i;
+      d.style.opacity = on ? '1' : '0';
+      d.style.transform = on ? 'none' : 'translateX(-12px)';
+      d.style.borderLeftColor = on ? (ACC[d.dataset.acc] || ACC.blue) : '#cbd5e1';
+      d.style.background = on ? (BGS[d.dataset.acc] || BGS.blue) : '#f8fafc';
+    });
+    renderMathAfterSnap(stage);
+  },
+  snaps: [
+    { cls: 'step',  tag: '审题', log: '识别型：f(2+2/x)−f(2) 配外因子 x，往导数定义上凑', count: 0 },
+    { cls: 'shift', tag: '求导', log: '参数方程求导：dy/dx = 2e^(t²)/(3t)', count: 1 },
+    { cls: 'ok',    tag: '代入', log: 'x=2 定出 t=1，f\'(2) = 2e/3', count: 2 },
+    { cls: 'shift', tag: '换元', log: '令 Δ=2/x，原式改写成 2 倍差商', count: 3 },
+    { cls: 'ok',    tag: '极限', log: '差商趋于 f\'(2)，L = 2 × 2e/3 = 4e/3', count: 4 },
+    { cls: 'step',  tag: '对照', log: '4e/3 是选项 B；C 漏乘 2，A 的 f\'(2) 算错', count: 5 },
+    { cls: 'done',  tag: '完成', log: '结论：原极限 = 4e/3，选 B', count: 6, done: true },
+  ],
+  result: {
+    big: '答案 B：4e/3',
+    html: '记忆锚点：<b>$x\\big[f(2+\\tfrac2x)-f(2)\\big]\\to2f\'(2)$</b>——外因子与增量配对（$x=\\tfrac2\\Delta$ 多出系数 2）。参数求导先解 $1+t^3=2$ 定 $t=1$，得 $f\'(2)=\\dfrac{2\\mathrm e}{3}$。易错：系数 2 别丢（C 的坑）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：导数定义式极限与参数方程求导的拼接</h2>
+<p>答案：<strong>B</strong>（$\dfrac{4\mathrm e}{3}$）。</p>
+<h3>第 0 步：先立机制——为什么必须凑导数定义</h3>
+<p>所求 $L=\lim\limits_{x\to+\infty}x\Big[f\big(2+\dfrac2x\big)-f(2)\Big]$ 是"$\infty\times$ 小增量"结构。<strong>为什么这条路是凑定义而不是硬算或洛必达？</strong> $f$ 只由参数方程给出：要显式写出 $f(x)$ 得回代 $t=(x-1)<sup>1/3</sup>$ 得 $f(x)=\mathrm e<sup>(x-1)^{2/3</sup>}$，再求导更繁；直接对原式洛必达也需要 $f'$ 的表达式——而 $f'$ 正是本题要先算出来的东西。凑定义把极限化归为一个数 $f'(2)$，一步到位。</p>
+<h3>第 1 步：凑定义，识别隐藏系数</h3>
+<p>令 $\Delta=\dfrac2x$：$x\to+\infty$ 时 $\Delta\to0<sup>+</sup>$，且 $x=\dfrac2\Delta$，于是</p>
+<p>$$x\Big[f\big(2+\tfrac2x\big)-f(2)\Big]=\frac2\Delta\big[f(2+\Delta)-f(2)\big]=2\cdot\frac{f(2+\Delta)-f(2)}{\Delta}\longrightarrow2f'(2).$$</p>
+<p><strong>为什么增量是单侧的 $\Delta\to0<sup>+</sup>$ 也算数？</strong> 导数存在意味着左、右差商极限都存在且都等于 $f'(2)$，从右侧压过去极限相同。</p>
+<p><strong>为什么外面多出因子 $2$？</strong> 增量是 $\dfrac2x$ 而非 $\dfrac1x$：差商分母比 $x$ 本身小一半，除回来就多乘 $2$——这是本题第一坑。</p>
+<h3>第 2 步：参数方程求 $f'(2)$</h3>
+<p>$$f'(x)=\frac{\mathrm dy/\mathrm dt}{\mathrm dx/\mathrm dt}=\frac{2t\,\mathrm e<sup>t^2</sup>}{3t<sup>2</sup>}=\frac{2\,\mathrm e<sup>t^2</sup>}{3t}.$$</p>
+<p>它的合法性来自链式法则：$y$ 对 $t$ 求导、$t$ 再对 $x$ 求导；$x=1+t<sup>3</sup>$ 在 $t\ne0$ 处 $\dfrac{\mathrm dx}{\mathrm dt}=3t<sup>2</sup>\ne0$，反函数可导，链条成立（本题只用 $t=1$）。</p>
+<p><strong>为什么必须先解出 $t$ 再代入？</strong> 上式是关于参数 $t$ 的表达式，$x=2$ 对应的参数由 $1+t<sup>3</sup>=2$ 解得 $t=1$；把 $x=2$ 直接当 $t$ 代入是最典型的张冠李戴。代 $t=1$：</p>
+<p>$$f'(2)=\frac{2\mathrm e}{3}.$$</p>
+<h3>第 3 步：合并定案</h3>
+<p>$$L=2f'(2)=2\cdot\frac{2\mathrm e}{3}=\frac{4\mathrm e}{3},$$</p>
+<p>选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 C</strong>：$\dfrac{2\mathrm e}{3}$ 只是 $f'(2)$ 本身，漏掉凑定义冒出的因子 $2$——没把 $\dfrac2\Delta$ 与差商分开乘。</li><li><strong>选 A</strong>：$f'(2)$ 算错（如当成 $\mathrm e$ 或 $2\mathrm e$），多因 $\dfrac{2t\mathrm e<sup>t^2</sup>}{3t<sup>2</sup>}$ 约分时弄丢 $3$ 或 $t$。</li><li><strong>把 $x=2$ 代进参数式</strong>：$t$ 必须由 $1+t<sup>3</sup>=2$ 定出 $t=1$，自变量与参数不是一个东西。</li><li><strong>对原式硬上洛必达</strong>：绕不开先求 $f'$，反而多一层对 $f$ 可导性的说明，不如凑定义干净。</li></ul>
+<blockquote>一句话结论：凑定义得 $2f'(2)$（因子 2 来自增量 $\frac2x$），参数求导在 $t=1$ 处 $f'(2)=\frac{2\mathrm e}3$，答案 $\frac{4\mathrm e}3$，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

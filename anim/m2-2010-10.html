@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-09.html" data-q="../question/m2-2010-09/">← <b>m2-2010-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-10/" data-q="../question/m2-2010-10/" data-no-anim="1">m2-2010-10 · 本题</a>
+  <a href="m2-2010-11.html" data-q="../question/m2-2010-11/"><b>m2-2010-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+/* 推导板：所有推导行在 build 时建好（含公式），render 按 i 逐行点亮 */
+var rows = [];
+function drow(html, at, green){
+  var d = AW.el('div', '', html);
+  d.style.cssText = 'margin:10px 0;padding:10px 16px;border-left:4px solid #cbd5e1;' +
+    'background:#f8fafc;border-radius:8px;font-size:15.5px;line-height:1.9;' +
+    'opacity:0.15;transform:translateX(-10px);transition:all .4s;';
+  rows.push({el: d, at: at, green: !!green});
+  return d;
+}
+
+AW.init({
+  title: '2010 数学二 第10题 · 曲线 $y=\\dfrac{2x^3}{x^2+1}$ 的渐近线',
+  subtitle: '考点：渐近线三步排查 · 方法：竖直 → 水平 → 斜（先 $k$ 后 $b$）',
+  counterLabel: '已推导',
+  intro: '点击「▶ 播放」逐步演示三类渐近线的排查过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：渐近线排查顺序——竖直、水平、斜，一类查完再查下一类'));
+    inner.appendChild(drow(
+      '<b>竖直渐近线</b>：分母 $x^2+1\\gt0$ 恒成立，定义域为 $\\mathbb R$，无竖直渐近线', 1));
+    inner.appendChild(drow(
+      '<b>水平渐近线</b>：分子比分母高一次，$x\\to\\pm\\infty$ 时 $y\\to\\pm\\infty$，无水平渐近线——转而找斜渐近线 $y=kx+b$', 2));
+    inner.appendChild(drow(
+      '<b>斜率</b>：$k=\\displaystyle\\lim_{x\\to\\infty}\\frac yx=\\lim_{x\\to\\infty}\\frac{2x^2}{x^2+1}=2$', 3));
+    inner.appendChild(drow(
+      '<b>截距</b>：$b=\\displaystyle\\lim_{x\\to\\infty}\\big(y-2x\\big)=\\lim_{x\\to\\infty}\\frac{2x^3-2x(x^2+1)}{x^2+1}=\\lim_{x\\to\\infty}\\frac{-2x}{x^2+1}=0$', 4));
+    inner.appendChild(drow(
+      '<b>结论</b>：唯一渐近线为 $y=2x$（$x\\to+\\infty$ 与 $x\\to-\\infty$ 两个方向都成立）', 5, true));
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls: 'step',  tag: '查竖直', log: '分母 x 平方加 1 永远是正的，定义域是全体实数，任何点都不会竖直发散', count: 1 },
+    { cls: 'step',  tag: '查水平', log: '分子比分母恰好高一次，x 趋于无穷时函数值也趋于无穷，没有水平渐近线，转向斜渐近线', count: 2 },
+    { cls: 'shift', tag: '求斜率', log: '斜渐近线先求 k：y 除以 x 取极限，得到 2', count: 3 },
+    { cls: 'shift', tag: '求截距', log: '再求 b：函数值减 2x 通分后只剩负的 2x 比 x 平方加 1，极限为 0', count: 4 },
+    { cls: 'done',  tag: '完成',   log: 'k 等于 2、b 等于 0，两个方向一致，唯一渐近线 y 等于 2x', count: 5, done: true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < rows.length; k++){
+      var r = rows[k];
+      var revealed = i >= r.at;
+      var active = revealed && r.at === i && !sn.done;
+      var green = sn.done && r.green;
+      r.el.style.opacity = revealed ? '1' : '0.15';
+      r.el.style.transform = revealed ? 'none' : 'translateX(-10px)';
+      r.el.style.background = green ? '#ecfdf3' : (active ? '#fff7e0' : '#f8fafc');
+      r.el.style.borderLeftColor = green ? '#16a34a' : (active ? '#f59e0b' : '#cbd5e1');
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '渐近线：$y=2x$',
+    html: '记忆锚点：<b>分子比分母恰高一次 $\\Rightarrow$ 有斜渐近线</b>；斜渐近线要 $k=\\lim\\frac yx$ 与 $b=\\lim(y-kx)$ 两者都求出。易错：只答斜率丢截距；跳过竖直检查（本题分母无实零点）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：渐近线三查——本质是「曲线与直线的纵差趋于零」</h2>
+<p>答案：$y=2x$。</p>
+<h3>第 0 步：先立机制——渐近线是什么、为什么按这个顺序查</h3>
+<p>渐近线不是含糊的「曲线贴近某直线」，而是精确的极限条件：</p>
+<ul><li><strong>竖直</strong>：$x\to x_0$ 时 $y\to\infty$——只可能发生在分母为零的点，所以<strong>先查定义域</strong>；</li><li><strong>水平/斜</strong>：$x\to\infty$ 时曲线与直线 $y=kx+b$ 的<strong>纵差</strong> $y-(kx+b)\to0$——纵向误差被吸干，直线才能越拉越紧地「贴住」曲线。</li></ul>
+<p>查的顺序由「谁先出面」决定：竖直看有限点，水平/斜看无穷远。本题分母 $x<sup>2</sup>+1&gt;0$ 恒成立，无竖直渐近线；分子次数（$3$）比分母（$2$）恰高一次，$x\to\pm\infty$ 时 $y\to\pm\infty$，无水平渐近线——<strong>次数差恰好 $1$ 正是斜渐近线的典型信号</strong>（差 $0$ 才对应水平）。</p>
+<h3>第一步：为什么必须先求 $k$ 再求 $b$——顺序不可反</h3>
+<p>设 $y=kx+b+\varepsilon(x)$ 且 $\varepsilon(x)\to0$。除以 $x$：</p>
+<p>$$\frac yx=k+\frac bx+\frac{\varepsilon(x)}x\ \xrightarrow{\ x\to\infty\ }\ k.$$</p>
+<p><strong>这就是「先 $k$ 后 $b$」的机制</strong>：只有斜率猜对了，$y-kx$ 才会收敛到有限的 $b$；斜率不对，$y-kx$ 直接发散，$b$ 根本算不出来。</p>
+<p>$$k=\lim_{x\to\infty}\frac yx=\lim_{x\to\infty}\frac{2x<sup>2</sup>}{x<sup>2</sup>+1}=2.$$</p>
+<h3>第二步：再求 $b$——长除法一眼看出余项</h3>
+<p>$$b=\lim_{x\to\infty}\big(y-2x\big)=\lim_{x\to\infty}\frac{2x<sup>3</sup>-2x(x<sup>2</sup>+1)}{x<sup>2</sup>+1}=\lim_{x\to\infty}\frac{-2x}{x<sup>2</sup>+1}=0.$$</p>
+<p><strong>更快的一条路</strong>是先做除法分离整部：</p>
+<p>$$\frac{2x<sup>3</sup>}{x<sup>2</sup>+1}=2x-\frac{2x}{x<sup>2</sup>+1}.$$</p>
+<p>「多项式部分 $+$ 真分式」正是斜渐近线的代数形态：$2x$ 就是那根直线，余项 $-\dfrac{2x}{x<sup>2</sup>+1}\to0$ 自动验证 $b=0$——极限法与长除法互为印证。$x\to-\infty$ 方向同样得 $k=2,\ b=0$，故唯一渐近线为 $y=2x$。</p>
+<h3>易错点</h3>
+<ul><li><strong>只答 $k$ 丢 $b$</strong>：斜渐近线要 $k,b$ 齐备；此处 $b=0$ 只是恰好为零，不是可以不写。</li><li><strong>顺序颠倒或跳步</strong>：斜率没定准就令 $b=\lim(y-kx)$，极限发散算不出；更常见的是跳过竖直与水平检查直接凑斜率。</li><li><strong>通分漏项</strong>：$y-2x$ 的分子是 $2x<sup>3</sup>-2x(x<sup>2</sup>+1)=-2x$，漏减 $2x$ 会得错误余项。</li></ul>
+<blockquote>渐近线 $=$ 纵差趋零；先 $k=\lim y/x$ 后 $b=\lim(y-kx)$（顺序不可反），或长除分离整部。本题 $y=2x$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

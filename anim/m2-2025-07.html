@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：带绝对值的差商极限能否推出可导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-06.html" data-q="../question/m2-2025-06/">← <b>m2-2025-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-07/" data-q="../question/m2-2025-07/" data-no-anim="1">m2-2025-07 · 本题</a>
+  <a href="m2-2025-08.html" data-q="../question/m2-2025-08/"><b>m2-2025-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：分母趋零逼分子趋零',
+    cls: 'key',
+    log: '差商分母 x→0，极限存在 ⇒ 分子→0，先定 f(0)=c 的符号再脱绝对值',
+    body: '<p>$f$ 在 $0$ 连续，记 $f(0)=c$。四个条件都是「分母 $x\\to0$ 的分式极限存在」，故<b>分子必须趋零</b>，由此逼出 $c$ 的符号信息，再把绝对值脱掉、归结到标准差商 $\\dfrac{f(x)-f(0)}{x}$。</p>' },
+  { title: '条件 (1)：分子 |f|−f(0) 趋零 ⇒ c≥0',
+    cls: 'good',
+    log: '|c|=c ⇒ c≥0；c>0 直接脱绝对值，c=0 夹逼出 f′(0)=0',
+    ribbon: {k:1, ok:true},
+    body: '<p>$\\lvert c\\rvert=c\\Rightarrow c\\ge0$。$c>0$ 时邻域内 $f>0$，原式即 $\\dfrac{f(x)-f(0)}{x}$，$f\'(0)$ 存在；$c=0$ 时原式 $=\\dfrac{\\lvert f(x)\\rvert}{x}$，右侧商 $\\ge0$、左侧商 $\\le0$，夹逼得极限 $=0$，故 $\\dfrac{f(x)}{x}\\to0$，$f\'(0)=0$ 存在 ✓。</p>' },
+  { title: '条件 (2)：分子 f−|f(0)| 趋零 ⇒ c=|c|',
+    cls: 'good',
+    log: 'c=|c| ⇒ c≥0，此时 |f(0)|=f(0)，原式就是标准差商',
+    ribbon: {k:2, ok:true},
+    body: '<p>$c-\\lvert c\\rvert=0\\Rightarrow c\\ge0$，于是 $\\lvert f(0)\\rvert=c=f(0)$，原式恰为 $\\dfrac{f(x)-f(0)}{x}$，极限存在即 $f\'(0)$ 存在 ✓。</p>' },
+  { title: '条件 (3)：|f|/x 存在 ⇒ 强制 f(0)=0',
+    cls: 'good',
+    log: '|c|=0 ⇒ c=0；同 (1) 左右夹逼，f′(0)=0 存在',
+    ribbon: {k:3, ok:true},
+    body: '<p>分子 $\\lvert f(x)\\rvert\\to\\lvert c\\rvert$ 必须趋零，得 $c=0$。原式即 $\\dfrac{\\lvert f(x)\\rvert}{x}$，由 (1) 的 $c=0$ 情形：右侧 $\\ge0$、左侧 $\\le0$，极限只能为 $0$，于是 $f\'(0)=0$ 存在 ✓。</p>' },
+  { title: '条件 (4)：|f|−|f(0)| 趋零，分 c≠0 与 c=0',
+    cls: 'good',
+    log: 'c≠0 时 |f|=±f 脱绝对值，f′(0)=±B；c=0 时同 (3)',
+    ribbon: {k:4, ok:true},
+    body: '<p>记极限为 $B$。$c\\ne0$ 时邻域内 $f$ 与 $c$ 同号，$\\lvert f(x)\\rvert=\\operatorname{sgn}(c)f(x)$，原式 $=\\operatorname{sgn}(c)\\cdot\\dfrac{f(x)-f(0)}{x}$，故 $f\'(0)=\\operatorname{sgn}(c)\\,B$ 存在；$c=0$ 时同 (3) 夹逼得 $f\'(0)=0$ ✓。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '四条全部能推出 f 在 x=0 可导，个数为 4，选 D',
+    body: '<p>四条殊途同归都能脱掉绝对值、归结到 $f\'(0)$ 的定义，个数 $=4$，答案选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '四个带绝对值的差商条件：几个能保证 $f\'(0)$ 存在',
+  subtitle: '考点：导数定义 · 分母趋零逼分子趋零 · 脱绝对值的分类讨论',
+  counterLabel: '检验步',
+  ribbonTitle: '条件裁决（✓ 可推出 / ✗ 不能推出）',
+  intro: '点击「▶ 播放」逐条检验 (1)–(4)。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D（4 个条件全部可以）',
+    html: '记忆锚点：<b>「分母趋零 ⇒ 分子趋零」是入口：先逼出 $\\lvert c\\rvert=c$ 或 $c=0$，再脱绝对值</b>。$c=0$ 的临界情形别漏：$\\dfrac{\\lvert f(x)\\rvert}{x}$ 被左右两侧 $\\ge0$ 与 $\\le0$ 夹逼成 $0$，照样给出 $f\'(0)=0$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：带绝对值的差商极限与 $f'(0)$ 的存在性</h2>
+<p>答案：D</p>
+<h3>第一步：统一策略——分母趋零逼分子趋零</h3>
+<p>$f$ 在 $0$ 连续，记 $f(0)=c$。四个条件都是「差商极限存在」：分母 $x\to0$，若分子极限不为 $0$，比值就会无界、极限不可能存在——所以<strong>分子必须趋于 $0$</strong>，由此先逼出 $c$ 的符号信息，再把绝对值脱掉，归结到标准差商 $\dfrac{f(x)-f(0)}{x}$。</p>
+<h3>第二步：逐条分析</h3>
+<p><strong>(1)</strong> $\dfrac{\lvert f(x)\rvert-c}{x}$ 存在 $\Rightarrow\lvert c\rvert=c\Rightarrow c\ge0$。若 $c&gt;0$，$f$ 连续且 $f(0)=c&gt;0$，由连续保号性邻域内 $f(x)&gt;0$，绝对值可脱，原式即 $\dfrac{f(x)-f(0)}{x}$，$f'(0)$ 存在；若 $c=0$，原式为 $\dfrac{\lvert f(x)\rvert}{x}$，$x\to0^+$ 时商 $\ge0$、$x\to0^-$ 时商 $\le0$，极限只能为 $0$；再用绝对值桥接一步：$\left\lvert\dfrac{f(x)}{x}\right\rvert=\dfrac{\lvert f(x)\rvert}{\lvert x\rvert}\to0$，故 $\dfrac{f(x)}{x}\to0$，$f'(0)=0$ 存在。✓</p>
+<p><strong>(2)</strong> $\dfrac{f(x)-\lvert c\rvert}{x}$ 存在 $\Rightarrow c=\lvert c\rvert\Rightarrow c\ge0$，此时 $\lvert f(0)\rvert=f(0)$，原式就是标准差商，$f'(0)$ 存在。✓</p>
+<p><strong>(3)</strong> $\dfrac{\lvert f(x)\rvert}{x}$ 存在 $\Rightarrow\lvert c\rvert=0\Rightarrow c=0$，同 (1) 的 $c=0$ 情形左右夹逼得极限为 $0$，再经 $\left\lvert f(x)/x\right\rvert\to0$ 桥接得 $f'(0)=0$ 存在。✓</p>
+<p><strong>(4)</strong> $\dfrac{\lvert f(x)\rvert-\lvert c\rvert}{x}$ 存在，记为 $B$。若 $c\ne0$，由连续保号性（$f(0)=c\ne0$）邻域内 $f$ 与 $c$ 同号，$\lvert f(x)\rvert=\operatorname{sgn}(c)f(x)$，原式 $=\operatorname{sgn}(c)\cdot\dfrac{f(x)-f(0)}{x}$，故 $f'(0)=\operatorname{sgn}(c)\cdot B$ 存在；若 $c=0$，同 (3) 得 $f'(0)=0$。✓</p>
+<h3>第三步：计数</h3>
+<p>四条全部能推出 $f$ 在 $x=0$ 可导，个数为 $4$，选 <strong>D</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>只认最标准的 (4)</strong>：(1)(2)(3) 靠「分子趋零定符号」同样能脱绝对值。</li><li><strong>漏判 $c=0$ 的临界情形</strong>：$\dfrac{\lvert f(x)\rvert}{x}$ 存在时被左右两侧 $\ge0$ 与 $\le0$ 夹逼成 $0$，仍可推出 $f'(0)=0$，把个数数成 2 或 3 就错了。</li><li><strong>忽略 (3) 的隐含信息</strong>：它虽不含 $f(0)$，但极限存在已强制 $\lvert f(0)\rvert=0$。</li></ul>
+<blockquote>一句话结论：分母趋零逼分子趋零定出 $c\ge0$ 或 $c=0$，四条殊途同归都能脱掉绝对值，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

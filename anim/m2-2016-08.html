@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·08 由正负惯性指数定参数 a</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-07.html" data-q="../question/m2-2016-07/">← <b>m2-2016-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-08/" data-q="../question/m2-2016-08/" data-no-anim="1">m2-2016-08 · 本题</a>
+  <a href="m2-2016-09.html" data-q="../question/m2-2016-09/"><b>m2-2016-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：惯性指数 = 特征值符号配额',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>正惯性指数 = 正特征值个数，负惯性指数 = 负特征值个数。题设配额「正 1、负 2」即：<b>一个正、两个负、零个零</b>。</p>',
+    log: '目标：1 个正特征值 + 2 个负特征值' },
+  { title: '写矩阵、认结构',
+    cls: 'step',
+    tag: '拆矩阵',
+    body: '<p>$$A=\\begin{pmatrix}a&1&1\\\\1&a&1\\\\1&1&a\\end{pmatrix}=(a-1)E+J,$$ 其中 $J$ 是全 1 矩阵——三行相同、行和皆为 $a+2$，结构特殊。</p>',
+    log: 'A = (a−1)E + J，先拆出全 1 阵' },
+  { title: '借 J 的特征值平移',
+    cls: 'key',
+    tag: '特征值',
+    body: '<p>$J$ 的特征值：$3$（对应 $(1,1,1)^{T}$，即行和）与 $0$（二重）。$A$ 在 $J$ 基础上平移 $a-1$：$$\\lambda_1=a+2\\ (\\text{一重}),\\qquad \\lambda_{2,3}=a-1\\ (\\text{二重}).$$</p>',
+    log: 'λ₁ = a+2，λ₂,₃ = a−1（二重）' },
+  { title: '符号配额 → 不等式组',
+    cls: 'step',
+    tag: '列条件',
+    body: '<p>要「一正二负无零」：一重根 $a+2$ 必须当正根、二重根 $a-1$ 必须当负根：$$\\begin{cases}a+2>0\\\\ a-1<0\\end{cases}$$</p>',
+    log: 'a+2 > 0 且 a−1 < 0' },
+  { title: '解出范围并核对边界',
+    cls: 'good',
+    tag: '求解',
+    ribbon: {k:1, ok:true},
+    body: '<p>$-2<a<1$。边界上特征值归零、惯性配额即破：$a=1$ 时 $\\lambda_{2,3}=0$（秩 1），$a=-2$ 时 $\\lambda_1=0$（正惯性指数 0）。两侧 $a>1$ 全正、$a<-2$ 全负，也不符。</p>',
+    log: '−2 < a < 1，边界与两侧全排除' },
+  { title: '对选项',
+    cls: 'bad',
+    tag: '防坑',
+    body: '<p><b>A</b> $a>1$：三正，正惯性指数 3。<b>B</b> $a<-2$：三负，正惯性指数 0。<b>D</b> $a=1$ 或 $a=-2$：出现零特征值，配额不足。<b>C</b> $-2<a<1$：恰好一正二负。</p>',
+    log: 'A/B 符号全偏，D 含零特征值' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>行和相等的矩阵拆 $(a-1)E+J$，特征值一步平移到位</b>；惯性指数给的是符号配额，零特征值即出局。</p>',
+    log: '选 C：−2 < a < 1' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '二次型正、负惯性指数为 $1,\\ 2$ 时定 $a$ 的范围',
+  subtitle: '考点：惯性指数与特征值符号 · 方法：拆 $(a-1)E+J$ → 平移特征值 → 符号配额',
+  counterLabel: '推理步',
+  ribbonTitle: '结论判定（✓ 范围成立）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C（−2 < a < 1）',
+    html: '记忆锚点：<b>惯性指数是特征值的「符号配额」</b>——$\\lambda_1=a+2$、$\\lambda_{2,3}=a-1$，配 $1+2$ 要求 $a+2>0$ 且 $a-1<0$；$a=1$ 或 $a=-2$ 时零特征值抢走一个名额，直接出局。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由正负惯性指数反推参数 $a$</h2>
+<p>答案：C</p>
+<h3>第 0 步：先立机制——惯性指数为什么就是特征值的符号配额</h3>
+<p>二次型 $f=z<sup>T</sup>Az$ 的正（负）惯性指数，是它化出的 $y_1<sup>2</sup>+y_2<sup>2</sup>-y_3<sup>2</sup>$ 型标准形里正（负）平方项个数。实对称矩阵可正交对角化 $A=Q\Lambda Q<sup>T</sup>$，代回得 $f=\lambda_1y_1<sup>2</sup>+\lambda_2y_2<sup>2</sup>+\lambda_3y_3<sup>2</sup>$——<strong>平方项系数就是特征值</strong>，且合同变换不改符号配额（惯性定理）。所以"正惯性指数 1、负惯性指数 2"直译为：<strong>恰一个正特征值、两个负特征值、没有零特征值</strong>。把符号配额盯成目标，参数范围只是解不等式。</p>
+<h3>第一步：写矩阵、认结构——特征值为什么能口算</h3>
+<p>$$A=\begin{pmatrix}a&amp;1&amp;1\\1&amp;a&amp;1\\1&amp;1&amp;a\end{pmatrix}=(a-1)E+J,\qquad J=\begin{pmatrix}1&amp;1&amp;1\\1&amp;1&amp;1\\1&amp;1&amp;1\end{pmatrix}.$$</p>
+<p>$J$ 的机制：每列都是 $(1,1,1)<sup>T</sup>$，作用在向量 $v$ 上得 $Jv=(v_1+v_2+v_3)(1,1,1)<sup>T</sup>$——先把分量求和，再朝全 1 方向送回。于是全 1 方向被放大 3 倍（$\lambda=3$），与之垂直的平面里求和恒为零（$\lambda=0$ 二重）。加减单位阵只是给特征值统一平移：</p>
+<p>$$\lambda_1=(a-1)+3=a+2\ (\text{一重}),\qquad \lambda_{2,3}=a-1\ (\text{二重}).$$</p>
+<h3>第二步：符号配额解出 a</h3>
+<p>恰一个正、两个负：</p>
+<p>$$\begin{cases}a+2&gt;0\\ a-1&lt;0\end{cases}\Longrightarrow-2&lt;a&lt;1,$$</p>
+<p>无零特征值、秩 3，与 $1+2=3$ 的配额吻合，选 <strong>C</strong>。</p>
+<h3>第三步：边界与两侧复核</h3>
+<p>$a=1$：$\lambda_{2,3}=0$，秩降为 1，负惯性指数凑不齐 2；$a=-2$：$\lambda_1=0$，正惯性指数为 0——两个边界值都让配额破缺，开区间是真的。$a&gt;1$ 时三个全正、$a&lt;-2$ 时三个全负，均不符。</p>
+<h3>易错点</h3>
+<ul><li><strong>把边界收进区间</strong>（D）：$a=1$ 或 $a=-2$ 时出现零特征值，"无零"这条暗含要求被破坏——惯性指数数的是<strong>非零</strong>特征值的符号。</li><li><strong>惯性指数与特征值脱节</strong>：以为必须配方才能数惯性指数。正交对角化这条路早已把符号配额写在 $\Lambda$ 的对角线上。</li><li><strong>硬解三次特征方程</strong>：认不出"行和相等 + 平移结构"就展开 $(a-\lambda)$ 的三次式——认出 $J$ 机制才是本题真正的考点。</li></ul>
+<blockquote>结论：$\lambda_1=a+2&gt;0$、$\lambda_{2,3}=a-1&lt;0$，$-2&lt;a&lt;1$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

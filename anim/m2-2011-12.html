@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 12 题 · 指数密度的一阶矩</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-11.html" data-q="../question/m2-2011-11/">← <b>m2-2011-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-12/" data-q="../question/m2-2011-12/" data-no-anim="1">m2-2011-12 · 本题</a>
+  <a href="m2-2011-13.html" data-q="../question/m2-2011-13/"><b>m2-2011-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>$f(x)=\\lambda e^{-\\lambda x}$（$x>0$），$f(x)=0$（$x\\le0$），$\\lambda>0$，求 $$\\int_{-\\infty}^{+\\infty}x\\,f(x)\\,\\mathrm dx.$$</p>',
+  '<p><b>清理负半轴：</b>$x\\le0$ 时 $f(x)=0$，$$\\int_{-\\infty}^{+\\infty}x\\,f(x)\\,\\mathrm dx=\\int_0^{+\\infty}x\\cdot\\lambda e^{-\\lambda x}\\,\\mathrm dx.$$</p>',
+  '<p><b>分部积分：</b>取 $u=x$、$\\mathrm dv=\\lambda e^{-\\lambda x}\\mathrm dx\\Rightarrow v=-e^{-\\lambda x}$：$$\\int_0^{+\\infty}x\\lambda e^{-\\lambda x}\\,\\mathrm dx=\\Bigl[-x\\,e^{-\\lambda x}\\Bigr]_0^{+\\infty}+\\int_0^{+\\infty}e^{-\\lambda x}\\,\\mathrm dx.$$</p>',
+  '<p><b>首项归零：</b>$\\lambda>0$ 时指数衰减压倒线性增长，$x\\,e^{-\\lambda x}\\to0$，故 $\\Bigl[-x\\,e^{-\\lambda x}\\Bigr]_0^{+\\infty}=0$。</p>',
+  '<p><b>剩余积分：</b>$$\\int_0^{+\\infty}e^{-\\lambda x}\\,\\mathrm dx=\\Bigl[-\\frac{e^{-\\lambda x}}{\\lambda}\\Bigr]_0^{+\\infty}=\\frac{1}{\\lambda}.$$</p>',
+  '<p><b>结论：</b>原积分 $=\\dfrac{1}{\\lambda}$（即指数分布的期望 $E(X)=\\dfrac1\\lambda$）。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 12 题 · $\\int_{-\\infty}^{+\\infty}x\\,f(x)\\,\\mathrm dx$ 的计算',
+  subtitle: '考点：广义积分 · 方法：负半轴清零 + 分部积分',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：清理区间 → 分部积分 → 首项归零 → 收尾。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'清理区间', log:'负半轴上密度为零，积分区间收缩到正半轴', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'分部积分', log:'设 u = x、dv = λe^(−λx)dx，则 v = −e^(−λx)', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'首项归零', log:'λ>0 时 x·e^(−λx) 趋于 0，边界项为零', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'收尾', log:'剩下的积分算出 1/λ', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：积分 = 1/λ（指数分布的期望）', count:5, reveal:6, hl:5, good:true, done:true, ribbon:{k:5, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '填 1/λ',
+    html: '链条：<b>负半轴清零 → 分部积分（$v=-e^{-\\lambda x}$）→ 首项因 $x\\,e^{-\\lambda x}\\to0$ 归零 → 剩 $\\int_0^{+\\infty}e^{-\\lambda x}\\mathrm dx=\\frac1\\lambda$</b>。这正是指数分布的期望 $E(X)=\\frac1\\lambda$，可当快速检验。易错：$v$ 的负号丢了答案会变号。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：指数密度的一阶矩——负半轴清零后分部积分</h2>
+<p>答案：$\dfrac{1}{\lambda}$</p>
+<h3>第一步：清理负半轴</h3>
+<p>$x\le0$ 时 $f(x)=0$，被积区间收缩为正半轴：</p>
+<p>$$\int_{-\infty}<sup>+\infty</sup>xf(x)\,\mathrm dx=\int_0<sup>+\infty</sup>x\cdot\lambda e<sup>-\lambda x</sup>\,\mathrm dx.$$</p>
+<h3>第二步：分部积分</h3>
+<p>取 $u=x$、$\mathrm dv=\lambda e<sup>-\lambda x</sup>\mathrm dx$，则 $v=-e<sup>-\lambda x</sup>$：</p>
+<p>$$\int_0<sup>+\infty</sup>x\lambda e<sup>-\lambda x</sup>\mathrm dx=\Bigl[-x\,e<sup>-\lambda x</sup>\Bigr]_0<sup>+\infty</sup>+\int_0<sup>+\infty</sup>e<sup>-\lambda x</sup>\,\mathrm dx.$$</p>
+<p>$\lambda&gt;0$ 时 $x\,e<sup>-\lambda x</sup>\to0$（指数衰减压倒线性增长），首项为零。</p>
+<h3>第三步：算剩余积分</h3>
+<p>$$\int_0<sup>+\infty</sup>e<sup>-\lambda x</sup>\,\mathrm dx=\Bigl[-\frac{e<sup>-\lambda x</sup>}{\lambda}\Bigr]_0<sup>+\infty</sup>=\frac{1}{\lambda}.$$</p>
+<p>（这正是指数分布的期望 $E(X)=\frac1\lambda$，可作快速检验。）</p>
+<h3>易错点</h3>
+<ul><li><strong>负半轴不清理</strong>：直接在 $(-\infty,+\infty)$ 上硬写容易漏掉 $f=0$ 的一段。</li><li><strong>收敛性不交代</strong>：$\lambda&gt;0$ 才保证 $xe<sup>-\lambda x</sup>\to0$，缺这一步首项不能归零。</li><li><strong>$v$ 的符号错</strong>：$\int\lambda e<sup>-\lambda x</sup>\mathrm dx=-e<sup>-\lambda x</sup>$，负号丢了答案就变成 $-\frac1\lambda$。</li></ul>
+<blockquote>结论：填 $\dfrac{1}{\lambda}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

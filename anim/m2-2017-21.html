@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2017·21 切法线截距条件建立并求解微分方程</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-20.html" data-q="../question/m2-2017-20/">← <b>m2-2017-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-21/" data-q="../question/m2-2017-21/" data-no-anim="1">m2-2017-21 · 本题</a>
+  <a href="m2-2017-22.html" data-q="../question/m2-2017-22/"><b>m2-2017-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2017·21　由 $X_{P}=Y_{P}$ 求 $L$ 上点的坐标满足的方程',
+  subtitle: '考点：切线/法线截距 → 微分方程 → 齐次方程 $y=ux$ 求解',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，从几何条件一路算到隐式曲线方程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "$$P(x,y)\\in L,\\quad \\text{切线}:\\ Y-y=y\'(X-x)$$",
+      "<b>① 切线截 $y$ 轴：</b>令 $X=0\\ \\Rightarrow\\ Y_{P}=y-xy\'$",
+      "<b>② 法线：</b>斜率 $-\\dfrac1{y\'}$，$Y-y=-\\dfrac1{y\'}(X-x)$；令 $Y=0\\ \\Rightarrow\\ X_{P}=x+yy\'$",
+      "<b>③ 条件 $X_{P}=Y_{P}$：</b>$x+yy\'=y-xy\'\\ \\Longrightarrow\\ (x+y)\\,y\'=y-x$",
+      "<b>④ 认型：</b>$y\'=\\dfrac{y-x}{x+y}$ 是<b>齐次方程</b>，令 $y=ux$",
+      "<b>⑤ 代入：</b>$u+xu\'=\\dfrac{u-1}{u+1}\\ \\Rightarrow\\ xu\'=-\\dfrac{u^{2}+1}{u+1}$",
+      "<b>⑥ 分离：</b>$\\dfrac{u+1}{u^{2}+1}\\,\\mathrm{d}u=-\\dfrac{\\mathrm{d}x}{x}$",
+      "<b>⑦ 积分：</b>$\\dfrac12\\ln(u^{2}+1)+\\arctan u=-\\ln|x|+C$",
+      "<b>⑧ 回代 $u=\\dfrac yx$：</b>$-\\ln|x|$ 恰好抵消 $\\Rightarrow\\ \\arctan\\dfrac{y}{x}+\\dfrac12\\ln(x^{2}+y^{2})=C$",
+      "<b>⑨ 定常数：</b>$y(1)=0\\Rightarrow C=0$：$$\\arctan\\dfrac{y}{x}+\\dfrac12\\ln(x^{2}+y^{2})=0$$"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'设点', log:'曲线上任取一点，先写切线方程', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'切截', log:'横坐标取零，得切线在纵轴上的截距', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'法截', log:'法线斜率是负的倒数，纵坐标取零，得横轴截距', count:2, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'翻译', log:'两个截距相等，整理成一个含 y 撇的微分方程', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'认型', log:'右边是 y 比 x 的函数，齐次方程，令 y 等于 u x', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'代入', log:'代入整理，得到 u 对 x 的可分离方程', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'分离', log:'u 的归 u，x 的归 x，两边各自积分', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'积分', log:'一半是对数，一半是反正切，右边是负 ln x', count:7, ribbon:{k:8, ok:true} },
+    { cls:'ok',    tag:'回代', log:'u 换回 y 比 x，负 ln x 恰好被对数项吸收，式子很干净', count:8, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'定值', log:'用初始条件 y(1)=0 算出常数为零', count:9, ribbon:{k:10, ok:true} },
+    { cls:'done',  tag:'完成', log:'结论：arctan(y/x) + 半倍 ln(x²+y²) = 0', count:10, ribbon:{k:11, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\arctan\\dfrac{y}{x}+\\dfrac12\\ln(x^{2}+y^{2})=0$',
+    html: '两条截距要背牢：<b>$Y_{P}=y-xy\'$（切线交 $y$ 轴），$X_{P}=x+yy\'$（法线交 $x$ 轴）</b>。方程 $(x+y)y\'=y-x$ 是齐次型，$y=ux$ 化为可分离；$\\dfrac12\\ln(u^{2}+1)$ 里藏着的 $-\\ln|x|$ 与右端恰好相消，才得到简洁隐式。易错：法线斜率漏负号、不用初值 $y(1)=0$ 定 $C$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：切线、法线截距条件 → 微分方程 → 齐次方程求解</h2>
+<p>答案：$\arctan\dfrac{y}{x}+\dfrac12\ln(x<sup>2</sup>+y<sup>2</sup>)=0$</p>
+<h3>第一步：写出 P 点的切线与法线，求两个截距</h3>
+<p>设 $P(x,y)\in L$，记 $y'=y'(x)$；切线、法线上的动点用大写 $(X,Y)$，避免与曲线上的点混淆。切线：$Y-y=y'(X-x)$，令 $X=0$ 得切线在 $y$ 轴上的截距</p>
+<p>$$Y_{P}=y-x\,y'.$$</p>
+<p>法线与切线垂直，两斜率之积为 $-1$（$y'\ne0$ 时），故法线斜率为 $-\dfrac1{y'}$：$Y-y=-\dfrac{1}{y'}(X-x)$，令 $Y=0$ 得</p>
+<p>$$-y=-\frac{1}{y'}(X_{P}-x)\ \Longrightarrow\ X_{P}=x+y\,y'.$$</p>
+<p>（若某点 $y'=0$，法线是竖直线 $X=x$，与 $x$ 轴交于 $(x,0)$；此时公式 $X_{P}=x+y\,y'=x$ 依然成立，两条路一致。）</p>
+<h3>第二步：把 $X_P=Y_P$ 翻译成微分方程</h3>
+<p>$$x+y\,y'=y-x\,y'\ \Longleftrightarrow\ (x+y)\,y'=y-x.$$</p>
+<p>几何条件到此已完全变成分析语言：先解这个微分方程，再用 $y(1)=0$ 定常数，才是题目要的最终方程。</p>
+<h3>第三步：怎么一眼认出齐次方程、为什么令 y=ux</h3>
+<p>$y'=\dfrac{y-x}{x+y}$ 的分子、分母都是 $x,y$ 的<strong>一次齐次式</strong>：把 $x,y$ 同乘 $t$，分子分母同乘 $t$，比值不变——即右端只依赖比值 $\dfrac yx$。凡 $y'=F\!\left(\dfrac yx\right)$ 型，都令 $y=ux$：这样 $\dfrac yx=u$ 成为新未知量，方程从"二元"降到"一元"。对 $y=ux$ 求导（乘积法则）$y'=u+x\dfrac{\mathrm{d}u}{\mathrm{d}x}$，代入：</p>
+<p>$$u+x\frac{\mathrm{d}u}{\mathrm{d}x}=\frac{u-1}{u+1}\ \Longrightarrow\ x\frac{\mathrm{d}u}{\mathrm{d}x}=-\frac{u<sup>2</sup>+1}{u+1}\ \Longrightarrow\ \frac{u+1}{u<sup>2</sup>+1}\,\mathrm{d}u=-\frac{\mathrm{d}x}{x}.$$</p>
+<p>变量已分离（$u$ 与 $x$ 各居一边）——这正是换元的目的所在。</p>
+<h3>第四步：两边积分——为什么 ln|x| 会自己消掉</h3>
+<p>$$\int\frac{u}{u<sup>2</sup>+1}\,\mathrm{d}u+\int\frac{\mathrm{d}u}{u<sup>2</sup>+1}=-\ln|x|+C,$$</p>
+<p>$$\frac12\ln(u<sup>2</sup>+1)+\arctan u=-\ln|x|+C.$$</p>
+<p>回代 $u=\dfrac yx$ 时，$\dfrac12\ln(u<sup>2</sup>+1)=\dfrac12\ln\dfrac{x<sup>2</sup>+y<sup>2</sup>}{x<sup>2</sup>}=\dfrac12\ln(x<sup>2</sup>+y<sup>2</sup>)-\ln|x|$：末项 $-\ln|x|$ 与右端 $-\ln|x|$ <strong>恰好相消</strong>——这不是巧合，$u<sup>2</sup>+1$ 回代后本来就带着 $x<sup>-2</sup>$ 的因子。于是</p>
+<p>$$\arctan\frac{y}{x}+\frac12\ln(x<sup>2</sup>+y<sup>2</sup>)=C.$$</p>
+<h3>第五步：初值 $y(1)=0$ 定常数</h3>
+<p>$x=1,\ y=0$：$\arctan0+\dfrac12\ln1=0$，故 $C=0$，所求方程为</p>
+<p>$$\arctan\frac{y}{x}+\frac12\ln(x<sup>2</sup>+y<sup>2</sup>)=0.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>法线截距算错</strong>：法线斜率是 $-\dfrac1{y'}$（来自"垂直 ⇒ 斜率积为 $-1$"），$X_P=x+yy'$ 不是 $x-yy'$。</li><li><strong>切线截距符号</strong>：$Y_P=y-xy'$，与 $X_P$ 不对称，别想当然写成 $y+xy'$。</li><li><strong>看不出齐次就乱换元</strong>：先检验"分子分母同乘 $t$ 比值不变"，再上 $y=ux$；$y'=u+xu'$ 的乘积法则别丢 $xu'$。</li><li><strong>不用初值</strong>：题目给了 $y(1)=0$ 就是为了定 $C=0$，不解到底只得一半分。</li></ul>
+<blockquote>一句话结论：$X_P=x+yy'$，$Y_P=y-xy'$，相等给出齐次方程 $(x+y)y'=y-x$；$y=ux$ 分离变量积分，$\ln|x|$ 项自动相消，由 $y(1)=0$ 定 $C=0$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

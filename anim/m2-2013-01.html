@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：无穷小阶的比较（2013 年第 1 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-23.html" data-q="../question/m2-2012-23/">← <b>m2-2012-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-01/" data-q="../question/m2-2013-01/" data-no-anim="1">m2-2013-01 · 本题</a>
+  <a href="m2-2013-02.html" data-q="../question/m2-2013-02/"><b>m2-2013-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼', cls: 'key',
+    body: '<p>由 $\\cos x-1=x\\sin\\alpha(x)$ 可解出 $\\sin\\alpha(x)=\\dfrac{\\cos x-1}{x}$。目标是定 $\\alpha(x)$ 对 $x$ 的阶——<b>只看一个数</b>：$\\lim_{x\\to0}\\dfrac{\\alpha(x)}{x}$。</p>' },
+  { title: '先看 sin α(x) 的去向', cls: '',
+    body: '<p>$x\\to0$ 时 $\\cos x-1\\sim-\\dfrac{x^2}{2}$，代入得</p>' +
+          '<p>$$\\sin\\alpha(x)=\\frac{\\cos x-1}{x}\\sim\\frac{-\\frac{x^2}{2}}{x}=-\\frac{x}{2}\\to0.$$</p>' },
+  { title: '反解出 α(x) → 0', cls: '',
+    body: '<p>条件 $\\lvert\\alpha(x)\\rvert&lt;\\dfrac\\pi2$ 保证 $\\sin$ 在该区间上严格单调（可以反解），所以 $\\sin\\alpha(x)\\to0\\Rightarrow\\alpha(x)\\to0$。于是 $\\alpha(x)$ 是无穷小，且 $\\alpha(x)\\sim\\sin\\alpha(x)$。</p>' },
+  { title: '定阶：算 lim α(x)/x', cls: 'key',
+    body: '<p>$$\\lim_{x\\to0}\\frac{\\alpha(x)}{x}=\\lim_{x\\to0}\\frac{\\sin\\alpha(x)}{x}=\\lim_{x\\to0}\\frac{\\cos x-1}{x^2}=\\lim_{x\\to0}\\frac{-\\frac{x^2}{2}}{x^2}=-\\frac12.$$</p>' },
+  { title: '选项 A：高阶？', cls: 'bad',
+    body: '<p>高阶要求 $\\lim\\frac{\\alpha(x)}{x}=0$，实际是 $-\\frac12\\ne0$。<b>排除</b>。</p>' },
+  { title: '选项 B：低阶？', cls: 'bad',
+    body: '<p>低阶要求 $\\lim\\frac{\\alpha(x)}{x}=\\infty$，实际极限有限。<b>排除</b>。</p>' },
+  { title: '选项 D：等价？', cls: 'bad',
+    body: '<p>等价要求 $\\lim\\frac{\\alpha(x)}{x}=1$，实际是 $-\\frac12$。<b>排除</b>。</p>' },
+  { title: '选项 C：同阶不等价 ✓', cls: 'good',
+    body: '<p>同阶不等价的定义：$\\lim\\frac{\\alpha(x)}{x}$ 为<b>非零有限常数且 $\\ne1$</b>。$-\\frac12$ 正中定义。答案选 <b>C</b>。</p>' },
+];
+
+var RIBBONS = [null, null, null, null,
+  {k:1, ok:false}, {k:2, ok:false}, {k:4, ok:false}, {k:3, ok:true}];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : (s.cls === 'good' ? 'ok' : 'step')),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title.replace(' ✓', '，命中').replace('？', '——核对定义'),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i + 1,
+    ribbon: RIBBONS[i],
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$\\alpha(x)$ 的阶——由 $\\cos x-1=x\\sin\\alpha(x)$ 定阶',
+  subtitle: '考点：无穷小阶的比较 · 方法：解出配角 → 定极限 → 对号入座',
+  ribbonTitle: '选项判定（A=1 · B=2 · C=3 · D=4）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>定阶只看 $\\lim\\frac{\\alpha(x)}{x}$</b>：为 0 → 高阶，为 ∞ → 低阶，为 1 → 等价，<b>其余非零常数 → 同阶不等价</b>。本题极限为 $-\\frac12$。干扰项共性：把"同阶"与"等价"混为一谈——等价是同阶里极限恰为 1 的特例。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由关系式定 $\alpha(x)$ 的无穷小阶数</h2>
+<p><strong>答案：C</strong></p>
+<h3>第一步：立起"比阶"的标尺</h3>
+<p>比较无穷小的阶，唯一标尺是<strong>比值极限</strong>：$\lim\limits_{x\to0}\dfrac{\alpha(x)}x$ 为 $0$ 是高阶、为非零常数是同阶（恰为 $1$ 才等价）、为 $\infty$ 是低阶。道理在于比值度量"谁缩得快"：$\alpha\approx cx$ 说明两者步调一致、只差倍数 $c$。所以本题的全部目标就是算出这一个数。为此把 $\cos x-1=x\sin\alpha(x)$ 两边除以 $x$：</p>
+<p>$$\sin\alpha(x)=\frac{\cos x-1}{x}.$$</p>
+<p>$\alpha$ 本身不好直接解，但它的"影子" $\sin\alpha(x)$ 已被解出——只要确认 $\alpha\to0$，就有 $\sin\alpha\sim\alpha$，影子可当本人用。</p>
+<h3>第二步：确认 $\alpha(x)\to0$</h3>
+<p>$x\to0$ 时 $\cos x-1\sim-\dfrac{x<sup>2</sup>}{2}$，代入得 $\sin\alpha(x)\sim-\dfrac x2\to0$。条件 $\lvert\alpha(x)\rvert&lt;\dfrac\pi2$ 保证 $\sin$ 在 $(-\frac\pi2,\frac\pi2)$ 上严格单调、可以反解，故 $\alpha(x)\to0$：它是无穷小，且 $\alpha(x)\sim\sin\alpha(x)$。</p>
+<h3>第三步：定阶——只看一个数</h3>
+<p>$$\lim_{x\to0}\frac{\alpha(x)}{x}=\lim_{x\to0}\frac{\sin\alpha(x)}{x}=\lim_{x\to0}\frac{\cos x-1}{x<sup>2</sup>}=\lim_{x\to0}\frac{-\frac{x<sup>2</sup>}{2}}{x<sup>2</sup>}=-\frac12.$$</p>
+<p>直观读数：$\dfrac{\alpha(x)}x\to-\dfrac12$ 意味着 $\alpha(x)\approx-\dfrac x2$——与 $x$ 同速缩小、方向相反、幅度减半，这正是"同阶不等价"的画像。</p>
+<h3>第四步：按定义对号入座</h3>
+<table><thead><tr><th>$\lim\dfrac{\alpha(x)}{x}$</th><th>$0$</th><th>非零常数且 $\ne1$</th><th>$1$</th><th>$\infty$</th></tr></thead><tbody><tr><td>结论</td><td>高阶</td><td>同阶不等价</td><td>等价</td><td>低阶</td></tr></tbody></table>
+<p>现在极限是 $-\dfrac12$：非零、有限、不等于 $1$，正中"同阶但不等价"，选 <strong>C</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>跳过 $\alpha$ 直接判 $\sin\alpha$</strong>：$\sin\alpha(x)\sim-\frac x2$ 要转化为 $\alpha\sim-\frac x2$，前提是 $\alpha\to0$（保证 $\sin\alpha\sim\alpha$）；条件 $\lvert\alpha\rvert&lt;\frac\pi2$ 正是为此设的。</li><li><strong>见到非零常数就选"等价"</strong>：等价要求极限恰为 $1$，$-\frac12$ 只算同阶。</li><li><strong>选 A 或 B</strong>：高阶要求比值极限为 $0$、低阶要求为 $\infty$，而 $-\frac12$ 两者都不沾——先把标尺算出来，再对号入座。</li><li><strong>把 $\cos x-1$ 等价成 $-\frac{x<sup>2</sup>}2$ 后忘记除 $x$</strong>：分子分母要同步处理。</li></ul>
+<blockquote>一句话结论：$\lim_{x\to0}\frac{\alpha(x)}{x}=-\frac12$，同阶不等价，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

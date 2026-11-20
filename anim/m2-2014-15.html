@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2014·15 变限积分极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-14.html" data-q="../question/m2-2014-14/">← <b>m2-2014-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-15/" data-q="../question/m2-2014-15/" data-no-anim="1">m2-2014-15 · 本题</a>
+  <a href="m2-2014-16.html" data-q="../question/m2-2014-16/"><b>m2-2014-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：分子是变限积分 $\\int_1^x\\big[t^2\\big(e^{1/t}-1\\big)-t\\big]\\,\\mathrm dt$，分母是 $x^2\\ln\\big(1+\\tfrac1x\\big)$。$x\\to+\\infty$ 时两者都趋于 $+\\infty$，属 $\\dfrac{\\infty}{\\infty}$ 型。</p>",
+  "<p><b>分母的主部</b>：用 $\\ln(1+u)=u-\\dfrac{u^2}{2}+o(u^2)$（取 $u=\\tfrac1x$）：$$x^2\\ln\\Big(1+\\frac1x\\Big)=x^2\\Big(\\frac1x-\\frac{1}{2x^2}+o\\big(\\tfrac1{x^2}\\big)\\Big)=x-\\frac12+o(1)\\sim x.$$</p>",
+  "<p><b>分子的主部</b>：被积函数 $t^2\\big(e^{1/t}-1\\big)-t$ 当 $t$ 很大时趋于 $\\dfrac12$（下一步算），故分子 $\\sim\\dfrac x2\\to+\\infty$——确认 $\\dfrac{\\infty}{\\infty}$ 型。</p>",
+  "<p><b>洛必达：分子求导</b>（变限积分求导，上限 $x$ 代入被积函数）：$$\\Big(\\int_1^x\\big[t^2(e^{1/t}-1)-t\\big]\\mathrm dt\\Big)^{\\prime}=x^2\\big(e^{1/x}-1\\big)-x.$$</p>",
+  "<p><b>泰勒展开看主部</b>：令 $u=\\dfrac1x\\to0^+$，$$e^u-1=u+\\frac{u^2}{2}+o(u^2)\\ \\Longrightarrow\\ x^2\\big(e^{1/x}-1\\big)=\\frac1u+\\frac12+o(1)=x+\\frac12+o(1).$$</p>",
+  "<p><b>分子导数的极限</b>：$$x^2\\big(e^{1/x}-1\\big)-x=\\Big(x+\\frac12+o(1)\\Big)-x=\\frac12+o(1)\\ \\longrightarrow\\ \\frac12.$$</p>",
+  "<p><b>分母不硬求导</b>：由主部 $x^2\\ln\\big(1+\\tfrac1x\\big)=x-\\dfrac12+o(1)$ 知其导数趋于 $1$（硬算 $2x\\ln\\big(1+\\tfrac1x\\big)-\\dfrac{x}{x+1}\\to1$ 也一致）。</p>",
+  "<p><b>收尾</b>：洛必达后分子导数趋于 $\\dfrac12$、分母导数趋于 $1$：$$\\lim_{x\\to+\\infty}\\frac{\\int_1^x\\big[t^2(e^{1/t}-1)-t\\big]\\mathrm dt}{x^2\\ln\\big(1+\\frac1x\\big)}=\\frac{1/2}{1}=\\boxed{\\dfrac12}.$$</p>"
+];
+
+AW.init({
+  title: "变限积分的极限：洛必达之前先看主部",
+  subtitle: "考点：变限积分求导 · 泰勒展开 · $\\dfrac{\\infty}{\\infty}$ 型极限（2014 年数学二第 15 题）",
+  counterLabel: "推导步",
+  ribbonTitle: "关键节点（✓ 已完成）",
+  intro: "点击「▶ 播放」逐步演示极限的求解过程。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:"shift", tag:"审题",     log:"分子是变限积分，分母带对数，两个都冲向无穷，先确认是无穷比无穷", show:1, count:0 },
+    { cls:"step",  tag:"分母主部", log:"对数用泰勒展开，分母的主部就是 x", show:2, count:1 },
+    { cls:"step",  tag:"分子主部", log:"被积函数在 t 很大时趋于常数二分之一，分子大约是 x 的一半", show:3, count:2, ribbon:{k:1, ok:true} },
+    { cls:"step",  tag:"洛必达",   log:"无穷比无穷，分子按变限积分求导，把上限直接代进被积函数", show:4, count:3 },
+    { cls:"step",  tag:"泰勒展开", log:"指数函数展开到二阶，换成倒数变量看主部", show:5, count:4 },
+    { cls:"ok",    tag:"分子导数", log:"展开式减去 x 后恰好剩下二分之一，分子导数的极限是二分之一", show:6, count:5, ribbon:{k:2, ok:true} },
+    { cls:"step",  tag:"分母导数", log:"分母不硬求导，用主部知道它的导数趋于 1", show:7, count:6 },
+    { cls:"done",  tag:"完成",     log:"两个导数的极限一比，最终结果是二分之一", show:8, count:7, done:true },
+  ],
+
+  result: {
+    big: "极限 $=\\dfrac{1}{2}$",
+    html: "记忆锚点：<b>变限积分求导 + 泰勒展开看主部</b>。$e^{1/x}-1$ 必须展到二阶：$\\frac1x+\\frac{1}{2x^2}+o\\big(\\frac{1}{x^2}\\big)$，减 $x$ 后才剩下 $\\frac12$；只展一阶会误得 $0$。分母 $x^2\\ln(1+\\frac1x)=x-\\frac12+o(1)$，导数趋于 $1$。捷径：分子 $\\sim\\frac x2$、分母 $\\sim x$，比值即 $\\frac12$。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分极限——洛必达把"面积"降维成"增速"</h2>
+<p>答案：$\dfrac{1}{2}$。</p>
+<h3>第 0 步：先立机制——变限积分的极限到底在问什么</h3>
+<p>分子 $F(x)=\displaystyle\int_1<sup>x</sup>\left[t<sup>2</sup>\left(e<sup>1/t</sup>-1\right)-t\right]\mathrm dt$ 是一块从 $1$ 铺到 $x$ 的"累积面积"。问 $\dfrac{F(x)}{x<sup>2</sup>\ln(1+1/x)}$ 的极限，本质是问<strong>面积与分母谁长得快</strong>。洛必达法则在这里不是硬凑的技巧，而是<strong>降维工具</strong>：对 $F$ 求导（变限积分求导公式），面积问题瞬间退化成"瞬时增速"问题——</p>
+<p>$$F'(x)=x<sup>2</sup>\left(e<sup>1/x</sup>-1\right)-x,$$</p>
+<p>即被积函数在 $t=x$ 处的值。所以本题真正要算的只有一件事：$t\to\infty$ 时被积函数 $t<sup>2</sup>(e<sup>1/t</sup>-1)-t$ 的极限。机制立好，后面的每一步都在为这一件事服务。</p>
+<h3>第一步：判型——为什么洛必达合法</h3>
+<p>$x\to+\infty$ 时分母 $x<sup>2</sup>\ln\left(1+\dfrac1x\right)=x<sup>2</sup>\left(\dfrac1x-\dfrac{1}{2x<sup>2</sup>}+o(\tfrac1{x<sup>2</sup>})\right)=x-\dfrac12+o(1)\to+\infty$；分子被积函数的主部马上算出是 $\dfrac12&gt;0$，故分子 $\sim\dfrac x2\to+\infty$。这是 $\dfrac{\infty}{\infty}$ 型，洛必达的两个前提（都趋于同一方向的∞、导数比极限存在）都有保证。</p>
+<h3>第二步：展开被积函数——为什么必须展到二阶（本题题眼）</h3>
+<p>令 $u=\dfrac1x\to0^+$：</p>
+<p>$$t<sup>2</sup>\left(e<sup>1/t</sup>-1\right)-t\ \to\ \frac1{u<sup>2</sup>}\left(u+\frac{u<sup>2</sup>}{2}+o(u<sup>2</sup>)\right)-\frac1u=\frac1u+\frac12-\frac1u+o(1)=\frac12+o(1).$$</p>
+<p><strong>为什么只用等价无穷小 $e<sup>1/t</sup>-1\sim\dfrac1t$ 会全盘崩溃</strong>：那一替换给出 $t<sup>2</sup>\cdot\dfrac1t-t=t-t=0$——两项的<strong>主部恰好相消</strong>，被积函数的"全部信息"都藏在次一阶的 $\dfrac{1}{2t}$ 里。等价无穷小只保留首阶，首阶一消它就交白卷；所以必须把 $e<sup>u</sup>-1$ 展开到 $u<sup>2</sup>$ 项，把 $\dfrac12$ 这个次主部显式带出来。这是"<strong>主部相消、看次主部</strong>"的典型局面。</p>
+<p>于是 $F'(x)\to\dfrac12$；顺带得到分子的粗略形状 $F(x)\approx\dfrac x2$。</p>
+<h3>第三步：分母为什么不硬求导</h3>
+<p>洛必达要对分母也求导：$\left(x<sup>2</sup>\ln\left(1+\frac1x\right)\right)'=2x\ln\left(1+\frac1x\right)-\dfrac{x}{x+1}$，两项的极限分别是 $2x\cdot\dfrac1x=2$ 与 $1$，故分母导数 $\to1$。其实从第一步的主部 $x-\dfrac12+o(1)$ 就能直接看出导数趋于 $1$——<strong>先展主部再谈导数</strong>，比求导后重新展开省力且不易错。</p>
+<h3>第四步：收尾</h3>
+<p>$$\lim_{x\to+\infty}\frac{F(x)}{x<sup>2</sup>\ln\left(1+\frac1x\right)}=\frac{\lim F'(x)}{\lim\left(\text{分母}\right)'}=\frac{1/2}{1}=\frac12.$$</p>
+<p><strong>捷径验证</strong>（同一机制的另一面）：分子 $\displaystyle\int_1<sup>x</sup>\left(\frac12+o(1)\right)\mathrm dt\sim\frac x2$，分母 $\sim x$，比值直接 $\dfrac12$——洛必达做的事和"被积函数主部直接积分"完全等价，后者更快，前者更标准，考场写洛必达更稳。</p>
+<h3>易错点</h3>
+<ul><li><strong>对整个分子用等价无穷小</strong>：分子是积分，不能把 $e<sup>1/t</sup>-1$ 换成 $\dfrac1t$ 再积——主部相消后积分里剩下的全是高阶细节，替换即失真。正确姿势是求导后对<strong>差式</strong> $t<sup>2</sup>(e<sup>1/t</sup>-1)-t$ 做泰勒。</li><li><strong>只展一阶</strong>：$e<sup>1/x</sup>-1=\dfrac1x+o(\tfrac1x)$ 减 $x$ 后只剩 $o(1)\to0$，把 $\dfrac12$ 弄丢了。</li><li><strong>不判型就洛必达</strong>：先说明分子、分母都趋于 $+\infty$，否则法则前提缺失。</li><li><strong>在分母上求导后硬算到底</strong>：可行但绕远；主部 $x-\dfrac12+o(1)$ 一次到位。</li></ul>
+<blockquote>结论：极限为 $\dfrac12$。机制链条：变限积分求导脱掉积分号 → 主部相消必须展到二阶 → 洛必达交出 $\dfrac12$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

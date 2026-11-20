@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画：间断点逐点判型</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-01.html" data-q="../question/m2-2020-01/">← <b>m2-2020-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-02/" data-q="../question/m2-2020-02/" data-no-anim="1">m2-2020-02 · 本题</a>
+  <a href="m2-2020-03.html" data-q="../question/m2-2020-03/"><b>m2-2020-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：先找全无定义点',
+    cls: 'key',
+    log: '四个嫌疑点：x = -1, 0, 1, 2',
+    body: '<p>$f(x)=\\dfrac{e^{\\frac{1}{x-1}}\\ln|1+x|}{(e^x-1)(x-2)}$ 的无定义点共四个：$x=1$（$e^{\\frac{1}{x-1}}$ 指数发炸）、$x=-1$（$\\ln|1+x|$ 真数归零）、$x=0$（$e^x-1=0$）、$x=2$（$x-2=0$）。判型标准：<b>有一个单侧极限为 $\\infty$ 或不存在 → 第二类</b>；两个单侧极限都存在 → 第一类。</p>' },
+  { title: '$x=0$：两个 $x$ 因子相消，可去（第一类）',
+    cls: 'bad',
+    log: 'x=0：极限 -1/(2e) 有限，可去，不计数',
+    ribbon: {k:1, ok:false},
+    body: '<p>$e^{\\frac{1}{x-1}}\\to e^{-1}$，$x-2\\to-2$，且 $\\ln|1+x|\\sim x$、$e^x-1\\sim x$：$$\\lim_{x\\to0}f(x)=\\frac{e^{-1}\\cdot x}{x\\cdot(-2)}=-\\frac{1}{2e}\\quad(有限).$$ 是<b>可去间断点（第一类）</b>，不计入第二类。</p>' },
+  { title: '$x=1$：右侧爆到无穷，第二类',
+    cls: 'good',
+    log: 'x=1：右侧 e^(1/(x-1)) 趋于 +∞，第二类',
+    ribbon: {k:2, ok:true},
+    body: '<p>其余因子的极限 $\\dfrac{\\ln 2}{(e-1)(-1)}$ 有限非零，只看 $e^{\\frac{1}{x-1}}$：$x\\to1^-$ 时 $\\frac{1}{x-1}\\to-\\infty$，因子 $\\to0$；$x\\to1^+$ 时 $\\to+\\infty$，因子 $\\to+\\infty$。右极限为无穷 → <b>第二类（无穷型）</b>。</p>' },
+  { title: '$x=2$：分母因子归零，第二类',
+    cls: 'good',
+    log: 'x=2：分子非零、分母因子 x-2 归零，无穷',
+    ribbon: {k:3, ok:true},
+    body: '<p>分子 $e^{\\frac{1}{2-1}}\\ln3=e\\ln3\\ne0$，$e^x-1\\to e^2-1\\ne0$，而分母因子 $x-2\\to0$，故 $|f(x)|\\to+\\infty$ → <b>第二类（无穷型）</b>。</p>' },
+  { title: '$x=-1$：对数爆炸，最易漏，第二类',
+    cls: 'good',
+    log: 'x=-1：ln|1+x| 趋于 -∞，别漏',
+    ribbon: {k:4, ok:true},
+    body: '<p>$\\ln|1+x|\\to-\\infty$，其余因子 $e^{-1/2}\\cdot(e^{-1}-1)\\cdot(-3)$ 都有限非零，故 $|f(x)|\\to+\\infty$ → <b>第二类（无穷型）</b>。这一条最容易被漏掉。</p>' },
+  { title: '统计：第二类共 3 个',
+    cls: 'good',
+    log: '第二类：x = -1, 1, 2，共 3 个 → 选 C',
+    body: '<p>第二类间断点：$x=-1,\\,1,\\,2$，共 $3$ 个；$x=0$ 是第一类可去。答案选 <b>C</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '选 C：3 个第二类间断点',
+    body: '<p>答案 <b>C</b>。记忆锚点：<b>先列全无定义点，再逐点判型</b>——$e^{\\frac{1}{x-1}}$ 要分左右、$\\ln|1+x|$ 在 $x=-1$ 爆炸、$x=0$ 处两个 $x$ 因子恰好相消。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$f(x)=\\dfrac{e^{\\frac{1}{x-1}}\\ln|1+x|}{(e^x-1)(x-2)}$ 的第二类间断点个数',
+  subtitle: '考点：连续与间断 · 方法：找全无定义点，逐点判单侧极限',
+  counterLabel: '推理步',
+  ribbonTitle: '各点判型（✓ 第二类 / ✗ 非第二类）',
+  intro: '点击「▶ 播放」逐点排查四个间断点。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C（3 个第二类间断点）',
+    html: '记忆锚点：<b>无定义点 $-1,0,1,2$ 共四个；除 $x=0$ 可去外全是无穷型第二类</b>。$x=0$ 处分子分母的 $x$ 因子相消出有限极限 $-\\frac{1}{2e}$；$x=-1$ 的对数爆炸最易漏。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：间断点判型——先找全无定义点，再逐点看单侧极限</h2>
+<p>答案：C</p>
+<h3>第一步：把嫌疑点找全</h3>
+<p>$f(x)=\dfrac{e<sup>\frac{1</sup>{x-1}}\ln|1+x|}{(e<sup>x</sup>-1)(x-2)}$ 的无定义点共四个：</p>
+<ul><li>$x=1$：$e<sup>\frac{1</sup>{x-1}}$ 的内层指数 $\frac{1}{x-1}$ 在此无定义；</li><li>$x=-1$：$\ln|1+x|$ 的真数归零；</li><li>$x=0$：分母因子 $e<sup>x</sup>-1=0$；</li><li>$x=2$：分母因子 $x-2=0$。</li></ul>
+<p>判型标准背后的机制：间断点按"左右极限是否存在且有限"分类。两个单侧极限都存在且有限，才有资格比较它们——相等是可去、不等是跳跃，同属第一类；只要有一侧极限不存在（趋于 $\infty$ 是"不存在"最常见的形态），就是第二类。所以每到一个点，先问"这一侧的极限有没有"，再谈类型。</p>
+<h3>第二步：逐点判型（先讲道理，表格只做汇总）</h3>
+<ul><li><strong>$x=0$（可去，第一类）</strong>：分子里的 $\ln|1+x|$ 与分母里的 $e<sup>x</sup>-1$ 是一对同阶无穷小（都 $\sim x$），一除相消；剩下 $e<sup>\frac1{x-1</sup>}\to e<sup>-1</sup>$、$x-2\to-2$ 都有限，极限 $-\frac{1}{2e}$ 存在有限——极限存在即可去，与函数值本身有没有定义无关。</li><li><strong>$x=1$（第二类，无穷型）</strong>：其余因子的极限 $\frac{\ln2}{(e-1)(-1)}$ 非零有限，命门全在 $e<sup>\frac{1</sup>{x-1}}$ 上，而它必须分左右：$x\to1^-$ 时内层 $\frac{1}{x-1}\to-\infty$，$e<sup>t</sup>\to0$；$x\to1^+$ 时内层 $\to+\infty$，$e<sup>t</sup>\to+\infty$。复合函数的单侧行为由内层指数决定——右极限为无穷，判第二类。</li><li><strong>$x=2$（第二类，无穷型）</strong>：分子 $e\ln3$ 非零、$e<sup>2</sup>-1$ 非零，只有 $x-2\to0$——"非零 $\div$ 零"，$\lvert f\rvert\to+\infty$。</li><li><strong>$x=-1$（第二类，无穷型）</strong>：$\ln|1+x|\to-\infty$，而其余因子 $e<sup>-1/2</sup>(e<sup>-1</sup>-1)(-3)$ 有限非零——"无穷 $\times$ 非零有限 $=$ 无穷"。判无穷型之前先确认其余因子不添乱，这一步不能省。</li></ul>
+<table><thead><tr><th>点</th><th>关键极限</th><th>类型</th></tr></thead><tbody><tr><td>$x=0$</td><td>$\ln\lvert1+x\rvert\sim x$ 与 $e<sup>x</sup>-1\sim x$ 相消，极限 $-\frac{1}{2e}$ 有限</td><td>可去（第一类）</td></tr><tr><td>$x=1$</td><td>右极限 $e<sup>\frac1{x-1</sup>}\to+\infty$</td><td>第二类（无穷型）</td></tr><tr><td>$x=2$</td><td>非零分子除以 $x-2\to0$</td><td>第二类（无穷型）</td></tr><tr><td>$x=-1$</td><td>$\ln\lvert1+x\rvert\to-\infty$，其余因子有限非零</td><td>第二类（无穷型）</td></tr></tbody></table>
+<h3>第三步：统计</h3>
+<p>第二类间断点为 $x=-1,\,1,\,2$，共 $3$ 个，选 C。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉 $x=-1$</strong>：只盯着分母和 $e<sup>\frac{1</sup>{x-1}}$，忘了对数因子在 $x=-1$ 处趋于 $-\infty$——找无定义点要逐个因子过一遍，这是本题最常见的漏判。</li><li><strong>把 $x=0$ 误判为第二类</strong>：看见分母 $e<sup>x</sup>-1\to0$ 就喊无穷；其实分子有同阶的 $\ln|1+x|$ 相消，极限有限，是可去间断点。</li><li><strong>$x=1$ 不分左右</strong>：内层指数在两侧一个奔 $-\infty$、一个奔 $+\infty$，整体行为必须分左右讨论，右极限 $+\infty$ 才把它定成第二类。</li></ul>
+<blockquote>一句话结论：无定义点 $-1,0,1,2$ 共四个，除 $x=0$ 可去（第一类）外全是无穷型第二类，共 3 个，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

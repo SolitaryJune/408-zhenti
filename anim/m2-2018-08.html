@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·08 分块矩阵的秩恒等式辨析</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-07.html" data-q="../question/m2-2018-07/">← <b>m2-2018-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-08/" data-q="../question/m2-2018-08/" data-no-anim="1">m2-2018-08 · 本题</a>
+  <a href="m2-2018-09.html" data-q="../question/m2-2018-09/"><b>m2-2018-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：横拼的秩 = 列空间之和的维数',
+    cls: 'key',
+    body: '<p>$(\\boldsymbol X,\\boldsymbol Y)$ 的秩等于两组列向量<b>合在一起</b>生成的维数。逐项只问一件事：<b>新拼进来的列有没有超出原有的列空间？</b></p>',
+    log: '翻译成列空间语言再判断' },
+  { title: 'A 成立：$\\boldsymbol{AB}$ 的列超不出 $\\boldsymbol A$ 的列空间',
+    cls: 'good',
+    body: '<p>$\\boldsymbol{AB}$ 的第 $j$ 列 $=\\boldsymbol A\\cdot(\\boldsymbol B\\ \\text{的第}\\ j\\ \\text{列})$，是 $\\boldsymbol A$ 列向量的线性组合 ⇒ $\\boldsymbol{AB}$ 的列空间 $\\subseteq\\boldsymbol A$ 的列空间：$$r(\\boldsymbol A)\\le r(\\boldsymbol A,\\boldsymbol{AB})\\le r(\\boldsymbol A)\\ \\Longrightarrow\\ r(\\boldsymbol A,\\boldsymbol{AB})=r(\\boldsymbol A)$$ 也可一行看出：$(\\boldsymbol A,\\boldsymbol{AB})=\\boldsymbol A(\\boldsymbol E,\\boldsymbol B)$，右乘不改变列空间。</p>',
+    ribbon: {k:1, ok:true},
+    log: 'AB 的列 ⊆ A 的列空间，秩相等' },
+  { title: 'B 排除：$\\boldsymbol{BA}$ 的列是 B 的列的组合',
+    cls: 'bad',
+    body: '<p>左乘换方向：$\\boldsymbol{BA}$ 的列落在 $\\boldsymbol B$（不是 $\\boldsymbol A$）的列空间。反例：$\\boldsymbol A=\\begin{pmatrix}1&0\\\\0&0\\end{pmatrix}$，$\\boldsymbol B=\\begin{pmatrix}0&0\\\\1&0\\end{pmatrix}$，则 $(\\boldsymbol A,\\boldsymbol{BA})$ 含列 $(1,0)^{\\mathrm T},(0,1)^{\\mathrm T}$，秩 $2\\ne1=r(\\boldsymbol A)$。</p>',
+    ribbon: {k:2, ok:false},
+    log: '反例：秩从 1 涨到 2' },
+  { title: 'C 排除：拼接的秩不是 max',
+    cls: 'bad',
+    body: '<p>"和空间"的维数可以超过两部分的最大值。反例：$\\boldsymbol A=\\mathrm{diag}(1,0)$，$\\boldsymbol B=\\mathrm{diag}(0,1)$，两组列方向互相垂直，$$r(\\boldsymbol A,\\boldsymbol B)=2>\\max\\{r(\\boldsymbol A),r(\\boldsymbol B)\\}=1.$$</p>',
+    ribbon: {k:3, ok:false},
+    log: '两个秩 1 拼出秩 2' },
+  { title: 'D 排除：转置换的是行空间',
+    cls: 'bad',
+    body: '<p>横拼看列空间，转置后看行空间，二者维数无必然关系。反例：$\\boldsymbol A=\\begin{pmatrix}1&1\\\\0&0\\end{pmatrix}$，$\\boldsymbol B=\\begin{pmatrix}0&0\\\\1&1\\end{pmatrix}$：$(\\boldsymbol A,\\boldsymbol B)$ 秩为 $2$；而 $(\\boldsymbol A^{\\mathrm T},\\boldsymbol B^{\\mathrm T})$ 的列全是 $(1,1)^{\\mathrm T}$ 型，秩仅 $1$。</p>',
+    ribbon: {k:4, ok:false},
+    log: '反例：一边秩 2、另一边秩 1' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>A</b>。核心记忆点：<b>右乘不换列空间</b>——$\\boldsymbol{AB}$ 的列永远是 $\\boldsymbol A$ 的列的线性组合，横拼自然不添新方向；而 $\\boldsymbol{BA}$（B 项）、普通拼接（C 项）、转置拼接（D 项）都可能添新方向。</p>',
+    log: 'r(A, AB) = r(A)，选 A' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '分块矩阵的秩：$r(\\boldsymbol A,\\boldsymbol{AB})=r(\\boldsymbol A)$ 为什么对？',
+  subtitle: '考点：分块矩阵的秩 · 列空间 · 方法：一证三反例',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 成立 / ✗ 排除）',
+  intro: '点击「▶ 播放」：先证 A，再用 2 阶反例排掉 B、C、D。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A：$r(\\boldsymbol A,\\boldsymbol{AB})=r(\\boldsymbol A)$',
+    html: '记忆锚点：<b>右乘不换列空间</b>（$\\boldsymbol{AB}$ 的列 $\\subseteq\\boldsymbol A$ 的列空间）。B 错在 $\\boldsymbol{BA}$ 的列跟 $\\boldsymbol B$ 走；C 错在"和空间"维数可超 max；D 错在转置后比较的是行空间——三个反例都只需 2 阶矩阵就能构造。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分块矩阵的秩——拼接看列空间，$AB$ 的列是 $A$ 的列的组合</h2>
+<p>答案：A</p>
+<h3>第一步：把"横拼的秩"翻译成列空间语言</h3>
+<p>$(\boldsymbol X,\boldsymbol Y)$ 的秩等于两组列向量合在一起生成空间的维数，即"两个列空间之和"的维数。所以判断每个选项，就问一件事：<strong>新拼进来的列有没有超出原有的列空间</strong>。</p>
+<h3>第二步：证 A 成立</h3>
+<p>$\boldsymbol{AB}$ 的第 $j$ 列 $=\boldsymbol A\,(\boldsymbol B\ \text{的第}\ j\ \text{列})$，是 $\boldsymbol A$ 的列向量的线性组合，故 $\boldsymbol{AB}$ 的列空间包含于 $\boldsymbol A$ 的列空间：</p>
+<p>$$r(\boldsymbol A)\le r(\boldsymbol A,\boldsymbol{AB})\le r(\boldsymbol A)\ \Longrightarrow\ r(\boldsymbol A,\boldsymbol{AB})=r(\boldsymbol A).$$</p>
+<p>（左不等号因拼块含 $\boldsymbol A$ 全部列；右不等号因新增列不添新方向。也可用 $(\boldsymbol A,\boldsymbol{AB})=\boldsymbol A(\boldsymbol E,\boldsymbol B)$ 一行看出。）</p>
+<h3>第三步：反例排掉 B、C、D（都取 2 阶）</h3>
+<ul><li><strong>B</strong>：取 $\boldsymbol A=\begin{pmatrix}1&amp;0\\0&amp;0\end{pmatrix}$，$\boldsymbol B=\begin{pmatrix}0&amp;0\\1&amp;0\end{pmatrix}$，则 $\boldsymbol{BA}$ 的列 $(0,1)<sup>\mathrm T</sup>$ 不在 $\boldsymbol A$ 的列空间里，$r(\boldsymbol A,\boldsymbol{BA})=2\neq r(\boldsymbol A)=1$。错在 $\boldsymbol{BA}$ 的列是<strong>左乘的 $\boldsymbol B$</strong> 的列的组合。</li><li><strong>C</strong>：取 $\boldsymbol A=\mathrm{diag}(1,0)$，$\boldsymbol B=\mathrm{diag}(0,1)$，两列方向互相垂直：$r(\boldsymbol A,\boldsymbol B)=2&gt;\max\{1,1\}$。拼接的秩是"和空间"维数，不是最大值。</li><li><strong>D</strong>：取 $\boldsymbol A=\begin{pmatrix}1&amp;1\\0&amp;0\end{pmatrix}$，$\boldsymbol B=\begin{pmatrix}0&amp;0\\1&amp;1\end{pmatrix}$：$(\boldsymbol A,\boldsymbol B)$ 秩为 $2$；而 $(\boldsymbol A<sup>\mathrm T</sup>,\boldsymbol B<sup>\mathrm T</sup>)$ 的列都是 $(1,1)<sup>\mathrm T</sup>$ 型，秩仅 $1$。横拼看列空间，转置后看行空间，维数没有必然关系。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>把 AB 的列当成 B 的列</strong>：$A$ 左乘是"组合"别人列的一方，$AB$ 的列落在 $A$ 的列空间；而 $BA$ 的列落在 $B$ 的列空间，B 选项正是利用这个方向差设错。</li><li><strong>认为拼接秩取 max</strong>：两组方向不同的秩 1 列向量拼起来就是秩 2，"和"可以比两部分都大。</li><li><strong>转置当不变量</strong>：$r(\boldsymbol A<sup>\mathrm T</sup>)=r(\boldsymbol A)$ 成立，但 $r(\boldsymbol A<sup>\mathrm T</sup>,\boldsymbol B<sup>\mathrm T</sup>)$ 与 $r(\boldsymbol A,\boldsymbol B)$ 不必相等——拼接后比较的是不同的子空间。</li></ul>
+<blockquote>结论：$AB$ 的列 $\subseteq A$ 的列空间，横拼不添新方向，$r(\boldsymbol A,\boldsymbol{AB})=r(\boldsymbol A)$，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

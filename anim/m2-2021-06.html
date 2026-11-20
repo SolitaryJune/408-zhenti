@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·06 由复合恒等式求 df(1,1)</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-05.html" data-q="../question/m2-2021-05/">← <b>m2-2021-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-06/" data-q="../question/m2-2021-06/" data-no-anim="1">m2-2021-06 · 本题</a>
+  <a href="m2-2021-07.html" data-q="../question/m2-2021-07/"><b>m2-2021-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>目标 $\\mathrm{d}f(1,1)=f_x(1,1)\\,\\mathrm{d}x+f_y(1,1)\\,\\mathrm{d}y$——要把 $f_x(1,1),f_y(1,1)$ 从两个恒等式里解出来",
+  "<b>② 挑 $x$：</b>恒等式必须在内层命中 $(1,1)$ 才可用：$f(x+1,\\mathrm{e}^x)$ 取 $x=0$；$f(x,x^2)$ 取 $x=1$",
+  "<b>③ 第一式求导：</b>链式法则 $f_x+f_y\\cdot\\mathrm{e}^x=(x+1)^2+2x(x+1)=(x+1)(3x+1)$",
+  "<b>④ 代 $x=0$：</b>$f_x(1,1)+f_y(1,1)=1$　……方程 (1)",
+  "<b>⑤ 第二式求导：</b>$f_x+f_y\\cdot2x=4x\\ln x+2x$",
+  "<b>⑥ 代 $x=1$：</b>$f_x(1,1)+2f_y(1,1)=4\\cdot1\\cdot0+2=2$　……方程 (2)",
+  "<b>⑦ 联立：</b>(2)$-$(1) 得 $f_y(1,1)=1$，回代 (1) 得 $f_x(1,1)=0$",
+  "<b>⑧ 结论：</b>$\\mathrm{d}f(1,1)=0\\cdot\\mathrm{d}x+1\\cdot\\mathrm{d}y=\\mathrm{d}y$，选 C"
+];
+
+AW.init({
+  title: '2021·06　两个复合恒等式夹出 $\\mathrm{d}f(1,1)$',
+  subtitle: '考点：多元复合函数链式法则 · 代入使内层命中指定点 · 解二元方程组',
+  counterLabel: '已推导',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，两个恒等式各供一个方程，联立解出偏导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'全微分由两个偏导数拼成，目标就是解出它们在一点一的值', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'挑代入点', log:'第一式取 x 为零、第二式取 x 为一，让内层都恰好路过一一', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'链式求导', log:'第一式两边对 x 求导，右端整理成 x 加一乘三 x 加一', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'得方程一', log:'代入得第一个方程：两偏导之和等于一', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'链式求导', log:'第二式求导，右端是四 x ln x 加二 x', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'得方程二', log:'代入得第二个方程：x 偏导加两倍 y 偏导等于二', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'联立',   log:'两式相减得 y 偏导为一，回代得 x 偏导为零', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：全微分等于 dy，选 C', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '选 C　$\\mathrm{d}f(1,1)=\\mathrm{d}y$　（$f_x(1,1)=0,\\ f_y(1,1)=1$）',
+    html: '记忆锚点：<b>复合恒等式两边求导 + 让内层命中目标点 = 两个线性方程</b>。易错：第二式代 $x=0$ 会落点 $(0,0)$ 还遇 $\\ln 0$；链式法则漏乘内层导数（$\\mathrm{e}^x$、$2x$）方程就错。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：复合恒等式两边求导，联立解出 $\mathrm{d}f(1,1)$</h2>
+<p>答案：C</p>
+<h3>第一步：定目标，挑「能命中 $(1,1)$」的 $x$</h3>
+<p>目标是 $f_x(1,1)$ 与 $f_y(1,1)$，因为 $\mathrm{d}f(1,1)=f_x(1,1)\,\mathrm{d}x+f_y(1,1)\,\mathrm{d}y$。两个恒等式必须在内层<strong>恰好路过 $(1,1)$</strong> 时才可用：$f(x+1,e<sup>x</sup>)$ 取 $x=0$；$f(x,x<sup>2</sup>)$ 取 $x=1$。</p>
+<h3>第二步：第一式对 $x$ 求导</h3>
+<p>$$f_x(x+1,e<sup>x</sup>)\cdot1+f_y(x+1,e<sup>x</sup>)\cdot e<sup>x</sup>=(x+1)<sup>2</sup>+2x(x+1)=(x+1)(3x+1).$$</p>
+<p>代 $x=0$（内层 $(1,1)$，$e<sup>0</sup>=1$）：$f_x(1,1)+f_y(1,1)=1$。</p>
+<h3>第三步：第二式对 $x$ 求导</h3>
+<p>$$f_x(x,x<sup>2</sup>)\cdot1+f_y(x,x<sup>2</sup>)\cdot2x=4x\ln x+2x.$$</p>
+<p>代 $x=1$（内层 $(1,1)$）：$f_x(1,1)+2f_y(1,1)=0+2=2$。</p>
+<h3>第四步：联立求解</h3>
+<p>两式相减得 $f_y(1,1)=1$，回代得 $f_x(1,1)=0$。于是</p>
+<p>$$\mathrm{d}f(1,1)=0\cdot\mathrm{d}x+1\cdot\mathrm{d}y=\mathrm{d}y.$$</p>
+<p>选 C。</p>
+<h3>易错点</h3>
+<ul><li><strong>代错 $x$</strong>：第二式若也代 $x=0$，内层是 $(0,0)$ 且出现 $\ln0$，根本不可用；先让内层命中 $(1,1)$ 再动手。</li><li><strong>链式法则丢内层导数</strong>：$\dfrac{\mathrm{d}}{\mathrm{d}x}e<sup>x</sup>=e<sup>x</sup>$、$\dfrac{\mathrm{d}}{\mathrm{d}x}x<sup>2</sup>=2x$，漏乘任何一侧方程组就废了。</li><li><strong>凭直觉平分</strong>：以为 $f_x=f_y=\dfrac12$；两个方程必须联立解，答案是 $(0,1)$。</li></ul>
+<blockquote>一句话结论：两个恒等式分别取 $x=0,1$ 求导，得 $f_x+f_y=1$ 与 $f_x+2f_y=2$，解出 $(0,1)$，故 $\mathrm{d}f(1,1)=\mathrm{d}y$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

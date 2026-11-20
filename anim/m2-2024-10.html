@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·10 "A 有两个不同特征值"与"B 可对角化"的逻辑关系</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-09.html" data-q="../question/m2-2024-09/">← <b>m2-2024-09</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-10/" data-q="../question/m2-2024-10/" data-no-anim="1">m2-2024-10 · 本题</a>
+  <a href="m2-2024-11.html" data-q="../question/m2-2024-11/"><b>m2-2024-11</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：充分、必要两问分开验',
+    cls: 'key',
+    tag: '策略',
+    body: '<p>前提：$\\boldsymbol A,\\boldsymbol B$ 为 2 阶矩阵且 $\\boldsymbol A\\boldsymbol B=\\boldsymbol B\\boldsymbol A$。要判定"p：$\\boldsymbol A$ 有两个不同特征值"与"q：$\\boldsymbol B$ 可对角化"的关系。打法：<b>充分性（p⟹q）走证明</b>，<b>必要性（q⟹p）找反例</b>——逻辑关系必须两问都验才能下结论。</p>',
+    log: '充分性证明 + 必要性反例，两条线' },
+  { title: '充分性 (1)：Bξ 仍是 A 的特征向量',
+    cls: 'step',
+    tag: '链条①',
+    body: '<p>设 $\\boldsymbol A\\boldsymbol\\xi_i=\\lambda_i\\boldsymbol\\xi_i$（$i=1,2$，$\\lambda_1\\neq\\lambda_2$）。两边左乘 $\\boldsymbol B$ 并用交换性：$$\\boldsymbol A(\\boldsymbol B\\boldsymbol\\xi_i)=\\boldsymbol B(\\boldsymbol A\\boldsymbol\\xi_i)=\\lambda_i(\\boldsymbol B\\boldsymbol\\xi_i).$$ 即 $\\boldsymbol B\\boldsymbol\\xi_i$ 仍是 $\\boldsymbol A$ 属于 $\\lambda_i$ 的特征向量——<b>可交换保证 $\\boldsymbol B$ 不把特征向量踢出特征子空间</b>。</p>',
+    log: 'AB=BA ⟹ A(Bξᵢ)=λᵢ(Bξᵢ)，子空间被保存' },
+  { title: '充分性 (2)：互异 ⟹ 子空间一维 ⟹ B 被动对角化',
+    cls: 'good',
+    tag: '充分 ✓',
+    ribbon: {k:1, ok:true},
+    body: '<p>$\\lambda_i$ 互异时 $\\boldsymbol A$ 的特征子空间 $V_{\\lambda_i}$ <b>是一维的</b>（由 $\\boldsymbol\\xi_i$ 张成）。$\\boldsymbol B\\boldsymbol\\xi_i\\in V_{\\lambda_i}$，故存在数 $\\mu_i$ 使 $$\\boldsymbol B\\boldsymbol\\xi_i=\\mu_i\\boldsymbol\\xi_i.$$ 于是 $\\boldsymbol\\xi_1,\\boldsymbol\\xi_2$（线性无关）同时是 $\\boldsymbol B$ 的特征向量，$\\boldsymbol B$ 被同一组基对角化——<b>充分性成立</b>。</p>',
+    log: 'λᵢ 互异 ⟹ Bξᵢ=μᵢξᵢ ⟹ B 可对角化' },
+  { title: '必要性反例：B = E 太听话',
+    cls: 'bad',
+    tag: '必要 ✗',
+    ribbon: {k:2, ok:false},
+    body: '<p>取 $\\boldsymbol B=\\boldsymbol E$（本身就是对角阵，可对角化），$\\boldsymbol A=\\begin{pmatrix}1&1\\\\0&1\\end{pmatrix}$（若尔当块，只有特征值 $\\lambda=1$）。此时 $$\\boldsymbol A\\boldsymbol B=\\boldsymbol B\\boldsymbol A=\\boldsymbol A\\quad(\\text{交换恒成立}),$$ 但 $\\boldsymbol A$ 并没有两个不同特征值——<b>必要性不成立</b>。$\\boldsymbol B=\\boldsymbol E$ 与任何矩阵都交换，是零成本反例。</p>',
+    log: 'B=E 可对角化但 A 只有单特征值，必要性破' },
+  { title: '合题：充分而不必要 → B',
+    cls: 'good',
+    tag: '定答案',
+    body: '<p>p 是 q 的<b>充分不必要条件</b>，选 <b>B</b>。</p>',
+    log: '充分不必要，选 B' },
+  { title: '干扰项复盘',
+    cls: 'bad',
+    tag: '防坑',
+    body: '<p><b>A（充要）</b>：只证了充分性就收工，忘了必要性的反例。<b>C（必要不充分）</b>：与已严格证明的充分性直接矛盾。<b>D（都不成立）</b>：充分性链条（保存子空间 + 一维化）是硬证明，不会假。<b>反例警示</b>：找必要性反例必须配齐交换性——随手找两个不交换的矩阵无效。</p>',
+    log: 'A 漏验必要性，C/D 与充分性证明矛盾' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>可交换 ⟹ 保存对方的特征子空间；互异特征值 ⟹ 子空间一维 ⟹ 特征向量自动继承</b>。反向不成立：$\\boldsymbol B=\\boldsymbol E$ 与谁都交换、都可对角化，但对 $\\boldsymbol A$ 无任何特征值要求。</p>',
+    log: '选 B：充分不必要' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '"$\\boldsymbol A$ 有两个不同特征值" 是 "$\\boldsymbol B$ 可对角化" 的什么条件？',
+  subtitle: '考点：特征值与对角化 · 方法：充分性证明（子空间继承）+ 必要性反例（B=E）',
+  counterLabel: '推理步',
+  ribbonTitle: '逻辑判定（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B（充分不必要）',
+    html: '记忆锚点：$\\boldsymbol A\\boldsymbol B=\\boldsymbol B\\boldsymbol A$ 时 $\\boldsymbol B$ 保存 $\\boldsymbol A$ 的特征子空间；$\\lambda_1\\neq\\lambda_2$ 让子空间缩成一维，$\\boldsymbol B\\boldsymbol\\xi_i=\\mu_i\\boldsymbol\\xi_i$ 自动成立——<b>A 互异 ⟹ B 可对角化</b>。反例 $\\boldsymbol B=\\boldsymbol E$、$\\boldsymbol A=\\begin{pmatrix}1&1\\\\0&1\\end{pmatrix}$ 砍掉必要性。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解："A 有两个不同特征值"与"B 可对角化"的逻辑关系（充分性证明 + 必要性反例）</h2>
+<p>答案：B</p>
+<h3>第一步：拆成两问</h3>
+<p>在 $\boldsymbol A\boldsymbol B=\boldsymbol B\boldsymbol A$ 的前提下分别检验：</p>
+<ul><li>充分性："$\boldsymbol A$ 有两个不同特征值" $\Rightarrow$ "$\boldsymbol B$ 可对角化"？</li><li>必要性："$\boldsymbol B$ 可对角化" $\Rightarrow$ "$\boldsymbol A$ 有两个不同特征值"？</li></ul>
+<h3>第二步：证充分性（交换性传递特征向量）</h3>
+<p>设 $\boldsymbol A\boldsymbol\xi_i=\lambda_i\boldsymbol\xi_i$（$\lambda_1\ne\lambda_2$）。对两边左乘 $\boldsymbol B$ 并利用交换性：</p>
+<p>$$\boldsymbol A(\boldsymbol B\boldsymbol\xi_i)=\boldsymbol B(\boldsymbol A\boldsymbol\xi_i)=\lambda_i(\boldsymbol B\boldsymbol\xi_i).$$</p>
+<p>即 $\boldsymbol B\boldsymbol\xi_i$ 仍是 $\boldsymbol A$ 属于 $\lambda_i$ 的特征向量。$\lambda_i$ 互异时该特征子空间<strong>是一维的</strong>，故 $\boldsymbol B\boldsymbol\xi_i=\mu_i\boldsymbol\xi_i$。于是 $\boldsymbol\xi_1,\boldsymbol\xi_2$（线性无关）同时是 $\boldsymbol B$ 的特征向量，$\boldsymbol B$ 可对角化——充分性成立。</p>
+<h3>第三步：必要性举反例</h3>
+<p>取 $\boldsymbol B=\boldsymbol E$（当然可对角化），$\boldsymbol A=\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$。此时 $\boldsymbol A\boldsymbol B=\boldsymbol B\boldsymbol A=\boldsymbol A$ 恒成立，但 $\boldsymbol A$ 只有一个特征值 $\lambda=1$（代数重数 2），并不"有两个不同特征值"。必要性不成立。</p>
+<h3>第四步：下结论</h3>
+<p>充分而不必要，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 A（充要）</strong>：只证了充分性就收工；判断逻辑关系必须两问都验，一个反例足以砍掉必要性。</li><li><strong>找反例时忘了配交换性</strong>：随便找一个可对角化的 $\boldsymbol B$ 和单特征值的 $\boldsymbol A$，若 $\boldsymbol A\boldsymbol B\ne\boldsymbol B\boldsymbol A$ 则反例无效。$\boldsymbol B=\boldsymbol E$ 与任何 $\boldsymbol A$ 都交换，是零成本反例。</li><li><strong>证明充分性时没用到"互异"</strong>：若 $\lambda$ 有重根，特征子空间可以高于一维，$\boldsymbol B\boldsymbol\xi$ 未必还是 $\boldsymbol A$ 的特征向量——互异性正是推理链条的承重墙。</li></ul>
+<blockquote>一句话结论：可交换保证 $\boldsymbol B$ 保存 $\boldsymbol A$ 的特征子空间，互异特征值让子空间缩成一维、$\boldsymbol B$ 被动继承特征向量；反向有 $\boldsymbol B=\boldsymbol E$ 反例——充分不必要，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

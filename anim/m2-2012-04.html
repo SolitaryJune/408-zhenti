@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·04 三个积分 I₁, I₂, I₃ 的大小</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-03.html" data-q="../question/m2-2012-03/">← <b>m2-2012-03</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-04/" data-q="../question/m2-2012-04/" data-no-anim="1">m2-2012-04 · 本题</a>
+  <a href="m2-2012-05.html" data-q="../question/m2-2012-05/"><b>m2-2012-05</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];   // 推导板的持久 DOM 行
+
+var LINES = [
+  "<p><b>切段</b>：记 $J_m=\\int_{m\\pi}^{(m+1)\\pi}\\mathrm{e}^{x^{2}}\\sin x\\,\\mathrm{d}x$，则 $$I_1=J_0,\\qquad I_2=J_0+J_1,\\qquad I_3=J_0+J_1+J_2.$$相邻半周期上 $\\sin x$ 变号，而 $\\mathrm{e}^{x^{2}}$ 严格增。</p>",
+  "<p><b>第一段 $[0,\\pi]$</b>：$\\sin x\\ge0$，故 $J_0>0$，即 $I_1>0$。</p>",
+  "<p><b>第二段 $[\\pi,2\\pi]$</b>：$\\sin x\\le0$，故 $J_1<0$，于是 $I_2=I_1+J_1<I_1$。</p>",
+  "<p><b>比幅度</b>：换元 $x=t+\\pi$，$$|J_1|=\\int_{0}^{\\pi}\\mathrm{e}^{(t+\\pi)^{2}}\\sin t\\,\\mathrm{d}t.$$因 $(t+\\pi)^{2}>t^{2}$，被积函数处处压过 $J_0$ 的，故 $|J_1|>J_0$。</p>",
+  "<p><b>推论</b>：$I_2=J_0+J_1<0$——$I_2$ 不只是最小，它干脆是<b>负的</b>：$I_2<0<I_1$。</p>",
+  "<p><b>第三段 $[2\\pi,3\\pi]$</b>：$\\sin x\\ge0$，$J_2>0$；同理 $|J_2|>|J_1|$（$\\mathrm{e}^{x^{2}}$ 在更后段更大）。</p>",
+  "<p><b>比较 $I_3$ 与 $I_1$</b>：$$I_3-I_1=J_1+J_2>0\\ \\Longrightarrow\\ I_3>I_1.$$</p>",
+  "<p><b>结论</b>：$I_2<I_1<I_3$，<b>选 D</b>。（数值旁证：$I_1\\approx5.7\\times10^{2}$，$I_2\\approx-9.1\\times10^{14}$，$I_3\\approx1.1\\times10^{36}$。）</p>"
+];
+
+AW.init({
+  title: '积分大小比较：$I_k=\\int_{0}^{k\\pi}\\mathrm{e}^{x^{2}}\\sin x\\,\\mathrm{d}x$',
+  subtitle: '考点：定积分性质 · 方法：按半周期切段，符号 + 幅度两头夹',
+  counterLabel: '已推演',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'切段',   log:'按 sin x 的半周期切成 J₀、J₁、J₂ 三段，I_k 是前缀和', show:1, count:0 },
+    { cls:'ok',    tag:'J₀ 为正', log:'[0,π] 上 sin x ≥ 0，J₀ > 0，即 I₁ > 0', show:2, count:1 },
+    { cls:'step',  tag:'J₁ 为负', log:'[π,2π] 上 sin x ≤ 0，J₁ < 0，把 I₂ 拖到 I₁ 之下', show:3, count:2 },
+    { cls:'step',  tag:'比幅度',  log:'平移 π 后被积函数的 e 指数更大，|J₁| > J₀', show:4, count:3 },
+    { cls:'miss',  tag:'I₂ 为负', log:'J₀ 抵不过 |J₁|，I₂ = J₀ + J₁ < 0，它是最小的', show:5, count:4 },
+    { cls:'ok',    tag:'J₂ 为正', log:'[2π,3π] 上 sin x ≥ 0，J₂ > 0，且幅度又压过 |J₁|', show:6, count:5 },
+    { cls:'ok',    tag:'I₃ 反超', log:'I₃ − I₁ = J₁ + J₂ > 0，所以 I₃ > I₁', show:7, count:6 },
+    { cls:'done',  tag:'完成',   log:'结论：I₂ < I₁ < I₃，选 D', show:8, count:7, done:true },
+  ],
+
+  result: {
+    big: 'I₂ < I₁ < I₃（选 D）',
+    html: '记忆锚点：<b>符号看 $\\sin$、幅度看 $\\mathrm{e}^{x^{2}}$</b>。每平移一个 $\\pi$，段上 $\\mathrm{e}^{x^{2}}$ 暴增，后一段的绝对值碾压前一段：$|J_1|>J_0$ 使 $I_2<0$，$J_2>|J_1|$ 使 $I_3>I_1$。别默认三个积分单调递增（A 错因）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：按半周期分段比较 $\mathrm{e}<sup>x^{2</sup>}\sin x$ 的积分大小</h2>
+<p>答案：D（$I_2&lt;I_1&lt;I_3$）</p>
+<h3>第一步：切段，写成增量之和</h3>
+<p>记 $J_m=\int_{m\pi}<sup>(m+1)\pi</sup>\mathrm{e}<sup>x^{2</sup>}\sin x\,\mathrm dx$，则 $I_1=J_0$，$I_2=J_0+J_1$，$I_3=J_0+J_1+J_2$。$\sin x$ 在相邻半周期上变号，而 $\mathrm{e}<sup>x^{2</sup>}$ 严格增——这就是全部武器。</p>
+<h3>第二步：定每段符号</h3>
+<p>$[0,\pi]$ 上 $\sin x\ge0$，故 $J_0&gt;0$，$I_1&gt;0$；$[\pi,2\pi]$ 上 $\sin x\le0$，故 $J_1&lt;0$，于是 $I_2=I_1+J_1&lt;I_1$。</p>
+<h3>第三步：比出 $J_1$ 压过 $J_0$，$I_2$ 是负的</h3>
+<p>换元 $x=t+\pi$：</p>
+<p>$$|J_1|=\int_{0}<sup>\pi</sup>\mathrm{e}<sup>(t+\pi)^{2</sup>}\sin t\,\mathrm dt.$$</p>
+<p>因 $(t+\pi)<sup>2</sup>&gt;t<sup>2</sup>$，被积函数处处压过 $J_0$ 的，故 $|J_1|&gt;J_0$，于是 $I_2=J_0+J_1&lt;0$。目前 $I_2$ 最小。</p>
+<h3>第四步：$I_3$ 反超 $I_1$</h3>
+<p>$[2\pi,3\pi]$ 上 $\sin x\ge0$，$J_2&gt;0$，且同理 $|J_2|&gt;|J_1|$（$\mathrm{e}<sup>x^{2</sup>}$ 在更后段更大）。于是</p>
+<p>$$I_3-I_1=J_1+J_2&gt;0\ \Longrightarrow\ I_3&gt;I_1.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>默认 $I_1&lt;I_2&lt;I_3$ 单调递增</strong>：$I_2$ 混入负增量 $J_1$，反而最小（A 错因）。</li><li><strong>只看符号不看幅度</strong>：以为正负段大致抵消、难以比较，忽略 $\mathrm{e}<sup>x^{2</sup>}$ 暴增使后段碾压前段。</li><li><strong>比较 $I_3$ 与 $I_1$ 时漏掉 $J_1$</strong>：$I_3-I_1=J_1+J_2$，要靠 $J_2&gt;|J_1|$ 才能定号（C 错因）。</li></ul>
+<blockquote>一句话结论：$I_2=J_0+J_1&lt;0&lt;I_1&lt;I_3$，其中 $I_3-I_1=J_1+J_2&gt;0$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

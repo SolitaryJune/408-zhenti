@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·19 联立方程组求 f 与变限积分曲线的拐点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-18.html" data-q="../question/m2-2012-18/">← <b>m2-2012-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-19/" data-q="../question/m2-2012-19/" data-no-anim="1">m2-2012-19 · 本题</a>
+  <a href="m2-2012-20.html" data-q="../question/m2-2012-20/"><b>m2-2012-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  '<p><b>审题</b>：两个方程都含 $f\'\'$。稳妥路线：先解齐次方程 $f\'\'+f\'-2f=0$ 得含两个常数的通解，再代入 $f\'\'+f=2\\mathrm e^x$ 定常数。</p>',
+  '<p><b>特征方程</b>：$$r^2+r-2=0\\ \\Rightarrow\\ (r-1)(r+2)=0\\ \\Rightarrow\\ r=1,\\ -2.$$</p>',
+  '<p><b>通解</b>：$$f(x)=C_1\\mathrm e^{x}+C_2\\mathrm e^{-2x}.$$</p>',
+  '<p><b>定常数</b>：$f\'\'=C_1\\mathrm e^x+4C_2\\mathrm e^{-2x}$，代入第二方程：$$f\'\'+f=2C_1\\mathrm e^x+5C_2\\mathrm e^{-2x}=2\\mathrm e^x\\ \\Rightarrow\\ C_1=1,\\ C_2=0.$$</p>',
+  '<p><b>(1) 收工</b>：$$f(x)=\\mathrm e^{x}.$$（代回两个方程均成立。）</p>',
+  '<p><b>转向 (2)</b>：$f(x^2)=\\mathrm e^{x^2}$，$f(-t^2)=\\mathrm e^{-t^2}$。记 $g(x)=\\int_0^x\\mathrm e^{-t^2}\\,\\mathrm dt$（被积函数恒正），曲线为 $y=\\mathrm e^{x^2}g(x)$。</p>',
+  '<p><b>一阶导</b>：变限积分求导 $g\'(x)=\\mathrm e^{-x^2}$，恰与 $\\mathrm e^{x^2}$ 抵消：$$y\'=2x\\,\\mathrm e^{x^2}g(x)+\\mathrm e^{x^2}\\mathrm e^{-x^2}=2x\\,\\mathrm e^{x^2}g(x)+1.$$</p>',
+  '<p><b>二阶导</b>：$$y\'\'=\\big(2+4x^2\\big)\\mathrm e^{x^2}g(x)+2x\\,\\mathrm e^{x^2}\\mathrm e^{-x^2}=2(1+2x^2)\\mathrm e^{x^2}g(x)+2x.$$</p>',
+  '<p><b>符号分析</b>：$g$ 是奇函数（$x>0$ 时 $g>0$），$(1+2x^2)\\mathrm e^{x^2}>0$，两段都是奇函数 $\\Rightarrow$ $y\'\'$ 为奇函数：$x>0$ 时 $y\'\'>0$（下凸），$x<0$ 时 $y\'\'<0$（上凸），$x=0$ 处变号。</p>',
+  '<p><b>结论</b>：$y(0)=\\mathrm e^{0}\\cdot g(0)=0$，且 $y\'\'$ 在 $x=0$ 两侧异号 $\\Rightarrow$ 拐点 $$(0,0).$$</p>',
+];
+
+AW.init({
+  title: '联立 $f\'\'+f\'-2f=0$ 与 $f\'\'+f=2\\mathrm e^x$，再找拐点',
+  subtitle: '考点：二阶常系数线性方程 · 变限积分求导 · 拐点判定',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示求 $f$ 与判拐点的全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var strip = AW.el('div', '');
+    strip.style.cssText = 'display:flex;gap:10px;margin:2px 0 12px;flex-wrap:wrap;';
+    this._chips = [];
+    this._labels = ['(1) $f(x)=\\,?$', '(2) 拐点 $=\\,?$'];
+    for(var k = 0; k < this._labels.length; k++){
+      var c = AW.el('div', '', this._labels[k]);
+      c.style.cssText = 'padding:6px 12px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;background:#f8fafc;color:#94a3b8;';
+      strip.appendChild(c);
+      this._chips.push(c);
+    }
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(strip);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var chips = this._chips, labels = this._labels;
+    var known = [sn.show >= 5, sn.show >= 10];
+    var vals = ['(1) $f(x)=\\mathrm e^{x}$', '(2) 拐点 $(0,0)$'];
+    for(var k = 0; k < chips.length; k++){
+      if(known[k]){
+        chips[k].style.border = '2px solid #16a34a';
+        chips[k].style.background = '#f6fef9';
+        chips[k].style.color = '#14532d';
+        chips[k].innerHTML = '<b>' + vals[k] + '</b>';
+      } else {
+        chips[k].style.border = '2px solid #e2e8f0';
+        chips[k].style.background = '#f8fafc';
+        chips[k].style.color = '#94a3b8';
+        chips[k].innerHTML = labels[k];
+      }
+    }
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'先解齐次方程拿通解，再代入另一个方程定常数', show:1, count:0 },
+    { cls:'step',  tag:'特征根', log:'特征方程因式分解，两根为 1 和 −2', show:2, count:1 },
+    { cls:'step',  tag:'通解',   log:'两个相异实根，通解是两个指数函数的线性组合', show:3, count:2 },
+    { cls:'ok',    tag:'定常数', log:'代入第二方程比较系数：C1=1、C2=0', show:4, count:3 },
+    { cls:'ok',    tag:'(1) 完成', log:'f(x) 就是 e 的 x 次方，代回两方程验证成立', show:5, count:4 },
+    { cls:'shift', tag:'转向',   log:'代入 (2)：曲线是 e^(x²) 乘一个变限积分', show:6, count:5 },
+    { cls:'step',  tag:'一阶导', log:'变限积分求导出的 e^(−x²) 恰好抵消，一阶导很好看', show:7, count:6 },
+    { cls:'step',  tag:'二阶导', log:'乘积法则再来一次，二阶导整理成两段之和', show:8, count:7 },
+    { cls:'ok',    tag:'变号',   log:'两段都是奇函数：x>0 时二阶导为正、x<0 时为负，0 处变号', show:9, count:8 },
+    { cls:'done',  tag:'完成',   log:'结论：f(x)=e^x，拐点 (0,0)', show:10, count:9, done:true },
+  ],
+
+  result: {
+    big: '$f(x)=\\mathrm e^{x}$，拐点 $(0,0)$',
+    html: '记忆锚点：<b>联立方程先解齐次通解再定常数</b>；变限积分求导 $g\'(x)=\\mathrm e^{-x^2}$ 与 $\\mathrm e^{x^2}$ 抵消是本题的巧妙之处。判拐点要验两点：$y\'\'$ 变号 + 拐点纵坐标 $y(0)=0$，答 $(0,0)$ 而非 $x=0$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：常系数方程组定 $f$，变限积分函数的拐点</h2>
+<p>最终答案：(1) $f(x)=\mathrm e<sup>x</sup>$；(2) 拐点 $(0,0)$。</p>
+<h3>第 0 步：先立机制——特征方程为什么成立、路线为什么先齐次后代入</h3>
+<p><strong>为什么解 $f''+f'-2f=0$ 要找 $\mathrm e<sup>rx</sup>$</strong>：求导算子对 $\mathrm e<sup>rx</sup>$ 的作用就是乘常数——$\big(\mathrm e<sup>rx</sup>\big)'=r\,\mathrm e<sup>rx</sup>$，$\big(\mathrm e<sup>rx</sup>\big)''=r<sup>2</sup>\,\mathrm e<sup>rx</sup>$。把它代进方程，微分方程就降维成代数方程 $r<sup>2</sup>+r-2=0$。指数函数是求导运算的"特征方向"，这就是"特征方程"名字的来历。</p>
+<p><strong>为什么先解齐次通解、再代入第二式</strong>：齐次方程的通解（带两个独立常数）是全部候选，第二个方程 $f''+f=2\mathrm e<sup>x</sup>$ 只负责从中挑人——路线是"先圈定候选、再筛选"，逻辑上保证不漏不重。若把两式直接相减降阶，得到的一阶方程只是必要条件，其通解还须回代原二阶方程检验，多一道手续。</p>
+<h3>第一步：(1) 特征方程与通解</h3>
+<p>$r<sup>2</sup>+r-2=(r-1)(r+2)=0$，$r_1=1$，$r_2=-2$，故</p>
+<p>$$f(x)=C_1\mathrm e<sup>x</sup>+C_2\mathrm e<sup>-2x</sup>.$$</p>
+<h3>第二步：(1) 代入第二个方程定常数</h3>
+<p>$f''=C_1\mathrm e<sup>x</sup>+4C_2\mathrm e<sup>-2x</sup>$，于是</p>
+<p>$$f''+f=2C_1\mathrm e<sup>x</sup>+5C_2\mathrm e<sup>-2x</sup>=2\mathrm e<sup>x</sup>.$$</p>
+<p><strong>为什么能"比较系数"</strong>：$\mathrm e<sup>x</sup>$ 与 $\mathrm e<sup>-2x</sup>$ 线性无关（比值 $\mathrm e<sup>3x</sup>$ 非常数），恒等式成立必须两组系数各自相等。$2C_1=2$、$5C_2=0$，得 $C_1=1$、$C_2=0$，故 $f(x)=\mathrm e<sup>x</sup>$。（代回两个方程：$\mathrm e<sup>x</sup>+\mathrm e<sup>x</sup>-2\mathrm e<sup>x</sup>=0$、$\mathrm e<sup>x</sup>+\mathrm e<sup>x</sup>=2\mathrm e<sup>x</sup>$，均成立。）</p>
+<h3>第三步：(2) 写出曲线并求一阶导</h3>
+<p>$f(x<sup>2</sup>)=\mathrm e<sup>x^2</sup>$，$f(-t<sup>2</sup>)=\mathrm e<sup>-t^2</sup>$。记 $g(x)=\displaystyle\int_0<sup>x</sup>\mathrm e<sup>-t^2</sup>\mathrm dt$，则曲线为 $y=\mathrm e<sup>x^2</sup>g(x)$。变限积分求导的机制：把上限 $x$ 代进被积函数，$g'(x)=\mathrm e<sup>-x^2</sup>$；乘积法则给</p>
+<p>$$y'=2x\,\mathrm e<sup>x^2</sup>g(x)+\mathrm e<sup>x^2</sup>\cdot\mathrm e<sup>-x^2</sup>=2x\,\mathrm e<sup>x^2</sup>g(x)+1.$$</p>
+<p>第二项里 $\mathrm e<sup>x^2</sup>$ 与 $\mathrm e<sup>-x^2</sup>$ 恰好抵消——这是本题设计好的"礼物"，但前提是 $g'$ 这一项必须写出：漏掉则一阶导缺项、二阶导全错。</p>
+<h3>第四步：求二阶导</h3>
+<p>$$y''=\big(2+4x<sup>2</sup>\big)\mathrm e<sup>x^2</sup>g(x)+2x\,\mathrm e<sup>x^2</sup>\cdot\mathrm e<sup>-x^2</sup>=2(1+2x<sup>2</sup>)\mathrm e<sup>x^2</sup>g(x)+2x.$$</p>
+<h3>第五步：判 $y''$ 变号——为什么看奇偶性、为什么"变号"才算拐点</h3>
+<p><strong>$g$ 是奇函数</strong>（这是判号的枢纽）：被积函数 $\mathrm e<sup>-t^2</sup>$ 是偶函数，从 $0$ 往左积与往右积互为相反数。换元验证：$g(-x)=\displaystyle\int_0<sup>-x</sup>\mathrm e<sup>-t^2</sup>\mathrm dt\ \xrightarrow{\ t=-u\ }\ -\int_0<sup>x</sup>\mathrm e<sup>-u^2</sup>\mathrm du=-g(x)$。又 $x&gt;0$ 时被积函数恒正，故 $g(x)&gt;0$。</p>
+<p>于是第一项 = 奇函数 $g$ × 恒正因子 $(1+2x<sup>2</sup>)\mathrm e<sup>x^2</sup>$ = 奇函数，$2x$ 也是奇函数，故 $y''$ 为奇函数，且 $y''(0)=0$（连续奇函数在原点必为零）：</p>
+<ul><li>$x&gt;0$：$g(x)&gt;0$、$2x&gt;0$，故 $y''&gt;0$（曲线下凸）；</li><li>$x&lt;0$：由奇性 $y''&lt;0$（曲线上凸）。</li></ul>
+<p><strong>为什么"变号"才算拐点</strong>：拐点是凹凸性的分界点，$y''=0$ 但两侧不变号的点（如 $y=x<sup>4</sup>$ 在原点）不是拐点——本题的奇性直接保证两侧异号，凹凸在 $x=0$ 处交替。又 $y(0)=\mathrm e<sup>0</sup>\cdot g(0)=0$，故拐点为 $(0,0)$。</p>
+<h3>易错点</h3>
+<ul><li><strong>直接两式相减消 $f''$</strong>：得到的一阶方程只是必要条件，解出的函数须回代原方程组检验；先解齐次通解再定常数更稳。</li><li><strong>变限积分求导漏项</strong>：$g'(x)=\mathrm e<sup>-x^2</sup>$ 漏写会使 $y'$ 缺一项、$y''$ 全错。</li><li><strong>奇函数论证跳步</strong>：$g$ 的奇性来自"偶函数从原点向两侧积分互为相反数"，要给出换元一行，不能凭感觉。</li><li><strong>拐点只报横坐标</strong>：拐点是曲线上的点，必须答 $(0,0)$ 而非 $x=0$。</li></ul>
+<blockquote>结论：$f(x)=\mathrm e<sup>x</sup>$；曲线唯一拐点 $(0,0)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

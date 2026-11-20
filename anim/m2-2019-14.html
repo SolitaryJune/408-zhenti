@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2019·14 代数余子式组合 A11−A12</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-13.html" data-q="../question/m2-2019-13/">← <b>m2-2019-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-14/" data-q="../question/m2-2019-14/" data-no-anim="1">m2-2019-14 · 本题</a>
+  <a href="m2-2019-15.html" data-q="../question/m2-2019-15/"><b>m2-2019-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$A_{11}-A_{12}=1\\cdot A_{11}+(-1)\\cdot A_{12}+0\\cdot A_{13}+0\\cdot A_{14}$，系数行是 $(1,-1,0,0)$。<b>别逐个算代数余子式</b>——用换行性质一步归约。</p>",
+  "<p><b>换行性质</b>：$\\sum_j c_jA_{1j}$ 等于把 $\\boldsymbol{A}$ 的第一行换成 $(c_1,c_2,c_3,c_4)$ 后的行列式（$A_{1j}$ 只依赖其余三行，与第一行元素无关）。本题系数行 $(1,-1,0,0)$ <b>恰好就是第一行</b>——换行换了个寂寞，所以 $$A_{11}-A_{12}=|\\boldsymbol{A}|.$$</p>",
+  "<p><b>消元</b>：$r_2+2r_1,\\ r_3-3r_1$（倍加变换不改变行列式值），第一列只剩 $a_{11}=1$：$$\\begin{pmatrix}1&-1&0&0\\\\0&-1&-1&1\\\\0&1&2&-1\\\\0&0&3&4\\end{pmatrix}$$</p>",
+  "<p><b>按第一列展开</b>：$$|\\boldsymbol{A}|=\\begin{vmatrix}-1&-1&1\\\\1&2&-1\\\\0&3&4\\end{vmatrix}.$$</p>",
+  "<p><b>三阶按第一行展开</b>：$$(-1)\\cdot(8+3)-(-1)\\cdot(4-0)+1\\cdot(3-0)=-11+4+3=-4.$$</p>",
+  "<p><b>结论</b>：$A_{11}-A_{12}=|\\boldsymbol{A}|=\\boldsymbol{-4}$。</p>"
+];
+
+/* 矩阵四行的数据：消元前后两套字符 */
+var BASE_CHARS = [
+  ['1','-1','0','0'],
+  ['-2','1','-1','1'],
+  ['3','-2','2','-1'],
+  ['0','0','3','4']
+];
+var ELIM_CHARS = [
+  ['1','-1','0','0'],
+  ['0','-1','-1','1'],
+  ['0','1','2','-1'],
+  ['0','0','3','4']
+];
+var ROW_LABELS = ['$r_1$', '$r_2$', '$r_3$', '$r_4$'];
+
+AW.init({
+  title: '$A_{11}-A_{12}=?$（$A_{ij}$ 为 $|\\boldsymbol{A}|$ 的代数余子式）',
+  subtitle: '考点：代数余子式组合 · 方法：换行行列式 + 消元展开',
+  counterLabel: '已执行',
+  intro: '点击「▶ 播放」逐步演示归约与行列式计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+
+    var matLabel = AW.el('div', 'aw-row-label',
+      '<b>矩阵 $\\boldsymbol{A}$ 的四行</b>（消元会实时更新，行首标 $r_i$）');
+    wrap.appendChild(matLabel);
+
+    var rowsArea = AW.el('div', '');
+    rowsArea.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin:6px 0 10px;';
+    for(var i = 0; i < 4; i++){
+      var line = AW.el('div', '');
+      line.style.cssText = 'display:flex;align-items:center;gap:12px;';
+      var lab = AW.el('span', '', ROW_LABELS[i]);
+      lab.style.cssText = 'width:34px;text-align:right;color:#64748b;font-size:14px;';
+      line.appendChild(lab);
+      line.appendChild(AW.cellRow(BASE_CHARS[i], ['','','','']));
+      rowsArea.appendChild(line);
+    }
+    wrap.appendChild(rowsArea);
+    this._rowsArea = rowsArea;
+
+    var boardLabel = AW.el('div', 'aw-row-label', '<b>推导板</b>');
+    wrap.appendChild(boardLabel);
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    /* 重画矩阵四行：字符按是否已消元切换，颜色按 sn.rowCls 点亮 */
+    var chars = sn.elim ? ELIM_CHARS : BASE_CHARS;
+    var rowCls = sn.rowCls || {};
+    this._rowsArea.innerHTML = '';
+    for(var i = 0; i < 4; i++){
+      var line = AW.el('div', '');
+      line.style.cssText = 'display:flex;align-items:center;gap:12px;';
+      var lab = AW.el('span', '', ROW_LABELS[i]);
+      lab.style.cssText = 'width:34px;text-align:right;color:#64748b;font-size:14px;';
+      line.appendChild(lab);
+      var cls = rowCls[i] || '';
+      line.appendChild(AW.cellRow(chars[i], [cls, cls, cls, cls]));
+      this._rowsArea.appendChild(line);
+    }
+
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'组合 A11 − A12 的系数行是 1、负 1、0、0，恰好就是矩阵第一行', show:1, count:0, rowCls:{0:'key'} },
+    { cls:'ok',    tag:'换行', log:'代数余子式与第一行元素无关，组合等于换行行列式；第一行没变，组合就是行列式本身的值', show:2, count:1, rowCls:{0:'ok'} },
+    { cls:'shift', tag:'消元', log:'第二行加第一行两倍、第三行减第一行三倍，第一列只剩一个 1', show:3, count:2, elim:true, rowCls:{1:'ok', 2:'ok'} },
+    { cls:'step',  tag:'展开', log:'按第一列展开，剩一个三阶行列式', show:4, count:3, elim:true },
+    { cls:'step',  tag:'计算', log:'三阶按第一行展开：负 11 加 4 加 3，等于负 4', show:5, count:4, elim:true, ribbon:{k:1, ok:true} },
+    { cls:'done',  tag:'完成', log:'A11 − A12 = |A| = −4', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '答案：$-4$',
+    html: '记忆锚点：<b>系数行 $(1,-1,0,0)$ 恰是第一行 $\\Rightarrow A_{11}-A_{12}=|\\boldsymbol{A}|$</b>。换行性质的依据：$A_{1j}$ 与第一行元素无关。消元 $r_2+2r_1,\\ r_3-3r_1$ 后按第一列展开，三阶行列式 $=-11+4+3=-4$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$A_{11}-A_{12}$ 别硬算——代数余子式组合就是“换行行列式”</h2>
+<p>答案：$-4$</p>
+<h3>第一步：把组合看成展开式，识别系数行</h3>
+<p>$$A_{11}-A_{12}=1\cdot A_{11}+(-1)\cdot A_{12}+0\cdot A_{13}+0\cdot A_{14},$$</p>
+<p>系数行是 $(1,-1,0,0)$。核心性质：$\sum_j c_jA_{1j}$ 等于<strong>把 $A$ 的第一行换成 $(c_1,c_2,c_3,c_4)$ 后的行列式</strong>——因为代数余子式 $A_{1j}$ 只依赖其余三行，与第一行的元素无关。</p>
+<h3>第二步：发现“换了个寂寞”</h3>
+<p>$A$ 的第一行本来就是 $(1,-1,0,0)$，替换后行列式不变，所以</p>
+<p>$$A_{11}-A_{12}=|A|.$$</p>
+<p>一步归约成“只算一个四阶行列式”。</p>
+<h3>第三步：消元算 $|A|$</h3>
+<p>做不改变值的消元 $r_2+2r_1,\ r_3-3r_1$，第一列只剩 $a_{11}=1$，按第一列展开：</p>
+<p>$$|A|=\begin{vmatrix}1&amp;-1&amp;0&amp;0\\0&amp;-1&amp;-1&amp;1\\0&amp;1&amp;2&amp;-1\\0&amp;0&amp;3&amp;4\end{vmatrix}=\begin{vmatrix}-1&amp;-1&amp;1\\1&amp;2&amp;-1\\0&amp;3&amp;4\end{vmatrix}.$$</p>
+<p>再按第一行展开：</p>
+<p>$$(-1)\cdot(8+3)-(-1)\cdot(4-0)+1\cdot(3-0)=-11+4+3=-4.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>逐个计算 $A_{11},A_{12}$</strong>：要算两个 $3$ 阶行列式再各带符号，又慢又容易错；“换行”性质一步归约到 $|A|$。</li><li><strong>符号双重变号</strong>：$A_{12}$ 自带代数符号 $(-1)<sup>1+2</sup>$，组合式里写 $-A_{12}$ 用的是题面给的减号，不要再额外补符号。</li><li><strong>消元时忘了行列式性质</strong>：行的倍加变换不改变行列式值，可以放心消元。</li></ul>
+<blockquote>一句话结论：系数行 $(1,-1,0,0)$ 恰是 $A$ 的第一行 $\Rightarrow A_{11}-A_{12}=|A|$，消元展开得 $-4$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

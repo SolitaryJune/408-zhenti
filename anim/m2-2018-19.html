@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018·19 三段铁丝的最小面积和（拉格朗日乘数法）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-18.html" data-q="../question/m2-2018-18/">← <b>m2-2018-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-19/" data-q="../question/m2-2018-19/" data-no-anim="1">m2-2018-19 · 本题</a>
+  <a href="m2-2018-20.html" data-q="../question/m2-2018-20/"><b>m2-2018-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2018·19　2 m 铁丝分三段围圆、正方形、正三角形，面积和的最小值',
+  subtitle: '考点：条件极值 · 方法：建模 → 拉格朗日乘数法 → 正定二次型定最小',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '约束 $x+y+z=2$（$x$ 围圆、$y$ 围正方形、$z$ 围正三角形）。点击「▶ 播放」逐步求解。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "<p><b>建模：</b>围圆、正方形、正三角形的三段长记 $x,\\ y,\\ z\\ (>0)$，约束 $x+y+z=2$。$$f=\\frac{x^{2}}{4\\pi}+\\frac{y^{2}}{16}+\\frac{\\sqrt3\\,z^{2}}{36}\\ \\ \\text{求最小}$$</p>",
+      "<b>① 面积公式：</b>圆（半径 $\\frac{x}{2\\pi}$）$\\to\\dfrac{x^{2}}{4\\pi}$；正方形（边 $\\frac{y}{4}$）$\\to\\dfrac{y^{2}}{16}$；正三角形（边 $\\frac{z}{3}$）$\\to\\dfrac{\\sqrt3}{4}\\left(\\dfrac z3\\right)^{2}=\\dfrac{\\sqrt3\\,z^{2}}{36}$",
+      "<b>② 构造：</b>$L=f+\\lambda\\,(x+y+z-2)$",
+      "<b>③ 一阶条件：</b>$\\dfrac{x}{2\\pi}+\\lambda=0,\\quad\\dfrac{y}{8}+\\lambda=0,\\quad\\dfrac{\\sqrt3\\,z}{18}+\\lambda=0$",
+      "<b>④ 解出：</b>记 $k=-\\lambda$：$x=2\\pi k,\\quad y=8k,\\quad z=6\\sqrt3\\,k$",
+      "<b>⑤ 代入约束：</b>$k\\,(2\\pi+8+6\\sqrt3)=2\\ \\Longrightarrow\\ k=\\dfrac{1}{\\pi+4+3\\sqrt3}$（三分量皆正，驻点在内部）",
+      "<b>⑥ 巧算 $f$：</b>由 $\\dfrac{x}{2\\pi}=\\dfrac{y}{8}=\\dfrac{\\sqrt3 z}{18}=k$，每块面积 $=$ 段长 $\\times\\dfrac{k}{2}$：$$f=\\dfrac{k}{2}(x+y+z)=\\dfrac{k}{2}\\cdot2=k$$",
+      "<b>⑦ 定最小：</b>$f$ 为正定二次型，在有界闭集 $\\{x,y,z\\ge0,\\ x+y+z=2\\}$ 上连续必有最小值；边界（某段取 $0$）分母缺项、面积和更大 $\\Rightarrow$ 内部唯一驻点即最小值点",
+      "<b>⑧ 结论：</b>$$f_{\\min}=\\dfrac{1}{\\pi+4+3\\sqrt3}\\ (\\mathrm{m}^{2})\\approx0.081\\ \\mathrm{m}^{2}$$"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'建模', log:'设三段长为 x、y、z，总和为二，目标函数是三个面积之和', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'面积表', log:'圆的面积是段长平方除四倍圆周率，正方形是除十六，正三角形别丢根号三', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'构造', log:'目标函数加上约束的倍数项，这就是拉格朗日函数', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'求偏导', log:'三个偏导为零，每个式子都是段长除以自己的系数再加拉姆达', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'解比值', log:'三段长都由同一个 k 表示，比例是二倍圆周率比八比六倍根号三', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'定 k', log:'代回约束解出 k，等于分母圆周率加四加三倍根号三分之一', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'巧算', log:'每块面积恰好等于段长乘 k 的一半，总和乘二分之一就是 k 本身', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'判定', log:'正定二次型加有界闭域保证最小值存在，只用两个图形的边界方案面积更大', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成', log:'结论：最小面积和存在，等于分母圆周率加四加三倍根号三分之一个平方米', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$f_{\\min}=\\dfrac{1}{\\pi+4+3\\sqrt3}\\ \\mathrm{m}^{2}$（存在最小值）',
+    html: '记忆锚点：<b>周长 $s$ 围成的面积正比于 $s^{2}$，比例系数越小越「划算」</b>——最优点按 $x:y:z=2\\pi:8:6\\sqrt3$ 分配，此时 $\\dfrac{x}{2\\pi}=\\dfrac{y}{8}=\\dfrac{\\sqrt3 z}{18}=k$，总面积恰为 $k$。易错：正三角形面积丢 $\\sqrt3$；求出驻点不说明为何是最小。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：周长怎么分最省面积——"边际面积相等"原理与拉格朗日乘数法</h2>
+<p>答案：<strong>存在最小值</strong>，最小值为 $f_{\min}=\dfrac{1}{\pi+4+3\sqrt{3}}\ (\mathrm{m}<sup>2</sup>)$（约 $0.081\ \mathrm{m}<sup>2</sup>$）。</p>
+<h3>第一步：建模——面积是周长的二次函数</h3>
+<p>设围圆、正方形、正三角形的三段长为 $x,y,z&gt;0$，约束 $x+y+z=2$。每个图形走两步：周长给尺寸，尺寸给面积——圆的半径 $\dfrac{x}{2\pi}$、面积 $\pi\left(\dfrac{x}{2\pi}\right)<sup>2</sup>=\dfrac{x<sup>2</sup>}{4\pi}$；正方形边长 $\dfrac{y}{4}$、面积 $\dfrac{y<sup>2</sup>}{16}$；正三角形边长 $\dfrac{z}{3}$、面积 $\dfrac{\sqrt3}{4}\left(\dfrac z3\right)<sup>2</sup>=\dfrac{\sqrt3\,z<sup>2</sup>}{36}$。对号入座：</p>
+<table><thead><tr><th>图形</th><th>尺寸</th><th>面积</th></tr></thead><tbody><tr><td>圆</td><td>半径 $\dfrac{x}{2\pi}$</td><td>$\dfrac{x<sup>2</sup>}{4\pi}$</td></tr><tr><td>正方形</td><td>边长 $\dfrac{y}{4}$</td><td>$\dfrac{y<sup>2</sup>}{16}$</td></tr><tr><td>正三角形</td><td>边长 $\dfrac{z}{3}$</td><td>$\dfrac{\sqrt3\,z<sup>2</sup>}{36}$</td></tr></tbody></table>
+<p>目标：在 $x+y+z=2$ 下求 $f=\dfrac{x<sup>2</sup>}{4\pi}+\dfrac{y<sup>2</sup>}{16}+\dfrac{\sqrt3\,z<sup>2</sup>}{36}$ 的最小值。</p>
+<h3>第二步：先想通机制——最优分配发生在"边际面积相等"处</h3>
+<p>面积对段长是"线性边际的二次增长"：多给圆一小段 $\mathrm{d}x$，面积约增加 $\dfrac{x}{2\pi}\mathrm{d}x$；三种图形的边际面积分别是 $\dfrac{x}{2\pi}$、$\dfrac{y}{8}$、$\dfrac{\sqrt3 z}{18}$。<strong>若三者的边际不相等</strong>，把一小段长度从"边际低"的图形挪给"边际高"的图形，总面积净减少——所以最优点必须三边际相等。约束下等式极值的一阶条件正是这个原理的代数化：这就是用<strong>拉格朗日乘数法</strong>的理由（也可代入 $z=2-x-y$ 消元，但乘数法保持三图形对称，且一阶条件直接读出"边际相等"）。</p>
+<p>令 $L=f+\lambda(x+y+z-2)$，偏导为零：</p>
+<p>$$\frac{x}{2\pi}+\lambda=0,\qquad \frac{y}{8}+\lambda=0,\qquad \frac{\sqrt3\,z}{18}+\lambda=0.$$</p>
+<p>三式即"边际面积 $=-\lambda$"。记 $k=-\lambda$，解得</p>
+<p>$$x=2\pi k,\qquad y=8k,\qquad z=6\sqrt3\,k.$$</p>
+<h3>第三步：代入约束解出 k</h3>
+<p>$$k\,(2\pi+8+6\sqrt3)=2\ \Longrightarrow\ k=\frac{1}{\pi+4+3\sqrt3}.$$</p>
+<p>驻点三分量均为正，落在可行域内部；三段长为 $x=\dfrac{2\pi}{\pi+4+3\sqrt3},\ y=\dfrac{8}{\pi+4+3\sqrt3},\ z=\dfrac{6\sqrt3}{\pi+4+3\sqrt3}$（米），比例 $2\pi:8:6\sqrt3$。</p>
+<h3>第四步：巧算最小值——面积 = 末端边际 × 段长 ÷ 2</h3>
+<p>每种图形的边际对段长都是线性的（比例依次为 $\dfrac{1}{2\pi},\dfrac18,\dfrac{\sqrt3}{18}$），面积是边际从 $0$ 积到段长：在驻点处末端边际都等于 $k$，故每块面积都等于 $\dfrac{k}{2}\times$ 段长（如 $\dfrac{x<sup>2</sup>}{4\pi}=x\cdot\dfrac{x}{4\pi}=x\cdot\dfrac{k}{2}$）：</p>
+<p>$$f=\frac{k}{2}\,(x+y+z)=\frac{k}{2}\cdot2=k=\frac{1}{\pi+4+3\sqrt3}.$$</p>
+<h3>第五步：为什么是最小、为什么不在边界</h3>
+<p>存在性：可行集 $\{x,y,z\ge0,\ x+y+z=2\}$ 是有界闭集（三角形），$f$ 连续，必有最值；$f$ 是系数全正的正定二次型，内部无平坦方向。边界为什么不是最小：在 $z=0$ 处三角形的边际面积 $\dfrac{\sqrt3 z}{18}=0$，小于圆与正方形的正边际——按"挪一小段给边际高者"的机制，把一小段长度挪给三角形总面积<strong>严格下降</strong>；其余边界点同理（至少一个边际为正）。故最小值必在内部，唯一内部驻点就是最小值点。</p>
+<h3>易错点</h3>
+<ul><li><strong>正三角形面积丢 $\sqrt3$</strong>：边长 $z/3$，面积 $\dfrac{\sqrt3}{4}\left(\dfrac z3\right)<sup>2</sup>=\dfrac{\sqrt3 z<sup>2</sup>}{36}$。</li><li><strong>求出驻点就收工</strong>：必须交代"为什么是最小"——存在性（有界闭集 + 连续）与"边界更差"（边际论证或直接比较）缺一环都扣分。</li><li><strong>把 $k$ 当成 $\lambda$</strong>：由 $\dfrac{x}{2\pi}+\lambda=0$ 得 $x=-2\pi\lambda$，令 $k=-\lambda&gt;0$ 才与各分量皆正相容。</li><li><strong>硬把 $x,y,z$ 的表达式平方代回</strong>：用"面积 $=\dfrac{k}{2}\times$段长"一步得 $f=k$，比展开快且不易错。</li></ul>
+<blockquote>一句话结论：按边际面积相等的原理，三段按 $x:y:z=2\pi:8:6\sqrt3$ 分配，$k=\dfrac{1}{\pi+4+3\sqrt3}$；边界（砍掉某图形）处边际失衡必非最优，故 $f_{\min}=\dfrac{1}{\pi+4+3\sqrt3}\ \mathrm{m}<sup>2</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

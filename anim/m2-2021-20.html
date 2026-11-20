@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021·20 一阶线性方程与法线截距最小值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-19.html" data-q="../question/m2-2021-19/">← <b>m2-2021-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-20/" data-q="../question/m2-2021-20/" data-no-anim="1">m2-2021-20 · 本题</a>
+  <a href="m2-2021-21.html" data-q="../question/m2-2021-21/"><b>m2-2021-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$xy^{\\prime}-6y=-6,\\qquad y(\\sqrt{3})=10\\qquad\\text{先解方程，再优化截距}$$",
+  "<b>① (I) 化标准形：</b>$y^{\\prime}-\\dfrac{6}{x}y=-\\dfrac{6}{x}$（$x\\ne0$），积分因子 $\\mu=\\mathrm{e}^{-\\int\\frac{6}{x}\\mathrm{d}x}=x^{-6}$",
+  "<b>② 乘积分因子：</b>$\\left(x^{-6}y\\right)^{\\prime}=-6x^{-7}$ —— 左边凑成一个导数",
+  "<b>③ 积分得通解：</b>$x^{-6}y=x^{-6}+C\\ \\Rightarrow\\ y=1+Cx^{6}$",
+  "<b>④ 定常数：</b>$y(\\sqrt{3})=10$：$(\\sqrt{3})^6=27$，$1+27C=10\\Rightarrow C=\\dfrac13$，故 $$y=1+\\frac{1}{3}x^{6}$$",
+  "<b>⑤ (II) 法线斜率：</b>$y^{\\prime}=2x^{5}$，点 $P(x_0,y_0)$ 处法线斜率为 $-\\dfrac{1}{2x_0^{5}}$（切线斜率的负倒数）",
+  "<b>⑥ 法线方程与截距：</b>$Y-y_0=-\\dfrac{1}{2x_0^{5}}\\left(X-x_0\\right)$，令 $X=0$：$$I_y=y_0+\\frac{1}{2x_0^{4}}=1+\\frac{1}{3}x_0^{6}+\\frac{1}{2x_0^{4}}$$",
+  "<b>⑦ 求导找驻点：</b>记 $g(x)=\\dfrac{1}{3}x^{6}+\\dfrac{1}{2}x^{-4}$，$g^{\\prime}(x)=2x^{5}-2x^{-5}=2\\cdot\\dfrac{x^{10}-1}{x^{5}}$，驻点 $x=\\pm1$",
+  "<b>⑧ 判号定最小：</b>$x=1$ 与 $x=-1$ 两侧 $g^{\\prime}$ 均由负变正，两处都是最小值点",
+  "<b>⑨ 结论：</b>$x=\\pm1$ 时 $y_0=1+\\dfrac13=\\dfrac{4}{3}$：$$P=\\left(\\pm1,\\ \\frac{4}{3}\\right),\\qquad I_y^{\\min}=1+\\frac{1}{3}+\\frac{1}{2}=\\frac{11}{6}$$"
+];
+
+AW.init({
+  title: "2021·20　一阶线性方程与法线 $y$ 轴截距的最小值",
+  subtitle: "考点：积分因子法 · 法线斜率取负倒数 · 含 $x^{-4}$ 项的最值",
+  counterLabel: "推导步数",
+  ribbonTitle: "推导进度（✓ 完成）",
+  intro: "点击「▶ 播放」或「下一步」，先解方程，再优化法线截距。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前步亮琥珀色，已完成步变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    {"cls": "step", "tag": "审题", "log": "先解微分方程，第二问再优化法线的 y 轴截距", "count": 0, "ribbon": {"k": 1, "ok": true}},
+    {"cls": "shift", "tag": "标准化", "log": "除以 x 化成标准形，积分因子是 x 的负六次方", "count": 1, "ribbon": {"k": 2, "ok": true}},
+    {"cls": "ok", "tag": "积分因子", "log": "乘积分因子后左边凑成导数，右端只剩幂函数", "count": 2, "ribbon": {"k": 3, "ok": true}},
+    {"cls": "ok", "tag": "通解", "log": "积分得通解，y 等于一加 C 乘 x 六次方", "count": 3, "ribbon": {"k": 4, "ok": true}},
+    {"cls": "ok", "tag": "定常数", "log": "代入根号三处的初值，C 等于三分之一，第一问完成", "count": 4, "ribbon": {"k": 5, "ok": true}},
+    {"cls": "shift", "tag": "法线", "log": "切线斜率是二 x 五次方，法线取负倒数", "count": 5, "ribbon": {"k": 6, "ok": true}},
+    {"cls": "ok", "tag": "截距", "log": "法线方程令横坐标为零得 y 轴截距，含 x 负四次方项", "count": 6, "ribbon": {"k": 7, "ok": true}},
+    {"cls": "ok", "tag": "驻点", "log": "对截距主体求导，驻点为正负一", "count": 7, "ribbon": {"k": 8, "ok": true}},
+    {"cls": "ok", "tag": "判号", "log": "两个驻点两侧导数都由负变正，都是最小值点", "count": 8, "ribbon": {"k": 9, "ok": true}},
+    {"cls": "ok", "tag": "结论", "log": "代回得纵坐标三分之四，截距最小值为六分之十一", "count": 9, "ribbon": {"k": 10, "ok": true}},
+    {"cls": "done", "tag": "完成", "log": "完成：两点对称同时取最小，答案全部确定", "count": 10, "ribbon": {"k": 11, "ok": true}, "done": true}
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$(\\mathrm{I})\\ y=1+\\dfrac{1}{3}x^{6}$；$(\\mathrm{II})\\ P\\left(\\pm1,\\dfrac{4}{3}\\right)$，$I_y^{\\min}=\\dfrac{11}{6}$",
+    html: "记忆锚点：<b>法线斜率 $=-1/y^{\\prime}$；$y$ 轴截距令 $X=0$</b>。易错：漏掉偶函数对称点 $x=-1$；把 $y$ 轴截距当成 $x$ 轴截距（令 $Y=0$）。"
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：一阶线性方程的"特解 + 齐次"结构与法线截距的最小化</h2>
+<p><strong>答案</strong>：(I) $y=1+\dfrac{1}{3}x<sup>6</sup>$；(II) $P\left(\pm1,\dfrac{4}{3}\right)$，$I_y$ 的最小值为 $\dfrac{11}{6}$。</p>
+<h3>第 (I) 问第一步：机制——通解 = 一个特解 + 齐次通解</h3>
+<p>$xy'-6y=-6$ 对 $y$ 是线性的：右端是常数、系数只含 $x$。线性方程的结构定理说：<strong>通解 = 任一特解 + 齐次通解</strong>。</p>
+<p>先用眼睛找特解：试 $y\equiv1$，代入 $0-6=-6$ ✓——右端是常数 $-6$，常数解天然是首选。</p>
+<p>再解齐次 $xy'-6y=0$：分离变量 $\dfrac{\mathrm dy}{y}=6\dfrac{\mathrm dx}{x}$，积分得 $\ln\lvert y\rvert=6\ln\lvert x\rvert$，即 $y=Cx<sup>6</sup>$。</p>
+<p>两者相加即通解 $y=1+Cx<sup>6</sup>$。</p>
+<p><strong>积分因子法是同一件事的机械化</strong>（参考答案的路线）：化成标准形 $y'-\dfrac{6}{x}y=-\dfrac{6}{x}$ 后，要找 $\mu$ 使左端恰好坍缩成一个导数：$(\mu y)'=\mu y'+\mu'y$ 装下 $\mu\left(y'+Py\right)$，需 $\mu'=P\mu$，解得 $\mu=\mathrm e<sup>\int P\mathrm dx</sup>=\mathrm e<sup>-6\ln x</sup>=x<sup>-6</sup>$。验证坍缩：$(x<sup>-6</sup>y)'=x<sup>-6</sup>y'-6x<sup>-7</sup>y=x<sup>-6</sup>\left(y'-\dfrac{6}{x}y\right)$ ✓——左端成了 $(x<sup>-6</sup>y)'$，两边积分得 $x<sup>-6</sup>y=x<sup>-6</sup>+C$，同样给出 $y=1+Cx<sup>6</sup>$。两条路殊途同归：结构法看得快，积分因子法不出错。</p>
+<h3>第 (I) 问第二步：代初值定常数并回验</h3>
+<p>代入 $y(\sqrt3)=10$：$(\sqrt3)<sup>6</sup>=\left((\sqrt3)<sup>2</sup>\right)<sup>3</sup>=3<sup>3</sup>=27$，故 $1+27C=10$，$C=\dfrac13$：</p>
+<p>$$y=1+\frac{1}{3}x<sup>6</sup>.$$</p>
+<p>回验：$y'=2x<sup>5</sup>$，$xy'-6y=2x<sup>6</sup>-6-2x<sup>6</sup>=-6$ ✓；$y(\sqrt3)=1+\dfrac{27}{3}=10$ ✓。</p>
+<h3>第 (II) 问第一步：法线机制——为什么斜率取负倒数</h3>
+<p>切线斜率 $y'(x_0)=2x_0<sup>5</sup>$。法线与切线垂直：把切线方向向量 $(1,\ y')$ 转 $90^\circ$ 得 $(-y',\ 1)$，验证垂直：$(1,\ y')\cdot(-y',\,1)=-y'+y'=0$ ✓；这个方向向量的斜率是 $\dfrac{1}{-y'}=-\dfrac{1}{y'}$。故法线斜率为 $-\dfrac{1}{2x_0<sup>5</sup>}$，法线方程</p>
+<p>$$Y-y_0=-\frac{1}{2x_0<sup>5</sup>}(X-x_0).$$</p>
+<h3>第 (II) 问第二步：$y$ 轴截距 $I_y$</h3>
+<p>$y$ 轴上的点横坐标为零，令 $X=0$ 解出 $Y$：</p>
+<p>$$I_y=y_0+\frac{x_0}{2x_0<sup>5</sup>}=1+\frac{1}{3}x_0<sup>6</sup>+\frac{1}{2x_0<sup>4</sup>}.$$</p>
+<h3>第 (II) 问第三步：为什么最小值必存在、为什么驻点就是它</h3>
+<p>记 $g(x)=\dfrac{1}{3}x<sup>6</sup>+\dfrac{1}{2}x<sup>-4</sup>$（$x&gt;0$，即初值所在分支）。<strong>两端行为先把"有没有最小"钉死</strong>：$x\to0^+$ 时 $\dfrac{1}{2x<sup>4</sup>}\to+\infty$——法线近乎竖直，截距被甩向无穷远；$x\to+\infty$ 时 $\dfrac{x<sup>6</sup>}{3}\to+\infty$——曲线本身飞离 $y$ 轴。两端都爆炸、中间连续，最小值必在内部取到。</p>
+<p>$$g'(x)=2x<sup>5</sup>-2x<sup>-5</sup>=\frac{2\left(x<sup>10</sup>-1\right)}{x<sup>5</sup>},$$</p>
+<p>$0&lt;x&lt;1$ 时 $g'&lt;0$，$x&gt;1$ 时 $g'&gt;0$：唯一驻点 $x=1$ 两侧负变正，是极小点，也就成了最小值点。代回 $y_0=1+\dfrac13=\dfrac43$，</p>
+<p>$$I_y<sup>\min</sup>=1+\frac{1}{3}+\frac{1}{2}=\frac{11}{6}.$$</p>
+<h3>为什么 $\pm1$ 都算——对称性补全另一半</h3>
+<p>初值点 $x=\sqrt3&gt;0$，解在 $x&gt;0$ 上确定；但显式解 $y=1+\dfrac{1}{3}x<sup>6</sup>$ 是<strong>偶函数</strong>，且在整个数轴上满足方程（$x=0$ 处方程给 $-6y=-6$，即 $y=1$，与公式值恰好衔接），整条曲线关于 $y$ 轴对称；$I_y$ 只含 $x<sup>6</sup>$ 与 $x<sup>4</sup>$，也是偶函数，故 $x=-1$ 处同样取最小。与参考答案口径一致：$P=\left(\pm1,\dfrac43\right)$，最小值 $\dfrac{11}{6}$。</p>
+<h3>易错点</h3>
+<ul><li><strong>法线斜率忘取负倒数</strong>：直接用 $y'$ 写出的是切线；垂直 $\Rightarrow$ 斜率之积为 $-1$。</li><li><strong>截距方向弄反</strong>：$y$ 轴截距是令 $X=0$ 解出的 $Y$，不是令 $Y=0$。</li><li><strong>只答 $(1,\dfrac43)$ 一点</strong>：不说明对称性就丢掉 $\left(-1,\dfrac43\right)$，按参考答案两点都要写。</li><li><strong>漏"最小值存在性"论证</strong>：两端趋于 $+\infty$ 才能把唯一驻点升级成全局最小，答卷里要有这一句。</li></ul>
+<blockquote>一句话结论：$y=1+\dfrac{1}{3}x<sup>6</sup>$；$I_y=1+\dfrac{1}{3}x<sup>6</sup>+\dfrac{1}{2x<sup>4</sup>}$ 在 $x=\pm1$ 最小，$P\left(\pm1,\dfrac43\right)$，$I_y<sup>\min</sup>=\dfrac{11}{6}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

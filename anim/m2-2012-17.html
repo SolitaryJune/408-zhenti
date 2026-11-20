@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·17 切线、弓形面积与旋转体体积</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-16.html" data-q="../question/m2-2012-16/">← <b>m2-2012-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-17/" data-q="../question/m2-2012-17/" data-no-anim="1">m2-2012-17 · 本题</a>
+  <a href="m2-2012-18.html" data-q="../question/m2-2012-18/"><b>m2-2012-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  '<p><b>审题</b>：过 $(0,1)$ 作 $y=\\ln x$ 的切线，切点 $A$；$L$ 与 $x$ 轴交于 $B$；区域 $D$ 由 $L$ 与弦 $AB$ 围成。先定 $A$、$B$，再算面积与绕 $x$ 轴的旋转体体积。</p>',
+  '<p><b>定切点</b>：设切点 $(a,\\ln a)$，$y\'=\\dfrac1x$，切线 $y-\\ln a=\\dfrac1a(x-a)$。代入 $(0,1)$：$1-\\ln a=-1\\ \\Rightarrow\\ \\ln a=2\\ \\Rightarrow\\ a=\\mathrm e^2$，故 $A=(\\mathrm e^2,2)$。</p>',
+  '<p><b>定 $B$ 与弦</b>：$\\ln x=0$ 给 $B=(1,0)$；弦 $AB$：斜率 $\\dfrac{2}{\\mathrm e^2-1}$，方程 $y=\\dfrac{2}{\\mathrm e^2-1}(x-1)$。</p>',
+  '<p><b>面积选口径</b>：两条边界都易写成 $x(y)$——曲线 $x=\\mathrm e^y$，弦 $x=1+\\dfrac{\\mathrm e^2-1}{2}y$；$y\\in[0,2]$，弦在右、曲线在左，按 $y$ 积分。</p>',
+  '<p><b>算面积</b>：$$S=\\int_0^2\\Big[\\Big(1+\\frac{\\mathrm e^2-1}{2}y\\Big)-\\mathrm e^y\\Big]\\mathrm dy=\\Big[y+\\frac{\\mathrm e^2-1}{4}y^2-\\mathrm e^y\\Big]_0^2=2.$$</p>',
+  '<p><b>体积选口径</b>：绕 $x$ 轴、$x\\in[1,\\mathrm e^2]$。$y=\\ln x$ 是凹函数，弦连两端点必在曲线下方，圆盘套环：$$V=\\pi\\int_1^{\\mathrm e^2}\\Big[(\\ln x)^2-\\frac{4(x-1)^2}{(\\mathrm e^2-1)^2}\\Big]\\mathrm dx.$$</p>',
+  '<p><b>曲线块</b>：$$\\int_1^{\\mathrm e^2}(\\ln x)^2\\,\\mathrm dx=\\big[x(\\ln x)^2-2x\\ln x+2x\\big]_1^{\\mathrm e^2}=2\\mathrm e^2-2.$$</p>',
+  '<p><b>弦块</b>：$$\\frac{4}{(\\mathrm e^2-1)^2}\\int_1^{\\mathrm e^2}(x-1)^2\\,\\mathrm dx=\\frac{4}{(\\mathrm e^2-1)^2}\\cdot\\frac{(\\mathrm e^2-1)^3}{3}=\\frac{4(\\mathrm e^2-1)}{3}.$$</p>',
+  '<p><b>合并</b>：$$V=\\pi\\Big[(2\\mathrm e^2-2)-\\frac{4(\\mathrm e^2-1)}{3}\\Big]=\\pi(\\mathrm e^2-1)\\Big(2-\\frac43\\Big)=\\frac{2\\pi}{3}(\\mathrm e^2-1).$$</p>',
+  '<p><b>结论</b>：$$S=2,\\qquad V=\\frac{2\\pi}{3}(\\mathrm e^2-1).$$</p>',
+];
+
+AW.init({
+  title: '$y=\\ln x$ 的切线、弓形面积与旋转体体积',
+  subtitle: '考点：切线定点 · 面积（按 $y$ 积分）· 绕 $x$ 轴圆盘法',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示从切点到面积再到体积的全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var pts = AW.el('div', '');
+    pts.style.cssText = 'display:flex;gap:10px;margin:2px 0 12px;flex-wrap:wrap;';
+    this._chips = [];
+    var labels = ['$A=(\\mathrm e^2,\\,2)$', '$B=(1,\\,0)$', '$S=\\,?$', '$V=\\,?$'];
+    for(var k = 0; k < labels.length; k++){
+      var c = AW.el('div', '', labels[k]);
+      c.style.cssText = 'padding:6px 12px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;background:#f8fafc;color:#94a3b8;';
+      pts.appendChild(c);
+      this._chips.push(c);
+    }
+    this._labels = labels;
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(pts);
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    var chips = this._chips;
+    var known = [sn.show >= 2, sn.show >= 3, sn.show >= 5, sn.show >= 9];
+    var vals = ['$A=(\\mathrm e^2,\\,2)$', '$B=(1,\\,0)$', '$S=2$', '$V=\\dfrac{2\\pi}{3}(\\mathrm e^2-1)$'];
+    for(var k = 0; k < chips.length; k++){
+      if(known[k]){
+        chips[k].style.border = '2px solid #16a34a';
+        chips[k].style.background = '#f6fef9';
+        chips[k].style.color = '#14532d';
+        chips[k].innerHTML = '<b>' + vals[k] + '</b>';
+      } else {
+        chips[k].style.border = '2px solid #e2e8f0';
+        chips[k].style.background = '#f8fafc';
+        chips[k].style.color = '#94a3b8';
+        chips[k].innerHTML = this._labels[k];
+      }
+    }
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'先把切点和曲线与 x 轴的交点找出来，几何信息才齐', show:1, count:0 },
+    { cls:'step',  tag:'切点',   log:'设切点坐标代入切线方程，让它过 0,1 这一点，解出 a 等于 e 平方', show:2, count:1 },
+    { cls:'step',  tag:'弦',     log:'曲线与 x 轴交于 1,0，连结两点得弦的方程', show:3, count:2 },
+    { cls:'shift', tag:'选口径', log:'两条边界都能写成 x 关于 y 的式子，按 y 积分最省事', show:4, count:3 },
+    { cls:'ok',    tag:'面积',   log:'右边界减左边界从 0 积到 2，面积等于 2', show:5, count:4 },
+    { cls:'shift', tag:'旋转',   log:'绕 x 轴转：曲线在上当外半径，弦在下当内半径，环形截面', show:6, count:5 },
+    { cls:'step',  tag:'曲线块', log:'对数平方的积分用两次分部，得 2e² 减 2', show:7, count:6 },
+    { cls:'step',  tag:'弦块',   log:'弦平方那块是简单幂函数，得 4(e²−1)/3', show:8, count:7 },
+    { cls:'ok',    tag:'合并',   log:'外减内再乘 π，提出公因子 (e²−1)，得 2π/3 倍的 (e²−1)', show:9, count:8 },
+    { cls:'done',  tag:'完成',   log:'结论：S=2，V=2π/3·(e²−1)', show:10, count:9, done:true },
+  ],
+
+  result: {
+    big: '$S=2,\\qquad V=\\dfrac{2\\pi}{3}(\\mathrm e^2-1)$',
+    html: '记忆锚点：<b>切点设 $(a,\\ln a)$ 而不是定点本身</b>；面积挑好积分变量（两边界都写成 $x(y)$）；旋转体区域是弓形，必须用 $R^2-r^2$ 的环形截面。$\\ln x$ 是凹函数，弦恒在曲线下方。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：切线定点 → 弦与曲线围成的面积 → 绕 $x$ 轴旋转体体积</h2>
+<p>最终答案：面积 $S=2$；体积 $V=\dfrac{2\pi}{3}(\mathrm e<sup>2</sup>-1)$。</p>
+<h3>第一步：定切点 $A$ 与交点 $B$</h3>
+<p>设切点 $(a,\ln a)$，$y'=\dfrac1x$，切线 $y-\ln a=\dfrac1a(x-a)$。切线过 $(0,1)$：</p>
+<p>$$1-\ln a=\frac{0-a}{a}=-1\ \Rightarrow\ \ln a=2\ \Rightarrow\ a=\mathrm e<sup>2</sup>,$$</p>
+<p>故 $A=(\mathrm e<sup>2</sup>,2)$，切线 $y=\dfrac{x}{\mathrm e<sup>2</sup>}+1$。曲线与 $x$ 轴交点：$\ln x=0$ 给 $B=(1,0)$。弦 $AB$：$y=\dfrac{2}{\mathrm e<sup>2</sup>-1}(x-1)$。</p>
+<h3>第二步：面积——按 $y$ 积分</h3>
+<p>区域边界两条线都容易写成 $x(y)$：曲线 $x=\mathrm e<sup>y</sup>$，弦 $x=1+\dfrac{\mathrm e<sup>2</sup>-1}{2}y$；$y$ 从 $0$ 到 $2$，弦在右、曲线在左：</p>
+<p>$$S=\int_0<sup>2</sup>\Big[\Big(1+\frac{\mathrm e<sup>2</sup>-1}{2}y\Big)-\mathrm e<sup>y</sup>\Big]dy=\Big[y+\frac{\mathrm e<sup>2</sup>-1}{4}y<sup>2</sup>-\mathrm e<sup>y</sup>\Big]_0<sup>2</sup>=2.$$</p>
+<p>（上限代入得 $2+(\mathrm e<sup>2</sup>-1)-\mathrm e<sup>2</sup>=1$，下限代入得 $-1$，相减为 $2$。）</p>
+<h3>第三步：体积——绕 $x$ 轴圆盘法</h3>
+<p>$x\in[1,\mathrm e<sup>2</sup>]$：$y=\ln x$ 是凹函数，连结两端点的弦必在曲线下方，故外半径 $R=\ln x$、内半径 $r=\dfrac{2}{\mathrm e<sup>2</sup>-1}(x-1)$：</p>
+<p>$$V=\pi\int_1<sup>\mathrm e^2</sup>\Big[(\ln x)<sup>2</sup>-\frac{4(x-1)<sup>2</sup>}{(\mathrm e<sup>2</sup>-1)<sup>2</sup>}\Big]dx.$$</p>
+<p>分块计算：</p>
+<p>$$\int_1<sup>\mathrm e^2</sup>(\ln x)<sup>2dx</sup>=\big[x(\ln x)<sup>2</sup>-2x\ln x+2x\big]_1<sup>\mathrm e^2</sup>=2\mathrm e<sup>2</sup>-2,$$</p>
+<p>$$\frac{4}{(\mathrm e<sup>2</sup>-1)<sup>2</sup>}\int_1<sup>\mathrm e^2</sup>(x-1)<sup>2dx</sup>=\frac{4}{(\mathrm e<sup>2</sup>-1)<sup>2</sup>}\cdot\frac{(\mathrm e<sup>2</sup>-1)<sup>3</sup>}{3}=\frac{4(\mathrm e<sup>2</sup>-1)}{3}.$$</p>
+<p>于是</p>
+<p>$$V=\pi\Big[(2\mathrm e<sup>2</sup>-2)-\frac{4(\mathrm e<sup>2</sup>-1)}{3}\Big]=\pi(\mathrm e<sup>2</sup>-1)\Big(2-\frac43\Big)=\frac{2\pi}{3}(\mathrm e<sup>2</sup>-1).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $(0,1)$ 当成切点</strong>：$(0,1)$ 不在曲线 $y=\ln x$ 上，它只是切线经过的点；切点必须设为 $(a,\ln a)$ 再解。</li><li><strong>面积死磕 $x$ 积分</strong>：按 $x$ 积分也可行，但按 $y$ 积分时曲线与弦都是简单表达式，$S$ 两行就收工。</li><li><strong>旋转体忘减内孔</strong>：区域是"弦上曲线下"的弓形，绕 $x$ 轴要用 $(\ln x)<sup>2</sup>-(\text{弦})<sup>2</sup>$ 的环形截面，只算 $\pi\int(\ln x)<sup>2</sup>$ 会算多。</li></ul>
+<blockquote>结论：$S=2$；$V=\dfrac{2\pi}{3}(\mathrm e<sup>2</sup>-1)$（约 $13.4$）。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

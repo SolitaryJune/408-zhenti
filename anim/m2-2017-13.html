@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2017·13 交换积分次序求累次积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2017-12.html" data-q="../question/m2-2017-12/">← <b>m2-2017-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2017-13/" data-q="../question/m2-2017-13/" data-no-anim="1">m2-2017-13 · 本题</a>
+  <a href="m2-2017-14.html" data-q="../question/m2-2017-14/"><b>m2-2017-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：识局</b>。$\\dfrac{\\tan x}{x}$ 没有初等原函数——原积分 $\\displaystyle\\int_0^1\\mathrm{d}y\\int_y^1\\dfrac{\\tan x}{x}\\,\\mathrm{d}x$ 先对 $x$ 积是死路，标准动作：<b>交换积分次序</b>。</p>",
+  "<p><b>第二步：写出积分区域</b>。内层 $x$ 从 $y$ 到 $1$、外层 $y$ 从 $0$ 到 $1$，即 $$D=\\{(x,y)\\mid 0\\le y\\le x\\le 1\\},$$ 是以 $(0,0)$、$(1,0)$、$(1,1)$ 为顶点的三角形（由 $y=x$、$x=1$、$y=0$ 围成）。</p>",
+  "<p><b>第三步：交换次序</b>。改为先 $y$ 后 $x$：$x$ 从 $0$ 到 $1$，固定 $x$ 时 $y$ 从 $0$ 到 $x$：$$\\int_0^1\\mathrm{d}x\\int_0^x\\frac{\\tan x}{x}\\,\\mathrm{d}y.$$</p>",
+  "<p><b>第四步：内层积分</b>。$\\dfrac{\\tan x}{x}$ 与 $y$ 无关，内层 = 被积函数 × 区间长度：$$\\int_0^x\\frac{\\tan x}{x}\\,\\mathrm{d}y=\\frac{\\tan x}{x}\\cdot x=\\tan x.$$ 分母 $x$ 恰好被长度 $x$ 消掉——这就是换序的目的。</p>",
+  "<p><b>第五步：外层积分</b>$$\\int_0^1\\tan x\\,\\mathrm{d}x=\\Big[-\\ln\\lvert\\cos x\\rvert\\Big]_0^1=-\\ln\\cos 1-\\bigl(-\\ln 1\\bigr)=-\\ln\\cos 1.$$（$\\cos 0=1$，$\\ln 1=0$。）</p>",
+  "<p><b>易错对照</b>：死磕 $\\tan x/x$ 的原函数永远积不出；区域写成 $y\\ge x$ 就换错了（内层下限是 $x=y$ 说明 $y\\le x$）；$\\int\\tan x\\,\\mathrm{d}x=-\\ln\\lvert\\cos x\\rvert$ 的符号与绝对值别丢。答案等价写法 $\\ln\\sec 1$。</p>"
+];
+
+AW.init({
+  title: '$\\displaystyle\\int_0^1\\mathrm{d}y\\int_y^1\\frac{\\tan x}{x}\\,\\mathrm{d}x$',
+  subtitle: '考点：二重积分累次积分换序 · 方法：画区域 D={0≤y≤x≤1} → 先 y 后 x → 内层约掉 x',
+  counterLabel: '已执行',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'识局',   log:'tanx/x 无初等原函数，先对 x 积是死路 → 换序', show:1, count:0 },
+    { cls:'step',  tag:'画区域', log:'内层 x: y→1，外层 y: 0→1，D = {0≤y≤x≤1} 三角形', show:2, count:1 },
+    { cls:'step',  tag:'换序',   log:'改为先 y 后 x：x: 0→1，y: 0→x', show:3, count:2 },
+    { cls:'ok',    tag:'内层',   log:'被积函数与 y 无关，×x 恰好约掉分母，内层 = tanx', show:4, count:3 },
+    { cls:'done',  tag:'完成',   log:'∫₀¹ tanx dx = −lncos1，选最终答案 −lncos1', show:5, count:4, done:true },
+    { cls:'step',  tag:'易错',   log:'区域方向、tan 原函数符号、绝对值', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '积分值 $=-\\ln\\cos 1$',
+    html: '记忆锚点：<b>内层积不出就换序</b>；换序前必先把区域写成不等式 $0\\le y\\le x\\le1$。内层积出 $\\tan x$ 是本题的"题眼"——长度 $x$ 消掉分母 $x$。等价写法 $\\ln\\sec 1$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：交换积分次序，把"积不出"变成"积得出"</h2>
+<p>答案：$-\ln\cos 1$（等价写法 $\ln\sec 1$）</p>
+<h3>第一步：识局——先对 $x$ 积是死路</h3>
+<p>$\dfrac{\tan x}{x}$ 没有初等原函数，原积分 $\displaystyle\int_0<sup>1</sup>\mathrm{d}y\int_y<sup>1</sup>\frac{\tan x}{x}\,\mathrm{d}x$ 直接算不动。这类"内层积不出"的累次积分，标准动作是<strong>交换积分次序</strong>。</p>
+<h3>第二步：把区域写清楚</h3>
+<p>内层 $x$ 从 $y$ 到 $1$、外层 $y$ 从 $0$ 到 $1$，即区域</p>
+<p>$$D=\{(x,y)\mid 0\le y\le x\le 1\},$$</p>
+<p>是以 $(0,0),(1,0),(1,1)$ 为顶点的三角形（直线 $y=x$ 与 $x=1$、$y=0$ 围成）。</p>
+<h3>第三步：交换次序为先 $y$ 后 $x$</h3>
+<p>换成先 $y$ 后 $x$：$x$ 从 $0$ 到 $1$，固定 $x$ 时 $y$ 从 $0$ 到 $x$：</p>
+<p>$$\int_0<sup>1</sup>\mathrm{d}y\int_y<sup>1</sup>\frac{\tan x}{x}\,\mathrm{d}x=\int_0<sup>1</sup>\mathrm{d}x\int_0<sup>x</sup>\frac{\tan x}{x}\,\mathrm{d}y.$$</p>
+<h3>第四步：内层把 $x$ "约掉"</h3>
+<p>被积函数与 $y$ 无关，内层就是乘区间长度：</p>
+<p>$$\int_0<sup>x</sup>\frac{\tan x}{x}\,\mathrm{d}y=\frac{\tan x}{x}\cdot x=\tan x.$$</p>
+<p>这正是交换次序的目的——分母 $x$ 被区间长度 $x$ 恰好消掉。</p>
+<h3>第五步：算 $\displaystyle\int_0<sup>1</sup>\tan x\,\mathrm{d}x$</h3>
+<p>$$\int_0<sup>1</sup>\tan x\,\mathrm{d}x=\Big[-\ln\lvert\cos x\rvert\Big]_0<sup>1</sup>=-\ln\cos 1-\bigl(-\ln 1\bigr)=-\ln\cos 1.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>死磕 $\tan x/x$ 的原函数</strong>：它不是初等函数，先对 $x$ 积分永远积不出，必须换序。</li><li><strong>区域写反</strong>：内层下限是 $x=y$ 说明 $y\le x$，写成 $y\ge x$ 交换后就错了。</li><li><strong>$\tan x$ 的原函数</strong>：$\int\tan x\,\mathrm{d}x=-\ln\lvert\cos x\rvert$，正负号与绝对值都要留神。</li></ul>
+<blockquote>结论：$D=\{0\le y\le x\le1\}$，换序后内层积出 $\tan x$，最终值为 $-\ln\cos 1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·12 二阶常系数齐次方程 + 极值条件定解</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-11.html" data-q="../question/m2-2015-11/">← <b>m2-2015-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-12/" data-q="../question/m2-2015-12/" data-no-anim="1">m2-2015-12 · 本题</a>
+  <a href="m2-2015-13.html" data-q="../question/m2-2015-13/"><b>m2-2015-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>$y^{\\prime\\prime}+y^{\\prime}-2y=0$，且 $y(x)$ 在 $x=0$ 处取得极值 $3$。常系数齐次 → 特征方程；「极值 3」一句话里藏着<b>两个</b>定解条件。</p>' },
+  { label: '第 1 步 · 写特征方程并求根',
+    h: '<p>$r^2+r-2=0\\Rightarrow(r+2)(r-1)=0\\Rightarrow r_1=1,\\ r_2=-2.$</p>' },
+  { label: '第 2 步 · 写通解与导函数',
+    h: '<p>$y=C_1\\mathrm{e}^{x}+C_2\\mathrm{e}^{-2x},\\qquad y^{\\prime}=C_1\\mathrm{e}^{x}-2C_2\\mathrm{e}^{-2x}.$</p>' },
+  { label: '第 3 步 · 翻译「极值 3」',
+    h: '<p>极值点 $\\Rightarrow y^{\\prime}(0)=0$；极值为 $3\\Rightarrow y(0)=3$。两个条件缺一不可。</p>' },
+  { label: '第 4 步 · 联立解出常数',
+    h: '<p>$y^{\\prime}(0)=C_1-2C_2=0,\\quad y(0)=C_1+C_2=3$，解得 $C_1=2,\\ C_2=1$。</p>' },
+  { label: '第 5 步 · 结论与验证',
+    h: '<p>$y=2\\mathrm{e}^{x}+\\mathrm{e}^{-2x}$。验证：$y^{\\prime}(0)=0$ ✓；$y^{\\prime\\prime}(0)=2+4=6>0$（极小值）✓；$y(0)=3$ ✓。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '$y^{\\prime\\prime}+y^{\\prime}-2y=0$，$x=0$ 处取得极值 3',
+  subtitle: '考点：二阶常系数齐次方程 · 方法：特征根 → 通解 → 极值条件翻译成定解条件',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示求解流程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'先通解后定解；「极值 3」= 两个条件', count:0 },
+    { cls:'ok',    tag:'特征根', log:'r²+r−2=0 因式分解得 r=1 与 r=−2', count:1 },
+    { cls:'ok',    tag:'通解',   log:'y=C₁eˣ+C₂e⁻²ˣ，导函数同步写好', count:2 },
+    { cls:'shift', tag:'译条件', log:'y′(0)=0（驻点）+ y(0)=3（极值大小）', count:3 },
+    { cls:'ok',    tag:'解常数', log:'C₁=2C₂ 与 C₁+C₂=3 联立：C₁=2, C₂=1', count:4 },
+    { cls:'done',  tag:'完成',   log:'y=2eˣ+e⁻²ˣ，三项验证全部吻合', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: 'y = e⁻²ˣ + 2eˣ',
+    html: '记忆锚点：<b>「取得极值」= $y^{\\prime}(x_0)=0$ 与 $y(x_0)=$ 极值两条件打包</b>。特征根 $1,-2$ 各配指数 $\\mathrm{e}^x,\\ \\mathrm{e}^{-2x}$，最后用 $y^{\\prime\\prime}(0)=6>0$ 验证确为极小值兜底。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：二阶常系数方程——特征法的机制与极值条件的翻译</h2>
+<p>答案：$y=\mathrm e<sup>-2x</sup>+2\mathrm e<sup>x</sup>$（即 $2\mathrm e<sup>x</sup>+\mathrm e<sup>-2x</sup>$，等价写法）。</p>
+<h3>第 0 步：先立机制——为什么"猜 $\mathrm e<sup>rx</sup>$"就能解</h3>
+<p>常系数线性齐次方程 $y''+y'-2y=0$ 的核心事实：$\mathrm e<sup>rx</sup>$ 求导不变身，只是乘常数——$y'=\mathrm e<sup>rx</sup>r$，$y''=\mathrm e<sup>rx</sup>r<sup>2</sup>$。代入方程，公因子 $\mathrm e<sup>rx</sup>\neq0$ 可除：</p>
+<p>$$(r<sup>2</sup>+r-2)\,\mathrm e<sup>rx</sup>=0\ \Longleftrightarrow\ r<sup>2</sup>+r-2=0.$$</p>
+<p><strong>微分方程降级成代数方程</strong>——这就是特征方程法。$r<sup>2</sup>+r-2=(r+2)(r-1)=0$，$r_1=1,\ r_2=-2$，通解</p>
+<p>$$y=C_1\mathrm e<sup>x</sup>+C_2\mathrm e<sup>-2x</sup>.$$</p>
+<p>（为什么线性组合也是解：方程线性齐次，解的叠加仍是解。）</p>
+<h3>第 1 步：把"在 $x=0$ 取得极值 3"翻译成两个方程</h3>
+<ul><li><strong>为什么极值 $\Rightarrow y'(0)=0$</strong>：$y$ 处处可导；若 $y'(0)&gt;0$，该点附近函数正在爬升，不可能取极值——可导点取极值必为驻点（费马引理）。</li><li><strong>为什么还给 $y(0)=3$</strong>："极值为 3"直接给出函数值。</li></ul>
+<p>一句话两个方程，恰好配平两个未知常数 $C_1,C_2$——条件个数与自由度正好匹配。</p>
+<h3>第 2 步：解出常数并验算</h3>
+<p>$y'=C_1\mathrm e<sup>x</sup>-2C_2\mathrm e<sup>-2x</sup>$，故</p>
+<p>$$\begin{cases}C_1-2C_2=0,\\ C_1+C_2=3\end{cases}\Longrightarrow C_1=2C_2,\ 3C_2=3\ \Longrightarrow\ C_1=2,\ C_2=1,$$</p>
+<p>$$y(x)=2\mathrm e<sup>x</sup>+\mathrm e<sup>-2x</sup>.$$</p>
+<p>验证：$y'(0)=2-2=0$；$y''=2\mathrm e<sup>x</sup>+4\mathrm e<sup>-2x</sup>$，$y''(0)=6&gt;0$，确为极小值，$y(0)=3$。题目只说"极值"，验一下极小属性可兜底。</p>
+<h3>易错点</h3>
+<ul><li><strong>只用一个条件</strong>："取得极值 3"含 $y'(0)=0$ 与 $y(0)=3$ 两个信息，丢一个就定不出两个常数。</li><li><strong>特征根与指数配错</strong>：$r=1,-2$ 对应 $\mathrm e<sup>x</sup>,\mathrm e<sup>-2x</sup>$，别写成 $\mathrm e<sup>-x</sup>,\mathrm e<sup>2x</sup>$。</li><li><strong>不解特征方程硬凑</strong>：丢掉"求导不变身"这条机制，猜都猜不到点子上。</li></ul>
+<blockquote>记忆锚点：特征法 = $\mathrm e<sup>rx</sup>$ 求导不变身；"极值 3" = $y'(0)=0$ + $y(0)=3$ 两个方程。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

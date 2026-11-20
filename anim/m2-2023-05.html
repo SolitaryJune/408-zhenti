@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：含 |t| 的参数函数逐级验导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-04.html" data-q="../question/m2-2023-04/">← <b>m2-2023-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-05/" data-q="../question/m2-2023-05/" data-no-anim="1">m2-2023-05 · 本题</a>
+  <a href="m2-2023-06.html" data-q="../question/m2-2023-06/"><b>m2-2023-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：|t| 必须分段消参',
+    cls: 'key',
+    log: 'x=2t+|t| 在 t=0 处 dx/dt 左 1 右 3，公式法失效，先分段得显式 f(x)',
+    body: '<p>$|t|$ 意味着<b>分段函数</b>，以 $t=0$ 为界把 $x,y$ 各写两段，再消参得 $f(x)$ 的显式表达式；$f\'(0)$、$f\'$ 连续、$f\'\'(0)$ 三件事全靠左右两侧比较。</p>' },
+  { title: '分段消参',
+    cls: 'good',
+    log: 't≥0 时 x=3t；t<0 时 x=t。得到两段显式表达式，两段在 0 处都是 0',
+    body: '<p>$t\\ge0$：$x=3t,\\ y=t\\sin t\\Rightarrow f(x)=\\dfrac x3\\sin\\dfrac x3\\ (x\\ge0)$；$t<0$：$x=t,\\ y=-t\\sin t\\Rightarrow f(x)=-x\\sin x\\ (x<0)$。两段在 $x=0$ 都是 0，$f$ <b>连续</b>。</p>' },
+  { title: '一阶导：两段表达式与极限',
+    cls: 'step',
+    log: '右段求导后趋于 0，左段求导后也趋于 0',
+    body: '<p>$x>0$：$f\'(x)=\\dfrac13\\sin\\dfrac x3+\\dfrac x9\\cos\\dfrac x3\\to0$；$x<0$：$f\'(x)=-\\sin x-x\\cos x\\to0$。</p>' },
+  { title: '判定① f′(0) 存在',
+    cls: 'good',
+    log: '差商两侧极限都是 0，f′(0)=0',
+    ribbon: {k:1, ok:true},
+    body: '<p>用定义：右差商 $\\dfrac{f(x)}x=\\dfrac{\\sin(x/3)}3\\to0$，左差商 $\\dfrac{-x\\sin x}x=-\\sin x\\to0$，故 $f\'(0)=0$ <b>存在</b>——A 的说法错。</p>' },
+  { title: '判定② f′(x) 在 0 处连续',
+    cls: 'good',
+    log: 'lim f′(x) = 0 = f′(0)，导函数连续',
+    ribbon: {k:2, ok:true},
+    body: '<p>$\\lim\\limits_{x\\to0}f\'(x)=0=f\'(0)$，$f\'$ 在 $x=0$ 处<b>连续</b>——B、D 中「$f\'$ 不连续」的说法落空。</p>' },
+  { title: '判定③ f″(0)：右 2/9 vs 左 −2',
+    cls: 'step',
+    log: '对 f′ 用定义取左右极限：右侧 2/9，左侧 −2',
+    body: '<p>右侧：$\\lim\\limits_{x\\to0^+}\\dfrac{f\'(x)-0}x=\\lim\\Bigl(\\dfrac{\\sin(x/3)}{3x}+\\dfrac{\\cos(x/3)}9\\Bigr)=\\dfrac19+\\dfrac19=\\dfrac29$；左侧：$\\lim\\limits_{x\\to0^-}\\Bigl(-\\dfrac{\\sin x}x-\\cos x\\Bigr)=-2$。</p>' },
+  { title: '裁决：f″(0) 不存在，选 C',
+    cls: 'good',
+    log: '2/9 ≠ −2，二阶导不存在；f′ 连续，选 C',
+    ribbon: {k:3, ok:false},
+    body: '<p>$\\dfrac29\\neq-2$，$f\'\'(0)$ <b>不存在</b>；而 $f\'$ 存在且连续——两条同时成立的只有 <b>C</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$x=2t+|t|,\\ y=|t|\\sin t$：连续性、一阶与二阶逐级判定',
+  subtitle: '考点：参数方程 + 分段函数可导性 · 方法：分段消参 → 左右极限',
+  counterLabel: '判定步',
+  ribbonTitle: '三级判定（✓ 成立 / ✗ 不成立）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C（$f\'$ 连续，$f\'\'(0)$ 不存在）',
+    html: '记忆锚点：<b>含 $|t|$ 的参数方程先分段消参</b>；判 $f\'\'(0)$ 对 $f\'$ 用定义取左右极限（本题左 $-2$、右 $\\dfrac29$）。易错：跳过消参直接对 $t$ 用公式——$\\dfrac{\\mathrm dx}{\\mathrm dt}$ 在 $t=0$ 左 1 右 3，公式失效。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含 |t| 的参数方程——先分段消参，再逐级验导</h2>
+<p>答案：C</p>
+<h3>第一步：分段消参得显式 f(x)</h3>
+<ul><li>$t\ge0$：$|t|=t$，$x=2t+t=3t$，$y=t\sin t$，代入 $t=\dfrac x3$ 得 $f(x)=\dfrac x3\sin\dfrac x3$（$x\ge0$）。</li><li>$t&lt;0$：$|t|=-t$，$x=t$，$y=-t\sin t$，得 $f(x)=-x\sin x$（$x&lt;0$）。</li></ul>
+<p>两段在 $x=0$ 处函数值都是 0，$f$ 连续。</p>
+<h3>第二步：f'(0) 存在，且 f'(x) 连续</h3>
+<p>$x&gt;0$ 时 $f'(x)=\dfrac13\sin\dfrac x3+\dfrac x9\cos\dfrac x3\to0$；$x&lt;0$ 时 $f'(x)=-\sin x-x\cos x\to0$。再用定义确认 $f'(0)$：差商 $\dfrac{f(x)-f(0)}x$ 右侧为 $\dfrac{\sin(x/3)}3\to0$，左侧为 $-\sin x\to0$，故 $f'(0)=0$ 存在。又 $\lim\limits_{x\to0}f'(x)=0=f'(0)$，所以 $f'(x)$ 在 $x=0$ 处连续。</p>
+<h3>第三步：f''(0) 用导数定义的左右极限判</h3>
+<p>$$\lim_{x\to0^+}\frac{f'(x)-f'(0)}x=\lim_{x\to0^+}\Bigl(\frac{\sin(x/3)}{3x}+\frac{\cos(x/3)}9\Bigr)=\frac19+\frac19=\frac29,$$</p>
+<p>$$\lim_{x\to0^-}\frac{f'(x)-f'(0)}x=\lim_{x\to0^-}\Bigl(-\frac{\sin x}x-\cos x\Bigr)=-1-1=-2.$$</p>
+<p>$\dfrac29\neq-2$，$f''(0)$ 不存在。</p>
+<h3>易错点</h3>
+<ul><li><strong>跳过消参直接对 t 用公式</strong>：$x=2t+|t|$ 在 $t=0$ 处 $\dfrac{\mathrm dx}{\mathrm dt}$ 左 1 右 3，参数求导公式失效，必须回到分段显式表达式。</li><li><strong>用 $\lim f''(x)$ 代替定义判 $f''(0)$</strong>：本题两侧极限恰好不等、结论碰巧一致，但规范做法是对 $f'$ 用定义取左右极限。</li></ul>
+<blockquote>一句话结论：$f'$ 存在且连续、$f''(0)$ 左右不等不存在，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

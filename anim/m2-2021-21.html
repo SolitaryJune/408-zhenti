@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021·21 双纽线一叶上的二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-20.html" data-q="../question/m2-2021-20/">← <b>m2-2021-20</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-21/" data-q="../question/m2-2021-21/" data-no-anim="1">m2-2021-21 · 本题</a>
+  <a href="m2-2021-22.html" data-q="../question/m2-2021-22/"><b>m2-2021-22</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$\\left(x^2+y^2\\right)^2=x^2-y^2\\quad(x\\ge0,\\ y\\ge0)\\qquad\\text{双纽线第一象限一叶，用极坐标}$$",
+  "<b>① 化极坐标：</b>代入 $x=r\\cos\\theta,\\ y=r\\sin\\theta$：$r^4=r^2\\cos 2\\theta\\ \\Rightarrow\\ \\boxed{r^2=\\cos 2\\theta}$",
+  "<b>② 定范围：</b>第一象限 $\\theta\\ge0$，又需 $\\cos 2\\theta\\ge0$：$$D:\\quad 0\\le\\theta\\le\\frac{\\pi}{4},\\qquad 0\\le r\\le\\sqrt{\\cos 2\\theta}$$",
+  "<b>③ 化累次积分：</b>$xy=r^2\\cos\\theta\\sin\\theta$，$\\mathrm{d}x\\,\\mathrm{d}y=r\\,\\mathrm{d}r\\,\\mathrm{d}\\theta$：$$\\iint_D xy\\,\\mathrm{d}x\\,\\mathrm{d}y=\\int_0^{\\pi/4}\\cos\\theta\\sin\\theta\\,\\mathrm{d}\\theta\\int_0^{\\sqrt{\\cos 2\\theta}}r^{3}\\,\\mathrm{d}r$$",
+  "<b>④ 内层积分：</b>$\\displaystyle\\int_0^{\\sqrt{\\cos 2\\theta}}r^{3}\\,\\mathrm{d}r=\\frac{r^{4}}{4}\\Big|_0^{\\sqrt{\\cos 2\\theta}}=\\frac{\\cos^{2} 2\\theta}{4}$",
+  "<b>⑤ 降幂：</b>$\\cos\\theta\\sin\\theta=\\dfrac{1}{2}\\sin 2\\theta$：$$=\\frac{1}{8}\\int_0^{\\pi/4}\\sin 2\\theta\\,\\cos^{2} 2\\theta\\,\\mathrm{d}\\theta$$",
+  "<b>⑥ 换元收尾：</b>令 $u=\\cos 2\\theta$（$\\theta:0\\to\\dfrac{\\pi}{4}$ 对应 $u:1\\to0$）：$$=\\frac{1}{16}\\int_0^{1}u^{2}\\,\\mathrm{d}u=\\frac{1}{48}$$"
+];
+
+AW.init({
+  title: "2021·21　双纽线一叶上的 $\\iint_D xy\\,\\mathrm{d}x\\,\\mathrm{d}y$",
+  subtitle: "考点：极坐标 · 双纽线 $r^2=\\cos 2\\theta$ · 定角定限与换元收尾",
+  counterLabel: "推导步数",
+  ribbonTitle: "推导进度（✓ 完成）",
+  intro: "点击「▶ 播放」或「下一步」，化极坐标、定限、逐层积分。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前步亮琥珀色，已完成步变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    {"cls": "step", "tag": "审题", "log": "区域是双纽线在第一象限的一叶，平方和平方差结构适合极坐标", "count": 0, "ribbon": {"k": 1, "ok": true}},
+    {"cls": "shift", "tag": "极坐标", "log": "代入极坐标，曲线方程化为 r 平方等于 cos 二 theta", "count": 1, "ribbon": {"k": 2, "ok": true}},
+    {"cls": "ok", "tag": "定限", "log": "要求余弦非负，theta 上限是四分之派，r 从零到根号 cos 二 theta", "count": 2, "ribbon": {"k": 3, "ok": true}},
+    {"cls": "ok", "tag": "累次", "log": "被积式化为 r 平方乘角部分，面积元多一个 r，内层是 r 三次方", "count": 3, "ribbon": {"k": 4, "ok": true}},
+    {"cls": "ok", "tag": "内层", "log": "内层积出四分之 cos 二 theta 的平方", "count": 4, "ribbon": {"k": 5, "ok": true}},
+    {"cls": "ok", "tag": "降幂", "log": "用二倍角公式把角部分降成二分之一 sin 二 theta", "count": 5, "ribbon": {"k": 6, "ok": true}},
+    {"cls": "ok", "tag": "收尾", "log": "换元 u 等于 cos 二 theta，上下限对调，积分收敛到四十八分之一", "count": 6, "ribbon": {"k": 7, "ok": true}},
+    {"cls": "done", "tag": "完成", "log": "完成：二重积分等于四十八分之一", "count": 7, "ribbon": {"k": 8, "ok": true}, "done": true}
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$\\iint_D xy\\,\\mathrm{d}x\\,\\mathrm{d}y=\\dfrac{1}{48}$",
+    html: "记忆锚点：<b>双纽线 $r^2=\\cos 2\\theta$ 只占 $\\theta\\in\\left[0,\\dfrac{\\pi}{4}\\right]$；先积 $r$ 得 $\\dfrac{\\cos^2 2\\theta}{4}$，再换元 $u=\\cos 2\\theta$</b>。易错：漏雅可比因子 $r$；$\\theta$ 上限误取 $\\dfrac{\\pi}{2}$。"
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：双纽线为什么天生属于极坐标——$r<sup>2</sup>=\cos2\theta$ 的定限与累次积分</h2>
+<p><strong>答案：$\displaystyle\iint_D xy\,\mathrm dx\,\mathrm dy=\dfrac{1}{48}$。</strong></p>
+<h3>第 0 步：为什么这条路是极坐标</h3>
+<p>机制识别两层。<strong>其一，曲线方程</strong>：$(x<sup>2</sup>+y<sup>2</sup>)<sup>2</sup>=x<sup>2</sup>-y<sup>2</sup>$ 里只有 $x<sup>2</sup>+y<sup>2</sup>$ 与 $x<sup>2</sup>-y<sup>2</sup>$，而极坐标恰好把这两样变简单——$x<sup>2</sup>+y<sup>2</sup>=r<sup>2</sup>$ 是定义，$x<sup>2</sup>-y<sup>2</sup>=r<sup>2</sup>(\cos<sup>2</sup>\theta-\sin<sup>2</sup>\theta)=r<sup>2</sup>\cos2\theta$ 是二倍角公式。代入得 $r<sup>4</sup>=r<sup>2</sup>\cos2\theta$，解出 $r<sup>2</sup>=\cos2\theta$：曲线成了"$r$ 关于 $\theta$ 的显式函数"；在直角坐标里解 $y$ 是四次方程，没有出路。<strong>其二，区域形状</strong>：这一叶从原点张开，每条固定 $\theta$ 的射线从原点进入、在曲线处离开——"射线型"区域天然先 $r$ 后 $\theta$，一次定限。</p>
+<h3>第一步：化曲线方程并解出 $r<sup>2</sup>$</h3>
+<p>$$r<sup>4</sup>=r<sup>2</sup>\cos2\theta\ \Longrightarrow\ r<sup>2</sup>=\cos2\theta.$$</p>
+<p><strong>为什么敢约去 $r<sup>2</sup>$</strong>：约去可能丢掉 $r=0$（原点）。看它去哪了：$\cos2\theta=0$ 即 $\theta=\dfrac{\pi}{4}$ 时 $r<sup>2</sup>=0$，原点恰好在 $\theta=\dfrac{\pi}{4}$ 这条射线的"终点"处被收进来——一点不丢；区域内部 $r&gt;0$，约去无损失。</p>
+<h3>第二步：定积分限</h3>
+<p>第一象限给 $\theta\ge0$；曲线存在要求 $r<sup>2</sup>=\cos2\theta\ge0$，在第一象限内即 $2\theta\le\dfrac{\pi}{2}$，故 $\theta\le\dfrac{\pi}{4}$：</p>
+<p>$$D:\ 0\le\theta\le\frac{\pi}{4},\qquad 0\le r\le\sqrt{\cos2\theta}.$$</p>
+<p><strong>为什么下边界是 $\theta=0$</strong>：题说"与 $x$ 轴围成"——曲线与 $x$ 轴的交点由 $y=0$ 代入：$x<sup>4</sup>=x<sup>2</sup>$，$x\ge0$ 得 $x=1$（外加原点）。叶的下沿是 $x$ 轴上从原点到 $(1,0)$ 的线段，在极坐标里就是射线 $\theta=0$；$\theta$ 从 $0$ 增到 $\dfrac{\pi}{4}$，$r$ 的上限从 $1$ 缩到 $0$，叶子在原点闭合。图形在心里过一遍：一条从 $(1,0)$ 拱回原点的"眉"，下面压着 $x$ 轴。</p>
+<h3>第三步：换被积函数与面积元，先积 $r$</h3>
+<p>$xy=r\cos\theta\cdot r\sin\theta=r<sup>2</sup>\cos\theta\sin\theta$。<strong>面积元为什么多一个 $r$</strong>：极坐标的小格子是扇环微元，角向边长 $r\,\mathrm d\theta$（离原点越远、同样的角度扫出的弧越长），径向边长 $\mathrm dr$，面积 $=r\,\mathrm dr\,\mathrm d\theta$——这个 $r$ 不是死记的雅可比，是"弧长随半径变长"的直接结果。</p>
+<p>$$\iint_D xy\,\mathrm dx\,\mathrm dy=\int_0<sup>\pi/4</sup>\cos\theta\sin\theta\left(\int_0<sup>\sqrt{\cos2\theta</sup>}r<sup>3</sup>\,\mathrm dr\right)\mathrm d\theta,$$</p>
+<p>内层 $\displaystyle\int_0<sup>\sqrt{\cos2\theta</sup>}r<sup>3</sup>\,\mathrm dr=\frac{r<sup>4</sup>}{4}\Big|_0<sup>\sqrt{\cos2\theta</sup>}=\frac{\cos<sup>22</sup>\theta}{4}$（$(\sqrt u)<sup>4</sup>=u<sup>2</sup>$），于是</p>
+<p>$$\iint_D xy\,\mathrm dx\,\mathrm dy=\frac{1}{4}\int_0<sup>\pi/4</sup>\cos\theta\sin\theta\cos<sup>22</sup>\theta\,\mathrm d\theta.$$</p>
+<h3>第四步：二倍角 + 换元收尾</h3>
+<p>$\cos\theta\sin\theta=\dfrac{1}{2}\sin2\theta$（本就是二倍角公式，不是硬凑）：</p>
+<p>$$=\frac{1}{8}\int_0<sup>\pi/4</sup>\sin2\theta\cos<sup>22</sup>\theta\,\mathrm d\theta.$$</p>
+<p>令 $u=\cos2\theta$，$\mathrm du=-2\sin2\theta\,\mathrm d\theta$；$\theta:0\to\dfrac{\pi}{4}$ 时 $u:1\to0$：</p>
+<p>$$=\frac{1}{8}\int_1<sup>0u</sup><sup>2</sup>\left(-\frac{1}{2}\right)\mathrm du=\frac{1}{16}\int_0<sup>1u</sup><sup>2</sup>\,\mathrm du=\frac{1}{48}.$$</p>
+<p>量级回验：叶面积 $=\displaystyle\int_0<sup>\pi/4</sup>\frac{1}{2}\cos2\theta\,\mathrm d\theta=\frac{1}{4}$，被积函数 $xy$ 在区域内大部分位置远小于 $1$，$\dfrac{1}{48}\approx0.021$ 合理 ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>$\theta$ 上限写成 $\dfrac{\pi}{2}$</strong>：忽略 $\cos2\theta\ge0$ 的存在域限制，把积分积到曲线不存在的区域。</li><li><strong>漏雅可比因子 $r$</strong>：内层被积函数就不是 $r<sup>3</sup>$，结果差一个量级。</li><li><strong>换元不改限、丢负号</strong>：$u$ 的走向是 $1\to0$，负号与换序恰好对消成 $\int_0<sup>1</sup>$。</li><li><strong>把整条双纽线的对称性当"乘倍"</strong>：题目已把区域锁定在第一象限的一叶，别把其他叶也乘进来。</li></ul>
+<blockquote>一句话结论：$r<sup>2</sup>=\cos2\theta$、$\theta\in\left[0,\frac{\pi}{4}\right]$；先积 $r$ 得 $\frac{1}{4}\cos<sup>22</sup>\theta$，换元后 $\frac{1}{16}\int_0<sup>1u</sup><sup>2</sup>\mathrm du=\frac{1}{48}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

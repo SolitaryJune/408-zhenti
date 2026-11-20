@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015 数二第 20 题 · 牛顿冷却定律（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-19.html" data-q="../question/m2-2015-19/">← <b>m2-2015-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-20/" data-q="../question/m2-2015-20/" data-no-anim="1">m2-2015-20 · 本题</a>
+  <a href="m2-2015-21.html" data-q="../question/m2-2015-21/"><b>m2-2015-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2015·20　牛顿冷却：$120^\\circ$C 降到 $21^\\circ$C 还需多久？',
+  subtitle: '考点：微分方程应用 · <b>牛顿冷却定律 + 分离变量</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看温差如何每 30 分钟缩水到十分之一。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '$$\\frac{\\mathrm dT}{\\mathrm dt}=-k\\,(T-20)\\quad(k>0),\\qquad T(0)=120,\\quad T(30)=30$$',
+      '<b>① 换元（盯住温差）：</b>令 $u=T-20$，则 $\\dfrac{\\mathrm du}{\\mathrm dt}=-ku$',
+      '<b>② 分离变量求解：</b>$u=C\\,\\mathrm e^{-kt}$，即 $T-20=C\\,\\mathrm e^{-kt}$',
+      '<b>③ 初值定 $C$：</b>$T(0)=120\\Rightarrow C=100$，故 $T-20=100\\,\\mathrm e^{-kt}$',
+      '<b>④ 用 30 分钟数据定 $k$：</b>$T(30)=30\\Rightarrow 10=100\\,\\mathrm e^{-30k}\\Rightarrow\\mathrm e^{-30k}=\\dfrac1{10}$',
+      '<b>⑤ 目标 $21^\\circ$C：</b>$1=100\\,\\mathrm e^{-kt}\\Rightarrow\\mathrm e^{-kt}=\\dfrac1{100}=\\Bigl(\\dfrac1{10}\\Bigr)^{\\!2}$',
+      '<b>⑥ 对比出规律：</b>每过 $30$ 分钟温差缩小到 $\\dfrac1{10}$；温差从 $10$ 到 $1$ 还需一个「周期」$\\Rightarrow$ 总时刻 $t=60$ 分钟',
+      '<b>⑦ 还需时间：</b>$60-30=30$ 分钟',
+      '<b>⑧ 验算：</b>$t=30$ 温差 $100\\times\\frac1{10}=10$（$T=30$ ✓）；$t=60$ 温差 $100\\times\\frac1{100}=1$（$T=21$ ✓）'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'变化率与温差成正比就是牛顿冷却定律，介质恒温二十度，别忘负号', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'换元',   log:'盯住温差这个量：令 u 等于温度减二十，方程变成标准衰减方程', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'求解',   log:'分离变量解出指数衰减形式', count:2, ribbon:{k:3, ok:true} },
+    { cls:'shift', tag:'定 C',  log:'初始温度一百二十度，温差初值是一百，常数确定', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'定 k',  log:'三十分钟后降到三十度，温差剩十，得到指数因子的关键取值', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'目标',  log:'目标二十一度对应温差一，正好是一百乘十分之一的平方', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'对比',  log:'每三十分钟温差缩到十分之一：十到一再花三十分钟，总时刻六十分钟', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'作答',  log:'题目问还需多久：总时刻减去已用的三十分钟，答案是三十分钟', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',   log:'验算两个时刻的温度都吻合', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '还需冷却 $30$ 分钟',
+    html: '记忆锚点：<b>温差按指数衰减，$\\mathrm e^{-30k}=\\frac1{10}$ 说明「每 30 分钟缩水到十分之一」</b>——温差 $100\\to10\\to1$ 各花 30 分钟。易错：方程漏负号会解出升温发散；题目问「还需」要减去已用的 30 分钟（总时刻 60 分钟）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：牛顿冷却——把"离终点还差几度"设成未知量</h2>
+<p><strong>答案：还需冷却 $30$ 分钟。</strong></p>
+<h3>第 0 步：先立机制——为什么方程长这样、为什么解是指数</h3>
+<p>「变化率与温差成正比」：介质恒温 $20^\circ$C，物体温度 $T(t)$，则</p>
+<p>$$\frac{\mathrm dT}{\mathrm dt}=-k\,(T-20),\qquad k&gt;0.$$</p>
+<p>负号的含义：物体比介质热（$T&gt;20$）时 $\dfrac{\mathrm dT}{\mathrm dt}&lt;0$，温度下降——方向不能反。</p>
+<p><strong>设温差 $u=T-20$ 是本题的枢纽</strong>：$u$ 的物理意义就是"离终点还差几度"，方程立刻化成最简形式</p>
+<p>$$\frac{\mathrm du}{\mathrm dt}=-ku,$$</p>
+<p>即<strong>变化率正比于剩余量</strong>——这正是指数衰减的标志（银行复利、放射性衰变同一个模型）：每单位时间缩小固定<strong>比例</strong>，而非固定数量。解为 $u=Ce<sup>-kt</sup>$；比拖着常数 20 直接解 $T$ 干净得多。</p>
+<h3>第 1 步：两批数据定常数</h3>
+<p>初值 $T(0)=120$：$u_0=100$，故 $T-20=100\,e<sup>-kt</sup>$。数据 $T(30)=30$：温差 $10=100\,e<sup>-30k</sup>$，即</p>
+<p>$$e<sup>-30k</sup>=\frac1{10}.$$</p>
+<h3>第 2 步：不必解出 $k$——抓住"每 30 分钟缩到 1/10"的节律</h3>
+<p>$e<sup>-30k</sup>=\dfrac1{10}$ 已经把冷却的节律说完了：<strong>每过 30 分钟，温差缩小到原来的 $\dfrac1{10}$</strong>。目标 $21^\circ$C 对应温差 $21-20=1$，而 $1=100\times\Bigl(\dfrac1{10}\Bigr)<sup>2</sup>$：温差从 $100$ 到 $10$ 用 30 分钟，从 $10$ 到 $1$ 再用 30 分钟，总时刻 $t=60$ 分钟，故还需</p>
+<p>$$60-30=30\ \text{分钟}.$$</p>
+<p>（若求 $k=\dfrac{\ln10}{30}$ 再代回去只是绕路，两条路结果一致。）</p>
+<h3>第 3 步：为什么 $21^\circ$C 一定能到达（预答）</h3>
+<p>温差按 $\dfrac1{10}$ 逐段缩小、恒大于 0，物体无限趋近 $20^\circ$C 而不越过；但 $21&gt;20$ 只要求温差降到 $1$，有限时间可完成。验算：$t=30$ 温差 $100\times\dfrac1{10}=10$，$T=30$ ✓；$t=60$ 温差 $100\times\bigl(\dfrac1{10}\bigr)<sup>2</sup>=1$，$T=21$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>方程漏负号</strong>：$\dfrac{\mathrm dT}{\mathrm dt}=k(T-20)$ 会解出"越冷越升温"的荒谬结果。</li><li><strong>盯着 $k$ 硬算</strong>：$e<sup>-30k</sup>=\dfrac1{10}$ 这条比例关系本身就是答案。</li><li><strong>答非所问</strong>：算出总时刻 60 分钟，题目问"还需"，要减去已用的 30 分钟。</li></ul>
+<blockquote>记忆锚点：设温差 $u=T-T_{介质}$，"变化率 ∝ 剩余量" = 指数衰减；求出 $e<sup>-30k</sup>$ 这个节律比，就不必解出 $k$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

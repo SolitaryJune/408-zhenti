@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：任一解都可积 ⟺ 特征根实部全负</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-02.html" data-q="../question/m2-2025-02/">← <b>m2-2025-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-03/" data-q="../question/m2-2025-03/" data-no-anim="1">m2-2025-03 · 本题</a>
+  <a href="m2-2025-04.html" data-q="../question/m2-2025-04/"><b>m2-2025-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：把收敛条件翻译成特征根语言',
+    cls: 'key',
+    log: '任一解都可积 ⟺ 每个基本解都衰减 ⟺ 特征根实部全负',
+    body: '<p>通解由特征根决定：$\\mathrm e^{\\lambda x}$ 型可积要求 $\\lambda<0$；$\\mathrm e^{\\alpha x}\\cos\\beta x$ 型（$\\beta\\ne0$）要求实部 $\\alpha<0$。所以「<b>任一解</b>都使 $\\int_0^{+\\infty}y\\,\\mathrm dx$ 收敛」$\\iff$ <b>两个特征根实部全负</b>。</p>' },
+  { title: '写出特征方程与判别式',
+    cls: 'key',
+    log: 'r² − 2ar + (a+2) = 0，判别式 4(a−2)(a+1) 定复根/实根',
+    body: '<p>$$r^2-2ar+(a+2)=0,\\qquad r=a\\pm\\sqrt{a^2-a-2}$$ 判别式核心 $a^2-a-2=(a-2)(a+1)$：$a\\in(-1,2)$ 时为<b>复根</b>，$a\\le-1$ 或 $a\\ge2$ 时为<b>实根</b>，两情形分开讨论。</p>' },
+  { title: '复根情形：实部就是 a',
+    cls: 'good',
+    log: '−1<a<2 时根为 a ± iβ，实部 a<0 给出 −1<a<0',
+    ribbon: {k:1, ok:true},
+    body: '<p>$r=a\\pm\\mathrm i\\beta$，通解 $\\mathrm e^{ax}(C_1\\cos\\beta x+C_2\\sin\\beta x)$，实部 $=a$。要 $a<0$，且限定在 $-1<a<2$ 内，得 $$-1<a<0.$$</p>' },
+  { title: '实根情形：韦达定理定符号',
+    cls: 'good',
+    log: '两根皆负 ⟺ 和 2a<0 且积 a+2>0，交集得 −2<a≤−1',
+    ribbon: {k:2, ok:true},
+    body: '<p>$r_1+r_2=2a$，$r_1r_2=a+2$。两根皆负 $\\iff$ 和为负且积为正：$2a<0\\Rightarrow a<0$，$a+2>0\\Rightarrow a>-2$。与实根前提 $a\\le-1$ 或 $a\\ge2$ 取交，$a\\ge2$ 违背 $a<0$ 舍去，得 $$-2<a\\le-1.$$</p>' },
+  { title: '合并两段，端点单独验',
+    cls: 'key',
+    log: '并集 (−2,0)；a=0 纯振荡发散，a=−2 有零根常数解发散，都不取',
+    body: '<p>$$(-2,-1]\\cup(-1,0)=(-2,0).$$ 端点验证：$a=0$ 时方程 $y\'\'+2y=0$ 的解 $\\cos\\sqrt2\\,x$ 纯振荡，积分不收敛；$a=-2$ 时 $r_1r_2=a+2=0$ 出现零根，含常数解，发散——两端都取不到。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: 'a ∈ (−2,0)，选 C',
+    body: '<p>$a$ 的取值范围为 $(-2,0)$，答案选 <b>C</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '微分方程 $y\'\'-2ay\'+(a+2)y=0$：任一解都可积的 $a$ 范围',
+  subtitle: '考点：特征根与解的形态 · 反常积分收敛 · 判别式分情形讨论',
+  counterLabel: '推理步',
+  ribbonTitle: '情形收口（✓ 完成 / ✗ 受阻）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$a\\in(-2,0)$（选 C）',
+    html: '记忆锚点：<b>「任一解可积」= 特征根实部全负；实根看「和负积正」，复根看「实部 $a<0$」，两段并起来再验端点</b>。只讨论实根会漏掉 $(-1,0)$（错选 A）；$a\\le-2$ 时两根积 $a+2\\le0$ 出非负根（错选 B、D）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：任一解都可积 ⟺ 特征根实部全负（按判别式分情形）</h2>
+<p>答案：C</p>
+<h3>第一步：把条件翻译成特征根的语言</h3>
+<p>$y''-2ay'+(a+2)y=0$ 是常系数齐次线性方程，解的形态完全由特征根决定，通解是若干基本解的线性组合。</p>
+<p><strong>为什么「任一解」收敛等价于「每个基本解」收敛？</strong> 若某个基本解的反常积分发散，取它自己（其余组合系数全取 $0$）就是一个解，与题设矛盾；反之基本解全收敛时，有限个收敛函数的线性组合显然也收敛。</p>
+<p>再看两条可积性判据的来历：$e<sup>\lambda x</sup>$ 型，直接算 $\displaystyle\int_0<sup>b</sup> e<sup>\lambda x</sup>\mathrm dx=\frac{e<sup>\lambda b</sup>-1}{\lambda}$，$b\to+\infty$ 时结果有界要求 $e<sup>\lambda b</sup>\to0$，即 $\lambda&lt;0$；$e<sup>\alpha x</sup>\cos\beta x$ 型，振幅包络是 $e<sup>\alpha x</sup>$，由 $\displaystyle\int_0<sup>+\infty</sup>e<sup>\alpha x</sup>\lvert\cos\beta x\rvert\,\mathrm dx\le\int_0<sup>+\infty</sup>e<sup>\alpha x</sup>\,\mathrm dx$ 知 $\alpha&lt;0$ 时绝对收敛（衰减振荡）。合起来：<strong>特征根实部全负</strong>。</p>
+<h3>第二步：写特征方程，按判别式分两种情形</h3>
+<p>$$r<sup>2</sup>-2ar+(a+2)=0,\qquad r=a\pm\sqrt{a<sup>2</sup>-a-2},$$</p>
+<p>其中 $a<sup>2</sup>-a-2=(a-2)(a+1)$，按判别式是否非负分两种情形。</p>
+<p><strong>为什么实根情形用韦达定理？</strong> 判「两根皆负」，与其带着根号逐支讨论 $a\pm\sqrt{a<sup>2</sup>-a-2}&lt;0$，不如把根的符号翻译成系数条件：两根皆负 $\iff$ 和为负且积为正，而和与积恰由韦达给出——$r_1+r_2=2a$，$r_1r_2=a+2$。一行不等式，免去对根号内符号的分类讨论。</p>
+<ul><li><strong>复根</strong>（判别式 $&lt;0$，即 $-1&lt;a&lt;2$）：实部 $=a$，收敛要求 $a&lt;0$，得 $-1&lt;a&lt;0$。</li><li><strong>实根</strong>（判别式 $\ge0$，即 $a\le-1$ 或 $a\ge2$）：韦达条件 $2a&lt;0$ 且 $a+2&gt;0$ 给 $-2&lt;a&lt;0$，与本情形范围取交得 $-2&lt;a\le-1$。</li></ul>
+<table><thead><tr><th>情形</th><th>参数范围</th><th>收敛条件</th><th>结果</th></tr></thead><tbody><tr><td>复根（判别式 $&lt;0$）</td><td>$-1&lt;a&lt;2$</td><td>实部 $=a&lt;0$</td><td>$-1&lt;a&lt;0$</td></tr><tr><td>实根（判别式 $\ge0$）</td><td>$a\le-1$ 或 $a\ge2$</td><td>和 $2a&lt;0$ 且积 $a+2&gt;0$</td><td>$-2&lt;a\le-1$</td></tr></tbody></table>
+<h3>第三步：合并并验端点</h3>
+<p>$$(-2,-1]\ \cup\ (-1,0)=(-2,0).$$</p>
+<p>端点必须单独验：$a=0$ 时方程为 $y''+2y=0$，解是纯振荡的 $\cos\sqrt2\,x$ 型，反常积分不收敛，0 不取；$a=-2$ 时 $r_1r_2=a+2=0$ 出现零根，通解含常数项，积分发散，$-2$ 不取。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉复根情形</strong>：只讨论实根得 $(-2,-1]$，错选 A —— $-1&lt;a&lt;0$ 时复根实部 $a&lt;0$，解衰减振荡，积分同样收敛。</li><li><strong>下界放开到 $-\infty$</strong>：$a\le-2$ 时两根之积 $a+2\le0$，必出非负根，选 B、D 都栽在这里。</li><li><strong>不验端点</strong>：$a=0$ 让实部恰好为零，是纯振荡而非衰减，必须剔除。</li></ul>
+<blockquote>一句话结论：实部全负 = 实根时和负积正、复根时实部 $a&lt;0$，并起来是 $(-2,0)$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

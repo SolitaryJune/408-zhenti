@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：极值、单调与凹性的四组命题</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-04.html" data-q="../question/m2-2026-04/">← <b>m2-2026-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-05/" data-q="../question/m2-2026-05/" data-no-anim="1">m2-2026-05 · 本题</a>
+  <a href="m2-2026-06.html" data-q="../question/m2-2026-06/"><b>m2-2026-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两组互逆命题',
+    cls: 'key',
+    body: '<p>A 与 B 互逆（两侧单调 $\\leftrightarrow$ $f(0)$ 极小），C 与 D 互逆（凹 $\\leftrightarrow$ 割线斜率增）。突破口：<b>单调性管不住点值</b>；<b>"凹 $\\iff$ 割线斜率增"要对每个固定点成立</b>。</p>' },
+  { title: 'A 错：单调推不出极小',
+    cls: 'bad',
+    body: '<p>两侧单调只描述开区间内部，管不了 $f(0)$ 本身。反例：取 $f(x)=\\lvert x\\rvert$ 但把 $f(0)$ 单独改成 $1$——两侧仍一减一增，而 $f(0)=1$ 是<b>极大</b>值。</p>' },
+  { title: 'B 错：极小推不出单调',
+    cls: 'bad',
+    body: '<p>极小值只保证局部 $f(x)\\ge f(0)$。反例：$f(x)=x^2\\Bigl(2+\\sin\\dfrac1x\\Bigr)$（$x\\ne0$），$f(0)=0$ 是极小值，但在 $0$ 的任何一侧都不单调。</p>' },
+  { title: 'C 对：凹 ⇒ 割线斜率增',
+    cls: 'good',
+    body: '<p>凹函数（开口向上）的割线斜率随点右移而不减；固定端点 $x_0=1$，$$g(x)=\\frac{f(x)-f(1)}{x-1}$$ 在 $[-1,1)$ 上单调递增。<b>成立</b>。</p>' },
+  { title: 'D 错：单点版本不够',
+    cls: 'bad',
+    body: '<p>凹 $\\iff$ 对<b>任意</b>固定点割线斜率都单调增。只对 $x_0=1$ 一个点成立，约束不了函数内部的局部起伏，推不出整体凹——C 的逆命题不成立。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>C</b>。记忆锚点：<b>单调 $\\leftrightarrow$ 极值互不蕴含；"凹 ⇒ 任一固定点割线斜率增"，单点版本只是单向的必要条件</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '极值、单调与凹性：$A/B$ 互逆、$C/D$ 互逆，谁一定成立',
+  subtitle: '考点：凹凸性与割线斜率 · 极值的局部性 · 逆命题辨析',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐项裁决四个命题。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C',
+    html: '记忆锚点：<b>凹函数的割线斜率刻画是"对任意固定点"单调增，只对单个固定点成立推不出凹</b>；两侧单调与 $f(0)$ 是否极小互不蕴含（抬高 $f(0)$ 即反例）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：极值与单调、凹性与割线斜率——四组命题逐项裁决</h2>
+<p>答案：C</p>
+<h3>第零步：机制——割线斜率为什么能刻画凹性</h3>
+<p>凹函数（开口向上）的图像越往右越"翘"，几何上是：<strong>从任一固定点看曲线，点越远割线越陡</strong>。翻译成代数：固定 $x_0$，割线斜率 $g(x)=\dfrac{f(x)-f(x_0)}{x-x_0}$ 随 $x$ 单调增——这就是凹性的等价刻画。注意关键词是"<strong>任一</strong>固定点"：凹性约束的是整条曲线，只对一个点成立的割线性质，管不到曲线内部的起伏。A、B 与 C、D 恰是两组互逆命题，四个选项的真假全挂在上述两条机制上。</p>
+<h3>第一步：A、B 都错——单调与极值互不蕴含</h3>
+<p>A：两侧单调只描述开区间<strong>内部</strong>，管不住 $f(0)$ 这一个点的取值。反例：取 $f(x)=\lvert x\rvert$ 但把 $f(0)$ 单独改成 $1$，两侧仍一减一增，而 $f(0)=1$ 是极大值。B：极小值只保证局部 $f(x)\ge f(0)$，不要求两侧单调：$f(x)=x<sup>2</sup>\Bigl(2+\sin\dfrac1x\Bigr)$（$x\ne0$）、$f(0)=0$ 在 $0$ 处取极小，却在 $0$ 的任何一侧都不单调。极值是"点的比较"，单调是"区间的行为"，谁也推不出谁。</p>
+<h3>第二步：C 对——凹函数的割线斜率性质</h3>
+<p>凹函数有标准性质：$x_1&lt;x_2&lt;x_3$ 时割线斜率满足</p>
+<p>$$\frac{f(x_2)-f(x_1)}{x_2-x_1}\le\frac{f(x_3)-f(x_1)}{x_3-x_1}\le\frac{f(x_3)-f(x_2)}{x_3-x_2},$$</p>
+<p>（同一段弧上的割线被两边夹住，随点右移越来越陡）。固定端点 $x_0=1$，得</p>
+<p>$$g(x)=\frac{f(x)-f(1)}{x-1}$$</p>
+<p>在 $[-1,1)$ 上单调递增——C 成立。（$x&lt;1$ 时分子分母同为负，$g$ 仍是从 $(x,f(x))$ 到 $(1,f(1))$ 的割线斜率，方向没有歧义。）</p>
+<h3>第三步：D 错——单点版本推不出凹</h3>
+<p>凹 $\iff$ 对<strong>任意</strong>固定点割线斜率都增。只对 $x_0=1$ 一个点成立，只约束"从端点 $1$ 望出去"这一族割线，函数在区间内部仍可局部起伏而不被察觉——是必要不充分条件，逆命题不成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>把"对任意固定点"弱化成"对某个固定点"</strong>：这正是 D 的陷阱；C→D 方向成立、D→C 不成立。</li><li><strong>以为极小值 $\Rightarrow$ 两侧单调</strong>：A、B 两个方向都是错的，反例互不相通。</li><li><strong>凹凸方向记混</strong>：本题"凹"指开口向上（$f''\ge0$ 型），此时割线斜率递增。</li></ul>
+<blockquote>一句话结论：单调 $\leftrightarrow$ 极值互不蕴含；凹 $\Rightarrow$ 任一固定点割线斜率增，单点版本只是单向，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

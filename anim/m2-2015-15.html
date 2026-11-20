@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2015 数二第 15 题 · 等价无穷小定参（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-14.html" data-q="../question/m2-2015-14/">← <b>m2-2015-14</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-15/" data-q="../question/m2-2015-15/" data-no-anim="1">m2-2015-15 · 本题</a>
+  <a href="m2-2015-16.html" data-q="../question/m2-2015-16/"><b>m2-2015-16</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题由引擎在 render 返回后才写入或只写一次，
+     用 setTimeout(0) 兜底渲染（后台标签页 setTimeout 仍会触发） */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2015·15　$f\\sim g$：$x+a\\ln(1+x)+bx\\sin x \\sim kx^3$，求 $a,b,k$',
+  subtitle: '考点：等价无穷小 · <b>泰勒展开按幂次配系数</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看三个参数如何被逐幂次「逼」出来。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '$$f(x)=x+a\\ln(1+x)+b\\,x\\sin x,\\qquad g(x)=kx^{3},\\qquad f(x)\\sim g(x)\\ (x\\to0)$$',
+      '<b>① 翻译条件：</b>$f(x)\\sim kx^3$ 即 $f(x)=kx^3+o(x^3)$ —— 展到三阶后，一、二次项系数须为 $0$，三次项系数须等于 $k$',
+      '<b>② 展开 $\\ln(1+x)$：</b>$\\ln(1+x)=x-\\dfrac{x^2}2+\\dfrac{x^3}3+o(x^3)$',
+      '<b>③ 展开 $x\\sin x$：</b>$\\sin x=x-\\dfrac{x^3}6+o(x^3)\\ \\Rightarrow\\ x\\sin x=x^2+o(x^3)$（主部是二阶）',
+      '<b>④ 代入合并：</b>$f(x)=(1+a)x+\\Bigl(b-\\dfrac a2\\Bigr)x^2+\\dfrac a3x^3+o(x^3)$',
+      '<b>⑤ 一次项归零：</b>$1+a=0\\ \\Rightarrow\\ a=-1$',
+      '<b>⑥ 二次项归零：</b>$b-\\dfrac a2=0\\ \\Rightarrow\\ b=\\dfrac a2=-\\dfrac12$',
+      '<b>⑦ 三次项定 $k$：</b>$k=\\dfrac a3=\\dfrac{-1}3=-\\dfrac13$',
+      '<b>⑧ 验算：</b>$f(x)=-\\dfrac{x^3}3+o(x^3)\\sim-\\dfrac{x^3}3=g(x)$ ✓'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'等价无穷小就是比值极限为 1，把 f 展开到三阶与 k x 三次方比对系数', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'翻译',   log:'等价翻译成展开语言：f 的展开里一、二次项系数必须为零，三次项系数是 k', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'对数',   log:'对数展开到三阶：一阶、二分之一二阶、三分之一三阶', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'乘积',   log:'正弦乘 x：主部落在二阶，别误当成三阶', count:3, ribbon:{k:4, ok:true} },
+    { cls:'shift', tag:'合并',   log:'按幂次合并同类项：三个系数分别写出来', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'定 a',   log:'一次项系数归零：a 等于负一', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'定 b',   log:'二次项系数归零：b 等于 a 的一半，即负二分之一', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'定 k',   log:'三次项系数就是 k：a 除以三，等于负三分之一', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',   log:'验算通过：f 的三阶主部恰为负三分之一个 x 三次方', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$a=-1,\\quad b=-\\dfrac12,\\quad k=-\\dfrac13$',
+    html: '记忆锚点：<b>等价无穷小 = 泰勒展开比系数</b>：$f\\sim kx^3$ 就是「低幂次归零、$x^3$ 系数归 $k$」。易错：$x\\sin x$ 的主部是<b>二阶</b>（不是三阶），$b$ 全靠它定；三个参数依次为 $-1,-\\tfrac12,-\\tfrac13$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：等价无穷小的"配平"本质——泰勒展开逐幂次清账</h2>
+<p><strong>答案：$a=-1,\ b=-\dfrac12,\ k=-\dfrac13$。</strong></p>
+<h3>第 0 步：先立机制——"等价"就是"差一个高阶"</h3>
+<p>两个无穷小等价的定义是 $\lim_{x\to0}\dfrac{f(x)}{kx<sup>3</sup>}=1$。把它改写成减法：比值趋于 1，等价于分子分母的差被分母整个吃掉，即</p>
+<p>$$f(x)-kx<sup>3</sup>=o(x<sup>3</sup>).$$</p>
+<p>这才是配系数法的合法性来源：<strong>泰勒展开是按幂次记账</strong>，$kx<sup>3</sup>$ 已是三阶，所以 $f$ 的展开里一阶、二阶都是"欠账"，必须彻底清零；三阶的账面余额恰为 $k$；四阶以上的项全部打包进 $o(x<sup>3</sup>)$，不影响等价。三个未知数恰好对应三次"清账"。</p>
+<h3>第 1 步：展开到几阶——精度跟着"乘完后的阶数"走</h3>
+<ul><li>$\ln(1+x)$ 外面只乘常数 $a$，要为三阶配平做贡献，自身必须展到 $x<sup>3</sup>$：$\ln(1+x)=x-\dfrac{x<sup>2</sup>}2+\dfrac{x<sup>3</sup>}3+o(x<sup>3</sup>)$。</li><li>$\sin x$ 外面<strong>还乘着一个 $x$</strong>：它对 $x<sup>3</sup>$ 项的贡献需要 $\sin x$ 的 $x<sup>2</sup>$ 项，而 $\sin x$ 是奇函数，没有 $x<sup>2</sup>$ 项；下一个非零项 $\dfrac{x<sup>3</sup>}6$ 乘 $x$ 得 $x<sup>4</sup>$，自动落入 $o(x<sup>3</sup>)$。所以 $\sin x\sim x$ 就够，$x\sin x=x<sup>2</sup>+o(x<sup>3</sup>)$——<strong>主部是二阶</strong>，$b$ 全靠它定。</li></ul>
+<h3>第 2 步：合并、逐幂次清账</h3>
+<p>$$f(x)=x+a\Bigl(x-\frac{x<sup>2</sup>}2+\frac{x<sup>3</sup>}3\Bigr)+bx<sup>2</sup>+o(x<sup>3</sup>)=(1+a)x+\Bigl(b-\frac a2\Bigr)x<sup>2</sup>+\frac a3x<sup>3</sup>+o(x<sup>3</sup>).$$</p>
+<table><thead><tr><th>幂次</th><th>系数</th><th>清账条件</th><th>结论</th></tr></thead><tbody><tr><td>$x$</td><td>$1+a$</td><td>$1+a=0$</td><td>$a=-1$</td></tr><tr><td>$x<sup>2</sup>$</td><td>$b-\frac a2$</td><td>$b-\frac a2=0$</td><td>$b=\frac a2=-\frac12$</td></tr><tr><td>$x<sup>3</sup>$</td><td>$\frac a3$</td><td>它就是 $k$</td><td>$k=-\frac13$</td></tr></tbody></table>
+<p>验算：此时 $f(x)=-\dfrac{x<sup>3</sup>}3+o(x<sup>3</sup>)$，与 $g(x)=-\dfrac{x<sup>3</sup>}3$ 之差为 $o(x<sup>3</sup>)$，等价成立。</p>
+<h3>为什么不用洛必达（预答）</h3>
+<p>$\lim_{x\to0}\dfrac{f(x)}{kx<sup>3</sup>}$ 确是 $\dfrac00$ 型，洛必达可行，但 $a,b$ 混在函数里要连导三次，$f'$、$f''$、$f'''$ 一层层乘积求导越写越长，最后仍要解方程组。泰勒展开<strong>一次配平、三问齐解</strong>，这就是选这条路的理由。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $x\sin x$ 当三阶</strong>：$\sin x\sim x$ 乘 $x$ 后主部是 $x<sup>2</sup>$；忘了这点 $b$ 就定错。</li><li><strong>$\sin x$ 白展到三阶</strong>：多做无用功还易抄错系数；精度由"乘完后的阶数"决定。</li><li><strong>符号算反</strong>：$a=-1$ 代入 $b=\dfrac a2$、$k=\dfrac a3$，两个都是负数。</li></ul>
+<blockquote>记忆锚点：等价 = 差一个高阶；展开精度跟"乘完后的阶数"走；逐幂次清账，表格只是对号入座。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

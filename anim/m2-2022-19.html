@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022·19 拆区域与极坐标二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-18.html" data-q="../question/m2-2022-18/">← <b>m2-2022-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-19/" data-q="../question/m2-2022-19/" data-no-anim="1">m2-2022-19 · 本题</a>
+  <a href="m2-2022-20.html" data-q="../question/m2-2022-20/"><b>m2-2022-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$I=\\iint_D\\frac{(x-y)^2}{x^2+y^2}\\,\\mathrm{d}x\\mathrm{d}y,\\qquad D=\\{\\,y-2\\le x\\le\\sqrt{4-y^2},\\ 0\\le y\\le2\\,\\}$$",
+  "<b>① 拆区域：</b>$D=D_1\\cup D_2$——$D_1$：第一象限四分之一圆盘（半径 $2$）；$D_2$：三角形，顶点 $(0,0),(-2,0),(0,2)$，即 $-2\\le x\\le0,\\ 0\\le y\\le x+2$",
+  "<b>② 化简被积函数：</b>$\\dfrac{(x-y)^2}{x^2+y^2}=1-\\dfrac{2xy}{x^2+y^2}$，故 $I=\\text{面积}-2J$，其中 $J=\\iint_D\\dfrac{xy}{x^2+y^2}\\,\\mathrm{d}\\sigma$",
+  "<b>③ 面积：</b>$\\dfrac14\\pi\\cdot2^2+\\dfrac12\\cdot2\\cdot2=\\pi+2$",
+  "<b>④ 极坐标准备：</b>$\\dfrac{xy}{x^2+y^2}=\\sin\\theta\\cos\\theta$，$\\mathrm{d}\\sigma=r\\,\\mathrm{d}r\\,\\mathrm{d}\\theta$",
+  "<b>⑤ $D_1$ 段：</b>$\\theta\\in\\left[0,\\frac\\pi2\\right]$，$r\\in[0,2]$：$J_1=\\displaystyle\\int_0^{\\pi/2}\\sin\\theta\\cos\\theta\\cdot\\frac{2^2}{2}\\,\\mathrm{d}\\theta=2\\int_0^{\\pi/2}\\sin\\theta\\cos\\theta\\,\\mathrm{d}\\theta=1$",
+  "<b>⑥ $D_2$ 段：</b>$\\theta\\in\\left[\\frac\\pi2,\\pi\\right]$，射线与 $y=x+2$ 交于 $r=\\dfrac{2}{\\sin\\theta-\\cos\\theta}$：$J_2=\\displaystyle\\int_{\\pi/2}^{\\pi}\\dfrac{2\\sin\\theta\\cos\\theta}{(\\sin\\theta-\\cos\\theta)^2}\\,\\mathrm{d}\\theta$",
+  "<b>⑦ 换元 $\\theta=\\frac\\pi2+s$：</b>分子分母变成 $-\\sin2s$ 与 $1+\\sin2s$：$J_2=\\displaystyle\\int_0^{\\pi/2}\\left(-1+\\dfrac{1}{1+\\sin2s}\\right)\\mathrm{d}s$",
+  "<b>⑧ 算完 $D_2$ 段：</b>$\\dfrac{\\mathrm{d}}{\\mathrm{d}s}\\dfrac{-\\cos2s}{1+\\sin2s}=\\dfrac{2}{1+\\sin2s}$，故 $J_2=-\\dfrac\\pi2+\\dfrac12\\Big[\\dfrac{-\\cos2s}{1+\\sin2s}\\Big]_0^{\\pi/2}=1-\\dfrac\\pi2$（$D_2$ 上 $xy<0$，负号合理）",
+  "<b>⑨ 合计：</b>$J=J_1+J_2=1+1-\\dfrac\\pi2=2-\\dfrac\\pi2$",
+  "<b>⑩ 合成：</b>$I=(\\pi+2)-2\\left(2-\\dfrac\\pi2\\right)=\\pi+2-4+\\pi=2\\pi-2$"
+];
+
+AW.init({
+  title: '2022·19　二重积分：拆区域 + 化简 + 极坐标',
+  subtitle: '考点：区域不等式 → 几何拼块 · $\\frac{(x-y)^2}{x^2+y^2}=1-\\frac{2xy}{x^2+y^2}$ · 极坐标分段积分',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，先把区域拆成圆盘与三角形，再用「面积减修正项」收网。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（区域用不等式描述）：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'区域由左右两条边界给出，先看清它由哪两块几何图形拼成', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'拆区域', log:'右边界是四分之一圆弧，左边界是直线，D 拼成圆盘加三角形两块', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'化简',   log:'分子展开后整体拆成 1 减修正项，积分变成面积减两倍 J', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'面积',   log:'四分之一圆面积加三角形面积，得到派加 2', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'极坐标', log:'换极坐标后分式只剩角度部分，面积元多一个 r', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'圆盘段', log:'第一象限那段角度从零到二分之派，r 到 2，积出一个 1', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'三角段', log:'第二段角度延伸到派，r 上界由直线方程给出', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'换元',   log:'角度平移半个派后，被积式化成负 1 加一个简单分式', count:7, ribbon:{k:8, ok:true} },
+    { cls:'ok',    tag:'算完',   log:'用现成原函数收尾，三角段积分是 1 减二分之派，负号合理', count:8, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'合计',   log:'两段相加，J 等于 2 减二分之派', count:9, ribbon:{k:10, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：I 等于派加 2 减去 2 乘 2 减二分之派，得 2 派减 2', count:10, ribbon:{k:11, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$I=2\\pi-2$",
+    html: "记忆锚点：<b>先拆区域再动笔：圆盘块用「面积 − 修正项」，$\\frac{xy}{x^2+y^2}$ 极坐标下只剩 $\\sin\\theta\\cos\\theta$</b>。易错：三角形块极角要到 $\\pi$ 而不是 $\\frac{3\\pi}4$；$D_2$ 上 $xy<0$，该段积分必为负。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：拆区域 + 化简被积函数 + 极坐标收网</h2>
+<p><strong>答案</strong>：$I=2\pi-2$。</p>
+<h3>第一步：认清区域 $D$（用不等式描述几何结构）</h3>
+<p>$D=\{y-2\le x\le\sqrt{4-y<sup>2</sup>},\ 0\le y\le2\}$：右边界 $x=\sqrt{4-y<sup>2</sup>}$ 等价于 $x<sup>2</sup>+y<sup>2</sup>=4$ 且 $x\ge0$——半径 $2$ 的圆在第一象限的四分之一弧；左边界 $x=y-2$ 即 $y=x+2$。于是 $D$ 无重叠地拼成两块：</p>
+<ul><li>$D_1$：第一象限的四分之一圆盘（$x\ge0$，$x<sup>2</sup>+y<sup>2</sup>\le4$，$y\ge0$）；</li><li>$D_2$：三角形，顶点 $(0,0)$，$(-2,0)$，$(0,2)$，即 $\{-2\le x\le0,\ 0\le y\le x+2\}$。</li></ul>
+<h3>第二步：被积函数先化简，再谈积分</h3>
+<p>$$\frac{(x-y)<sup>2</sup>}{x<sup>2</sup>+y<sup>2</sup>}=\frac{x<sup>2</sup>+y<sup>2</sup>-2xy}{x<sup>2</sup>+y<sup>2</sup>}=1-\frac{2xy}{x<sup>2</sup>+y<sup>2</sup>},$$</p>
+<p>$$I=\iint_D1\,\mathrm{d}\sigma-2\iint_D\frac{xy}{x<sup>2</sup>+y<sup>2</sup>}\,\mathrm{d}\sigma=\text{面积}-2J.$$</p>
+<p>面积 $=\dfrac14\pi\cdot2<sup>2</sup>+\dfrac12\cdot2\cdot2=\pi+2$。剩下的任务只是算 $J=\iint_D\dfrac{xy}{x<sup>2</sup>+y<sup>2</sup>}\mathrm{d}\sigma$。</p>
+<p><strong>为什么先拆这一下？</strong> 分子展开后 $x<sup>2</sup>+y<sup>2</sup>$ 与分母恰好抵掉，被积函数瞬间从"分式"降为"$1$ 减一个简单商"；而 $1$ 的积分就是面积，可以几何直接算，只剩 $\dfrac{xy}{x<sup>2</sup>+y<sup>2</sup>}$ 一块要动真格。不拆就硬啃原式，工作量翻倍还容易出错。</p>
+<h3>第三步：极坐标算 $J$（分两段）</h3>
+<p>极坐标 $x=r\cos\theta,\ y=r\sin\theta$：$\dfrac{xy}{x<sup>2</sup>+y<sup>2</sup>}=\sin\theta\cos\theta$，$\mathrm{d}\sigma=r\,\mathrm{d}r\,\mathrm{d}\theta$。</p>
+<p><strong>为什么换极坐标？</strong> 被积函数与区域边界（圆弧）都只含 $x<sup>2</sup>+y<sup>2</sup>$——极坐标下前者变成与 $r$ 无关的 $\sin\theta\cos\theta$，后者变成 $r=2$ 的常数，两个复杂对象同时变简单，这是换极坐标的标准信号。</p>
+<p><strong>$r$ 的上限怎么来？</strong> 把直线 $y=x+2$ 代入 $x=r\cos\theta,\ y=r\sin\theta$：$r\sin\theta=r\cos\theta+2$，解出 $r=\dfrac{2}{\sin\theta-\cos\theta}$；在 $\theta\in\left(\dfrac\pi2,\pi\right)$ 上 $\sin\theta-\cos\theta&gt;0$，上限为正，合理。</p>
+<p><strong>$\theta$ 为什么能铺到 $\pi$？</strong> 从原点看三角形 $D_2$：它的两条从原点出发的边分别沿 $\theta=\dfrac\pi2$（$y$ 轴正向）与 $\theta=\pi$（$x$ 轴负向），第三条边（斜边 $y=x+2$）在所有中间方向上——每条射线都从斜边穿出，所以极角一直铺满到 $\pi$。</p>
+<ul><li>$D_1$ 段：$\theta\in\left[0,\frac\pi2\right]$，$r\in[0,2]$：</li></ul>
+<p>$$J_1=\int_0<sup>\pi/2</sup>\sin\theta\cos\theta\cdot\frac{2<sup>2</sup>}{2}\,\mathrm{d}\theta=2\int_0<sup>\pi/2</sup>\sin\theta\cos\theta\,\mathrm{d}\theta=1.$$</p>
+<ul><li>$D_2$ 段：$\theta\in\left[\frac\pi2,\pi\right]$，射线与 $y=x+2$ 交于 $r=\dfrac{2}{\sin\theta-\cos\theta}$：</li></ul>
+<p>$$J_2=\int_{\pi/2}<sup>\pi</sup>\sin\theta\cos\theta\cdot\frac12\left(\frac{2}{\sin\theta-\cos\theta}\right)<sup>2</sup>\mathrm{d}\theta=\int_{\pi/2}<sup>\pi</sup>\frac{2\sin\theta\cos\theta}{(\sin\theta-\cos\theta)<sup>2</sup>}\,\mathrm{d}\theta.$$<br/>令 $\theta=\frac\pi2+s$，则 $\sin\theta=\cos s,\ \cos\theta=-\sin s$，被积式变成 $\dfrac{-\sin2s}{1+\sin2s}=-1+\dfrac{1}{1+\sin2s}$：<br/>$$J_2=\int_0<sup>\pi/2</sup>\left(-1+\frac{1}{1+\sin2s}\right)\mathrm{d}s=-\frac\pi2+\frac12\left[\frac{-\cos2s}{1+\sin2s}\right]_0<sup>\pi/2</sup>=-\frac\pi2+1.$$<br/>（$\dfrac{\mathrm{d}}{\mathrm{d}s}\dfrac{-\cos2s}{1+\sin2s}=\dfrac{2}{1+\sin2s}$；$D_2$ 上 $x&lt;0,y&gt;0$，$J_2&lt;0$ 与结果一致。）</p>
+<h3>第四步：合成</h3>
+<p>$$J=J_1+J_2=2-\frac\pi2,\qquad I=(\pi+2)-2\left(2-\frac\pi2\right)=\pi+2-4+\pi=2\pi-2.$$</p>
+<p><strong>结果体检</strong>：$I=2\pi-2\approx4.28$，略小于面积 $\pi+2\approx5.14$——方向合理：$D_1$ 上 $xy&gt;0$，被积函数 $1-\dfrac{2xy}{x<sup>2</sup>+y<sup>2</sup>}&lt;1$，拉低整体；$D_2$ 上 $xy&lt;0$，被积函数 $&gt;1$，抬高局部；净效果由 $J=2-\dfrac\pi2&gt;0$ 决定，$I$ 比面积小一点点。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $D_2$ 当成扇形</strong>：三角形块的极角一直延伸到 $\pi$，不能用圆心角 $\frac{3\pi}{4}$ 截断；该段 $r$ 上界是 $\frac{2}{\sin\theta-\cos\theta}$，不是常数。（数值检验：按 $\left[\frac\pi2,\frac{3\pi}4\right]$ 截断会把 $I$ 算成 $\frac{3\pi}2-1\approx3.71$，与真值 $2\pi-2\approx4.28$ 对不上。）</li><li><strong>硬啃原被积函数</strong>：不先拆出 $1-\frac{2xy}{x<sup>2</sup>+y<sup>2</sup>}$，「面积减修正项」这条路就没了，计算量翻倍。</li><li><strong>$D_2$ 段符号错</strong>：$D_2$ 上 $xy&lt;0$，$J_2=1-\frac\pi2&lt;0$；算出正数说明极角范围或代入错了。</li></ul>
+<blockquote>一句话结论：$I=\text{面积}-2J$，面积 $\pi+2$，$J=2-\frac\pi2$，故 $I=2\pi-2$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2009·03 由全微分判极值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-02.html" data-q="../question/m2-2009-02/">← <b>m2-2009-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-03/" data-q="../question/m2-2009-03/" data-no-anim="1">m2-2009-03 · 本题</a>
+  <a href="m2-2009-04.html" data-q="../question/m2-2009-04/"><b>m2-2009-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题：从全微分读偏导',
+    cls: 'key',
+    body: '<p>可微时 $\\mathrm dz=f_x\\,\\mathrm dx+f_y\\,\\mathrm dy$，对照 $\\mathrm dz=x\\,\\mathrm dx+y\\,\\mathrm dy$ 得 $f_x=x,\\ f_y=y$。可微 $\\Rightarrow$ 连续，选项 A 先排除。</p>',
+    log: '读出 f_x = x、f_y = y；可微必连续' },
+  { title: '确认驻点',
+    cls: 'step',
+    body: '<p>$f_x(0,0)=f_y(0,0)=0$：$(0,0)$ 是驻点，但驻点未必是极值点。</p>',
+    log: '两个偏导同时为零，是驻点' },
+  { title: '二阶系数 A、B、C',
+    cls: 'step',
+    body: '<p>$A=f_{xx}=1,\\qquad B=f_{xy}=0,\\qquad C=f_{yy}=1$。</p>',
+    log: '二阶偏导都是常数' },
+  { title: '判别式裁决',
+    cls: 'good',
+    body: '<p>$AC-B^2=1\\cdot1-0=1>0$ 且 $A=1>0$：由二元极值充分条件，$(0,0)$ 是<b>极小值点</b>。</p>',
+    log: 'AC−B² = 1 > 0 且 A > 0，极小值点' },
+  { title: '直观印证',
+    cls: 'good',
+    body: '<p>积分还原：$f(x,y)=\\dfrac{x^2+y^2}{2}+C$，开口向上的旋转抛物面，原点处最小，与判别结果一致。</p>',
+    log: '还原出抛物面，原点最小' },
+  { title: '排除干扰项',
+    cls: 'bad',
+    body: '<p>B 错：判别式通过，$(0,0)$ 确实是极值点；C 错：$A>0$ 是碗口向上，是极小不是极大。</p>',
+    log: 'B、C 都与判别式矛盾' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>：$(0,0)$ 是 $f$ 的极小值点。</p>',
+    log: '选 D' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '全微分 $\\mathrm dz=x\\,\\mathrm dx+y\\,\\mathrm dy$ 时，$(0,0)$ 是什么点',
+  subtitle: '考点：二元极值充分条件 · 方法：读偏导 → 驻点 → $AC-B^2$ 判别',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>读偏导 → 验驻点 → $AC-B^2>0$ 且 $A>0$ ⇒ 极小值点</b>。可微必连续（排除 A）；$A$ 的符号定极大极小：$A>0$ 碗口向上是极小。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由全微分判二元函数的极值</h2>
+<p>答案：D（是极小值点）</p>
+<h3>第一步：先立机制——全微分给出什么、判极值靠什么</h3>
+<p>$f$ 可微时 $\mathrm dz=f_x\,\mathrm dx+f_y\,\mathrm dy$，对照 $\mathrm dz=x\,\mathrm dx+y\,\mathrm dy$ 逐项读系数得</p>
+<p>$$f_x=x,\qquad f_y=y.$$</p>
+<p><strong>为什么可微就能排除 A（不是连续点）？</strong> 可微的定义是 $\Delta f=f_x\Delta x+f_y\Delta y+o(\rho)$，右边在 $(\Delta x,\Delta y)\to(0,0)$ 时趋于 $0$，故 $\Delta f\to0$，即 $f$ 连续——可微是比连续强得多的条件，能写出全微分就自动连续。</p>
+<h3>第二步：驻点只是"候选人"</h3>
+<p>$f_x(0,0)=f_y(0,0)=0$，$(0,0)$ 是驻点。但驻点只说明切平面水平，函数在此可高可低，必须过二阶判别法这一关。</p>
+<h3>第三步：二阶判别——为什么 $AC-B<sup>2</sup>&gt;0$ 且 $A&gt;0$ 是"碗"</h3>
+<p>在驻点附近作二阶泰勒展开，函数增量由二次型主导：</p>
+<p>$$\Delta f\approx\tfrac12\big(A\,h<sup>2</sup>+2B\,hk+C\,k<sup>2</sup>\big),\qquad h=\Delta x,\ k=\Delta y.$$</p>
+<p>$AC-B<sup>2</sup>$ 正是这个二次型的判别式：$AC-B<sup>2</sup>&gt;0$ 说明它<strong>定号</strong>（沿任何方向都不摇摆变号），符号由 $A$ 决定；$A&gt;0$ 定号为正——无论往哪个方向走一小步，函数值都变大，几何上是"碗口向上"，故取极小。代入本题：</p>
+<p>$$A=f_{xx}=1,\quad B=f_{xy}=0,\quad C=f_{yy}=1,\qquad AC-B<sup>2</sup>=1&gt;0,\ A=1&gt;0,$$</p>
+<p>所以 $(0,0)$ 是<strong>极小值点</strong>，选 D。若 $A&lt;0$ 则"碗口向下"取极大——这正是 C 的误区。</p>
+<h3>第四步：特例印证</h3>
+<p>积分还原得 $f(x,y)=\dfrac{x<sup>2</sup>+y<sup>2</sup>}{2}+C$，旋转抛物面开口向上，原点显然是最低点，与判别结果一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A（不是连续点）</strong>：可微 $\Rightarrow$ 连续（见第一步的增量式），写得出全微分就连续。</li><li><strong>误选 B（不是极值点）</strong>：把"驻点未必是极值点"错当成"驻点必不是极值点"，本题判别式确实通过。</li><li><strong>误选 C（极大值点）</strong>：$A&gt;0$ 对应碗口向上即极小；极大要 $A&lt;0$。</li><li><strong>跳过判别直接下结论</strong>：驻点只是必要条件，$AC-B<sup>2</sup>$ 这一步不能省。</li></ul>
+<blockquote>一句话：读偏导 → 验驻点 → 二次型判别式 $AC-B<sup>2</sup>&gt;0$ 且 $A&gt;0$ ⇒ 极小值点。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

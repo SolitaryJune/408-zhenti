@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：全微分系数 + 链式法则求 g′(1)</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-13.html" data-q="../question/m2-2026-13/">← <b>m2-2026-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-14/" data-q="../question/m2-2026-14/" data-no-anim="1">m2-2026-14 · 本题</a>
+  <a href="m2-2026-15.html" data-q="../question/m2-2026-15/"><b>m2-2026-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: "全微分 $df(0,0)=\\pi\\,dx+3\\,dy$，$g(x)=f(\\ln x,\\sin\\pi x)$，求 $g'(1)$",
+  subtitle: '考点：全微分与偏导 · 多元复合函数链式法则',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示读偏导与链式求导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>读偏导</b>：可微时 $df=f_x\\,dx+f_y\\,dy$，对照 $df(0,0)=\\pi\\,dx+3\\,dy$：$$f_x(0,0)=\\pi,\\qquad f_y(0,0)=3.$$',
+      '<b>复合结构</b>：$g(x)=f(u,v)$，$u=\\ln x$、$v=\\sin\\pi x$。在 $x=1$ 处 $u=\\ln1=0$、$v=\\sin\\pi=0$——恰好落在已知偏导的 $(0,0)$。',
+      '<b>链式法则</b>（两条支路都要乘）：$$g\'(x)=f_u\\cdot\\frac1x+f_v\\cdot\\pi\\cos\\pi x$$',
+      '<b>代入 $x=1$</b>（$\\cos\\pi=-1$）：$$g\'(1)=\\pi\\cdot1+3\\cdot\\pi\\cdot(-1)=\\pi-3\\pi$$',
+      '<b>结论</b>：$$g\'(1)=-2\\pi.$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'读偏导', log:'全微分的系数就是偏导：f_x(0,0)=π，f_y(0,0)=3', count:0 },
+    { cls:'step',  tag:'定位',   log:'x=1 时 ln1=0、sinπ=0，复合点正好是 (0,0)', count:1 },
+    { cls:'shift', tag:'链式',   log:'两条支路：1/x 和 π·cos πx，一条都不能丢', count:2 },
+    { cls:'ok',    tag:'代入',   log:'cos π = −1：π·1 + 3·π·(−1) = π − 3π', count:3 },
+    { cls:'done',  tag:'完成',   log:'结论：g′(1) = −2π', count:4, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$g'(1)=-2\\pi$",
+    html: '记忆锚点：<b>$df$ 的系数 = 该点偏导；链式两条支路各乘各的导数</b>。易错：弧度制 $\\cos\\pi=-1$；漏掉 $\\sin\\pi x$ 那条支路只得 $\\pi$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：全微分的系数 + 多元复合链式法则</h2>
+<p>答案：$-2\pi$</p>
+<h3>第零步：机制——$df$ 的系数为什么就是偏导数、链式为什么两条支路都乘</h3>
+<p>可微的定义是：$f$ 在一点的改变量能被一个<strong>线性主部</strong>近似，$\Delta f=f_x\,dx+f_y\,dy+o(\rho)$，这个线性主部就叫全微分 $df=f_x\,dx+f_y\,dy$——所以 $dx,dy$ 前面的系数天然就是两个偏导数。对照题设 $df(0,0)=\pi\,dx+3\,dy$，立刻读出 $f_x(0,0)=\pi$、$f_y(0,0)=3$。而 $g(x)=f(\ln x,\ \sin\pi x)$ 中，$x$ 通过<strong>两条支路</strong>影响 $f$：一条经 $u=\ln x$，一条经 $v=\sin\pi x$；链式法则就是把两条支路的贡献各乘各的"传送率"（内层导数）后相加——一条都不能丢。</p>
+<h3>第一步：从全微分读偏导数</h3>
+<p>$$f_x(0,0)=\pi,\qquad f_y(0,0)=3.$$</p>
+<h3>第二步：理清复合结构并定位</h3>
+<p>$u=\ln x$、$v=\sin\pi x$。在 $x=1$ 处：$u=\ln1=0$，$v=\sin\pi=0$——复合点恰好落回已知偏导值的 $(0,0)$，这是命题人特意安排的落点，也是必须先定位再代值的原因。</p>
+<h3>第三步：链式法则</h3>
+<p>$$g'(x)=f_u(u,v)\cdot\frac1x+f_v(u,v)\cdot\pi\cos\pi x.$$</p>
+<p>（$\dfrac1x$ 与 $\pi\cos\pi x$ 就是两条支路各自的"传送率"。）</p>
+<h3>第四步：代入 $x=1$</h3>
+<p>$$g'(1)=f_x(0,0)\cdot1+f_y(0,0)\cdot\pi\cos\pi=\pi+3\pi\cdot(-1)=-2\pi.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>$\cos\pi$ 算成 $1$</strong>：弧度制下 $\cos\pi=-1$，符号一错答案就变成 $4\pi$。</li><li><strong>漏掉第二条复合支</strong>：只对 $\ln x$ 求导、丢掉 $\sin\pi x$ 的 $\pi\cos\pi x$，是最常见的半截答案。</li><li><strong>把 $df$ 的系数当函数值</strong>：$\pi$ 与 $3$ 是 $(0,0)$ 处的偏导数，不是 $f(0,0)$ 本身。</li></ul>
+<blockquote>一句话结论：$g'(1)=\pi\cdot1+3\cdot\pi\cdot(-1)=-2\pi$；全微分系数即偏导，链式两条支路都乘。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

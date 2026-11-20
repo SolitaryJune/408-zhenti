@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·02 分段函数原函数的衔接</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-01.html" data-q="../question/m2-2016-01/">← <b>m2-2016-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-02/" data-q="../question/m2-2016-02/" data-no-anim="1">m2-2016-02 · 本题</a>
+  <a href="m2-2016-03.html" data-q="../question/m2-2016-03/"><b>m2-2016-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>$f(x)=\\begin{cases}2(x-1), & x<1\\\\ \\ln x, & x\\ge1\\end{cases}$。原函数 $F$ 要满足两条：<b>处处连续</b> + $F\'=f$。策略：分段积分 → 用 $x=1$ 处连续性定常数 → 回头验导。</p>' },
+  { label: '第 1 步 · 左段积分',
+    h: '<p>$x<1$：$\\displaystyle\\int 2(x-1)\\,\\mathrm dx=(x-1)^2+C_1$。四个选项左段都取了 $C_1=0$，分歧全在右段常数。</p>' },
+  { label: '第 2 步 · 右段分部积分',
+    h: '<p>$x\\ge1$：$$\\int\\ln x\\,\\mathrm dx=x\\ln x-\\int 1\\,\\mathrm dx=x(\\ln x-1)+C_2.$$</p>' },
+  { label: '第 3 步 · 连续性定 C₂（成败在此）',
+    h: '<p>左极限 $(1-1)^2=0$，右值 $\\ln 1-1+C_2=-1+C_2$。令 $-1+C_2=0$ 得 $\\boxed{C_2=1}$——右段应为 $x(\\ln x-1)+1$。</p>' },
+  { label: '第 4 步 · 回头验导',
+    h: '<p>$\\big[x(\\ln x-1)+1\\big]\'=\\ln x-1+1=\\ln x=f(x)$（$x>1$），且 $F(1)=0$ 与左段接上：导数、连续两关全过。</p>' },
+  { label: '第 5 步 · 结论',
+    h: '<p>$$F(x)=\\begin{cases}(x-1)^2, & x<1\\\\ x(\\ln x-1)+1, & x\\ge1\\end{cases}\\quad\\Rightarrow\\quad \\textbf{选 D}$$</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '分段函数 $f$ 的一个原函数（连续性定常数）',
+  subtitle: '考点：原函数存在与分段衔接 · 方法：分段积分 → 连续性定 $C_2$ → 验导',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的六步计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'原函数两条硬要求：连续 + 导数恒等于 f', count:0 },
+    { cls:'step', tag:'左段',   log:'2(x−1) 积分得 (x−1)²，四选项此处一致', count:1 },
+    { cls:'step', tag:'右段',   log:'ln x 分部积分得 x(ln x−1)+C₂', count:2 },
+    { cls:'ok',   tag:'定常数', log:'左极限 0 = 右值 −1+C₂，解出 C₂=1', count:3 },
+    { cls:'ok',   tag:'验导',   log:'求导回到 ln x，且 F(1)=0 与左段接上', count:4 },
+    { cls:'done', tag:'完成',   log:'右段 x(ln x−1)+1，选 D', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '选 D：x(ln x − 1) + 1',
+    html: '记忆锚点：<b>分段原函数，分段点靠连续性定常数</b>——左极限 $(1-1)^2=0$ 钉死 $C_2=1$。干扰项 A 差一个常数不连续，B/C 的 $\\int\\ln x$ 本身就积错了（应为 $x\\ln x-x$）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分段函数求原函数——用连续性钉死常数</h2>
+<p>答案：D</p>
+<h3>第 0 步：先立机制——常数为什么只能由连续性裁判</h3>
+<p>原函数的定义是"在整个定义域上 $F'(x)=f(x)$"。<strong>可导必连续</strong>，所以 $F$ 必须处处连续，分段点 $x=1$ 是命门。再看另一头：分段积分出的两段各带任意常数 $C_1,C_2$，但<strong>求导会把常数抹掉</strong>——条件 $F'=f$ 对常数完全"失明"。于是分段点处接没接上，只能交给连续性检验：先分段积出形状，再令两段在 $x=1$ 处无缝对接，常数由方程解出，不能拍脑袋。这就是"连续性定常数"的由来。</p>
+<h3>第一步：分段积出形状</h3>
+<p>$x&lt;1$ 段：$\displaystyle\int 2(x-1)\,\mathrm dx=(x-1)<sup>2</sup>+C_1$，四个选项统一取 $C_1=0$，不必纠结。</p>
+<p>$x\ge1$ 段：分部积分选 $u=\ln x$、$\mathrm dv=\mathrm dx$——原则是"谁求导变简单谁作 $u$"，$\ln x\to\frac1x$ 正是如此：</p>
+<p>$$\int\ln x\,\mathrm dx=x\ln x-\int 1\,\mathrm dx=x(\ln x-1)+C_2.$$</p>
+<h3>第二步：连续性解出 C₂</h3>
+<p>$$\lim_{x\to1^-}F(x)=(1-1)<sup>2</sup>=0,\qquad \lim_{x\to1^+}F(x)=1\cdot(\ln1-1)+C_2=-1+C_2,$$</p>
+<p>令二者相等得 $C_2=1$，右段为 $x(\ln x-1)+1$，选 <strong>D</strong>。</p>
+<h3>第三步：验导并复核衔接</h3>
+<p>$\big[x(\ln x-1)+1\big]'=\ln x-1+1=\ln x=f(x)$；且 $x\to1^\pm$ 时 $F'$ 都趋于 $f(1)=\ln1=0$，分段点处导数也无缝——$F$ 是货真价实的原函数。</p>
+<h3>易错点</h3>
+<ul><li><strong>只验导数不验连续</strong>（A）：$C_2=0$ 时右段在 $x=1$ 处取值 $-1\ne0$，$F$ 跳跃，跳跃处必不可导——导数验得再对也不是原函数。</li><li><strong>$\int\ln x$ 的符号</strong>（B/C）：$\ln x$ 求导是 $\frac1x$，原函数必带 $-x$；$x(\ln x+1)$ 求导得 $\ln x+2$，多出的 $+1$ 正是符号写错的指纹。</li><li><strong>常数随手给</strong>：常数在导数里隐形，连续性是唯一能"看见"它的检验，$C_2$ 只能解出、不能指定。</li></ul>
+<blockquote>结论：$F(x)=\begin{cases}(x-1)<sup>2</sup>, &amp; x&lt;1\\[2pt] x(\ln x-1)+1, &amp; x\ge1\end{cases}$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

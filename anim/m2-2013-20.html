@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2013·20 最小值打底 + 单调有界定极限</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-19.html" data-q="../question/m2-2013-19/">← <b>m2-2013-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-20/" data-q="../question/m2-2013-20/" data-no-anim="1">m2-2013-20 · 本题</a>
+  <a href="m2-2013-21.html" data-q="../question/m2-2013-21/"><b>m2-2013-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>(1) 求导</b>：$f(x)=\\ln x+\\dfrac1x$（$x>0$），$$f'(x)=\\frac1x-\\frac1{x^2}=\\frac{x-1}{x^2}$$</p>",
+  "<p><b>(1) 定单调</b>：$0<x<1$ 时 $f'<0$ 递减；$x>1$ 时 $f'>0$ 递增。$x=1$ 是极小值点，也是最小值点。</p>",
+  "<p><b>(1) 最小值</b>：$$f(1)=\\ln1+1=1\\qquad\\Longrightarrow\\qquad \\ln x+\\frac1x\\ge1\\ \\ (x>0)$$ 等号仅在 $x=1$。</p>",
+  "<p><b>(2) 审题</b>：数列满足 $\\ln x_n+\\dfrac1{x_{n+1}}<1$。目标：证 $\\lim\\limits_{n\\to\\infty}x_n$ 存在并求值。路线：单调有界准则。</p>",
+  "<p><b>(2) 调用 (1) 的成果</b>：$f(x_n)\\ge1$ 改写成 $$1-\\ln x_n\\le\\frac1{x_n}$$</p>",
+  "<p><b>串成不等式链</b>：结合题设 $\\ln x_n+\\dfrac1{x_{n+1}}<1$：$$\\frac1{x_{n+1}}<1-\\ln x_n\\le\\frac1{x_n}$$</p>",
+  "<p><b>取倒数得单调性</b>：各量均为正，倒数后不等号反向：$$\\frac1{x_n}>\\frac1{x_{n+1}}>0\\ \\Longrightarrow\\ x_{n+1}>x_n$$ $\\{x_n\\}$ 严格递增。</p>",
+  "<p><b>取上界</b>：链的最左端 $\\dfrac1{x_{n+1}}>0$ 迫使 $1-\\ln x_n>0$，即 $\\ln x_n<1$：$$x_n<\\mathrm e$$ 有上界。</p>",
+  "<p><b>极限存在</b>：递增 + 有上界，由单调有界准则，$$\\lim_{n\\to\\infty}x_n=A\\ \\text{存在}$$</p>",
+  "<p><b>取极限两面夹</b>：对 $\\ln x_n+\\dfrac1{x_{n+1}}<1$ 令 $n\\to\\infty$（$x_{n+1}\\to A$）：$\\ln A+\\dfrac1A\\le1$；而 (1) 给 $\\ln A+\\dfrac1A\\ge1$。故 $f(A)=1$，最小值仅在 $x=1$ 取得。$$\\boxed{\\;\\lim_{n\\to\\infty}x_n=1\\;}$$</p>"
+];
+
+AW.init({
+  title: '$f(x)=\\ln x+\\dfrac1x$ 的最小值与数列极限 $\\lim x_n$',
+  subtitle: '考点：最值 + 单调有界准则 · 方法：用 (1) 的下界夹出递推不等式',
+  counterLabel: '推理步',
+  ribbonTitle: '关键关口（✓ 通过）',
+  intro: '点击「▶ 播放」逐步演示 (1) 最小值与 (2) 极限存在性的推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'(1)求导', log:'先做第 (1) 问：通分求导，分子是 x−1', show:1, count:0 },
+    { cls:'step',  tag:'(1)单调', log:'负变正：1 之前递减、之后递增，x=1 是谷底', show:2, count:1 },
+    { cls:'ok',    tag:'(1)结论', log:'最小值 f(1)=1，于是恒有 ln x + 1/x 不小于 1', show:3, count:2, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'(2)审题', log:'第 (2) 问：数列不等式里藏着 ln xₙ 与 1/xₙ₊₁，正好是 f 的两块', show:4, count:3 },
+    { cls:'step',  tag:'造链',    log:'把 (1) 的下界改写成 1−ln xₙ ≤ 1/xₙ', show:5, count:4 },
+    { cls:'ok',    tag:'不等式链', log:'题设夹在中间：1/xₙ₊₁ < 1−ln xₙ ≤ 1/xₙ', show:6, count:5 },
+    { cls:'ok',    tag:'递增',    log:'均为正数取倒数，不等号反向：xₙ₊₁ > xₙ，严格递增', show:7, count:6, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'有界',    log:'链条左端为正，逼出 1−ln xₙ > 0，即 xₙ < e，有上界', show:8, count:7 },
+    { cls:'ok',    tag:'存在',    log:'递增加有上界，单调有界准则：极限 A 存在', show:9, count:8 },
+    { cls:'done',  tag:'求值',    log:'对题设取极限得 f(A) ≤ 1，又恒有 f(A) ≥ 1，夹出 f(A)=1，唯一最小点 x=1', show:10, count:9, done:true },
+  ],
+
+  result: {
+    big: '$(1)\\ f_{\\min}=f(1)=1;\\qquad (2)\\ \\lim\\limits_{n\\to\\infty}x_n=1$',
+    html: '记忆锚点：<b>数列不等式含 $\\ln x_n$ 与 $\\dfrac1{x_{n+1}}$，先把 $f\\ge1$ 化成 $1-\\ln x_n\\le\\dfrac1{x_n}$ 再串联</b>。易错：取倒数方向；严格不等号取极限只能给 $\\le$，等号靠最小值唯一夹出。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：用最值造不等式，单调有界准则锁极限</h2>
+<p>答案：(1) 最小值为 $1$；(2) $\lim\limits_{n\to\infty}x_n=1$。</p>
+<h3>第一步：(1) 求最小值——同时造出一把「尺子」</h3>
+<p>$$f'(x)=\frac1x-\frac1{x<sup>2</sup>}=\frac{x-1}{x<sup>2</sup>}$$</p>
+<p>$x<sup>2</sup>&gt;0$，符号由 $x-1$ 决定：$0&lt;x&lt;1$ 时递减、$x&gt;1$ 时递增，$x=1$ 是唯一极小点，两侧单调夹住它，故就是最小值点：</p>
+<p>$$f(1)=\ln1+1=1,\qquad \ln x+\frac1x\ge1\ \ (x&gt;0)$$</p>
+<p>这条<strong>全局不等式</strong>就是第 (2) 问的全部外援——(1) 不只是算个值，是在给 (2) 造工具。</p>
+<h3>第二步：为什么用单调有界准则</h3>
+<p>题设 $\ln x_n+\dfrac1{x_{n+1}}&lt;1$ 是关于 $x_n,x_{n+1}$ 的<strong>不等式</strong>，不是显式递推 $x_{n+1}=g(x_n)$——手里只有「序」的信息。单调有界准则恰好只需要序信息就能兑现收敛性，所以它是这类题的标准机器。它需要两样原料——单调性、有界性——都从 (1) 的尺子来。把 $f(x_n)\ge1$ 改写成 $1-\ln x_n\le\dfrac1{x_n}$，与题设串成链：</p>
+<p>$$\frac1{x_{n+1}}&lt;1-\ln x_n\le\frac1{x_n}$$</p>
+<h3>第三步：单调性与有界性——每步变形为什么合法</h3>
+<ul><li><strong>取倒数为什么合法</strong>：链上各量均为正——$\dfrac1{x_{n+1}}&gt;0$；它小于右端又迫使 $1-\ln x_n&gt;0$；$\dfrac1{x_n}&gt;0$。<strong>同正才可倒数反向</strong>，得 $x_{n+1}&gt;x_n$，$\{x_n\}$ 严格递增。</li><li><strong>有界从哪来</strong>：$1-\ln x_n&gt;0$ 给出 $\ln x_n&lt;1$，即 $x_n&lt;\mathrm e$——上界是顺手拿到的副产品。</li><li>单调递增 + 有上界，由单调有界准则，$A=\lim\limits_{n\to\infty}x_n$ 存在。</li></ul>
+<h3>第四步：取极限夹出 $A$——两处容易翻车的地方</h3>
+<p>对 $\ln x_n+\dfrac1{x_{n+1}}&lt;1$ 令 $n\to\infty$：</p>
+<ul><li><strong>为什么 $1/x_{n+1}$ 可以代极限</strong>：$\{x_n\}$ 递增且各项为正（$\ln x_n$ 有意义强制 $x_n&gt;0$），故 $A\ge x_1&gt;0$；$1/x$ 在 $(0,\infty)$ 连续，极限可代入。不交代 $A&gt;0$ 是常见失分点。</li><li><strong>为什么严格不等号只能传成 $\le$</strong>：极限过程会吃掉严格性（如 $x_n=1-\frac1n$ 每项严格小于 $1$，极限却是 $1$）。于是得 $\ln A+\dfrac1A\le1$，即 $f(A)\le1$。</li></ul>
+<p>但 (1) 的尺子给出 $f(A)\ge1$，两面夹出 $f(A)=1$。<strong>为什么能钉死 $A=1$</strong>：$f(A)=1$ 说明 $A$ 是最小值点，而单调性分析已证最小值点唯一（$x=1$），故</p>
+<p>$$\lim_{n\to\infty}x_n=1$$</p>
+<h3>易错点</h3>
+<ul><li><strong>取倒数忘了反向</strong>：同正才反向，$0&lt;\dfrac1{x_{n+1}}&lt;\dfrac1{x_n}$ 倒过来是 $x_{n+1}&gt;x_n$（递增），别弄成递减。</li><li><strong>不交代 $A&gt;0$ 就代 $1/A$</strong>：$1/x$ 只在 $(0,\infty)$ 连续，$A&gt;0$ 须由「递增 + 各项为正」落实。</li><li><strong>把 $&lt;$ 直接传成 $&lt;$</strong>：只能得 $f(A)\le1$，等号靠 $f(A)\ge1$ 夹出来。</li></ul>
+<blockquote>记忆锚点：数列题只有序信息就用单调有界准则；(1) 的最小值是 (2) 的尺子——造链、夹 $f(A)=1$、唯一最小点钉死 $A$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

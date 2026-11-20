@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：阿基米德螺线的切线（2014 年第 12 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-11.html" data-q="../question/m2-2014-11/">← <b>m2-2014-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-12/" data-q="../question/m2-2014-12/" data-no-anim="1">m2-2014-12 · 本题</a>
+  <a href="m2-2014-13.html" data-q="../question/m2-2014-13/"><b>m2-2014-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CARDS = [
+  { cls: 'key', title: '极坐标化参数方程',
+    body: '<p>$r=\\theta$（阿基米德螺线），以 $\\theta$ 为参数：</p>' +
+          '<p>$$x=r\\cos\\theta=\\theta\\cos\\theta,\\qquad y=r\\sin\\theta=\\theta\\sin\\theta.$$</p>' },
+  { cls: '', title: '求两个参数导数',
+    body: '<p>$$\\frac{\\mathrm dx}{\\mathrm d\\theta}=\\cos\\theta-\\theta\\sin\\theta,\\qquad \\frac{\\mathrm dy}{\\mathrm d\\theta}=\\sin\\theta+\\theta\\cos\\theta.$$</p>' },
+  { cls: 'step', title: '代入 $\\theta=\\dfrac{\\pi}{2}$',
+    body: '<p>$\\cos\\dfrac\\pi2=0$，$\\sin\\dfrac\\pi2=1$：</p>' +
+          '<p>$$\\frac{\\mathrm dx}{\\mathrm d\\theta}=-\\frac{\\pi}{2},\\qquad \\frac{\\mathrm dy}{\\mathrm d\\theta}=1.$$</p>' },
+  { cls: 'ok', title: '斜率 $k$',
+    body: '<p>$$k=\\frac{\\mathrm dy/\\mathrm d\\theta}{\\mathrm dx/\\mathrm d\\theta}=\\frac{1}{-\\pi/2}=-\\frac{2}{\\pi}.$$</p>' },
+  { cls: '', title: '切点的直角坐标',
+    body: '<p>$x=\\dfrac{\\pi}{2}\\cos\\dfrac{\\pi}{2}=0$，$y=\\dfrac{\\pi}{2}\\sin\\dfrac{\\pi}{2}=\\dfrac{\\pi}{2}$，切点 $\\Big(0,\\dfrac{\\pi}{2}\\Big)$。注意 $(\\tfrac\\pi2,\\tfrac\\pi2)$ 是<b>极坐标</b>，不能直接当 $x,y$。</p>' },
+  { cls: 'good', title: '写切线方程',
+    body: '<p>$$y-\\frac{\\pi}{2}=-\\frac{2}{\\pi}(x-0)\\ \\Longleftrightarrow\\ y=-\\frac{2}{\\pi}x+\\frac{\\pi}{2}.$$</p>' },
+];
+
+AW.init({
+  title: '【2014 数二·12】$r=\\theta$ 在 $\\theta=\\tfrac{\\pi}{2}$ 处的切线',
+  subtitle: '考点：极坐标求切线 · 方法：化参数方程 + 参数求导',
+  counterLabel: '已执行',
+  ribbonTitle: '关键节点',
+  intro: '点击「▶ 播放」逐步演示推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一张卡'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'极坐标曲线没有现成斜率，先化成参数方程', count:0 },
+    { cls:'step',  tag:'参数化', log:'x = θcosθ，y = θsinθ', count:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'求导', log:'dx/dθ 与 dy/dθ 各自求出', count:2 },
+    { cls:'ok',    tag:'代值', log:'θ=π/2 处：dx/dθ = −π/2，dy/dθ = 1', count:3 },
+    { cls:'ok',    tag:'斜率', log:'k = 1 ÷ (−π/2) = −2/π', count:4, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'切点', log:'极坐标换算：切点是 (0, π/2)，不是 (π/2, π/2)', count:5 },
+    { cls:'done',  tag:'完成', log:'y = −2/π x + π/2', count:6, ribbon:{k:3, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 y = −(2/π)x + π/2',
+    html: '记忆锚点：<b>极坐标切线两件套</b>——切点用 $x=r\\cos\\theta,\\ y=r\\sin\\theta$ 换算；斜率用 $k=\\dfrac{y\'_\\theta}{x\'_\\theta}$，别拿 $r\'$ 当斜率。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：极坐标切线——参数化后按链式法则取斜率</h2>
+<p><strong>答案：$y=-\dfrac{2}{\pi}x+\dfrac{\pi}{2}$</strong></p>
+<h3>第一步：先立机制——为什么化参数方程</h3>
+<p>极坐标点 $(r,\theta)$ 的直角坐标定义就是 $x=r\cos\theta$、$y=r\sin\theta$，故曲线 $r=\theta$ 天然是以 $\theta$ 为参数的参数曲线，而参数曲线的斜率有现成机制：</p>
+<p>$$\frac{\mathrm dy}{\mathrm dx}=\frac{\mathrm dy/\mathrm d\theta}{\mathrm dx/\mathrm d\theta}\qquad(\mathrm dx/\mathrm d\theta\neq0\ \text{时的链式法则}).$$</p>
+<p>为什么不能拿 $r'=1$ 当斜率：$r'$ 量的是「到极点的距离随角度的变化率」，方向沿极径；切线方向与极径方向一般不同，必须经参数方程换算。</p>
+<h3>第二步：求参数导数</h3>
+<p>$$\frac{\mathrm dx}{\mathrm d\theta}=\cos\theta-\theta\sin\theta,\qquad \frac{\mathrm dy}{\mathrm d\theta}=\sin\theta+\theta\cos\theta.$$</p>
+<h3>第三步：代 $\theta=\dfrac\pi2$</h3>
+<p>$\cos\dfrac\pi2=0$，$\sin\dfrac\pi2=1$：</p>
+<p>$$x'_\theta=0-\frac\pi2=-\frac\pi2\ (\neq0,\ \text{链式法则合法}),\qquad y'_\theta=1+0=1.$$</p>
+<p>斜率</p>
+<p>$$k=\frac{1}{-\pi/2}=-\frac2\pi.$$</p>
+<h3>第四步：定切点、写切线</h3>
+<p>题给的 $\big(\dfrac\pi2,\dfrac\pi2\big)$ 是 $(r,\theta)$，<strong>不是直角坐标</strong>！切点要现算：</p>
+<p>$$x=\frac\pi2\cos\frac\pi2=0,\qquad y=\frac\pi2\sin\frac\pi2=\frac\pi2,$$</p>
+<p>即切点 $\big(0,\dfrac\pi2\big)$ 在正 $y$ 轴上；螺线在此处向左上方爬，斜率约 $-0.64$，几何上合理。切线：</p>
+<p>$$y-\frac\pi2=-\frac2\pi(x-0)\ \Longleftrightarrow\ y=-\frac2\pi x+\frac\pi2.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $(r,\theta)$ 当直角坐标入式</strong>：切点要用 $x=r\cos\theta$、$y=r\sin\theta$ 换算。</li><li><strong>拿 $r'$ 当斜率</strong>：$r'$ 沿极径量距离，斜率须走 $y'_\theta/x'_\theta$。</li><li><strong>斜率倒数弄反</strong>：$k=\dfrac{1}{-\pi/2}=-\dfrac2\pi$，不是 $-\dfrac\pi2$。</li></ul>
+<blockquote>一句话结论：切点 $\big(0,\frac\pi2\big)$、斜率 $-\frac2\pi$，切线 $y=-\frac2\pi x+\frac\pi2$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

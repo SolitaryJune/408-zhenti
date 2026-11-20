@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·05 由复合关系反求 f(u,v) 再求偏导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-04.html" data-q="../question/m2-2015-04/">← <b>m2-2015-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-05/" data-q="../question/m2-2015-05/" data-no-anim="1">m2-2015-05 · 本题</a>
+  <a href="m2-2015-06.html" data-q="../question/m2-2015-06/"><b>m2-2015-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>已知 $f\\Big(x+y,\\ \\dfrac{y}{x}\\Big)=x^2-y^2$。目标：先反求 $f(u,v)$ 的显式表达，再算 $\\left.\\dfrac{\\partial f}{\\partial u}\\right|_{(1,1)}$ 与 $\\left.\\dfrac{\\partial f}{\\partial v}\\right|_{(1,1)}$。</p>' },
+  { label: '第 1 步 · 反解 x、y',
+    h: '<p>令 $u=x+y,\\ v=\\dfrac{y}{x}$。由 $y=vx$ 代入第一式得 $u=x(1+v)$，解出 $$x=\\dfrac{u}{1+v},\\qquad y=\\dfrac{uv}{1+v}.$$</p>' },
+  { label: '第 2 步 · 代回，凑平方差',
+    h: '<p>$$x^2-y^2=(x+y)(x-y)=u\\cdot\\dfrac{u}{1+v}(1-v)=u^2\\cdot\\dfrac{1-v}{1+v},$$ 故 $f(u,v)=u^2\\,\\dfrac{1-v}{1+v}$。</p>' },
+  { label: '第 3 步 · 对 u 求偏导',
+    h: '<p>$\\dfrac{\\partial f}{\\partial u}=2u\\cdot\\dfrac{1-v}{1+v}$，在 $(1,1)$：$2\\cdot\\dfrac{1-1}{2}=0$ —— 因子 $1-v$ 在 $v=1$ 处为零。</p>' },
+  { label: '第 4 步 · 对 v 求偏导（商法则）',
+    h: '<p>$\\Big(\\dfrac{1-v}{1+v}\\Big)^{\\prime}=\\dfrac{-(1+v)-(1-v)}{(1+v)^2}=\\dfrac{-2}{(1+v)^2}$，故 $\\dfrac{\\partial f}{\\partial v}=\\dfrac{-2u^2}{(1+v)^2}$，在 $(1,1)$：$-\\dfrac{2}{4}=-\\dfrac12$。</p>' },
+  { label: '第 5 步 · 结论',
+    h: '<p>$$\\left.\\dfrac{\\partial f}{\\partial u}\\right|_{(1,1)}=0,\\qquad \\left.\\dfrac{\\partial f}{\\partial v}\\right|_{(1,1)}=-\\dfrac12,$$ 依次为 $0,\\ -\\tfrac12$，选 <b>D</b>。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '由 $f\\big(x+y,\\tfrac{y}{x}\\big)=x^2-y^2$ 求 $\\partial f/\\partial u,\\ \\partial f/\\partial v$ 在 $(1,1)$ 的值',
+  subtitle: '考点：多元复合函数 · 方法：反解 x、y → 显式化 f(u,v) → 求偏导 → 代值',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的六步计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'x、y 是中间量：先用 u、v 反解，再显式化 f(u,v)', count:0 },
+    { cls:'step',  tag:'反解',   log:'y=vx 代入得 x=u/(1+v)、y=uv/(1+v)', count:1 },
+    { cls:'ok',    tag:'代回',   log:'平方差凑成 (x+y)(x−y)，f(u,v)=u²(1−v)/(1+v)', count:2 },
+    { cls:'ok',    tag:'∂f/∂u', log:'在 (1,1) 处因子 1−v 为零，偏导等于 0', count:3 },
+    { cls:'ok',    tag:'∂f/∂v', log:'商法则得 −2u²/(1+v)²，代值 −1/2', count:4 },
+    { cls:'done',  tag:'完成',   log:'依次 0、−1/2，选 D', count:5, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '0 与 −1/2（选 D）',
+    html: '记忆锚点：<b>先反解、后代回</b>，把 $f(u,v)=u^2\\dfrac{1-v}{1+v}$ 显式化再动手求导。$\\dfrac{\\partial f}{\\partial u}$ 在 $(1,1)$ 因子 $1-v=0$ 归零；$\\dfrac{\\partial f}{\\partial v}$ 用商法则得 $\\dfrac{-2u^2}{(1+v)^2}=-\\dfrac12$。干扰项专设「顺序颠倒」「符号弄反」两种坑。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由复合关系反求 $f(u,v)$——先显式化，再谈偏导</h2>
+<p>答案：<strong>D</strong>。</p>
+<h3>第 0 步：先立机制——为什么必须先把 $f$ 显式化</h3>
+<p>$\dfrac{\partial f}{\partial u}$ 的含义是：把 $f$ 看成以 $(u,v)$ 为自变量的二元函数，固定 $v$ 对 $u$ 求导。现在手里只有 $f\big(x+y,\frac yx\big)=x<sup>2</sup>-y<sup>2</sup>$——$u,v$ 藏在 $x,y$ 里，不显式化连"对谁求导"都说不清。路线选择：两个方程两个未知数，可解——由 $y=vx$ 代入 $u=x+y=x(1+v)$，只要 $v\neq-1$（本题目标点 $v=1$ 满足）就能反解出 $x,y$；用链式法则隐式求导也能做，但要解方程组，绕远。<strong>反解显式化是最直接的路。</strong></p>
+<h3>第 1 步：反解与代回——为什么用平方差</h3>
+<p>$$x=\frac{u}{1+v},\qquad y=\frac{uv}{1+v}.$$</p>
+<p>代回时用平方差 $x<sup>2</sup>-y<sup>2</sup>=(x+y)(x-y)$：因子 $x+y=u$ 现成，$x-y=x(1-v)=\dfrac{u(1-v)}{1+v}$ 也现成，一步到位；硬算 $x<sup>2</sup>,y<sup>2</sup>$ 再通分相减是绕路。</p>
+<p>$$f(u,v)=u\cdot\frac{u(1-v)}{1+v}=u<sup>2</sup>\,\frac{1-v}{1+v}.$$</p>
+<h3>第 2 步：求偏导——两个结果各有各的"为什么"</h3>
+<p>$\dfrac{\partial f}{\partial u}=2u\,\dfrac{1-v}{1+v}$，在 $(1,1)$ 处 $=0$。<strong>直观</strong>：$v=1$ 时 $f(u,1)\equiv0$（因子 $1-v$ 归零），函数沿 $u$ 方向平躺，变化率自然是 $0$。</p>
+<p>$\dfrac{\partial f}{\partial v}$ 用商法则：$\Big(\dfrac{1-v}{1+v}\Big)'=\dfrac{-(1+v)-(1-v)}{(1+v)<sup>2</sup>}=\dfrac{-2}{(1+v)<sup>2</sup>}$（分子 $-(1+v)-(1-v)=-2$，相消后只剩常数），故 $\dfrac{\partial f}{\partial v}=\dfrac{-2u<sup>2</sup>}{(1+v)<sup>2</sup>}$，在 $(1,1)$ 处 $=-\dfrac12$。</p>
+<p>交叉验证：$(u,v)=(1,1)$ 反解得 $x=y=\tfrac12$，此时 $x<sup>2</sup>-y<sup>2</sup>=0$，即 $f(1,1)=0$，与 $f(1,1)=1<sup>2</sup>\cdot\frac02$ 吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>不反解、直接对 $x,y$ 求导</strong>：求的是复合关系的导数，不是 $f$ 对 $u,v$ 的偏导，对象就错了。</li><li><strong>商法则分子算错</strong>：结果 $\dfrac{-2}{(1+v)<sup>2</sup>}$ 不是 $-1$。</li><li><strong>两个数顺序/符号排错</strong>：第一个是 $0$，第二个才是 $-\dfrac12$——A、B、C 正是在这两处设坑。</li></ul>
+<blockquote>记忆锚点：复合关系给的是"函数值方程"，先反解显式化再求导；$v=1$ 处因子 $1-v$ 归零，$\dfrac{\partial f}{\partial u}$ 必为 $0$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

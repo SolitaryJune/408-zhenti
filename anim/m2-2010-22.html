@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>m2-2010-22 由「两个不同解」定参数并求通解</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-21.html" data-q="../question/m2-2010-21/">← <b>m2-2010-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2010-22/" data-q="../question/m2-2010-22/" data-no-anim="1">m2-2010-22 · 本题</a>
+  <a href="m2-2010-23.html" data-q="../question/m2-2010-23/"><b>m2-2010-23</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var PAGES = [
+  "<p>$\\boldsymbol A=\\begin{pmatrix}\\lambda&1&1\\\\0&\\lambda-1&0\\\\1&1&\\lambda\\end{pmatrix}$，$\\boldsymbol b=(a,1,1)^T$，已知 $\\boldsymbol{Ax}=\\boldsymbol b$ 存在<b>两个不同解</b>。</p><p>两个不同解 $\\Rightarrow$ 解不唯一 $\\Rightarrow$ 无穷多解 $\\Rightarrow$ $|\\boldsymbol A|=0$。</p>",
+  "<p>按第二行展开（只有 $\\lambda-1$ 非零）：</p>$$|\\boldsymbol A|=(\\lambda-1)\\begin{vmatrix}\\lambda&1\\\\1&\\lambda\\end{vmatrix}=(\\lambda-1)(\\lambda^2-1)=(\\lambda-1)^2(\\lambda+1)=0$$<p>得 $\\lambda=1$ 或 $\\lambda=-1$。</p>",
+  "<p>检验 $\\lambda=1$：第二行变成 $0x_1+0x_2+0x_3=1$，矛盾——<b>无解，舍去</b>。</p>",
+  "<p>$\\lambda=-1$ 时的增广矩阵：</p>$$\\left(\\begin{array}{ccc|c}-1&1&1&a\\\\0&-2&0&1\\\\1&1&-1&1\\end{array}\\right)$$",
+  "<p>行变换（$r_3+r_1$，再 $r_3+r_2$）：</p>$$\\left(\\begin{array}{ccc|c}-1&1&1&a\\\\0&-2&0&1\\\\0&0&0&2+a\\end{array}\\right)$$",
+  "<p>相容条件：末行 $0=2+a$ 必须成立，故 $a=-2$。</p><p>(1) 的答案：$\\lambda=-1,\\ a=-2$。</p>",
+  "<p>(2) 回代 $a=-2$ 解阶梯形：$-2x_2=1\\Rightarrow x_2=-\\dfrac12$；第一行 $-x_1+x_2+x_3=-2\\Rightarrow x_1=x_3+\\dfrac32$。取 $x_3=k$。</p>",
+  "<p>验算：特解 $(\\tfrac32,-\\tfrac12,0)^T$ 代入三行全成立；$(1,0,1)^T$ 满足 $\\boldsymbol A(1,0,1)^T=\\boldsymbol0$ ✓</p>$$\\boldsymbol x=k\\begin{pmatrix}1\\\\0\\\\1\\end{pmatrix}+\\begin{pmatrix}\\tfrac32\\\\[2pt]-\\tfrac12\\\\[2pt]0\\end{pmatrix}$$"
+];
+
+AW.init({
+  title: "2010·22　$\\boldsymbol{Ax}=\\boldsymbol b$ 有两个不同解：求 $\\lambda,a$ 与通解",
+  subtitle: "考点：解的结构与秩 · 行列式展开 · 相容性检验 · 高斯消元求通解",
+  counterLabel: "步数",
+  intro: "点击「▶ 播放」逐步演示：行列式 → 逐个 λ 检验 → 行变换 → 通解。",
+
+  build: function(stage){
+    stage.innerHTML = "";
+    var wrap = AW.el("div", "aw-scroll");
+    wrap.appendChild(AW.el("div", "aw-row-label", "<b>推导板</b>：$\\boldsymbol{Ax}=\\boldsymbol b$ 有两个不同解"));
+    this._board = AW.el("div", "", "");
+    wrap.appendChild(this._board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:"shift", tag:"审题", log:"方程组有两个不同解 = 解不唯一 = 无穷多解，系数矩阵必不满秩", count:0 },
+    { cls:"step", tag:"算行列式", log:"按第二行展开得 (λ−1)²(λ+1)=0，候选 λ=1 或 λ=−1", count:1 },
+    { cls:"miss", tag:"λ=1 舍", log:"λ=1 时第二行是 0=1，方程组无解，舍去——行列式为零不代表有解", count:2 },
+    { cls:"step", tag:"λ=−1", log:"λ=−1 时写出增广矩阵，其中含待定的 a", count:3 },
+    { cls:"step", tag:"行变换", log:"r₃+r₁ 再 r₃+r₂，第三行化成 0 0 0 | 2+a", count:4 },
+    { cls:"ok", tag:"定 a", log:"相容要求 2+a=0，即 a=−2；此时秩相等，有无穷多解", count:5 },
+    { cls:"step", tag:"回代", log:"−2x₂=1 给 x₂=−1/2；第一行给 x₁=x₃+3/2；自由未知量取 x₃=k", count:6 },
+    { cls:"done", tag:"通解", log:"齐次解 k(1,0,1)ᵀ 加特解 (3/2,−1/2,0)ᵀ，验算无误", count:7, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    this._board.innerHTML = PAGES[i];
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "(1) λ=−1, a=−2　(2) x = k(1,0,1)ᵀ + (3/2,−1/2,0)ᵀ",
+    html: "最终答案：(1) $\\lambda=-1,\\ a=-2$；(2) $\\boldsymbol x=k\\begin{pmatrix}1\\\\0\\\\1\\end{pmatrix}+\\begin{pmatrix}\\tfrac32\\\\[2pt]-\\tfrac12\\\\[2pt]0\\end{pmatrix}$（$k$ 为任意常数）。<br>" +
+          "记忆点：<b>「两个不同解」$=$「无穷多解」$=$「$|\\boldsymbol A|=0$ 且增广与系数矩阵同秩」</b>；$\\lambda=1$ 虽使行列式为零但无解，必须检验。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：由「两个不同解」定参数 + 行变换求通解</h2>
+<p><strong>答案</strong>：(1) $\lambda=-1,\ a=-2$；(2) $x=k\begin{pmatrix}1\\0\\1\end{pmatrix}+\begin{pmatrix}\tfrac32\\[2pt]-\tfrac12\\[2pt]0\end{pmatrix}$（$k$ 为任意常数）。</p>
+<h3>第一步：(1) "两个不同解"背后的解的结构</h3>
+<p>设有两个不同解 $x_1\ne x_2$，两式相减得 $A(x_1-x_2)=0$：差是导出组 $Ax=0$ 的<strong>非零</strong>齐次解。于是对任意 $k$，$x_1+k(x_1-x_2)$ 仍是 $Ax=b$ 的解——解一经不唯一，就必然<strong>无穷多</strong>（这正是"非齐次通解 $=$ 特解 $+$ 齐次通解"结构的直接后果）；而齐次解非零要求 $A$ 不可逆，即</p>
+<p>$$|A|=0.$$</p>
+<p>按第二行展开（该行只有 $\lambda-1$ 非零）：</p>
+<p>$$|A|=\begin{vmatrix}\lambda&amp;1&amp;1\\0&amp;\lambda-1&amp;0\\1&amp;1&amp;\lambda\end{vmatrix}<br/>=(\lambda-1)\begin{vmatrix}\lambda&amp;1\\1&amp;\lambda\end{vmatrix}=(\lambda-1)<sup>2</sup>(\lambda+1),$$</p>
+<p>得 $\lambda=1$ 或 $\lambda=-1$。</p>
+<h3>第二步：逐个检验相容性，定 $a$</h3>
+<p>$\lambda=1$：第二行变成 $0x_1+0x_2+0x_3=1$——"零系数行对非零常数"的矛盾意味着增广矩阵的秩高于系数矩阵的秩，无解，舍去。</p>
+<p>$\lambda=-1$：对增广矩阵作行变换</p>
+<p>$$\left(\begin{array}{ccc|c}-1&amp;1&amp;1&amp;a\\0&amp;-2&amp;0&amp;1\\1&amp;1&amp;-1&amp;1\end{array}\right)<br/>\xrightarrow{r_3+r_1}\left(\begin{array}{ccc|c}-1&amp;1&amp;1&amp;a\\0&amp;-2&amp;0&amp;1\\0&amp;2&amp;0&amp;1+a\end{array}\right)<br/>\xrightarrow{r_3+r_2}\left(\begin{array}{ccc|c}-1&amp;1&amp;1&amp;a\\0&amp;-2&amp;0&amp;1\\0&amp;0&amp;0&amp;2+a\end{array}\right).$$</p>
+<p>末行是零系数行，相容（有解）要求它的常数端也是零：$2+a=0$，即 $a=-2$。综上 $\lambda=-1,\ a=-2$。</p>
+<h3>第三步：(2) 为什么恰有一个自由变量</h3>
+<p>回代得 $r(A)=r(\bar A)=2&lt;3$，自由未知量个数 $=n-r=3-2=1$——通解里恰有一个任意常数 $k$。由阶梯形：$-2x_2=1\Rightarrow x_2=-\dfrac12$；第一行 $-x_1+x_2+x_3=-2\Rightarrow x_1=x_3+\dfrac32$。取 $x_3=k$：</p>
+<p>$$x_1=k+\frac32,\quad x_2=-\frac12,\quad x_3=k<br/>\ \Longrightarrow\ \boldsymbol x=k\begin{pmatrix}1\\0\\1\end{pmatrix}+\begin{pmatrix}\tfrac32\\[2pt]-\tfrac12\\[2pt]0\end{pmatrix}.$$</p>
+<p>（特解取 $x_3=0$ 的那一个，方便计算；齐次部分 $(1,0,1)<sup>T</sup>$ 是自由变量 $x_3$ 对应的基础解系。）</p>
+<p><strong>验算</strong>：特解代入三行：$-\tfrac32-\tfrac12=-2=a$ ✓，$-2\cdot(-\tfrac12)=1$ ✓，$\tfrac32-\tfrac12=1$ ✓；$(1,0,1)<sup>T</sup>$ 满足 $\boldsymbol A(1,0,1)<sup>T</sup>=\boldsymbol0$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>只解 $|\boldsymbol A|=0$ 就写答案</strong>：$\lambda=1$ 也使行列式为零但方程组<strong>无解</strong>，必须回代检验增广矩阵的秩。</li><li><strong>通解里漏特解或漏齐次解</strong>：非齐次通解 $=$ 特解 $+$ 导出组基础解系，两者缺一不可；$\big(\tfrac32,-\tfrac12,0\big)<sup>T</sup>$ 是特解，$(1,0,1)<sup>T</sup>$ 是齐次解。</li></ul>
+<blockquote>一句话：「存在两个不同解」$\Rightarrow$ 解集不唯一 $\Rightarrow$ 有非零齐次解 $\Rightarrow|\boldsymbol A|=0$——先筛 $\lambda$，再靠相容性定 $a$，最后按"自由变量个数 $=n-r$"回代写通解。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

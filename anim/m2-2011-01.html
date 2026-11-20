@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 1 题 · 等价无穷小的阶与系数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2010-23.html" data-q="../question/m2-2010-23/">← <b>m2-2010-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-01/" data-q="../question/m2-2011-01/" data-no-anim="1">m2-2011-01 · 本题</a>
+  <a href="m2-2011-02.html" data-q="../question/m2-2011-02/"><b>m2-2011-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  /* stage 同步渲染；结论卡/标题/副标题用 setTimeout(0) 兜底 */
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>当 $x\\to0$ 时，$f(x)=3\\sin x-\\sin 3x$ 与 $c\\,x^k$ 是等价无穷小，求 $k$ 与 $c$。</p>',
+  '<p><b>三倍角公式消元：</b>$$\\sin 3x=3\\sin x-4\\sin^3x\\ \\Longrightarrow\\ f(x)=3\\sin x-\\sin 3x=4\\sin^3x.$$一次项 $3\\sin x-3\\sin x$ 恰好消光，只剩纯三次结构。</p>',
+  '<p><b>取等价首项：</b>$x\\to0$ 时 $\\sin x\\sim x$，故 $$4\\sin^3x\\sim 4x^3,$$ 对照 $c\\,x^k$ 读出 $k=3,\\ c=4$。</p>',
+  '<p><b>泰勒展开复核：</b>$$\\sin x=x-\\frac{x^3}{6}+o(x^3),\\qquad \\sin 3x=3x-\\frac{27x^3}{6}+o(x^3),$$ $$f(x)=\\Bigl(-\\frac{3}{6}+\\frac{27}{6}\\Bigr)x^3+o(x^3)=4x^3+o(x^3).$$</p>',
+  '<p><b>结论：</b>$f(x)\\sim 4x^3$，即 $k=3,\\ c=4$，<b>选 C</b>。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 1 题 · $3\\sin x-\\sin 3x\\sim c\\,x^k$ 的阶与系数',
+  subtitle: '考点：等价无穷小比较 · 方法：三倍角公式消元 / 泰勒展开取首项',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：先消一次项，再取首项读出阶数与系数。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'消元', log:'用三倍角公式 sin3x = 3sinx − 4sin³x 代入，一次项恰好全部消掉', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'取首项', log:'sin x 与 x 等价，立方后 4sin³x 与 4x³ 等价，读出 k=3、c=4', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'复核', log:'改用泰勒展开到三次项，首项系数同样算出 +4', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：k=3，c=4，选 C', count:4, reveal:5, hl:4, good:true, done:true, ribbon:{k:4, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '选 C：k=3，c=4',
+    html: '记忆锚点：<b>$\\sin 3x=3\\sin x-4\\sin^3x$</b> 让一次项当场消光，$f(x)=4\\sin^3x\\sim 4x^3$。易错：等价替换不能用在<b>相减</b>的项上——$3\\sin x-\\sin 3x$ 直接换成 $3x-3x=0$ 会丢掉全部主导项，必须展开（或用三倍角）看清首项。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：等价无穷小的阶与系数——泰勒首项机制</h2>
+<p>答案：C（$k=3,\ c=4$）</p>
+<h3>第一步：先弄清「等价」在考什么</h3>
+<p>$f(x)\sim cx<sup>k</sup>$ 的定义是 $\lim_{x\to0}\dfrac{f(x)}{cx<sup>k</sup>}=1$。把 $f$ 在 $0$ 处泰勒展开后，<strong>第一个系数非零的项</strong>就完全决定了这个极限：比它低次的项全为零，比它高次的项除以 $x<sup>k</sup>$ 后趋于 $0$。所以幂次 $k$、系数 $c$ 分别就是首项的次数与系数——求等价无穷小，本质是找泰勒首项。</p>
+<p>为什么主角是三次项？一来 $f'(0)=3\cos 0-3\cos 0=0$，一次项注定相消；二来 $3\sin x-\sin 3x$ 是奇函数，展开里根本不会出现偶次项。于是只剩一个问题：三次项系数是多少。</p>
+<h3>第二步：用三倍角公式一步显形</h3>
+<p>$\sin 3x=3\sin x-4\sin<sup>3x</sup>$，代入得</p>
+<p>$$f(x)=3\sin x-\sin 3x=4\sin<sup>3x</sup>.$$</p>
+<p>选这条路的原因：它把「相减后剩下什么」直接摆到台面上——一次项被完整吃掉，剩下的就是纯三次结构；比逐项展开到三阶更快，也不易在符号上出错。</p>
+<h3>第三步：取首项定 $k$ 与 $c$</h3>
+<p>$x\to0$ 时 $\dfrac{\sin x}{x}\to1$，两边取三次方得 $\dfrac{\sin<sup>3x</sup>}{x<sup>3</sup>}\to1$，即 $\sin<sup>3x</sup>\sim x<sup>3</sup>$（等价无穷小可以乘方）。于是</p>
+<p>$$f(x)=4\sin<sup>3x</sup>\sim 4x<sup>3</sup>,$$</p>
+<p>对照 $cx<sup>k</sup>$ 得 $k=3,\ c=4$。</p>
+<h3>第四步：泰勒展开复核</h3>
+<p>$$3\sin x-\sin 3x=3\Bigl(x-\frac{x<sup>3</sup>}{6}\Bigr)-\Bigl(3x-\frac{27x<sup>3</sup>}{6}\Bigr)+o(x<sup>3</sup>)=\Bigl(-\frac{3}{6}+\frac{27}{6}\Bigr)x<sup>3</sup>+o(x<sup>3</sup>)=4x<sup>3</sup>+o(x<sup>3</sup>),$$</p>
+<p>与三倍角法一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>见到 $\sin$ 就用 $\sin x\sim x$</strong>：$3\sin x-\sin 3x$ 里一次项 $3x-3x$ 相减恰好为零，等价替换用在相减的项上会丢掉主导项——这正是干扰项 A（$k=1$）的来源：把没消干净的一次项当成了首项。</li><li><strong>符号算反（误选 D）</strong>：$-\sin 3x$ 展开后三次项系数是 $+\frac{27}{6}$，负负得正，最终是 $+4$ 而非 $-4$。</li><li><strong>B 是两错叠加</strong>：阶数看错成 $1$，符号又算反，说明「首项机制」和展开都没吃透。</li></ul>
+<blockquote>结论：选 <strong>C</strong>。等价无穷小 = 泰勒首项；三倍角公式 $\sin 3x=3\sin x-4\sin<sup>3x</sup>$ 是本题最快的消元钥匙。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

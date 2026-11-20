@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2019·02 曲线 y=xsinx+2cosx 的拐点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-01.html" data-q="../question/m2-2019-01/">← <b>m2-2019-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-02/" data-q="../question/m2-2019-02/" data-no-anim="1">m2-2019-02 · 本题</a>
+  <a href="m2-2019-03.html" data-q="../question/m2-2019-03/"><b>m2-2019-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：拐点要过两道门',
+    cls: 'key',
+    body: '<p>拐点的判定流程：<b>求 $y\'\'$ → 令 $y\'\'=0$ 得候选 → 验证两侧凹凸性真的变号 → 算坐标</b>。$y\'\'=0$ 只是入场券，变号才是门票——本题的陷阱就藏在"候选点不变号"里。</p>',
+    log: '拐点流程：候选点必须过变号检验' },
+  { title: '求一、二阶导，锁定候选点',
+    cls: 'step',
+    body: '<p>$$y\'=\\sin x+x\\cos x-2\\sin x=x\\cos x-\\sin x,$$ $$y\'\'=\\cos x-x\\sin x-\\cos x=-x\\sin x.$$ 在区间 $\\left(-\\frac{\\pi}{2},2\\pi\\right)$ 内令 $y\'\'=0$，得候选 $x=0$ 与 $x=\\pi$。</p>',
+    log: 'y 的二阶导 = −x·sinx，候选 x=0 与 x=π' },
+  { title: '候选一 $x=0$：两侧不变号，淘汰',
+    cls: 'bad',
+    body: '<p>$x=0$ 附近 $x$ 与 $\\sin x$ <b>同号</b>，故 $x\\sin x>0$，两侧都有 $y\'\'=-x\\sin x<0$：曲线两边都是凸的，凹凸性没有换向。$(0,2)$ 只是"路过"的二阶零点，<b>不是拐点</b>——A 出局。</p>',
+    log: 'x=0 两侧 y 二阶导都为负，不变号，淘汰', ribbon: {k:1, ok:false} },
+  { title: '候选二 $x=\\pi$：变号，入选',
+    cls: 'good',
+    body: '<p>$x$ 略小于 $\\pi$ 时 $\\sin x>0$，$y\'\'<0$（凸）；略大于 $\\pi$ 时 $\\sin x<0$，$y\'\'>0$（凹）。<b>变号成立</b>。纵坐标 $$y(\\pi)=\\pi\\sin\\pi+2\\cos\\pi=0-2=-2.$$</p>',
+    log: 'x=π 左凸右凹，变号成立，y(π)=−2', ribbon: {k:2, ok:true} },
+  { title: 'C、D：连必要条件都不满足',
+    cls: 'bad',
+    body: '<p>$y\'\'\\big|_{x=\\frac{\\pi}{2}}=-\\frac{\\pi}{2}\\neq0$，$y\'\'\\big|_{x=\\frac{3\\pi}{2}}=\\frac{3\\pi}{2}\\neq0$：这两处二阶导根本不为零，连候选资格都没有，直接排除。</p>',
+    log: 'π/2 与 3π/2 处二阶导非零，直接排除' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>变号候选只有 $x=\\pi$，拐点为 $\\boldsymbol{(\\pi,-2)}$——答案选 <b>B</b>。</p>',
+    log: '拐点 (π, −2)，选 B' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : 'step'),
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '曲线 $y=x\\sin x+2\\cos x$ 在 $\\left(-\\frac{\\pi}{2},2\\pi\\right)$ 上的拐点',
+  subtitle: '考点：凹凸性与拐点 · 方法：y″=0 只是候选，两侧变号才作数',
+  counterLabel: '推理步',
+  ribbonTitle: '检验环节（✓ 通过 / ✗ 淘汰）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B：拐点 $(\\pi,-2)$',
+    html: '记忆锚点：<b>$y\'\'=0$ 的点未必是拐点，两侧凹凸性变号才是</b>。本题 $y\'\'=-x\\sin x$，$x=0$ 两侧 $x$ 与 $\\sin x$ 同号、$y\'\'$ 恒负不变号（陷阱），$x=\\pi$ 两侧 $\\sin x$ 变号、凹凸互换（真拐点），$y(\\pi)=-2$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：拐点判定——$y''=0$ 只是候选，凹凸性真的变号才作数</h2>
+<p>答案：B（拐点为 $(\pi,-2)$）</p>
+<h3>第一步：先立机制——拐点是什么，为什么盯住 $y''$ 的符号</h3>
+<p>拐点是<strong>凹凸性发生改变的分界点</strong>，而凹凸性由 $y''$ 的符号决定：$y''&lt;0$ 凸（往下弯）、$y''&gt;0$ 凹（往上弯）。所以判定流程固定两拍：解 $y''=0$ 拿<strong>候选</strong>，再验两侧符号是否真的互换。</p>
+<p><strong>为什么 $y''=0$ 只是必要条件？</strong> $y''$ 连续时符号要变必须先穿过 $0$，故变号点必满足 $y''=0$；但反过来 $y''=0$ 不强求变号——$y=x<sup>4</sup>$ 在 $x=0$ 处 $y''=0$ 却两侧都凹，曲线只是"直了一下"。</p>
+<h3>第二步：算 $y''$，锁定候选横坐标</h3>
+<p>$$y'=x\cos x-\sin x,\qquad y''=-x\sin x.$$</p>
+<p>在开区间 $\left(-\dfrac{\pi}{2},\,2\pi\right)$ 内令 $y''=0$，得候选点 $x=0$ 与 $x=\pi$。</p>
+<h3>第三步：逐点验证两侧凹凸性是否互换</h3>
+<p>$y''=-x\sin x$ 的符号由 $x$ 与 $\sin x$ 共同决定。关键观察：$0$ 附近 $x$ 与 $\sin x$ <strong>同号</strong>（$x&lt;0$ 时 $\sin x&lt;0$，$x&gt;0$ 时 $\sin x&gt;0$），故乘积 $x\sin x$ 恒正：</p>
+<table><thead><tr><th>候选点</th><th>左侧 $y''$</th><th>右侧 $y''$</th><th>是否变号</th><th>判定</th></tr></thead><tbody><tr><td>$x=0$</td><td>$-$</td><td>$-$</td><td>不变号，两侧都凸</td><td>淘汰</td></tr><tr><td>$x=\pi$</td><td>$-$（$\sin x&gt;0$）</td><td>$+$（$\sin x&lt;0$）</td><td>变号</td><td><strong>入选</strong></td></tr></tbody></table>
+<p>$x=0$ 正是本题埋的陷阱：它像 $x<sup>4</sup>$ 的二阶导那样"路过零点"，凹凸性没有换向，所以 $(0,2)$ 不是拐点。</p>
+<h3>第四步：算纵坐标，并排掉 C、D</h3>
+<p>$y(\pi)=\pi\sin\pi+2\cos\pi=0-2=-2$，故拐点为 $(\pi,-2)$，选 B。</p>
+<p>C、D 两点连候选资格都没有：$y''\left(\dfrac{\pi}{2}\right)=-\dfrac{\pi}{2}$、$y''\left(\dfrac{3\pi}{2}\right)=\dfrac{3\pi}{2}$，都不满足 $y''=0$ 这条必要条件——它们只是曲线上的普通点，错在只看"点在曲线上"而没查必要条件。</p>
+<h3>易错点</h3>
+<ul><li><strong>只解 $y''=0$ 不验变号</strong>：会误选 A。$y''=0$ 是必要而非充分条件，凹凸性必须真的互换。</li><li><strong>把 $(0,2)$ 当拐点</strong>：$x=0$ 两侧 $y''$ 同为负，与 $y=x<sup>4</sup>$ 的 $x=0$ 同款陷阱。</li><li><strong>忽视定义域</strong>：区间是 $-\dfrac{\pi}{2}&lt;x&lt;2\pi$，端点不在讨论范围内。</li></ul>
+<blockquote>一句话结论：$y''=-x\sin x$；$x=0$ 两侧不变号淘汰（$x$ 与 $\sin x$ 同号），$x=\pi$ 两侧由凸变凹入选，拐点 $(\pi,-2)$，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画：可逆矩阵 P 的列与对角元配对</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-07.html" data-q="../question/m2-2020-07/">← <b>m2-2020-07</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-08/" data-q="../question/m2-2020-08/" data-no-anim="1">m2-2020-08 · 本题</a>
+  <a href="m2-2020-09.html" data-q="../question/m2-2020-09/"><b>m2-2020-09</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：列与对角元一一对应',
+    cls: 'key',
+    log: 'AP = PΛ 逐列比较：第 1、3 列属 1，第 2 列属 -1',
+    body: '<p>$P^{-1}AP=\\Lambda\\iff AP=P\\Lambda$，逐列比较：$$Ap_1=1\\cdot p_1,\\quad Ap_2=-1\\cdot p_2,\\quad Ap_3=1\\cdot p_3.$$ 即 $P$ 的<b>第 1、3 列要属于特征值 $1$，第 2 列要属于 $-1$</b>，且三列线性无关。</p>' },
+  { title: '盘点可用向量，拉响警报',
+    cls: 'step',
+    log: '同特征值可组合；α1+α3 是异特征值之和，废',
+    body: '<p>特征值 $1$：$\\alpha_1$、$\\alpha_2$ 及非零组合 $\\alpha_1+\\alpha_2$ 都可用；特征值 $-1$：$\\alpha_3$ 与 $-\\alpha_3$ 可用。<b>警报</b>：$\\alpha_1+\\alpha_3$ 是不同特征值向量之和，$A(\\alpha_1+\\alpha_3)=\\alpha_1-\\alpha_3$ 不是它的倍数——它<b>不是特征向量</b>。</p>' },
+  { title: '选项 A：第 1 列废 + 第 2 列错位',
+    cls: 'bad',
+    log: 'A：α1+α3 不是特征向量，α2 站错 -1 位',
+    ribbon: {k:1, ok:false},
+    body: '<p>$(\\alpha_1+\\alpha_3,\\;\\alpha_2,\\;-\\alpha_3)$：第 1 列 $\\alpha_1+\\alpha_3$ 不是特征向量；第 2 列 $\\alpha_2$ 属于 $1$，却站在对角元 $-1$ 的位置。<b>A 错</b>。</p>' },
+  { title: '选项 B：向量都合格，但位置错',
+    cls: 'bad',
+    log: 'B：α1+α2 对，但 α2 站在第 2 列要属 -1',
+    ribbon: {k:2, ok:false},
+    body: '<p>$(\\alpha_1+\\alpha_2,\\;\\alpha_2,\\;-\\alpha_3)$：第 1 列 $\\alpha_1+\\alpha_2$ 属于 $1$（对），但第 2 列 $\\alpha_2$ 属于 $1\\ne-1$，位置不匹配。<b>B 错</b>。</p>' },
+  { title: '选项 C：一废毁全列',
+    cls: 'bad',
+    log: 'C：第 1 列 α1+α3 不是特征向量，整列报废',
+    ribbon: {k:3, ok:false},
+    body: '<p>$(\\alpha_1+\\alpha_3,\\;-\\alpha_3,\\;\\alpha_2)$：第 2 列 $-\\alpha_3$、第 3 列 $\\alpha_2$ 都对，但第 1 列 $\\alpha_1+\\alpha_3$ 不是特征向量，$Ap_1\\ne p_1$，整组报废。<b>C 错</b>。</p>' },
+  { title: '选项 D：位置全对 + 可逆性验证',
+    cls: 'good',
+    log: 'D 三列分别属 1,-1,1，且线性无关，P 可逆',
+    ribbon: {k:4, ok:true},
+    body: '<p>$(\\alpha_1+\\alpha_2,\\;-\\alpha_3,\\;\\alpha_2)$：三列分别属于 $1,-1,1$，位置全对。再验无关性：$$c_1(\\alpha_1+\\alpha_2)-c_2\\alpha_3+c_3\\alpha_2=c_1\\alpha_1+(c_1+c_3)\\alpha_2-c_2\\alpha_3=0,$$ 由 $\\alpha_1,\\alpha_2,\\alpha_3$ 线性无关（不同特征值的特征向量无关）得 $c_1=c_2=c_3=0$，$P$ 可逆。<b>D 对</b>。</p>' },
+  { title: '结论',
+    cls: 'good',
+    log: '选 D：列与对角元一一对应',
+    body: '<p>答案 <b>D</b>。记忆锚点：<b>$P$ 的列与 $\\Lambda$ 的对角元一一对应</b>；只有<b>同一</b>特征值的特征向量的线性组合才仍是该特征值的特征向量。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$P^{-1}AP=\\mathrm{diag}(1,-1,1)$：四个候选 $P$ 谁合格',
+  subtitle: '考点：相似对角化 · 方法：$AP=P\\Lambda$ 逐列配对 + 可逆性验证',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 合格 / ✗ 不合格）',
+  intro: '点击「▶ 播放」逐项检验候选矩阵 P。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D：$P=(\\alpha_1+\\alpha_2,\\,-\\alpha_3,\\,\\alpha_2)$',
+    html: '记忆锚点：<b>列与对角元一一对应</b>：$1,-1,1$ 依次放 $\\alpha_1+\\alpha_2,\\,-\\alpha_3,\\,\\alpha_2$。两类硬伤：$\\alpha_1+\\alpha_3$ 是异特征值之和不是特征向量（A、C）；向量合格但站错位置（B 的第 2 列）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：$P$ 的第 $i$ 列必须是对角元 $\lambda_i$ 的特征向量</h2>
+<p>答案：D</p>
+<h3>第一步：把条件翻译成列约束</h3>
+<p>$P<sup>-1</sup>AP=\Lambda\iff AP=P\Lambda$，两边逐列比较得 $Ap_i=\lambda_ip_i$。本题 $\Lambda=\mathrm{diag}(1,-1,1)$，要求：第 1、3 列属于特征值 $1$，第 2 列属于特征值 $-1$，且三列线性无关（$P$ 可逆）。</p>
+<h3>第二步：盘点可用向量</h3>
+<ul><li>特征值 $1$：$\alpha_1$、$\alpha_2$ 以及它们的非零组合 $\alpha_1+\alpha_2$ 都可用；</li><li>特征值 $-1$：$\alpha_3$ 与 $-\alpha_3$ 都可用；</li><li><strong>警报</strong>：$\alpha_1+\alpha_3$ 是不同特征值向量之和，$A(\alpha_1+\alpha_3)=\alpha_1-\alpha_3$ 不是它的倍数——它不是任何特征值的特征向量。</li></ul>
+<p><strong>预答两个追问</strong>。为什么"同值组合"仍可用、而"异值相加"报废？同一特征值时 $A(c_1\alpha_1+c_2\alpha_2)=c_1A\alpha_1+c_2A\alpha_2=c_1\alpha_1+c_2\alpha_2$，被 $A$ 按同一倍数拉伸的身份保持不变；异特征值时两个分量被拉伸的倍数不同，和向量就不再是单纯的拉伸结果。<strong>为什么不同特征值的特征向量线性无关？</strong> 以两个为例：若 $c_1\alpha_1+c_3\alpha_3=0$，两边作用 $A$ 又得 $c_1\alpha_1-c_3\alpha_3=0$，两式相加、相减得 $2c_1\alpha_1=0$ 与 $2c_3\alpha_3=0$，而特征向量非零，故 $c_1=c_3=0$——这正是第三步验证 $P$ 可逆时引用的事实。</p>
+<h3>第三步：逐项对号</h3>
+<ul><li><strong>A</strong>：第 1 列 $\alpha_1+\alpha_3$ 不是特征向量；第 2 列 $\alpha_2$ 属于 $1$ 却站在 $-1$ 的位置。</li><li><strong>B</strong>：第 1 列 $\alpha_1+\alpha_2$ 属于 $1$（对），但第 2 列 $\alpha_2$ 属于 $1\ne-1$，位置不匹配。</li><li><strong>C</strong>：第 2 列 $-\alpha_3$、第 3 列 $\alpha_2$ 都对，但第 1 列 $\alpha_1+\alpha_3$ 不是特征向量，整列报废。</li><li><strong>D</strong>：$(\alpha_1+\alpha_2,\,-\alpha_3,\,\alpha_2)$ 三个位置分别属于 $1,-1,1$，全对。再验无关性：$c_1(\alpha_1+\alpha_2)-c_2\alpha_3+c_3\alpha_2=c_1\alpha_1+(c_1+c_3)\alpha_2-c_2\alpha_3=0$，由 $\alpha_1,\alpha_2,\alpha_3$ 线性无关（不同特征值的特征向量无关）得 $c_1=c_2=c_3=0$，$P$ 可逆。</li></ul>
+<h3>易错点</h3>
+<ul><li><strong>以为不同特征值的向量之和还是特征向量</strong>：只有<strong>同一</strong>特征值的组合才保持身份，$\alpha_1+\alpha_3$ 必废。</li><li><strong>只验向量不验位置</strong>：B 里三个向量单独看都合格，但 $\alpha_2$ 站错了列。</li><li><strong>忘验可逆性</strong>：列全对还要线性无关，$P$ 才可逆、等式才成立。</li></ul>
+<blockquote>一句话结论：列与对角元一一对应——$1,-1,1$ 依次放 $\alpha_1+\alpha_2,\,-\alpha_3,\,\alpha_2$，选 D；「异特征值之和」永远不是特征向量。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-17 二元函数极值 · 逐步推导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-16.html" data-q="../question/m2-2020-16/">← <b>m2-2020-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-17/" data-q="../question/m2-2020-17/" data-no-anim="1">m2-2020-17 · 本题</a>
+  <a href="m2-2020-18.html" data-q="../question/m2-2020-18/"><b>m2-2020-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域 ================== */
+var rows = [];
+
+AW.init({
+  title: '求 $f(x,y)=x^3+8y^3-xy$ 的极值',
+  subtitle: '考点：无条件极值 · 流程：驻点方程组 → $AC-B^2$ 判别 → 代回求值',
+  counterLabel: '已推进',
+  intro: '点击「▶ 播放」：解驻点、算判别式、逐点下结论。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rows = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：$f(x,y)=x^3+8y^3-xy$，判别式 $AC-B^2$（$A=f_{xx},B=f_{xy},C=f_{yy}$）'));
+    var ROWS = [
+      '$$f_x=3x^2-y=0,\\qquad f_y=24y^2-x=0$$',
+      '$$y=3x^2\\ \\Rightarrow\\ 24(3x^2)^2-x=x(216x^3-1)=0\\ \\Rightarrow\\ (0,0),\\ \\left(\\tfrac16,\\tfrac1{12}\\right)$$',
+      '$$A=f_{xx}=6x,\\qquad B=f_{xy}=-1,\\qquad C=f_{yy}=48y$$',
+      '$$\\text{在 }(0,0):\\quad AC-B^2=0\\cdot0-(-1)^2=-1<0\\ \\Rightarrow\\ \\text{非极值（鞍点）}$$',
+      '$$\\text{在 }\\left(\\tfrac16,\\tfrac1{12}\\right):\\quad AC-B^2=1\\cdot4-1=3>0,\\ A=1>0\\ \\Rightarrow\\ \\text{极小值点}$$',
+      '$$f\\left(\\tfrac16,\\tfrac1{12}\\right)=\\frac1{216}+\\frac1{216}-\\frac3{216}=-\\frac1{216}$$'
+    ];
+    ROWS.forEach(function(html){
+      var row = AW.el('div', 'derive-row', html);
+      row.style.cssText = 'padding:6px 14px;margin:8px 0;border-radius:8px;' +
+        'border-left:4px solid #cbd5e1;background:#f8fafc;opacity:0;' +
+        'transform:translateY(8px);transition:all .35s ease;';
+      wrap.appendChild(row);
+      rows.push(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    rows.forEach(function(row, j){
+      var vis = j < i;
+      var cur = vis && j === i - 1;
+      row.style.opacity = vis ? '1' : '0';
+      row.style.transform = vis ? 'translateY(0)' : 'translateY(8px)';
+      row.style.borderLeftColor = cur ? '#f59e0b' : (vis ? '#10b981' : '#cbd5e1');
+      row.style.background = cur ? '#fffbeb' : (vis ? '#f0fdf4' : '#f8fafc');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'无条件极值标准流程：驻点、判别、求值', count:0 },
+    { cls:'step',  tag:'列方程', log:'两个一阶偏导同时为零', count:1 },
+    { cls:'ok',    tag:'解驻点', log:'代入消元得 x 乘 (216x三次方减1)，两个根都不能丢', count:2 },
+    { cls:'step',  tag:'二阶导', log:'A、B、C 三个二阶偏导写出来，都是线性式子', count:3 },
+    { cls:'miss',  tag:'判 (0,0)', log:'判别式等于负 1 小于 0，原点是鞍点不是极值点', count:4 },
+    { cls:'ok',    tag:'判另一点', log:'判别式等于 3 大于 0，且 A=1 大于 0，是极小值点', count:5 },
+    { cls:'done',  tag:'结论', log:'通分求值：极小值 = 负 1/216', count:6, done:true },
+  ],
+
+  result: {
+    big: '极小值 $f\\left(\\dfrac16,\\dfrac1{12}\\right)=-\\dfrac1{216}$；$(0,0)$ 非极值点',
+    html: '正确答案：只有极小值 $f\\left(\\dfrac16,\\dfrac1{12}\\right)=-\\dfrac1{216}$，驻点 $(0,0)$ 处 $AC-B^2=-1<0$ 是鞍点。易错：<b>解 $x(216x^3-1)=0$ 时除以 $x$ 会丢根 $(0,0)$</b>；判别式为正时还要看 $A$ 的符号定极大极小。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：二元极值——为什么驻点是候选、为什么 AC−B² 能判型</h2>
+<p><strong>答案：极小值 $f\left(\dfrac16,\dfrac1{12}\right)=-\dfrac1{216}$；驻点 $(0,0)$ 不是极值点。</strong></p>
+<h3>第 0 步：机制——极值判别是两道关卡</h3>
+<p>可微函数的极值判别分两步机制。<strong>第一道关卡（必要条件）</strong>：费马定理的二元版——极值点处沿任何方向局部都不增不减，特别地沿两个坐标轴方向的一阶变化率为零，即 $f_x=f_y=0$，这样的点叫驻点；解不出驻点就无从谈极值，所以先解方程组。<strong>第二道关卡（充分性）</strong>：在驻点附近看曲面凹凸朝向，工具是二阶泰勒主部对应的 Hesse 矩阵 $\begin{pmatrix}A&amp;B\\B&amp;C\end{pmatrix}$（$A=f_{xx},\ B=f_{xy},\ C=f_{yy}$），其行列式正是 $AC-B<sup>2</sup>$：大于 $0$ 说明两个主方向弯向一致（$A&gt;0$ 同向下弯成碗，极小；$A&lt;0$ 同向上拱，极大）；小于 $0$ 说明一凹一凸，沿一个方向上升、另一个方向下降——鞍点；等于 $0$ 时二阶信息不够，判别失效需另判。这就是「先解驻点、再判型」的来历。</p>
+<h3>第一步：解驻点方程组（小心别丢根）</h3>
+<p>$$f_x=3x<sup>2</sup>-y=0,\qquad f_y=24y<sup>2</sup>-x=0.$$</p>
+<p>由第一式 $y=3x<sup>2</sup>$，代入第二式：</p>
+<p>$$24(3x<sup>2</sup>)<sup>2</sup>-x=216x<sup>4</sup>-x=x\left(216x<sup>3</sup>-1\right)=0,$$</p>
+<p>得 $x=0$ 或 $x=\dfrac16$，对应两个驻点 $(0,0)$ 与 $\left(\dfrac16,\dfrac1{12}\right)$。（因子 $x$ 必须保留——它给出驻点 $(0,0)$，这个点也要送进第二道关卡。）</p>
+<h3>第二步：逐点判型——先叙事，再对号</h3>
+<p>在 $(0,0)$：$A=0,\ B=-1,\ C=0$，$AC-B<sup>2</sup>=-1&lt;0$，判为鞍点。这与直觉得互相印证：沿 $x$ 轴 $f(x,0)=x<sup>3</sup>$ 过零变号，沿 $y$ 轴 $f(0,y)=8y<sup>3</sup>$ 过零变号——$(0,0)$ 附近既有比 $f(0,0)=0$ 大的点也有比它小的点，根本当不成极值。</p>
+<p>在 $\left(\dfrac16,\dfrac1{12}\right)$：$A=1,\ B=-1,\ C=4$，$AC-B<sup>2</sup>=1\cdot4-(-1)<sup>2</sup>=3&gt;0$ 且 $A=1&gt;0$，曲面在该点附近呈碗状，取极小值。</p>
+<table><thead><tr><th>驻点</th><th>$A$</th><th>$B$</th><th>$C$</th><th>$AC-B<sup>2</sup>$</th><th>判定</th></tr></thead><tbody><tr><td>$(0,0)$</td><td>$0$</td><td>$-1$</td><td>$0$</td><td>$-1&lt;0$</td><td>鞍点，非极值</td></tr><tr><td>$\left(\dfrac16,\dfrac1{12}\right)$</td><td>$1$</td><td>$-1$</td><td>$4$</td><td>$3&gt;0$</td><td>$A=1&gt;0$，极小值点</td></tr></tbody></table>
+<p>（表格只作对号入座的汇总，判型以上面的叙事为准。）</p>
+<h3>第三步：代回求极小值</h3>
+<p>$$f\left(\frac16,\frac1{12}\right)=\frac1{216}+8\cdot\frac1{1728}-\frac1{72}=\frac1{216}+\frac1{216}-\frac3{216}=-\frac1{216}.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>解方程时用 x 除两边</strong>：$x(216x<sup>3</sup>-1)=0$ 若直接除以 $x$ 会丢掉驻点 $(0,0)$，而它恰恰要参与判别。</li><li><strong>只看 AC−B² 的符号</strong>：$AC-B<sup>2</sup>&gt;0$ 时还要分 $A&gt;0$（极小）与 $A&lt;0$（极大）；$AC-B<sup>2</sup>&lt;0$ 直接判非极值，无需再看 $A$。</li><li><strong>以为 AC−B²=0 也能套结论</strong>：等于 $0$ 时判别法失效（例如 $f=x<sup>4</sup>$ 与 $f=x<sup>3</sup>$ 在原点都使 $AC-B<sup>2</sup>=0$，但前者是极小、后者不是），需按定义或更高阶展开另判。</li></ul>
+<blockquote>一句话结论：驻点有两个，判别式一负一正，只有 $\left(\dfrac16,\dfrac1{12}\right)$ 取到极小值 $-\dfrac1{216}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

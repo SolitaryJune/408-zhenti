@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画：参数方程求二阶导数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-08.html" data-q="../question/m2-2020-08/">← <b>m2-2020-08</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-09/" data-q="../question/m2-2020-09/" data-no-anim="1">m2-2020-09 · 本题</a>
+  <a href="m2-2020-10.html" data-q="../question/m2-2020-10/"><b>m2-2020-10</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$x=\\sqrt{t^2+1},\\ y=\\ln\\left(t+\\sqrt{t^2+1}\\right)$：求 $\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\Big|_{t=1}$',
+  subtitle: '考点：参数方程求导 · 方法：两次链式法则，第二次分母仍是 $x^\\prime(t)$',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示求导链条。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>公式链</b>：$$\\frac{\\mathrm{d}y}{\\mathrm{d}x}=\\frac{y^\\prime(t)}{x^\\prime(t)},\\qquad \\frac{\\mathrm{d}^2y}{\\mathrm{d}x^2}=\\frac{\\dfrac{\\mathrm{d}}{\\mathrm{d}t}\\left(\\dfrac{y^\\prime(t)}{x^\\prime(t)}\\right)}{x^\\prime(t)}$$ 第二个分母<b>仍是 $x^\\prime(t)$</b>，不是它的平方',
+      '<b>求 $x^\\prime(t)$</b>：$x=\\sqrt{t^2+1}\\Rightarrow x^\\prime=\\dfrac{t}{\\sqrt{t^2+1}}$',
+      '<b>求 $y^\\prime(t)$</b>（反双曲正弦）：$$y^\\prime=\\frac{1+\\frac{t}{\\sqrt{t^2+1}}}{t+\\sqrt{t^2+1}}=\\frac{\\frac{\\sqrt{t^2+1}+t}{\\sqrt{t^2+1}}}{t+\\sqrt{t^2+1}}=\\frac{1}{\\sqrt{t^2+1}}$$',
+      '<b>一阶导</b>：$\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}=\\dfrac{1/\\sqrt{t^2+1}}{t/\\sqrt{t^2+1}}=\\dfrac{1}{t}$',
+      '<b>对 $t$ 再求导</b>：$\\left(\\dfrac{1}{t}\\right)^\\prime=-\\dfrac{1}{t^2}$',
+      '<b>除以 $x^\\prime(t)$</b>：$\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}=\\dfrac{-1/t^2}{t/\\sqrt{t^2+1}}=-\\dfrac{\\sqrt{t^2+1}}{t^3}$',
+      '<b>代 $t=1$</b>：$\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\Big|_{t=1}=-\\dfrac{\\sqrt{2}}{1}=-\\sqrt{2}$',
+      '<b>答案：$-\\sqrt{2}$</b>',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'参数方程求二阶导：先一阶 dy/dx，再对 t 求导后除以 x 导', count:0 },
+    { cls:'step',  tag:'求 x 导', log:'x 的导数：根号里求导得 t 除以根号(t²+1)', count:1 },
+    { cls:'shift', tag:'求 y 导', log:'y 是反双曲正弦，繁分式上下同乘根号(t²+1) 后化简为 1 除以根号(t²+1)', count:2 },
+    { cls:'ok',    tag:'一阶导', log:'两个导数一比，根号抵消，dy/dx 就是 1/t', count:3 },
+    { cls:'step',  tag:'再求导', log:'1/t 对 t 求导得负的 1/t²', count:4 },
+    { cls:'step',  tag:'除 x 导', log:'再除一次 x 导（不是平方！），得负的 根号(t²+1)/t³', count:5 },
+    { cls:'step',  tag:'代值',   log:'代入 t=1，得负根号 2', count:6 },
+    { cls:'done',  tag:'完成',   log:'结论：二阶导在 t=1 处等于 −√2', count:7, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$-\\sqrt{2}$',
+    html: '记忆锚点：<b>二阶导公式 $\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}=\\dfrac{\\left(\\frac{\\mathrm{d}y}{\\mathrm{d}x}\\right)^\\prime_t}{x^\\prime(t)}$ 的分母是 $x^\\prime(t)$ 本身</b>，不是 $[x^\\prime(t)]^2$。本题 $\\frac{\\mathrm{d}y}{\\mathrm{d}x}=\\frac{1}{t}$ 特别干净，因为 $y=\\ln\\left(t+\\sqrt{t^2+1}\\right)$ 的导数恰是 $\\frac{1}{\\sqrt{t^2+1}}$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：参数方程二阶导——第二次除的还是 $x'(t)$</h2>
+<p>答案：$-\sqrt{2}$</p>
+<h3>第一步：公式链为什么长这样</h3>
+<p>$\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{y'(t)}{x'(t)}$ 的依据是微分：$\mathrm{d}x=x'(t)\,\mathrm{d}t$，$\mathrm{d}y=y'(t)\,\mathrm{d}t$，一阶微分相除即得（一阶微分形式不变性）。</p>
+<p>关键是二阶：$\dfrac{\mathrm{d}y}{\mathrm{d}x}$ 算出来仍是 $t$ 的函数 $\varphi(t)$，而 $\dfrac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}=\dfrac{\mathrm{d}\varphi}{\mathrm{d}x}$ 要<strong>对 $x$</strong> 求导，只能再走一遍链式——$t$ 是 $x$ 的函数，$\dfrac{\mathrm{d}\varphi}{\mathrm{d}x}=\dfrac{\mathrm{d}\varphi}{\mathrm{d}t}\cdot\dfrac{\mathrm{d}t}{\mathrm{d}x}=\dfrac{\dfrac{\mathrm{d}\varphi}{\mathrm{d}t}}{x'(t)}$。这就是</p>
+<p>$$\frac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}=\frac{\dfrac{\mathrm{d}}{\mathrm{d}t}\left(\dfrac{y'(t)}{x'(t)}\right)}{x'(t)}.$$</p>
+<p>第二个分式的分母<strong>仍是 $x'(t)$</strong>，不是 $[x'(t)]<sup>2</sup>$——「$[x'(t)]<sup>2</sup>$」是把两次链式错当成两次"相除"叠出来的：第二次求导的对象是 $\varphi(t)$ 对 $t$ 的导数，除数是 $x'(t)$，仅此一次。这是参数方程求导最大的坑。</p>
+<h3>第二步：算出两个一阶导</h3>
+<p>$x=\sqrt{t<sup>2</sup>+1}$ → $x'(t)=\dfrac{t}{\sqrt{t<sup>2</sup>+1}}$。</p>
+<p>$y=\ln\left(t+\sqrt{t<sup>2</sup>+1}\right)$（即反双曲正弦）→</p>
+<p>$$y'(t)=\frac{1+\dfrac{t}{\sqrt{t<sup>2</sup>+1}}}{t+\sqrt{t<sup>2</sup>+1}}=\frac{1}{\sqrt{t<sup>2</sup>+1}}.$$</p>
+<h3>第三步：两次运算</h3>
+<p>$$\frac{\mathrm{d}y}{\mathrm{d}x}=\frac{1/\sqrt{t<sup>2</sup>+1}}{t/\sqrt{t<sup>2</sup>+1}}=\frac{1}{t},\qquad \frac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}=\frac{-1/t<sup>2</sup>}{t/\sqrt{t<sup>2</sup>+1}}=-\frac{\sqrt{t<sup>2</sup>+1}}{t<sup>3</sup>}.$$</p>
+<h3>第四步：代值</h3>
+<p>$t=1$ 时 $\dfrac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}\Big|_{t=1}=-\dfrac{\sqrt{2}}{1}=-\sqrt{2}$。</p>
+<h3>易错点</h3>
+<ul><li><strong>二阶导分母平方</strong>：写成 $\dfrac{-1/t<sup>2</sup>}{[x'(t)]<sup>2</sup>}$ 会得出错误的数值——第二次是「对 $t$ 求导后<strong>再除以 $x'(t)$</strong>」。</li><li><strong>$y'$ 的繁分式化简出错</strong>：分子分母同乘 $\sqrt{t<sup>2</sup>+1}$ 立刻干净：$\dfrac{\sqrt{t<sup>2</sup>+1}+t}{\sqrt{t<sup>2</sup>+1}\,(t+\sqrt{t<sup>2</sup>+1})}=\dfrac{1}{\sqrt{t<sup>2</sup>+1}}$。</li><li><strong>代错点</strong>：题目给的是 $t=1$，别代成某个 $x$ 或 $y$ 的值。</li></ul>
+<blockquote>一句话结论：$\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{1}{t}$，再除一次 $x'(t)=\dfrac{t}{\sqrt{t<sup>2</sup>+1}}$ 得 $-\dfrac{\sqrt{t<sup>2</sup>+1}}{t<sup>3</sup>}$，代 $t=1$ 得 $-\sqrt{2}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

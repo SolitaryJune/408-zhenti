@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·07 特征值全相同的矩阵判相似</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-06.html" data-q="../question/m2-2018-06/">← <b>m2-2018-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-07/" data-q="../question/m2-2018-07/" data-no-anim="1">m2-2018-07 · 本题</a>
+  <a href="m2-2018-08.html" data-q="../question/m2-2018-08/"><b>m2-2018-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：特征值全相同，换裁判',
+    cls: 'key',
+    body: '<p>目标 $A=\\begin{pmatrix}1&1&0\\\\0&1&1\\\\0&0&1\\end{pmatrix}$ 是特征值三重 $\\lambda=1$ 的上三角矩阵；四个选项对角线也全是 $1$——<b>比特征值毫无区分度</b>。相似必须连线性无关特征向量的个数都一样，裁判换成：$$r(A-E)\\quad(\\text{几何重数}=3-r)$$</p>',
+    log: '特征值无区分度 ⇒ 比较 r(B−E)' },
+  { title: '先算标尺 $r(A-E)=2$',
+    cls: 'step',
+    body: '<p>$$A-E=\\begin{pmatrix}0&1&0\\\\0&0&1\\\\0&0&0\\end{pmatrix},\\qquad r(A-E)=2$$ 几何重数 $=3-2=1$：特征值 1 只配一个线性无关特征向量（单个约当块）。候选必须满足 $r(B-E)=2$。</p>',
+    ribbon: {k:1, ok:true},
+    log: '标尺：r(A−E)=2，几何重数 1' },
+  { title: '检验 A：$r(B-E)=2$ ✓',
+    cls: 'good',
+    body: '<p>$$B-E=\\begin{pmatrix}0&1&-1\\\\0&0&1\\\\0&0&0\\end{pmatrix}$$ 首非零元分别在列 2、列 3，两行线性无关，$r=2$——与标尺一致，同为单个约当块结构。</p>',
+    ribbon: {k:2, ok:true},
+    log: 'A 的 r(B−E)=2，与标尺一致' },
+  { title: '检验 B：$r(B-E)=1$ ✗',
+    cls: 'bad',
+    body: '<p>$$B-E=\\begin{pmatrix}0&0&-1\\\\0&0&1\\\\0&0&0\\end{pmatrix}$$ 两个非零行都只占第 3 列且成比例，$r=1\\ne2$：几何重数为 $2$，约当块更多，不相似。</p>',
+    ribbon: {k:3, ok:false},
+    log: 'B 的两行成比例，秩只有 1' },
+  { title: '检验 C、D：都只有 $r=1$ ✗',
+    cls: 'bad',
+    body: '<p>C：$B-E$ 只剩 $(0,1,-1)$ 一行非零，$r=1$ ✗。D：只剩 $(0,0,-1)$ 一行非零，$r=1$ ✗。两者几何重数都是 $2$，与 $A$ 的几何重数 $1$ 不同。</p>',
+    ribbon: {k:4, ok:false},
+    log: 'C、D 秩均为 1，排除' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>只有 A 与目标矩阵同为「特征值三重 $1$、$r(A-E)=2$」，二者相似，答案选 <b>A</b>。核心记忆点：<b>特征值全相同 ⇒ 相似判据 = $r(B-\\lambda E)$ 是否相等</b>。</p>',
+    log: '只有 A 满足 r(B−E)=2，选 A' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '与 $\\begin{pmatrix}1&1&0\\\\0&1&1\\\\0&0&1\\end{pmatrix}$ 相似的矩阵是谁？',
+  subtitle: '考点：相似矩阵 · 秩 $r(A-\\lambda E)$ · 几何重数',
+  counterLabel: '推理步',
+  ribbonTitle: '排查记录（✓ 通过 / ✗ 排除）',
+  intro: '点击「▶ 播放」：算标尺 → 逐个验 $r(B-E)$。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（$r(B-E)=2$，几何重数同为 1）',
+    html: '记忆锚点：特征值（代数重数）相同时，相似与否看<b>几何重数</b>，即 $r(B-\\lambda E)$。本题标尺 $r(A-E)=2$；B 的两非零行成比例、C/D 各只有一行非零，秩都是 $1$，几何重数 $2\\ne1$，全部排除。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：特征值全相同的矩阵判相似——用秩 $r(B-E)$ 比几何重数</h2>
+<p>答案：A</p>
+<h3>第一步：先懂机制——特征值筛不动时，秩是裁判</h3>
+<p>目标矩阵 $A=\begin{pmatrix}1&amp;1&amp;0\\0&amp;1&amp;1\\0&amp;0&amp;1\end{pmatrix}$ 与四个选项都是对角线全 $1$ 的上三角矩阵，特征值全是三重 $\lambda=1$——<strong>比特征值毫无区分度</strong>。相似还有一道必过的关卡：<strong>线性无关特征向量的个数（几何重数）必须相同</strong>。</p>
+<p>为什么相似就锁定了 $r(B-E)$？若 $B=P<sup>-1</sup>AP$，则</p>
+<p>$$B-E=P<sup>-1</sup>(A-E)P,$$</p>
+<p>可逆矩阵左右乘不改变秩，故 $r(A-E)$ 是<strong>相似不变量</strong>。而齐次方程组 $(A-E)x=0$ 的解空间维数 $=3-r(A-E)$，正是属于 $\lambda=1$ 的特征向量个数——秩通过"解空间维数"这个桥梁控制几何重数。于是本题判据就一条：</p>
+<p>$$A\sim B\ \Longleftrightarrow\ r(B-E)=r(A-E)\quad(\text{本题情形}).$$</p>
+<p>（用约当块的语言说：三重特征值 $1$ 下，$r(B-E)=2,1,0$ 分别对应一个 3 阶块、一个 2 阶块加一个 1 阶块、三个 1 阶块——秩相同则块结构相同，所以本题情形下这条判据是充要的。）</p>
+<h3>第二步：算出标尺 $r(A-E)=2$</h3>
+<p>$$A-E=\begin{pmatrix}0&amp;1&amp;0\\0&amp;0&amp;1\\0&amp;0&amp;0\end{pmatrix},\qquad r(A-E)=2,\qquad \text{几何重数}=3-2=1.$$</p>
+<p>候选必须同样满足 $r(B-E)=2$：即属于 $\lambda=1$ 的线性无关特征向量也只有一个（"同样亏损"）。</p>
+<h3>第三步：逐个算 $r(B-E)$ 对号入座</h3>
+<table><thead><tr><th>选项</th><th>$B-E$ 的非零结构</th><th>秩</th><th>判定</th></tr></thead><tbody><tr><td>A</td><td>$(0,1,-1)$ 与 $(0,0,1)$，首非零元错列</td><td>$2$</td><td>✓ 与标尺一致</td></tr><tr><td>B</td><td>$(0,0,-1)$ 与 $(0,0,1)$，成比例</td><td>$1$</td><td>✗</td></tr><tr><td>C</td><td>只有 $(0,1,-1)$ 一行</td><td>$1$</td><td>✗</td></tr><tr><td>D</td><td>只有 $(0,0,-1)$ 一行</td><td>$1$</td><td>✗</td></tr></tbody></table>
+<p>只有 A 的 $r(B-E)=2$：几何重数同为 $1$，与 $A$ 结构一致；B、C、D 的几何重数为 $2$，特征向量比 $A$ 多，不可能相似。</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 B</strong>：看到 $B-E$ 有两行非零就报秩 $2$——两行 $(0,0,-1)$、$(0,0,1)$ 成比例，秩只有 $1$，几何重数 $2\ne1$。</li><li><strong>误选 C、D</strong>：以为对角元相同就相似——特征值（代数重数）相同只是必要条件，本题真正的坎在几何重数。</li><li><strong>只用 $\det(B-\lambda E)$ 验证</strong>：本题四个矩阵特征值完全一样，这一步什么也筛不出来，等于没做。</li></ul>
+<blockquote>结论：特征值全相同 ⇒ 相似判据退化为相似不变量 $r(B-E)$；标尺 $r(A-E)=2$（几何重数 $1$），只有 A 对号，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

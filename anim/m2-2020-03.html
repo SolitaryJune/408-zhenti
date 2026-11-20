@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画：凑微分换元计算定积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-02.html" data-q="../question/m2-2020-02/">← <b>m2-2020-02</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-03/" data-q="../question/m2-2020-03/" data-no-anim="1">m2-2020-03 · 本题</a>
+  <a href="m2-2020-04.html" data-q="../question/m2-2020-04/"><b>m2-2020-04</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$\\int_0^1\\dfrac{\\arcsin\\sqrt{x}}{\\sqrt{x(1-x)}}\\,\\mathrm{d}x$ 逐步换元演示',
+  subtitle: '考点：定积分换元 · 方法：凑微分 $t=\\arcsin\\sqrt{x}$',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示换元全过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>原式</b>：$$I=\\int_0^1\\frac{\\arcsin\\sqrt{x}}{\\sqrt{x(1-x)}}\\,\\mathrm{d}x$$',
+      '<b>凑微分信号</b>：$\\mathrm{d}\\left(\\arcsin\\sqrt{x}\\right)=\\dfrac{1}{2\\sqrt{x(1-x)}}\\,\\mathrm{d}x$ —— 被积式恰好只差 2 倍',
+      '<b>换元</b>：令 $t=\\arcsin\\sqrt{x}$，即 $x=\\sin^2t$，$t\\in\\left[0,\\frac{\\pi}{2}\\right]$',
+      '<b>微分与分母同步化简</b>：$\\mathrm{d}x=2\\sin t\\cos t\\,\\mathrm{d}t$，$\\sqrt{x(1-x)}=\\sqrt{\\sin^2t\\cos^2t}=\\sin t\\cos t$',
+      '<b>代入约分</b>：$$I=\\int_0^{\\frac{\\pi}{2}}\\frac{t}{\\sin t\\cos t}\\cdot2\\sin t\\cos t\\,\\mathrm{d}t=\\int_0^{\\frac{\\pi}{2}}2t\\,\\mathrm{d}t$$',
+      '<b>积出</b>：$I=t^2\\Big|_0^{\\frac{\\pi}{2}}=\\dfrac{\\pi^2}{4}$',
+      '<b>答案：$\\dfrac{\\pi^2}{4}$，选 A</b>',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'分子是 arcsin 根号 x，分母带根号 x(1-x)，联想凑微分', count:0 },
+    { cls:'shift', tag:'凑微分', log:'arcsin 根号 x 的导数恰是分母的一半，决定换元', count:1 },
+    { cls:'step',  tag:'设 t',   log:'令 t 等于 arcsin 根号 x，反解出 x 等于 sin 平方 t，范围 0 到二分之 π', count:2 },
+    { cls:'step',  tag:'换微分', log:'dx 换成 2 sin t cos t dt，分母开方恰好等于 sin t cos t', count:3 },
+    { cls:'ok',    tag:'化简',   log:'分子分母约掉 sin t cos t，只剩 2t', count:4 },
+    { cls:'step',  tag:'积分',   log:'2t 的原函数是 t 平方，代入上下限得 π²/4', count:5 },
+    { cls:'done',  tag:'完成',   log:'结论：积分值 π²/4，选 A', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\dfrac{\\pi^2}{4}$（选 A）',
+    html: '记忆锚点：<b>$\\dfrac{\\mathrm{d}}{\\mathrm{d}x}\\arcsin\\sqrt{x}=\\dfrac{1}{2\\sqrt{x(1-x)}}$</b>——见到 $\\arcsin\\sqrt{x}$ 与 $\\dfrac{1}{\\sqrt{x(1-x)}}$ 同框就换元 $t=\\arcsin\\sqrt{x}$。易错：换元后分子剩 $2t$，漏掉因子 2 会错成 $\\dfrac{\\pi^2}{8}$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：凑微分换元——$\arcsin\sqrt{x}$ 的导数恰是 $\frac{1}{2\sqrt{x(1-x)}}$</h2>
+<p>答案：A</p>
+<h3>第一步：识别凑微分信号</h3>
+<p>被积函数同时出现 $\arcsin\sqrt{x}$ 与 $\dfrac{1}{\sqrt{x(1-x)}}$，先求前者导数：</p>
+<p>$$\mathrm{d}\left(\arcsin\sqrt{x}\right)=\frac{1}{\sqrt{1-x}}\cdot\frac{1}{2\sqrt{x}}\,\mathrm{d}x=\frac{1}{2\sqrt{x(1-x)}}\,\mathrm{d}x.$$</p>
+<p>被积式恰好只差常数 2 倍——直接令 $t=\arcsin\sqrt{x}$，不必硬算。为什么先对 $\arcsin\sqrt{x}$ 求导而不反过来？因为"它的导数已在场内"是凑微分最典型的信号；若反过来对根式求导，只会越算越繁。</p>
+<h3>第二步：换元并同步换限</h3>
+<p>$t=\arcsin\sqrt{x}$ 即 $x=\sin<sup>2t</sup>$，$t\in\left[0,\frac{\pi}{2}\right]$；换限：$x=0\to t=0$，$x=1\to t=\frac{\pi}{2}$。微分与分母同时化简：</p>
+<p>$$\mathrm{d}x=2\sin t\cos t\,\mathrm{d}t,\qquad \sqrt{x(1-x)}=\sqrt{\sin<sup>2t</sup>\cos<sup>2t</sup>}=\sin t\cos t.$$</p>
+<h3>第三步：代入积分收口</h3>
+<p>$$\int_0<sup>1</sup>\frac{\arcsin\sqrt{x}}{\sqrt{x(1-x)}}\,\mathrm{d}x=\int_0<sup>\frac{\pi</sup>{2}}\frac{t}{\sin t\cos t}\cdot2\sin t\cos t\,\mathrm{d}t=\int_0<sup>\frac{\pi</sup>{2}}2t\,\mathrm{d}t=t<sup>2</sup>\Big|_0<sup>\frac{\pi</sup>{2}}=\frac{\pi<sup>2</sup>}{4}.$$</p>
+<p>换元的"收益"一目了然：分子只剩 $t$，分母 $\sin t\cos t$ 与 $\mathrm{d}x=2\sin t\cos t\,\mathrm{d}t$ 中的同名因子恰好约掉——"反三角 + 双根式"的难题塌缩成一次幂函数积分。选 A。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉因子 2</strong>：凑微分后分子剩 $2t$ 而不是 $t$，漏掉 2 会错成 $\frac{\pi<sup>2</sup>}{8}$（选 B 的典型来源）。</li><li><strong>开方取负</strong>：$\sqrt{\sin<sup>2t</sup>\cos<sup>2t</sup>}$ 在 $t\in[0,\frac{\pi}{2}]$ 上取正 $\sin t\cos t$，别写出绝对值混乱。</li><li><strong>换限不同步</strong>：新积分上限是 $t$ 的 $\frac{\pi}{2}$，不是 $x$ 的 1。</li><li><strong>选 C（$\frac{\pi}{4}$）</strong>：多半把 $\arcsin\sqrt{x}$ 当成了常数、或根本没对新变量 $t$ 积分，整层 $\int_0<sup>\frac{\pi</sup>{2}}2t\,\mathrm{d}t$ 丢失。</li><li><strong>选 D（$\frac{\pi}{8}$）</strong>：换元没做到底——漏掉 $\mathrm{d}x$ 里的因子 $2\sin t\cos t$ 或换限出错，结果再砍一半。</li></ul>
+<blockquote>一句话结论：$\left(\arcsin\sqrt{x}\right)'=\dfrac{1}{2\sqrt{x(1-x)}}$ 是现成的凑微分对，令 $t=\arcsin\sqrt{x}$ 后积分塌缩为 $\int_0<sup>\pi/2</sup>2t\,\mathrm{d}t=\dfrac{\pi<sup>2</sup>}{4}$，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

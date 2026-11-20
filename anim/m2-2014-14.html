@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：配方定负惯性指数（2014 年第 14 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-13.html" data-q="../question/m2-2014-13/">← <b>m2-2014-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-14/" data-q="../question/m2-2014-14/" data-no-anim="1">m2-2014-14 · 本题</a>
+  <a href="m2-2014-15.html" data-q="../question/m2-2014-15/"><b>m2-2014-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CARDS = [
+  { cls: 'key', title: '审题与选方法',
+    body: '<p>负惯性指数 = 标准形中<b>负系数的个数</b> = 负特征值个数。含参数 $a$ 时配方法最快，不必硬解特征方程。</p>' },
+  { cls: '', title: '写出二次型矩阵',
+    body: '<p>$$A=\\begin{pmatrix}1&0&a\\\\0&-1&2\\\\a&2&0\\end{pmatrix},\\qquad f=x_{1}^{2}-x_{2}^{2}+2ax_{1}x_{3}+4x_{2}x_{3}.$$</p>' },
+  { cls: '', title: '配掉 $x_{1}$',
+    body: '<p>$$f=(x_{1}+ax_{3})^{2}-a^{2}x_{3}^{2}-x_{2}^{2}+4x_{2}x_{3}.$$</p>' +
+          '<p>注意补偿项 $-a^{2}x_{3}^{2}$。</p>' },
+  { cls: '', title: '配掉 $x_{2}$（系数为负）',
+    body: '<p>$$-x_{2}^{2}+4x_{2}x_{3}=-(x_{2}-2x_{3})^{2}+4x_{3}^{2}.$$</p>' +
+          '<p>作可逆替换 $y_{1}=x_{1}+ax_{3},\\ y_{2}=x_{2}-2x_{3},\\ y_{3}=x_{3}$。</p>' },
+  { cls: 'ok', title: '标准形出炉',
+    body: '<p>$$f=y_{1}^{2}-y_{2}^{2}+(4-a^{2})\\,y_{3}^{2}.$$</p>' +
+          '<p>前两个系数 $+1$、$-1$ 与 $a$ 无关，已经锁定。</p>' },
+  { cls: 'step', title: '按负系数个数列不等式',
+    body: '<p>负惯性指数为 $1$：第三个系数<b>不为负</b>即可（为 $0$ 不增加负系数）：</p>' +
+          '<p>$$4-a^{2}\\ge0.$$</p>' },
+  { cls: 'good', title: '边界讨论与结论',
+    body: '<p>$\\lvert a\\rvert<2$：$(+,-,+)$，负惯性指数 $1$；$a=\\pm2$：$(+,-,0)$，仍为 $1$；$\\lvert a\\rvert>2$：$(+,-,-)$，变 $2$，不合。故</p>' +
+          '<p>$$a\\in[-2,2].$$</p>' },
+];
+
+AW.init({
+  title: '【2014 数二·14】负惯性指数为 1 时 $a$ 的范围',
+  subtitle: '考点：二次型标准形 / 惯性定理 · 方法：配方法',
+  counterLabel: '已执行',
+  ribbonTitle: '关键节点',
+  intro: '点击「▶ 播放」逐步演示配方与边界讨论。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一张卡'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'负惯性指数 = 标准形负系数个数，选配方法', count:0 },
+    { cls:'step',  tag:'矩阵', log:'对称矩阵对角是 1、−1、0，A(1,3)=A(3,1)=a', count:1 },
+    { cls:'step',  tag:'配 x1', log:'x₁ 项配成完全平方，补偿 −a²x₃²', count:2 },
+    { cls:'step',  tag:'配 x2', log:'x₂ 系数为负，提出负号配成 −(x₂−2x₃)²', count:3, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'标准形', log:'f = y₁² − y₂² + (4−a²)y₃²', count:4, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'不等式', log:'负系数只能有一个：4−a² ≥ 0', count:5 },
+    { cls:'done',  tag:'完成', log:'含端点：a ∈ [−2, 2]', count:6, ribbon:{k:3, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '答案 a ∈ [−2, 2]',
+    html: '记忆锚点：<b>配方到 $y_{1}^{2}-y_{2}^{2}+(4-a^{2})y_{3}^{2}$ 后看符号表</b>：$(+,-,0)$ 的 $0$ 不算负系数，所以 $a=\\pm2$ 含在区间内（闭区间）；$\\lvert a\\rvert>2$ 时负系数变 2 个。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：配方读惯性指数——为什么配出来的符号可信</h2>
+<p><strong>答案：$-2\le a\le2$（即 $a\in[-2,2]$）</strong></p>
+<h3>第一步：先立机制——惯性定理给配方「上保险」</h3>
+<p>负惯性指数 = 标准形中负系数的个数 = 实对称矩阵 $A$ 的负特征值个数。为什么敢用配方法的系数符号下结论：配方的过程就是对 $A$ 作<strong>可逆线性替换</strong>（合同变换），惯性定理保证合同变换不改变正、负惯性指数——无论怎么配，负系数个数都一样，可以放心读。为什么不用特征方程：含参数 $a$ 的三次特征多项式判根太繁，配方两步读符号。</p>
+<p>$$A=\begin{pmatrix}1&amp;0&amp;a\\0&amp;-1&amp;2\\a&amp;2&amp;0\end{pmatrix}.$$</p>
+<h3>第二步：配掉 $x_1$（系数 $+1$，直接配）</h3>
+<p>$$f=x_{1}<sup>2</sup>+2ax_{1}x_{3}-x_{2}<sup>2</sup>+4x_{2}x_{3}=(x_{1}+ax_{3})<sup>2</sup>-a<sup>2</sup>x_{3}<sup>2</sup>-x_{2}<sup>2</sup>+4x_{2}x_{3}.$$</p>
+<p>每一步配方都是「凑成一次式的平方」，代价是补出一个平方项之差——符号变化正来自这里。</p>
+<h3>第三步：配掉 $x_2$（系数 $-1$，先提负号）</h3>
+<p>$$-x_{2}<sup>2</sup>+4x_{2}x_{3}=-(x_{2}-2x_{3})<sup>2</sup>+4x_{3}<sup>2</sup>.$$</p>
+<p>作可逆替换 $y_{1}=x_{1}+ax_{3},\ y_{2}=x_{2}-2x_{3},\ y_{3}=x_{3}$，得标准形</p>
+<p>$$f=y_{1}<sup>2</sup>-y_{2}<sup>2</sup>+(4-a<sup>2</sup>)\,y_{3}<sup>2</sup>.$$</p>
+<h3>第四步：按负系数个数解出 $a$</h3>
+<p>$+1$ 与 $-1$ 已占一正一负，负惯性指数为 $1$ 要求第三个系数<strong>不为负</strong>：</p>
+<p>$$4-a<sup>2</sup>\ge0\ \Longleftrightarrow\ -2\le a\le2.$$</p>
+<p>为什么含等号：$4-a<sup>2</sup>=0$ 时系数为 $0$，不算负，符号组 $(+,-,0)$ 的负指数仍是 $1$；$\lvert a\rvert&gt;2$ 时成 $(+,-,-)$，负指数变 $2$，不合。</p>
+<p>特例校验：$a=0$ 时 $A$ 的特征多项式为 $(1-\lambda)\big(\lambda<sup>2</sup>+\lambda-4\big)$，根 $\ 1,\ \dfrac{-1\pm\sqrt{17}}{2}$，符号 $(+,+,-)$，负指数恰为 $1$，与 $0\in[-2,2]$ 吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>条件读反</strong>：题固定的是<strong>负</strong>惯性指数，盯住那个 $-1$。</li><li><strong>漏掉等号</strong>：$a=\pm2$ 时负系数仍只有 $1$ 个，答案是闭区间。</li><li><strong>硬解特征方程</strong>：含参三次方程判根繁，配方两步出结果。</li></ul>
+<blockquote>一句话结论：标准形 $y_{1}<sup>2</sup>-y_{2}<sup>2</sup>+(4-a<sup>2</sup>)y_{3}<sup>2</sup>$，需 $4-a<sup>2</sup>\ge0$，$a\in[-2,2]$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

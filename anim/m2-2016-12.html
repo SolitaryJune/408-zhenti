@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·12 变限积分方程与高阶导数规律</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-11.html" data-q="../question/m2-2016-11/">← <b>m2-2016-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-12/" data-q="../question/m2-2016-12/" data-no-anim="1">m2-2016-12 · 本题</a>
+  <a href="m2-2016-13.html" data-q="../question/m2-2016-13/"><b>m2-2016-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 推导板各行：与 snaps 一一对应（build 建立、render 按 i 点亮）
+var ROWS = [
+  { label: '第 0 步 · 审题',
+    h: '<p>$f(x)=(x+1)^2+2\\displaystyle\\int_0^x f(t)\\,\\mathrm dt$，$f$ 处处连续。求 $n\\ge2$ 时的 $f^{(n)}(0)$。思路：变限积分可导，两边求导制造递推，再逐阶代 $x=0$ 找节奏。</p>' },
+  { label: '第 1 步 · 取 x=0 得初值',
+    h: '<p>积分项 $\\int_0^0=0$：$$f(0)=1.$$ 递推的起点必须有它。</p>' },
+  { label: '第 2 步 · 一阶：两边求导',
+    h: '<p>$$f\'(x)=2(x+1)+2f(x)\\ \\Longrightarrow\\ f\'(0)=2\\cdot1+2\\cdot1=4.$$</p>' },
+  { label: '第 3 步 · 二阶：多项式还在场',
+    h: '<p>$$f\'\'(x)=2+2f\'(x)\\ \\Longrightarrow\\ f\'\'(0)=2+2\\cdot4=10.$$</p>' },
+  { label: '第 4 步 · 三阶起：纯倍增递推',
+    h: '<p>$2(x+1)$ 求二阶导已归零，$$f^{(k)}(x)=2f^{(k-1)}(x)\\quad(k\\ge3).$$</p>' },
+  { label: '第 5 步 · 列数列找通项',
+    h: '<p>$$f\'\'(0)=10=5\\cdot2,\\quad f\'\'\'(0)=20=5\\cdot2^2,\\quad f^{(4)}(0)=40=5\\cdot2^3,\\ \\cdots$$ 每加一阶乘 2，基数是 5。</p>' },
+  { label: '第 6 步 · 结论',
+    h: '<p>$$f^{(n)}(0)=5\\cdot 2^{\\,n-1}\\qquad(n\\ge2).$$ 验算：$n=2$ 得 $10$，$n=3$ 得 $20$，与逐阶求导一致。</p>' },
+];
+
+var rowEls = [];
+
+AW.init({
+  title: '$f(x)=(x+1)^2+2\\int_0^x f(t)\\,\\mathrm dt$，求 $f^{(n)}(0)$',
+  subtitle: '考点：变限积分求导 · 高阶导数递推 · 方法：定初值 → 求导造递推 → 找通项',
+  counterLabel: '步骤',
+  intro: '点击「▶ 播放」逐步演示推导板上的七步计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rowEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    ROWS.forEach(function(r){
+      var d = AW.el('div', '');
+      d.style.cssText = 'padding:9px 14px;margin:8px 0;border-left:4px solid transparent;border-radius:10px;opacity:.15;transition:opacity .35s,background .35s,border-color .35s;';
+      d.innerHTML = '<div style="font-size:12.5px;color:#64748b;font-weight:700;margin-bottom:2px">' + r.label + '</div>' + r.h;
+      wrap.appendChild(d);
+      rowEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step', tag:'审题',   log:'变限积分可导：两边求导把积分方程变成导数递推', count:0 },
+    { cls:'ok',   tag:'初值',   log:'x=0 时积分为零，f(0) = 1', count:1 },
+    { cls:'step', tag:'一阶',   log:'f′ = 2(x+1) + 2f，代 x=0 得 f′(0) = 4', count:2 },
+    { cls:'step', tag:'二阶',   log:'f″ = 2 + 2f′，f″(0) = 10', count:3 },
+    { cls:'ok',   tag:'纯倍增', log:'三阶起 2(x+1) 求没，f⁽ᵏ⁾ = 2f⁽ᵏ⁻¹⁾', count:4 },
+    { cls:'ok',   tag:'找通项', log:'10, 20, 40, … 每阶乘 2，基数 5', count:5 },
+    { cls:'done', tag:'完成',   log:'f⁽ⁿ⁾(0) = 5·2ⁿ⁻¹（n ≥ 2）', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    rowEls.forEach(function(d, j){
+      d.style.opacity = j <= i ? '1' : '.15';
+      d.style.borderLeftColor = j < i ? '#16a34a' : (j === i ? '#d97706' : 'transparent');
+      d.style.background = j === i ? '#fffbeb' : (j < i ? '#f6fef9' : 'transparent');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: 'f⁽ⁿ⁾(0) = 5·2ⁿ⁻¹（n ≥ 2）',
+    html: '记忆锚点：<b>变限积分方程 = 求导造递推</b>——先 $f(0)=1$ 定起点，$f\'(0)=4$、$f\'\'(0)=10$ 后多项式项退场，剩下 $\\times 2$ 的等比节奏：$f^{(n)}(0)=5\\cdot2^{\\,n-1}$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分方程求 $f<sup>(n)</sup>(0)$</h2>
+<p>答案：$5\cdot 2<sup>n-1</sup>$</p>
+<h3>第 0 步：先立机制——求导一次积分现形；递推加初值，通项自出</h3>
+<p>$f$ 被等式 $f(x)=(x+1)<sup>2</sup>+2\int_0<sup>xf</sup>(t)\,\mathrm dt$ <strong>隐性定义</strong>。机制在变限积分：由微积分基本定理，$\Big(\int_0<sup>xf</sup>(t)\,\mathrm dt\Big)'=f(x)$——对两边求导一次，藏在积分号下的 $f$ 就"现形"，等式变成 $f$ 与 $f'$ 的线性关系。再往下每求一阶导，多项式 $2(x+1)$ 的贡献就降一阶，从三阶起彻底退场，只剩"$f<sup>(k)</sup>=2f<sup>(k-1)</sup>$"的纯倍增。所以整体策略是：取初值 → 求导建递推 → 按等比节奏读通项。</p>
+<h3>第一步：取初值 f(0)</h3>
+<p>$x=0$ 时变限积分上下限重合、值为 $0$：</p>
+<p>$$f(0)=(0+1)<sup>2</sup>+0=1.$$</p>
+<p>递推的每一环都要用前一项的值，初值不给，链条推不动——这就是先算 $f(0)$ 的理由。</p>
+<h3>第二步：求导建递推</h3>
+<p>$$f'(x)=2(x+1)+2f(x)\ \Longrightarrow\ f'(0)=2+2\cdot1=4,$$</p>
+<p>$$f''(x)=2+2f'(x)\ \Longrightarrow\ f''(0)=2+8=10.$$</p>
+<p>注意 $f''$ 里还残留多项式的贡献 $2$（二次式的二阶导是常数）。</p>
+<h3>第三步：从三阶起读等比节奏</h3>
+<p>三阶起 $2(x+1)$ 已被求没（二次式经两次求导归零）：</p>
+<p>$$f<sup>(k)</sup>(x)=2f<sup>(k-1)</sup>(x)\quad(k\ge3).$$</p>
+<p>于是 $f'''(0)=2\cdot10=20,\ f<sup>(4)</sup>(0)=40,\cdots$；回看 $f''(0)=10=5\cdot2$ 恰好也合节奏，首项 $10$、公比 $2$：</p>
+<p>$$f<sup>(n)</sup>(0)=5\cdot2<sup>n-1</sup>\quad(n\ge2).$$</p>
+<p>验算：$n=2$ 给 $10$、$n=3$ 给 $20$，与递推一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>跳过初值直接递推</strong>：$f'(0)$ 里要用 $f(0)$，$f''(0)$ 里要用 $f'(0)$——第一环 $f(0)=1$ 不取，后面全错。</li><li><strong>让 $2(x+1)$ 一直陪跑</strong>：它只污染 $f'(0)=4$ 一项（$f''$ 里只剩常数 $2$），三阶起才是纯倍增；$4$ 不在 $5\cdot2<sup>n-1</sup>$ 的节奏里，这正是公式限定 $n\ge2$ 的原因。</li><li><strong>通项指数错位</strong>：以 $f''(0)=10=5\cdot2<sup>1</sup>$ 对齐（$n=2\leftrightarrow2<sup>1</sup>$），对齐到 $2<sup>n</sup>$ 会整体差一档。</li></ul>
+<blockquote>结论：初值 $f(0)=1$、节奏起点 $f''(0)=10=5\cdot2$，三阶起每阶乘 $2$：$f<sup>(n)</sup>(0)=5\cdot2<sup>n-1</sup>$（$n\ge2$）。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

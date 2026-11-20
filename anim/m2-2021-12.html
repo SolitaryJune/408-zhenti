@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·12 参数方程的二阶导数</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-11.html" data-q="../question/m2-2021-11/">← <b>m2-2021-11</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-12/" data-q="../question/m2-2021-12/" data-no-anim="1">m2-2021-12 · 本题</a>
+  <a href="m2-2021-13.html" data-q="../question/m2-2021-13/"><b>m2-2021-13</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$x=2\\mathrm{e}^t+t+1,\\ y=4(t-1)\\mathrm{e}^t+t^2$，求 $\\left.\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\right|_{t=0}$",
+  "<b>② 公式备好：</b>$\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}=\\dfrac{y'_t}{x'_t}$，$\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}=\\dfrac{\\dfrac{\\mathrm{d}}{\\mathrm{d}t}\\!\\left(\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}\\right)}{x'_t}$——<b>分母是 $x'_t$，最后还要除一次</b>",
+  "<b>③ 分别求导：</b>$x'_t=2\\mathrm{e}^t+1$；$y'_t=4\\mathrm{e}^t+4(t-1)\\mathrm{e}^t+2t=4t\\,\\mathrm{e}^t+2t$（$(t-1)\\mathrm{e}^t$ 的导数是 $t\\mathrm{e}^t$）",
+  "<b>④ 一阶导：</b>$\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}=\\dfrac{4t\\mathrm{e}^t+2t}{2\\mathrm{e}^t+1}$",
+  "<b>⑤ 商法则对 $t$ 再导：</b>$u=4t\\mathrm{e}^t+2t,\\ u'=4\\mathrm{e}^t+4t\\mathrm{e}^t+2$；$v=2\\mathrm{e}^t+1,\\ v'=2\\mathrm{e}^t$",
+  "<b>⑥ 代 $t=0$：</b>$u=0,\\ u'=6,\\ v=3,\\ v'=2$，故 $\\dfrac{\\mathrm{d}}{\\mathrm{d}t}\\!\\left(\\dfrac{\\mathrm{d}y}{\\mathrm{d}x}\\right)\\Big|_0=\\dfrac{6\\cdot3-0\\cdot2}{9}=2$",
+  "<b>⑦ 最后一次除法：</b>$\\left.\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\right|_{t=0}=\\dfrac{2}{x'_t|_{t=0}}=\\dfrac{2}{2\\mathrm{e}^0+1}=\\dfrac23$",
+  "<b>⑧ 结论：</b>$\\left.\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\right|_{t=0}=\\dfrac23$"
+];
+
+AW.init({
+  title: '2021·12　参数方程 $x=2\\mathrm{e}^t+t+1$，$y=4(t-1)\\mathrm{e}^t+t^2$ 求二阶导',
+  subtitle: '考点：参数方程求导公式 · 商法则 · 二阶导分母是 $x\'_t$',
+  counterLabel: '已推导',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，先一阶、再对 t 求导、最后除一次 x 导数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'参数方程二阶导在 t 等于零处的值，先把公式备好', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'公式',   log:'一阶导是 y 导比 x 导，二阶导还要再对 t 求导后除以 x 导', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'分别求导', log:'x 导是二 e 的 t 次方加一，y 导化简成四 t e 的 t 次方加二 t', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'一阶导', log:'两者相除得到一阶导表达式', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'商法则', log:'分子分母各自求导备好，准备在零点代入', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'代零点', log:'分子为零分母为三，对 t 求导的结果是二', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'再除一次', log:'最后除以 x 导在零点的值三，得到三分之二', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：二阶导等于三分之二', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\left.\\dfrac{\\mathrm{d}^2y}{\\mathrm{d}x^2}\\right|_{t=0}=\\dfrac23$',
+    html: '记忆锚点：<b>二阶导 = 「对 $t$ 求导 $\\frac{\\mathrm{d}y}{\\mathrm{d}x}$」再 ÷ $x\'_t$</b>——除的是 $x\'_t$ 本身，不是 $(x\'_t)^2$。易错：把中间结果 2 当最终答案（漏最后一步）；$(t-1)\\mathrm{e}^t$ 的导数写成 $\\mathrm{e}^t$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：参数方程二阶导——"再除一次 $x'_t$"是链式法则的必然</h2>
+<p>答案：$\dfrac{2}{3}$</p>
+<h3>第一步：机制——公式为什么长这样</h3>
+<p>一阶导是微分之比：$\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{y'_t}{x'_t}$。算二阶导要注意：$\dfrac{\mathrm{d}y}{\mathrm{d}x}$ 算出来后是 <strong>$t$ 的函数</strong> $g(t)$，而 $\dfrac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}$ 的定义是"$g$ 对 $x$ 求导"。$g$ 的自变量是 $t$，对 $x$ 求导必须穿过中间变量 $t$（链式法则）：</p>
+<p>$$\frac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}=\frac{\mathrm{d}}{\mathrm{d}x}\,g(t)=g'(t)\cdot\frac{\mathrm{d}t}{\mathrm{d}x}=\frac{g'(t)}{x'_t}.$$</p>
+<p>所以"最后还要除一次 $x'_t$"不是死规定，而是链式法则的直接后果——$\dfrac{\mathrm{d}t}{\mathrm{d}x}=\dfrac{1}{x'_t}$ 自动补在分母上。它同时回答两个常见疑问：为什么不是除 $(x'_t)<sup>2</sup>$？——那是把"对 $x$ 求导"错当成"对 $t$ 求两次"；$g$ 只对 $t$ 求导一次，商法则里的 $v<sup>2</sup>$ 是 $g'$ 内部计算的产物，与最后的除法无关。直观地说：一阶导已换算成"$x$ 语言"，但它仍按参数 $t$ 的节奏记录，再对 $x$ 微分时换算因子 $\dfrac{1}{x'_t}$ 会再出现一次。</p>
+<h3>第二步：求一阶导</h3>
+<p>$x'_t=2\mathrm{e}<sup>t</sup>+1$；对 $y=4(t-1)\mathrm{e}<sup>t</sup>+t<sup>2</sup>$，用 $(t-1)\mathrm{e}<sup>t</sup>$ 的导数 $=t\mathrm{e}<sup>t</sup>$：</p>
+<p>$$y'_t=4\mathrm{e}<sup>t</sup>+4(t-1)\mathrm{e}<sup>t</sup>+2t=4t\,\mathrm{e}<sup>t</sup>+2t,\qquad g(t)=\frac{\mathrm{d}y}{\mathrm{d}x}=\frac{4t\mathrm{e}<sup>t</sup>+2t}{2\mathrm{e}<sup>t</sup>+1}.$$</p>
+<h3>第三步：$g$ 对 $t$ 求导（商法则）</h3>
+<p>记分子 $u=4t\mathrm{e}<sup>t</sup>+2t$、分母 $v=2\mathrm{e}<sup>t</sup>+1$，则 $u'=4\mathrm{e}<sup>t</sup>+4t\mathrm{e}<sup>t</sup>+2$，$v'=2\mathrm{e}<sup>t</sup>$。在 $t=0$ 处 $u=0,\ u'=6,\ v=3,\ v'=2$，故</p>
+<p>$$g'(0)=\frac{u'v-uv'}{v<sup>2</sup>}\bigg|_{t=0}=\frac{6\cdot3-0\cdot2}{9}=2.$$</p>
+<h3>第四步：除以 $x'_t(0)$ 收尾</h3>
+<p>$$\left.\frac{\mathrm{d}<sup>2y</sup>}{\mathrm{d}x<sup>2</sup>}\right|_{t=0}=\frac{g'(0)}{x'_t(0)}=\frac{2}{2\mathrm{e}<sup>0</sup>+1}=\frac23.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>漏除 $x'_t$</strong>：把 $g'(0)=2$ 当最终答案——二阶导的分母还有 $x'_t$，这是链式法则欠的账。</li><li><strong>公式记成除 $(x'_t)<sup>2</sup>$</strong>：$v<sup>2</sup>=9$ 属于商法则内部，与最后的除法无关；最后除的是 $x'_t$ 本身。</li><li><strong>$y'_t$ 求导出错</strong>：$\left((t-1)\mathrm{e}<sup>t</sup>\right)'=\mathrm{e}<sup>t</sup>+(t-1)\mathrm{e}<sup>t</sup>=t\mathrm{e}<sup>t</sup>$，写错则全盘皆错。</li></ul>
+<blockquote>一句话结论：$g(t)=\dfrac{4t\mathrm{e}<sup>t</sup>+2t}{2\mathrm{e}<sup>t</sup>+1}$，$g'(0)=2$，再除 $x'(0)=3$ 得 $\dfrac23$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

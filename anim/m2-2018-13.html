@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·13 隐函数求偏导并代值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-12.html" data-q="../question/m2-2018-12/">← <b>m2-2018-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-13/" data-q="../question/m2-2018-13/" data-no-anim="1">m2-2018-13 · 本题</a>
+  <a href="m2-2018-14.html" data-q="../question/m2-2018-14/"><b>m2-2018-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>第一步：先求代入点处的 $z$ 值（不能跳过）</b>把 $x=2,\\ y=\\dfrac12$ 代入：右端 $xy=1$，$$\\ln z+e^{z-1}=1.$$ 左端关于 $z$ 严格单调递增；试 $z=1$：$\\ln1+e^0=0+1=1$ 成立，故 $z=1$ 是唯一解。</p>",
+  "<p><b>第二步：两边对 $x$ 求偏导（$z=z(x,y)$，$y$ 视为常数）</b>$$\\frac1z\\cdot\\frac{\\partial z}{\\partial x}+e^{z-1}\\cdot\\frac{\\partial z}{\\partial x}=y.$$ 左边两项都带链式因子 $z_x$；右端对 $x$ 求偏导是 $y$（$y$ 是常数，不是 $x$）。</p>",
+  "<p><b>第三步：提出公因式解出 $z_x$</b>$$\\left(\\frac1z+e^{z-1}\\right)\\frac{\\partial z}{\\partial x}=y\\ \\Longrightarrow\\ \\frac{\\partial z}{\\partial x}=\\frac{y}{\\dfrac1z+e^{z-1}}.$$</p>",
+  "<p><b>第四步：代值 $y=\\dfrac12,\\ z=1$</b>$$\\left.\\frac{\\partial z}{\\partial x}\\right|_{\\left(2,\\frac12\\right)}=\\frac{\\tfrac12}{\\dfrac11+e^0}=\\frac{\\tfrac12}{2}=\\frac14.$$</p>",
+  "<p><b>排错</b>：不解出 $z(2,\\tfrac12)=1$ 就停笔，答案里留着 $z$——必须代值；对 $xy$ 求导时把 $y$ 也求了——对 $x$ 求偏导时 $y$ 是常数；$\\ln z$ 的导数漏乘 $z_x$——链式因子不能丢。</p>",
+  "<p><b>结论</b>$$\\left.\\frac{\\partial z}{\\partial x}\\right|_{\\left(2,\\frac12\\right)}=\\frac14\\quad(\\text{填空答案})$$</p>"
+];
+
+AW.init({
+  title: '由 $\\ln z+e^{z-1}=xy$ 求 $\\left.\\dfrac{\\partial z}{\\partial x}\\right|_{\\left(2,\\frac12\\right)}$',
+  subtitle: '考点：隐函数求偏导 · 方法：先定 z → 求导 → 代值',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」：定 z → 偏导 → 解出 z_x → 代值。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'定 z',   log:'xy=1 ⇒ ln z + e^(z−1) = 1，z=1 唯一解', show:1, count:0, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'求偏导', log:'两边对 x 求导：z_x 的两项提出公因式，右边得 y', show:2, count:1, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'解出',   log:'(1/z + e^(z−1))·z_x = y ⇒ z_x = y/(1/z+e^(z−1))', show:3, count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'代值',   log:'y=1/2、z=1 ⇒ z_x = (1/2)/2 = 1/4', show:4, count:3, ribbon:{k:4, ok:true} },
+    { cls:'miss',  tag:'排错',   log:'z 不代值、y 被求导、链式漏乘都是常见错', show:5, count:4 },
+    { cls:'done',  tag:'完成',   log:'填空答案：1/4', show:6, count:5, done:true, ribbon:{k:5, ok:true} },
+  ],
+
+  result: {
+    big: '填空答案：$\\dfrac14$',
+    html: '记忆锚点：<b>隐函数代值三拍走</b>：先由方程解出 $z(2,\\tfrac12)=1$（$xy=1$ 是刻意设计，$z=1$ 一猜即中）→ 对 $x$ 求偏导时 $y$ 当常数、$z$ 带链式因子 → 最后代 $y=\\tfrac12,\\ z=1$ 得 $\\dfrac14$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：隐函数求偏导并代值——先定 $z$，再求导，后代入</h2>
+<p>答案：$\dfrac14$</p>
+<h3>第一步：先求代入点处的 $z$ 值（不能跳过）</h3>
+<p>把 $x=2,\ y=\dfrac12$ 代入方程 $\ln z+e<sup>z-1</sup>=xy$：右端 $xy=1$，于是</p>
+<p>$$\ln z+e<sup>z-1</sup>=1.$$</p>
+<p>试 $z=1$：$\ln1+e<sup>0</sup>=0+1=1$ 成立；且左端关于 $z$ 严格单调递增，故 $z=1$ 是唯一解，即 $z\left(2,\tfrac12\right)=1$。</p>
+<h3>第二步：方程两边对 $x$ 求偏导（$z=z(x,y)$，$y$ 视为常数）</h3>
+<p>$$\frac1z\cdot\frac{\partial z}{\partial x}+e<sup>z-1</sup>\cdot\frac{\partial z}{\partial x}=y,$$</p>
+<p>左边两项都含链式因子 $z_x$，提出公因式：</p>
+<p>$$\left(\frac1z+e<sup>z-1</sup>\right)\frac{\partial z}{\partial x}=y\ \Longrightarrow\ \frac{\partial z}{\partial x}=\frac{y}{\dfrac1z+e<sup>z-1</sup>}.$$</p>
+<h3>第三步：代值</h3>
+<p>代入 $y=\dfrac12,\ z=1$：</p>
+<p>$$\left.\frac{\partial z}{\partial x}\right|_{\left(2,\frac12\right)}=\frac{\frac12}{\frac11+e<sup>0</sup>}=\frac{\frac12}{2}=\frac14.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>不先解出 $z$ 就停笔</strong>：答案里留着 $z$ 说明没完成"代值"这一问；本题 $z=1$ 恰好是"猜得出来"的特殊值（$xy=1$ 是刻意设计的）。</li><li><strong>对 $xy$ 求导时把 $y$ 也求了</strong>：对 $x$ 求偏导时 $y$ 是常数，右端导数就是 $y$，不是 $x$。</li><li><strong>链式因子漏乘</strong>：$\ln z$ 对 $x$ 的导数是 $\dfrac1z z_x$ 而不是 $\dfrac1z$；$e<sup>z-1</sup>$ 同理要乘 $z_x$。</li></ul>
+<blockquote>结论：$z(2,\tfrac12)=1$，$\left(\dfrac1z+e<sup>z-1</sup>\right)z_x=y$ 代值得 $z_x=\dfrac{\tfrac12}{1+1}=\dfrac14$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

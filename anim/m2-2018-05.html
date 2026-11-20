@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·05 对称区间上三个定积分比大小</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-04.html" data-q="../question/m2-2018-04/">← <b>m2-2018-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-05/" data-q="../question/m2-2018-05/" data-no-anim="1">m2-2018-05 · 本题</a>
+  <a href="m2-2018-06.html" data-q="../question/m2-2018-06/"><b>m2-2018-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '策略：先造标尺，只比大小不硬算',
+    cls: 'key',
+    body: '<p>三个积分都在同一对称区间 $\\left[-\\tfrac\\pi2,\\tfrac\\pi2\\right]$ 上。挑最好算的 $M$ 用<b>奇偶性</b>得出精确值当标尺，$K$、$N$ 分别与标尺比，全程不做数值积分。</p>',
+    log: '对称区间：先算 M 当标尺' },
+  { title: '标尺 $M$：拆出奇函数，得精确值',
+    cls: 'step',
+    body: '<p>$$\\frac{(1+x)^2}{1+x^2}=\\frac{1+2x+x^2}{1+x^2}=1+\\frac{2x}{1+x^2}$$ 第二项是奇函数，对称区间上积分为 $0$：$$M=\\int_{-\\frac\\pi2}^{\\frac\\pi2}1\\,dx=\\pi.$$</p>',
+    ribbon: {k:1, ok:true},
+    log: 'M = π，标尺就位' },
+  { title: '$K$ 与标尺比：被积函数大于 1',
+    cls: 'step',
+    body: '<p>区间内部 $\\cos x>0$，故 $1+\\sqrt{\\cos x}>1$ 且不恒等于 $1$：$$K=\\pi+\\int_{-\\frac\\pi2}^{\\frac\\pi2}\\sqrt{\\cos x}\\,dx>\\pi=M.$$</p>',
+    ribbon: {k:2, ok:true},
+    log: 'K > π = M，K 是最大的' },
+  { title: '$N$ 与标尺比：配对后看单调',
+    cls: 'step',
+    body: '<p>把左半区间用 $x\\mapsto-x$ 翻到右半轴（记 $a=\\tfrac\\pi2$）：$$N=\\int_0^a h(x)\\,dx,\\qquad h(x)=(1+x)e^{-x}+(1-x)e^{x}$$ $h(0)=2$，且 $h\'(x)=-x\\left(e^{x}+e^{-x}\\right)<0\\ (0<x<a)$ ⇒ $h(x)<2$：$$N<\\int_0^a2\\,dx=2a=\\pi=M.$$</p>',
+    ribbon: {k:3, ok:true},
+    log: 'h(x)<2 ⇒ N < π = M' },
+  { title: '排错 A / B / D',
+    cls: 'bad',
+    body: '<p>A 把 $K$ 判成最小——错，$1+\\sqrt{\\cos x}\\ge1$ 保证 $K>\\pi$，$K$ 反而最大。B 把 $M$、$K$ 颠倒。D 把 $N$ 排在 $M$ 之前——配对估计已证 $N<\\pi=M$。</p>',
+    log: 'A 低估 K，B 颠倒 M/K，D 颠倒 N/M' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>三块拼起来：$K>M=\\pi>N$，答案选 <b>C</b>。核心记忆点：<b>对称区间先找能出精确值的标尺</b>（奇偶性），其余积分只放缩、不求值。</p>',
+    log: 'K > M > N，选 C' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$M=\\int_{-\\frac\\pi2}^{\\frac\\pi2}\\frac{(1+x)^2}{1+x^2}dx$，$N=\\int_{-\\frac\\pi2}^{\\frac\\pi2}\\frac{1+x}{e^x}dx$，$K=\\int_{-\\frac\\pi2}^{\\frac\\pi2}(1+\\sqrt{\\cos x})dx$ 排序',
+  subtitle: '考点：定积分性质（奇偶性 · 保序性）· 方法：精确标尺 + 放缩',
+  counterLabel: '推理步',
+  ribbonTitle: '比较环节（✓ 完成）',
+  intro: '点击「▶ 播放」：造标尺 → 比 K → 比 N → 排错。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 C：$K>M>N$',
+    html: '记忆锚点：<b>$M=\\pi$ 是标尺</b>（$\\dfrac{2x}{1+x^2}$ 为奇函数）；$1+\\sqrt{\\cos x}\\ge1$ ⇒ $K>\\pi$；$N$ 配对成 $\\int_0^ah\\,dx$ 后 $h\'=-x(e^x+e^{-x})<0$、$h<2$ ⇒ $N<\\pi$。不硬算是本题最快的路。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：同一对称区间上三个定积分比大小（造标尺 + 配对比较，不硬算）</h2>
+<p>答案：C（$K&gt;M&gt;N$）</p>
+<h3>第一步：先懂机制——比大小不硬算，靠"精确标尺 + 放缩"</h3>
+<p>三个积分都在 $[-\tfrac\pi2,\tfrac\pi2]$ 上。$N=\displaystyle\int\frac{1+x}{e<sup>x</sup>}dx$ 硬算要分部积分且积出来还要再比；比大小的正确机制是：<strong>找一个能算出精确值的当标尺，其余两个只与标尺比</strong>。$M$ 的被积函数里藏着奇函数、恰好能算出精确值，标尺就是它。</p>
+<h3>第二步：标尺 $M=\pi$（奇偶性）</h3>
+<p>$$\frac{(1+x)<sup>2</sup>}{1+x<sup>2</sup>}=\frac{1+2x+x<sup>2</sup>}{1+x<sup>2</sup>}=\frac{1+x<sup>2</sup>}{1+x<sup>2</sup>}+\frac{2x}{1+x<sup>2</sup>}=1+\frac{2x}{1+x<sup>2</sup>},$$</p>
+<p>第二项是奇函数——直观上，对称区间内点成对出现 $(x,\cdot)$ 与 $(-x,\cdot)$，取值一正一负恰好相抵，积分为 $0$。故</p>
+<p>$$M=\int_{-\frac\pi2}<sup>\frac\pi2</sup>1\,dx=\pi.$$</p>
+<h3>第三步：$K$ 与标尺比——被积函数比 $1$ 大</h3>
+<p>区间内 $\cos x&gt;0$，故 $1+\sqrt{\cos x}&gt;1$ 且不恒等于 $1$：</p>
+<p>$$K=\pi+\int_{-\frac\pi2}<sup>\frac\pi2</sup>\sqrt{\cos x}\,dx&gt;\pi=M.$$</p>
+<h3>第四步：$N$ 与标尺比——对称配对后看单调</h3>
+<p><strong>为什么可以配对？</strong> 对称区间上恒有 $\int_{-a}<sup>a</sup>F\,dx=\int_0<sup>a</sup>\left[F(x)+F(-x)\right]dx$（左半区间作换元 $t=-x$ 翻到右半轴）。取 $a=\tfrac\pi2$：$F(x)=\dfrac{1+x}{e<sup>x</sup>}$ 在 $-x$ 处变成 $(1-x)e<sup>x</sup>$，于是</p>
+<p>$$N=\int_0<sup>a</sup>\underbrace{\left[(1+x)e<sup>-x</sup>+(1-x)e<sup>x</sup>\right]}_{h(x)}dx.$$</p>
+<p>$h(0)=2$，且 $h'(x)=-x\left(e<sup>x</sup>+e<sup>-x</sup>\right)&lt;0\ (0&lt;x&lt;a)$，故 $h$ 递减、在 $(0,a)$ 内 $h(x)&lt;2$，从而</p>
+<p>$$N&lt;\int_0<sup>a</sup> 2\,dx=2a=\pi=M.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>误选 A、B（$K$ 被低估）</strong>：$\sqrt{\cos x}\ge0$ 且不恒为 $0$ 决定 $K&gt;\pi$ <strong>严格</strong>成立，$K$ 是三者中最大的；凡把 $K$ 排在 $M$ 之后的排序（A 的 $M&gt;N&gt;K$、B 的 $M&gt;K&gt;N$）都错在这里。</li><li><strong>误选 D（$N$ 被高估）</strong>：不做配对论证就看不出 $N&lt;\pi$，凭"正半轴上 $e<sup>x</sup>$ 大"的直觉把 $N$ 排最前；配对后 $h(x)&lt;2$ 直接封死 $N&lt;\pi$。</li><li><strong>硬算 $N$</strong>：分部积分能积出来，但比大小只需要上界，配对 + 单调一步到位。</li></ul>
+<blockquote>结论：$M=\pi$（拆出奇函数）作标尺；$K&gt;\pi$（被积函数 $&gt;1$），$N&lt;\pi$（配对后 $h(x)&lt;2$），故 $K&gt;M&gt;N$，选 C。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

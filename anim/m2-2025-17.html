@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>m2-2025-17 · 部分分式分解求定积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2025-16.html" data-q="../question/m2-2025-16/">← <b>m2-2025-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2025-17/" data-q="../question/m2-2025-17/" data-no-anim="1">m2-2025-17 · 本题</a>
+  <a href="m2-2025-18.html" data-q="../question/m2-2025-18/"><b>m2-2025-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '$\\int_0^1\\dfrac{\\mathrm{d}x}{(x+1)(x^2-2x+2)}$ · 部分分式分解逐步演示',
+  subtitle: '考点：有理函数定积分 · 方法：部分分式 + 凑分母导数 + 配方 arctan',
+  counterLabel: '已完成',
+  intro: '点击「▶ 播放」逐步演示部分分式分解与积分全程。',
+
+  /* 持久 DOM：顶部固定题目，下方推导板每步更新 */
+  build: function(stage){
+    stage.innerHTML = '';
+    var head = AW.el('div', '',
+      '<p>$$\\int_0^1\\frac{\\mathrm{d}x}{(x+1)(x^2-2x+2)}$$</p>');
+    stage.appendChild(head);
+    this._board = AW.el('div', '');
+    stage.appendChild(this._board);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'二次因式判别式小于零，不可再分：分子要设一次式', count:1,
+      board: '<div class="aw-row-label"><b>第 1 步 · 判型与设分解</b></div>'
+        + '<p>$x^2-2x+2=(x-1)^2+1$，$\\Delta<0$ 在实数域不可约；一次因式 $x+1$ 配常数，二次因式配一次分子：</p>'
+        + '<p>$$\\frac{1}{(x+1)(x^2-2x+2)}=\\frac{A}{x+1}+\\frac{Bx+C}{x^2-2x+2}$$</p>' },
+    { cls:'step', tag:'定 A', log:'两边乘分母，再令 x 等于负 1，把一次因式那块掐成零', count:2,
+      ribbon:{k:1, ok:true},
+      board: '<div class="aw-row-label"><b>第 2 步 · 通分乘开，令 x=-1</b></div>'
+        + '<p>$$1=A(x^2-2x+2)+(Bx+C)(x+1)$$</p>'
+        + '<p>令 $x=-1$：$1=A\\big(1+2+2\\big)=5A$，故 $A=\\dfrac15$。</p>' },
+    { cls:'step', tag:'定 B、C', log:'再代 x 等于 0 定 C，比较平方项系数定 B', count:3,
+      ribbon:{k:2, ok:true},
+      board: '<div class="aw-row-label"><b>第 3 步 · 剩余系数</b></div>'
+        + '<p>令 $x=0$：$1=2A+C\\;\\Rightarrow\\;C=\\dfrac35$；比较 $x^2$ 系数：$0=A+B\\;\\Rightarrow\\;B=-\\dfrac15$。</p>'
+        + '<div class="aw-cells" style="margin-top:8px">'
+        + '<div class="aw-col"><div class="aw-ptr">=1/5</div><div class="aw-box ok">A</div></div>'
+        + '<div class="aw-col"><div class="aw-ptr">=-1/5</div><div class="aw-box ok">B</div></div>'
+        + '<div class="aw-col"><div class="aw-ptr">=3/5</div><div class="aw-box ok">C</div></div>'
+        + '</div>'
+        + '<p style="margin-top:8px">$$\\frac{1}{(x+1)(x^2-2x+2)}=\\frac{1/5}{x+1}+\\frac{-x/5+3/5}{x^2-2x+2}$$</p>' },
+    { cls:'ok', tag:'对数块', log:'一次因式那块直接积出对数，代限得五分之一 ln2', count:4,
+      ribbon:{k:3, ok:true},
+      board: '<div class="aw-row-label"><b>第 4 步 · 第一块：纯对数</b></div>'
+        + '<p>$$\\frac15\\int_0^1\\frac{\\mathrm{d}x}{x+1}=\\frac15\\Big[\\ln(x+1)\\Big]_0^1=\\frac15\\ln 2$$</p>' },
+    { cls:'shift', tag:'凑导数', log:'二次因式那块：把分子拆成「分母导数的倍数 + 余下的常数」', count:5,
+      board: '<div class="aw-row-label"><b>第 5 步 · 第二块：拆分子</b></div>'
+        + '<p>分母的导数 $(x^2-2x+2)\'=2x-2$，把分子 $-x+3$ 凑成</p>'
+        + '<p>$$-x+3=-\\frac12(2x-2)+2$$</p>'
+        + '<p>前半积出 $\\ln$，后半配方便出 $\\arctan$。</p>' },
+    { cls:'step', tag:'两小项', log:'对数项代限得二分之一 ln2；反正切项代限得二分之 π', count:6,
+      ribbon:{k:4, ok:true},
+      board: '<div class="aw-row-label"><b>第 6 步 · 第二块分别代限</b></div>'
+        + '<p>$$-\\frac12\\Big[\\ln(x^2-2x+2)\\Big]_0^1=-\\frac12\\big(\\ln 1-\\ln 2\\big)=\\frac12\\ln 2$$</p>'
+        + '<p>$$2\\Big[\\arctan(x-1)\\Big]_0^1=2\\Big(0-(-\\tfrac\\pi4)\\Big)=\\frac{\\pi}{2}$$</p>' },
+    { cls:'step', tag:'并第二块', log:'两小项除以系数五分之一，得十分之一 ln2 加十分之 π', count:7,
+      board: '<div class="aw-row-label"><b>第 7 步 · 第二块合计</b></div>'
+        + '<p>$$\\frac15\\Big(\\frac12\\ln 2+\\frac\\pi2\\Big)=\\frac1{10}\\ln 2+\\frac{\\pi}{10}$$</p>' },
+    { cls:'done', tag:'完成', log:'两块合并：五分之一加十分之一等于十分之三', count:8, done:true,
+      ribbon:{k:5, ok:true},
+      board: '<div class="aw-row-label"><b>第 8 步 · 合并结论</b></div>'
+        + '<p>$$\\int_0^1\\frac{\\mathrm{d}x}{(x+1)(x^2-2x+2)}=\\frac15\\ln 2+\\frac1{10}\\ln 2+\\frac{\\pi}{10}=\\frac3{10}\\ln 2+\\frac{\\pi}{10}$$</p>'
+        + '<p>数值约 $0.5221$，与被积函数在 $[0,1]$ 上约 $0.5$ 出头的取值一致。</p>' },
+  ],
+
+  render: function(stage, sn, i){
+    this._board.innerHTML = sn.board || '';
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '3/10 · ln 2 + π/10 ≈ 0.522',
+    html: '结论：$$\\int_0^1\\frac{\\mathrm{d}x}{(x+1)(x^2-2x+2)}=\\frac{3}{10}\\ln 2+\\frac{\\pi}{10}$$'
+      + '记忆点：<b>不可约二次因式 $\\Rightarrow$ 分子设一次式 $Bx+C$</b>；'
+      + '系数用「代特殊值（掐死一次因式）+ 比较高次系数」最快；'
+      + '二次因式积分一律拆成「凑导数出 $\\ln$ + 配方出 $\\arctan$」两块。易错：$\\arctan(x-1)$ 在 $x=0$ 处取负值 $-\\dfrac\\pi4$，上减下得正。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：部分分式分解算有理函数定积分</h2>
+<p><strong>答案</strong>：$\displaystyle\int_0<sup>1</sup> \frac{\mathrm{d}x}{(x+1)(x<sup>2</sup>-2x+2)}=\frac{3}{10}\ln 2+\frac{\pi}{10}$（数值约 $0.5221$）。</p>
+<h3>第一步：判型定策——为什么必须部分分式</h3>
+<p>有理函数的积分，归根结底只有两块"积木"：$\ln$（来自 $\int\frac{u'}{u}\,\mathrm{d}x$ 型）与 $\arctan$（来自配方后的 $\int\frac{\mathrm{d}u}{1+u<sup>2</sup>}$ 型）。部分分式分解不是背出来的套路，而是把被积函数拆成这两块积木的组合——本题主部 $\frac1{x+1}$ 贡献 $\ln$，二次块里配方 $(x-1)<sup>2</sup>+1$ 贡献 $\arctan$，最终答案"对数 + $\pi$"的结构正是这个机制的体现。</p>
+<p>分子怎么设？规则背后有两条依据：其一，因式上方的分子次数必须<strong>低于</strong>该因式次数（次数够了就先做多项式除法，本题分子是常数，天然满足）；其二，一次因式给 $A$、二次因式给 $Bx+C$，未知数恰好 $3$ 个，对上分母的 $3$ 次"自由度"，方程组才保证有唯一解。分母中 $x<sup>2</sup>-2x+2$ 的判别式 $\Delta=(-2)<sup>2</sup>-8&lt;0$，实数域<strong>不可约</strong>（配方即 $(x-1)<sup>2</sup>+1$），不能再拆：</p>
+<p>$$\frac{1}{(x+1)(x<sup>2</sup>-2x+2)}=\frac{A}{x+1}+\frac{Bx+C}{x<sup>2</sup>-2x+2},$$</p>
+<p>两边乘分母通分，得对<strong>一切 $x$</strong> 成立的恒等式 $1=A(x<sup>2</sup>-2x+2)+(Bx+C)(x+1)$。</p>
+<h3>第二步：赋值法定系数（比逐项比较快）</h3>
+<p>为什么可以随便代值？因为上式是恒等式，对一切 $x$ 成立，任何点代入都合法。技巧在于<strong>掐死一个因式</strong>：代 $x=-1$ 时 $(Bx+C)(x+1)$ 整块归零，一步锁定 $A$；其余点负责补出 $C$ 与 $B$。逐项比较要展开整理出三个联立方程，赋值法则让每步只出现一个未知数——这就是"快"的来源。</p>
+<table><thead><tr><th>代入点</th><th>得到的方程</th><th>解</th></tr></thead><tbody><tr><td>$x=-1$（掐死一次因子）</td><td>$1=5A$</td><td>$A=\dfrac15$</td></tr><tr><td>$x=0$</td><td>$1=2A+C$</td><td>$C=\dfrac35$</td></tr><tr><td>比较 $x<sup>2</sup>$ 系数</td><td>$0=A+B$</td><td>$B=-\dfrac15$</td></tr></tbody></table>
+<h3>第三步：两块分别积分</h3>
+<p>凑导数与配方的分工：前半块 $-\dfrac12(2x-2)$ 恰是分母导数的倍数，积分落进 $\ln$ 积木（$\int\frac{u'}u\mathrm{d}u=\ln\lvert u\rvert$）；剩下常数 $2$ 配上 $x<sup>2</sup>-2x+2=(x-1)<sup>2</sup>+1$，令 $u=x-1$ 就变成 $\int\frac{\mathrm{d}u}{1+u<sup>2</sup>}=\arctan u$（$\arctan$ 积木）。一题两积木，答案里一半对数、一半 $\pi$ 由此而来。</p>
+<p>第一块直接出对数：</p>
+<p>$$\frac15\int_0<sup>1</sup>\frac{\mathrm{d}x}{x+1}=\frac15\Big[\ln(x+1)\Big]_0<sup>1</sup>=\frac15\ln 2.$$</p>
+<p>第二块把分子凑成「分母的导数 + 常数」。因 $(x<sup>2</sup>-2x+2)'=2x-2$，故 $-x+3=-\dfrac12(2x-2)+2$，于是</p>
+<p>$$\frac15\int_0<sup>1</sup>\frac{-x+3}{x<sup>2</sup>-2x+2}\mathrm{d}x<br/>=\frac15\Big[-\frac12\ln(x<sup>2</sup>-2x+2)+2\arctan(x-1)\Big]_0<sup>1</sup>.$$</p>
+<p>逐项代限：$-\dfrac12\big(\ln 1-\ln 2\big)=\dfrac12\ln 2$；$2\big(\arctan 0-\arctan(-1)\big)=2\cdot\dfrac\pi4=\dfrac\pi2$。合起来第二块等于 $\dfrac15\Big(\dfrac12\ln 2+\dfrac\pi2\Big)=\dfrac1{10}\ln 2+\dfrac\pi{10}$。</p>
+<h3>第四步：合并同类项</h3>
+<p>$$\frac15\ln 2+\frac1{10}\ln 2+\frac\pi{10}=\frac3{10}\ln 2+\frac\pi{10}.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>把不可约二次因式硬拆</strong>：$\Delta&lt;0$ 的因式在实数域不能再分，分子必须设 $Bx+C$ 一次式；只设常数 $B$ 是常见错误，方程组会矛盾。</li><li><strong>凑导数系数错</strong>：$(x<sup>2</sup>-2x+2)'=2x-2$，拆 $-x+3$ 应写 $-\dfrac12(2x-2)+2$；系数凑成 $-\dfrac12(x-1)$ 就少了因子 2。</li><li><strong>$\arctan(x-1)$ 代限符号</strong>：下限 $x=0$ 处是 $-\dfrac\pi4$，上减下得正 $\dfrac\pi4$；把负号丢掉整个 $\pi$ 项就没了。</li><li><strong>以为 $\ln(x<sup>2</sup>-2x+2)$ 上限贡献非零</strong>：$x=1$ 时该式值为 $1$，$\ln 1=0$，贡献全来自下限的 $\ln 2$。</li></ul>
+<blockquote>一句话结论：设 $\dfrac{A}{x+1}+\dfrac{Bx+C}{x<sup>2</sup>-2x+2}$，赋值定出 $A=\dfrac15,\ B=-\dfrac15,\ C=\dfrac35$，对数块与反正切块合并得 $\dfrac3{10}\ln 2+\dfrac\pi{10}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

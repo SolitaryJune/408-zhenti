@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2021·19 弧长与旋转曲面面积</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-18.html" data-q="../question/m2-2021-18/">← <b>m2-2021-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-19/" data-q="../question/m2-2021-19/" data-no-anim="1">m2-2021-19 · 本题</a>
+  <a href="m2-2021-20.html" data-q="../question/m2-2021-20/"><b>m2-2021-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$\\int\\frac{f(x)}{\\sqrt{x}}\\,\\mathrm{d}x=\\frac{1}{6}x^2-x+C\\qquad\\text{两边求导，解锁 } f(x)$$",
+  "<b>① 还原 $f(x)$：</b>$\\dfrac{f(x)}{\\sqrt{x}}=\\dfrac{x}{3}-1\\ \\Rightarrow\\ f(x)=\\dfrac{1}{3}x^{3/2}-x^{1/2}$",
+  "<b>② 求导并配方：</b>$f^{\\prime}(x)=\\dfrac{1}{2}x^{1/2}-\\dfrac{1}{2}x^{-1/2}=\\dfrac{x-1}{2\\sqrt{x}}$，$$1+\\left[f^{\\prime}(x)\\right]^2=1+\\frac{(x-1)^2}{4x}=\\frac{(x+1)^2}{4x}$$",
+  "<b>③ 开方：</b>在 $[4,9]$ 上 $x+1>0$：$\\sqrt{1+\\left[f^{\\prime}\\right]^2}=\\dfrac{x+1}{2\\sqrt{x}}$ —— 完全平方开出有理式",
+  "<b>④ 弧长：</b>$$s=\\int_4^9\\frac{x+1}{2\\sqrt{x}}\\,\\mathrm{d}x=\\frac{1}{2}\\int_4^9\\left(x^{1/2}+x^{-1/2}\\right)\\mathrm{d}x=\\frac{1}{2}\\left(\\frac{38}{3}+2\\right)=\\frac{22}{3}$$",
+  "<b>⑤ 面积公式：</b>$A=2\\pi\\int_4^9\\left|f(x)\\right|\\sqrt{1+\\left[f^{\\prime}\\right]^2}\\,\\mathrm{d}x$；$x\\in[4,9]$ 时 $\\dfrac{x}{3}-1\\ge\\dfrac13>0$，$f(x)\\ge0$，去掉绝对值",
+  "<b>⑥ 化简被积函数：</b>$$A=2\\pi\\int_4^9\\sqrt{x}\\left(\\frac{x}{3}-1\\right)\\cdot\\frac{x+1}{2\\sqrt{x}}\\,\\mathrm{d}x=\\pi\\int_4^9\\left(\\frac{x}{3}-1\\right)(x+1)\\,\\mathrm{d}x=\\pi\\int_4^9\\left(\\frac{x^2}{3}-\\frac{2x}{3}-1\\right)\\mathrm{d}x$$",
+  "<b>⑦ 积分收尾：</b>$$A=\\pi\\left[\\frac{x^3}{9}-\\frac{x^2}{3}-x\\right]_4^9=\\pi\\left(45+\\frac{20}{9}\\right)=\\frac{425\\pi}{9}$$"
+];
+
+AW.init({
+  title: "2021·19　弧长 $s$ 与旋转曲面面积 $A$",
+  subtitle: "考点：求导还原 $f$ · 弧长公式 · 侧面积公式 $A=2\\pi\\int\\lvert f\\rvert\\sqrt{1+f^{\\prime 2}}\\,\\mathrm{d}x$",
+  counterLabel: "推导步数",
+  ribbonTitle: "推导进度（✓ 完成）",
+  intro: "点击「▶ 播放」或「下一步」，先还原 f，再算弧长与旋转面积。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前步亮琥珀色，已完成步变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    {"cls": "step", "tag": "审题", "log": "题目给的是含 f 的不定积分等式，两边对 x 求导就能解出 f", "count": 0, "ribbon": {"k": 1, "ok": true}},
+    {"cls": "ok", "tag": "还原", "log": "求导得 f 除以根号 x 等于三分之 x 减一，乘上根号 x 还原出 f", "count": 1, "ribbon": {"k": 2, "ok": true}},
+    {"cls": "ok", "tag": "配方", "log": "一阶导化为分式，平方加一恰好配成完全平方", "count": 2, "ribbon": {"k": 3, "ok": true}},
+    {"cls": "ok", "tag": "开方", "log": "区间上 x 加一为正，开方得 x 加一除以二倍根号 x", "count": 3, "ribbon": {"k": 4, "ok": true}},
+    {"cls": "ok", "tag": "弧长", "log": "拆成幂函数积分，代入上下限，弧长为三分之二十二", "count": 4, "ribbon": {"k": 5, "ok": true}},
+    {"cls": "ok", "tag": "面积", "log": "侧面积公式带二派乘 f，区间上 f 非负，绝对值直接去掉", "count": 5, "ribbon": {"k": 6, "ok": true}},
+    {"cls": "ok", "tag": "化简", "log": "根号 x 约掉，被积函数化为二次多项式", "count": 6, "ribbon": {"k": 7, "ok": true}},
+    {"cls": "ok", "tag": "收尾", "log": "原函数代上限得四十五，代下限得负九分之二十，面积收敛", "count": 7, "ribbon": {"k": 8, "ok": true}},
+    {"cls": "done", "tag": "完成", "log": "完成：弧长三分之二十二，旋转面积四百二十五派除以九", "count": 8, "ribbon": {"k": 9, "ok": true}, "done": true}
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$s=\\dfrac{22}{3}$，　$A=\\dfrac{425\\pi}{9}$",
+    html: "记忆锚点：<b>先求导解锁 $f$；$1+f^{\\prime 2}$ 配方成 $\\dfrac{(x+1)^2}{4x}$ 是本题题眼</b>。易错：侧面积漏 $2\\pi f$ 因子；开方不讨论 $x+1$ 的符号。"
+  }
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：微分解锁 $f$，弧长与旋转面共用同一个弧微元 $\mathrm ds$</h2>
+<p><strong>答案</strong>：$s=\dfrac{22}{3}$；$A=\dfrac{425\pi}{9}$。</p>
+<h3>第 0 步：两个公式的机制——同一个 $\mathrm ds$ 的两种用法</h3>
+<p><strong>弧长微元</strong>：曲线上从 $(x,\ f(x))$ 到 $(x+\mathrm dx,\ f(x)+\mathrm df)$ 的一小段，用切线段代替（以直代曲），勾股定理给出</p>
+<p>$$\mathrm ds=\sqrt{(\mathrm dx)<sup>2</sup>+(\mathrm df)<sup>2</sup>}=\sqrt{1+[f'(x)]<sup>2</sup>}\,\mathrm dx.$$</p>
+<p>弧长就是把这些小切线段接起来：$s=\int_a<sup>b</sup>\mathrm ds$。</p>
+<p><strong>旋转面积微元</strong>：让这一小段绕 $x$ 轴转一周，扫出一条窄带（细圆台），近似成"圆环带展开"：面积 $\approx$ 周长 $\times$ 宽 $=2\pi\times$ 旋转半径 $\times\ \mathrm ds$。旋转半径是点到转轴的距离，必须写 $\lvert f(x)\rvert$。于是</p>
+<p>$$A=2\pi\int_a<sup>b</sup>\lvert f(x)\rvert\sqrt{1+[f'(x)]<sup>2</sup>}\,\mathrm dx.$$</p>
+<p>两个公式共用同一个 $\mathrm ds$，差别只在要不要乘"圆周长 $2\pi\times$ 半径"——抓住微元，两个公式都不用背。</p>
+<h3>第一步：两边求导，解锁 $f(x)$</h3>
+<p>为什么一个不定积分等式可以直接求导："$\displaystyle\int\frac{f(x)}{\sqrt x}\,\mathrm dx=\frac{1}{6}x<sup>2</sup>-x+C$"这句话的意思就是"$\dfrac{1}{6}x<sup>2</sup>-x$ 是 $\dfrac{f(x)}{\sqrt x}$ 的一个原函数"；而原函数的定义是"导数等于被积函数"，两边对 $x$ 求导只是把定义念出来，不需要任何额外条件：</p>
+<p>$$\frac{f(x)}{\sqrt x}=\frac{x}{3}-1\ \Longrightarrow\ f(x)=\sqrt x\left(\frac{x}{3}-1\right)=\frac{1}{3}x<sup>3/2</sup>-x<sup>1/2</sup>.$$</p>
+<h3>第二步：求 $f'$ 并配方——完全平方是命题人的设计</h3>
+<p>$$f'(x)=\frac{1}{2}x<sup>1/2</sup>-\frac{1}{2}x<sup>-1/2</sup>=\frac{x-1}{2\sqrt x},\qquad 1+[f'(x)]<sup>2</sup>=1+\frac{(x-1)<sup>2</sup>}{4x}=\frac{4x+(x-1)<sup>2</sup>}{4x}=\frac{(x+1)<sup>2</sup>}{4x}.$$</p>
+<p>特例验证：$x=4$ 时 $f'(4)=\dfrac34$，$1+f'<sup>2</sup>=1+\dfrac{9}{16}=\dfrac{25}{16}$；而 $\dfrac{x+1}{2\sqrt x}=\dfrac54$，平方恰为 $\dfrac{25}{16}$ ✓。</p>
+<p>开方为什么能直接去绝对值：$\sqrt{(x+1)<sup>2</sup>}=\lvert x+1\rvert$，本题区间 $[4,9]$ 上 $x+1&gt;0$，故 $\sqrt{1+[f']<sup>2</sup>}=\dfrac{x+1}{2\sqrt x}$。若换成含 $x=-1$ 的区间就必须拆开讨论——这是开方步骤唯一要过脑子的地方。$1+f'<sup>2</sup>$ 配成完全平方保证了开方后有理可积，这是本题"计算一气呵成"的设计。</p>
+<h3>第三步：弧长 $s$</h3>
+<p>$$s=\int_4<sup>9</sup>\frac{x+1}{2\sqrt x}\,\mathrm dx=\frac{1}{2}\int_4<sup>9</sup>\left(x<sup>1/2</sup>+x<sup>-1/2</sup>\right)\mathrm dx=\frac{1}{2}\left[\frac{2}{3}x<sup>3/2</sup>+2x<sup>1/2</sup>\right]_4<sup>9</sup>.$$</p>
+<p>$x=9$：$\dfrac{2}{3}\cdot27+2\cdot3=24$；$x=4$：$\dfrac{2}{3}\cdot8+2\cdot2=\dfrac{28}{3}$。故</p>
+<p>$$s=\frac{1}{2}\left(24-\frac{28}{3}\right)=\frac{22}{3}.$$</p>
+<p>量级回验：两端点 $\left(4,\dfrac23\right)$ 与 $(9,6)$ 的直线距离 $=\sqrt{25+\left(\dfrac{16}{3}\right)<sup>2</sup>}\approx7.31$，弧长 $\dfrac{22}{3}\approx7.33$ 略大于弦长——曲线比弦长是几何必然，数值合理 ✓。</p>
+<h3>第四步：旋转曲面面积 $A$</h3>
+<p>先处理 $\lvert f\rvert$：$[4,9]$ 上 $\dfrac{x}{3}-1\ge\dfrac13&gt;0$ 且 $\sqrt x&gt;0$，故 $f(x)\ge0$，绝对值直接去掉（若曲线在轴下方，这一步就得写 $\lvert f\rvert$）。</p>
+<p>$$A=2\pi\int_4<sup>9</sup>\sqrt x\left(\frac{x}{3}-1\right)\cdot\frac{x+1}{2\sqrt x}\,\mathrm dx=\pi\int_4<sup>9</sup>\left(\frac{x}{3}-1\right)(x+1)\,\mathrm dx.$$</p>
+<p>$\sqrt x$ 恰好约掉——$\sqrt{1+f'<sup>2</sup>}$ 里的 $\dfrac{1}{\sqrt x}$ 与 $f$ 里的 $\sqrt x$ 成对出现，正是"设计好可积"题的标志。展开 $\left(\dfrac{x}{3}-1\right)(x+1)=\dfrac{x<sup>2</sup>}{3}-\dfrac{2x}{3}-1$：</p>
+<p>$$A=\pi\left[\frac{x<sup>3</sup>}{9}-\frac{x<sup>2</sup>}{3}-x\right]_4<sup>9</sup>=\pi\left(45-\left(-\frac{20}{9}\right)\right)=\frac{425\pi}{9}.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>不先还原 $f$</strong>：不定积分等式不解锁 $f$，弧长、面积公式无处代入——第一步永远是求导翻译定义。</li><li><strong>侧面积漏 $2\pi f$</strong>：那是"圆周长 $\times$ 弧微元"，漏掉就退化成弧长公式。</li><li><strong>开方不讨论符号</strong>：$\sqrt{(x+1)<sup>2</sup>}=\lvert x+1\rvert$，本题靠 $x+1&gt;0$ 直接开，换区间就翻车。</li><li><strong>忘 $\lvert f\rvert$ 的存在</strong>：旋转半径是距离，公式里本来就该带绝对值，本题靠 $f\ge0$ 躲过，习惯不能省。</li></ul>
+<blockquote>一句话结论：求导解锁 $f=\dfrac{1}{3}x<sup>3/2</sup>-x<sup>1/2</sup>$；$1+f'<sup>2</sup>=\dfrac{(x+1)<sup>2</sup>}{4x}$ 完全平方；$s=\dfrac{22}{3}$，$A=\dfrac{425\pi}{9}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

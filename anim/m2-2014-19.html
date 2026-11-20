@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2014·19 积分不等式证明</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-18.html" data-q="../question/m2-2014-18/">← <b>m2-2014-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-19/" data-q="../question/m2-2014-19/" data-no-anim="1">m2-2014-19 · 本题</a>
+  <a href="m2-2014-20.html" data-q="../question/m2-2014-20/"><b>m2-2014-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：条件清单与两问',
+    cls: 'key',
+    body: '<p>条件：<b>$f(x)$ 在 $[a,b]$ 连续且单调增加</b>；<b>$0\\le g(x)\\le1$</b>。要证：(I) $\\int_a^xg$ 被夹在 $0$ 与 $x-a$ 之间；(II) 积分上限取到 $a+\\int_a^bg$ 时不超过 $\\int_a^bfg$。</p>' },
+  { title: '(I) 夹逼，一步到位',
+    cls: 'good',
+    body: '<p>$0\\le g(t)\\le1$ 两边同时在 $[a,x]$ 上积分：$$0\\le\\int_a^xg(t)\\,\\mathrm dt\\le\\int_a^x1\\,\\mathrm dt=x-a.$$ (I) 得证，还顺手给出 $c=\\int_a^bg\\le b-a$。</p>' },
+  { title: '(II) 准备：上限合法',
+    cls: 'key',
+    body: '<p>记 $c=\\int_a^bg(t)\\,\\mathrm dt$。由 (I) 取 $x=b$ 得 $0\\le c\\le b-a$，所以 $a\\le a+c\\le b$：<b>积分上限 $a+c$ 落在 $f$ 的连续区间内</b>，后面才能用 $f(a+c)$。</p>' },
+  { title: '作差并在分点处拆分',
+    cls: 'step',
+    body: '<p>考察差 $$\\Delta=\\int_a^bf(x)g(x)\\,\\mathrm dx-\\int_a^{a+c}f(x)\\,\\mathrm dx,$$ 把第一个积分在 $a+c$ 处拆开：$$\\Delta=-\\int_a^{a+c}f(x)\\bigl[1-g(x)\\bigr]\\,\\mathrm dx+\\int_{a+c}^bf(x)g(x)\\,\\mathrm dx.$$</p>' },
+  { title: '左段放缩（函数值小于分点值）',
+    cls: 'step',
+    body: '<p>$f$ 单调增：在 $[a,a+c]$ 上 $f(x)\\le f(a+c)$，且 $1-g\\ge0$，故 $$\\int_a^{a+c}f\\bigl(1-g\\bigr)\\,\\mathrm dx\\le f(a+c)\\int_a^{a+c}\\bigl(1-g\\bigr)\\,\\mathrm dx.$$ 带负号走：这一段<b>至少</b>贡献 $-f(a+c)\\int_a^{a+c}(1-g)$。</p>' },
+  { title: '右段放缩（函数值大于分点值）',
+    cls: 'step',
+    body: '<p>在 $[a+c,b]$ 上 $f(x)\\ge f(a+c)$ 且 $g\\ge0$：$$\\int_{a+c}^bfg\\,\\mathrm dx\\ge f(a+c)\\int_{a+c}^bg\\,\\mathrm dx.$$ 合并：$$\\Delta\\ge f(a+c)\\left[-\\int_a^{a+c}(1-g)\\,\\mathrm dx+\\int_{a+c}^bg\\,\\mathrm dx\\right].$$</p>' },
+  { title: '面积守恒：方括号恒为零',
+    cls: 'key',
+    body: '<p>由 $c=\\int_a^{a+c}g+\\int_{a+c}^bg$ 得 $$\\int_{a+c}^bg\\,\\mathrm dx=c-\\int_a^{a+c}g\\,\\mathrm dx=\\int_a^{a+c}\\bigl(1-g\\bigr)\\,\\mathrm dx.$$ 方括号 $=0$，故 $\\Delta\\ge f(a+c)\\cdot0=0$。</p>' },
+  { title: '收尾：两问全部证毕',
+    cls: 'good',
+    body: '<p>$\\Delta\\ge0$ 即 $\\int_a^{a+\\int_a^bg}f\\,\\mathrm dx\\le\\int_a^bfg\\,\\mathrm dx$，与 (I) 一起<b>证毕</b>。直观：把左段「欠下」的权重 $1-g$ 搬到右段的 $g$ 上，而 $f$ 在右边更大，总积分不会变小。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '积分不等式：拆分点 + 单调性放缩 + 面积守恒',
+  subtitle: '考点：定积分性质与积分不等式证明（2014 年数学二第 19 题）',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开两问的证明推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '(I) $0\\le\\int_a^xg\\,\\mathrm dt\\le x-a$；(II) $\\int_a^{a+c}f\\,\\mathrm dx\\le\\int_a^bfg\\,\\mathrm dx$',
+    html: '记忆锚点：<b>分点 $a+c$ 拆开 + 单调增把 $f$ 换成边界值 $f(a+c)$ + 面积守恒式 $\\int_{a+c}^bg=\\int_a^{a+c}(1-g)$ 收尾</b>。易错：不交代上限 $a+c\\in[a,b]$（由 (I) 保证）；左段带负号、右段带正号，放缩方向写反。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：积分不等式——把 $g$ 看成沙堆，单调性决定"往左压"</h2>
+<p>答案：(I) $0\le\displaystyle\int_a<sup>xg</sup>(t)\,\mathrm dt\le x-a$；(II) $\displaystyle\int_a<sup>a+\int_a^bg(t)\,\mathrm dt</sup>f(x)\,\mathrm dx\le\int_a<sup>bf</sup>(x)g(x)\,\mathrm dx$。</p>
+<h3>第 0 步：先立机制——为什么结论长这样</h3>
+<p>把 $g$ 看成铺在 $[a,b]$ 上的<strong>沙堆</strong>：$0\le g\le1$ 意思是每一点最多铺一层；$c=\int_a<sup>bg</sup>\,\mathrm dt$ 是沙的<strong>总质量</strong>。(II) 比较两个量：右边 $\int_a<sup>bfg</sup>$ 是"沙铺在 $f$ 上"的总价值；左边 $\int_a<sup>a+c</sup>f$ 是"把质量为 $c$ 的沙<strong>全部压到最左边</strong>（铺满 $[a,a+c]$）"的总价值。$f$ 单调增——同样的沙，铺得越靠左，压到的 $f$ 越小。所以直觉上 $\int_a<sup>a+c</sup>f$ 是<strong>最省钱的一种铺法</strong>，任何真实铺法（受"每点至多一层"约束，质量 $c$ 只能往右溢出）价值只会更大。证明的全部内容，就是把"任何铺法 ≥ 最左铺法"这一句写严格；(I) 则是为 (II) 提供"沙的质量不超过区间长度 $b-a$、上限 $a+c$ 不越界"的后勤保障。</p>
+<h3>第一步：(I) 保号性的直接搬运</h3>
+<p>$0\le g(t)\le1$ 在 $[a,x]$ 上同时积分，由积分保号性：</p>
+<p>$$\int_a<sup>x0</sup>\,\mathrm dt\le\int_a<sup>xg</sup>(t)\,\mathrm dt\le\int_a<sup>x1</sup>\,\mathrm dt=x-a.$$</p>
+<p>这一问是送分的，但<strong>不要跳过</strong>：取 $x=b$ 得 $0\le c\le b-a$，立刻给出 $a+c\in[a,b]$——(II) 的积分上限合法、且能用 $f$ 在 $a+c$ 处的值，全靠它。(I) 不是孤立小题，是 (II) 的先决条件。</p>
+<h3>第二步：(II) 作差——为什么拆分点选 $a+c$</h3>
+<p>记 $c=\int_a<sup>bg</sup>(t)\,\mathrm dt$，考察差</p>
+<p>$$\Delta=\int_a<sup>bf</sup>(x)g(x)\,\mathrm dx-\int_a<sup>a+c</sup>f(x)\,\mathrm dx.$$</p>
+<p><strong>为什么在 $a+c$ 处把 $\int_a<sup>bfg</sup>$ 拆成两段</strong>：左边的积分上限恰好是 $a+c$，拆开后两段区间 $[a,a+c]$ 与 $[a+c,b]$ 各自的"权重账"可以分开算：</p>
+<p>$$\Delta=-\int_a<sup>a+c</sup>f(x)\bigl[1-g(x)\bigr]\,\mathrm dx+\int_{a+c}<sup>bf</sup>(x)g(x)\,\mathrm dx.$$</p>
+<p>读一下这个式子的含义：左段"欠账"（该铺满却没铺满的 $1-g$），右段"盈余"（铺上去的 $g$）。</p>
+<h3>第三步：单调性放缩——为什么方向是那样</h3>
+<p>$f$ 单调增，与常数 $f(a+c)$ 比较：在左段 $[a,a+c]$ 上 $f(x)\le f(a+c)$；在右段 $[a+c,b]$ 上 $f(x)\ge f(a+c)$。权重 $1-g\ge0$、$g\ge0$，逐点不等式乘非负权重后可积分：</p>
+<p>$$-\int_a<sup>a+c</sup>f(1-g)\,\mathrm dx\ \ge\ -f(a+c)\int_a<sup>a+c</sup>(1-g)\,\mathrm dx,\qquad \int_{a+c}<sup>bfg</sup>\,\mathrm dx\ \ge\ f(a+c)\int_{a+c}<sup>bg</sup>\,\mathrm dx.$$</p>
+<p>合并：</p>
+<p>$$\Delta\ge f(a+c)\left[-\int_a<sup>a+c</sup>(1-g)\,\mathrm dx+\int_{a+c}<sup>bg</sup>\,\mathrm dx\right].$$</p>
+<p><strong>为什么这样放缩不会翻方向</strong>：左段带负号，"小的 $f$ 配大系数"才放大左端，故把 $f$ 换成上界 $f(a+c)$ 后不等号仍朝 $\ge$；右段带正号，$f$ 换下界 $f(a+c)$ 也是 $\ge$。两段都朝同一个方向让步，误差被推给方括号。</p>
+<h3>第四步：方括号恰为零——面积守恒是枢纽</h3>
+<p>由 $c=\displaystyle\int_a<sup>bg</sup>=\int_a<sup>a+c</sup>g+\int_{a+c}<sup>bg</sup>$ 得</p>
+<p>$$\int_{a+c}<sup>bg</sup>\,\mathrm dx=c-\int_a<sup>a+c</sup>g\,\mathrm dx,$$</p>
+<p>而左段欠账 $\displaystyle\int_a<sup>a+c</sup>(1-g)\,\mathrm dx=c-\int_a<sup>a+c</sup>g\,\mathrm dx$。<strong>两个"修正量"一模一样</strong>——$[a,a+c]$ 上没铺满的质量，恰好等于 $[a+c,b]$ 上铺着的质量（沙的总质量守恒 $c$ 的两面）。于是方括号 $=0$，$\Delta\ge0$，即</p>
+<p>$$\int_a<sup>a+\int_a^bg(t)\,\mathrm dt</sup>f(x)\,\mathrm dx\le\int_a<sup>bf</sup>(x)g(x)\,\mathrm dx.\qquad\text{证毕。}$$</p>
+<p><strong>为什么恰好归零而不是 $\ge0$</strong>：放缩是有损的，若方括号还带正数，等于要求 $f(a+c)&gt;0$ 之类的额外条件；守恒式把两段误差精确对冲，让下界干净地落在 $0$ 上——这说明"最左铺法"在极限意义下真的可以取到（$g\equiv1$ 于 $[a,a+c]$、其后为 $0$ 时等号成立）。</p>
+<h3>易错点</h3>
+<ul><li><strong>不交代上限合法</strong>：必须先用 (I) 说明 $a+c\in[a,b]$，否则 $f(a+c)$ 无定义，后面全部悬空。</li><li><strong>放缩方向搞反</strong>：左段负系数、右段正系数，两段让步方向要同朝 $\ge$；动笔前先写清"谁放大谁缩小"。</li><li><strong>误把 (II) 当成 $\int_a<sup>a+c</sup>f\le\int_a<sup>a+c</sup>fg$</strong>：在 $[a,a+c]$ 上 $fg\le f$ 逐点成立，方向恰好相反；(II) 比的是全区间 $[a,b]$ 的 $fg$ 与左段的 $f$——右段补上左段欠的权重，才是本题的实质。</li><li><strong>想用切比雪夫不等式</strong>：它要求两个函数同向单调，$g$ 无单调性，不适用；分点比较法才是通用武器。</li></ul>
+<blockquote>直观锚点：$g$ 是每点至多一层的沙堆，总质量 $c$；$f$ 递增 ⇒ 沙铺得越靠左总价值越小，"压满 $[a,a+c]$"是最省配置，故 $\int_a<sup>bfg</sup>\ge\int_a<sup>a+c</sup>f$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

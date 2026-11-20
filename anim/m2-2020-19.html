@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-19 极坐标二重积分 · 逐步推导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-18.html" data-q="../question/m2-2020-18/">← <b>m2-2020-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-19/" data-q="../question/m2-2020-19/" data-no-anim="1">m2-2020-19 · 本题</a>
+  <a href="m2-2020-20.html" data-q="../question/m2-2020-20/"><b>m2-2020-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域 ================== */
+var rows = [];
+
+AW.init({
+  title: '计算 $\\displaystyle\\iint_D\\frac{\\sqrt{x^2+y^2}}{x}\\,\\mathrm dx\\,\\mathrm dy$',
+  subtitle: '考点：极坐标二重积分 · 区域 $D$：$x=1,\\ x=2,\\ y=x$ 与 $x$ 轴围成',
+  counterLabel: '已推进',
+  intro: '点击「▶ 播放」：极坐标定限、化简被积函数、逐次积分。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rows = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：$D$ 由 $x=1,\\ x=2,\\ y=x$ 与 $x$ 轴围成（第一象限内的梯形区域）'));
+    var ROWS = [
+      '$$D:\\ 1\\le x\\le2,\\ 0\\le y\\le x\\ \\Rightarrow\\ \\theta\\in\\left[0,\\tfrac\\pi4\\right]\\quad(x\\text{ 轴到 } y=x)$$',
+      '$$x=1,2\\ \\Rightarrow\\ r\\cos\\theta=1,2\\ \\Rightarrow\\ r=\\sec\\theta,\\ 2\\sec\\theta$$',
+      '$$\\frac{\\sqrt{x^2+y^2}}x=\\frac{r}{r\\cos\\theta}=\\sec\\theta,\\qquad \\mathrm dx\\,\\mathrm dy=r\\,\\mathrm dr\\,\\mathrm d\\theta$$',
+      '$$I=\\int_0^{\\pi/4}\\sec\\theta\\,\\mathrm d\\theta\\int_{\\sec\\theta}^{2\\sec\\theta}r\\,\\mathrm dr=\\int_0^{\\pi/4}\\sec\\theta\\cdot\\frac32\\sec^2\\theta\\,\\mathrm d\\theta$$',
+      '$$\\int\\sec^3\\theta\\,\\mathrm d\\theta=\\frac12\\left(\\sec\\theta\\tan\\theta+\\ln\\lvert\\sec\\theta+\\tan\\theta\\rvert\\right)$$',
+      '$$I=\\frac32\\cdot\\frac12\\left(\\sqrt2+\\ln(1+\\sqrt2)\\right)=\\frac34\\left(\\sqrt2+\\ln(1+\\sqrt2)\\right)$$'
+    ];
+    ROWS.forEach(function(html){
+      var row = AW.el('div', 'derive-row', html);
+      row.style.cssText = 'padding:6px 14px;margin:8px 0;border-radius:8px;' +
+        'border-left:4px solid #cbd5e1;background:#f8fafc;opacity:0;' +
+        'transform:translateY(8px);transition:all .35s ease;';
+      wrap.appendChild(row);
+      rows.push(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    rows.forEach(function(row, j){
+      var vis = j < i;
+      var cur = vis && j === i - 1;
+      row.style.opacity = vis ? '1' : '0';
+      row.style.transform = vis ? 'translateY(0)' : 'translateY(8px)';
+      row.style.borderLeftColor = cur ? '#f59e0b' : (vis ? '#10b981' : '#cbd5e1');
+      row.style.background = cur ? '#fffbeb' : (vis ? '#f0fdf4' : '#f8fafc');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'被积函数含根号 x平方加y平方，上极坐标', count:0 },
+    { cls:'step',  tag:'定角度', log:'下边是 x 轴，上边是 y=x，角度从 0 到四分之π', count:1 },
+    { cls:'step',  tag:'定半径', log:'两条竖线化成 r = secθ 和 2secθ，不是常数', count:2 },
+    { cls:'ok',    tag:'化简', log:'被积函数变成 secθ，面积元记得乘 r', count:3 },
+    { cls:'step',  tag:'内层', log:'先对 r 积分，得二分之三倍 secθ 平方', count:4 },
+    { cls:'step',  tag:'套公式', log:'sec 三次方的原函数是标准公式，系数二分之一别丢', count:5 },
+    { cls:'done',  tag:'结论', log:'代限合并，答案是四分之三倍（根号2 + ln(1+根号2)）', count:6, done:true },
+  ],
+
+  result: {
+    big: '$I=\\dfrac34\\left(\\sqrt2+\\ln(1+\\sqrt2)\\right)$',
+    html: '正确答案：$\\displaystyle\\iint_D\\frac{\\sqrt{x^2+y^2}}x\\,\\mathrm dx\\,\\mathrm dy=\\frac34\\left(\\sqrt2+\\ln(1+\\sqrt2)\\right)$。记忆点：<b>竖线 $x=c$ 在极坐标下是 $r=c\\sec\\theta$</b>；被积函数化成 $\\sec\\theta$ 后内层积出 $\\frac32\\sec^2\\theta$；<b>面积元 $r\\,\\mathrm dr\\,\\mathrm d\\theta$ 的 $r$ 不能丢</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：为什么换极坐标——√(x²+y²) 的化简与角形区域的定限</h2>
+<p><strong>答案：$\displaystyle\iint_D\frac{\sqrt{x<sup>2</sup>+y<sup>2</sup>}}x\,\mathrm dx\,\mathrm dy=\frac34\left(\sqrt2+\ln(1+\sqrt2)\right)$。</strong></p>
+<h3>第 0 步：为什么这条路是极坐标</h3>
+<p>机制识别有两层。<strong>其一，被积函数</strong>：$\sqrt{x<sup>2</sup>+y<sup>2</sup>}$ 在极坐标下就是到原点的距离 $r$，分母 $x=r\cos\theta$，整个函数塌缩成 $\sec\theta$——直角坐标下是根式除法，极坐标下一次化简到底，收益极大，这是「见到 $\sqrt{x<sup>2</sup>+y<sup>2</sup>}$ 就想极坐标」的根据。<strong>其二，区域</strong>：$D$ 由两条竖直线和两条过原点的方向线围成——竖直线在极坐标下是径向段 $r=c\sec\theta$（随角度变化），方向线是常数角 $\theta=\dfrac\pi4$。区域天然是「角域」结构：每个 $\theta$ 对应一条射线段，用 $\theta$ 作外层、$r$ 作内层，定限一次到位。</p>
+<h3>第一步：把区域 D 翻译成极坐标</h3>
+<p>$D:\ 1\le x\le2,\ 0\le y\le x$。下边界 $x$ 轴与上边界 $y=x$ 给出角度：</p>
+<p>$$0\le\theta\le\frac\pi4.$$</p>
+<p><strong>为什么两条竖直线不是 $r=1,2$</strong>：$r$ 是「到原点的距离」，竖直线上的点离原点远近随方向而变。$x=1$ 即 $r\cos\theta=1$，解出 $r=\sec\theta$——从原点看这堵「墙」，角度越贴近 $x$ 轴（$\cos\theta$ 越大）墙越近，角度越大墙越远。故</p>
+<p>$$D:\ \sec\theta\le r\le 2\sec\theta,\quad 0\le\theta\le\frac\pi4.$$</p>
+<h3>第二步：被积函数与面积元</h3>
+<p>$$\frac{\sqrt{x<sup>2</sup>+y<sup>2</sup>}}x=\frac{r}{r\cos\theta}=\sec\theta.$$</p>
+<p><strong>面积元为什么多一个 $r$</strong>：$\mathrm dr\,\mathrm d\theta$ 围出的是个小扇形环带，不是矩形——角向那头随半径变宽，弧长是 $r\,\mathrm d\theta$，小扇形面积近似 $r\,\mathrm d\theta\cdot\mathrm dr$。所以 $\mathrm dx\,\mathrm dy=r\,\mathrm dr\,\mathrm d\theta$，这个 $r$ 不能丢。</p>
+<h3>第三步：先 r 后 θ 化为累次积分</h3>
+<p>$$I=\int_0<sup>\pi/4</sup>\sec\theta\,\mathrm d\theta\int_{\sec\theta}<sup>2\sec\theta</sup>r\,\mathrm dr =\int_0<sup>\pi/4</sup>\sec\theta\cdot\frac32\sec<sup>2</sup>\theta\,\mathrm d\theta=\frac32\int_0<sup>\pi/4</sup>\sec<sup>3</sup>\theta\,\mathrm d\theta.$$</p>
+<p>（内层 $\int r\,\mathrm dr=\dfrac{r<sup>2</sup>}2$，代入 $\sec\theta$ 到 $2\sec\theta$ 得 $\dfrac12(4\sec<sup>2</sup>\theta-\sec<sup>2</sup>\theta)=\dfrac32\sec<sup>2</sup>\theta$。）</p>
+<h3>第四步：sec³ 的原函数从哪来——分部积分自递推</h3>
+<p>$\int\sec<sup>3</sup>\theta\,\mathrm d\theta$ 不靠背，靠一次分部积分自己解自己：</p>
+<p>$$\int\sec\theta\cdot\sec<sup>2</sup>\theta\,\mathrm d\theta=\sec\theta\tan\theta-\int\sec\theta\tan<sup>2</sup>\theta\,\mathrm d\theta=\sec\theta\tan\theta-\int\sec\theta\left(\sec<sup>2</sup>\theta-1\right)\mathrm d\theta,$$</p>
+<p>右边又出现 $\int\sec<sup>3</sup>\theta\,\mathrm d\theta$，移项解出：</p>
+<p>$$\int\sec<sup>3</sup>\theta\,\mathrm d\theta=\frac12\left(\sec\theta\tan\theta+\ln\lvert\sec\theta+\tan\theta\rvert\right),$$</p>
+<p>系数 $\dfrac12$ 就是移项的痕迹。代入上下限：$\theta=\dfrac\pi4$ 时 $\sec=\sqrt2,\ \tan=1$，得 $\sqrt2+\ln(1+\sqrt2)$；$\theta=0$ 时值为 $\ln1=0$。所以</p>
+<p>$$\int_0<sup>\pi/4</sup>\sec<sup>3</sup>\theta\,\mathrm d\theta=\frac12\left(\sqrt2+\ln(1+\sqrt2)\right),\qquad I=\frac34\left(\sqrt2+\ln(1+\sqrt2)\right).$$</p>
+<h3>易错点</h3>
+<ul><li><strong>漏乘面积元里的 r</strong>：$\mathrm dx\,\mathrm dy$ 换成 $r\,\mathrm dr\,\mathrm d\theta$，那个 $r$ 的本质是扇形弧长 $r\,\mathrm d\theta$，极坐标第一大坑。</li><li><strong>把竖线当成 r=常数</strong>：$x=1$ 对应 $r=\sec\theta$（随角度变化），不是 $r=1$。</li><li><strong>sec³ 原函数记错</strong>：结果 $\dfrac12(\sec\tan+\ln\lvert\sec+\tan\rvert)$ 的系数 $\dfrac12$ 来自移项，别丢。</li></ul>
+<blockquote>一句话结论：极坐标下被积函数化成 $\sec\theta$，内层积出 $\dfrac32\sec<sup>2</sup>\theta$，最终 $I=\dfrac34\left(\sqrt2+\ln(1+\sqrt2)\right)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

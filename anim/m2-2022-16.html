@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法/过程类动画：初等变换求 tr(A⁻¹)</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-15.html" data-q="../question/m2-2022-15/">← <b>m2-2022-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-16/" data-q="../question/m2-2022-16/" data-no-anim="1">m2-2022-16 · 本题</a>
+  <a href="m2-2022-17.html" data-q="../question/m2-2022-17/"><b>m2-2022-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '行换位 + 列倍加后得 $B$：求 $\\operatorname{tr}(A^{-1})$',
+  subtitle: '考点：初等矩阵与迹 · 方法：$PAQ=B$ → $A^{-1}=QB^{-1}P$ → 循环性质取迹',
+  counterLabel: '推演步',
+  intro: '点击「▶ 播放」逐步演示矩阵翻译与取迹流程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>审题</b>：行变换<b>左乘</b>、列变换<b>右乘</b> —— 记 $P$ 为交换 2、3 行的初等矩阵，$Q$ 为「第 1 列加第 2 列的 $-1$ 倍」的初等矩阵：$$PAQ=B=\\begin{pmatrix}-2&1&-1\\\\1&-1&0\\\\-1&0&0\\end{pmatrix}$$',
+      '<b>写出 $P,Q$</b>（列操作写在 $Q$ 的第 1 列）：$$P=\\begin{pmatrix}1&0&0\\\\0&0&1\\\\0&1&0\\end{pmatrix},\\quad Q=\\begin{pmatrix}1&0&0\\\\-1&1&0\\\\0&0&1\\end{pmatrix}$$',
+      '<b>表示 $A^{-1}$</b>：$A=P^{-1}BQ^{-1}\\Rightarrow A^{-1}=QB^{-1}P$；由循环性质 $$\\operatorname{tr}(A^{-1})=\\operatorname{tr}(QB^{-1}P)=\\operatorname{tr}\\bigl(B^{-1}PQ\\bigr)$$',
+      '<b>求 $B^{-1}$</b>：$\\det B=1$（按第 3 行展开），$$B^{-1}=\\begin{pmatrix}0&0&-1\\\\0&-1&-1\\\\-1&-1&1\\end{pmatrix}$$',
+      '<b>算 $PQ$</b>：$$PQ=\\begin{pmatrix}1&0&0\\\\0&0&1\\\\-1&1&0\\end{pmatrix}$$',
+      '<b>取对角元</b>：$B^{-1}(PQ)$ 的 $(1,1),(2,2),(3,3)$ 元为 $$(0,0,-1)\\cdot(1,0,-1)^{\\mathrm T}=1,\\quad (0,-1,-1)\\cdot(0,0,1)^{\\mathrm T}=-1,\\quad (-1,-1,1)\\cdot(0,1,0)^{\\mathrm T}=-1$$',
+      '<b>结论</b>：$\\operatorname{tr}(A^{-1})=1-1-1=-1$（交叉验证：直接还原 $A$ 求逆，迹同为 $-1$）',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'翻译',     log:'行变换左乘 P、列变换右乘 Q，写成 PAQ=B', count:0 },
+    { cls:'shift', tag:'写P和Q',  log:'P 交换二三行；Q 的第 1 列放 −1（列操作右乘）', count:1 },
+    { cls:'shift', tag:'表示逆',   log:'A⁻¹ = Q B⁻¹ P，循环性质把迹化成 tr(B⁻¹PQ)', count:2 },
+    { cls:'step',  tag:'求B⁻¹',   log:'det B = 1，算出 B 的逆矩阵', count:3 },
+    { cls:'step',  tag:'算PQ',    log:'P 左乘 Q 只是把 Q 的二三行对调', count:4 },
+    { cls:'ok',    tag:'取迹',    log:'B⁻¹(PQ) 对角元为 1、−1、−1', count:5 },
+    { cls:'done',  tag:'完成',    log:'结论：tr(A⁻¹) = 1 − 1 − 1 = −1', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\operatorname{tr}(A^{-1})=-1$',
+    html: '记忆锚点：<b>「左乘行、右乘列」+ 迹的循环性质 $\\operatorname{tr}(QB^{-1}P)=\\operatorname{tr}(B^{-1}PQ)$</b>，把求逆问题压到算 $PQ$ 与对角元。易错：$Q$ 的 $-1$ 要写在第 1 列（$Q_{21}=-1$）；取逆时三个因子顺序反排。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：初等变换的矩阵语言 + 迹的循环性质</h2>
+<p>答案：$-1$</p>
+<h3>第一步：把变换翻译成初等矩阵——为什么行左乘、列右乘</h3>
+<p>矩阵乘法的结构决定了方向：$(PA)$ 的第 $i$ 行是 $P$ 的第 $i$ 行对 $A$ 各行的组合——<strong>左乘动行</strong>；$(AQ)$ 的第 $j$ 列是 $A$ 各列按 $Q$ 的第 $j$ 列的组合——<strong>右乘动列</strong>。所以「交换第 2、3 行」= 左乘行交换矩阵 $P$；「第 2 列的 $-1$ 倍加到第 1 列」= 右乘列变换矩阵 $Q$（第 1 列加上 $-e_2$）：</p>
+<p>$$P=\begin{pmatrix}1&amp;0&amp;0\\0&amp;0&amp;1\\0&amp;1&amp;0\end{pmatrix},\qquad Q=\begin{pmatrix}1&amp;0&amp;0\\-1&amp;1&amp;0\\0&amp;0&amp;1\end{pmatrix},\qquad PAQ=B.$$</p>
+<h3>第二步：表示 $A<sup>-1</sup>$</h3>
+<p>由 $PAQ=B$ 得 $A=P<sup>-1</sup>BQ<sup>-1</sup>$，取逆按逆序法则 $(XYZ)<sup>-1</sup>=Z<sup>-1</sup>Y<sup>-1</sup>X<sup>-1</sup>$ 反排（$P$ 是对称的交换矩阵，$P<sup>-1</sup>=P$）：</p>
+<p>$$A<sup>-1</sup>=QB<sup>-1</sup>P.$$</p>
+<p>求迹用<strong>循环性质</strong>：$\operatorname{tr}(A<sup>-1</sup>)=\operatorname{tr}(QB<sup>-1</sup>P)=\operatorname{tr}(B<sup>-1</sup>PQ)$。它为什么成立？$\operatorname{tr}(XY)=\sum_i\sum_k X_{ik}Y_{ki}=\operatorname{tr}(YX)$——对角元求和时把两个求和号换序即可，三个因子同理轮换。于是只需算 $PQ$ 与 $B<sup>-1</sup>PQ$ 的对角元。</p>
+<h3>第三步：算 $B<sup>-1</sup>$ 与 $PQ$</h3>
+<p>$\det B=1$（按第 3 行展开），</p>
+<p>$$B<sup>-1</sup>=\begin{pmatrix}0&amp;0&amp;-1\\0&amp;-1&amp;-1\\-1&amp;-1&amp;1\end{pmatrix},\qquad PQ=\begin{pmatrix}1&amp;0&amp;0\\0&amp;0&amp;1\\-1&amp;1&amp;0\end{pmatrix}.$$</p>
+<h3>第四步：取迹</h3>
+<p>$B<sup>-1</sup>(PQ)$ 的对角元依次为</p>
+<p>$$(0,0,-1)\cdot(1,0,-1)<sup>\mathrm T</sup>=1,\quad (0,-1,-1)\cdot(0,0,1)<sup>\mathrm T</sup>=-1,\quad (-1,-1,1)\cdot(0,1,0)<sup>\mathrm T</sup>=-1,$$</p>
+<p>故 $\operatorname{tr}(A<sup>-1</sup>)=1-1-1=-1$。（交叉验证：$A=\begin{pmatrix}-1&amp;1&amp;-1\\-1&amp;0&amp;0\\0&amp;-1&amp;0\end{pmatrix}$，$A<sup>-1</sup>=\begin{pmatrix}0&amp;-1&amp;0\\0&amp;0&amp;-1\\-1&amp;1&amp;-1\end{pmatrix}$，迹同为 $-1$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>行变换右乘、列变换左乘搞混</strong>：必须「左乘行、右乘列」，$PAQ$ 的顺序不能反。</li><li><strong>$Q$ 的元素位置</strong>：列倍加操作写在 $Q$ 的<strong>第 1 列</strong>（$Q_{21}=-1$），不是第 2 行。</li></ul>
+<blockquote>一句话结论：$A<sup>-1</sup>=QB<sup>-1</sup>P$，$\operatorname{tr}(A<sup>-1</sup>)=\operatorname{tr}(B<sup>-1</sup>PQ)=-1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

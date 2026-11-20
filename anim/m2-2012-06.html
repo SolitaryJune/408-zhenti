@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·06 对称区域上的二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-05.html" data-q="../question/m2-2012-05/">← <b>m2-2012-05</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-06/" data-q="../question/m2-2012-06/" data-no-anim="1">m2-2012-06 · 本题</a>
+  <a href="m2-2012-07.html" data-q="../question/m2-2012-07/"><b>m2-2012-07</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];   // 推导板的持久 DOM 行
+
+var LINES = [
+  "<p><b>写出区域</b>：$D=\\left\\{(x,y):-\\tfrac{\\pi}{2}\\le x\\le\\tfrac{\\pi}{2},\\ \\sin x\\le y\\le1\\right\\}$，下边界 $y=\\sin x$、上边界 $y=1$、左右 $x=\\pm\\tfrac{\\pi}{2}$，<b>关于 $y$ 轴对称</b>。拆被积函数：$$\\iint_D(xy^{5}-1)\\,\\mathrm{d}\\sigma=\\iint_D xy^{5}\\,\\mathrm{d}\\sigma+\\iint_D(-1)\\,\\mathrm{d}\\sigma$$</p>",
+  "<p><b>第一块先积 $y$</b>：$\\int_{\\sin x}^{1}y^{5}\\,\\mathrm{d}y=\\dfrac{1-\\sin^{6}x}{6}$。</p>",
+  "<p><b>奇偶性清零</b>：$x$ 是奇函数，$\\dfrac{1-\\sin^{6}x}{6}$ 是偶函数，乘积为<b>奇函数</b>，在对称区间上 $$\\int_{-\\pi/2}^{\\pi/2}x\\cdot\\frac{1-\\sin^{6}x}{6}\\,\\mathrm{d}x=0.$$</p>",
+  "<p><b>第二块 = 负的面积</b>：$$\\iint_D(-1)\\,\\mathrm{d}\\sigma=-\\int_{-\\pi/2}^{\\pi/2}\\Big(\\int_{\\sin x}^{1}\\mathrm{d}y\\Big)\\mathrm{d}x=-\\int_{-\\pi/2}^{\\pi/2}(1-\\sin x)\\,\\mathrm{d}x.$$</p>",
+  "<p><b>算面积</b>：$\\sin x$ 是奇函数，对称区间上积分为 $0$，故面积 $=\\int_{-\\pi/2}^{\\pi/2}1\\,\\mathrm{d}x=\\pi$，第二块 $=-\\pi$。</p>",
+  "<p><b>合并</b>：$$0+(-\\pi)=-\\pi$$</p>",
+  "<p><b>结论</b>：$\\iint_D(xy^{5}-1)\\,\\mathrm{d}\\sigma=-\\pi$，<b>选 D</b>。</p>"
+];
+
+AW.init({
+  title: '对称区域上的二重积分：$\\iint_D(xy^{5}-1)\\,\\mathrm{d}\\sigma$',
+  subtitle: '考点：二重积分与奇偶对称性 · 方法：拆块 → 奇函数清零 → 常数项 = 负面积',
+  counterLabel: '已推演',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'拆块',    log:'区域上下界是 y=1 与 y=sin x，关于 y 轴对称；被积函数拆成 xy⁵ 和 −1 两块', show:1, count:0 },
+    { cls:'step',  tag:'先积 y',  log:'内层积分 y⁵ 从 sin x 积到 1，得 (1−sin⁶x)/6', show:2, count:1 },
+    { cls:'ok',    tag:'清零',    log:'x 是奇函数、(1−sin⁶x)/6 是偶函数，乘积为奇，对称区间上积分为 0', show:3, count:2 },
+    { cls:'step',  tag:'负面积',  log:'−1 的积分就是区域面积的相反数，化作一重积分', show:4, count:3 },
+    { cls:'ok',    tag:'算面积',  log:'sin x 项奇函数归零，面积就是区间长度 π', show:5, count:4 },
+    { cls:'ok',    tag:'合并',    log:'第一块 0，第二块 −π，相加得 −π', show:6, count:5 },
+    { cls:'done',  tag:'完成',    log:'结论：积分 = −π，选 D', show:7, count:6, done:true },
+  ],
+
+  result: {
+    big: '积分 = −π（选 D）',
+    html: '记忆锚点：<b>先拆块，奇偶清零，常数项收尾</b>。$xy^{5}$ 经"先 $y$ 后 $x$"拆出奇函数整体，对称区域上归零；剩下 $\\iint_D(-1)\\,\\mathrm{d}\\sigma=-\\,\\text{面积}=-\\pi$（$\\sin$ 项在对称区间上积分为 0）。只算 $xy^{5}$ 得 0 就选 A 是最常见的翻车点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：对称性用在哪里才合法——先看"区域配不配对"</h2>
+<p>答案：D（$-\pi$）</p>
+<h3>第一步：写出区域、拆开被积函数</h3>
+<p>$D=\{(x,y):-\tfrac{\pi}{2}\le x\le\tfrac{\pi}{2},\ \sin x\le y\le1\}$。由积分线性性拆块：</p>
+<p>$$\iint_D(xy<sup>5</sup>-1)\,\mathrm d\sigma=\iint_D xy<sup>5</sup>\,\mathrm d\sigma+\iint_D(-1)\,\mathrm d\sigma.$$</p>
+<h3>第二步：为什么"区域对称 + 奇函数"不能直接用</h3>
+<p><strong>奇函数在对称区域上积分为零</strong>的前提是<strong>区域与被积函数按同一根轴配对</strong>。逐条检查：$xy<sup>5</sup>$ 对 $y$ 是奇函数，但 $D$ 的下边界是 $\sin x$，不是它的镜像，$D$ 不关于 $x$ 轴对称（如点 $(\tfrac\pi4,0.9)\in D$，而 $(\tfrac\pi4,-0.9)\notin D$）；$xy<sup>5</sup>$ 对 $x$ 是奇函数，但 $D$ 在 $x=\pm\tfrac\pi2$ 处的条带高度分别是 $2$ 与 $0$，也不关于 $y$ 轴对称。两条直路都堵死——<strong>不是对称性没用，而是要先积掉一层再谈</strong>。</p>
+<h3>第三步：先积 $y$，让奇性浮出水面</h3>
+<p>$$\iint_D xy<sup>5</sup>\,\mathrm d\sigma=\int_{-\pi/2}<sup>\pi/2</sup>x\Big(\int_{\sin x}<sup>1</sup>y<sup>5</sup>\,\mathrm dy\Big)\mathrm dx=\int_{-\pi/2}<sup>\pi/2</sup>x\cdot\frac{1-\sin<sup>6</sup>x}{6}\,\mathrm dx.$$</p>
+<p>内核 $\dfrac{1-\sin<sup>6</sup>x}{6}$ 满足 $\sin<sup>6</sup>(-x)=\sin<sup>6</sup>x$，是 $x$ 的<strong>偶</strong>函数；外面乘 $x$（奇），整体为奇函数，在<strong>对称的积分区间</strong> $[-\tfrac\pi2,\tfrac\pi2]$ 上逐点配对抵消：$x$ 与 $-x$ 两处函数值恰好相反。故第一块为 $0$。</p>
+<h3>第四步：第二块是"负的面积"</h3>
+<p>$$\iint_D(-1)\,\mathrm d\sigma=-\,\text{面积}(D)=-\int_{-\pi/2}<sup>\pi/2</sup>(1-\sin x)\,\mathrm dx.$$</p>
+<p>$\sin x$ 是奇函数，对称区间上积分为 0，面积 $=\int_{-\pi/2}<sup>\pi/2</sup>1\,\mathrm dx=\pi$，第二块为 $-\pi$。合计 $0+(-\pi)=-\pi$，选 D。</p>
+<h3>易错点</h3>
+<ul><li><strong>只算 $xy<sup>5</sup>$ 忘了 $-1$</strong>：奇偶性用得漂亮却丢掉常数项——面积本身是 $\pi$，但带负号（A 错因）。</li><li><strong>把面积算成 2</strong>：$\sin$ 项归零后剩下区间长度 $\pi$（B、C 错因）。</li><li><strong>对称性不检查区域</strong>：喊"奇函数积分为零"之前必须确认区域对称；区域不对称时先把一层积掉，让剩余被积函数的奇偶性对上对称区间。</li></ul>
+<blockquote>一句话结论：先积 $y$ 得偶内核，外层 $x$ 是奇 → 第一块为 0；剩下 $-\text{面积}=-\pi$，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

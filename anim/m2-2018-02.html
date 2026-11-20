@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2018·02 哪个函数在 x=0 处不可导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-01.html" data-q="../question/m2-2018-01/">← <b>m2-2018-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-02/" data-q="../question/m2-2018-02/" data-no-anim="1">m2-2018-02 · 本题</a>
+  <a href="m2-2018-03.html" data-q="../question/m2-2018-03/"><b>m2-2018-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：差商极限 + 分子量级',
+    cls: 'key',
+    body: '<p>四个函数在 $x=0$ 都连续，可导与否只看 $f\'(0)=\\lim_{x\\to0}\\dfrac{f(x)-f(0)}{x}$ 是否存在。分子含 $|x|$ 时 $\\dfrac{|x|}{x}$ 左右分别取 $\\pm1$：<b>分子恰为 $|x|$ 的一阶无穷小 ⇒ 左右导数不等；高于一阶 ⇒ 可导且 $f\'(0)=0$</b>。用 $\\sin t\\sim t$、$1-\\cos t\\sim\\dfrac{t^2}{2}$ 逐项称量。</p>',
+    log: '判别工具：差商极限 + 分子量级' },
+  { title: 'A：$|x|\\sin|x|$ —— 可导',
+    cls: 'good',
+    body: '<p>$f(0)=0$，$\\sin|x|\\sim|x|$，分子 $\\sim|x|\\cdot|x|=x^2$（比 $|x|$ 高两阶）：$$\\frac{|x|\\sin|x|}{x}=\\pm\\sin|x|\\to0$$ 可导，$f\'(0)=0$。</p>',
+    ribbon: {k:1, ok:false},
+    log: 'A 分子是 x²，高阶，可导' },
+  { title: 'B：$|x|\\sin\\sqrt{|x|}$ —— 可导',
+    cls: 'good',
+    body: '<p>$\\sin\\sqrt{|x|}\\sim\\sqrt{|x|}$，分子 $\\sim|x|^{3/2}$（仍高于一阶）：$$\\frac{|x|\\sin\\sqrt{|x|}}{x}=\\pm\\sin\\sqrt{|x|}\\to0$$ 可导，$f\'(0)=0$。</p>',
+    ribbon: {k:2, ok:false},
+    log: 'B 分子是 |x|^(3/2)，高阶，可导' },
+  { title: 'C：$\\cos|x|$ —— 可导（假绝对值）',
+    cls: 'good',
+    body: '<p>偶函数去绝对值不变：$\\cos|x|=\\cos x$，是处处光滑的初等函数，$f\'(0)=-\\sin0=0$。可导。</p>',
+    ribbon: {k:3, ok:false},
+    log: 'C 去掉绝对值就是 cos x，光滑' },
+  { title: 'D：$\\cos\\sqrt{|x|}$ —— 不可导！',
+    cls: 'bad',
+    body: '<p>$f(0)=1$，令 $t=\\sqrt{|x|}$，用 $1-\\cos t\\sim\\dfrac{t^2}{2}$：$$f(x)-f(0)=\\cos\\sqrt{|x|}-1\\sim-\\frac{t^2}{2}=-\\frac{|x|}{2}$$ 分子<b>恰为一阶</b>！$$\\frac{f(x)-f(0)}{x}\\sim-\\frac12\\cdot\\frac{|x|}{x}\\longrightarrow\\begin{cases}-\\dfrac12, & x\\to0^+\\\\[2pt]+\\dfrac12, & x\\to0^-\\end{cases}$$ 左右导数存在但不相等，$f\'(0)$ 不存在。</p>',
+    ribbon: {k:4, ok:true},
+    log: 'D 分子恰为 -|x|/2，一阶，左右导数 ±1/2 不等' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>答案选 <b>D</b>。核心记忆点：分子量级<b>高于</b> $|x|$ 一阶 → 可导（A、B、C）；恰为<b>一阶</b> → 差商出现 $\\dfrac{|x|}{x}$，左右导数必不等 → 不可导。</p>',
+    log: '一阶同阶必断，高阶必导，选 D' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪个函数在 $x=0$ 处不可导？逐项称分子的量级',
+  subtitle: '考点：导数定义 · 无穷小阶数 · 方法：高阶可导 / 同阶必断',
+  counterLabel: '推理步',
+  ribbonTitle: '选项判定（✓ 不可导 / ✗ 可导排除）',
+  intro: '点击「▶ 播放」逐项称量分子，锁定不可导的那个。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D：$\\cos\\sqrt{|x|}$ 在 $x=0$ 处不可导',
+    html: '记忆锚点：<b>量级称重</b>——$|x|\\sin|x|\\sim x^2$、$|x|\\sin\\sqrt{|x|}\\sim|x|^{3/2}$ 都高于一阶 ⇒ 可导；$\\cos\\sqrt{|x|}-1\\sim-\\dfrac{|x|}{2}$ 恰一阶 ⇒ 差商出现 $\\dfrac{|x|}{x}$，左右导数 $\\mp\\dfrac12$ 不相等。C 的绝对值是「假绝对值」：$\\cos|x|=\\cos x$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含 $|x|$、$\sqrt{|x|}$ 的函数在 $x=0$ 处的可导性判别</h2>
+<p>答案：D（$f(x)=\cos\sqrt{|x|}$ 在 $x=0$ 处不可导）</p>
+<h3>第一步：统一判别工具——导数定义 + 无穷小阶数</h3>
+<p>四个函数在 $x=0$ 都连续，能不能导只看一件事：差商极限</p>
+<p>$$f'(0)=\lim_{x\to0}\frac{f(x)-f(0)}{x}$$</p>
+<p>是否存在。分子含 $|x|$ 时，$\dfrac{|x|}{x}$ 在 $x\to0^\pm$ 分别取 $\pm1$，所以<strong>分子只要出现 $|x|$ 的同阶量就会左右导数不等</strong>；比 $|x|$ 高阶则可导且 $f'(0)=0$。用 $\sin t\sim t$、$1-\cos t\sim\dfrac{t<sup>2</sup>}{2}$ 逐项称量分子。</p>
+<h3>第二步：逐项称分子</h3>
+<table><thead><tr><th>选项</th><th>$f(x)-f(0)$ 的量级</th><th>差商行为</th><th>判定</th></tr></thead><tbody><tr><td>A $\lvert x\rvert\sin\lvert x\rvert$</td><td>$\sim \lvert x\rvert<sup>2</sup>=x<sup>2</sup>$</td><td>$\dfrac{\lvert x\rvert\sin\lvert x\rvert}{x}=\pm\sin\lvert x\rvert\to0$</td><td>可导，$f'(0)=0$</td></tr><tr><td>B $\lvert x\rvert\sin\sqrt{\lvert x\rvert}$</td><td>$\sim \lvert x\rvert<sup>3/2</sup>$</td><td>$\pm\sin\sqrt{\lvert x\rvert}\to0$</td><td>可导，$f'(0)=0$</td></tr><tr><td>C $\cos\lvert x\rvert$</td><td>$=\cos x$（偶函数去绝对值不变）</td><td>初等函数处处光滑</td><td>可导，$f'(0)=0$</td></tr><tr><td>D $\cos\sqrt{\lvert x\rvert}$</td><td>$-1+\cos\sqrt{\lvert x\rvert}\sim-\dfrac{\lvert x\rvert}{2}$</td><td>$\sim-\dfrac12\cdot\dfrac{\lvert x\rvert}{x}$</td><td><strong>左右导数不等</strong></td></tr></tbody></table>
+<p>D 的细节：$t=\sqrt{|x|}\to0$，用 $1-\cos t\sim\dfrac{t<sup>2</sup>}{2}$ 得 $f(x)-f(0)\sim-\dfrac{|x|}{2}$，于是</p>
+<p>$$\lim_{x\to0^+}\frac{f(x)-f(0)}{x}=-\frac12,\qquad \lim_{x\to0^-}\frac{f(x)-f(0)}{x}=+\frac12.$$</p>
+<p>左右极限存在但不相等，$f'(0)$ 不存在——不可导。</p>
+<h3>易错点</h3>
+<ul><li><strong>把"根号"想当然当高阶</strong>：A、B 的 $\sin$ 把 $\sqrt{|x|}$ 的半阶"吃"进分子后仍是高阶（$x<sup>2</sup>$、$|x|<sup>3/2</sup>$）；而 D 里 $\cos\sqrt{|x|}$ 展开后恰好留下 $-\dfrac{|x|}{2}$，是<strong>一阶</strong>——方向恰好相反，必须逐个算，不能凭感觉。</li><li><strong>只看右导数</strong>：$x\to0^+$ 时 $\sqrt{|x|}=\sqrt{x}$，差商确为 $-\dfrac12$；漏掉左半支就误判可导。</li><li><strong>误以为 C 含绝对值必不可导</strong>：$\cos|x|=\cos x$，绝对值被偶函数性质消掉。</li></ul>
+<blockquote>结论：分子量级高于 $|x|$ 一阶 → 可导（A、B、C）；恰为一阶 → 出现 $\dfrac{|x|}{x}$，左右导数不等 → 不可导，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

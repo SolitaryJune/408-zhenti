@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2022·20 链式法则、回代求 f 与二元极值</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-19.html" data-q="../question/m2-2022-19/">← <b>m2-2022-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-20/" data-q="../question/m2-2022-20/" data-no-anim="1">m2-2022-20 · 本题</a>
+  <a href="m2-2022-21.html" data-q="../question/m2-2022-21/"><b>m2-2022-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$\\frac{\\partial f(u,v)}{\\partial u}-\\frac{\\partial f(u,v)}{\\partial v}=2(u-v)\\mathrm{e}^{-(u+v)},\\qquad f(u,0)=u^2\\mathrm{e}^{-u}$$",
+  "<b>① (I) 链式法则：</b>令 $u=x,\\ v=y-x$，$y$ 固定时 $\\dfrac{\\partial u}{\\partial x}=1,\\ \\dfrac{\\partial v}{\\partial x}=-1$：$g_x=f_u-f_v\\big|_{(x,\\,y-x)}$",
+  "<b>② (I) 代入条件：</b>$u+v=y,\\ u-v=2x-y$：$g_x=2(2x-y)\\mathrm{e}^{-y}=(4x-2y)\\mathrm{e}^{-y}$",
+  "<b>③ (II) 对 $x$ 积分：</b>$y$ 视为参数，「常数」是待定函数：$g(x,y)=(2x^2-2xy)\\mathrm{e}^{-y}+\\varphi(y)$",
+  "<b>④ 回代：</b>令 $x=u,\\ y=u+v$：$2u^2-2u(u+v)=-2uv$，得 $f(u,v)=-2uv\\,\\mathrm{e}^{-(u+v)}+\\varphi(u+v)$",
+  "<b>⑤ 定 $\\varphi$：</b>令 $v=0$：$f(u,0)=\\varphi(u)=u^2\\mathrm{e}^{-u}$，故 $\\varphi(t)=t^2\\mathrm{e}^{-t}$",
+  "<b>⑥ 合并：</b>$f(u,v)=\\mathrm{e}^{-(u+v)}\\big[(u+v)^2-2uv\\big]=(u^2+v^2)\\mathrm{e}^{-(u+v)}$（验算两条条件均满足）",
+  "<b>⑦ 驻点：</b>记 $S=u^2+v^2,\\ E=\\mathrm{e}^{-(u+v)}$：$f_u=(2u-S)E,\\ f_v=(2v-S)E$；令其为零 ⇒ $u=v$，$2u-2u^2=0$ ⇒ 驻点 $(0,0)$ 与 $(1,1)$",
+  "<b>⑧ 二阶偏导：</b>$f_{uu}=(2-4u+S)E,\\ f_{vv}=(2-4v+S)E,\\ f_{uv}=(S-2u-2v)E$",
+  "<b>⑨ 判 $(0,0)$：</b>$S=0,E=1$：$A=2,\\ B=0,\\ C=2$，$AC-B^2=4>0$ 且 $A>0$ → <b>极小值</b> $f(0,0)=0$",
+  "<b>⑩ 判 $(1,1)$：</b>$S=2,E=\\mathrm{e}^{-2}$：$A=C=0,\\ B=-2\\mathrm{e}^{-2}$，$AC-B^2=-4\\mathrm{e}^{-4}<0$ → 非极值（鞍点）",
+  "<b>⑪ 收尾：</b>(I) $g_x=(4x-2y)\\mathrm{e}^{-y}$；(II) $f=(u^2+v^2)\\mathrm{e}^{-(u+v)}$，唯一极值是极小值 $0$"
+];
+
+AW.init({
+  title: '2022·20　链式法则 + 回代求 $f$ + 二元极值',
+  subtitle: '考点：复合函数偏导 · 对 $x$ 积分回代 · 驻点与 $AC-B^2$ 判别',
+  counterLabel: '已推进',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，(I) 一问一答，(II) 从积分回代到极值判别共八步。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'条件给了偏导差和一个边界条件，两问分别是求 g 的偏导与求 f 加极值', count:0, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'链式',   log:'对 x 求偏导时 v 的系数是负一，正好凑出条件里的偏导差', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'代入',   log:'把新变量代入右端，得到 4x 减 2y 乘 e 负 y，第一问完成', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'积分',   log:'第二问先把 y 当参数对 x 积分，别忘了加待定函数 φ(y)', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'回代',   log:'换回原变量，交叉项合并成负 2uv，φ 的自变量变成 u 加 v', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'定 φ',   log:'令 v 等于零，用边界条件确定 φ 是 t 平方乘 e 负 t', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'合并',   log:'展开合并后 f 化成 u 平方加 v 平方乘指数因子，回代验算成立', count:6, ribbon:{k:7, ok:true} },
+    { cls:'ok',    tag:'驻点',   log:'两个一阶偏导同时为零推出 u 等于 v，驻点有原点和一一两个', count:7, ribbon:{k:8, ok:true} },
+    { cls:'ok',    tag:'二阶',   log:'写出三个二阶偏导，准备逐点判别', count:8, ribbon:{k:9, ok:true} },
+    { cls:'ok',    tag:'判原点', log:'原点处判别式为 4 且 A 为正，取到极小值零', count:9, ribbon:{k:10, ok:true} },
+    { cls:'miss',  tag:'判一一', log:'一一处判别式为负，是鞍点不是极值，直接淘汰', count:10, ribbon:{k:11, ok:false} },
+    { cls:'done',  tag:'完成',   log:'结论：唯一极值是原点处的极小值 0', count:11, ribbon:{k:12, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "(I) $\\dfrac{\\partial g}{\\partial x}=(4x-2y)\\mathrm{e}^{-y}$；　(II) $f=(u^2+v^2)\\mathrm{e}^{-(u+v)}$，极小值 $f(0,0)=0$",
+    html: "记忆锚点：<b>条件给 $f_u-f_v$ 就往「$v=y-x$」这类代换上凑；对 $x$ 积分时的「常数」是 $\\varphi(y)$；极值判别 $AC-B^2>0$ 且看 $A$ 定大小</b>。易错：链式漏负号；忘加 $\\varphi(y)$；把鞍点误判成极大值。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：链式法则凑 $g_x$ → 积分回代求 $f$ → 二元极值判别</h2>
+<p><strong>答案</strong>：(I) $\dfrac{\partial g(x,y)}{\partial x}=(4x-2y)\mathrm{e}<sup>-y</sup>$；(II) $f(u,v)=(u<sup>2</sup>+v<sup>2</sup>)\mathrm{e}<sup>-(u+v)</sup>$，$f$ 有极小值 $f(0,0)=0$（驻点 $(1,1)$ 非极值）。</p>
+<h3>第一步：(I) 链式法则正好凑出条件里的组合</h3>
+<p>令 $u=x,\ v=y-x$，则 $g(x,y)=f(u,v)$。对 $x$ 求偏导时 $y$ 固定，$\dfrac{\partial u}{\partial x}=1$，$\dfrac{\partial v}{\partial x}=-1$：</p>
+<p>$$\frac{\partial g}{\partial x}=f_u\cdot1+f_v\cdot(-1)=(f_u-f_v)\Big|_{(x,\,y-x)}.$$</p>
+<p>代入条件 $f_u-f_v=2(u-v)\mathrm{e}<sup>-(u+v)</sup>$，注意 $u+v=y$，$u-v=2x-y$：</p>
+<p>$$g_x=2(2x-y)\mathrm{e}<sup>-y</sup>=(4x-2y)\mathrm{e}<sup>-y</sup>.$$</p>
+<p><strong>为什么偏偏是 $y-x$？</strong> 更根本地看，$g(x,y)=f(x,y-x)$ 是沿直线族 $v=y-u$ 参数化 $f$，对参数求导产生 $f_u\cdot1+f_v\cdot(-1)$——条件给的 $f_u-f_v$ 正是"沿这族直线的方向导数"，题目等于把代换直接递到你手上。而这个代换的妙处是两个组合同时变干净：$u+v=x+(y-x)=y$（指数里不再有 $x$），$u-v=2x-y$。</p>
+<h3>第二步：(II) 对 $x$ 积分，回代定 $f$</h3>
+<p>把 $y$ 当参数对 $x$ 积分：</p>
+<p>$$g(x,y)=(2x<sup>2</sup>-2xy)\mathrm{e}<sup>-y</sup>+\varphi(y).$$</p>
+<p>回代 $x=u,\ y=u+v$（即 $u+v=y$）：$2u<sup>2</sup>-2u(u+v)=-2uv$，于是</p>
+<p>$$f(u,v)=-2uv\,\mathrm{e}<sup>-(u+v)</sup>+\varphi(u+v).$$</p>
+<p>由条件 $f(u,0)=u<sup>2</sup>\mathrm{e}<sup>-u</sup>$：令 $v=0$ 得 $\varphi(u)=u<sup>2</sup>\mathrm{e}<sup>-u</sup>$，故 $\varphi(t)=t<sup>2</sup>\mathrm{e}<sup>-t</sup>$，从而</p>
+<p>$$f(u,v)=\mathrm{e}<sup>-(u+v)</sup>\big[(u+v)<sup>2</sup>-2uv\big]=(u<sup>2</sup>+v<sup>2</sup>)\mathrm{e}<sup>-(u+v)</sup>.$$</p>
+<p>（验算：$f_u-f_v=2(u-v)\mathrm{e}<sup>-(u+v)</sup>$，$f(u,0)=u<sup>2</sup>\mathrm{e}<sup>-u</sup>$，两条条件都满足。）</p>
+<p>（机制：对 $x$ 积分时 $y$ 是参数，所以"积分常数"是待定函数 $\varphi(y)$；它不是在这一步定出的，而是被条件 $f(u,0)=u<sup>2</sup>\mathrm{e}<sup>-u</sup>$——即 $v=0$ 这条线上的取值——唯一钉死。"偏微分方程 + 一条线上的边界值"恰好定出一个函数，这是本题剧本的骨架。）</p>
+<h3>第三步：一阶条件求驻点</h3>
+<p>记 $S=u<sup>2</sup>+v<sup>2</sup>$，$E=\mathrm{e}<sup>-(u+v)</sup>$，则 $f_u=(2u-S)E$，$f_v=(2v-S)E$。令两者为零（$E\ne0$）：$2u-S=0$ 且 $2v-S=0$，相减得 $u=v$，代回 $2u-2u<sup>2</sup>=0$ 得 $u=0$ 或 $u=1$。驻点：$(0,0)$ 与 $(1,1)$。</p>
+<h3>第四步：二阶判别式定胜负</h3>
+<p>$$f_{uu}=(2-4u+S)E,\quad f_{vv}=(2-4v+S)E,\quad f_{uv}=(S-2u-2v)E.$$</p>
+<table><thead><tr><th>驻点</th><th>$A=f_{uu}$</th><th>$B=f_{uv}$</th><th>$C=f_{vv}$</th><th>$AC-B<sup>2</sup>$</th><th>结论</th></tr></thead><tbody><tr><td>$(0,0)$</td><td>$2$</td><td>$0$</td><td>$2$</td><td>$4&gt;0$，$A&gt;0$</td><td>极小值点，$f(0,0)=0$</td></tr><tr><td>$(1,1)$</td><td>$0$</td><td>$-2\mathrm{e}<sup>-2</sup>$</td><td>$0$</td><td>$-4\mathrm{e}<sup>-4</sup>&lt;0$</td><td>非极值（鞍点）</td></tr></tbody></table>
+<p>故 $f$ 在 $(0,0)$ 取唯一极值：极小值 $0$。</p>
+<p><strong>$AC-B<sup>2</sup>$ 为什么能定生死？</strong> 在驻点处作二阶泰勒，增量近似为二次型 $\Delta f\approx\frac12\big(Ah<sup>2</sup>+2Bhk+Ck<sup>2</sup>\big)$：$AC-B<sup>2</sup>&gt;0$ 时二次型定号（符号随 $A$），增量不变号，是极值；$AC-B<sup>2</sup>&lt;0$ 时二次型变号，曲面在这点两个方向弯法相反——鞍点。$(1,1)$ 处正是如此：沿方向 $(1,1)$ 二阶导数 $-4\mathrm{e}<sup>-2</sup>&lt;0$（下凹），沿 $(1,-1)$ 为 $+4\mathrm{e}<sup>-2</sup>&gt;0$（上凸），典型马鞍面。</p>
+<p><strong>再补一道全局保险</strong>：$f=(u<sup>2</sup>+v<sup>2</sup>)\mathrm{e}<sup>-(u+v)</sup>\ge0$，且仅当 $(u,v)=(0,0)$ 时为零，故 $(0,0)$ 其实还是全局最小点，极小值 $0$ 与直观一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>链式法则漏符号</strong>：$v=y-x$ 对 $x$ 的导数是 $-1$，错写成 $+1$ 就凑不出条件里的 $f_u-f_v$。</li><li><strong>对 $x$ 积分忘加 $\varphi(y)$</strong>：$y$ 是参数，「积分常数」是待定函数 $\varphi(y)$，漏写就定不出 $f$。</li><li><strong>判别式只算一半</strong>：$AC-B<sup>2</sup>&gt;0$ 才是极值，还要看 $A$ 的符号定大小；$(1,1)$ 处 $AC-B<sup>2</sup>&lt;0$ 直接淘汰，不能硬说成极大值。</li></ul>
+<blockquote>一句话结论：(I) $g_x=(4x-2y)\mathrm{e}<sup>-y</sup>$；(II) $f=(u<sup>2</sup>+v<sup>2</sup>)\mathrm{e}<sup>-(u+v)</sup>$，仅在 $(0,0)$ 取极小值 $0$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

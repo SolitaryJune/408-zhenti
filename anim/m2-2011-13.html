@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 13 题 · 圆与直线围域的二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-12.html" data-q="../question/m2-2011-12/">← <b>m2-2011-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-13/" data-q="../question/m2-2011-13/" data-no-anim="1">m2-2011-13 · 本题</a>
+  <a href="m2-2011-14.html" data-q="../question/m2-2011-14/"><b>m2-2011-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>$D$ 由直线 $y=x$、圆 $x^2+y^2=2y$ 及 $y$ 轴围成，求 $\\iint_Dxy\\,\\mathrm d\\sigma$。</p>',
+  '<p><b>认圆：</b>$x^2+y^2=2y\\iff x^2+(y-1)^2=1$：圆心 $(0,1)$、半径 1，过原点、与 $y$ 轴相切。极坐标下圆变为 $$r=2\\sin\\theta.$$</p>',
+  '<p><b>定角度：</b>$y=x$ 是射线 $\\theta=\\dfrac\\pi4$，$y$ 轴正半轴是 $\\theta=\\dfrac\\pi2$，区域夹在两者之间：$$D:\\ \\frac\\pi4\\le\\theta\\le\\frac\\pi2,\\quad 0\\le r\\le 2\\sin\\theta.$$</p>',
+  '<p><b>换元：</b>$x=r\\cos\\theta,\\ y=r\\sin\\theta$，$\\mathrm d\\sigma=r\\,\\mathrm dr\\,\\mathrm d\\theta$（别漏雅可比 $r$）：$$\\iint_Dxy\\,\\mathrm d\\sigma=\\int_{\\frac\\pi4}^{\\frac\\pi2}\\!\\mathrm d\\theta\\int_0^{2\\sin\\theta}r^3\\sin\\theta\\cos\\theta\\,\\mathrm dr.$$</p>',
+  '<p><b>内层（对 r）：</b>$$\\int_0^{2\\sin\\theta}r^3\\,\\mathrm dr=\\frac{(2\\sin\\theta)^4}{4}=4\\sin^4\\theta.$$</p>',
+  '<p><b>外层（对 θ）：</b>$$\\int_{\\frac\\pi4}^{\\frac\\pi2}4\\sin^5\\theta\\cos\\theta\\,\\mathrm d\\theta=4\\Bigl[\\frac{\\sin^6\\theta}{6}\\Bigr]_{\\frac\\pi4}^{\\frac\\pi2}.$$</p>',
+  '<p><b>代入数值：</b>$\\sin\\dfrac\\pi4=\\dfrac{\\sqrt2}{2}$，其六次方为 $\\dfrac18$：$$4\\cdot\\frac16\\Bigl(1-\\frac18\\Bigr)=\\frac23\\cdot\\frac78=\\frac{7}{12}.$$</p>',
+  '<p><b>结论：</b>$\\iint_Dxy\\,\\mathrm d\\sigma=\\dfrac{7}{12}$。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 13 题 · $\\iint\\limits_D xy\\,\\mathrm d\\sigma$（圆 + 直线 + $y$ 轴围域）',
+  subtitle: '考点：二重积分 · 方法：极坐标分层积分',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：认圆 → 定角度范围 → 换元 → 先 r 后 θ。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'认圆', log:'配方得圆心 (0,1)、半径 1，极坐标下圆是 r = 2sinθ', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'定角度', log:'y=x 给下限 π/4，y 轴给上限 π/2，r 从 0 到 2sinθ', count:2, reveal:3, hl:2, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'换元', log:'xy 变成 r²sinθcosθ，面积元多乘一个 r，共 r³', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'内层', log:'对 r 积分得 (2sinθ)⁴/4 = 4sin⁴θ', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'外层', log:'sin⁵θcosθ 正好是 sin⁶θ/6 的导数形状，直接凑微分', count:5, reveal:6, hl:5, ribbon:{k:5, ok:true} },
+    { cls:'step',  tag:'代数值', log:'sin(π/4) 的六次方是 1/8，算出 2/3 × 7/8', count:6, reveal:7, hl:6, ribbon:{k:6, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：二重积分 = 7/12', count:7, reveal:8, hl:7, good:true, done:true, ribbon:{k:7, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '填 7/12',
+    html: '关键三件事：<b>$r=2\\sin\\theta$（圆心在 $y$ 轴上）、$\\theta\\in\\left[\\frac\\pi4,\\frac\\pi2\\right]$、别漏雅可比 $r$</b>。内层 $\\frac{(2\\sin\\theta)^4}{4}$，外层凑 $\\mathrm d(\\sin^6\\theta)$，得 $\\frac{7}{12}$。易错：圆心在 $y$ 轴上是 $2\\sin\\theta$，在 $x$ 轴上才是 $2\\cos\\theta$。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：圆与直线围成的二重积分——极坐标的两个「为什么」</h2>
+<p>答案：$\dfrac{7}{12}$</p>
+<h3>第一步：先懂机制——面积元里为什么多一个 r</h3>
+<p>极坐标下的小块面积不是 $\mathrm dr\cdot\mathrm d\theta$：角度走 $\mathrm d\theta$ 时扫过的弧长是 $r\,\mathrm d\theta$（弧长 = 半径 × 圆心角），径向厚 $\mathrm dr$，于是微元面积</p>
+<p>$$\mathrm d\sigma\approx(r\,\mathrm d\theta)\cdot\mathrm dr=r\,\mathrm dr\,\mathrm d\theta.$$</p>
+<p>这个 $r$ 就是雅可比，漏掉它等于把远离原点的地方也算成单位面积。</p>
+<h3>第二步：把区域翻译成极坐标不等式</h3>
+<p>圆 $x<sup>2</sup>+y<sup>2</sup>=2y$ 即 $x<sup>2</sup>+(y-1)<sup>2</sup>=1$：圆心 $(0,1)$、半径 1，过原点、与 $y$ 轴相切。为什么极坐标下变 $r=2\sin\theta$？代入 $x=r\cos\theta,\ y=r\sin\theta$：$r<sup>2</sup>=2r\sin\theta$，即 $r(r-2\sin\theta)=0$；$r=0$ 对应原点（圆恰好过原点），非原点部分约去 $r$ 得 $r=2\sin\theta$。两条射线边界：$y=x$ 是 $\theta=\dfrac\pi4$，$y$ 轴正半轴是 $\theta=\dfrac\pi2$。区域夹在两射线之间、圆内：</p>
+<p>$$D:\ \frac\pi4\le\theta\le\frac\pi2,\quad 0\le r\le2\sin\theta.$$</p>
+<p>每个 $\theta$ 处从原点出发的射线都「从圆心（原点）穿入、从圆边穿出」，所以 $r$ 下限是 $0$、上限是圆方程。</p>
+<h3>第三步：被积函数与面积元一起换，逐层积分</h3>
+<p>$x=r\cos\theta,\ y=r\sin\theta$：</p>
+<p>$$\iint_Dxy\,\mathrm d\sigma=\int_{\frac\pi4}<sup>\frac\pi2</sup>\mathrm d\theta\int_0<sup>2\sin\theta</sup>r<sup>2</sup>\sin\theta\cos\theta\cdot r\,\mathrm dr.$$</p>
+<p>内层 $\int_0<sup>2\sin\theta</sup>r<sup>3</sup>\,\mathrm dr=\dfrac{(2\sin\theta)<sup>4</sup>}{4}=4\sin<sup>4</sup>\theta$，于是</p>
+<p>$$\int_{\frac\pi4}<sup>\frac\pi2</sup>4\sin<sup>5</sup>\theta\cos\theta\,\mathrm d\theta=4\Bigl[\frac{\sin<sup>6</sup>\theta}{6}\Bigr]_{\frac\pi4}<sup>\frac\pi2</sup>=\frac23\Bigl(1-\frac18\Bigr)=\frac{7}{12},$$</p>
+<p>其中 $\sin\frac\pi4=\frac{\sqrt2}{2}$，其六次方为 $\frac18$。内层之所以走得顺，是因为 $\sin<sup>5</sup>\theta\cos\theta\,\mathrm d\theta$ 恰是 $\frac16\,\mathrm d(\sin<sup>6</sup>\theta)$——幂函数配它的导数。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏乘雅可比 $r$</strong>：$\mathrm d\sigma=r\,\mathrm dr\,\mathrm d\theta$，来源是「弧长 = 半径 × 圆心角」，少一个 $r$ 结果全错。</li><li><strong>圆方程转极坐标写错</strong>：代入 $x=r\cos\theta,\ y=r\sin\theta$ 现场化简最稳；圆心在 $y$ 轴上时是 $r=2\sin\theta$，圆心在 $x$ 轴上才是 $r=2\cos\theta$。</li><li><strong>角度上下限装反</strong>：$y=x$ 给下限 $\frac\pi4$，$y$ 轴给上限 $\frac\pi2$；画一眼区域即可确认。</li></ul>
+<blockquote>结论：填 $\dfrac{7}{12}$。圆过原点 ⟹ $r=0$ 可约去 ⟹ $r=2\sin\theta$；微元面积带 $r$ 是极坐标的头号考点。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

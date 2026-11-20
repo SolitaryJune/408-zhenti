@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2012·11 复合函数的偏导组合</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2012-10.html" data-q="../question/m2-2012-10/">← <b>m2-2012-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2012-11/" data-q="../question/m2-2012-11/" data-no-anim="1">m2-2012-11 · 本题</a>
+  <a href="m2-2012-12.html" data-q="../question/m2-2012-12/"><b>m2-2012-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];   // 推导板的持久 DOM 行
+
+var LINES = [
+  "<p><b>设中间变量</b>：$z=f(u)$，$u=\\ln x+\\dfrac{1}{y}$。$f$ 是一元函数，链式系数只有两条：$\\dfrac{\\partial u}{\\partial x}=\\dfrac{1}{x}$ 与 $\\dfrac{\\partial u}{\\partial y}=-\\dfrac{1}{y^{2}}$。</p>",
+  "<p><b>对 $x$ 求偏导</b>：$$\\frac{\\partial z}{\\partial x}=f'(u)\\cdot\\frac{1}{x}.$$</p>",
+  "<p><b>对 $y$ 求偏导</b>：$$\\frac{\\partial z}{\\partial y}=f'(u)\\cdot\\Big(-\\frac{1}{y^{2}}\\Big).$$</p>",
+  "<p><b>代入组合</b>：$$x\\frac{\\partial z}{\\partial x}=f'(u),\\qquad y^{2}\\frac{\\partial z}{\\partial y}=-f'(u).$$组合系数 $x$、$y^{2}$ 恰好是链式系数的倒数。</p>",
+  "<p><b>相加</b>：$$f'(u)-f'(u)=0.$$</p>",
+  "<p><b>结论</b>：$x\\dfrac{\\partial z}{\\partial x}+y^{2}\\dfrac{\\partial z}{\\partial y}=0$，与 $f$ 的具体形式无关。</p>"
+];
+
+AW.init({
+  title: '偏导组合：$x\\dfrac{\\partial z}{\\partial x}+y^{2}\\dfrac{\\partial z}{\\partial y}=\\,?$',
+  subtitle: '考点：多元复合函数求导（链式法则） · 方法：设 u → 两条链 → 精确抵消',
+  counterLabel: '已推演',
+  intro: '点击「▶ 播放」逐步演示每一步推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'设 u',    log:'z = f(u)，u = ln x + 1/y；f 是一元函数，链式系数只有两条', show:1, count:0 },
+    { cls:'ok',    tag:'z 对 x',  log:'∂z/∂x = f′(u) × 1/x，链式因子是 1/x', show:2, count:1 },
+    { cls:'ok',    tag:'z 对 y',  log:'∂z/∂y = f′(u) × (−1/y²)，注意负号', show:3, count:2 },
+    { cls:'step',  tag:'代入',    log:'组合系数 x 与 y² 恰好除掉链式系数：得 f′(u) 与 −f′(u)', show:4, count:3 },
+    { cls:'ok',    tag:'抵消',    log:'f′(u) − f′(u) = 0', show:5, count:4 },
+    { cls:'done',  tag:'完成',    log:'结论：组合等于 0，与 f 无关', show:6, count:5, done:true },
+  ],
+
+  result: {
+    big: '结果 = 0',
+    html: '记忆锚点：<b>组合系数是链式系数的"消去设计"</b>——$x$ 除掉 $\\tfrac1x$，$y^{2}$ 除掉 $-\\tfrac{1}{y^{2}}$，$f\'(u)$ 精确抵消。两大易错：漏乘 $f\'(u)$、丢掉 $y$ 方向的负号（丢了负号会算成 $2f\'(u)$）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：链式法则与"恰好抵消"的偏导组合</h2>
+<p>答案：$0$</p>
+<h3>第一步：设中间变量</h3>
+<p>$z=f(u)$，$u=\ln x+\dfrac{1}{y}$。$f$ 是一元函数，链式系数只有两条路：$\dfrac{\partial u}{\partial x}=\dfrac{1}{x}$，$\dfrac{\partial u}{\partial y}=-\dfrac{1}{y<sup>2</sup>}$。</p>
+<h3>第二步：两条偏导</h3>
+<p>$$\frac{\partial z}{\partial x}=f'(u)\cdot\frac{1}{x},\qquad \frac{\partial z}{\partial y}=f'(u)\cdot\Big(-\frac{1}{y<sup>2</sup>}\Big).$$</p>
+<h3>第三步：组合后 $f'(u)$ 被精确抵消</h3>
+<p>$$x\frac{\partial z}{\partial x}+y<sup>2</sup>\frac{\partial z}{\partial y}=x\cdot\frac{f'(u)}{x}+y<sup>2</sup>\cdot\Big(-\frac{f'(u)}{y<sup>2</sup>}\Big)=f'(u)-f'(u)=0.$$</p>
+<p>组合系数 $x$ 与 $y<sup>2</sup>$ 恰好是两条链式系数的倒数——这不是巧合，而是"系数互为消去"的设计：$f$ 具体是什么根本不重要。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏掉 $f'(u)$</strong>：把 $\dfrac{\partial z}{\partial x}$ 写成 $\dfrac1x$——复合函数求导必须乘链式因子。</li><li><strong>$y$ 方向符号弄错</strong>：$\dfrac1y$ 对 $y$ 求导是 $-\dfrac{1}{y<sup>2</sup>}$，负号丢失则组合变成 $2f'(u)$ 而不是 0。</li><li><strong>把 $f$ 当二元函数</strong>：$z=f(\,\cdot\,)$ 是一元函数的复合，不存在 $f'_x$、$f'_y$ 之类的记号。</li></ul>
+<blockquote>一句话结论：$x\cdot\dfrac{f'}{x}+y<sup>2</sup>\cdot\Big(-\dfrac{f'}{y<sup>2</sup>}\Big)=0$，与 $f$ 的具体形式无关。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

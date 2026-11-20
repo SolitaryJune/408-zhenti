@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2021·14 二元变限积分先换序再求导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2021-13.html" data-q="../question/m2-2021-13/">← <b>m2-2021-13</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2021-14/" data-q="../question/m2-2021-14/" data-no-anim="1">m2-2021-14 · 本题</a>
+  <a href="m2-2021-15.html" data-q="../question/m2-2021-15/"><b>m2-2021-15</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "<b>① 审题：</b>$f(t)=\\displaystyle\\int_1^{t^2}\\mathrm{d}x\\int_{\\sqrt x}^{t}\\sin\\frac{x}{y}\\,\\mathrm{d}y$——内层对 $y$ 积 $\\sin\\frac xy$ 没有初等原函数，<b>必须换序</b>",
+  "<b>② 写出区域：</b>$D:\\ 1\\le x\\le t^2,\\ \\sqrt x\\le y\\le t$（要求 $t\\ge1$）",
+  "<b>③ 换序：</b>$\\sqrt x\\le y\\iff x\\le y^2$，故 $y:1\\to t$、$x:1\\to y^2$：$$f(t)=\\int_1^{t}\\mathrm{d}y\\int_1^{y^2}\\sin\\frac{x}{y}\\,\\mathrm{d}x$$",
+  "<b>④ 内层积 $x$：</b>$y$ 当常数，$\\displaystyle\\int_1^{y^2}\\sin\\frac xy\\,\\mathrm{d}x=\\left[-y\\cos\\frac xy\\right]_1^{y^2}=y\\left(\\cos\\frac1y-\\cos y\\right)$",
+  "<b>⑤ 化成一元变限积分：</b>$f(t)=\\displaystyle\\int_1^{t}y\\left(\\cos\\frac1y-\\cos y\\right)\\mathrm{d}y$——被积函数不含 $t$，上限恰是 $t$",
+  "<b>⑥ 变限求导：</b>$f\'(t)=t\\left(\\cos\\dfrac1t-\\cos t\\right)$（变限积分求导公式直接套用）",
+  "<b>⑦ 代 $t=\\dfrac\\pi2$：</b>$\\cos\\dfrac\\pi2=0$，第二项消失：$f\'\\left(\\dfrac\\pi2\\right)=\\dfrac\\pi2\\cos\\dfrac2\\pi$",
+  "<b>⑧ 结论：</b>$f\'\\left(\\dfrac\\pi2\\right)=\\dfrac\\pi2\\cos\\dfrac2\\pi$"
+];
+
+AW.init({
+  title: '2021·14　$f(t)=\\displaystyle\\int_1^{t^2}\\mathrm{d}x\\int_{\\sqrt x}^{t}\\sin\\frac{x}{y}\\,\\mathrm{d}y$，求 $f\'\\!\\left(\\frac\\pi2\\right)$',
+  subtitle: '考点：交换积分次序 · 谁积得动积谁 · 变限积分求导',
+  counterLabel: '已推导',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，换序 → 内层积 x → 变限求导 → 代值。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'内层那个对 y 的积分原函数不是初等的，硬算是死路', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'画区域', log:'用不等式把积分区域写清楚：x 在一到 t 方之间，y 夹在根号 x 与 t 之间', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'换序',   log:'根号 x 小于等于 y 等价于 x 不超过 y 方，交换后内层换成对 x 积', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'积 x',   log:'对 x 秫正弦得负 y 倍余弦，代上下限整理成 y 乘括号差', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'化简',   log:'被积函数与 t 无关、上限恰好是 t，标准的变限积分', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'求导',   log:'变限求导公式直接给出一阶导数', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'代值',   log:'二分之派处余弦为零，第二项归零，只剩干净的单项', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：导数值为二分之派乘余弦二比派', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$f\'\\!\\left(\\dfrac\\pi2\\right)=\\dfrac\\pi2\\cos\\dfrac2\\pi$',
+    html: '记忆锚点：<b>$\\sin\\frac xy$ 对 $y$ 积不出、对 $x$ 积得动 → 换序；变限求导 $f\'(t)=t\\left(\\cos\\frac1t-\\cos t\\right)$</b>。易错：换序后 $x$ 下限是 1 不是 0；代值时漏掉 $\\cos\\frac\\pi2=0$ 这个消项。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：先换序消掉「积不出」的那一层，再按变限积分求导</h2>
+<p>答案：$\dfrac{\pi}{2}\cos\dfrac{2}{\pi}$</p>
+<h3>第一步：写出区域，判断该往哪个方向换序</h3>
+<p>区域 $D:\ 1\le x\le t<sup>2</sup>,\ \sqrt x\le y\le t$。内层 $\displaystyle\int_{\sqrt x}<sup>t</sup>\sin\frac{x}{y}\,\mathrm{d}y$ 对 $y$ <strong>没有初等原函数</strong>，但 $\sin\frac{x}{y}$ 对 $x$ 好积——所以必须换序，把对 $x$ 的积分放到内层。</p>
+<h3>第二步：换序</h3>
+<p>$\sqrt x\le y\iff x\le y<sup>2</sup>$，结合 $x\ge1$，换序后 $y:1\to t$，$x:1\to y<sup>2</sup>$：</p>
+<p>$$f(t)=\int_1<sup>t</sup>\mathrm{d}y\int_1<sup>y^2</sup>\sin\frac{x}{y}\,\mathrm{d}x.$$</p>
+<h3>第三步：内层对 $x$ 积（$y$ 暂当常数）</h3>
+<p>$$\int_1<sup>y^2</sup>\sin\frac{x}{y}\,\mathrm{d}x=\left[-y\cos\frac{x}{y}\right]_1<sup>y^2</sup>=-y\cos y+y\cos\frac1y=y\left(\cos\frac1y-\cos y\right).$$</p>
+<p>于是 $f(t)=\displaystyle\int_1<sup>t</sup>y\left(\cos\frac1y-\cos y\right)\mathrm{d}y$——被积函数不含 $t$，上限恰是 $t$。</p>
+<h3>第四步：变限求导并代值</h3>
+<p>$$f'(t)=t\left(\cos\frac1t-\cos t\right),\qquad f'\left(\frac\pi2\right)=\frac\pi2\left(\cos\frac2\pi-\cos\frac\pi2\right)=\frac\pi2\cos\frac2\pi.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>硬算内层</strong>：$\sin\frac{x}{y}$ 对 $y$ 积不出来，「谁积得动就积谁」决定换序方向，死磕是陷阱。</li><li><strong>换序上下限写错</strong>：$x$ 的下限是 1（来自原外层下限），不是 0；$y$ 的范围由 $t\ge1$ 保证。</li><li><strong>代值漏 $\cos\frac\pi2=0$</strong>：第二项恰好归零，答案只剩干净的单项。</li></ul>
+<blockquote>一句话结论：换序后内层积 $x$ 得 $y\left(\cos\frac1y-\cos y\right)$，$f'(t)=t\left(\cos\frac1t-\cos t\right)$，代 $t=\frac\pi2$ 得 $\frac\pi2\cos\frac2\pi$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

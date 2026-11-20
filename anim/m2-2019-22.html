@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019·22 向量组等价的判定</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-21.html" data-q="../question/m2-2019-21/">← <b>m2-2019-21</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-22/" data-q="../question/m2-2019-22/" data-no-anim="1">m2-2019-22 · 本题</a>
+  <a href="m2-2019-23.html" data-q="../question/m2-2019-23/"><b>m2-2019-23</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼',
+    cls: 'key',
+    body: '<p>向量组等价 $\\iff$ 互相可表示 $\\iff$ $r(\\mathrm{I})=r(\\mathrm{II})=r(\\mathrm{I},\\mathrm{II})$。三阶情形：先算两个行列式定满秩情形，再单独处理临界值 $a=\\pm1$。</p>' },
+  { title: '第一步：两个行列式',
+    cls: '',
+    body: '<p>$\\lvert\\alpha_1,\\alpha_2,\\alpha_3\\rvert$：第三行减去第一行的 4 倍后只剩 $(0,0,a^2-1)$，按行展开得 $1-a^2$；$\\lvert\\beta_1,\\beta_2,\\beta_3\\rvert=2(a^2-1)$。$a\\ne\\pm1$ 时都满秩，两组都是 $\\mathbb{R}^3$ 的基，必等价。</p>' },
+  { title: '第二步：临界值 $a=1$',
+    cls: '',
+    body: '<p>$\\alpha_3$ 的第三分量只含 $a^2$，故 $a=\\pm1$ 时组 I 相同：$\\alpha_3=(1,2,4)^{\\mathsf T}=2\\alpha_1-\\alpha_2$，$r(\\mathrm{I})=2$，$\\mathrm{span}(\\mathrm{I})=\\{(u,v,4u)^{\\mathsf T}\\}$。$a=1$ 时 $\\beta_1=(1,1,4)^{\\mathsf T}$、$\\beta_2=(0,2,0)^{\\mathsf T}$、$\\beta_3=(1,3,4)^{\\mathsf T}$ 全部落入该平面，且 $\\alpha_2=\\beta_1-\\tfrac12\\beta_2$——两个 2 维空间相同，等价。</p>' },
+  { title: '第三步：临界值 $a=-1$',
+    cls: 'bad',
+    body: '<p>$\\beta_1=(1,1,2)^{\\mathsf T}$：第三分量 $2$ 不满足平面规律 $4u$（$2\\ne4$），故 $\\beta_1\\notin\\mathrm{span}(\\mathrm{I})$，$r(\\mathrm{I},\\mathrm{II})=3\\ne2$，不等价。</p>' },
+  { title: '结论一：a 的取值',
+    cls: 'good',
+    body: '<p>综上：$a\\ne\\pm1$ 等价，$a=1$ 等价，$a=-1$ 不等价。<b>等价 $\\iff a\\ne-1$。</b></p>' },
+  { title: '第四步：设表示式',
+    cls: '',
+    body: '<p>令 $k_1\\alpha_1+k_2\\alpha_2+k_3\\alpha_3=\\beta_3$，按分量比较：</p><p>$$\\begin{cases}k_1+k_2+k_3=1,\\\\ k_1+2k_3=3,\\\\ 4k_1+4k_2+(a^2+3)k_3=a^2+3.\\end{cases}$$</p>' },
+  { title: '第五步：消元求解',
+    cls: '',
+    body: '<p>第三式减第一式的 4 倍：$(a^2-1)k_3=a^2-1$，$a\\ne\\pm1$ 时 $k_3=1$；代回第二式 $k_1=3-2=1$；再由第一式 $k_2=-1$。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>$\\beta_3=\\alpha_1-\\alpha_2+\\alpha_3$。验证：$\\alpha_1-\\alpha_2+\\alpha_3=(1,\\ 3,\\ a^2+3)^{\\mathsf T}=\\beta_3$，对一切 $a$ 成立（$a=1$ 时表示不唯一，此组仍有效）。<b>最终答案：$a\\ne-1$，$\\beta_3=\\alpha_1-\\alpha_2+\\alpha_3$。</b></p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2019·22　向量组 I 与 II 等价，求 $a$ 并表示 $\\beta_3$',
+  subtitle: '考点：等价的秩判据 · 行列式定满秩 · 临界值逐一验 · 解线性方程组',
+  counterLabel: '已推演',
+  intro: '点击「▶ 播放」或「下一步」，先定满秩情形，再验临界值，最后解表示式。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '$a\\ne-1$；$\\beta_3=\\alpha_1-\\alpha_2+\\alpha_3$',
+    html: '记忆锚点：<b>等价看三个秩，先算行列式扫清满秩情形，$a=\\pm1$ 逐个验空间是否相同</b>。易错：只答 "$a\\ne\\pm1$"；把秩相等当成等价（$a=-1$ 时两组秩同为 2 却不等价）；表示式忘了验证它对一切 $a$ 成立。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：向量组等价的判定（秩的口径 + 临界值讨论）</h2>
+<p><strong>答案</strong>：向量组 I 与 II 等价当且仅当 $a\ne-1$；此时 $\boldsymbol\beta_3=\boldsymbol\alpha_1-\boldsymbol\alpha_2+\boldsymbol\alpha_3$。</p>
+<h3>第一步：等价的判据与满秩情形</h3>
+<p>等价 $\iff$ 互相可线性表示 $\iff$ $r(\text{I})=r(\text{II})=r(\text{I},\text{II})$。三阶情形先算行列式定满秩：</p>
+<p>$$\lvert\alpha_1,\alpha_2,\alpha_3\rvert=1-a<sup>2</sup>\ (\text{第三行减第一行的}\ 4\ \text{倍后展开}),\qquad \lvert\beta_1,\beta_2,\beta_3\rvert=2(a<sup>2</sup>-1).$$</p>
+<p>$a\ne\pm1$ 时两个行列式都非零，两组都是 $\mathbb R<sup>3</sup>$ 的基，必等价——先拿下主体情形。</p>
+<h3>第二步：临界值 a = ±1 逐个验</h3>
+<p>注意 $\alpha_3$ 的第三个分量只含 $a<sup>2</sup>$，故 $a=1$ 与 $a=-1$ 时向量组 I 完全相同，差别全在 II：</p>
+<ul><li><strong>$a=1$</strong>：$\alpha_3=(1,2,4)<sup>\mathsf T</sup>=2\alpha_1-\alpha_2$，$r(\text{I})=2$，$\mathrm{span}(\text{I})=\{(u,v,4u)<sup>\mathsf T</sup>\}$。此时 $\beta_1=(1,1,4)<sup>\mathsf T</sup>$、$\beta_2=(0,2,0)<sup>\mathsf T</sup>$、$\beta_3=(1,3,4)<sup>\mathsf T</sup>$ 全部落入该平面，且 $\alpha_2=\beta_1-\tfrac12\beta_2$ 也落在 $\mathrm{span}(\text{II})$ 内——两个 2 维空间相同，<strong>等价</strong>。</li><li><strong>$a=-1$</strong>：$\beta_1=(1,1,2)<sup>\mathsf T</sup>$，第三分量 $2$ 不满足平面规律（$2\ne4\cdot1$），故 $\beta_1\notin\mathrm{span}(\text{I})$，$r(\text{I},\text{II})=3\ne2$，<strong>不等价</strong>。</li></ul>
+<p>结论：等价 $\iff a\ne-1$。</p>
+<h3>第三步：解 $\beta_3$ 的表示式</h3>
+<p>设 $k_1\alpha_1+k_2\alpha_2+k_3\alpha_3=\beta_3$，按分量比较：</p>
+<p>$$\begin{cases}k_1+k_2+k_3=1,\\ k_1+2k_3=3,\\ 4k_1+4k_2+(a<sup>2</sup>+3)k_3=a<sup>2</sup>+3.\end{cases}$$</p>
+<p>第三式减第一式的 4 倍：$(a<sup>2</sup>-1)k_3=a<sup>2</sup>-1$，$a\ne\pm1$ 时 $k_3=1$；代回第二式 $k_1=3-2=1$；再由第一式 $k_2=-1$。验证：$\alpha_1-\alpha_2+\alpha_3=(1,\ 3,\ a<sup>2</sup>+3)<sup>\mathsf T</sup>=\beta_3$，对一切 $a$ 成立；$a=1$ 时表示不唯一，但这一组依然有效。</p>
+<h3>易错点</h3>
+<ul><li><strong>算完 $a\ne\pm1$ 就收工</strong>：临界值必须单独讨论；正确答案是"$a\ne-1$"，不是"$a\ne\pm1$"。</li><li><strong>用 $r(\text{I})=r(\text{II})$ 就判等价</strong>：秩相等不代表张成空间相同——$a=-1$ 时两组秩都是 $2$ 却不等价。</li><li><strong>表示式只在满秩时宣称</strong>：$\alpha_1-\alpha_2+\alpha_3=\beta_3$ 与 $a$ 无关，$a=1$ 时同样成立，别把结论写窄。</li></ul>
+<blockquote>结论：$a\ne-1$ 时两向量组等价；$\boldsymbol\beta_3=\boldsymbol\alpha_1-\boldsymbol\alpha_2+\boldsymbol\alpha_3$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

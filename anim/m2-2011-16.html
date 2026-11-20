@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·16 参数方程的极值与凹凸拐点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-15.html" data-q="../question/m2-2011-15/">← <b>m2-2011-15</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-16/" data-q="../question/m2-2011-16/" data-no-anim="1">m2-2011-16 · 本题</a>
+  <a href="m2-2011-17.html" data-q="../question/m2-2011-17/"><b>m2-2011-17</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题 + 通行证</b>：$x=\\dfrac13t^3+t+\\dfrac13,\\ y=\\dfrac13t^3-t+\\dfrac13$。先查 $x'(t)=t^2+1>0$ 恒成立——$x$ 随 $t$ 严格增，按 $t$ 讨论符号可以放心搬到 $x$ 轴上。</p>",
+  "<p><b>一阶导</b>：$$\\frac{\\mathrm dy}{\\mathrm dx}=\\frac{y'(t)}{x'(t)}=\\frac{t^2-1}{t^2+1},$$ 驻点 $t=\\pm1$（此处 $x'=2\\neq0$，确为函数极值）。</p>",
+  "<p><b>符号表</b>（$t$ 与 $x$ 同向）：$$\\frac{\\mathrm dy}{\\mathrm dx}:\\ \\underbrace{+}_{t<-1}\\ \\underbrace{0}_{t=-1}\\ \\underbrace{-}_{-1<t<1}\\ \\underbrace{0}_{t=1}\\ \\underbrace{+}_{t>1}$$</p>",
+  "<p><b>极大值</b>：$t=-1$ 处导数由正变负。$x=-\\dfrac13-1+\\dfrac13=-1$，$y=-\\dfrac13+1+\\dfrac13=1$，极大值 $y=1$（$x=-1$）。</p>",
+  "<p><b>极小值</b>：$t=1$ 处导数由负变正。$x=\\dfrac13+1+\\dfrac13=\\dfrac53$，$y=\\dfrac13-1+\\dfrac13=-\\dfrac13$，极小值 $y=-\\dfrac13$（$x=\\dfrac53$）。</p>",
+  "<p><b>二阶导</b>：$$\\frac{\\mathrm d^2y}{\\mathrm dx^2}=\\frac{\\dfrac{\\mathrm d}{\\mathrm dt}\\left(\\dfrac{t^2-1}{t^2+1}\\right)}{x'(t)}=\\frac{4t/(t^2+1)^2}{t^2+1}=\\frac{4t}{(t^2+1)^3}.$$</p>",
+  "<p><b>凹凸判断</b>：$y''$ 的符号与 $t$ 相同。$t<0$（即 $x<\\dfrac13$）时 $y''<0$，曲线<b>凸</b>，凸区间 $\\left(-\\infty,\\dfrac13\\right)$；$t>0$（即 $x>\\dfrac13$）时 $y''>0$，曲线<b>凹</b>，凹区间 $\\left(\\dfrac13,+\\infty\\right)$。</p>",
+  "<p><b>拐点</b>：$t=0$ 给出 $x=y=\\dfrac13$，凹凸性在此改变，拐点 $\\left(\\dfrac13,\\dfrac13\\right)$。</p>",
+  "<p><b>结论</b>：极大值 $y=1$（$x=-1$）；极小值 $y=-\\dfrac13$（$x=\\dfrac53$）；凸区间 $\\left(-\\infty,\\dfrac13\\right)$，凹区间 $\\left(\\dfrac13,+\\infty\\right)$，拐点 $\\left(\\dfrac13,\\dfrac13\\right)$。</p>"
+];
+
+AW.init({
+  title: '参数曲线 $\\begin{cases}x=\\frac13t^3+t+\\frac13\\\\ y=\\frac13t^3-t+\\frac13\\end{cases}$ 的极值与凹凸、拐点',
+  subtitle: '考点：参数方程求导 · 方法：一阶导定极值（$t=\\pm1$）/ 二阶导定凹凸（$t=0$）',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示极值与拐点的求取过程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'先查 x 对 t 的导数恒正，t 的左右关系就是 x 的左右关系', show:1, count:0 },
+    { cls:'step',  tag:'一阶导', log:'y 对 x 的导数 = y 对 t 导除以 x 对 t 导，等于 (t²−1)/(t²+1)', show:2, count:1 },
+    { cls:'step',  tag:'符号表', log:'t 从负到正：导数先正、过 −1 变负、过 1 再变正', show:3, count:2 },
+    { cls:'ok',    tag:'极大',   log:'t=−1 处导数由正变负，是极大值：x=−1，y=1', show:4, count:3 },
+    { cls:'ok',    tag:'极小',   log:'t=1 处导数由负变正，是极小值：x=5/3，y=−1/3', show:5, count:4 },
+    { cls:'step',  tag:'二阶导', log:'二阶导 = 一阶导再对 t 求导后除以 x 的导数，得 4t/(t²+1)³', show:6, count:5 },
+    { cls:'step',  tag:'凹凸',   log:'二阶导符号同 t：t<0（x<1/3）凸，t>0（x>1/3）凹', show:7, count:6 },
+    { cls:'ok',    tag:'拐点',   log:'t=0 对应 x=y=1/3，凹凸性在此改变，是拐点', show:8, count:7 },
+    { cls:'done',  tag:'完成',   log:'极值与拐点全部落定，答案汇总如右', show:9, count:8, done:true },
+  ],
+
+  result: {
+    big: '极大值 $y=1$，极小值 $y=-\\dfrac13$，拐点 $\\left(\\dfrac13,\\dfrac13\\right)$',
+    html: '记忆锚点：<b>参数方程先验证 $x\'(t)\\neq0$ 再动手</b>。极值看 $\\frac{\\mathrm dy}{\\mathrm dx}=\\frac{t^2-1}{t^2+1}$ 在 $t=\\pm1$ 的变号；拐点看二阶导 $\\frac{4t}{(t^2+1)^3}$ 的变号（$t=0$），最后务必把 $t$ 换算回 $x,y$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：参数方程的极值与凹凸、拐点</h2>
+<p>最终答案：极大值 $y=1$（$x=-1$，即 $t=-1$）；极小值 $y=-\dfrac13$（$x=\dfrac53$，即 $t=1$）；凸区间 $\left(-\infty,\dfrac13\right)$，凹区间 $\left(\dfrac13,+\infty\right)$，拐点 $\left(\dfrac13,\dfrac13\right)$。</p>
+<h3>第一步：立机制——参数方程怎么求导，为什么 x(t) 单调是"通行证"</h3>
+<p>两条推导的源头是同一个机制：$x,y$ 都随 $t$ 走，微分 $\mathrm dx=x'(t)\,\mathrm dt$、$\mathrm dy=y'(t)\,\mathrm dt$，相除消去 $\mathrm dt$ 得</p>
+<p>$$\frac{\mathrm dy}{\mathrm dx}=\frac{y'(t)}{x'(t)}.$$</p>
+<p>本题 $x'(t)=t<sup>2</sup>+1&gt;0$ 恒成立，有两重作用：其一，保证 $\mathrm dx\neq0$，上式的除法合法；其二，$x$ 随 $t$ <strong>严格增</strong>，$t$ 轴上的大小关系原样搬到 $x$ 轴上——后面按 $t$ 讨论的符号结论可以放心换算成 $x$，这就是"通行证"。</p>
+<h3>第二步：一阶导定极值——先找 t，再换算成 x</h3>
+<p>$$\frac{\mathrm dy}{\mathrm dx}=\frac{t<sup>2</sup>-1}{t<sup>2</sup>+1},$$</p>
+<p>令分子为零得 $t=\pm1$（分母 $t<sup>2</sup>+1\neq0$，驻点合法）。符号走向：$t&lt;-1$ 为正、$-1&lt;t&lt;1$ 为负、$t&gt;1$ 为正——导数<strong>变号</strong>两次。表格对号入座：</p>
+<table><thead><tr><th>$t$</th><th>$(-\infty,-1)$</th><th>$-1$</th><th>$(-1,1)$</th><th>$1$</th><th>$(1,+\infty)$</th></tr></thead><tbody><tr><td>$\mathrm dy/\mathrm dx$</td><td>$+$</td><td>$0$</td><td>$-$</td><td>$0$</td><td>$+$</td></tr><tr><td>$y(x)$</td><td>增</td><td>极大</td><td>减</td><td>极小</td><td>增</td></tr></tbody></table>
+<p>$t=-1$：$x=-\dfrac13-1+\dfrac13=-1$，$y=-\dfrac13+1+\dfrac13=1$，导数由正变负，极大值 $1$；$t=1$：$x=\dfrac53$，$y=-\dfrac13$，由负变正，极小值 $-\dfrac13$。</p>
+<p><strong>为什么必须"变号"才算极值？</strong> 导数为零只说明切线水平；只有两侧增减性真正翻转，才形成"峰"或"谷"。本题两处都翻转，都是真极值。</p>
+<h3>第三步：二阶导定凹凸、拐点——为什么公式里又除了一次 x'(t)</h3>
+<p>最容易错的一步，先把机制说透：$\dfrac{\mathrm d<sup>2y</sup>}{\mathrm dx<sup>2</sup>}=\dfrac{\mathrm d}{\mathrm dx}\!\left(y'_x\right)$，而 $y'_x=\dfrac{t<sup>2</sup>-1}{t<sup>2</sup>+1}$ <strong>仍是 $t$ 的函数</strong>。"对 $x$ 求导"没有直通路，必须走"先对 $t$ 求导、再除以 $\dfrac{\mathrm dx}{\mathrm dt}$"的通道——这就是公式里第二次除以 $x'(t)$ 的全部来源：</p>
+<p>$$\frac{\mathrm d<sup>2y</sup>}{\mathrm dx<sup>2</sup>}=\frac{\dfrac{\mathrm d}{\mathrm dt}\left(\dfrac{t<sup>2</sup>-1}{t<sup>2</sup>+1}\right)}{x'(t)}=\frac{4t}{(t<sup>2</sup>+1)<sup>3</sup>}.$$</p>
+<p>分母 $(t<sup>2</sup>+1)<sup>3</sup>&gt;0$，符号完全由 $t$ 决定：$t&lt;0$ 时 $y''&lt;0$，曲线凸；$t&gt;0$ 时 $y''&gt;0$，凹。经通行证换算：$t&lt;0\Leftrightarrow x&lt;\dfrac13$，$t&gt;0\Leftrightarrow x&gt;\dfrac13$。$t=0$ 时 $x=y=\dfrac13$，且 $y''$ 在两侧<strong>变号</strong>——凹凸性真正翻转，才是拐点。</p>
+<h3>易错点</h3>
+<ul><li><strong>忘记验证 $x'(t)\neq0$</strong>：驻点 $t=\pm1$ 处 $x'=2\neq0$，参数方程才真正给出函数的极值；若某处 $x'=0$，曲线可能倒勾回来，$t$ 与 $x$ 不再一一对应。</li><li><strong>二阶导漏除 $x'(t)$</strong>：只对 $y'_x$ 求 $t$ 导、不再除，得到的 $\dfrac{4t}{(t<sup>2</sup>+1)<sup>2</sup>}$ 是 $\dfrac{\mathrm d(y'_x)}{\mathrm dt}$，不是 $\dfrac{\mathrm d(y'_x)}{\mathrm dx}$。</li><li><strong>把 $y''=0$ 当拐点</strong>：$t=0$ 之所以是拐点，是因为 $y''$ 两侧<strong>变号</strong>；若两侧同号，$y''=0$ 的点凹凸性未翻转，不是拐点。</li><li><strong>凹凸与 $t$ 的正负对应错</strong>：$y''$ 符号同 $t$，$t$ 的正负要经通行证换算成 $x$ 与 $\dfrac13$ 的大小。</li></ul>
+<blockquote>结论：一阶导抓极值（$t=\pm1$，看变号），二阶导抓拐点（$t=0$，看凹凸翻转），全部落在 $x=\dfrac13$ 两侧对称展开。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

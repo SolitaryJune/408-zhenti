@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2024·07 反常积分敛散三命题真假</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2024-06.html" data-q="../question/m2-2024-06/">← <b>m2-2024-06</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2024-07/" data-q="../question/m2-2024-07/" data-no-anim="1">m2-2024-07 · 本题</a>
+  <a href="m2-2024-08.html" data-q="../question/m2-2024-08/"><b>m2-2024-08</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：三命题 = 两反例 + 一证明',
+    cls: 'key',
+    tag: '策略',
+    body: '<p>$f\\ge0$ 连续。三个命题：<b>(1)</b> $\\int_0^{+\\infty}f^2$ 收敛 $\\Rightarrow\\int f$ 收敛？<b>(2)</b> 有 $p>1$ 使 $x^pf(x)$ 有极限 $\\Rightarrow\\int f$ 收敛？<b>(3)</b> $\\int f$ 收敛 $\\Rightarrow$ 存在这样的 $p$？打法：证真用<b>比较判别法</b>，证伪用<b>构造反例</b>。</p>',
+    log: '(1)(3) 找反例，(2) 用比较判别法' },
+  { title: '命题 (1) 假：f = 1/(x+1)',
+    cls: 'bad',
+    tag: '(1) ✗',
+    ribbon: {k:1, ok:false},
+    body: '<p>取 $f(x)=\\dfrac1{x+1}$（非负连续）：$$\\int_0^{+\\infty}\\frac{\\mathrm dx}{(x+1)^2}=1\\ \\text{收敛},\\qquad \\int_0^{+\\infty}\\frac{\\mathrm dx}{x+1}=\\lim_{b\\to+\\infty}\\ln(b+1)=+\\infty.$$ 平方可积推不出本身可积——$f$ 只是"一阶小"，平方后才到"二阶小"。命题 (1) 错。</p>',
+    log: 'f=1/(x+1)：平方收敛但本身发散，(1) 假' },
+  { title: '命题 (2) 真：比较判别法一步到位',
+    cls: 'good',
+    tag: '(2) ✓',
+    ribbon: {k:2, ok:true},
+    body: '<p>设 $\\lim\\limits_{x\\to+\\infty}x^pf(x)=L$（$p>1$）。由极限定义，存在 $X$ 使 $x\\ge X$ 时 $0\\le f(x)\\le\\dfrac{L+1}{x^p}$。因 $p>1$，$\\displaystyle\\int_X^{+\\infty}\\frac{L+1}{x^p}\\,\\mathrm dx$ 收敛，比较判别法给出 $\\displaystyle\\int_X^{+\\infty}f$ 收敛；$[0,X]$ 上连续积分为有限值。<b>命题 (2) 真</b>。</p>',
+    log: 'f(x)≤(L+1)/x^p，p>1 压住，(2) 真' },
+  { title: '命题 (3) 假：高瘦尖峰反例',
+    cls: 'bad',
+    tag: '(3) ✗',
+    ribbon: {k:3, ok:false},
+    body: '<p>在 $x=n\\ (n\\ge2)$ 处放底宽 $\\dfrac2{n^3}$、峰高 $n$ 的三角形尖峰（峰间 $f=0$，连续保持）：第 $n$ 个峰面积 $=\\dfrac12\\cdot\\dfrac2{n^3}\\cdot n=\\dfrac1{n^2}$，故 $\\displaystyle\\int_0^{+\\infty}f=\\sum_{n\\ge2}\\frac1{n^2}$ 收敛。但峰顶处 $x^pf(x)=n^p\\cdot n=n^{p+1}\\to+\\infty$，谷底处为 $0$——对<b>任何</b> $p>1$，$x^pf(x)$ 都在 $0$ 与 $\\infty$ 之间横跳，极限不存在。(3) 错。</p>',
+    log: '尖峰：积分收敛但 x^p·f 无极限，(3) 假' },
+  { title: '计数：真命题只有 (2)',
+    cls: 'good',
+    tag: '计数',
+    body: '<p>(1) 假、(2) 真、(3) 假——真命题个数 $=1$，对应选项 <b>B</b>。</p>',
+    log: '真命题 1 个，选 B' },
+  { title: '干扰项复盘',
+    cls: 'bad',
+    tag: '防坑',
+    body: '<p><b>A（0 个）</b>：漏了 (2)——$x^pf$ 有极限意味着尾部衰减快于 $\\frac1{x^p}$，比较判别法稳真。<b>C（2 个）</b>：把 (1) 或 (3) 当真——(1) 缺"单调/有界"类条件，(3) 是 (2) 的<b>逆命题</b>，方向反了不成立。<b>D（3 个）</b>：(1)(3) 都有具体反例，不可能全真。</p>',
+    log: 'A 漏(2)，C/D 把(1)(3)当真' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>B</b>。记忆锚点：<b>平方可积 ⇏ 可积</b>（$\\frac1{x+1}$）；<b>$x^pf$ 有极限 $\\Rightarrow$ 可积</b>（$p>1$ 比较判别）；<b>可积 ⇏ 逐点衰减</b>（高瘦尖峰，面积 $\\sum\\frac1{n^2}$ 收敛但峰值 $\\to\\infty$）。</p>',
+    log: '选 B：真命题只有 (2)' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '反常积分敛散性：三个命题的真假判定',
+  subtitle: '考点：反常积分 · 方法：比较判别法（证真）+ 反例（证伪）',
+  counterLabel: '命题进度',
+  ribbonTitle: '命题判定（✓ 真 / ✗ 假）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B（真命题 1 个：只有 (2)）',
+    html: '记忆锚点：(1) 反例 $f=\\frac1{x+1}$——$\\int f^2$ 收敛而 $\\int f$ 发散；(2) $x^pf(x)\\le L+1$ 配 $p$-积分比较，真；(3) 高瘦尖峰（峰高 $n$、底宽 $\\frac2{n^3}$）——可积但 $x^pf$ 无极限。<b>(3) 是 (2) 的逆命题，天然可疑</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：反常积分敛散三命题的真假判定（比较判别法 + 两个反例）</h2>
+<p>答案：B</p>
+<h3>第一步：把三个命题翻译成可操作的问题</h3>
+<p>(1) $\displaystyle\int_0<sup>+\infty</sup>f<sup>2</sup>$ 收敛能否推出 $\displaystyle\int_0<sup>+\infty</sup>f$ 收敛？(2) 有 $p&gt;1$ 使 $x<sup>pf</sup>(x)$ 有极限能否推出 $\int f$ 收敛？(3) 反过来，$\int f$ 收敛能否保证存在这样的 $p$？工具：比较判别法（证真）、构造反例（证伪）。</p>
+<h3>第二步：命题 (1) 假——"平方可积"推不出"本身可积"</h3>
+<p>取 $f(x)=\dfrac1{x+1}$（非负连续）：</p>
+<p>$$\int_0<sup>+\infty</sup>\frac{\mathrm dx}{(x+1)<sup>2</sup>}=1\ \text{收敛},\qquad\int_0<sup>+\infty</sup>\frac{\mathrm dx}{x+1}=\lim_{b\to+\infty}\ln(b+1)=+\infty\ \text{发散}.$$</p>
+<p>直觉：$f=\frac1{x+1}$ 只是"一阶小"，平方后变"二阶小"才可积。(1) 错。</p>
+<h3>第三步：命题 (2) 真——比较判别法一步到位</h3>
+<p>设 $\lim\limits_{x\to+\infty}x<sup>pf</sup>(x)=L$（$p&gt;1$）。取 $M=L+1$，存在 $X$，当 $x\ge X$ 时 $0\le f(x)\le\dfrac{M}{x<sup>p</sup>}$。而 $\displaystyle\int_X<sup>+\infty</sup>\frac{M}{x<sup>p</sup>}\,\mathrm dx$ 因 $p&gt;1$ 收敛，由比较判别法 $\displaystyle\int_X<sup>+\infty</sup>f$ 收敛；$[0,X]$ 上 $f$ 连续，积分为有限值。故 $\displaystyle\int_0<sup>+\infty</sup>f$ 收敛。(2) 对。</p>
+<h3>第四步：命题 (3) 假——"高瘦尖峰"反例</h3>
+<p>在 $x=n\ (n\ge2)$ 处放底宽 $\dfrac{2}{n<sup>3</sup>}$、峰高 $n$ 的三角形尖峰（峰间 $f=0$，保持连续）：</p>
+<ul><li>每个峰面积 $=\dfrac12\cdot\dfrac{2}{n<sup>3</sup>}\cdot n=\dfrac1{n<sup>2</sup>}$，故 $\displaystyle\int_0<sup>+\infty</sup>f=\sum_{n\ge2}\frac1{n<sup>2</sup>}$ 收敛；</li><li>但峰顶处 $x<sup>pf</sup>(x)=n<sup>p</sup>\cdot n=n<sup>p+1</sup>\to+\infty$，谷底处为 $0$——对任何 $p&gt;1$，$x<sup>pf</sup>(x)$ 都在 $0$ 与 $\infty$ 之间反复横跳，极限不存在。</li></ul>
+<p>(3) 错。它是 (2) 的逆命题：把"衰减得够快"弱化成"平均意义可积"后，逐点衰减性就丢了。</p>
+<h3>第五步：计数</h3>
+<p>真命题只有 (2)，个数 $1$，选 <strong>B</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>认为 (1) 对</strong>：$\int f<sup>2</sup>$ 收敛只说明 $f<sup>2</sup>$ 小，$f$ 本身可以只比 $\frac1x$ 略强。</li><li><strong>认为 (3) 对</strong>：把 (2) 当成了充要条件；收敛积分允许"又高又瘦"的尖峰，逐点极限必然被破坏。</li><li><strong>反例构造失败</strong>：$\frac1{x+1}$ 同时是 (1) 的反例，注意它不能否定 (3)——它恰好满足 $x\cdot f(x)\to1$。</li></ul>
+<blockquote>一句话结论：(1) 差一阶、(2) 比较判别法稳真、(3) 被尖峰反例击穿——真命题 1 个，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

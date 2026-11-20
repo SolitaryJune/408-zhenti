@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2015·01 反常积分敛散性判别</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-23.html" data-q="../question/m2-2014-23/">← <b>m2-2014-23</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-01/" data-q="../question/m2-2015-01/" data-no-anim="1">m2-2015-01 · 本题</a>
+  <a href="m2-2015-02.html" data-q="../question/m2-2015-02/"><b>m2-2015-02</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：同一题型，备好工具箱',
+    cls: 'key',
+    body: '<p>四个选项都是 $\\int_2^{+\\infty}$ 上的无穷限反常积分，逐个判敛。工具：幂函数用 $p$-积分 $\\int^{+\\infty}\\dfrac{\\mathrm{d}x}{x^p}$（$p>1$ 收敛）；带对数先换元 $t=\\ln x$；指数型看衰减速度。</p>',
+    log: '四个无穷限积分，逐项判敛散' },
+  { title: 'A 项：$p=\\tfrac12$ 的 $p$-积分',
+    cls: 'bad',
+    body: '<p>$\\displaystyle\\int_2^{+\\infty}x^{-1/2}\\,\\mathrm{d}x=\\Big[2\\sqrt{x}\\Big]_2^{+\\infty}=+\\infty$：$p=\\tfrac12<1$，<b>发散</b>。$p$-积分只有 $p>1$ 才收敛。</p>',
+    ribbon: {k:1, ok:false},
+    log: 'A：p=1/2<1，原函数趋于无穷，发散' },
+  { title: 'B 项：分子带对数，衰减更慢',
+    cls: 'bad',
+    body: '<p>$\\displaystyle\\int_2^{+\\infty}\\frac{\\ln x}{x}\\,\\mathrm{d}x=\\Big[\\frac{(\\ln x)^2}{2}\\Big]_2^{+\\infty}=+\\infty$，<b>发散</b>。别把它当成 $\\frac1x$ 型——多乘 $\\ln x$ 反而让衰减更慢。</p>',
+    ribbon: {k:2, ok:false},
+    log: 'B：原函数 (ln x)²/2 → +∞，发散' },
+  { title: 'C 项：换元后是 p=1',
+    cls: 'bad',
+    body: '<p>令 $t=\\ln x$（$\\mathrm{d}t=\\frac{\\mathrm{d}x}{x}$）：$\\displaystyle\\int_2^{+\\infty}\\frac{\\mathrm{d}x}{x\\ln x}=\\int_{\\ln 2}^{+\\infty}\\frac{\\mathrm{d}t}{t}=\\Big[\\ln t\\Big]\\to+\\infty$，<b>发散</b>。它是 $p=1$ 的对数修正版，衰减比 $\\frac1x$ 还慢。</p>',
+    ribbon: {k:3, ok:false},
+    log: 'C：换元 t=ln x 后是 ∫dt/t，发散' },
+  { title: 'D 项：指数压制，分部积分验证',
+    cls: 'good',
+    body: '<p>$\\displaystyle\\int_2^{+\\infty}x\\,\\mathrm{e}^{-x}\\,\\mathrm{d}x=\\Big[-(x+1)\\mathrm{e}^{-x}\\Big]_2^{+\\infty}=0-\\big(-3\\mathrm{e}^{-2}\\big)=3\\mathrm{e}^{-2}$，极限有限，<b>收敛</b>。$\\mathrm{e}^{-x}$ 的衰减压倒 $x$ 的一次增长。</p>',
+    ribbon: {k:4, ok:true},
+    log: 'D：分部积分得 3e⁻²，有限，收敛' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>A、B、C 全发散，D 收敛——答案选 <b>D</b>。记忆锚点：<b>$\\dfrac{x}{\\mathrm{e}^x}$ 型（指数压制幂）必收敛</b>；$\\dfrac{\\ln x}{x^p}$ 型在 $p\\le1$ 时必发散。</p>',
+    log: '选 D：只有指数压制型收敛' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '哪个反常积分收敛：$\\int_2^{+\\infty}$ 上的四个候选',
+  subtitle: '考点：反常积分敛散 · 方法：p-积分 / 对数换元 / 指数压制 逐项判别',
+  counterLabel: '判敛进度',
+  ribbonTitle: '选项判定（✓ 收敛 / ✗ 发散）',
+  intro: '点击「▶ 播放」逐项判别四个反常积分的敛散性。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D（收敛，值 3e⁻²）',
+    html: '记忆锚点：<b>指数压制</b>——$x\\to+\\infty$ 时 $\\mathrm{e}^{-x}$ 衰减压倒任何幂增长，故 $\\dfrac{x}{\\mathrm{e}^x}$ 型必收敛；而对数只会拖慢衰减：$\\dfrac{\\ln x}{x}$、$\\dfrac{1}{x\\ln x}$ 都发散。干扰项全靠「把发散的 p 型看成收敛」设坑。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：无穷限反常积分的敛散判别——尾部衰减速度的比拼</h2>
+<p>答案：<strong>D</strong>。</p>
+<h3>第 0 步：先立机制——收敛与否，看"尾部"掉得多快</h3>
+<p>$\int_2<sup>+\infty</sup>g(x)\,\mathrm{d}x$ 收敛，意思是 $x$ 越大、剩余的面积越逼近一个有限值——换句话说，<strong>被积函数在无穷远处必须衰减得足够快</strong>。比较的标尺是 $p$-积分 $\int<sup>+\infty</sup>\dfrac{\mathrm{d}x}{x<sup>p</sup>}$：其原函数 $\dfrac{x<sup>1-p</sup>}{1-p}$ 要在 $+\infty$ 处有极限，必须指数 $1-p&lt;0$，即 $p&gt;1$。直观说：$p$ 越大，$\dfrac1{x<sup>p</sup>}$ 掉得越快；$p=1$ 恰好是临界线（$\dfrac1x$ 的尾部面积积不起来）。于是判敛变成一句话：<strong>把被积函数与标尺比衰减速度——慢于一切收敛标尺的发散，快过某把收敛标尺的收敛</strong>。</p>
+<h3>第 1 步：A、B、C 为什么都发散——都倒在临界线附近或更慢</h3>
+<ul><li><strong>A</strong> 是 $p=\tfrac12$ 的标准 $p$-积分，衰减比临界线慢，原函数 $2\sqrt{x}\to+\infty$，发散。</li><li><strong>B</strong> 是 $\dfrac1x$ 又乘了增长因子 $\ln x$：衰减比 $\dfrac1x$ 还慢，必发散；原函数 $\dfrac{(\ln x)<sup>2</sup>}{2}\to+\infty$。为什么加个 $\ln x$ 就坏——它无界增长，只会拖慢衰减，绝不会救回一个已经临界的积分。</li><li><strong>C</strong> 是 $p=1$ 的"对数版"。为什么用换元 $t=\ln x$：分母里 $x$ 与 $\ln x$ 同现，而 $\mathrm{d}(\ln x)=\dfrac{\mathrm{d}x}{x}$ 恰好在场，凑微分一步到位：$\displaystyle\int\frac{\mathrm{d}x}{x\ln x}=\int\frac{\mathrm{d}t}{t}=\ln(\ln x)\to+\infty$，发散。</li></ul>
+<p>三者的共同机制：衰减速度都不快于 $\dfrac1x$ 这把临界标尺，全部落在发散侧。</p>
+<h3>第 2 步：D 为什么收敛——指数压制一切幂</h3>
+<p>$\mathrm{e}<sup>-x</sup>$ 的衰减快过任何幂函数的增长（$x\to+\infty$ 时 $\dfrac{x}{\mathrm{e}<sup>x</sup>}\to0$，甚至 $\dfrac{x<sup>10</sup>}{\mathrm{e}<sup>x</sup>}\to0$），所以 $x\,\mathrm{e}<sup>-x</sup>$ 的尾部面积必有限。可复现的计算用分部积分——为什么取 $u=x,\ \mathrm{d}v=\mathrm{e}<sup>-x</sup>\mathrm{d}x$：每分一次幂次降一阶，凑出纯指数项：</p>
+<p>$$\int_2<sup>+\infty</sup>x\,\mathrm{e}<sup>-x</sup>\mathrm{d}x=\Big[-(x+1)\mathrm{e}<sup>-x</sup>\Big]_2<sup>+\infty</sup>=0-\big(-3\mathrm{e}<sup>-2</sup>\big)=3\mathrm{e}<sup>-2</sup>,$$</p>
+<p>极限存在且有限，收敛。</p>
+<h3>易错点</h3>
+<ul><li><strong>选 A</strong>：$p=\tfrac12&lt;1$，比 $\dfrac1x$ 衰减还慢，站在发散侧。</li><li><strong>选 B/C</strong>：把"分子有点花样"当成可能收敛的信号；实际上对数因子只会让衰减更慢。</li><li><strong>不敢选 D</strong>：以为分子 $x$ 会捣乱；指数衰减的威力远大于一次幂增长——这是"指数压制"结论。</li></ul>
+<blockquote>记忆锚点：无穷限判敛 = 比尾部衰减速度；$\dfrac1{x<sup>p</sup>}$ 是标尺（$p&gt;1$ 收敛），对数只拖慢、指数必压制。A、B、C 全发散，D 收敛且值为 $3\mathrm{e}<sup>-2</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

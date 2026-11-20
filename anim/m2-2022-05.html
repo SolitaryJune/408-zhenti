@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念/分析类动画：含参反常积分的收敛范围</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2022-04.html" data-q="../question/m2-2022-04/">← <b>m2-2022-04</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2022-05/" data-q="../question/m2-2022-05/" data-no-anim="1">m2-2022-05 · 本题</a>
+  <a href="m2-2022-06.html" data-q="../question/m2-2022-06/"><b>m2-2022-06</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：两个瑕点，两端分别定阶',
+    cls: 'key',
+    log: '瑕点有两个：x→0⁺ 与 x→1⁻，整体收敛 = 两端同时收敛',
+    body: '<p>被积函数 $\\dfrac{\\ln x}{x^p(1-x)^{1-p}}$ 在 $x\\to0^+$ 与 $x\\to1^-$ 两处都可能爆破。判敛框架：<b>两端分别用等价无穷小定阶，再取交集</b>。</p>' },
+  { title: '工具：幂阶判据 + 对数的量级',
+    cls: 'step',
+    log: '∫dx/x^α 收敛 ⟺ α<1；ln x 在 0 端低于任何幂、在 1 端是一阶无穷小',
+    body: '<p>幂判据：$\\displaystyle\\int_0\\frac{\\mathrm{d}x}{x^{\\alpha}}$ 收敛 $\\iff\\alpha<1$。对数两端脾气不同：$x\\to0^+$ 时量级低于任何幂；$x\\to1^-$ 时 $\\ln x=\\ln\\bigl(1-(1-x)\\bigr)\\sim-(1-x)$ 是<b>一阶无穷小</b>。</p>' },
+  { title: 'x→1⁻ 端：定出下界 p>−1',
+    cls: 'good',
+    log: '1 端：被积函数等价于 −(1−x)^p，收敛 ⟺ p>−1',
+    body: '<p>$x^p\\to1$，被积函数 $\\sim\\dfrac{-(1-x)}{(1-x)^{1-p}}=-(1-x)^p$。以 $1-x$ 为无穷小套幂判据，收敛 $\\iff p>-1$（<b>下界</b>）。</p>' },
+  { title: 'x→0⁺ 端：定出上界 p<1',
+    cls: 'good',
+    log: '0 端：被积函数等价于 ln x/x^p，收敛 ⟺ p<1',
+    body: '<p>被积函数 $\\sim\\dfrac{\\ln x}{x^p}$。$p<1$ 时被积函数被可积的 $\\dfrac{C}{x^{p+\\varepsilon}}$（$p+\\varepsilon<1$）压住（$x^{\\varepsilon}|\\ln x|\\to0$）；$p\\ge1$ 时不小于 $\\dfrac{|\\ln x|}{x}$ 而发散。收敛 $\\iff p<1$（<b>上界</b>）。</p>' },
+  { title: '取交集：(−1, 1)',
+    cls: 'good',
+    log: '两端同时收敛：p>−1 且 p<1，即 (−1,1)',
+    body: '<p>$$p>-1\\quad\\text{且}\\quad p<1\\ \\Longrightarrow\\ p\\in(-1,1).$$ 答案选 <b>A</b>。</p>' },
+  { title: '结论与干扰项',
+    cls: 'done',
+    log: 'C/D 漏了 1 端的下界，B 把上界放宽到 2，均错',
+    body: '<p>答案 <b>A</b>，$p\\in(-1,1)$。C 只判了 $0$ 端（漏下界），B 错在把 $1$ 端条件当成 $p<2$——$\\ln x$ 自带一阶 $(1-x)$ 因子，条件是 $p>-1$ 而非另设上界。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '$\\displaystyle\\int_0^1\\frac{\\ln x}{x^p(1-x)^{1-p}}\\,\\mathrm{d}x$ 收敛的 $p$ 范围',
+  subtitle: '考点：反常积分敛散判别 · 方法：两端瑕点分别定阶 + 取交集',
+  counterLabel: '判敛步',
+  ribbonTitle: '约束条件（✓ 已锁定 / ✗ 排除）',
+  intro: '点击「▶ 播放」逐步展开判敛推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 A（$p\\in(-1,1)$）',
+    html: '记忆锚点：<b>$1$ 端给下界 $p>-1$（$\\ln x\\sim-(1-x)$ 自带一阶零点），$0$ 端给上界 $p<1$（对数压不过幂的发散）</b>。两端都要判，取交集 $(-1,1)$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：含参反常积分判敛——两个瑕点分别定阶再取交集</h2>
+<p>答案：A</p>
+<h3>第一步：找瑕点，明确判敛框架</h3>
+<p>被积函数 $\dfrac{\ln x}{x<sup>p</sup>(1-x)<sup>1-p</sup>}$ 在 $[0,1]$ 上有<strong>两个</strong>可疑点：$x\to0^+$ 与 $x\to1^-$。整体收敛要求<strong>两端同时收敛</strong>，最后取交集。</p>
+<h3>第二步：工具——幂阶判据与对数的量级</h3>
+<p>$\displaystyle\int_0\frac{\mathrm{d}x}{x<sup>\alpha</sup>}$ 收敛 $\iff\alpha&lt;1$（瑕积分同理）；$\ln x$ 在 $x\to0^+$ 量级低于任何幂，在 $x\to1^-$ 处是一阶无穷小 $\ln x=\ln(1-(1-x))\sim-(1-x)$。</p>
+<h3>第三步：x→1⁻ 端定阶</h3>
+<p>$x<sup>p</sup>\to1$，故被积函数 $\sim\dfrac{-(1-x)}{(1-x)<sup>1-p</sup>}=-(1-x)<sup>p</sup>$。以 $1-x$ 为无穷小，收敛 $\iff$ 幂指数满足 $p&gt;-1$——这是<strong>下界</strong>。</p>
+<h3>第四步：x→0⁺ 端定阶</h3>
+<p>被积函数 $\sim\dfrac{\ln x}{x<sup>p</sup>}$。$p&lt;1$ 时取 $\varepsilon$ 使 $p+\varepsilon&lt;1$，被积函数被可积的 $\dfrac{C}{x<sup>p+\varepsilon</sup>}$ 压住（$x<sup>\varepsilon</sup>|\ln x|\to0$），收敛；$p\ge1$ 时 $\dfrac{|\ln x|}{x<sup>p</sup>}\ge\dfrac{|\ln x|}{x}$，而 $\displaystyle\int_0\frac{|\ln x|}{x}\,\mathrm{d}x$ 发散。故收敛 $\iff p&lt;1$——这是<strong>上界</strong>。</p>
+<h3>第五步：取交集</h3>
+<p>$p&gt;-1$ 且 $p&lt;1$，即 $p\in(-1,1)$，选 A。</p>
+<h3>易错点</h3>
+<ul><li><strong>漏判 $x\to1$ 端</strong>：只算 $0$ 端得 $p&lt;1$ 会错选 C。</li><li><strong>1 端定阶弄错</strong>：$\ln x$ 在 $1$ 处自带一阶 $(1-x)$ 因子，不是「对数发散」；等价后是 $(1-x)<sup>p</sup>$，下界为 $-1$ 而不是别的数。</li></ul>
+<blockquote>一句话结论：1 端给下界 $p&gt;-1$，0 端给上界 $p&lt;1$，交集 $(-1,1)$，选 A。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

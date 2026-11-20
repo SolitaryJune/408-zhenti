@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·过程动画：三个解定出微分方程的解（2013 年第 13 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-12.html" data-q="../question/m2-2013-12/">← <b>m2-2013-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-13/" data-q="../question/m2-2013-13/" data-no-anim="1">m2-2013-13 · 本题</a>
+  <a href="m2-2013-14.html" data-q="../question/m2-2013-14/"><b>m2-2013-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var CARDS = [
+  { cls: 'key', title: '解之差 = 齐次解',
+    body: '<p>$y_1=\\mathrm e^{3x}-x\\mathrm e^{2x}$，$y_2=\\mathrm e^{x}-x\\mathrm e^{2x}$，$y_3=-x\\mathrm e^{2x}$。非齐次解作差可"洗掉"特解成分：</p>' +
+          '<p>$$y_1-y_3=\\mathrm e^{3x},\\qquad y_2-y_3=\\mathrm e^{x}.$$</p>' +
+          '<p>比值 $\\frac{\\mathrm e^{3x}}{\\mathrm e^{x}}=\\mathrm e^{2x}$ 非常数 → 线性无关，构成二阶齐次的基础解系。</p>' },
+  { cls: '', title: '写通解',
+    body: '<p>$y_3=-x\\mathrm e^{2x}$ 本身是非齐次特解，故</p>' +
+          '<p>$$y=C_1\\mathrm e^{3x}+C_2\\mathrm e^{x}-x\\mathrm e^{2x}.$$</p>' },
+  { cls: '', title: '条件 y(0)=0',
+    body: '<p>代入 $x=0$：</p>' +
+          '<p>$$C_1+C_2=0.$$</p>' },
+  { cls: 'key', title: '求导并代入 y′(0)=1',
+    body: '<p>$$y\'=3C_1\\mathrm e^{3x}+C_2\\mathrm e^{x}-\\mathrm e^{2x}-2x\\mathrm e^{2x},$$</p>' +
+          '<p>代入 $x=0$：$3C_1+C_2-1=1$，即</p>' +
+          '<p>$$3C_1+C_2=2.$$</p>' },
+  { cls: 'good', title: '解出常数',
+    body: '<p>$3C_1+C_2=2$ 与 $C_1+C_2=0$ 相减得 $2C_1=2$：</p>' +
+          '<p>$$C_1=1,\\qquad C_2=-1.$$</p>' },
+  { cls: 'good', title: '回代并验算',
+    body: '<p>$$y=\\mathrm e^{3x}-\\mathrm e^{x}-x\\mathrm e^{2x}.$$</p>' +
+          '<p>验算：$y(0)=1-1-0=0$ ✓，$y\'(0)=3-1-1=1$ ✓。</p>' },
+];
+
+AW.init({
+  title: '由三个解定出满足初值的特解',
+  subtitle: '考点：线性微分方程解的结构 · 方法：解之差 → 通解 → 定常数',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示推导。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    stage.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：每步点亮一行'));
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    this._cards = [];
+    for(var k = 0; k < CARDS.length; k++){
+      var d = AW.el('div', 'aw-stepcard ' + (CARDS[k].cls || ''),
+        '<h4><span class="n">' + (k + 1) + '</span>' + CARDS[k].title + '</h4>' + CARDS[k].body);
+      d.style.display = 'none';
+      board.appendChild(d);
+      this._cards.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'作差', log:'两个解作差洗掉非齐次成分，得齐次解' },
+    { cls:'step',  tag:'通解', log:'剩下的 y3 就是特解，拼出通解' },
+    { cls:'step',  tag:'条件一', log:'y(0)=0 给出 C1+C2=0' },
+    { cls:'shift', tag:'条件二', log:'求导后代 x=0，注意特解求导别丢项' },
+    { cls:'ok',    tag:'定常数', log:'两条方程相减解出 C1=1、C2=−1' },
+    { cls:'done',  tag:'完成', log:'回代并验算初始条件，收工', done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var k = 0; k < this._cards.length; k++){
+      this._cards[k].style.display = (k <= i) ? '' : 'none';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$y=\\mathrm e^{3x}-\\mathrm e^{x}-x\\mathrm e^{2x}$',
+    html: '记忆锚点：<b>"解之差 = 齐次解"</b>：$y_1-y_3$、$y_2-y_3$ 洗掉特解成分；$y_3$ 本身就是特解，直接进通解。干扰直觉：$y_1,y_2$ 不是齐次解——它们还背着 $-x\\mathrm e^{2x}$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：非齐次方程解的结构——"解之差"洗出齐次解</h2>
+<p><strong>答案：$y=\mathrm e<sup>3x</sup>-\mathrm e<sup>x</sup>-x\mathrm e<sup>2x</sup>$</strong></p>
+<h3>第一步：作差拆出齐次解</h3>
+<p>非齐次线性方程的两个解之差必是对应齐次方程的解。为什么？把方程写成线性算子形式 $L[y]=y''+py'+qy=f(x)$，$L$ 的线性性给出 $L[y_1-y_3]=L[y_1]-L[y_3]=f(x)-f(x)=0$——两解相减时右端的 $f(x)$ 恰好抵消，差被"洗"成齐次解。这是<strong>叠加原理</strong>的直接应用，也是"给若干解反求通解"类题的通用起手式：</p>
+<p>$$y_1-y_3=\big(\mathrm e<sup>3x</sup>-x\mathrm e<sup>2x</sup>\big)-\big(-x\mathrm e<sup>2x</sup>\big)=\mathrm e<sup>3x</sup>,\qquad y_2-y_3=\mathrm e<sup>x</sup>.$$</p>
+<p>二者之比 $\frac{\mathrm e<sup>3x</sup>}{\mathrm e<sup>x</sup>}=\mathrm e<sup>2x</sup>$ 不恒为常数，线性无关——恰好构成二阶齐次方程的基础解系。</p>
+<h3>第二步：写出通解</h3>
+<p>剩下的 $y_3=-x\mathrm e<sup>2x</sup>$ 本身就是一个非齐次特解，故</p>
+<p>$$y=C_1\mathrm e<sup>3x</sup>+C_2\mathrm e<sup>x</sup>-x\mathrm e<sup>2x</sup>.$$</p>
+<h3>第三步：初始条件定常数</h3>
+<p>代入 $x=0$：$y(0)=C_1+C_2=0$。求导：</p>
+<p>$$y'=3C_1\mathrm e<sup>3x</sup>+C_2\mathrm e<sup>x</sup>-\mathrm e<sup>2x</sup>-2x\mathrm e<sup>2x</sup>,$$</p>
+<p>代入 $x=0$：$3C_1+C_2-1=1$，即 $3C_1+C_2=2$。两式相减得 $2C_1=2$，故 $C_1=1,\ C_2=-1$。</p>
+<h3>第四步：回代并验算</h3>
+<p>$$y=\mathrm e<sup>3x</sup>-\mathrm e<sup>x</sup>-x\mathrm e<sup>2x</sup>.$$</p>
+<p>验算：$y(0)=1-1-0=0$ ✓；$y'(0)=3-1-1=1$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>把 $y_1,y_2$ 直接当齐次解</strong>：它们都是<strong>非齐次</strong>方程的解，背着特解成分 $-x\mathrm e<sup>2x</sup>$；必须作差才能"洗掉"它。</li><li><strong>忘了检验线性无关</strong>：两个齐次解要构成基础解系需比值非常数，本题 $\mathrm e<sup>2x</sup>$ 显然满足。</li><li><strong>对 $-x\mathrm e<sup>2x</sup>$ 求导丢项</strong>：$(-x\mathrm e<sup>2x</sup>)'=-\mathrm e<sup>2x</sup>-2x\mathrm e<sup>2x</sup>$，乘积法则两项都不能少。</li></ul>
+<blockquote>一句话结论：$y=\mathrm e<sup>3x</sup>-\mathrm e<sup>x</sup>-x\mathrm e<sup>2x</sup>$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

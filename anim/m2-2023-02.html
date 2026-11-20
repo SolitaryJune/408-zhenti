@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念类动画：分段函数的原函数判定</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2023-01.html" data-q="../question/m2-2023-01/">← <b>m2-2023-01</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2023-02/" data-q="../question/m2-2023-02/" data-no-anim="1">m2-2023-02 · 本题</a>
+  <a href="m2-2023-03.html" data-q="../question/m2-2023-03/"><b>m2-2023-03</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：原函数要过两关',
+    cls: 'key',
+    log: '判据：逐段 F\'=f，且分段点 x=0 处连续（不连续必不可导）',
+    body: '<p>$F$ 是 $f$ 的原函数 $\\iff$ 每段上 $F\'=f$，<b>且</b> $F$ 在分段点 $x=0$ 处<b>连续</b>（不连续必不可导）。四个选项都是两段结构，逐段验导数、再用连续性定常数。</p>' },
+  { title: '验 x≤0 段：砍掉 A、B',
+    cls: 'bad',
+    log: 'ln(√(1+x²)+x) 求导正确；带减号的那支导数是负的，A、B 出局',
+    ribbon: {k:1, ok:true},
+    body: '<p>$\\dfrac{\\mathrm d}{\\mathrm dx}\\ln\\bigl(\\sqrt{1+x^2}+x\\bigr)=\\dfrac{\\dfrac{x}{\\sqrt{1+x^2}}+1}{\\sqrt{1+x^2}+x}=\\dfrac1{\\sqrt{1+x^2}}$ ✓；而 $\\ln\\bigl(\\sqrt{1+x^2}-x\\bigr)$ 求导得 $-\\dfrac1{\\sqrt{1+x^2}}$，符号相反——<b>A、B 出局</b>。</p>' },
+  { title: '验 x>0 段：分部积分',
+    cls: 'good',
+    log: '(x+1)cos x 积出来是 (x+1)sin x + cos x，剩 C、D',
+    ribbon: {k:2, ok:true},
+    body: '<p>$\\displaystyle\\int(x+1)\\cos x\\,\\mathrm dx=(x+1)\\sin x-\\int\\sin x\\,\\mathrm dx=(x+1)\\sin x+\\cos x$，故剩 <b>C、D</b>。（A、B 的 $(x+1)\\cos x-\\sin x$ 求导是 $-(x+1)\\sin x$，也不对。）</p>' },
+  { title: 'C、D 只差常数 1 → 看连续性',
+    cls: 'key',
+    log: '右极限是 1，左值是 ln1=0，差一个常数',
+    body: '<p>右极限 $\\lim\\limits_{x\\to0^+}\\bigl[(x+1)\\sin x+\\cos x\\bigr]=1$；左值 $\\ln(\\sqrt1+0)=\\ln1=0$。要连续必须给左段<b>补常数 1</b>。</p>' },
+  { title: '裁决：C 间断，D 连续',
+    cls: 'good',
+    log: 'C 左值 0 ≠ 右值 1，跳跃间断必不是原函数；D 连续，选 D',
+    ribbon: {k:3, ok:true},
+    body: '<p>C 在 $x=0$ 处左值 $0\\neq$ 右值 $1$，<b>跳跃间断 → 不可导 → 不是原函数</b>；D 左值 $0+1=1$ 与右极限相等，连续，符合。选 <b>D</b>。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  var cls;
+  if(i === STEPS.length - 1){ cls = 'done'; }
+  else if(s.ribbon){ cls = s.ribbon.ok ? 'ok' : 'miss'; }
+  else { cls = 'step'; }
+  return {
+    cls: cls,
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '分段函数的原函数：逐段求导 + 分段点连续',
+  subtitle: '考点：原函数与连续性 · 选项逐项推演',
+  counterLabel: '判定步',
+  ribbonTitle: '验证关卡（✓ 通过 / ✗ 卡壳）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 D',
+    html: '记忆锚点：<b>分段函数验原函数 = 逐段求导 + 分段点连续，两关缺一不可</b>；$\\int\\frac{\\mathrm dx}{\\sqrt{1+x^2}}=\\ln\\bigl(x+\\sqrt{1+x^2}\\bigr)+C$，带减号的那支导数是负的。C 的死穴：$x=0$ 处左 0 右 1，跳跃间断必不可导。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：分段函数的原函数——逐段求导 + 分段点连续，两关都要过</h2>
+<p>答案：D</p>
+<h3>第一步：明确判据</h3>
+<p>$F$ 是 $f$ 的原函数 $\iff$ 每一段上 $F'=f$，且 $F$ 在分段点 $x=0$ 处连续（不连续必不可导）。对四个选项逐段验导数，再用连续性定常数。</p>
+<h3>第二步：验 x≤0 段，先砍掉一半</h3>
+<p>$$\frac{\mathrm d}{\mathrm dx}\ln\bigl(\sqrt{1+x<sup>2</sup>}+x\bigr)=\frac{\dfrac{x}{\sqrt{1+x<sup>2</sup>}}+1}{\sqrt{1+x<sup>2</sup>}+x}=\frac1{\sqrt{1+x<sup>2</sup>}}.$$</p>
+<p>正确。而 $\ln\bigl(\sqrt{1+x<sup>2</sup>}-x\bigr)$ 求导得 $-\dfrac1{\sqrt{1+x<sup>2</sup>}}$，符号相反——A、B 出局。这对公式要成对记牢：$\ln(\sqrt{1+x<sup>2</sup>}\pm x)$ 求导一正一负。</p>
+<h3>第三步：验 x&gt;0 段，分部积分</h3>
+<p>$\displaystyle\int(x+1)\cos x\,\mathrm dx=(x+1)\sin x-\int\sin x\,\mathrm dx=(x+1)\sin x+\cos x$，所以只剩 C、D。（A、B 中 $(x+1)\cos x-\sin x$ 求导是 $-(x+1)\sin x$，同样不对。）</p>
+<h3>第四步：连续性定常数</h3>
+<p>右极限 $\lim\limits_{x\to0^+}\bigl[(x+1)\sin x+\cos x\bigr]=0+1=1$；左值 $\ln(\sqrt1+0)=\ln1=0$。要连续必须给左段补常数 $1$，即 $\ln(\sqrt{1+x<sup>2</sup>}+x)+1$——这正是 D；C 在 $x=0$ 处左值 $0\neq$ 右值 $1$，跳跃间断，不是原函数。</p>
+<h3>易错点</h3>
+<ul><li><strong>只验导数不看连续</strong>：C 两段导数全对，败在分段点断开。</li><li><strong>背反 $\int\frac{\mathrm dx}{\sqrt{1+x<sup>2</sup>}}$</strong>：结果是 $\ln(x+\sqrt{1+x<sup>2</sup>})+C$，不是带减号的那支。</li></ul>
+<blockquote>一句话结论：逐段求导淘汰 A、B，分段点连续淘汰 C，选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

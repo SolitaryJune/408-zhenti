@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2013·23 二次型矩阵与正交变换标准形</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-22.html" data-q="../question/m2-2013-22/">← <b>m2-2013-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-23/" data-q="../question/m2-2013-23/" data-no-anim="1">m2-2013-23 · 本题</a>
+  <a href="m2-2014-01.html" data-q="../question/m2-2014-01/"><b>m2-2014-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：把「组合的平方」翻译成矩阵语言',
+    cls: 'key',
+    body: '<p>记 $\\boldsymbol x=(x_1,x_2,x_3)^{\\mathrm T}$，则 $a_1x_1+a_2x_2+a_3x_3=\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol x$ 是<b>一个数</b>：$$f=2(\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol x)^2+(\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol x)^2$$ 关键桥梁：<b>标量的转置等于自身</b>，这是把平方写成 $\\boldsymbol x^{\\mathrm T}\\boldsymbol A\\boldsymbol x$ 的全部秘密。</p>' },
+  { title: '改写平方项（秩 1 外积）',
+    cls: 'step',
+    body: '<p>$$(\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol x)^2=(\\boldsymbol x^{\\mathrm T}\\boldsymbol\\alpha)(\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol x)=\\boldsymbol x^{\\mathrm T}(\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T})\\boldsymbol x$$ 同理 $(\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol x)^2=\\boldsymbol x^{\\mathrm T}(\\boldsymbol\\beta\\boldsymbol\\beta^{\\mathrm T})\\boldsymbol x$。注意外积 $\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}$ 是 $3\\times3$ 对称矩阵，不是数。</p>' },
+  { title: '(1) 合并 + 验证对称',
+    cls: 'good',
+    body: '<p>$$f=\\boldsymbol x^{\\mathrm T}\\big(2\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}+\\boldsymbol\\beta\\boldsymbol\\beta^{\\mathrm T}\\big)\\boldsymbol x$$ 又 $(\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T})^{\\mathrm T}=\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}$，$\\boldsymbol\\beta\\boldsymbol\\beta^{\\mathrm T}$ 同理，$2\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}+\\boldsymbol\\beta\\boldsymbol\\beta^{\\mathrm T}$ 是对称矩阵——由二次型矩阵的唯一性，它就是 $f$ 的矩阵。<b>(1) 得证。</b></p>' },
+  { title: '(2) 条件清单：正交 + 单位',
+    cls: 'key',
+    body: '<p>已知 $\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol\\alpha=1$，$\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\beta=1$，$\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol\\beta=\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha=0$。记 $\\boldsymbol A=2\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}+\\boldsymbol\\beta\\boldsymbol\\beta^{\\mathrm T}$，<b>直接用定义试探</b>：算 $\\boldsymbol A\\boldsymbol\\alpha$ 与 $\\boldsymbol A\\boldsymbol\\beta$。</p>' },
+  { title: '试探 $\\boldsymbol A\\boldsymbol\\alpha$',
+    cls: 'good',
+    body: '<p>$$(\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol\\alpha)=1,\\quad(\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\alpha)=0\\ \\Longrightarrow\\ \\boldsymbol A\\boldsymbol\\alpha=2\\boldsymbol\\alpha\\cdot1+\\boldsymbol\\beta\\cdot0=2\\boldsymbol\\alpha$$ 所以 $\\lambda_1=2$，$\\boldsymbol\\alpha$ 是对应特征向量。</p>' },
+  { title: '试探 $\\boldsymbol A\\boldsymbol\\beta$',
+    cls: 'good',
+    body: '<p>$$(\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol\\beta)=0,\\quad(\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol\\beta)=1\\ \\Longrightarrow\\ \\boldsymbol A\\boldsymbol\\beta=2\\boldsymbol\\alpha\\cdot0+\\boldsymbol\\beta\\cdot1=\\boldsymbol\\beta$$ 所以 $\\lambda_2=1$，$\\boldsymbol\\beta$ 是对应特征向量。</p>' },
+  { title: '补第三个方向 $\\boldsymbol\\gamma$',
+    cls: 'step',
+    body: '<p>取与 $\\boldsymbol\\alpha,\\boldsymbol\\beta$ 都正交的非零向量 $\\boldsymbol\\gamma$（三维中两个正交约束必有非零解），则 $\\boldsymbol A\\boldsymbol\\gamma=2\\boldsymbol\\alpha\\cdot0+\\boldsymbol\\beta\\cdot0=\\boldsymbol 0$，$$\\lambda_3=0$$ 故 $\\boldsymbol A$ 的特征值为 $2,\\,1,\\,0$。</p>' },
+  { title: '结论：标准形系数 = 特征值',
+    cls: 'good',
+    body: '<p>$\\boldsymbol A$ 是实对称矩阵，存在正交矩阵 $\\boldsymbol Q$（$\\boldsymbol x=\\boldsymbol Q\\boldsymbol y$）把 $f$ 化为标准形，系数恰为特征值：$$f=2y_1^2+y_2^2+0\\cdot y_3^2=\\boxed{2y_1^2+y_2^2}$$ (1)(2) 均得证。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '二次型 $f=2(\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol x)^2+(\\boldsymbol\\beta^{\\mathrm T}\\boldsymbol x)^2$ 的矩阵与标准形',
+  subtitle: '考点：二次型矩阵 · 正交变换标准形 · 方法：外积改写 + 定义读特征值',
+  intro: '点击「▶ 播放」逐步展开两问的证明推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '矩阵 $2\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T}+\\boldsymbol\\beta\\boldsymbol\\beta^{\\mathrm T}$；标准形 $2y_1^2+y_2^2$',
+    html: '记忆锚点：<b>「组合的平方」$\\to\\boldsymbol x^{\\mathrm T}(\\boldsymbol\\alpha\\boldsymbol\\alpha^{\\mathrm T})\\boldsymbol x$（标量转置等于自身）</b>；单位正交向量下直接算 $\\boldsymbol A\\boldsymbol\\alpha=2\\boldsymbol\\alpha$、$\\boldsymbol A\\boldsymbol\\beta=\\boldsymbol\\beta$，补一个正交补方向得 $\\lambda=0$。易错：写成 $\\boldsymbol x^{\\mathrm T}\\boldsymbol\\alpha^{\\mathrm T}\\boldsymbol\\alpha\\boldsymbol x$（完全错误）；忘验对称性。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：外积矩阵的「投影机」机制——二次型矩阵与定义法读特征值</h2>
+<p>答案：(1) $f$ 对应的矩阵为 $2\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>+\boldsymbol\beta\boldsymbol\beta<sup>\mathrm T</sup>$；(2) 标准形为 $2y_1<sup>2</sup>+y_2<sup>2</sup>$。</p>
+<h3>第一步：(1) 的桥梁——标量的转置等于自身</h3>
+<p>二次型的「身份认证」是 $f=\boldsymbol x<sup>\mathrm T</sup>\boldsymbol A\boldsymbol x$ 且 $\boldsymbol A$ 对称（这样的 $\boldsymbol A$ 唯一：若对一切 $\boldsymbol x$ 都有 $\boldsymbol x<sup>\mathrm T</sup>\boldsymbol A\boldsymbol x=\boldsymbol x<sup>\mathrm T</sup>\boldsymbol B\boldsymbol x$，取 $\boldsymbol x$ 依次为单位向量与其和，可逐元逼出 $\boldsymbol A=\boldsymbol B$）。所以任务是把 $(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol x)<sup>2</sup>$ 翻译成 $\boldsymbol x<sup>\mathrm T</sup>(\cdots)\boldsymbol x$。</p>
+<p>记 $\boldsymbol x=(x_1,x_2,x_3)<sup>\mathrm T</sup>$，则 $\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol x$ 是一个<strong>数</strong>，数的转置等于自身：</p>
+<p>$$(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol x)<sup>2</sup>=(\boldsymbol x<sup>\mathrm T</sup>\boldsymbol\alpha)(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol x)=\boldsymbol x<sup>\mathrm T</sup>(\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>)\boldsymbol x$$</p>
+<p><strong>为什么必须用外积 $\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ 而不是内积 $\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha$</strong>：内积是 $1\times1$ 的数，夹不进 $\boldsymbol x<sup>\mathrm T</sup>$ 与 $\boldsymbol x$ 之间当矩阵用；外积是 $3\times3$、秩 $1$ 的矩阵，才是二次型的合法载体。同理 $(\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol x)<sup>2</sup>=\boldsymbol x<sup>\mathrm T</sup>(\boldsymbol\beta\boldsymbol\beta<sup>\mathrm T</sup>)\boldsymbol x$，合并：</p>
+<p>$$f=\boldsymbol x<sup>\mathrm T</sup>\big(2\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>+\boldsymbol\beta\boldsymbol\beta<sup>\mathrm T</sup>\big)\boldsymbol x$$</p>
+<p>又 $(\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>)<sup>\mathrm T</sup>=\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$（$\boldsymbol\beta\boldsymbol\beta<sup>\mathrm T</sup>$ 同理），矩阵对称，由二次型矩阵的唯一性，(1) 得证。</p>
+<h3>第二步：(2) 的机制——秩 1 外积是一台「投影机」</h3>
+<p>$\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ 作用在向量 $\boldsymbol v$ 上：$\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol v=\boldsymbol\alpha\,(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol v)$——先把 $\boldsymbol v$ 投影到 $\boldsymbol\alpha$ 方向（标量 $\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol v$），再沿 $\boldsymbol\alpha$ 方向放回去。于是 $\boldsymbol A=2\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>+\boldsymbol\beta\boldsymbol\beta<sup>\mathrm T</sup>$ 的作用就是：<strong>沿 $\boldsymbol\alpha$ 的投影放大 $2$ 倍，加沿 $\boldsymbol\beta$ 的投影放大 $1$ 倍</strong>。特征值不用算行列式，看投影就能读出来；条件「单位 + 正交」正是为这套读法准备的——互相正交使 $\boldsymbol\alpha,\boldsymbol\beta$ 彼此「看不见」对方。</p>
+<h3>第三步：用定义读出三个特征值</h3>
+<p>条件：$\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha=\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\beta=1$，$\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\beta=\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha=0$。</p>
+<p>$$\boldsymbol A\boldsymbol\alpha=2\boldsymbol\alpha(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha)+\boldsymbol\beta(\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\alpha)=2\boldsymbol\alpha,\qquad \boldsymbol A\boldsymbol\beta=2\boldsymbol\alpha(\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\beta)+\boldsymbol\beta(\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\beta)=\boldsymbol\beta$$</p>
+<p>故 $\lambda_1=2$（特征向量 $\boldsymbol\alpha$），$\lambda_2=1$（特征向量 $\boldsymbol\beta$）。</p>
+<p>第三个方向：$\boldsymbol\alpha,\boldsymbol\beta$ 正交故线性无关，三维中与它们都垂直的解空间维数是 $3-2=1$，取单位向量 $\boldsymbol\gamma$（存在且可单位化），则 $\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\gamma=\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\gamma=0$：</p>
+<p>$$\boldsymbol A\boldsymbol\gamma=2\boldsymbol\alpha\cdot0+\boldsymbol\beta\cdot0=\boldsymbol0=0\cdot\boldsymbol\gamma$$</p>
+<p>故 $\lambda_3=0$。<strong>为什么不用 $|\lambda\boldsymbol E-\boldsymbol A|=0$ 硬算</strong>：$\boldsymbol\alpha,\boldsymbol\beta$ 是抽象向量，行列式摊不开；定义法（看 $\boldsymbol A$ 作用在谁身上）才是抽象矩阵特征值的标准武器。</p>
+<h3>第四步：从特征值到标准形——顺序为什么恰好是 $2y_1<sup>2</sup>+y_2<sup>2</sup>$</h3>
+<p>实对称矩阵必可正交对角化：把单位化且两两正交的 $\boldsymbol\alpha,\boldsymbol\beta,\boldsymbol\gamma$ 依次作列，得正交矩阵 $\boldsymbol Q$，则 $\boldsymbol Q<sup>\mathrm T</sup>\boldsymbol A\boldsymbol Q=\operatorname{diag}(2,1,0)$。正交变换 $\boldsymbol x=\boldsymbol Q\boldsymbol y$ 下</p>
+<p>$$f=\boldsymbol y<sup>\mathrm T</sup>\operatorname{diag}(2,1,0)\,\boldsymbol y=2y_1<sup>2</sup>+y_2<sup>2</sup>+0\cdot y_3<sup>2</sup>=2y_1<sup>2</sup>+y_2<sup>2</sup>$$</p>
+<p>列的摆放顺序由我们定（$\boldsymbol\alpha$ 放第一列、$\boldsymbol\beta$ 放第二列），系数才恰好按 $2,1,0$ 排成题目要的形式。两处互证：$\operatorname{tr}\boldsymbol A=2\cdot\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha+\boldsymbol\beta<sup>\mathrm T</sup>\boldsymbol\beta=3=2+1+0$；$\operatorname{rank}\boldsymbol A=2$ 与非零特征值个数一致。</p>
+<h3>易错点</h3>
+<ul><li><strong>把平方写成 $\boldsymbol x<sup>\mathrm T</sup>\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha\boldsymbol x$</strong>：内积是数，这个形状等于 $\|\boldsymbol\alpha\|<sup>2</sup>\|\boldsymbol x\|<sup>2</sup>$，与原式完全不同；正确桥梁是外积 $\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$。</li><li><strong>忘验证对称性</strong>：二次型矩阵必须对称，$\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ 的对称性要交代，否则 (1) 的身份认证不完整。</li><li><strong>以为 $2\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ 特征值全为 $2$</strong>：秩 1 矩阵的特征值只有 $\operatorname{tr}=2\boldsymbol\alpha<sup>\mathrm T</sup>\boldsymbol\alpha$ 与 $0$；本题靠两项相加才读出 $2,1,0$。</li></ul>
+<blockquote>记忆锚点：外积 $\boldsymbol\alpha\boldsymbol\alpha<sup>\mathrm T</sup>$ = 沿 $\boldsymbol\alpha$ 的投影机；单位正交条件下特征值「用定义读」，再补一个正交补方向凑齐三个。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

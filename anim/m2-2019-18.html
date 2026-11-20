@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2019·18 极坐标二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-17.html" data-q="../question/m2-2019-17/">← <b>m2-2019-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-18/" data-q="../question/m2-2019-18/" data-no-anim="1">m2-2019-18 · 本题</a>
+  <a href="m2-2019-19.html" data-q="../question/m2-2019-19/"><b>m2-2019-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [
+  "$$\\iint_D\\frac{x+y}{\\sqrt{x^2+y^2}}\\,\\mathrm{d}x\\,\\mathrm{d}y,\\quad D=\\{\\lvert x\\rvert\\le y,\\ (x^2+y^2)^3\\le y^4\\}\\qquad\\text{极坐标信号}$$",
+  "<b>① 边界化极坐标：</b>$(x^2+y^2)^3\\le y^4\\Rightarrow r^6\\le r^4\\sin^4\\theta\\Rightarrow 0\\le r\\le\\sin^2\\theta$（顶点在原点的叶形区域）",
+  "<b>② 角度范围：</b>$\\lvert x\\rvert\\le y\\Rightarrow y\\ge0$ 且 $\\lvert\\cos\\theta\\rvert\\le\\sin\\theta\\Rightarrow\\theta\\in\\left[\\dfrac{\\pi}{4},\\dfrac{3\\pi}{4}\\right]$",
+  "<b>③ 化被积函数并先积 $r$：</b>$\\dfrac{x+y}{\\sqrt{x^2+y^2}}=\\cos\\theta+\\sin\\theta$，面积元补进一个 $r$：$\\displaystyle\\int_0^{\\sin^2\\theta}r\\,\\mathrm{d}r=\\dfrac{\\sin^4\\theta}{2}$",
+  "<b>④ 对称性去掉一项：</b>区域关于 $\\theta=\\tfrac{\\pi}{2}$ 对称，$\\cos\\theta\\,\\sin^4\\theta$ 在 $\\theta\\mapsto\\pi-\\theta$ 下变号 → 该项积分为 $0$",
+  "<b>⑤ 剩余部分加倍：</b>$\\sin^5\\theta$ 在该对称下不变号：$$\\text{原式}=\\frac12\\int_{\\pi/4}^{3\\pi/4}\\sin^5\\theta\\,\\mathrm{d}\\theta=\\int_{\\pi/4}^{\\pi/2}\\sin^5\\theta\\,\\mathrm{d}\\theta$$",
+  "<b>⑥ 换元 $t=\\cos\\theta$：</b>$\\sin^5\\theta\\,\\mathrm{d}\\theta=-(1-t^2)^2\\,\\mathrm{d}t$，$\\theta:\\tfrac{\\pi}{4}\\to\\tfrac{\\pi}{2}$ 对应 $t:\\tfrac{\\sqrt2}{2}\\to0$：$$\\int_0^{\\sqrt2/2}\\left(1-t^2\\right)^2\\mathrm{d}t=\\left[t-\\frac{2t^3}{3}+\\frac{t^5}{5}\\right]_0^{\\sqrt2/2}$$",
+  "<b>⑦ 代值收尾：</b>$t^3=\\tfrac{\\sqrt2}{4},\\ t^5=\\tfrac{\\sqrt2}{8}$：$$\\frac{\\sqrt2}{2}-\\frac{\\sqrt2}{6}+\\frac{\\sqrt2}{40}=\\frac{60-20+3}{120}\\sqrt2=\\frac{43\\sqrt2}{120}$$"
+];
+
+AW.init({
+  title: '2019·18　$\\displaystyle\\iint_D\\frac{x+y}{\\sqrt{x^2+y^2}}\\,\\mathrm{d}x\\,\\mathrm{d}y$',
+  subtitle: '考点：极坐标变换 · 不等式定角 · 对称性削减 · 幂函数换元',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，先定 r 与 θ 的范围，再用对称性瘦身。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    this._rows = [];
+    for (var i = 0; i < ROWS.length; i++){
+      var r = AW.el('div', 'aw-stepcard', ROWS[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'审题',   log:'被积函数与边界都含平方和，切换到极坐标处理', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'定 r',   log:'边界不等式两边约掉 r 的四次方，半径上限是 sin 平方', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'定角',   log:'绝对值条件化成角度范围，四分之派到四分之三派', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'先积 r', log:'分子分母约掉一个 r，面积元补回一个 r，先积得 sin 四次方的一半', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'去奇项', log:'余弦项关于中线奇对称，整项积分为零', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'加倍',   log:'正弦五次方偶对称，区间减半后值不变', count:5, ribbon:{k:6, ok:true} },
+    { cls:'shift', tag:'换元',   log:'令 t 等于余弦，化成一减 t 平方的平方，限从二分之根号二到零', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：代值通分，结果为一百二十分之四十三倍根号二', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: "$\\displaystyle\\iint_D\\frac{x+y}{\\sqrt{x^2+y^2}}\\,\\mathrm{d}x\\,\\mathrm{d}y=\\frac{43\\sqrt2}{120}$",
+    html: "记忆锚点：<b>见 $\\sqrt{x^2+y^2}$ 与齐次边界就换极坐标；先定 $r$、后定 $\\theta$，再查对称性</b>。易错：忘乘雅可比 $r$；$\\lvert x\\rvert\\le y$ 忘化成角度范围；对称区间上的奇项没砍掉白算一遍。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：极坐标二重积分——为什么换、雅可比 $r$ 从哪来、对称性省一半</h2>
+<p><strong>答案</strong>：$\displaystyle\iint_D\frac{x+y}{\sqrt{x<sup>2</sup>+y<sup>2</sup>}}\,\mathrm{d}x\,\mathrm{d}y=\frac{43\sqrt2}{120}$。</p>
+<h3>第 0 步：机制——换坐标的唯一标准是"两样同时变简单"</h3>
+<p>二重积分选坐标系，看两件事：<strong>区域边界</strong>与<strong>被积函数</strong>能否都换成显式、简单的新变量。本题两者全由 $x<sup>2</sup>+y<sup>2</sup>$ 与 $y$ 组成：被积函数 $\dfrac{x+y}{\sqrt{x<sup>2</sup>+y<sup>2</sup>}}$ 在极坐标下就是 $\dfrac{r(\cos\theta+\sin\theta)}{r}=\cos\theta+\sin\theta$；边界 $(x<sup>2</sup>+y<sup>2</sup>)<sup>3</sup>\le y<sup>4</sup>$ 是<strong>齐次式</strong>——左端是 $r$ 的 $6$ 次幂、右端是 $r$ 的 $4$ 次幂，极坐标下 $r$ 能解出来。直角坐标下这块区域根本写不成"上下函数"，这才是"极坐标信号"背后的机制。</p>
+<p><strong>雅可比 $r$ 从哪来？</strong> $\mathrm{d}x\,\mathrm{d}y$ 换到极坐标，面积微元不是矩形而是<strong>小扇环</strong>：径向长 $\mathrm{d}r$、张角 $\mathrm{d}\theta$ 处的弧长是 $r\,\mathrm{d}\theta$，扇环面积 $\approx(r\,\mathrm{d}\theta)\cdot\mathrm{d}r$。$r$ 是扇环与"矩形"的面积比，不是可选项——丢掉它整个积分就错了。</p>
+<h3>第一步：两个条件各管一个坐标</h3>
+<ul><li>边界条件：$r<sup>6</sup>\le r<sup>4</sup>\sin<sup>4</sup>\theta\ \Rightarrow\ 0\le r\le\sin<sup>2</sup>\theta$——顶点在原点的叶形区域；</li><li>$\lvert x\rvert\le y$：即 $y\ge0$ 且 $y\ge\lvert x\rvert$（上方 $90^\circ$ 角域），极坐标下是 $\sin\theta\ge0$ 且 $\lvert\cos\theta\rvert\le\sin\theta$。<strong>为什么解出 $\theta\in\left[\tfrac\pi4,\tfrac{3\pi}4\right]$</strong>：拆成 $\cos\theta\le\sin\theta$ 与 $-\cos\theta\le\sin\theta$ 两半，前者给 $\theta\ge\tfrac\pi4$，后者给 $\theta\le\tfrac{3\pi}4$；对称轴是 $y$ 轴（$\theta=\tfrac\pi2$）。</li></ul>
+<h3>第二步：化被积函数，先积 $r$</h3>
+<p>$$\text{原式}=\int_{\pi/4}<sup>3\pi/4</sup>(\cos\theta+\sin\theta)\int_0<sup>\sin^2\theta</sup>r\,\mathrm{d}r\,\mathrm{d}\theta=\int_{\pi/4}<sup>3\pi/4</sup>(\cos\theta+\sin\theta)\cdot\frac{\sin<sup>4</sup>\theta}{2}\,\mathrm{d}\theta.$$</p>
+<p>注意 $r$ 的"一进一出"：被积函数的分子分母先<strong>约掉</strong>一个 $r$（$\sqrt{x<sup>2</sup>+y<sup>2</sup>}=r$），面积元又<strong>补回</strong>一个 $r$——信息全记进 $\theta$ 的积分：$\int_0<sup>\sin^2\theta</sup>r\,\mathrm{d}r=\dfrac{\sin<sup>4</sup>\theta}2$。</p>
+<h3>第三步：对称性砍掉 $\cos$ 项</h3>
+<p>区域关于 $\theta=\tfrac\pi2$ 对称（$\sin<sup>2</sup>\theta$ 在 $\theta\mapsto\pi-\theta$ 下不变）。逐项看奇偶：$\cos\theta\sin<sup>4</sup>\theta$ 在 $\pi-\theta$ 下<strong>变号</strong>（$\cos(\pi-\theta)=-\cos\theta$）——奇部在对称区间上积分为 $0$；$\sin<sup>5</sup>\theta$ <strong>不变号</strong>——偶部积分加倍：</p>
+<p>$$\text{原式}=\frac12\int_{\pi/4}<sup>3\pi/4</sup>\sin<sup>5</sup>\theta\,\mathrm{d}\theta=\int_{\pi/4}<sup>\pi/2</sup>\sin<sup>5</sup>\theta\,\mathrm{d}\theta.$$</p>
+<h3>第四步：降幂 + 换元 $t=\cos\theta$ 收尾</h3>
+<p>$\sin<sup>5</sup>\theta=\sin<sup>4</sup>\theta\cdot\sin\theta=(1-\cos<sup>2</sup>\theta)<sup>2</sup>\sin\theta$——<strong>为什么拆出一个 $\sin\theta$</strong>：给 $\mathrm{d}(\cos\theta)=-\sin\theta\,\mathrm{d}\theta$ 当微分伴侣，剩下的全是 $\cos\theta$ 的多项式。令 $t=\cos\theta$：$\theta$ 从 $\tfrac\pi4$ 到 $\tfrac\pi2$ 时 $t$ 从 $\tfrac{\sqrt2}2$ 到 $0$，$\mathrm{d}t$ 里的负号把上下限翻正：</p>
+<p>$$\int_0<sup>\sqrt2/2</sup>\left(1-t<sup>2</sup>\right)<sup>2</sup>\mathrm{d}t=\left[t-\frac{2t<sup>3</sup>}{3}+\frac{t<sup>5</sup>}{5}\right]_0<sup>\sqrt2/2</sup>=\frac{\sqrt2}{2}-\frac{\sqrt2}{6}+\frac{\sqrt2}{40}=\frac{43\sqrt2}{120}.$$</p>
+<p>（代值时 $t<sup>3</sup>=\tfrac{\sqrt2}4$、$t<sup>5</sup>=\tfrac{\sqrt2}8$，通分 $120$ 得 $60-20+3=43$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>$\lvert x\rvert\le y$ 只当 $y\ge\lvert x\rvert$ 看却不化角</strong>：它是区域的"角度半边"，漏掉它叶形区域残缺，答案必然错。</li><li><strong>忘乘雅可比 $r$</strong>：没有 $r$ 就成了 $\int_0<sup>\sin^2\theta</sup>\mathrm{d}r=\sin<sup>2</sup>\theta$，后面全盘皆错；本题还容易因"先约掉一个 $r$"顾此失彼。</li><li><strong>不验对称性硬算 $\cos\theta\sin<sup>4</sup>\theta$</strong>：费时易错；"对称区间 + 奇函数 = $0$"要形成条件反射。</li><li><strong>换元 $t=\cos\theta$ 忘翻限</strong>：$\mathrm{d}t=-\sin\theta\,\mathrm{d}\theta$ 带负号，上下限要交换或翻转符号。</li></ul>
+<blockquote>结论：极坐标下 $0\le r\le\sin<sup>2</sup>\theta$、$\theta\in\left[\tfrac\pi4,\tfrac{3\pi}4\right]$，对称性后只剩 $\sin<sup>5</sup>\theta$ 的定积分，值为 $\dfrac{43\sqrt2}{120}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

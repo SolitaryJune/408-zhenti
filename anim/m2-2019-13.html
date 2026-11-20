@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2019·13 变限积分参与的分部积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2019-12.html" data-q="../question/m2-2019-12/">← <b>m2-2019-12</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2019-13/" data-q="../question/m2-2019-13/" data-no-anim="1">m2-2019-13 · 本题</a>
+  <a href="m2-2019-14.html" data-q="../question/m2-2019-14/"><b>m2-2019-14</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$f(x)=x\\displaystyle\\int_1^x\\frac{\\sin t^2}{t}\\,\\mathrm{d}t$。记 $g(x)=\\int_1^x\\frac{\\sin t^2}{t}\\,\\mathrm{d}t$，则 $f(x)=x\\,g(x)$。<b>注意</b>：$\\frac{\\sin t^2}{t}$ 没有初等原函数，不能硬积——出路是分部积分，让 $g$ 在分部中求导。</p>",
+  "<p><b>备好弹药</b>：变限积分求导白送两条：$$g(1)=0\\ (\\text{上下限重合}),\\qquad g\'(x)=\\frac{\\sin x^2}{x}.$$</p>",
+  "<p><b>分部积分</b>：把 $x$ 收进微分 $\\mathrm{d}\\left(\\frac{x^2}{2}\\right)$：$$\\int_0^1 f\\,\\mathrm{d}x=\\int_0^1 g\\,\\mathrm{d}\\Big(\\frac{x^2}{2}\\Big)=\\Big[\\frac{x^2}{2}\\,g\\Big]_0^1-\\int_0^1\\frac{x^2}{2}\\,g\'\\,\\mathrm{d}x.$$</p>",
+  "<p><b>边界项清零</b>：$x=1$ 处 $g(1)=0$；$x\\to0^+$ 处 $\\frac{x^2}{2}g(x)\\to0$（$g$ 有界）。两项全归零。</p>",
+  "<p><b>剩余积分</b>：$$-\\frac12\\int_0^1 x\\sin x^2\\,\\mathrm{d}x,$$ 凑微分 $x\\,\\mathrm{d}x=\\frac12\\,\\mathrm{d}(x^2)$，原函数 $-\\frac12\\cos x^2$。</p>",
+  "<p><b>算完</b>：$$-\\frac12\\Big[-\\frac{\\cos x^2}{2}\\Big]_0^1=-\\frac12\\cdot\\frac{1-\\cos1}{2}=\\frac{\\cos1-1}{4}.$$</p>",
+  "<p><b>符号自检 + 结论</b>：$(0,1)$ 上 $g(x)=-\\int_x^1\\frac{\\sin t^2}{t}\\mathrm{d}t<0$（往回积分、被积函数为正），故 $f<0$，积分应为负——$\\frac{\\cos1-1}{4}\\approx-0.115$，吻合。答案 $\\boldsymbol{\\dfrac{\\cos1-1}{4}}$。</p>"
+];
+
+AW.init({
+  title: '$f(x)=x\\int_1^x\\dfrac{\\sin t^2}{t}\\,\\mathrm{d}t$，求 $\\int_0^1 f(x)\\,\\mathrm{d}x$',
+  subtitle: '考点：变限积分 + 分部积分 · 方法：让变限积分求导脱身',
+  counterLabel: '已执行',
+  intro: '点击「▶ 播放」逐步演示分部积分流程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'sin t²/t 没有初等原函数，不能硬算，让变限积分靠分部求导', show:1, count:0 },
+    { cls:'step',  tag:'备弹药', log:'g(1)=0 且 g′(x)=sin x²/x，两条白送的信息', show:2, count:1 },
+    { cls:'step',  tag:'分部',   log:'x 收进 d(x²/2)，分部后 g 变 g′', show:3, count:2, ribbon:{k:1, ok:true} },
+    { cls:'ok',    tag:'清边界', log:'g(1)=0、零点处因子 x² 归零，边界项全消', show:4, count:3 },
+    { cls:'step',  tag:'凑微分', log:'剩 −½∫x·sin x² dx，凑 d(x²)/2', show:5, count:4 },
+    { cls:'ok',    tag:'算完',   log:'得 (cos1 − 1)/4，约 −0.115', show:6, count:5, ribbon:{k:2, ok:true} },
+    { cls:'done',  tag:'完成',   log:'符号自检通过：答案 (cos1−1)/4', show:7, count:6, done:true },
+  ],
+
+  result: {
+    big: '答案：$\\dfrac{\\cos1-1}{4}$',
+    html: '记忆锚点：<b>被积函数里藏着变限积分 → 分部积分逼它求导</b>：$g\'(x)=\\frac{\\sin x^2}{x}$ 由变限求导白送，$g(1)=0$ 把边界项清零。剩下 $-\\frac12\\int_0^1x\\sin x^2\\,\\mathrm{d}x=\\frac{\\cos1-1}{4}$（负值，与 $f<0$ 一致）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分藏在被积函数里——分部积分逼它求导</h2>
+<p>答案：$\dfrac{\cos 1-1}{4}$</p>
+<h3>第一步：认清难点，定下策略</h3>
+<p>记 $g(x)=\displaystyle\int_1<sup>x</sup>\frac{\sin t<sup>2</sup>}{t}\,\mathrm{d}t$，则 $f(x)=x\,g(x)$。$\dfrac{\sin t<sup>2</sup>}{t}$ 没有初等原函数，硬算必死；出路是分部积分——分部一次，$g$ 变成 $g'$，而 $g'(x)=\dfrac{\sin x<sup>2</sup>}{x}$ 由变限积分求导白送。</p>
+<h3>第二步：分部积分</h3>
+<p>$$\int_0<sup>1</sup> f(x)\,\mathrm{d}x=\int_0<sup>1</sup> g(x)\,\mathrm{d}\Big(\frac{x<sup>2</sup>}{2}\Big)=\Big[\frac{x<sup>2</sup>}{2}\,g(x)\Big]_0<sup>1</sup>-\int_0<sup>1</sup>\frac{x<sup>2</sup>}{2}\,g'(x)\,\mathrm{d}x.$$</p>
+<p><strong>为什么挑 $\dfrac{x<sup>2</sup>}{2}$ 当"接盘方"？</strong> 分部后 $g'$ 里的 $\dfrac1x$ 恰被 $x<sup>2</sup>$ 除尽，剩下 $\int x\sin x<sup>2</sup>\,\mathrm{d}x$ 这种能凑 $\mathrm{d}(x<sup>2</sup>)$ 的初等积分——接盘方是照着 $g'$ 的形状挑的。</p>
+<p>边界项清点：$g(1)=0$（上下限重合）；$x\to0^+$ 时 $\dfrac{x<sup>2</sup>}{2}\,g(x)\to0$——这不只是"有界"一句带过：$\dfrac{\sin t<sup>2</sup>}{t}\sim t\to0$（$\sin t<sup>2</sup>\sim t<sup>2</sup>$），被积函数在 $t=0$ 处可补成连续，故 $g$ 在 $[0,1]$ 上连续有界，极限确实归零。两项全归零。</p>
+<h3>第三步：算剩下的初等积分</h3>
+<p>$$\int_0<sup>1</sup> f\,\mathrm{d}x=-\frac12\int_0<sup>1</sup> x\sin x<sup>2</sup>\,\mathrm{d}x=-\frac12\Big[-\frac{\cos x<sup>2</sup>}{2}\Big]_0<sup>1</sup>=-\frac12\cdot\frac{1-\cos1}{2}=\frac{\cos1-1}{4}.$$</p>
+<h3>第四步：符号自检</h3>
+<p>$x\in(0,1)$ 时 $g(x)=-\displaystyle\int_x<sup>1</sup>\frac{\sin t<sup>2</sup>}{t}\,\mathrm{d}t&lt;0$（积分区间往回走，且 $\sin t<sup>2</sup>&gt;0$），故 $f(x)=x\,g(x)&lt;0$，积分应为负值——$\dfrac{\cos1-1}{4}\approx-0.115$，与估计吻合。</p>
+<h3>易错点</h3>
+<ul><li><strong>试图先求 $\dfrac{\sin t<sup>2</sup>}{t}$ 的原函数</strong>：它不是初等函数，此路不通；必须让变限积分先“待在原位”，靠分部求导脱身。</li><li><strong>边界项处理马虎</strong>：$g(1)=0$ 与 $x\to0$ 时的有界性共同把边界项清零，漏掉任何一个都会剩一块算不动的项。</li></ul>
+<blockquote>一句话结论：分部积分把 $g$ 变成 $g'$，边界项因 $g(1)=0$ 清零，剩下 $-\dfrac12\int_0<sup>1x</sup>\sin x<sup>2</sup>\,\mathrm{d}x=\dfrac{\cos1-1}{4}$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2018·18 证明 (x−1)(x−ln²x+2klnx−1) ≥ 0</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2018-17.html" data-q="../question/m2-2018-17/">← <b>m2-2018-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2018-18/" data-q="../question/m2-2018-18/" data-no-anim="1">m2-2018-18 · 本题</a>
+  <a href="m2-2018-19.html" data-q="../question/m2-2018-19/"><b>m2-2018-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：把乘积不等式读成「同号」',
+    cls: 'key',
+    body: '<p>记 $g(x)=x-\\ln^{2}x+2k\\ln x-1$（$x>0$）。要证 $(x-1)\\,g(x)\\ge0$，等价于<b>两因子同号或其一为零</b>。$x-1$ 以 $x=1$ 为变号点，故只需证 $g(x)$ 也以 $x=1$ 分界、符号与 $x-1$ 始终一致。</p>' },
+  { title: '换元 u = ln x：化成指数多项式',
+    cls: 'key',
+    body: '<p>令 $u=\\ln x$（$x=\\mathrm{e}^{u}$），$g(x)=\\mathrm{e}^{u}-1-u^{2}+2ku=:\\varphi(u)$。关键观察：$x-1=\\mathrm{e}^{u}-1$ 与 $u$ <b>同号</b>（$u>0\\iff x>1$）。于是只需证 $$u\\cdot\\varphi(u)\\ge0\\quad(\\forall u\\in\\mathbb{R}).$$</p>' },
+  { title: '基准点：φ(0) = 0',
+    cls: '',
+    body: '<p>$\\varphi(0)=\\mathrm{e}^{0}-1-0+0=0$。这意味着「与 $u$ 同号」只需由单调性从原点两侧分别推出。</p>' },
+  { title: '二阶导定位 φ′ 的最小值',
+    cls: '',
+    body: '<p>$\\varphi\'(u)=\\mathrm{e}^{u}-2u+2k$，$\\varphi\'\'(u)=\\mathrm{e}^{u}-2$。$\\varphi\'\'$ 仅在 $u=\\ln 2$ 变号（先负后正），故 $\\varphi\'$ 在 $u=\\ln2$ 取<b>最小值</b>。</p>' },
+  { title: '条件 k ≥ ln2−1 恰好在此入场',
+    cls: 'good',
+    body: '<p>$\\varphi\'(\\ln2)=2-2\\ln2+2k=2\\left[k-(\\ln2-1)\\right]\\ge0$。由最小值性，对一切 $u$ 有 $\\varphi\'(u)\\ge0$：$\\varphi$ 在 $\\mathbb{R}$ 上<b>单调不减</b>。</p>' },
+  { title: '定号：φ 与 u 同号',
+    cls: 'good',
+    body: '<p>由 $\\varphi$ 单调不减、$\\varphi(0)=0$：$u\\ge0\\Rightarrow\\varphi(u)\\ge0$；$u\\le0\\Rightarrow\\varphi(u)\\le0$。故 $u\\cdot\\varphi(u)\\ge0$ 恒成立。</p>' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>回到原变量：$(x-1)\\left(x-\\ln^{2}x+2k\\ln x-1\\right)\\ge0$ 对一切 $x>0$ 成立，<b>等号当且仅当 $x=1$</b>。证毕。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.title.replace(/[:：].*$/, ''),
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    count: i,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '2018·18　证明 $(x-1)\\left(x-\\ln^{2}x+2k\\ln x-1\\right)\\ge0$（$k\\ge\\ln2-1$）',
+  subtitle: '考点：不等式证明 · 方法：换元 $u=\\ln x$ → 同号化 → 单调性定号',
+  intro: '点击「▶ 播放」或「下一步」，逐步展开证明推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '不等式成立，等号仅 $x=1$',
+    html: '记忆锚点：<b>乘积 $\\ge0$ = 两因子同号</b>；含 $\\ln^{2}x$ 时换元 $u=\\ln x$ 化成 $\\varphi(u)=\\mathrm{e}^{u}-1-u^{2}+2ku$，再证 $\\varphi$ 与 $u$ 同号。条件 $k\\ge\\ln2-1$ 的来源：$\\varphi\'$ 的最小值 $\\varphi\'(\\ln2)=2[k-(\\ln2-1)]\\ge0$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：证两因子同号——换元 $u=\ln x$ 把"指对混合"变成可求导到底的多项式</h2>
+<p>答案：当 $k\ge\ln2-1$ 时，对一切 $x&gt;0$ 有 $(x-1)\left(x-\ln<sup>2</sup>x+2k\ln x-1\right)\ge0$，<strong>等号当且仅当 $x=1$</strong>。</p>
+<h3>第一步：为什么先化成"同号"问题</h3>
+<p>记 $g(x)=x-\ln<sup>2</sup>x+2k\ln x-1$（定义域 $x&gt;0$）。按乘法符号规则，$(x-1)g(x)\ge0$ 等价于两因子<strong>同号或有一为零</strong>。第一个因子 $x-1$ 的符号毫无悬念：以 $x=1$ 为变号点。于是全部任务浓缩成一件事：证明 $g(x)$ 也以 $x=1$ 分界、且符号始终与 $x-1$ 一致。</p>
+<h3>第二步：为什么换元 $u=\ln x$——不是炫技，是被求导逼出来的</h3>
+<p>$g(x)$ 把 $x$ 与 $\ln x$ 混在一起：对 $x$ 求导得 $1-\dfrac{2\ln x}{x}+\dfrac{2k}{x}$，再求导生出 $\dfrac{2\ln x-2-2k}{x<sup>2</sup>}$——分式与对数纠缠，符号每层都更难定。而 $\ln x$ 在 $x&gt;0$ 上单调、取遍 $\mathbb{R}$，把它当新变量 $u$（即 $x=\mathrm{e}<sup>u</sup>$），$g$ 变成</p>
+<p>$$\varphi(u)=\mathrm{e}<sup>u</sup>-1-u<sup>2</sup>+2ku,$$</p>
+<p>这是标准的"指数多项式"：求导只会降级（$\mathrm{e}<sup>u</sup>$ 不变、$u<sup>2</sup>$ 变 $2u$、$2ku$ 变常数），三阶之内必然出现"符号可一次定清"的形态。</p>
+<p>换元的另一层收益同样关键：$x-1=\mathrm{e}<sup>u</sup>-1$ 与 $u$ <strong>同号</strong>——因为 $\mathrm{e}<sup>u</sup>$ 单调增且 $\mathrm{e}<sup>0</sup>=1$，$u&gt;0\iff x&gt;1$，$u&lt;0\iff x&lt;1$。且 $u=\ln x$ 是一一对应，符号信息无损失。于是</p>
+<p>$$(x-1)\,g(x)\ge0\iff u\cdot\varphi(u)\ge0\quad\text{对一切 }u\in\mathbb{R}.$$</p>
+<h3>第三步：条件 $k\ge\ln2-1$ 的来历——它正好补齐 $\varphi'$ 的最低点</h3>
+<p>$$\varphi'(u)=\mathrm{e}<sup>u</sup>-2u+2k,\qquad \varphi''(u)=\mathrm{e}<sup>u</sup>-2.$$</p>
+<p>$\varphi''$ 仅在 $u=\ln2$ 变号（先负后正），故 $\varphi'$ 的最小值在 $u=\ln2$：</p>
+<p>$$\varphi'(\ln2)=2-2\ln2+2k=2\left[k-(\ln2-1)\right].$$</p>
+<p>可见 $k$ 是"配平项"：$\mathrm{e}<sup>u</sup>-2u$ 的最小值 $2-2\ln2$ 是个负数，题给条件 $k\ge\ln2-1$ 恰好把缺口填平，保证 $\varphi'(u)\ge\varphi'(\ln2)\ge0$ 对一切 $u$ 成立——$\varphi$ 在 $\mathbb{R}$ 上单调不减。常数不是随便给的：$\ln2-1$ 正是 $\varphi'$ 全局非负的临界值。</p>
+<h3>第四步：定号收尾</h3>
+<p>$\varphi(0)=\mathrm{e}<sup>0</sup>-1-0+0=0$。单调不减 + 过原点，意味着 $\varphi$ 被自己过 $0$ 的值劈成两半：</p>
+<ul><li>$u\ge0$ 时 $\varphi(u)\ge\varphi(0)=0$；</li><li>$u\le0$ 时 $\varphi(u)\le\varphi(0)=0$。</li></ul>
+<p>即 $\varphi(u)$ 与 $u$ 同号，$u\cdot\varphi(u)\ge0$。回到原变量即得所证；两侧都必须交代——不等式要在全定义域 $x&gt;0$（即 $u\in\mathbb{R}$）成立。由单调性，等号仅在 $u=0$ 即 $x=1$ 处成立。</p>
+<h3>易错点</h3>
+<ul><li><strong>直接对 $g(x)$ 求导讨论</strong>：$g'$ 同时含 $\ln x$ 与 $\dfrac1x$，符号层层纠缠；换元 $u=\ln x$ 后才是求导封闭的指数多项式。</li><li><strong>漏用条件 $k\ge\ln2-1$ 或看不出它的来历</strong>：它恰是 $\varphi'(\ln2)\ge0$ 的充要条件；没有它 $\varphi$ 不单调，证明断链。</li><li><strong>忘记交代 $x-1$ 与 $u$ 同号</strong>：$\mathrm{e}<sup>u</sup>-1$ 与 $u$ 同号（$\mathrm{e}<sup>u</sup>$ 单调过 $1$）是换元后接回原不等式的桥，不写这一步证明不闭合。</li><li><strong>只证 $u\ge0$ 一侧</strong>：$u\le0$ 侧的 $\varphi(u)\le0$ 同样由"单调不减 + $\varphi(0)=0$"推出，两侧合起来才是 $u\varphi(u)\ge0$。</li></ul>
+<blockquote>一句话结论：换元 $u=\ln x$ 把 $g$ 化成指数多项式 $\varphi(u)=\mathrm{e}<sup>u</sup>-1-u<sup>2</sup>+2ku$，且 $x-1$ 与 $u$ 同号；$k\ge\ln2-1$ 恰好补齐 $\varphi'$ 的最低点 $2[k-(\ln2-1)]$，$\varphi$ 单调不减、$\varphi(0)=0$，两侧定号即证，等号仅 $x=1$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

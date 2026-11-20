@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2014·18 复合函数偏导反解 f(u)</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2014-17.html" data-q="../question/m2-2014-17/">← <b>m2-2014-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2014-18/" data-q="../question/m2-2014-18/" data-no-anim="1">m2-2014-18 · 本题</a>
+  <a href="m2-2014-19.html" data-q="../question/m2-2014-19/"><b>m2-2014-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$z=f\\bigl(e^x\\cos y\\bigr)$，记 $u=e^x\\cos y$。目标：把 $z_{xx}+z_{yy}$ 用 $f'(u)$、$f''(u)$ 表出，再对照题设右边 $\\bigl(4z+e^x\\cos y\\bigr)e^{2x}$。</p>",
+  "<p><b>一阶偏导</b>（链式法则，$u_x=e^x\\cos y$，$u_y=-e^x\\sin y$）：$$z_x=f'(u)\\,e^x\\cos y,\\qquad z_y=-f'(u)\\,e^x\\sin y.$$</p>",
+  "<p><b>$z_{xx}$</b>：对 $x$ 再求导，两项都来（$u$ 的因子也要求导）：$$z_{xx}=f''(u)\\,e^{2x}\\cos^2y+f'(u)\\,e^x\\cos y.$$</p>",
+  "<p><b>$z_{yy}$</b>：对 $y$ 再求导：$$z_{yy}=f''(u)\\,e^{2x}\\sin^2y-f'(u)\\,e^x\\cos y.$$</p>",
+  "<p><b>相加</b>：$f'(u)\\,e^x\\cos y$ 一正一负<b>恰好抵消</b>，$\\cos^2y+\\sin^2y=1$：$$z_{xx}+z_{yy}=f''(u)\\,e^{2x}.$$</p>",
+  "<p><b>化成常微分方程</b>：题设 $=\\bigl(4f(u)+u\\bigr)e^{2x}$（因 $z=f(u)$、$e^x\\cos y=u$），约去 $e^{2x}>0$：$$f''(u)-4f(u)=u.$$</p>",
+  "<p><b>齐次解</b>：特征方程 $r^2-4=0$，$r=\\pm2$：$$f_h=C_1e^{2u}+C_2e^{-2u}.$$</p>",
+  "<p><b>特解</b>：右端是一次多项式，设 $f^*=au+b$，代入得 $-4(au+b)=u$，比较系数：$a=-\\dfrac14,\\ b=0$。</p>",
+  "<p><b>定常数</b>：$f(0)=0\\Rightarrow C_1+C_2=0$；$f'(0)=0\\Rightarrow 2C_1-2C_2-\\dfrac14=0$，即 $C_1-C_2=\\dfrac18$。解得 $C_1=\\dfrac1{16},\\ C_2=-\\dfrac1{16}$。</p>",
+  "<p><b>验算收尾</b>：$$f(u)=\\frac{1}{16}\\bigl(e^{2u}-e^{-2u}\\bigr)-\\frac u4,\\qquad f''-4f=u\\ \\checkmark$$ 且 $f(0)=0$、$f'(0)=0$ 均满足。</p>"
+];
+
+AW.init({
+  title: "二阶偏导相加，凑出常微分方程 $f''-4f=u$",
+  subtitle: "考点：多元复合函数求导 · 二阶常系数线性微分方程（2014 年数学二第 18 题）",
+  counterLabel: "推导步",
+  ribbonTitle: "关键节点（✓ 已完成）",
+  intro: "点击「▶ 播放」逐步演示从偏导数到常微分方程的全过程。",
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:"shift", tag:"审题",   log:"设中间变量，目标是把两个二阶偏导加起来看剩下什么", show:1, count:0 },
+    { cls:"step",  tag:"一阶导", log:"链式法则分别对 x 和 y 求一阶偏导", show:2, count:1 },
+    { cls:"step",  tag:"对 x 再导", log:"对 x 求二阶偏导，出现平方余弦和带一阶导数的项", show:3, count:2 },
+    { cls:"step",  tag:"对 y 再导", log:"对 y 求二阶偏导，出现平方正弦和带一阶导数的项", show:4, count:3 },
+    { cls:"ok",    tag:"相加",   log:"带一阶导数的两项一正一负抵消，平方项凑成 1，只剩二阶导数", show:5, count:4, ribbon:{k:1, ok:true} },
+    { cls:"ok",    tag:"化方程", log:"约去公因子后得到二阶常系数方程，右端是 u", show:6, count:5, ribbon:{k:2, ok:true} },
+    { cls:"step",  tag:"齐次解", log:"特征根正负 2，齐次解是两个指数的线性组合", show:7, count:6 },
+    { cls:"step",  tag:"特解",   log:"设一次多项式试特解，解出系数负四分之一", show:8, count:7 },
+    { cls:"ok",    tag:"定常数", log:"两个初始条件解出两个组合系数，各为正负十六分之一", show:9, count:8, ribbon:{k:3, ok:true} },
+    { cls:"done",  tag:"完成",   log:"代回方程与初值全部吻合", show:10, count:9, done:true },
+  ],
+
+  result: {
+    big: "$f(u)=\\dfrac{1}{16}\\bigl(e^{2u}-e^{-2u}\\bigr)-\\dfrac{u}{4}$",
+    html: "记忆锚点：<b>$z_{xx}+z_{yy}=f''(u)\\,e^{2x}$——一阶项自动抵消（$\\cos^2y+\\sin^2y=1$）</b>。代回题设约去 $e^{2x}$ 得 $f''-4f=u$；特解 $-\\frac u4$，初值给出 $C_1=\\frac1{16}$、$C_2=-\\frac1{16}$。易错：$z_{yy}$ 漏掉 $-f'(u)e^x\\cos y$ 项导致一阶项不抵消；$f'(0)=0$ 给出 $2C_1-2C_2=\\frac14$ 别算错。",
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：调和变量让 $f'$ 项成对消去——偏微分方程化归为常微分方程</h2>
+<p>答案：$f(u)=\dfrac{1}{16}\left(e<sup>2u</sup>-e<sup>-2u</sup>\right)-\dfrac{u}{4}$。</p>
+<h3>第 0 步：先立机制——"奇迹消项"不是奇迹</h3>
+<p>一切"复合函数的偏微分方程反推 $f$"的题，流程固定三段：①设中间变量，算出 $z_{xx}+z_{yy}$；②代入方程，化成 $f(u)$ 的常微分方程；③用初值定常数。本题真正的机关在：$u=e<sup>x</sup>\cos y$ 是<strong>调和函数</strong>——它自己就满足</p>
+<p>$$\frac{\partial<sup>2u</sup>}{\partial x<sup>2</sup>}+\frac{\partial<sup>2u</sup>}{\partial y<sup>2</sup>}=e<sup>x</sup>\cos y-e<sup>x</sup>\cos y=0.$$</p>
+<p>链式法则对复合函数二阶求导时，除了 $f''(u)$ 项必然还会拖出一串 $f'(u)$ 项，其系数恰是 $\dfrac{\partial<sup>2u</sup>}{\partial x<sup>2</sup>}+\dfrac{\partial<sup>2u</sup>}{\partial y<sup>2</sup>}$——<strong>调和性让这一串 $f'$ 项整体归零</strong>。所以"两相抵消"是结构性必然，出题人选 $e<sup>x</sup>\cos y$ 就是为了这个。</p>
+<h3>第一步：链式法则求一阶偏导</h3>
+<p>$z=f(u)$，$u=e<sup>x</sup>\cos y$：</p>
+<p>$$z_x=f'(u)\,e<sup>x</sup>\cos y,\qquad z_y=-f'(u)\,e<sup>x</sup>\sin y.$$</p>
+<h3>第二步：再求一次——为什么会出现 $f'$ 项</h3>
+<p>对 $z_x=f'(u)\,e<sup>x</sup>\cos y$ 再求 $x$ 导时，$u_x=e<sup>x</sup>\cos y$ 也要跟着求导（"先乘后导"），于是劈成两项：</p>
+<p>$$z_{xx}=f''(u)\,e<sup>2x</sup>\cos<sup>2y</sup>+f'(u)\,e<sup>x</sup>\cos y,$$</p>
+<p>$$z_{yy}=f''(u)\,e<sup>2x</sup>\sin<sup>2y</sup>-f'(u)\,e<sup>x</sup>\cos y.$$</p>
+<p>看第二式的结构：$f''$ 项的系数是 $u_y<sup>2</sup>$，$f'$ 项的系数是 $u_{yy}=-e<sup>x</sup>\cos y$。<strong>这就是第 0 步说的机制</strong>：$f'$ 项的系数最终全靠 $u_{xx}$ 与 $u_{yy}$ 对账，而 $u_{xx}+u_{yy}=0$，注定相消。<strong>$z_{yy}$ 最易漏项</strong>：对 $-f'(u)e<sup>x</sup>\sin y$ 求 $y$ 导，$-f''(u)e<sup>x</sup>\sin y$ 与 $-f'(u)e<sup>x</sup>\cos y$ 都要写，漏掉后者，抵消就不成立。</p>
+<h3>第三步：相加——调和性兑现</h3>
+<p>$$z_{xx}+z_{yy}=f''(u)\,e<sup>2x</sup>\left(\cos<sup>2y</sup>+\sin<sup>2y</sup>\right)+f'(u)\left(e<sup>x</sup>\cos y-e<sup>x</sup>\cos y\right)=f''(u)\,e<sup>2x</sup>.$$</p>
+<p>两处化简各司其职：$f'$ 项因 $\Delta u=0$ 成对消去；$f''$ 项因 $\cos<sup>2y</sup>+\sin<sup>2y</sup>=1$ 收拢成一个系数。偏微分方程被压成一条只含 $f$ 的等式。</p>
+<h3>第四步：代入并约去 $e<sup>2x</sup>$——为什么可以约</h3>
+<p>题设右边 $=\left(4z+e<sup>x</sup>\cos y\right)e<sup>2x</sup>$，其中 $z=f(u)$、$e<sup>x</sup>\cos y=u$，故右边 $=\left(4f(u)+u\right)e<sup>2x</sup>$。于是</p>
+<p>$$f''(u)\,e<sup>2x</sup>=\left(4f(u)+u\right)e<sup>2x</sup>.$$</p>
+<p>$e<sup>2x</sup>&gt;0$ 恒成立，两边同除不改变方程——这一约，把 $x,y$ 彻底送走，剩下纯 $u$ 的常微分方程：</p>
+<p>$$f''(u)-4f(u)=u.$$</p>
+<h3>第五步：解常微分方程——为什么特解设 $au+b$</h3>
+<p>特征方程 $r<sup>2</sup>-4=0$，$r=\pm2$，齐次解 $C_1e<sup>2u</sup>+C_2e<sup>-2u</sup>$。右端 $u$ 是一次多项式，按"同次多项式试探"设特解 $au+b$：代入得 $-4(au+b)=u$，比较系数 $a=-\dfrac14,\ b=0$。<strong>为什么敢设一次式</strong>：$4\neq0$ 不是特征根，多项式空间被 $-4$ 倍地映回自身，一次试探必成功；若右端次数对应的 $\lambda=0$ 恰是特征根，才需要升次重设。</p>
+<h3>第六步：两个初值定两个常数</h3>
+<p>$f(0)=0$：$C_1+C_2=0$。$f'(u)=2C_1e<sup>2u</sup>-2C_2e<sup>-2u</sup>-\dfrac14$，$f'(0)=0$：$2C_1-2C_2=\dfrac14$，即 $C_1-C_2=\dfrac18$。<strong>为什么两个条件刚好够</strong>：二阶方程通解含两个自由常数，一个初值定一个。解得 $C_1=\dfrac1{16},\ C_2=-\dfrac1{16}$：</p>
+<p>$$f(u)=\frac{1}{16}\left(e<sup>2u</sup>-e<sup>-2u</sup>\right)-\frac u4.$$</p>
+<p><strong>验算</strong>：$f''=\dfrac14(e<sup>2u</sup>-e<sup>-2u</sup>)$，$4f=\dfrac14(e<sup>2u</sup>-e<sup>-2u</sup>)-u$，相减得 $u$ ✓；$f(0)=0$、$f'(0)=\dfrac{2}{16}+\dfrac{2}{16}-\dfrac14=0$ ✓。</p>
+<h3>易错点</h3>
+<ul><li><strong>$z_{yy}$ 漏一阶项</strong>：$-f'(u)e<sup>x</sup>\cos y$ 不写，$f'$ 项不抵消，整题崩盘——它的存在正是"调和消项"机制的另一半。</li><li><strong>忘约 $e<sup>2x</sup>$</strong>：不约就看不出 $f''-4f=u$，方程永远带着 $x,y$ 解不动。</li><li><strong>初值方程算错</strong>：$f'(0)=0$ 给出 $2C_1-2C_2=\dfrac14$，除以 2 才是 $\dfrac18$，直接令 $C_1-C_2=\dfrac14$ 会差一半。</li><li><strong>特解形式乱设</strong>：右端是一次多项式，设 $au+b$ 即可；设 $au$ 也可，设指数式反而解不出。</li></ul>
+<blockquote>结论：$u=e<sup>x</sup>\cos y$ 调和（$\Delta u=0$）⇒ $z_{xx}+z_{yy}=f''(u)e<sup>2x</sup>$ ⇒ $f''-4f=u$ 配初值 ⇒ $f(u)=\dfrac1{16}(e<sup>2u</sup>-e<sup>-2u</sup>)-\dfrac u4$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

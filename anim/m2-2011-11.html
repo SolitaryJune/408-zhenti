@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2011 数二第 11 题 · 变限积分曲线的弧长</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-10.html" data-q="../question/m2-2011-10/">← <b>m2-2011-10</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-11/" data-q="../question/m2-2011-11/" data-no-anim="1">m2-2011-11 · 本题</a>
+  <a href="m2-2011-12.html" data-q="../question/m2-2011-12/"><b>m2-2011-12</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（与模板一致，勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+var LINES = [
+  '<p><b>题面：</b>曲线 $y=\\int_0^x\\tan t\\,\\mathrm dt$（$0\\le x\\le\\dfrac\\pi4$），求弧长 $s$。</p>',
+  '<p><b>变限积分求导：</b>$$y\'=\\tan x.$$（不必先积出 $-\\ln\\cos x$ 再求导。）</p>',
+  '<p><b>弧长公式：</b>$$s=\\int_0^{\\frac\\pi4}\\sqrt{1+(y\')^2}\\,\\mathrm dx=\\int_0^{\\frac\\pi4}\\sqrt{1+\\tan^2x}\\,\\mathrm dx.$$</p>',
+  '<p><b>开方化简：</b>由 $1+\\tan^2x=\\sec^2x$，且区间上 $\\sec x>0$，$$s=\\int_0^{\\frac\\pi4}\\sec x\\,\\mathrm dx.$$</p>',
+  '<p><b>原函数：</b>$$\\int\\sec x\\,\\mathrm dx=\\ln\\lvert\\sec x+\\tan x\\rvert+C.$$</p>',
+  '<p><b>代上下限：</b>$$s=\\ln\\bigl(\\sec\\tfrac\\pi4+\\tan\\tfrac\\pi4\\bigr)-\\ln 1=\\ln(\\sqrt2+1).$$</p>',
+  '<p><b>结论：</b>弧长 $s=\\ln(1+\\sqrt2)$。</p>'
+];
+
+var lineEls = [];
+
+AW.init({
+  title: '第 11 题 · 曲线 $y=\\int_0^x\\tan t\\,\\mathrm dt$ 的弧长',
+  subtitle: '考点：变限积分求导 + 弧长公式 · 方法：被开方量凑完全平方',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示：求导 → 弧长公式 → 开方化简 → 积 sec x。',
+  ribbonTitle: '推导进度（✓ 完成）',
+  build: function(stage){
+    stage.innerHTML = '';
+    lineEls = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>（每步揭示一行，公式由 KaTeX 渲染）'));
+    LINES.forEach(function(h){
+      var d = AW.el('div', 'aw-stepcard', h);
+      d.style.display = 'none';
+      wrap.appendChild(d);
+      lineEls.push(d);
+    });
+    stage.appendChild(wrap);
+  },
+  snaps: [
+    { cls:'step',  tag:'审题', count:0, reveal:1 },
+    { cls:'shift', tag:'求导', log:'变限积分上限求导，y′ = tan x 一步到位', count:1, reveal:2, hl:1, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'公式', log:'代入弧长公式 s = ∫√(1+y′²) dx', count:2, reveal:3, hl:2, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'开方', log:'1 + tan²x = sec²x，区间上 sec x 为正，开方得 sec x', count:3, reveal:4, hl:3, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'原函数', log:'sec x 的原函数是 ln|sec x + tan x|', count:4, reveal:5, hl:4, ribbon:{k:4, ok:true} },
+    { cls:'step',  tag:'代限', log:'上限处 √2 + 1，下限处 ln1 = 0', count:5, reveal:6, hl:5, ribbon:{k:5, ok:true} },
+    { cls:'done',  tag:'结论', log:'结论：弧长 s = ln(1+√2)', count:6, reveal:7, hl:6, good:true, done:true, ribbon:{k:6, ok:true} },
+  ],
+  render: function(stage, sn){
+    for(var j = 0; j < lineEls.length; j++){
+      lineEls[j].style.display = (j < (sn.reveal || 0)) ? '' : 'none';
+      lineEls[j].className = 'aw-stepcard' + (sn.hl === j ? (sn.good ? ' good' : ' key') : '');
+    }
+    renderMathAfterSnap(stage);
+  },
+  result: {
+    big: '填 ln(1+√2)',
+    html: '链条：<b>$y\'=\\tan x$（变限积分求导）→ $\\sqrt{1+\\tan^2x}=\\sec x$ → $\\int\\sec x\\,\\mathrm dx=\\ln\\lvert\\sec x+\\tan x\\rvert$ → $s=\\ln(1+\\sqrt2)$</b>。易错：开平方要靠 $\\sec x>0$ 去掉绝对值；sec 的原函数记成「减号」会差一个负号。',
+  },
+});
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分曲线的弧长——公式从微元勾股定理来</h2>
+<p>答案：$\ln(1+\sqrt 2)$</p>
+<h3>第一步：先懂机制——弧长公式在算什么</h3>
+<p>弧长公式 $s=\int\sqrt{1+(y')<sup>2</sup>}\,\mathrm dx$ 不是要背的黑箱：把曲线切成小段，每小段用切线段近似，而切线段的长就是勾股定理</p>
+<p>$$\mathrm ds=\sqrt{(\mathrm dx)<sup>2</sup>+(\mathrm dy)<sup>2</sup>}=\sqrt{1+\Bigl(\frac{\mathrm dy}{\mathrm dx}\Bigr)<sup>2</sup>}\,\mathrm dx.$$</p>
+<p>积分把所有小段拼回全长。所以套公式前唯一要准备的就是 $y'$。</p>
+<h3>第二步：变限积分直接求导</h3>
+<p>$y=\int_0<sup>x</sup>\tan t\,\mathrm dt$，由变限积分求导定理（被积函数 $\tan t$ 在 $\left[0,\frac\pi4\right]$ 上连续）立刻得 $y'=\tan x$。不必先积出 $-\ln\cos x$ 再求导——那等于把刚做的积分原样拆掉。代入公式：</p>
+<p>$$s=\int_0<sup>\frac\pi4</sup>\sqrt{1+\tan<sup>2x</sup>}\,\mathrm dx.$$</p>
+<h3>第三步：被开方量凑完全平方</h3>
+<p>用 $1+\tan<sup>2x</sup>=\sec<sup>2x</sup>$——它来自 $\sin<sup>2x</sup>+\cos<sup>2x</sup>=1$ 两边同除以 $\cos<sup>2x</sup>$。开方时注意 $\sqrt{\sec<sup>2x</sup>}=\lvert\sec x\rvert$，而区间上 $\cos x&gt;0$，故 $\sec x&gt;0$，绝对值直接摘掉：</p>
+<p>$$s=\int_0<sup>\frac\pi4</sup>\sec x\,\mathrm dx.$$</p>
+<h3>第四步：用 sec 的原函数收尾</h3>
+<p>$$s=\Bigl[\ln(\sec x+\tan x)\Bigr]_0<sup>\frac\pi4</sup>=\ln(\sqrt2+1)-\ln 1=\ln(1+\sqrt2).$$</p>
+<p>（验证端点：$\sec\frac\pi4=\sqrt2$、$\tan\frac\pi4=1$；下限处 $\sec0+\tan0=1$，$\ln1=0$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>先积出 $y$ 再求导</strong>：绕远路；变限积分上限求导一步到位，这也是题目把 $y$ 写成变限积分的用意。</li><li><strong>开平方丢绝对值</strong>：$\sqrt{\sec<sup>2x</sup>}=\lvert\sec x\rvert$，本题靠 $\sec x&gt;0$ 才能直接开；换一个含 $\cos x&lt;0$ 的区间就必须讨论。</li><li><strong>$\sec x$ 原函数记错</strong>：$\int\sec x\,\mathrm dx=\ln\lvert\sec x+\tan x\rvert+C$；求导一遍即可自检，别凭印象写。</li></ul>
+<blockquote>结论：填 $\ln(1+\sqrt 2)$。弧长 = 微元勾股定理的积分；$1+\tan<sup>2</sup>=\sec<sup>2</sup>$ 把被开方量变成完全平方是本题的题眼。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

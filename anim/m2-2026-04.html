@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·算法类动画：微元法求细棒对质点的引力</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2026-03.html" data-q="../question/m2-2026-03/">← <b>m2-2026-03</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2026-04/" data-q="../question/m2-2026-04/" data-no-anim="1">m2-2026-04 · 本题</a>
+  <a href="m2-2026-05.html" data-q="../question/m2-2026-05/"><b>m2-2026-05</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '微元法：线密度 $1$ 的细棒（$-1\\le x\\le1$）对质点 $m$（$(0,1)$）的引力',
+  subtitle: '考点：定积分物理应用 · 万有引力 + 矢量分解 + 对称性',
+  counterLabel: '推导步',
+  intro: '点击「▶ 播放」逐步演示微元法的完整流程。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    var lines = [
+      '<b>取微元</b>：棒在 $y=0,\\ -1\\le x\\le1$，线密度 $1$；质点 $m$ 在 $(0,1)$。取微元 $[x,x+dx]$，质量 $dm=dx$。',
+      '<b>元引力</b>：距离 $r=\\sqrt{x^2+1}$，由万有引力定律 $$dF=\\frac{Gm\\,dm}{r^2}=\\frac{Gm}{x^2+1}\\,dx$$',
+      '<b>矢量分解</b>：$x$ 与 $-x$ 处微元的水平分量等大反向、<b>全部抵消</b>；竖直分量同向叠加，合力沿 $y$ 轴。',
+      '<b>竖直分量</b>：乘竖直方向余弦 $\\cos\\theta=\\dfrac1r=\\dfrac{1}{\\sqrt{x^2+1}}$ $$dF_y=\\frac{Gm}{x^2+1}\\cdot\\frac{1}{\\sqrt{x^2+1}}\\,dx=\\frac{Gm}{(x^2+1)^{3/2}}\\,dx$$',
+      '<b>对称合并</b>：$$F=\\int_{-1}^{1}\\frac{Gm}{(x^2+1)^{3/2}}dx=2\\int_0^1\\frac{Gm}{(x^2+1)^{3/2}}dx=\\int_0^1\\frac{2Gm}{(x^2+1)^{3/2}}dx$$',
+      '<b>排错</b>：分母 $(x^2+1)^{1/2}$（A、B）少乘了方向余弦；分子带 $x$（A、C）用的是水平方向余弦 $\\dfrac{x}{r}$——那个分量已抵消。',
+      '<b>结论</b>：$$F=\\int_0^1\\frac{2Gm}{(x^2+1)^{3/2}}\\,dx\\qquad\\Longrightarrow\\qquad \\text{选 D}$$',
+    ];
+    this._lines = [];
+    for(var i=0;i<lines.length;i++){
+      var d = AW.el('div', '', lines[i]);
+      d.style.cssText = 'padding:9px 14px;margin:7px 0;border-left:3px solid transparent;border-radius:10px;transition:all .35s;opacity:.28;font-size:15px;line-height:1.9;';
+      board.appendChild(d);
+      this._lines.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'取微元', log:'棒上取 [x, x+dx]，质量 dm = dx，质点在 (0,1)', count:0 },
+    { cls:'step',  tag:'元引力', log:'距离平方在分母：dF = Gm dx/(x²+1)', count:1 },
+    { cls:'shift', tag:'分解',   log:'引力是矢量：水平分量左右对称、互相抵消', count:2 },
+    { cls:'ok',    tag:'竖直分量', log:'乘竖直方向余弦 1/r，分母变成 (x²+1) 的 3/2 次方', count:3 },
+    { cls:'ok',    tag:'合并',   log:'[−1,1] 上的积分由对称性折成 2 倍 [0,1] 积分', count:4 },
+    { cls:'miss',  tag:'排错',   log:'A、B 指数少一次方；A、C 分子多一个 x（水平余弦）', count:5 },
+    { cls:'done',  tag:'完成',   log:'结论：F = ∫₀¹ 2Gm/(x²+1)^(3/2) dx，选 D', count:6, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    for(var j=0;j<this._lines.length;j++){
+      var L = this._lines[j];
+      L.style.opacity = j<=i ? '1' : '0.28';
+      L.style.borderLeftColor = (j===i) ? '#d97706' : (j<i ? '#16a34a' : 'transparent');
+      L.style.background = (j===i) ? '#fef3c7' : 'transparent';
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$F=\\displaystyle\\int_0^1\\frac{2Gm}{(x^2+1)^{3/2}}\\,dx$（选 D）',
+    html: '记忆锚点：<b>距离平方给 $(x^2+1)^{-1}$，竖直方向余弦再给 $(x^2+1)^{-1/2}$，合成 $(x^2+1)^{-3/2}$；水平分量被对称性抵消</b>。易错：分子带 $x$ 是水平方向余弦（A、C），指数 $1/2$ 是漏乘方向余弦（B）。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：微元法求细棒引力——矢量分解 + 对称性</h2>
+<p>答案：D</p>
+<h3>第零步：机制——为什么必须先分解再积分</h3>
+<p>引力是<strong>矢量</strong>，而微元法累加的是数。把各微元的引力直接"当数加"是错的：水平方向你有往左我有往右，合在一起不是大小相加。好在对称性救场——棒关于 $y$ 轴对称、质点恰在对称轴上，$x$ 与 $-x$ 处微元的水平分量等大反向、<strong>全部抵消</strong>；竖直分量同向叠加。所以合力 = 竖直分量之和，积分对象取竖直分量。</p>
+<h3>第一步：取微元，写元引力</h3>
+<p>棒在 $y=0,\ -1\le x\le1$ 上，线密度 $1$，质点 $m$ 在 $(0,1)$。取微元 $[x,x+dx]$，质量 $dm=1\cdot dx=dx$，到质点距离</p>
+<p>$$r=\sqrt{x<sup>2</sup>+1<sup>2</sup>}=\sqrt{x<sup>2</sup>+1},$$</p>
+<p>由万有引力定律（距离平方在分母）：</p>
+<p>$$dF=\frac{Gm\,dm}{r<sup>2</sup>}=\frac{Gm}{x<sup>2</sup>+1}\,dx.$$</p>
+<h3>第二步：竖直分量乘方向余弦——$\cos\theta=\dfrac1r$ 从哪来</h3>
+<p>微元在 $(x,0)$、质点在 $(0,1)$，微元引力沿两点连线指向对方。连线与竖直方向的夹角 $\theta$ 落在一个直角三角形里：<strong>对边是水平距离 $\lvert x\rvert$，邻边是竖直距离 $1$，斜边是 $r$</strong>。竖直分量 $=dF\cos\theta$，而</p>
+<p>$$\cos\theta=\frac{\text{邻边}}{\text{斜边}}=\frac1r=\frac{1}{\sqrt{x<sup>2</sup>+1}},$$</p>
+<p>故</p>
+<p>$$dF_y=\frac{Gm}{x<sup>2</sup>+1}\cdot\frac{1}{\sqrt{x<sup>2</sup>+1}}\,dx=\frac{Gm}{(x<sup>2</sup>+1)<sup>3/2</sup>}\,dx.$$</p>
+<p>（分子里的 $\dfrac{x}{r}$ 是<strong>水平</strong>方向余弦——正是 A、C 的分子；水平分量被对称性消掉，不该出现。）</p>
+<h3>第三步：对称区间合并</h3>
+<p>$$F=\int_{-1}<sup>1</sup>\frac{Gm}{(x<sup>2</sup>+1)<sup>3/2</sup>}\,dx=2\int_0<sup>1</sup>\frac{Gm}{(x<sup>2</sup>+1)<sup>3/2</sup>}\,dx=\int_0<sup>1</sup>\frac{2Gm}{(x<sup>2</sup>+1)<sup>3/2</sup>}\,dx,$$</p>
+<p>选 <strong>D</strong>。</p>
+<h3>易错点</h3>
+<ul><li><strong>不分解直接积 $\dfrac1{r<sup>2</sup>}$</strong>：距离平方只给 $(x<sup>2</sup>+1)<sup>-1</sup>$，还差一个方向余弦的方次；B 的分母 $1/2$ 次正是漏乘 $\dfrac1r$ 的结果。</li><li><strong>方向余弦取错</strong>：$\dfrac{x}{r}$ 对应水平方向，其贡献正负抵消；竖直方向对应常数因子 $\dfrac1r$，分子里不带 $x$。</li><li><strong>指数合成出错</strong>：$\dfrac1{r<sup>2</sup>}\cdot\dfrac1r=\dfrac1{r<sup>3</sup>}=(x<sup>2</sup>+1)<sup>-3/2</sup>$，分母是 $3/2$ 次不是 $1/2$ 次（A、B 的毛病）。</li></ul>
+<blockquote>一句话结论：距离平方给 $(x<sup>2</sup>+1)<sup>-1</sup>$，竖直方向余弦 $\dfrac1r$ 再给一次 $(x<sup>2</sup>+1)<sup>-1/2</sup>$，合成 $(x<sup>2</sup>+1)<sup>-3/2</sup>$，对称折半后选 D。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

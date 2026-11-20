@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009 数二第 19 题 · 半圆盘上二重积分：平移 + 极坐标（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-18.html" data-q="../question/m2-2009-18/">← <b>m2-2009-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-19/" data-q="../question/m2-2009-19/" data-no-anim="1">m2-2009-19 · 本题</a>
+  <a href="m2-2009-20.html" data-q="../question/m2-2009-20/"><b>m2-2009-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2009·19　计算 $\\iint_D(x-y)\\,\\mathrm{d}x\\mathrm{d}y$，$D:(x-1)^2+(y-1)^2\\le2$ 且 $y\\ge x$',
+  subtitle: '考点：平移圆心 + 极坐标 · 半圆盘定限 · 被积函数变量分离',
+  counterLabel: '已完成',
+  ribbonTitle: '推导进度（✓ 完成）',
+  intro: '点击「▶ 播放」或「下一步」，看半圆盘如何被平移和极坐标逐步消化。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      "<b>① 看区域：</b>$D$ 是圆 $(x-1)^2+(y-1)^2\\le2$（圆心 $(1,1)$、半径 $\\sqrt2$）与 $y\\ge x$ 的交集；直线 $y=x$ <b>恰过圆心</b>，所以 $D$ 是<b>半圆盘</b>",
+      "<b>② 平移：</b>令 $u=x-1,\\ v=y-1$，则 $x-y=u-v$，$\\mathrm{d}x\\,\\mathrm{d}y=\\mathrm{d}u\\,\\mathrm{d}v$，区域变为 $D':u^2+v^2\\le2,\\ v\\ge u$",
+      "<b>③ 极坐标定限：</b>$u=r\\cos\\theta,\\ v=r\\sin\\theta$；$v\\ge u\\iff\\sin\\theta\\ge\\cos\\theta\\iff\\theta\\in\\Big[\\dfrac{\\pi}{4},\\dfrac{5\\pi}{4}\\Big]$，$r\\in[0,\\sqrt2]$",
+      "<b>④ 变量分离：</b>$$I=\\int_{\\pi/4}^{5\\pi/4}(\\cos\\theta-\\sin\\theta)\\,\\mathrm{d}\\theta\\cdot\\int_0^{\\sqrt2}r^2\\,\\mathrm{d}r$$",
+      "<b>⑤ 径向：</b>$\\displaystyle\\int_0^{\\sqrt2}r^2\\,\\mathrm{d}r=\\frac{(\\sqrt2)^3}{3}=\\frac{2\\sqrt2}{3}$",
+      "<b>⑥ 角向：</b>原函数为 $\\sin\\theta+\\cos\\theta$，$\\big[\\sin\\theta+\\cos\\theta\\big]_{\\pi/4}^{5\\pi/4}=-\\sqrt2-\\sqrt2=-2\\sqrt2$",
+      "<b>⑦ 相乘：</b>$$I=\\frac{2\\sqrt2}{3}\\times(-2\\sqrt2)=-\\frac{8}{3}$$"
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'看区域', log:'圆心恰好落在切线上，圆被直径切成半圆盘', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'平移',   log:'把圆心平移到原点，被积函数简化成 u 减 v', count:1, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'定限',   log:'纵坐标不小于横坐标给出极角范围：四分之派到四分之五派', count:2, ribbon:{k:3, ok:true} },
+    { cls:'step',  tag:'分离',   log:'被积函数拆成角度部分乘半径部分，两个积分独立进行', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'径向',   log:'半径部分：r 平方从零积到根号二，得二倍根号二除以三', count:4, ribbon:{k:5, ok:true} },
+    { cls:'ok',    tag:'角向',   log:'角度部分原函数是正弦加余弦，两端作差得负二倍根号二', count:5, ribbon:{k:6, ok:true} },
+    { cls:'ok',    tag:'相乘',   log:'相乘时根号二互相约去，得到负三分之八', count:6, ribbon:{k:7, ok:true} },
+    { cls:'done',  tag:'自检',   log:'自检：区域内 y 大于等于 x，被积函数非正，负号结果合理', count:7, ribbon:{k:8, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '$\\iint_D(x-y)\\,\\mathrm{d}x\\mathrm{d}y=-\\dfrac{8}{3}$',
+    html: '记忆锚点：<b>直线过圆心 $\\Rightarrow$ 半圆盘</b>；先平移圆心到原点再上极坐标。极角由 $v\\ge u$ 译成 $\\Big[\\frac{\\pi}{4},\\frac{5\\pi}{4}\\Big]$。自检习惯：区域内 $x-y\\le0$，结果必为负——符号对上了才敢写答案。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：平移去圆心 + 极坐标，半圆盘上的二重积分</h2>
+<p><strong>答案：$-\dfrac{8}{3}$。</strong></p>
+<h3>第一步：看清区域形状——为什么是半圆盘</h3>
+<p>$D$ 是圆 $(x-1)<sup>2</sup>+(y-1)<sup>2</sup>\le2$（圆心 $(1,1)$、半径 $\sqrt2$）与 $y\ge x$ 的交集。圆心 $(1,1)$ 恰好满足 $y=x$，即<strong>切割线是过圆心的直径</strong>，所以 $D$ 是标准半圆盘。这一眼决定了策略：对称结构能用，极坐标能用。</p>
+<h3>第二步：为什么先平移再上极坐标</h3>
+<p>极坐标的好处只在"圆心位于极点"时兑现——此时圆边界才变成 $r=$ 常数；对圆心不在原点的圆直接上极坐标，边界方程 $(r\cos\theta-1)<sup>2</sup>+(r\sin\theta-1)<sup>2</sup>=2$ 反而更繁。所以先平移 $u=x-1,\ v=y-1$ 把圆心搬到原点。<strong>平移是合法的</strong>：这是变量替换，雅可比为 $1$，$\mathrm dx\,\mathrm dy=\mathrm du\,\mathrm dv$，积分值不变；被积函数换为 $x-y=u-v$。区域变为</p>
+<p>$$D':u<sup>2</sup>+v<sup>2</sup>\le2,\quad v\ge u.$$</p>
+<h3>第三步：极坐标定限——$r\,\mathrm dr\,\mathrm d\theta$ 与 $\theta$ 范围各是为什么</h3>
+<p><strong>面积元素为什么多一个 $r$</strong>：极坐标下的微元是"扇环"小格，径向边长 $\mathrm dr$、弧向边长 $r\,\mathrm d\theta$（半径越大弧越长），面积 $=r\,\mathrm dr\,\mathrm d\theta$——$r$ 因子是对"弧长随半径放大"的补偿，不是凭空规定。</p>
+<p><strong>$\theta$ 范围</strong>：$v\ge u$ 即 $\sin\theta\ge\cos\theta$，亦即 $\sqrt2\sin\Big(\theta-\dfrac\pi4\Big)\ge0$，给出 $\theta\in\Big[\dfrac\pi4,\dfrac{5\pi}4\Big]$——从 $45°$ 逆时针转 $180°$，正是"直线 $v=u$ 左上方"的半平面。故</p>
+<p>$$I=\int_{\pi/4}<sup>5\pi/4</sup>(\cos\theta-\sin\theta)\,\mathrm{d}\theta\cdot\int_0<sup>\sqrt2</sup>r<sup>2</sup>\,\mathrm{d}r.$$</p>
+<p>之所以能拆成两个独立积分相乘：被积函数 $r(\cos\theta-\sin\theta)\cdot r$ 可分离、区域又是 $\theta$ 区间乘 $r$ 区间的"矩形域"。</p>
+<h3>第四步：两个积分分别算，再相乘</h3>
+<ul><li>径向：$\displaystyle\int_0<sup>\sqrt2</sup>r<sup>2</sup>\,\mathrm{d}r=\frac{(\sqrt2)<sup>3</sup>}3=\frac{2\sqrt2}3$；</li><li>角向：原函数为 $\sin\theta+\cos\theta$，$\big[\sin\theta+\cos\theta\big]_{\pi/4}<sup>5\pi/4</sup>=-\sqrt2-\sqrt2=-2\sqrt2$。</li></ul>
+<p>相乘：$I=\dfrac{2\sqrt2}3\times(-2\sqrt2)=-\dfrac83$。</p>
+<p><strong>符号自检</strong>：区域内 $y\ge x$，被积函数 $x-y\le0$，结果必须是负数——口径吻合；若算出正数，说明 $\theta$ 范围取反了。</p>
+<h3>易错点</h3>
+<ul><li><strong>极角范围取错</strong>：不是 $[0,2\pi]$ 挖去一角，而是半圆 $\Big[\dfrac\pi4,\dfrac{5\pi}4\Big]$；用 $v\ge u$ 逐步翻译就不会错。</li><li><strong>忘记平移</strong>：对圆心不在原点的圆硬上极坐标，边界方程非常麻烦。</li><li><strong>漏掉雅可比 $r$</strong>：$\mathrm du\,\mathrm dv=r\,\mathrm dr\,\mathrm d\theta$，漏写 $r$ 结果差一个量级。</li></ul>
+<blockquote>结论：直线过圆心得半圆盘，平移 + 极坐标分离变量，答案 $-\dfrac83$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

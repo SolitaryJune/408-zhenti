@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·19 中值定理证不等式 + 单调有界证收敛</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-18.html" data-q="../question/m2-2011-18/">← <b>m2-2011-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-19/" data-q="../question/m2-2011-19/" data-no-anim="1">m2-2011-19 · 本题</a>
+  <a href="m2-2011-20.html" data-q="../question/m2-2011-20/"><b>m2-2011-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题：两问的分工',
+    cls: 'key',
+    body: '<p>第 (1) 问的不等式 $\\dfrac{1}{n+1}<\\ln\\left(1+\\dfrac1n\\right)<\\dfrac1n$ 是第 (2) 问的<b>弹药库</b>。观察：$\\ln\\left(1+\\dfrac1n\\right)=\\ln(n+1)-\\ln n$ 正是 $f(x)=\\ln x$ 在区间 $[n,n+1]$ 上的增量——这指向<b>拉格朗日中值定理</b>。第 (2) 问的目标是证收敛，路线是<b>单调有界准则</b>。</p>',
+    log: '把对数差看成 ln x 的增量，第(1)问用中值定理，第(2)问用单调有界' },
+  { title: '第 (1) 问：中值定理一击',
+    cls: 'key',
+    body: '<p>$f(x)=\\ln x$ 在 $[n,n+1]$ 上连续、内可导，存在 $\\xi\\in(n,n+1)$ 使 $$\\ln(n+1)-\\ln n=\\frac{1}{\\xi}.$$ 中值定理把「对数差」换成了「一个倒数」，而倒数的范围一目了然。</p>',
+    log: '中值定理：对数差 = 1/ξ，ξ 落在 n 与 n+1 之间' },
+  { title: '夹逼收网：两半各管一头',
+    cls: 'good',
+    body: '<p>由 $n<\\xi<n+1$ 得 $\\dfrac{1}{n+1}<\\dfrac{1}{\\xi}<\\dfrac1n$，即 $$\\boxed{\\dfrac{1}{n+1}<\\ln\\left(1+\\dfrac1n\\right)<\\dfrac1n}.$$ <b>左半是下界、右半是上界</b>，第 (2) 问里正好各用一次。</p>',
+    log: 'ξ 夹在 n 与 n+1 之间，取倒数即得双侧不等式' },
+  { title: '第 (2) 问·单调递减',
+    cls: 'good',
+    body: '<p>相邻两项相减，用<b>左半</b>不等式：$$a_{n+1}-a_n=\\frac{1}{n+1}-\\big(\\ln(n+1)-\\ln n\\big)=\\frac{1}{n+1}-\\ln\\left(1+\\frac1n\\right)<0,$$ 故 $\\{a_n\\}$ 严格递减。</p>',
+    log: '相邻项差 = 1/(n+1) − ln(1+1/n)，由左半不等式知它小于零' },
+  { title: '第 (2) 问·有下界 0',
+    cls: 'good',
+    body: '<p>把<b>右半</b> $\\ln\\left(1+\\dfrac1k\\right)<\\dfrac1k$ 改写为 $\\dfrac1k>\\ln(k+1)-\\ln k$，对 $k=1,\\dots,n$ 累加，右边裂项相消：$$\\sum_{k=1}^n\\frac1k>\\sum_{k=1}^n\\big(\\ln(k+1)-\\ln k\\big)=\\ln(n+1)>\\ln n,$$ 故 $a_n=\\displaystyle\\sum_{k=1}^n\\frac1k-\\ln n>0$。</p>',
+    log: '右半不等式累加：调和和压住 ln(n+1)，所以 aₙ 恒正' },
+  { title: '结论',
+    cls: 'good',
+    body: '<p>$\\{a_n\\}$ <b>单调递减</b>且<b>有下界 $0$</b>，由单调有界准则知 $\\{a_n\\}$ <b>收敛</b>。(1)(2) 全部得证。（其极限即欧拉常数，本题只要求证收敛，不必求出。）</p>',
+    log: '递减 + 下界 0，单调有界准则收官：数列收敛' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: '第 ' + (i + 1) + ' 步',
+    log: s.log || s.title,
+    count: i + 1,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '证明 $\\dfrac{1}{n+1}<\\ln\\left(1+\\dfrac1n\\right)<\\dfrac1n$ 与 $\\{a_n\\}$ 收敛',
+  subtitle: '考点：拉格朗日中值定理 + 单调有界准则 · 两问接力：不等式当弹药',
+  counterLabel: '推理步',
+  intro: '点击「▶ 播放」逐步展开证明推理链。',
+  /* 统一 render：复刻引擎默认的 sn.html 行为，再对舞台做公式渲染 */
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '(1) 不等式成立；(2) $\\{a_n\\}$ 收敛',
+    html: '记忆锚点：<b>看到 $\\ln(n+1)-\\ln n$ 就想到 $\\ln x$ 在 $[n,n+1]$ 上的中值定理</b>；(2) 的套路是「单调 + 有界」：单调性用左半不等式，下界用右半不等式累加裂项。只证收敛，不必求极限。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：中值定理证不等式，单调有界证收敛</h2>
+<p>最终答案：(1) 对任意正整数 $n$，$\dfrac{1}{n+1}&lt;\ln\left(1+\dfrac1n\right)&lt;\dfrac1n$ 成立；(2) 数列 $\{a_n\}$ 收敛。（题库 <code>answer</code> 字段为空，结论以本题推导与参考解析为准。）</p>
+<h3>第一步：(1) 为什么拉格朗日中值定理是对的工具</h3>
+<p>关键观察：$\ln\left(1+\dfrac1n\right)=\ln(n+1)-\ln n$，正是 $f(x)=\ln x$ 在区间 $[n,n+1]$ 上的<strong>增量</strong>。中值定理的机制恰是"增量 = 中间某点的导数 × 区间长"：</p>
+<p>$$\ln(n+1)-\ln n=\frac{1}{\xi}\cdot\big((n+1)-n\big)=\frac1\xi,\qquad \xi\in(n,n+1).$$</p>
+<p><strong>为什么一步就得到双侧夹逼？</strong> 因为 $\dfrac1x$ 严格递减，而 $\xi$ 被 $n&lt;\xi&lt;n+1$ 夹住，倒序后左右不等式同时到手：$\dfrac{1}{n+1}&lt;\dfrac1\xi&lt;\dfrac1n$。不用分别放缩两侧，一个 $\xi$ 的位置估计就是全部。又 $\ln(n+1)-\ln n=\ln\left(1+\dfrac1n\right)$，(1) 得证。左右两半各管一头：左半是下界、右半是上界，第 (2) 问各用一次——两问在这时就已挂上钩。</p>
+<h3>第二步：(2) 先证单调递减——左半不等式登场</h3>
+<p>$$a_{n+1}-a_n=\frac{1}{n+1}-\big(\ln(n+1)-\ln n\big)=\frac{1}{n+1}-\ln\left(1+\frac1n\right)&lt;0,$$</p>
+<p>最后一步用的正是 (1) 的<strong>左半</strong>不等式。直观地说：调和级数每步加上的 $\dfrac{1}{n+1}$，抵不掉对数一步的增量，故 $\{a_n\}$ 严格递减。</p>
+<h3>第三步：(2) 再证有下界——右半不等式累加成望远镜和</h3>
+<p>把 (1) 的右半改写为 $\dfrac1k&gt;\ln(k+1)-\ln k$，对 $k=1,2,\dots,n$ 累加。右边是<strong>裂项相消（望远镜和）</strong>：中间的 $\ln2,\ln3,\dots,\ln n$ 一加一减全部抵消，只剩首尾</p>
+<p>$$\sum_{k=1}<sup>n</sup>\frac1k&gt;\sum_{k=1}<sup>n</sup>\big(\ln(k+1)-\ln k\big)=\ln(n+1)&gt;\ln n,$$</p>
+<p>故 $a_n=\displaystyle\sum_{k=1}<sup>n</sup>\frac1k-\ln n&gt;0$，$\{a_n\}$ 有下界 $0$。</p>
+<h3>第四步：为什么"单调递减 + 有下界"就敢下收敛结论</h3>
+<p>这是单调有界准则的机制：递减数列只能一路向下，却被下界 $0$ 挡住穿不过去——它被"挤"在固定区间里，只能贴向下确界，下确界就是它的极限（背后是实数的确界原理）。<strong>两个条件缺一不可</strong>：只有递减可能一路跌到 $-\infty$，只有有界可能来回振荡不收敛。本题两条都验完，由单调有界准则，$\{a_n\}$ 收敛。</p>
+<h3>易错点</h3>
+<ul><li><strong>(1) 死算极限</strong>：不等式是对每个 $n$ 的精确估计；把 $\ln(1+\frac1n)$ 认作 $\ln x$ 在 $[n,n+1]$ 上的增量最直接，$\dfrac{1}{\xi}$ 的范围一步给出双侧夹逼。</li><li><strong>(2) 想算出极限值</strong>：本题只要求证收敛，单调有界准则就够；极限其实是欧拉常数 $\gamma\approx0.577$，不必也不能在此求出。</li><li><strong>下界证成 $\sum\frac1k&gt;\ln n$ 却不引 (1)</strong>：没有 (1) 的右半不等式，这条累加是无从谈起的——(1) 是为 (2) 备好的工具。</li><li><strong>只验一条就收工</strong>：只递减不找下界、或只有界不单调，都推不出收敛；准则两个条件必须同时成立。</li></ul>
+<blockquote>结论：递减（(1) 左半）+ 下界 $0$（(1) 右半累加成望远镜和），由单调有界准则，$\{a_n\}$ 收敛。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

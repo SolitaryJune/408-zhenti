@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2011·20 旋转体容积与抽水做功</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2011-19.html" data-q="../question/m2-2011-19/">← <b>m2-2011-19</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2011-20/" data-q="../question/m2-2011-20/" data-no-anim="1">m2-2011-20 · 本题</a>
+  <a href="m2-2011-21.html" data-q="../question/m2-2011-21/"><b>m2-2011-21</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>母线几何（文字定形）</b>：上段 $x^2+y^2=2y$ 是圆心 $(0,1)$、半径 $1$ 的圆取 $y\\ge\\dfrac12$ 的部分，$x^2=2y-y^2$，$y\\in\\left[\\dfrac12,2\\right]$（顶在 $y=2$）；下段 $x^2+y^2=1$ 取 $y\\le\\dfrac12$ 的部分，$x^2=1-y^2$，$y\\in\\left[-1,\\dfrac12\\right]$（底在 $y=-1$）。两段在 $y=\\dfrac12$ 处 $x^2=\\dfrac34$ 衔接，绕 $y$ 轴旋转成容器。</p>",
+  "<p><b>(1) 截面圆盘法</b>：高 $y$ 处截口半径平方为 $x^2(y)$，$$V=\\pi\\int_{-1}^{\\frac12}(1-y^2)\\,\\mathrm dy+\\pi\\int_{\\frac12}^{2}(2y-y^2)\\,\\mathrm dy.$$</p>",
+  "<p><b>下段积分</b>：$\\displaystyle\\int_{-1}^{\\frac12}(1-y^2)\\,\\mathrm dy=\\Big[y-\\frac{y^3}{3}\\Big]_{-1}^{\\frac12}=\\frac{11}{24}+\\frac23=\\frac98.$</p>",
+  "<p><b>上段积分</b>：$\\displaystyle\\int_{\\frac12}^{2}(2y-y^2)\\,\\mathrm dy=\\Big[y^2-\\frac{y^3}{3}\\Big]_{\\frac12}^{2}=\\frac43-\\frac{5}{24}=\\frac98.$ 两段恰好相等。</p>",
+  "<p><b>容积</b>：$$V=\\pi\\left(\\frac98+\\frac98\\right)=\\frac{9\\pi}{4}\\ \\mathrm{m}^3.$$</p>",
+  "<p><b>(2) 做功微元</b>：顶部在 $y=2$。第 $y$ 层薄水（厚 $\\mathrm dy$、截面积 $\\pi x^2$、重 $\\rho g\\,\\pi x^2\\,\\mathrm dy$）需提升行程 $2-y$：$$\\mathrm dW=10^3 g\\cdot\\pi x^2\\,(2-y)\\,\\mathrm dy.$$</p>",
+  "<p><b>下段做功积分</b>：$(1-y^2)(2-y)=2-y-2y^2+y^3$，$\\displaystyle\\int_{-1}^{\\frac12}=\\Big[2y-\\frac{y^2}{2}-\\frac{2y^3}{3}+\\frac{y^4}{4}\\Big]_{-1}^{\\frac12}=\\frac{153}{64}.$</p>",
+  "<p><b>上段做功积分</b>：$(2y-y^2)(2-y)=4y-4y^2+y^3$，$\\displaystyle\\int_{\\frac12}^{2}=\\Big[2y^2-\\frac{4y^3}{3}+\\frac{y^4}{4}\\Big]_{\\frac12}^{2}=\\frac{63}{64}.$</p>",
+  "<p><b>结论</b>：$W=10^3\\pi g\\left(\\dfrac{153}{64}+\\dfrac{63}{64}\\right)=10^3\\pi g\\cdot\\dfrac{27}{8}=\\dfrac{27\\times10^3}{8}\\,\\pi g\\ \\mathrm J$；容积 $V=\\dfrac{9\\pi}{4}\\ \\mathrm{m}^3$。</p>"
+];
+
+AW.init({
+  title: '旋转体容器：容积 $V$ 与抽水做功 $W$',
+  subtitle: '考点：定积分应用 · 方法：截面圆盘法 + 做功微元（力 × 行程沿 y 累加）',
+  counterLabel: '步数',
+  intro: '点击「▶ 播放」逐步演示容积与做功的微元计算。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'定形',   log:'两段圆弧分清归属：y≥1/2 归圆 x²+y²=2y，y≤1/2 归单位圆，交在 x²=3/4', show:1, count:0 },
+    { cls:'step',  tag:'列容积', log:'截面积 πx² 沿 y 积分，两段各积各的', show:2, count:1 },
+    { cls:'ok',    tag:'下段',   log:'下段积出 9/8', show:3, count:2 },
+    { cls:'ok',    tag:'上段',   log:'上段也算出 9/8，两段恰好相等', show:4, count:3 },
+    { cls:'ok',    tag:'容积',   log:'相加乘 π：容积 9π/4 立方米', show:5, count:4 },
+    { cls:'step',  tag:'列做功', log:'每层水重 ρg·πx²·dy，从顶部抽出要提升 2−y', show:6, count:5 },
+    { cls:'ok',    tag:'下段功', log:'下段 (1−y²)(2−y) 积出 153/64', show:7, count:6 },
+    { cls:'ok',    tag:'上段功', log:'上段 (2y−y²)(2−y) 积出 63/64', show:8, count:7 },
+    { cls:'done',  tag:'完成',   log:'合计 27/8，乘 10³πg 得总功；容积 9π/4', show:9, count:8, done:true },
+  ],
+
+  result: {
+    big: '$V=\\dfrac{9\\pi}{4}\\ \\mathrm{m}^3$，$W=\\dfrac{27\\times10^3}{8}\\,\\pi g\\ \\mathrm J$',
+    html: '记忆锚点：<b>容积 = 截面积沿 $y$ 累加；做功 = 每层水重 × 行程沿 $y$ 累加</b>。顶部 $y=2$，行程 $2-y$（越深提得越高）；力里别漏 $\\rho=10^3$ 与 $g$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：旋转体容积（截面圆盘法）与抽水做功（微元法）</h2>
+<p>最终答案：(1) 容积 $V=\dfrac{9\pi}{4}\ \mathrm{m}<sup>3</sup>$；(2) 所需功至少为 $W=\dfrac{27\times10<sup>3</sup>}{8}\,\pi g\ \mathrm{J}$。</p>
+<h3>第一步：立机制——旋转体的截面是圆盘，两问的一切积分都从它来</h3>
+<p>容器是曲线绕 $y$ 轴旋转一周而成的曲面：母线上每一点 $(x,y)$ 绕轴转出一个半径 $x$ 的水平圆，所以<strong>任何高度 $y$ 处的水平截面都是圆盘</strong>，面积 $\pi x<sup>2</sup>$。这一个机制同时撑起两问：</p>
+<ul><li><strong>容积</strong> = 圆盘面积沿 $y$ 从底到顶"码薄片"：$V=\pi\int x<sup>2</sup>\,\mathrm dy$。<strong>为什么用截面法而不用柱壳法？</strong> 母线方程天然给的是 $x<sup>2</sup>(y)$，截面法一行积分搞定；柱壳法要按 $x$ 积、还得拆段，反而绕远。</li><li><strong>做功</strong> = 把水一层一层提上去。功是标量，<strong>按层可加</strong>：第 $y$ 层薄片（厚 $\mathrm dy$、体积 $\pi x<sup>2</sup>\,\mathrm dy$）重 $\rho g\,\pi x<sup>2</sup>\,\mathrm dy$，要提到顶部 $y=2$，行程 $2-y$，故 $\mathrm dW=\rho g\,\pi x<sup>2</sup>(2-y)\,\mathrm dy$。<strong>为什么行程是 $2-y$？</strong> 越深的水提得越高：底部 $y=-1$ 要走 $3$ 米，顶层 $y=2$ 走 $0$ 米。</li></ul>
+<p>两问共用同一张"半径表" $x<sup>2</sup>(y)$——所以先花一步把它写准。</p>
+<h3>第二步：把母线写准——配平方识别两段圆，分段点靠衔接验证</h3>
+<p>上段 $x<sup>2</sup>+y<sup>2</sup>=2y$ 配平方得 $x<sup>2</sup>+(y-1)<sup>2</sup>=1$：圆心 $(0,1)$、半径 $1$ 的圆的<strong>上部</strong>（$y\ge\dfrac12$，顶在 $y=2$，该处 $x=0$）；下段 $x<sup>2</sup>+y<sup>2</sup>=1$ 是单位圆的<strong>下部</strong>（$y\le\dfrac12$，底在 $y=-1$，该处 $x=0$）。两段在 $y=\dfrac12$ 处<strong>同时</strong>给出 $x<sup>2</sup>=\dfrac34$，衔接无缺口——这正是题目按 $\dfrac12$ 分段的由来。汇总对号：</p>
+<table><thead><tr><th>段</th><th>方程</th><th>$x<sup>2</sup>=$</th><th>$y$ 范围</th></tr></thead><tbody><tr><td>上段</td><td>$x<sup>2</sup>+(y-1)<sup>2</sup>=1$</td><td>$2y-y<sup>2</sup>$</td><td>$\left[\dfrac12,2\right]$</td></tr><tr><td>下段</td><td>$x<sup>2</sup>+y<sup>2</sup>=1$</td><td>$1-y<sup>2</sup>$</td><td>$\left[-1,\dfrac12\right]$</td></tr></tbody></table>
+<h3>第三步：(1) 容积——两张圆盘各积一段</h3>
+<p>$$V=\pi\int_{-1}<sup>\frac12</sup>(1-y<sup>2</sup>)\,\mathrm dy+\pi\int_{\frac12}<sup>2</sup>(2y-y<sup>2</sup>)\,\mathrm dy.$$</p>
+<p>上段 $\displaystyle\int_{\frac12}<sup>2</sup>(2y-y<sup>2</sup>)\,\mathrm dy=\Big[y<sup>2</sup>-\frac{y<sup>3</sup>}3\Big]_{\frac12}<sup>2</sup>=\frac{27}{24}=\frac98$；下段 $\displaystyle\int_{-1}<sup>\frac12</sup>(1-y<sup>2</sup>)\,\mathrm dy=\Big[y-\frac{y<sup>3</sup>}3\Big]_{-1}<sup>\frac12</sup>=\frac{27}{24}=\frac98$。故</p>
+<p>$$V=\pi\left(\frac98+\frac98\right)=\frac{9\pi}{4}\ \mathrm{m}<sup>3</sup>.$$</p>
+<p>（两段恰好相等是本题的几何巧合，不是必然后果——但相等可以当验算信号：若算出不等，先查哪段抄错。）</p>
+<h3>第四步：(2) 做功——同一张半径表，多乘一个行程</h3>
+<p>$$W=10<sup>3</sup>\pi g\left[\int_{-1}<sup>\frac12</sup>(1-y<sup>2</sup>)(2-y)\,\mathrm dy+\int_{\frac12}<sup>2</sup>(2y-y<sup>2</sup>)(2-y)\,\mathrm dy\right].$$</p>
+<p>展开逐项积：下段 $(1-y<sup>2</sup>)(2-y)=2-y-2y<sup>2</sup>+y<sup>3</sup>$，原函数 $2y-\dfrac{y<sup>2</sup>}2-\dfrac{2y<sup>3</sup>}3+\dfrac{y<sup>4</sup>}4$，积分值 $\dfrac{153}{64}$；上段 $(2y-y<sup>2</sup>)(2-y)=4y-4y<sup>2</sup>+y<sup>3</sup>$，原函数 $2y<sup>2</sup>-\dfrac{4y<sup>3</sup>}3+\dfrac{y<sup>4</sup>}4$，积分值 $\dfrac{63}{64}$。合计 $\dfrac{153}{64}+\dfrac{63}{64}=\dfrac{216}{64}=\dfrac{27}{8}$，故</p>
+<p>$$W=10<sup>3</sup>\pi g\cdot\frac{27}{8}=\frac{27\times10<sup>3</sup>}{8}\,\pi g\ \mathrm J.$$</p>
+<h3>易错点</h3>
+<ul><li><strong>两段归属接反</strong>：$y\ge\dfrac12$ 归大圆上部 $x<sup>2</sup>=2y-y<sup>2</sup>$，$y\le\dfrac12$ 归单位圆下部 $x<sup>2</sup>=1-y<sup>2</sup>$；分段点由"两方程在 $y=\frac12$ 同给 $x<sup>2</sup>=\frac34$"锁定。</li><li><strong>做功行程写错</strong>：从顶部抽出，行程是 $2-y$，越深的层行程越长；写成 $y$ 或常数 $2$ 都会错。</li><li><strong>漏乘 $\rho g$ 或忘单位</strong>：力 $=$ 质量 $\times g$，质量 $=\rho\times$体积；容积单位 $\mathrm{m}<sup>3</sup>$、功单位 $\mathrm J$。</li><li><strong>截面法与柱壳法混用变量</strong>：绕 $y$ 轴旋转且已知 $x<sup>2</sup>(y)$，截面法沿 $y$ 积最直接；若写柱壳法必须换元，勿把 $\mathrm dy$ 直接当壳厚。</li></ul>
+<blockquote>结论：旋转体问题先问"高度 $y$ 处截面半径是多少"——容积是 $\pi x<sup>2</sup>$ 沿 $y$ 累加，功是 $\rho g\,\pi x<sup>2</sup>(2-y)$ 沿 $y$ 累加，两问共用同一张 $x<sup>2</sup>(y)$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

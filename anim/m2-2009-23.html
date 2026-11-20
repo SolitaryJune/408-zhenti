@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2009 数二第 23 题 · 二次型特征值分解与规范形定参（交互动画）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2009-22.html" data-q="../question/m2-2009-22/">← <b>m2-2009-22</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2009-23/" data-q="../question/m2-2009-23/" data-no-anim="1">m2-2009-23 · 本题</a>
+  <a href="m2-2010-01.html" data-q="../question/m2-2010-01/"><b>m2-2010-01</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+AW.init({
+  title: '2009·23　二次型 $f=ax_1^2+ax_2^2+(a-1)x_3^2+2x_1x_3-2x_2x_3$：特征值与规范形定参',
+  subtitle: '考点：交叉项系数折半写矩阵 · 提公因式 + 换元降次 · <b>规范形 = 惯性指数信息</b>',
+  counterLabel: '已完成',
+  ribbonTitle: '参数筛选（✓ 符合 / ✗ 排除）',
+  intro: '点击「▶ 播放」或「下一步」，先分解特征多项式，再用规范形筛出参数。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    var wrap = AW.el('div', 'aw-scroll');
+    var inner = AW.el('div', '');
+    inner.appendChild(AW.el('div', 'aw-row-label', '<b>推导板</b>：当前行亮琥珀色，已完成的行变绿'));
+    var LINES = [
+      '<b>① 写矩阵：</b>$$A=\\begin{pmatrix}a&0&1\\\\0&a&-1\\\\1&-1&a-1\\end{pmatrix}$$（$2x_1x_3\\Rightarrow A_{13}=A_{31}=1$；$-2x_2x_3\\Rightarrow A_{23}=A_{32}=-1$）',
+      '<b>② 展开特征多项式：</b>按第一行展开并提出公因子：$$|A-\\lambda E|=(a-\\lambda)\\big[(a-\\lambda)(a-1-\\lambda)-2\\big]$$',
+      '<b>③ 换元降次：</b>令 $u=a-\\lambda$，方括号内 $=u(u-1)-2=u^2-u-2=(u-2)(u+1)$',
+      '<b>④ 特征值：</b>$$|A-\\lambda E|=(a-\\lambda)(a-\\lambda-2)(a-\\lambda+1)\\ \\Rightarrow\\ \\lambda_1=a,\\ \\lambda_2=a+1,\\ \\lambda_3=a-2$$',
+      '<b>⑤ 验算：</b>$\\lambda_1+\\lambda_2+\\lambda_3=3a-1=a+a+(a-1)=\\operatorname{tr}A$，与迹吻合',
+      '<b>⑥ 规范形含义：</b>规范形为 $y_1^2+y_2^2$ $\\iff$ 正惯性指数 $=2$、秩 $=2$ $\\iff$ 特征值恰为「两正一零」',
+      '<b>⑦ 逐一检验：</b>$a=0$：特征值 $\\{0,\\,1,\\,-2\\}$ 含负，排除；$a=-1$：$\\{-1,\\,0,\\,-3\\}$ 两负，排除',
+      '<b>⑧ 唯一解：</b>$a=2$：特征值 $\\{2,\\,3,\\,0\\}$，两正一零，符合'
+    ];
+    this._rows = [];
+    for (var i = 0; i < LINES.length; i++){
+      var r = AW.el('div', 'aw-stepcard', LINES[i]);
+      inner.appendChild(r);
+      this._rows.push(r);
+    }
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  },
+
+  snaps: [
+    { cls:'step',  tag:'写矩阵', log:'先把二次型写成对称矩阵：平方项进对角线，交叉项系数折半', count:0, ribbon:{k:1, ok:true} },
+    { cls:'shift', tag:'展开',   log:'特征多项式按第一行展开，提出公因子 a 减拉姆达', count:1, ribbon:{k:2, ok:true} },
+    { cls:'step',  tag:'换元',   log:'方括号里换元后是二次三项式，十字相乘分解', count:2, ribbon:{k:3, ok:true} },
+    { cls:'ok',    tag:'因式',   log:'三个因式各给一个特征值：a、a 加一、a 减二', count:3, ribbon:{k:4, ok:true} },
+    { cls:'ok',    tag:'验算',   log:'用迹验算：三个特征值之和等于对角线之和，吻合', count:4, ribbon:{k:5, ok:true} },
+    { cls:'step',  tag:'规范形', log:'规范形只有两个正平方项：意味着两个正特征值加一个零', count:5, ribbon:{k:6, ok:true} },
+    { cls:'miss',  tag:'排除',   log:'让特征值轮流为零来试参数：a 取零混进负值、a 取负一全是非正，都排除', count:6, ribbon:{k:7, ok:false} },
+    { cls:'ok',    tag:'确认',   log:'a 取二：特征值为二、三、零，两正一零，符合', count:7, ribbon:{k:8, ok:true} },
+    { cls:'done',  tag:'完成',   log:'结论：特征值为 a、a 加一、a 减二；规范形要求给出 a 等于二', count:8, ribbon:{k:9, ok:true}, done:true },
+  ],
+
+  render: function(stage, sn, i){
+    var rows = this._rows;
+    for (var j = 0; j < rows.length; j++){
+      rows[j].className = 'aw-stepcard' + (j < i ? ' good' : (j === i ? ' key' : ''));
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  result: {
+    big: '(1) $\\lambda_1=a,\\ \\lambda_2=a+1,\\ \\lambda_3=a-2$；(2) $a=2$',
+    html: '记忆锚点：特征多项式<b>先提公因子再换元降次</b>；规范形 $y_1^2+y_2^2$ $\\iff$ <b>正惯性指数 2 + 秩 2</b> $\\iff$ 特征值「两正一零」。易错：交叉项 $2x_1x_3$、$-2x_2x_3$ 进矩阵要<b>折半</b>，写成 $\\pm1$ 而不是 $\\pm2$。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：特征多项式因式分解求特征值，规范形锁定参数</h2>
+<p><strong>答案：</strong></p>
+<ul><li>(1) $\lambda_1=a,\ \lambda_2=a+1,\ \lambda_3=a-2$；</li><li>(2) $a=2$。</li></ul>
+<h3>第一步：写出二次型矩阵——为什么交叉项要折半</h3>
+<p>二次型矩阵要求 $\boldsymbol x<sup>\mathrm T</sup>A\boldsymbol x=f$ 且 $A$ 对称。展开时 $a_{ij}x_ix_j$ 与 $a_{ji}x_jx_i$ 各出现一次，对称矩阵下合成 $2a_{ij}x_ix_j$——所以卷面上的交叉项系数要<strong>除以 2</strong> 平分到对称位置：$2x_1x_3$ 给 $A_{13}=A_{31}=1$，$-2x_2x_3$ 给 $A_{23}=A_{32}=-1$：</p>
+<p>$$A=\begin{pmatrix}a&amp;0&amp;1\\0&amp;a&amp;-1\\1&amp;-1&amp;a-1\end{pmatrix}.$$</p>
+<h3>第二步：为什么行列式里能提出公因子 $(a-\lambda)$——矩阵分裂</h3>
+<p>按第一行展开并提出公因子：</p>
+<p>$$|A-\lambda E|=(a-\lambda)\big[(a-\lambda)(a-1-\lambda)-2\big].$$</p>
+<p>换元 $u=a-\lambda$，方括号内 $=u(u-1)-2=u<sup>2</sup>-u-2=(u-2)(u+1)$，所以</p>
+<p>$$|A-\lambda E|=(a-\lambda)(a-\lambda-2)(a-\lambda+1)\ \Longrightarrow\ \lambda_1=a,\ \lambda_2=a+1,\ \lambda_3=a-2.$$</p>
+<p>这步"恰好能提公因子"不是运气：把 $A$ 拆成 $A=aE+B$（$B$ 只留下与 $a$ 无关的部分），则 $A-\lambda E=B-(\lambda-a)E$——<strong>$A$ 的特征值 $=a+B$ 的特征值</strong>，整体平移；$B$ 的特征多项式解出 $\mu=0,1,-2$，于是 $\lambda(A)=a, a+1, a-2$。行列式每行共享的 $(a-\lambda)$ 结构正是这个分裂的代数表现。</p>
+<p>验算：$\lambda_1+\lambda_2+\lambda_3=3a-1$，与 $\operatorname{tr}A=a+a+(a-1)=3a-1$ 吻合（特征值之和恒等于迹）。</p>
+<h3>第三步：规范形的含义——为什么是"两正一零"</h3>
+<p>实对称矩阵可正交相似于对角阵，标准形就是 $\lambda_1z_1<sup>2</sup>+\lambda_2z_2<sup>2</sup>+\lambda_3z_3<sup>2</sup>$；规范形只是再作可逆替换把系数归一成 $\pm1$ 或 $0$，而<strong>惯性定理保证正、负系数的个数不变</strong>。所以"规范形为 $y_1<sup>2</sup>+y_2<sup>2</sup>$"逐条翻译为：正平方项 2 个 ⇒ 正惯性指数 2 ⇒ 两个正特征值；共 2 项 ⇒ 秩为 2 ⇒ 第三个特征值为 $0$。三个特征值 $a,\ a+1,\ a-2$ 中必有一个为零，只有三种可能，逐一检验：</p>
+<table><thead><tr><th>取值</th><th>特征值</th><th>判断</th></tr></thead><tbody><tr><td>$a=0$</td><td>$0,\ 1,\ -2$</td><td>含负特征值，排除</td></tr><tr><td>$a=-1$</td><td>$-1,\ 0,\ -3$</td><td>两负一零，排除</td></tr><tr><td>$a=2$</td><td>$2,\ 3,\ 0$</td><td>两正一零，符合</td></tr></tbody></table>
+<p>所以 $a=2$。</p>
+<h3>易错点</h3>
+<ul><li><strong>交叉项忘记折半</strong>：$2x_1x_3$ 进矩阵是 $A_{13}=1$ 而不是 $2$——机制是 $\boldsymbol x<sup>\mathrm T</sup>A\boldsymbol x$ 对交叉项"双份计数"。</li><li><strong>把「规范形有两个平方项」误解为满秩</strong>：规范形的项数等于秩，这里秩是 2，必有一个零特征值。</li><li><strong>漏试某个特征值为零</strong>：令 $a,\ a+1,\ a-2$ 分别为零逐个检验，漏一种就少一个候选。</li></ul>
+<blockquote>结论：特征值为 $a,\ a+1,\ a-2$（$A=aE+B$ 的整体平移）；「两正一零」唯一给出 $a=2$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

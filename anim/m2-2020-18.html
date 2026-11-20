@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2020-18 函数方程消元 + 旋转体体积 · 逐步推导</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2020-17.html" data-q="../question/m2-2020-17/">← <b>m2-2020-17</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2020-18/" data-q="../question/m2-2020-18/" data-no-anim="1">m2-2020-18 · 本题</a>
+  <a href="m2-2020-19.html" data-q="../question/m2-2020-19/"><b>m2-2020-19</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域 ================== */
+var rows = [];
+
+AW.init({
+  title: '由 $2f(x)+x^2f\\!\\left(\\frac1x\\right)=\\dfrac{x^2+2x}{\\sqrt{1+x^2}}$ 求 $f(x)$ 与旋转体体积',
+  subtitle: '考点：函数方程代换消元 · 定积分应用（柱壳法）',
+  counterLabel: '已推进',
+  intro: '点击「▶ 播放」：代换联立求 f，再柱壳法算体积。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    rows = [];
+    var wrap = AW.el('div', 'aw-scroll');
+    wrap.appendChild(AW.el('div', 'aw-row-label',
+      '<b>推导板</b>：$x>0$，代换 $x\\to\\frac1x$ 时 $\\sqrt{1+\\frac1{x^2}}=\\frac{\\sqrt{1+x^2}}x$'));
+    var ROWS = [
+      '$$2f(x)+x^2f\\!\\left(\\tfrac1x\\right)=\\frac{x^2+2x}{\\sqrt{1+x^2}}\\quad\\xrightarrow{\\ x\\to\\frac1x\\ }\\quad 2f\\!\\left(\\tfrac1x\\right)+\\frac{f(x)}{x^2}=\\frac{1+2x}{x\\sqrt{1+x^2}}$$',
+      '$$\\text{式}(2)\\times x^2:\\quad 2x^2f\\!\\left(\\tfrac1x\\right)+f(x)=\\frac{2x^2+x}{\\sqrt{1+x^2}}$$',
+      '$$\\text{代入 } x^2f\\!\\left(\\tfrac1x\\right)=\\frac{x^2+2x}{\\sqrt{1+x^2}}-2f(x):\\quad \\frac{2x^2+4x}{\\sqrt{1+x^2}}-3f(x)=\\frac{2x^2+x}{\\sqrt{1+x^2}}\\ \\Rightarrow\\ f(x)=\\frac{x}{\\sqrt{1+x^2}}$$',
+      '$$\\text{反解曲线 } x=\\frac{y}{\\sqrt{1-y^2}};\\quad f=\\tfrac12\\Rightarrow x=\\tfrac1{\\sqrt3},\\qquad f=\\tfrac{\\sqrt3}2\\Rightarrow x=\\sqrt3$$',
+      '$$V=2\\pi\\int_{1/2}^{\\sqrt3/2} y\\cdot\\frac{y}{\\sqrt{1-y^2}}\\,\\mathrm dy=2\\pi\\int_{1/2}^{\\sqrt3/2}\\frac{y^2}{\\sqrt{1-y^2}}\\,\\mathrm dy$$',
+      '$$y=\\sin\\theta:\\quad \\int_{\\pi/6}^{\\pi/3}\\sin^2\\theta\\,\\mathrm d\\theta=\\left[\\frac\\theta2-\\frac{\\sin2\\theta}4\\right]_{\\pi/6}^{\\pi/3}=\\frac\\pi{12}$$',
+      '$$V=2\\pi\\cdot\\frac\\pi{12}=\\frac{\\pi^2}6$$'
+    ];
+    ROWS.forEach(function(html){
+      var row = AW.el('div', 'derive-row', html);
+      row.style.cssText = 'padding:6px 14px;margin:8px 0;border-radius:8px;' +
+        'border-left:4px solid #cbd5e1;background:#f8fafc;opacity:0;' +
+        'transform:translateY(8px);transition:all .35s ease;';
+      wrap.appendChild(row);
+      rows.push(row);
+    });
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn, i){
+    rows.forEach(function(row, j){
+      var vis = j < i;
+      var cur = vis && j === i - 1;
+      row.style.opacity = vis ? '1' : '0';
+      row.style.transform = vis ? 'translateY(0)' : 'translateY(8px)';
+      row.style.borderLeftColor = cur ? '#f59e0b' : (vis ? '#10b981' : '#cbd5e1');
+      row.style.background = cur ? '#fffbeb' : (vis ? '#f0fdf4' : '#f8fafc');
+    });
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题', log:'f(x) 与 f(1/x) 同时出现，代换造第二个方程', count:0 },
+    { cls:'step',  tag:'代换', log:'把 x 换成 1/x，根式化成 x 分之根号 1 加 x 平方', count:1 },
+    { cls:'step',  tag:'整理', log:'第二个方程两边乘 x 平方，系数摆整齐', count:2 },
+    { cls:'ok',    tag:'消元', log:'代入 x 平方 f(1/x) 的表达式，解出 f(x)', count:3 },
+    { cls:'step',  tag:'看区域', log:'反解曲线，定出两条水平边对应的 x 范围', count:4 },
+    { cls:'step',  tag:'柱壳', log:'绕 x 轴用水平条：2π 乘 y 乘 x(y) 对 y 积分', count:5 },
+    { cls:'ok',    tag:'换元', log:'令 y 等于 sinθ，区间变到六分之π到三分之π', count:6 },
+    { cls:'done',  tag:'结论', log:'体积 = π²/6，f(x) = x/√(1+x²)', count:7, done:true },
+  ],
+
+  result: {
+    big: '$f(x)=\\dfrac{x}{\\sqrt{1+x^2}}$，$V=\\dfrac{\\pi^2}6$',
+    html: '正确答案：$f(x)=\\dfrac{x}{\\sqrt{1+x^2}}$；旋转体体积 $V=2\\pi\\displaystyle\\int_{1/2}^{\\sqrt3/2}\\dfrac{y^2}{\\sqrt{1-y^2}}\\,\\mathrm dy=\\dfrac{\\pi^2}6$。记忆点：<b>含 $f(\\frac1x)$ 就代换联立</b>；绕 $x$ 轴而区域是横条时，<b>柱壳法一条积分搞定</b>。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：函数方程代换消元 + 为什么柱壳法在这里最优</h2>
+<p><strong>答案：$f(x)=\dfrac{x}{\sqrt{1+x<sup>2</sup>}}$；所求旋转体体积 $V=\dfrac{\pi<sup>2</sup>}{6}$。</strong></p>
+<h3>第 0 步：为什么想到代换 x→1/x</h3>
+<p>先做机制识别：方程左边 $2f(x)+x<sup>2f</sup>\!\left(\dfrac1x\right)$ 同时出现 $f$ 在 $x$ 与 $\dfrac1x$ 两处的值，且两个系数（$2$ 与 $x<sup>2</sup>$）互为镜像——把 $x$ 换成 $\dfrac1x$ 后，两个未知函数值的位置恰好对调，得到一个<strong>独立的新方程</strong>。两个方程、两个未知量，联立即可消元。凡「自变量与倒数成对出现」的函数方程，代换 $x\to\dfrac1x$ 都是标配的第一反应。</p>
+<h3>第一步：代换并把根式化对</h3>
+<p>原式对 $x&gt;0$ 把 $x$ 换成 $\dfrac1x$。根式化简要小心：</p>
+<p>$$\sqrt{1+\frac1{x<sup>2</sup>}}=\sqrt{\frac{x<sup>2</sup>+1}{x<sup>2</sup>}}=\frac{\sqrt{1+x<sup>2</sup>}}{\sqrt{x<sup>2</sup>}}=\frac{\sqrt{1+x<sup>2</sup>}}x,$$</p>
+<p>最后一步用到 $x&gt;0$（一般地 $\sqrt{x<sup>2</sup>}=\lvert x\rvert$，本题定义域恰好保证开出来是 $x$）。得第二个方程：</p>
+<p>$$2f\!\left(\frac1x\right)+\frac{1}{x<sup>2</sup>}f(x)=\frac{1+2x}{x\sqrt{1+x<sup>2</sup>}}.$$</p>
+<h3>第二步：联立消去 f(1/x)</h3>
+<p>由原式解出 $x<sup>2f</sup>\!\left(\dfrac1x\right)=\dfrac{x<sup>2</sup>+2x}{\sqrt{1+x<sup>2</sup>}}-2f(x)$，代入第二个方程两边乘 $x<sup>2</sup>$ 的形式：</p>
+<p>$$\frac{2x<sup>2</sup>+4x}{\sqrt{1+x<sup>2</sup>}}-3f(x)=\frac{2x<sup>2</sup>+x}{\sqrt{1+x<sup>2</sup>}}\ \Longrightarrow\ f(x)=\frac{x}{\sqrt{1+x<sup>2</sup>}}.$$</p>
+<p>（代回原式验证两边一致；$f$ 在 $(0,+\infty)$ 上从 $0$ 单调增到 $1$，下面画图要用这个单调性。）</p>
+<h3>第三步：为什么用柱壳法——先看区域形状</h3>
+<p>$f=\dfrac12$ 对应 $x=\dfrac1{\sqrt3}$，$f=\dfrac{\sqrt3}2$ 对应 $x=\sqrt3$。所围图形是：左贴 $y$ 轴，上下边界是两条水平线 $y=\dfrac{\sqrt3}2$ 与 $y=\dfrac12$，右侧是曲线。方法选择的依据在形状：<strong>竖着切片</strong>（圆片法）绕 $x$ 轴转时，外半径在 $x=\dfrac1{\sqrt3}$ 处要切换——左边外半径恒为 $\dfrac{\sqrt3}2$、右边换成曲线 $f(x)$，积分得拆两段；<strong>横着切条</strong>（柱壳法）绕 $x$ 轴转时，壳半径是 $y$、壳长恰是曲线上的横坐标 $x(y)$，一条定积分搞定。所以先反解曲线：</p>
+<p>$$x=\frac{y}{\sqrt{1-y<sup>2</sup>}},\qquad V=2\pi\int_{1/2}<sup>\sqrt3/2</sup>y\cdot\frac{y}{\sqrt{1-y<sup>2</sup>}}\,\mathrm dy.$$</p>
+<p>（柱壳微元 $2\pi\cdot\text{半径}\cdot\text{壳长}\cdot\text{厚度}=2\pi\,y\,x(y)\,\mathrm dy$；上下限 $\dfrac12,\dfrac{\sqrt3}2$ 是积分变量 $y$ 的范围，不是交点的 $x$ 值。）</p>
+<h3>第四步：为什么用三角换元收尾</h3>
+<p>被积函数含 $\sqrt{1-y<sup>2</sup>}$，这是 $\sin$ 换元的标志信号（$1-\sin<sup>2</sup>\theta=\cos<sup>2</sup>\theta$，根号正好开尽）；且 $y=\dfrac12,\dfrac{\sqrt3}2$ 对应 $\theta=\dfrac\pi6,\dfrac\pi3$，全是特殊角：</p>
+<p>$$V=2\pi\int_{\pi/6}<sup>\pi/3</sup>\sin<sup>2</sup>\theta\,\mathrm d\theta=2\pi\left[\frac\theta2-\frac{\sin2\theta}4\right]_{\pi/6}<sup>\pi/3</sup>=2\pi\cdot\frac\pi{12}=\frac{\pi<sup>2</sup>}6.$$</p>
+<p>（巧合在于 $\sin\dfrac\pi3=\sin\dfrac{2\pi}3=\dfrac{\sqrt3}2$，两端的 $\sin2\theta$ 项相消，只剩 $\theta$ 项之差 $\dfrac\pi6-\dfrac\pi{12}=\dfrac\pi{12}$。）</p>
+<h3>易错点</h3>
+<ul><li><strong>代换后根式化错</strong>：$\sqrt{1+\frac1{x<sup>2</sup>}}$ 只有在 $x&gt;0$ 时才能写成 $\dfrac{\sqrt{1+x<sup>2</sup>}}x$，本题定义域恰好保证这点。</li><li><strong>绕 x 轴却竖着切</strong>：外半径在 $x=\dfrac1{\sqrt3}$ 处切换，圆片法要拆两段；柱壳法一条定积分搞定。</li><li><strong>积分区间看错</strong>：积分变量是 $y$，上下限是 $\dfrac12$ 与 $\dfrac{\sqrt3}2$，不是交点的 $x$ 值。</li></ul>
+<blockquote>一句话结论：代换联立解出 $f(x)=\dfrac{x}{\sqrt{1+x<sup>2</sup>}}$，柱壳法 $V=2\pi\displaystyle\int_{1/2}<sup>\sqrt3/2</sup>\dfrac{y<sup>2</sup>}{\sqrt{1-y<sup>2</sup>}}\mathrm dy=\dfrac{\pi<sup>2</sup>}6$。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

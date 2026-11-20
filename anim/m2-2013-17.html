@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2013·17 三角形区域上 x² 的二重积分</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_algo_template.html，只改 AW.init 区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2013-16.html" data-q="../question/m2-2013-16/">← <b>m2-2013-16</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2013-17/" data-q="../question/m2-2013-17/" data-no-anim="1">m2-2013-17 · 本题</a>
+  <a href="m2-2013-18.html" data-q="../question/m2-2013-18/"><b>m2-2013-18</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+var ROWS = [];
+
+var LINES = [
+  "<p><b>审题</b>：$D$ 由 $x=3y$（即 $y=\\dfrac x3$）、$y=3x$、$x+y=8$ 围成。两条过原点的直线斜率一缓一陡，$x+y=8$ 是斜截线。</p>",
+  "<p><b>求顶点</b>：$y=3x$ 与 $x+y=8$ 联立得 $4x=8$，交点 $(2,6)$；$y=\\dfrac x3$ 与 $x+y=8$ 联立得 $\\dfrac{4x}{3}=8$，交点 $(6,2)$；两条直线交于原点。$D$ 是顶点为 $(0,0),(2,6),(6,2)$ 的三角形。</p>",
+  "<p><b>X 型分段</b>：被积函数只含 $x$，先对 $y$ 积分。下边界恒为 $y=\\dfrac x3$；上边界在 $x=2$ 处从 $y=3x$ 切换成 $y=8-x$（切换点就是顶点 $(2,6)$ 的横坐标）。</p>",
+  "<p><b>写出累次积分</b>：$$\\iint_Dx^2\\,\\mathrm d\\sigma=\\int_0^2x^2\\Big(3x-\\frac x3\\Big)\\mathrm dx+\\int_2^6x^2\\Big(8-x-\\frac x3\\Big)\\mathrm dx$$</p>",
+  "<p><b>第一段 $\\displaystyle\\int_0^2$</b>：$$\\int_0^2x^2\\cdot\\frac{8x}{3}\\,\\mathrm dx=\\frac83\\cdot\\frac{x^4}{4}\\Big|_0^2=\\frac83\\cdot4=\\frac{32}{3}$$</p>",
+  "<p><b>第二段 $\\displaystyle\\int_2^6$</b>：$$\\int_2^6\\Big(8x^2-\\frac43x^3\\Big)\\mathrm dx$$</p>",
+  "<p><b>第二段求值</b>：$$\\frac83\\big(216-8\\big)-\\frac43\\cdot\\frac{1296-16}{4}=\\frac{1664}{3}-\\frac{1280}{3}=128$$</p>",
+  "<p><b>合计</b>：$$\\frac{32}{3}+128=\\frac{32+384}{3}=\\frac{416}{3}$$</p>",
+  "<p><b>结论</b>：$$\\boxed{\\;\\iint_Dx^2\\,\\mathrm d\\sigma=\\frac{416}{3}\\;}$$</p>"
+];
+
+AW.init({
+  title: '三角形区域上的 $\\iint x^2\\,\\mathrm d\\sigma$：先定顶点，再分段积分',
+  subtitle: '考点：二重积分（X 型区域分段） · 方法：先 $y$ 后 $x$，上边界在 $x=2$ 处切换',
+  counterLabel: '推导步',
+  ribbonTitle: '两段积分（✓ 已完成）',
+  intro: '点击「▶ 播放」逐步演示顶点、分段与两段积分。',
+
+  build: function(stage){
+    stage.innerHTML = '';
+    ROWS.length = 0;
+    var wrap = AW.el('div', 'aw-scroll');
+    var board = AW.el('div', '');
+    for(var k = 0; k < LINES.length; k++){
+      var d = AW.el('div', '', LINES[k]);
+      d.style.cssText = 'margin:8px 0;padding:9px 14px;border-left:3px solid #e2e8f0;background:#f8fafc;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.9;display:none;';
+      board.appendChild(d);
+      ROWS.push(d);
+    }
+    wrap.appendChild(board);
+    stage.appendChild(wrap);
+  },
+
+  render: function(stage, sn){
+    for(var k = 0; k < ROWS.length; k++){
+      var r = ROWS[k];
+      if(k >= sn.show){ r.style.display = 'none'; continue; }
+      r.style.display = 'block';
+      if(k === sn.show - 1 && !sn.done){
+        r.style.borderLeftColor = '#d97706';
+        r.style.background = '#fffbeb';
+      } else {
+        r.style.borderLeftColor = '#16a34a';
+        r.style.background = '#f8fafc';
+      }
+    }
+    renderMathAfterSnap(stage);
+  },
+
+  snaps: [
+    { cls:'shift', tag:'审题',   log:'三条边界：两条过原点的直线加一条斜截线，围出一个三角形', show:1, count:0 },
+    { cls:'step',  tag:'顶点',   log:'逐对联立：得 (0,0)、(2,6)、(6,2) 三个顶点', show:2, count:1 },
+    { cls:'key',   tag:'分段',   log:'先积 y：下边界固定，上边界在 x=2 处换线（顶点 (2,6) 的横坐标），必须分两段', show:3, count:2 },
+    { cls:'step',  tag:'列式',   log:'两段累次积分相加，内层上下限分别是 3x 与 8−x', show:4, count:3 },
+    { cls:'ok',    tag:'第一段', log:'x 从 0 到 2：内层高度 8x/3，积出 32/3', show:5, count:4, ribbon:{k:1, ok:true} },
+    { cls:'step',  tag:'第二段', log:'x 从 2 到 6：内层高度 8−x−x/3，整理成 8x²−(4/3)x³', show:6, count:5 },
+    { cls:'ok',    tag:'第二段', log:'原函数代 6 和 2，得 1664/3 − 1280/3 = 128', show:7, count:6, ribbon:{k:2, ok:true} },
+    { cls:'ok',    tag:'合计',   log:'32/3 加 128 等于 416/3', show:8, count:7 },
+    { cls:'done',  tag:'完成',   log:'结论：二重积分等于 416/3', show:9, count:8, done:true },
+  ],
+
+  result: {
+    big: '$\\dfrac{416}{3}$',
+    html: '记忆锚点：<b>上边界换线处（顶点横坐标）必须分段</b>。本题：$0\\le x\\le2$ 上界 $y=3x$，$2\\le x\\le6$ 上界 $y=8-x$，下界恒为 $y=\\frac x3$；两段各积一次再相加。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：二重积分化累次——「条长」机制与分段点的来源</h2>
+<p>答案：$\displaystyle\iint_D x<sup>2</sup>\,\mathrm dx\,\mathrm dy=\frac{416}{3}$。</p>
+<h3>第一步：机制——化累次就是「先算条长，再加条」</h3>
+<p>二重积分的计算模型是把区域切成平行条。$X$ 型竖切：固定 $x$ 时，内层 $\int_{\text{下}}<sup>\text{上</sup>}\mathrm dy$ 算的是<strong>竖条长度</strong>（上边界减下边界）；外层把每条的贡献乘上被积函数后沿 $x$ 累加。所以化累次的关键动作只有一个：<strong>找出每根条的上下边界</strong>——而边界表达式在哪里切换，顶点就定在哪里，先算顶点等于先把分段点找齐。</p>
+<h3>第二步：定顶点——它们就是分段点</h3>
+<p>三条边界：$x=3y$（即 $y=\dfrac x3$）、$y=3x$、$x+y=8$。</p>
+<ul><li>$y=3x$ 与 $x+y=8$：$4x=8$，交于 $(2,6)$；</li><li>$y=\dfrac x3$ 与 $x+y=8$：$\dfrac{4x}{3}=8$，交于 $(6,2)$；</li><li>两条过原点的直线交于 $(0,0)$。</li></ul>
+<p>故 $D$ 是顶点 $(0,0),(2,6),(6,2)$ 的三角形：下边界恒为 $y=\dfrac x3$，上边界在 $x=2$ 处由 $y=3x$ 切换成 $y=8-x$——顶点 $(2,6)$ 的横坐标就是分段点。</p>
+<h3>第三步：为什么选 $X$ 型而不是 $Y$ 型</h3>
+<p>被积函数只含 $x$：内层对 $y$ 积分时 $x<sup>2</sup>$ 是常数因子，内层积分立刻变成「条长」，整个二重积分退化成两段多项式的一重积分，几乎零成本。若用 $Y$ 型，内层 $\int x<sup>2</sup>\,\mathrm dx$ 要代上下限得三次式，数字更大更繁；而且 $Y$ 型同样要在 $y=2$ 处分段（$3y=8-y$ 的交点）——两条路都要分段时，选让被积函数「躺平」的那条。</p>
+<h3>第四步：逐段积分</h3>
+<p>$$\iint_Dx<sup>2</sup>\,\mathrm d\sigma=\int_0<sup>2x</sup><sup>2</sup>\Big(3x-\frac x3\Big)\mathrm dx+\int_2<sup>6x</sup><sup>2</sup>\Big(8-x-\frac x3\Big)\mathrm dx$$</p>
+<p>第一段：条长 $3x-\dfrac x3=\dfrac83x$，$\displaystyle\int_0<sup>2</sup>\frac83x<sup>3</sup>\,\mathrm dx=\frac83\cdot\frac{2<sup>4</sup>}{4}=\frac{32}{3}$。</p>
+<p>第二段：条长 $8-x-\dfrac x3=8-\dfrac{4x}{3}$，$\displaystyle\int_2<sup>6</sup>\Big(8x<sup>2</sup>-\frac43x<sup>3</sup>\Big)\mathrm dx=\frac83(216-8)-\frac13(1296-16)=\frac{1664-1280}{3}=128$。</p>
+<p>合计：$\dfrac{32}{3}+128=\dfrac{32+384}{3}=\dfrac{416}{3}$。</p>
+<h3>易错点</h3>
+<ul><li><strong>不分段直接 $\int_0<sup>6</sup>$</strong>：上边界在 $x=2$ 处换直线，不分段等于把两条不同直线当成一条，必然错。</li><li><strong>把 $x=3y$ 当上边界</strong>：它解出 $y=\dfrac x3$，斜率 $\dfrac13$ 比 $y=3x$ 平缓，是<strong>下</strong>边界。</li><li><strong>交点算错</strong>：$y=3x$ 代入 $x+y=8$ 得 $4x=8$，横坐标是 $2$——分段点错了后面全错。</li></ul>
+<blockquote>记忆锚点：先算顶点（=分段点），再写条长；被积函数只含 $x$ 就选 $X$ 型，让内层积分白拿。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

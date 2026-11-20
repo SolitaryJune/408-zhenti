@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学·概念动画：变限积分函数零点个数（2015 年第 19 题）</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2015-18.html" data-q="../question/m2-2015-18/">← <b>m2-2015-18</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2015-19/" data-q="../question/m2-2015-19/" data-no-anim="1">m2-2015-19 · 本题</a>
+  <a href="m2-2015-20.html" data-q="../question/m2-2015-20/"><b>m2-2015-20</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+var STEPS = [
+  { title: '审题眼：积不出来，就走「单调性 + 零点定理」',
+    cls: 'key', tag: '审题', log: 'f 是两个变限积分之和，方程解不动，改走导数分析路线',
+    body: '<p>$f(x)=\\displaystyle\\int_x^1\\sqrt{1+t^2}\\,\\mathrm dt+\\int_1^{x^2}\\sqrt{1+t}\\,\\mathrm dt$。两个被积函数都没有初等原函数，<b>不能</b>试图解 $f(x)=0$；数零点的标准路线是：求导定单调区间 → 抓关键值 → 分段用零点定理。</p>' },
+  { title: '变限积分求导（注意链式因子）',
+    cls: 'good', tag: '求导', log: '上限是 x 平方要乘 2x，两处被积函数恰好同型',
+    ribbon: {k:1, ok:true},
+    body: '<p>$f\'(x)=-\\sqrt{1+x^2}+\\sqrt{1+x^2}\\cdot2x=\\sqrt{1+x^2}\\,(2x-1).$</p><p>第二个积分上限是 $x^2$，求导要乘 $(x^2)\'=2x$；且 $\\sqrt{1+t}$ 在 $t=x^2$ 处恰为 $\\sqrt{1+x^2}$，与第一项同型，可提公因式。</p>' },
+  { title: '单调区间：唯一极小点 $x=\\tfrac12$',
+    cls: 'good', tag: '单调', log: '根号部分恒正，符号全看 2x 减一',
+    ribbon: {k:2, ok:true},
+    body: '<p>因 $\\sqrt{1+x^2}>0$，符号由 $2x-1$ 决定：$x<\\tfrac12$ 时 $f\'<0$（严格递减），$x>\\tfrac12$ 时 $f\'>0$（严格递增）。$x=\\tfrac12$ 是唯一极小值点，两段上 $f$ 严格单调。</p>' },
+  { title: '抓三个关键值',
+    cls: 'key', tag: '关键值', log: 'f(1)=0 是现成零点，极小值为负，两端趋于正无穷',
+    ribbon: {k:3, ok:true},
+    body: '<p>$f(1)=0$：两个积分的上下限都重合于 $1$；$f\\bigl(\\tfrac12\\bigr)<f(1)=0$：$\\tfrac12<1$ 在递减段，故最小值为负；两端 $x\\to\\pm\\infty$ 时各有一个积分发散，$f\\to+\\infty$。</p>' },
+  { title: '分段计数：两段各恰一个',
+    cls: 'good', tag: '计数', log: '严格单调保证至多一个，端点变号保证至少一个',
+    ribbon: {k:4, ok:true},
+    body: '<table><tr><th>区间</th><th>走向</th><th>零点</th></tr><tr><td>$(-\\infty,\\tfrac12]$</td><td>从 $+\\infty$ 严格降到负</td><td>恰 $1$ 个</td></tr><tr><td>$[\\tfrac12,+\\infty)$</td><td>从负严格升到 $+\\infty$</td><td>恰 $1$ 个（$x=1$）</td></tr></table>' },
+  { title: '结论',
+    cls: 'good', tag: '完成', log: '递减段一个、递增段一个，共 2 个零点',
+    body: '<p>$f(x)$ 共有 <b>$2$ 个零点</b>：一个在极小点 $x=\\tfrac12$ 左侧的递减段，另一个恰为 $x=1$。</p>' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : (s.cls === 'bad' ? 'miss' : 'step'),
+    tag: s.tag,
+    log: s.log,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    ribbon: s.ribbon,
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '【2015 数二·19】$f(x)=\\int_x^1\\sqrt{1+t^2}\\,\\mathrm dt+\\int_1^{x^2}\\sqrt{1+t}\\,\\mathrm dt$ 有几个零点？',
+  subtitle: '考点：变限积分求导 · 单调性 · 零点定理分段计数',
+  counterLabel: '步数',
+  ribbonTitle: '推理链（✓ 已完成环节）',
+  intro: '点击「▶ 播放」逐步展开推理链。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '共 2 个零点',
+    html: '记忆锚点：<b>变限积分求导 + 严格单调段各恰一个零点</b>。$f\'=\\sqrt{1+x^2}(2x-1)$，$f(1)=0$ 是送分的现成零点；易错：对上限 $x^2$ 求导忘乘 $2x$；被积函数没有初等原函数时，数零点只能靠单调性 + 零点定理，不要硬解方程。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：变限积分求导定单调性，分段数零点</h2>
+<p><strong>答案：$f(x)$ 共有 $2$ 个零点。</strong></p>
+<h3>第一步：求导，看清单调结构</h3>
+<p>变限积分求导（注意第二个积分上限是 $x<sup>2</sup>$，要乘链式因子 $2x$）：</p>
+<p>$$f'(x)=-\sqrt{1+x<sup>2</sup>}+\sqrt{1+x<sup>2</sup>}\cdot2x=\sqrt{1+x<sup>2</sup>}\,(2x-1).$$</p>
+<p>这里有个巧合：第二个被积函数 $\sqrt{1+t}$ 在上限 $t=x<sup>2</sup>$ 处的值恰为 $\sqrt{1+x<sup>2</sup>}$，与第一项同型。因 $\sqrt{1+x<sup>2</sup>}&gt;0$，符号由 $2x-1$ 决定：</p>
+<ul><li>$x&lt;\dfrac12$：$f'&lt;0$，严格递减；</li><li>$x&gt;\dfrac12$：$f'&gt;0$，严格递增；</li></ul>
+<p>$x=\dfrac12$ 是唯一极小值点。</p>
+<h3>第二步：抓关键值</h3>
+<ul><li>$f(1)=0$：两个积分上下限都重合于 $1$，一段积分为零；</li><li>$f\bigl(\dfrac12\bigr)&lt;0$：$\dfrac12&lt;1$ 位于递减段，故 $f\bigl(\dfrac12\bigr)&lt;f(1)=0$（最小值为负）；</li><li>$x\to-\infty$ 时 $\int_x<sup>1</sup>\sqrt{1+t<sup>2</sup>}\,\mathrm dt\to+\infty$，$x\to+\infty$ 时 $\int_1<sup>x^2</sup>\sqrt{1+t}\,\mathrm dt\to+\infty$，两端都趋于 $+\infty$。</li></ul>
+<h3>第三步：分段用零点定理计数</h3>
+<table><thead><tr><th>区间</th><th>$f$ 的走向</th><th>零点个数</th></tr></thead><tbody><tr><td>$(-\infty,\tfrac12]$</td><td>从 $+\infty$ 严格降到 $f(\tfrac12)&lt;0$</td><td>恰 $1$ 个</td></tr><tr><td>$[\tfrac12,+\infty)$</td><td>从 $f(\tfrac12)&lt;0$ 严格升到 $+\infty$</td><td>恰 $1$ 个（正是 $x=1$）</td></tr></tbody></table>
+<p>严格单调保证每段<strong>至多</strong>一个零点，端点符号相反保证<strong>至少</strong>一个，所以各恰一个。</p>
+<h3>易错点</h3>
+<ul><li><strong>求导忘乘 $2x$</strong>：上限 $x<sup>2</sup>$ 的链式因子漏掉，$f'$ 变形，单调区间全错。</li><li><strong>试图解 $f(x)=0$</strong>：两个积分都积不出初等闭式，必须走「单调性 + 零点定理」路线。</li><li><strong>漏掉现成的 $x=1$</strong>：它是递增段上那个零点，不是额外发现的第三个。</li></ul>
+<blockquote>结论：递减段、递增段各一个零点，共 $2$ 个。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

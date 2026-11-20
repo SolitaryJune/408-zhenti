@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数学二 2016·04 由导函数图形读极值点与拐点</title>
+<link rel="stylesheet" href="../assets/anim.css?v=20261119a">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<!-- 复制自 tools/anim_math_concept_template.html，只改题目专属区域 -->
+<!-- AW_QNAV_START -->
+<style>
+.aw-qnav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  max-width:900px;margin:0 auto 12px;padding:7px 10px;border:1px solid #1b3a4b26;border-radius:12px;
+  background:#fbf3daf2;font:700 13px/1.4 "PingFang SC","Microsoft YaHei",sans-serif;color:#1b3a4b}
+.aw-qnav a,.aw-qnav span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
+  text-decoration:none;color:#213e48;background:#1b3a4b14;white-space:nowrap}
+.aw-qnav a:hover{background:#1b3a4b29}
+.aw-qnav b{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+.aw-qnav .aw-qnav-cur{background:#1b3a4b;color:#fff;font-weight:800}
+.aw-qnav .is-disabled{opacity:.35;pointer-events:none}
+@media (max-width:520px){
+  .aw-qnav{font-size:12px;padding:6px 7px;gap:4px}
+  .aw-qnav a,.aw-qnav span{padding:5px 7px}
+}
+</style>
+<nav class="aw-qnav" id="aw-qnav" aria-label="动画切题">
+  <a href="m2-2016-03.html" data-q="../question/m2-2016-03/">← <b>m2-2016-03</b></a>
+  <a class="aw-qnav-cur" href="../question/m2-2016-04/" data-q="../question/m2-2016-04/" data-no-anim="1">m2-2016-04 · 本题</a>
+  <a href="m2-2016-05.html" data-q="../question/m2-2016-05/"><b>m2-2016-05</b> →</a>
+</nav>
+<script>
+(function(){
+  var nav = document.getElementById('aw-qnav');
+  if(!nav) return;
+  var framed = false;
+  try { framed = (window.top !== window.self); } catch(e){ framed = true; }
+  /* 内嵌在题目页 iframe 里时打标记：高度随内容、题目卡默认展开 */
+  if(framed && document.body){ document.body.className += ' in-frame'; }
+  if(!framed) return;   /* 独立打开动画页：链接本身就是同级动画页，直接跳 */
+  function findA(el){
+    while(el && el !== nav){
+      if(el.tagName === 'A' && el.getAttribute('data-q')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+  nav.onclick = function(e){
+    e = e || window.event;
+    var a = findA(e.target || e.srcElement);
+    if(!a) return;
+    if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+    var target = a.getAttribute('data-q');
+    if(!a.getAttribute('data-no-anim')) target += '#anim';
+    try { window.top.location.href = target; } catch(err){ window.location.href = target; }
+  };
+})();
+</script>
+<!-- AW_QNAV_END -->
+<div class="aw"></div>
+<script src="../assets/anim-engine.js?v=20261119a"></script>
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script>
+/* ================== KaTeX 逐步渲染（勿改） ================== */
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$',  right: '$',  display: false}
+      ],
+      throwOnError: false
+    });
+  }
+}
+function renderMathAfterSnap(stage){
+  renderMath(stage);
+  setTimeout(function(){
+    var root = document.querySelector('.aw');
+    renderMath(document.getElementById('awResult'));
+    renderMath(root.querySelector('h1'));
+    renderMath(root.querySelector('.sub'));
+  }, 0);
+}
+/* ================== 题目专属区域（只改这里） ================== */
+
+// 一张推理卡片（body 里可写 $..$ / $$..$$ 公式）
+function card(n, cls, title, body){
+  return '<div class="aw-stepcard ' + (cls || '') + '"><h4><span class="n">' + n +
+         '</span>' + title + '</h4>' + body + '</div>';
+}
+
+// 推理链：每一步的完整内容（引擎按步数截取显示）
+var STEPS = [
+  { title: '审题眼：图上画的是 f′，不是 f',
+    cls: 'key',
+    tag: '审题',
+    body: '<p>极值点看 $f\'$ 的<b>变号零点</b>（图形真正穿过 $x$ 轴）；拐点看 $f\'\'$ 变号，而 $f\'\'$ 变号等价于 $f\'$ 的<b>单调性改变</b>——即 $f\'$ 图形的峰、谷（含与 $x$ 轴相切的触点，只要它先减后增）。</p>',
+    log: '极值 ⇔ f′ 变号；拐点 ⇔ f′ 增减互换' },
+  { title: '数极值点：穿过型零点',
+    cls: 'good',
+    tag: '极值点',
+    ribbon: {k:1, ok:true},
+    body: '<p>图中 $f\'$ <b>穿过</b> $x$ 轴并正负互换的有 <b>2</b> 处，每处都是极值点；其余位置 $f\'$ 不变号，不产生极值。</p>',
+    log: 'f′ 变号零点 2 个 → 极值点 2 个' },
+  { title: '相切触点：非极值，但藏着一个拐点',
+    cls: 'bad',
+    tag: '陷阱',
+    body: '<p>图中另有一处 $f\'$ 与 $x$ 轴<b>相切</b>、两侧不变号——切而不穿，$f\'$ 符号不变，<b>不是极值点</b>。但触点附近 $f\'$ 先减后增，$f\'\'=0$ 且变号，<b>这里恰是拐点</b>。</p>',
+    log: '切而不穿：不给极值，却给拐点' },
+  { title: '数拐点：f′ 的峰谷 + 触点',
+    cls: 'good',
+    tag: '拐点',
+    ribbon: {k:2, ok:true},
+    body: '<p>$f\'\'$ 变号 = $f\'$ 增减互换：图中 $f\'$ 有 <b>2 个内部峰/谷</b>，加上相切触点处（$f\'$ 由减转增），共 <b>3</b> 处。$f$ 处处可导足够光滑，3 处都是 $y=f(x)$ 的拐点。</p>',
+    log: 'f′′ 变号 3 处 → 拐点 3 个' },
+  { title: '对选项',
+    cls: 'step',
+    tag: '选项',
+    body: '<p><b>A</b>（2 极值 2 拐点）：拐点少算了触点。<b>B</b>（2 极值 3 拐点）：两数都对。<b>C/D</b>（3 极值…）：把相切不变号的点误计为极值。</p>',
+    log: 'A 拐点少 1；C/D 极值多 1' },
+  { title: '结论',
+    cls: 'good',
+    tag: '完成',
+    body: '<p>答案选 <b>B</b>：$f$ 有 2 个极值点，曲线 $y=f(x)$ 有 3 个拐点。记忆锚点：<b>变号才极值，峰谷出拐点</b>；相切零点是「不给极值、专给拐点」的经典陷阱。</p>',
+    log: '选 B：2 个极值点 + 3 个拐点' },
+];
+
+var snaps = STEPS.map(function(s, i){
+  return {
+    cls: i === STEPS.length - 1 ? 'done' : 'step',
+    tag: s.tag || ('第 ' + (i + 1) + ' 步'),
+    log: s.log || s.title,
+    count: i + 1,
+    ribbon: s.ribbon,
+    html: STEPS.slice(0, i + 1).map(function(x, j){
+      return card(j + 1, x.cls, x.title, x.body);
+    }).join(''),
+    done: i === STEPS.length - 1,
+  };
+});
+
+AW.init({
+  title: '由 $f\'$ 的图形读出极值点与拐点个数',
+  subtitle: '考点：极值判定 · 拐点判定 · 方法：f′ 变号定极值、f′ 峰谷定拐点',
+  counterLabel: '推理步',
+  ribbonTitle: '两个计数（✓ 已定）',
+  intro: '点击「▶ 播放」逐步展开推理链（题图以文字转述：f′ 有 2 个穿过型零点、1 个相切型触点、2 个内部峰谷）。',
+  render: function(stage, sn){
+    if(sn.html != null) stage.innerHTML = sn.html;
+    renderMathAfterSnap(stage);
+  },
+  snaps: snaps,
+  result: {
+    big: '答案 B（2 个极值点，3 个拐点）',
+    html: '记忆锚点：<b>变号才极值，峰谷出拐点</b>。$f\'$ 穿过 $x$ 轴变号 2 处 → 2 个极值；$f\'$ 的 2 个峰谷 + 1 个相切触点（先减后增）共 3 处 $f\'\'$ 变号 → 3 个拐点。相切零点不产生极值，专产拐点。',
+  },
+});
+/* ================== 题目专属区域结束 ================== */
+</script>
+<!-- AW_EXPLAIN_START -->
+<section class="aw-explain">
+<div class="aw-explain-head"><span class="aw-explain-title">📝 文字讲解</span><span class="aw-explain-sub">与动画配套的完整讲解</span></div>
+<div class="aw-explain-body"><h2>本题讲解：从 $f'$ 的图形数出极值点与拐点</h2>
+<p>答案：B</p>
+<h3>第 0 步：先立机制——两级"翻译"链</h3>
+<p>看图题先把判定法则的因果链立起来，图上的每一类点该翻译成 $f$ 的什么，要心里有账。<strong>极值</strong>是 $f$ 的一层信息，靠 $f'$ 翻译：$f'$ 变号（正转负）才保证 $f$ 由增转减、出现极大，反向变号出现极小；$f'$ <strong>不变号</strong>的零点只让 $f$ "原地喘口气"，单调性没变，<strong>不是极值点</strong>——最典型的反例是 $f(x)=x<sup>3</sup>$：$f'(0)=0$ 但 $0$ 不是极值点。<strong>拐点</strong>是凹凸性信息，靠 $f''$ 翻译：$f''$ 变号 $\iff$ $f'$ 增减互换 $\iff$ $f'$ 的图形出现峰、谷或"弯向切换"。所以在 $f'$ 的图上：数<strong>穿轴变号</strong>的点得极值，数<strong>峰谷与弯向切换</strong>的点得拐点，两套点完全不同。</p>
+<h3>第一步：数极值点——只认"穿过 x 轴"的零点</h3>
+<p>图中 $f'$ 与 $x$ 轴共 3 个接触位置：<strong>2 处真正穿过并变号</strong>，各贡献一个极值点；<strong>1 处相切不穿</strong>，两侧 $f'$ 同号，$f$ 单调性不变，那里不是极值点。故 $f$ 有 <strong>2</strong> 个极值点。</p>
+<h3>第二步：数拐点——在 $f'$ 图上找 $f''$ 的变号</h3>
+<p>$f''$ 变号处即 $f'$ 增减互换处：图中 $f'$ 有 2 个内部峰/谷（各变号一次），再加相切触点——$f'$ 在触点附近先减后增，这次减增切换同样是 $f''$ 变号。合计 <strong>3</strong> 处；$f$ 处处二阶可导且凹凸方向确有切换，故曲线有 <strong>3</strong> 个拐点。</p>
+<h3>易错点</h3>
+<ul><li><strong>把相切点算成极值点</strong>（C/D）：把"驻点"混同"极值点"。$f'$ 切而不穿 $\Rightarrow$ 两侧同号 $\Rightarrow$ 单调性不变——$x<sup>3</sup>$ 的指纹要认得。</li><li><strong>漏掉触点处的拐点</strong>（A）：以为拐点只能挂在 $f'$ 的峰谷上。触点处 $f'$ 先减后增正是 $f''$ 变号，这个拐点一个都不能少。</li><li><strong>看错图的主角</strong>：极值点数 $f'$ 的<strong>零点变号</strong>，拐点数 $f'$ 的<strong>单调性变化</strong>（$f'$ 自己的峰谷与弯向），别把两套点搅在一起。</li></ul>
+<blockquote>结论：穿轴变号 2 处 → 2 个极值点；$f'$ 增减切换 3 处 → 3 个拐点，选 B。</blockquote></div>
+</section>
+<!-- AW_EXPLAIN_END -->
+</body>
+</html>

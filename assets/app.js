@@ -16,6 +16,7 @@
   var wrong = load(LS.wrong, {});
   var fav = load(LS.fav, []);
   var year = document.body.dataset.year || null;
+  var SITE_REL = document.body.dataset.rel || '../../';
   var examMode = year ? !!load(LS.exam, {})[year] : false;
   var revealAlways = !!load(LS.reveal, false);
 
@@ -377,7 +378,7 @@
         html += '<div class="grp">' + lastType + '</div>';
       }
       var href = document.body.dataset.mode === 'question'
-        ? ('../../question/' + c.dataset.qid + '/')
+        ? (SITE_REL + 'question/' + c.dataset.qid + '/')
         : ('#q-' + c.dataset.qid);
       html += '<a href="' + href + '" data-qid="' + c.dataset.qid + '">' + n + '</a>';
     });
@@ -418,7 +419,7 @@
       box.innerHTML = '<b>成绩 ' + total + ' / ' + full + '</b><br>' +
         '选择题答对 ' + correctN + ' / ' + choiceN +
         (wrongIds.length ? '<br>错题：' + wrongIds.join('、') + '<br>（已记入错题本）' : '<br>全部正确 🎉') +
-        '<br><a class="btn ghost" style="margin-top:8px" href="../../wrongbook/">查看错题本</a>';
+        '<br><a class="btn ghost" style="margin-top:8px" href="' + SITE_REL + 'wrongbook/">查看错题本</a>';
       box.classList.add('show');
       examMode = false;
       var m = load(LS.exam, {}); m[year] = false; save(LS.exam, m);

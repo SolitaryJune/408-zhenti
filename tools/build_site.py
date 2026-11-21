@@ -22,7 +22,7 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 YEARS = list(range(2009, 2027))
-ASSET_VER = "20261119a"
+ASSET_VER = "20261121c"
 
 SUBJECTS = {
     "数据结构": {"cls": "ds", "color": "#e07a2f", "bg": "#e07a2f1f"},
@@ -659,6 +659,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
   var wrong = load(LS.wrong, {});
   var fav = load(LS.fav, []);
   var year = document.body.dataset.year || null;
+  var SITE_REL = document.body.dataset.rel || '../../';
   var examMode = year ? !!load(LS.exam, {})[year] : false;
   var revealAlways = !!load(LS.reveal, false);
 
@@ -1020,7 +1021,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
         html += '<div class="grp">' + lastType + '</div>';
       }
       var href = document.body.dataset.mode === 'question'
-        ? ('../../question/' + c.dataset.qid + '/')
+        ? (SITE_REL + 'question/' + c.dataset.qid + '/')
         : ('#q-' + c.dataset.qid);
       html += '<a href="' + href + '" data-qid="' + c.dataset.qid + '">' + n + '</a>';
     });
@@ -1061,7 +1062,7 @@ APP_JS = r"""/* 408 真题站 · 原站同款交互：模式切换/计时/考试
       box.innerHTML = '<b>成绩 ' + total + ' / ' + full + '</b><br>' +
         '选择题答对 ' + correctN + ' / ' + choiceN +
         (wrongIds.length ? '<br>错题：' + wrongIds.join('、') + '<br>（已记入错题本）' : '<br>全部正确 🎉') +
-        '<br><a class="btn ghost" style="margin-top:8px" href="../../wrongbook/">查看错题本</a>';
+        '<br><a class="btn ghost" style="margin-top:8px" href="' + SITE_REL + 'wrongbook/">查看错题本</a>';
       box.classList.add('show');
       examMode = false;
       var m = load(LS.exam, {}); m[year] = false; save(LS.exam, m);
@@ -1242,7 +1243,7 @@ def page_head(title: str, rel: str, mode: str = "", year: str = "",
 <title>{esc(title)} · 考研真题档案</title>
 <link rel="stylesheet" href="{rel}assets/style.css?v={ASSET_VER}">
 </head>
-<body data-mode="{mode}" data-year="{sk}-{year}" data-sk="{sk}">
+<body data-mode="{mode}" data-year="{sk}-{year}" data-sk="{sk}" data-rel="{rel}">
 <header class="site-header">
   <a class="brand" href="{rel}index.html">考研<i>真题档案</i><small>自建复习站</small></a>
   <nav class="site-nav">
@@ -1586,8 +1587,8 @@ def build(meta: dict, exams: list[dict]) -> None:
             paper_total = sum(q["points"] for q in qs)
             ydir = root / sk / "year" / str(y)
             ydir.mkdir(parents=True, exist_ok=True)
-            cards = "\n".join(render_card(q, "../../") for q in qs)
-            head = page_head(f"{ex['name']} {y} 年真题 · 整张模式", "../../", mode="paper",
+            cards = "\n".join(render_card(q, "../../../") for q in qs)
+            head = page_head(f"{ex['name']} {y} 年真题 · 整张模式", "../../../", mode="paper",
                              year=str(y), sk=sk, years=[yv["year"] for yv in ex["years"]])
             hero = f"""
 <div class="intro">
@@ -1603,8 +1604,8 @@ def build(meta: dict, exams: list[dict]) -> None:
 </div>"""
             page = (head + hero + f'<div class="paper-body">{cards}</div>' + sheet_trigger(len(qs))
                     + f'<footer><div class="wrap">{FOOTER_TXT}</div></footer>'
-                    + katex_foot("../../")
-                    + '<script src="../../assets/app.js"></script></body></html>')
+                    + katex_foot("../../../")
+                    + '<script src="../../../assets/app.js"></script></body></html>')
             (ydir / "index.html").write_text(page, encoding="utf-8")
 
     # ---------- 单题模式页（四科目平铺，id 全局唯一） ----------

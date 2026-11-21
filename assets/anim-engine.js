@@ -200,7 +200,8 @@
       var id = m[1];
       var ym = id.match(/(\d{4})/);
       if (!ym) return;
-      fetch('../data/questions/' + ym[1] + '.json').then(function(r){
+      var sk = id.indexOf('m2-') === 0 ? 'math2' : (id.indexOf('zz-') === 0 ? 'politics' : (id.indexOf('yy-') === 0 ? 'english2' : '408'));
+      fetch('../data/' + sk + '/questions/' + ym[1] + '.json').then(function(r){
         return r.ok ? r.json() : Promise.reject(new Error('http ' + r.status));
       }).then(function(d){
         var qs = Array.isArray(d) ? d : (d.questions || []);
